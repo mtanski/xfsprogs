@@ -1096,21 +1096,6 @@ main(
 		logversion = 2;
 	}
 
-	/*
-	 * Support for non-512 byte sector sizes is a work-in-progress...
-	 */
-
-#ifndef EXPERIMENTAL_LARGE_SECTORS
-	if (sectorsize != XFS_MIN_SECTORSIZE) {
-		fprintf(stderr, _("unsupported sector size %d\n"), sectorsize);
-		usage();
-	}
-	if (lsectorsize != XFS_MIN_SECTORSIZE) {
-		fprintf(stderr, _("unsupported log sector size %d\n"), lsectorsize);
-		usage();
-	}
-#endif
-
 	if (!nvflag)
 		dirversion = (nsflag || nlflag) ? 2 : XFS_DFL_DIR_VERSION;
 	switch (dirversion) {
@@ -1423,6 +1408,8 @@ reported by the device (%u).\n"),
 				[dirblocklog - XFS_MIN_BLOCKSIZE_LOG];
 	ASSERT(i);
 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, i * XFS_MIN_LOG_FACTOR);
+	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+		min_logblocks = MAX(min_logblocks, (10*1024*1024)>>blocklog);
 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
 		fprintf(stderr,
 _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
@@ -1443,11 +1430,11 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	else if (loginternal && !logsize) {
 		/*
 		 * logblocks grows from min_logblocks to XFS_MAX_LOG_BLOCKS
-		 * at 1TB
+		 * at 128GB
 		 *
-		 * 8192 = 1TB / MAX_LOG_BYTES
+		 * 2048 = 128GB / MAX_LOG_BYTES
 		 */
-		logblocks = (dblocks << blocklog) / 8192;
+		logblocks = (dblocks << blocklog) / 2048;
 		logblocks = logblocks >> blocklog;
 		logblocks = MAX(min_logblocks, logblocks);
 		logblocks = MAX(logblocks,

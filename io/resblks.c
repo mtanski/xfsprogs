@@ -46,7 +46,7 @@ resblks_f(
 	char			*sp;
 
 	if (argc == 2) {
-		res.resblks = strtoul(argv[1], &sp, 10);
+		res.resblks = strtoull(argv[1], &sp, 10);
 		if (!sp || sp == argv[1]) {
 			printf(_("non-numeric argument -- %s\n"), argv[1]);
 			return 0;

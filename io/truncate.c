@@ -44,7 +44,7 @@ truncate_f(
 	off64_t			offset;
 	char			*sp;
 
-	offset = strtoul(argv[1], &sp, 10);
+	offset = (off64_t) strtoull(argv[1], &sp, 10);
 	if (!sp || sp == argv[1]) {
 		printf(_("non-numeric truncate argument -- %s\n"), argv[1]);
 		return 0;

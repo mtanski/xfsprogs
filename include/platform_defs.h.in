@@ -113,8 +113,8 @@ typedef unsigned char	uchar_t;
 #endif
 
 #ifndef _BOOLEAN_T_DEFINED
- typedef enum { B_FALSE, B_TRUE } boolean_t;
- #define _BOOLEAN_T_DEFINED 1
+typedef enum {B_FALSE, B_TRUE}	boolean_t;
+#define _BOOLEAN_T_DEFINED	1
 #endif
 
 #elif defined(__FreeBSD__)

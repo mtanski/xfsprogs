@@ -49,12 +49,12 @@ offset_length(
 
 	memset(segment, 0, sizeof(*segment));
 	segment->l_whence = SEEK_SET;
-	segment->l_start = strtoul(offset, &sp, 0);
+	segment->l_start = strtoull(offset, &sp, 0);
 	if (!sp || sp == offset) {
 		printf(_("non-numeric offset argument -- %s\n"), offset);
 		return 0;
 	}
-	segment->l_len = strtoul(length, &sp, 0);
+	segment->l_len = strtoull(length, &sp, 0);
 	if (!sp || sp == length) {
 		printf(_("non-numeric length argument -- %s\n"), length);
 		return 0;

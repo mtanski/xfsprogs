@@ -46,6 +46,13 @@ S: Krosenska' 543
 S: 181 00 Praha 8
 S: Czech Republic
 
+N: Andi Kleen
+E: ak@muc.de
+D: Most recently, fine-tuning default mkfs/mount logsize/logbufs values
+S: Schwalbenstr. 96
+S: 85551 Ottobrunn
+S: Germany
+
 N: Seth Mos
 E: seth@arosa.nl
 D: XFS FAQ ( http://oss.sgi.com/projects/xfs/faq.html ) maintainer

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -36,37 +36,47 @@
 
 #define BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
 #define BDSTRAT_SIZE	(256 * 1024)
+#define min(x, y)	((x) < (y) ? (x) : (y))
 
 void
 libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 {
-	xfs_daddr_t	bno;
-	uint		nblks;
-	int		size;
-	int		fd;
+	xfs_off_t	start_offset, end_offset, offset;
+	ssize_t		zsize, bytes;
 	char		*z;
+	int		fd;
 
-	size = BDSTRAT_SIZE <= BBTOB(len) ? BDSTRAT_SIZE : BBTOB(len);
-	if ((z = memalign(getpagesize(), size)) == NULL) {
+	zsize = min(BDSTRAT_SIZE, BBTOB(len));
+	if ((z = memalign(getpagesize(), zsize)) == NULL) {
 		fprintf(stderr,
 			_("%s: %s can't memalign %d bytes: %s\n"),
-			progname, __FUNCTION__, size, strerror(errno));
+			progname, __FUNCTION__, zsize, strerror(errno));
 		exit(1);
 	}
-	memset(z, 0, size);
+	memset(z, 0, zsize);
+
 	fd = libxfs_device_to_fd(dev);
-	for (bno = start; bno < start + len; ) {
-		nblks = (uint)BTOBB(size);
-		if (bno + nblks > start + len)
-			nblks = (uint)(start + len - bno);
-		if (pwrite64(fd, z, BBTOB(nblks), BBTOOFF64(bno)) <
-				BBTOB(nblks)) {
-			fprintf(stderr,
-				_("%s: %s write failed: %s\n"),
+	start_offset = BBTOOFF64(start);
+
+	if ((lseek64(fd, start_offset, SEEK_SET)) < 0) {
+		fprintf(stderr, _("%s: %s seek to offset %llu failed: %s\n"),
+			progname, __FUNCTION__, start_offset, strerror(errno));
+		exit(1);
+	}
+
+	end_offset = BBTOOFF64(start + len) - start_offset;
+	for (offset = 0; offset < end_offset; ) {
+		bytes = min((ssize_t)(end_offset - offset), zsize);
+		if ((bytes = write(fd, z, bytes)) < 0) {
+			fprintf(stderr, _("%s: %s write failed: %s\n"),
 				progname, __FUNCTION__, strerror(errno));
 			exit(1);
+		} else if (bytes == 0) {
+			fprintf(stderr, _("%s: %s not progressing?\n"),
+				progname, __FUNCTION__);
+			exit(1);
 		}
-		bno += nblks;
+		offset += bytes;
 	}
 	free(z);
 }

@@ -166,7 +166,7 @@ pread_f(
 		printf("%s %s\n", pread_cmd.name, pread_cmd.oneline);
 		return 0;
 	}
-	offset = strtoul(argv[optind], &sp, 0);
+	offset = (off64_t) strtoull(argv[optind], &sp, 0);
 	if (!sp || sp == argv[optind]) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;

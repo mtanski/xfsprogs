@@ -1,3 +1,15 @@
+xfsprogs-2.5.0 (18 June 2003)
+	- Fix libdisk (and hence mkfs) code which warns on MD devices
+	  with the clean flag not set, apparently this is not so wise.
+	- Fix libxfs_device_zero to work with smaller-than-requested
+	  write return values.
+	- Fix error in xfs_io pwrite code with large request sizes.
+	- Fix rounding-down-input problems in several xfs_io commands.
+	- Changed mkfs.xfs default log size scaling algorithm slightly,
+	  to create larger logs at smaller filesystem sizes by default
+	  (thanks to Andi Kleen for the patch).
+	- Enable support for sector sizes larger than 512 bytes.
+
 xfsprogs-2.4.12 (02 June 2003)
 	- Fix xfs_logprint handling of any version 2 log device.
 	- Remove calls to exit in libhandle, propogate errors to

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -70,11 +70,6 @@ md_get_subvol_stripe(
 		close(fd);
 
 		/* Check state */
-		if (!(md.state & (1 << MD_SB_CLEAN))) {
-			fprintf(stderr,
-				_("warning - MD array %s not in clean state\n"),
-				dfile);
-		}
 		if (md.state & (1 << MD_SB_ERRORS)) {
 			fprintf(stderr,
 				_("warning - MD array %s in error state\n"),

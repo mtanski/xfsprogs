@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -219,6 +219,8 @@ calc_ino_align(xfs_sb_t *sb)
  * sector size info -
  *			sb_sectsize
  *			sb_sectlog
+ *			sb_logsectsize
+ *			sb_logsectlog
  *
  * not checked here -
  *			sb_rootino
@@ -258,11 +260,11 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 
 	bsize = 1;
 
-	for (i = 0; bsize < sb->sb_blocksize && i < 32; i++)  {
+	for (i = 0; bsize < sb->sb_blocksize &&
+		i < sizeof(sb->sb_blocksize) * NBBY; i++)
 		bsize <<= 1;
-	}
 
-	if (i < XR_LOG2BSIZE_MIN || i > XR_LOG2BSIZE_MAX)
+	if (i < XFS_MIN_BLOCKSIZE_LOG || i > XFS_MAX_BLOCKSIZE_LOG)
 		return(XR_BAD_BLOCKSIZE);
 
 	/* check sb blocksize field against sb blocklog field */
@@ -273,9 +275,11 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	/* sanity check ag count, size fields against data size field */
 
 	if (sb->sb_dblocks == 0 ||
-		sb->sb_dblocks > sb->sb_agcount * sb->sb_agblocks ||
-		sb->sb_dblocks < (sb->sb_agcount - 1)
-			* sb->sb_agblocks + XFS_MIN_AG_BLOCKS)
+		sb->sb_dblocks >
+			(__uint64_t)(sb->sb_agcount * sb->sb_agblocks) ||
+		sb->sb_dblocks <
+			(__uint64_t)((sb->sb_agcount - 1) * sb->sb_agblocks
+			+ XFS_MIN_AG_BLOCKS))
 		return(XR_BAD_FS_SIZE_DATA);
 
 	if (sb->sb_agblklog != (__uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
@@ -286,17 +290,48 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
 		return(XR_BAD_INO_SIZE_DATA);
 
-	/* check sector size against log(sector size) field */
+	/* check to make sure sectorsize is legal 2^N, 9 <= N <= 15 */
+
+	if (sb->sb_sectsize == 0)
+		return(XR_BAD_SECT_SIZE_DATA);
 
 	bsize = 1;
 
-	for (i = 0; bsize < sb->sb_sectsize && i < 15; i++)  {
+	for (i = 0; bsize < sb->sb_sectsize &&
+		i < sizeof(sb->sb_sectsize) * NBBY; i++)  {
 		bsize <<= 1;
 	}
 
-	if (sb->sb_sectsize == 0 || i == 16 ||
-			sb->sb_sectsize != (1 << i))
+	if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
 		return(XR_BAD_SECT_SIZE_DATA);
+
+	/* check sb sectorsize field against sb sectlog field */
+
+	if (i != sb->sb_sectlog)
+		return(XR_BAD_SECT_SIZE_DATA);
+
+	if (XFS_SB_VERSION_HASSECTOR(sb))  {
+
+		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
+
+		if (sb->sb_logsectsize == 0)
+			return(XR_BAD_SECT_SIZE_DATA);
+
+		bsize = 1;
+
+		for (i = 0; bsize < sb->sb_logsectsize &&
+			i < sizeof(sb->sb_logsectsize) * NBBY; i++)  {
+			bsize <<= 1;
+		}
+
+		if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
+			return(XR_BAD_SECT_SIZE_DATA);
+
+		/* check sb log sectorsize field against sb log sectlog field */
+
+		if (i != sb->sb_logsectlog)
+			return(XR_BAD_SECT_SIZE_DATA);
+	}
 
 	/*
 	 * real-time extent size is always set

@@ -334,7 +334,7 @@ extsize_f(
 	unsigned int		extsize;
 	char                    *sp;
 
-	extsize = strtoul(argv[1], &sp, 10);
+	extsize = strtoul(argv[1], &sp, 0);
 	if (!sp || sp == argv[1]) {
 		printf(_("non-numeric extsize argument -- %s\n"), argv[1]);
 		return 0;

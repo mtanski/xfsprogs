@@ -54,11 +54,7 @@ typedef unsigned int		__uint32_t;
 typedef signed long long int	__int64_t;
 typedef unsigned long long int	__uint64_t;
 
-#ifndef _BOOLEAN_T_DEFINED
- typedef enum { B_FALSE, B_TRUE } boolean_t;
- #define _BOOLEAN_T_DEFINED 1
-#endif
-
+typedef enum { B_FALSE,B_TRUE }	boolean_t;
 typedef __int64_t		prid_t;		/* project ID */
 typedef __uint32_t		inst_t;		/* an instruction */
 

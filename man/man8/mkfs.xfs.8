@@ -608,8 +608,8 @@ The
 .B size
 suboption is used to specify the size of the real-time section.
 This suboption is only needed if the real-time section of the
-filesystem should occupy
-less space than the size of the partition or logical volume containing the section.
+filesystem should occupy less space than the size of the partition
+or logical volume containing the section.
 .TP
 .B \-s
 Sector size options.
@@ -625,10 +625,9 @@ The sector size is specified either as a base two logarithm value with
 or in bytes with
 .BR size= .
 The default value is 512 bytes.
-.\" The minimum value for sector size is 512; the maximum is 32768 (32 KB).
-.\" The sector size cannot be made larger than the filesystem block size.
-This option is not yet implemented and sector size other than 512
-bytes cannot be set at this stage.
+The minimum value for sector size is 512; the maximum is 32768 (32 KB).
+The sector size must be a power of 2 size and cannot be made larger
+than the filesystem block size.
 .TP
 \f3\-L\f1 \f2label\f1
 Set the filesystem label.

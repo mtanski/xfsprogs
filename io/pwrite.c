@@ -67,7 +67,7 @@ write_buffer(
 	off64_t		skip,
 	ssize_t		*total)
 {
-	ssize_t		bytes, itotal = min(bs,count);
+	ssize_t		bytes, bytes_requested, itotal = min(bs, count);
 
 	*total = 0;
 	while (count > 0) {
@@ -75,7 +75,8 @@ write_buffer(
 			if (!read_buffer(fd, skip + *total, bs, &itotal, 0, 1))
 				break;
 		}
-		bytes = pwrite64(fdesc, buffer, min(itotal,count), offset);
+		bytes_requested = min(itotal, count);
+		bytes = pwrite64(fdesc, buffer, bytes_requested, offset);
 		if (bytes == 0)
 			break;
 		if (bytes < 0) {
@@ -83,7 +84,7 @@ write_buffer(
 			return 0;
 		}
 		*total += bytes;
-		if (bytes < count)
+		if (bytes < bytes_requested)
 			break;
 		offset += bytes;
 		count -= bytes;
@@ -120,7 +121,7 @@ pwrite_f(
 			infile = optarg;
 			break;
 		case 's':
-			skip = strtoul(optarg, &sp, 0);
+			skip = (off64_t) strtoull(optarg, &sp, 0);
 			if (!sp || sp == optarg) {
 				printf(_("non-numeric skip -- %s\n"), optarg);
 				return 0;
@@ -142,7 +143,7 @@ pwrite_f(
 		printf("%s %s\n", pwrite_cmd.name, pwrite_cmd.oneline);
 		return 0;
 	}
-	offset = strtoul(argv[optind], &sp, 0);
+	offset = (off64_t) strtoull(argv[optind], &sp, 0);
 	if (!sp || sp == argv[optind]) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
