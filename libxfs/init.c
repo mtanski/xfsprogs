@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -93,23 +93,26 @@ libxfs_device_to_fd(dev_t device)
  *     open a device and return its device number
  */
 dev_t
-libxfs_device_open(char *path, int creat, int readonly, int setblksize)
+libxfs_device_open(char *path, int creat, int xflags, int setblksize)
 {
-	int		fd;
 	dev_t		dev;
-	int		d;
-	struct stat	statb;
+	int		fd, d, flags;
+	int		readonly, excl;
+	struct stat64	statb;
 
-	if ((fd = open(path,
-			(readonly ? O_RDONLY : O_RDWR) |
-			(creat ? O_CREAT|O_TRUNC : 0),
-			0666)) < 0) {
+	readonly = (xflags & LIBXFS_ISREADONLY);
+	excl = (xflags & LIBXFS_EXCLUSIVELY) && !creat;
+
+	flags = (readonly ? O_RDONLY : O_RDWR) | \
+		(creat ? (O_CREAT|O_TRUNC) : 0) | \
+		(excl ? O_EXCL : 0);
+	if ((fd = open(path, flags, 0666)) < 0) {
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
 
-	if (stat(path, &statb)<0) {
+	if (fstat64(fd, &statb) < 0) {
 		fprintf(stderr, _("%s: cannot stat %s: %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
@@ -222,8 +225,6 @@ libxfs_init(libxfs_init_t *a)
 	char		*rtname;
 	char		rtpath[25];
 	int		rval = 0;
-	int		readonly;
-	int		inactive;
 	int		flags;
 
 	dpath[0] = logpath[0] = rtpath[0] = '\0';
@@ -238,8 +239,6 @@ libxfs_init(libxfs_init_t *a)
 	(void)getcwd(curdir,MAXPATHLEN);
 	needcd = 0;
 	fd = -1;
-	readonly = (a->isreadonly & LIBXFS_ISREADONLY);
-	inactive = (a->isreadonly & LIBXFS_ISINACTIVE);
 	flags = a->isreadonly;
 
 	if (a->volname) {
@@ -325,14 +324,14 @@ voldone:
 		if (dname[0] != '/' && needcd)
 			chdir(curdir);
 		if (a->disfile) {
-			a->ddev= libxfs_device_open(dname, a->dcreat, readonly,
+			a->ddev= libxfs_device_open(dname, a->dcreat, flags,
 						    a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {
 			if (!check_open(dname, flags, &rawfile, &blockfile))
 				goto done;
 			a->ddev = libxfs_device_open(rawfile,
-					a->dcreat, readonly, a->setblksize);
+					a->dcreat, flags, a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 			platform_findsizes(rawfile, a->dfd,
 						&a->dsize, &a->dbsize);
@@ -345,13 +344,13 @@ voldone:
 			chdir(curdir);
 		if (a->lisfile) {
 			a->logdev = libxfs_device_open(logname,
-					a->lcreat, readonly, a->setblksize);
+					a->lcreat, flags, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 		} else {
 			if (!check_open(logname, flags, &rawfile, &blockfile))
 				goto done;
 			a->logdev = libxfs_device_open(rawfile,
-					a->lcreat, readonly, a->setblksize);
+					a->lcreat, flags, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 			platform_findsizes(rawfile, a->logfd,
 						&a->logBBsize, &a->lbsize);
@@ -364,13 +363,13 @@ voldone:
 			chdir(curdir);
 		if (a->risfile) {
 			a->rtdev = libxfs_device_open(rtname,
-					a->rcreat, readonly, a->setblksize);
+					a->rcreat, flags, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 		} else {
 			if (!check_open(rtname, flags, &rawfile, &blockfile))
 				goto done;
 			a->rtdev = libxfs_device_open(rawfile,
-					a->rcreat, readonly, a->setblksize);
+					a->rcreat, flags, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 			platform_findsizes(rawfile, a->rtfd,
 						&a->rtsize, &a->rtbsize);
