@@ -44,12 +44,10 @@
 #include <errno.h>
 #include <libxfs.h>
 
-#undef O_DIRECT
-#define O_DIRECT 0	/* nathans TODO - remove this when direct IO done */
-
 #define	MAXBUFFERSIZE	(256 * 1024)
 
 static void usage(void);
+static char *progname;
 
 int
 main(int argc, char **argv)
@@ -68,7 +66,6 @@ main(int argc, char **argv)
 	int prealloc = 0;
 	int verbose = 0;
 	struct dioattr da;
-	char *progname;
 	void *buf = NULL;
 	int buflen = 0, nbuflen;
 	int bufalign = 0, nbufalign, bufmin;
@@ -279,6 +276,6 @@ main(int argc, char **argv)
 static void
 usage(void)
 {
-	fprintf(stderr, "mkfile: [-npv] <size> <name1> [<name2>] ...\n");
+	fprintf(stderr, "%s: [-npv] <size> <name1> [<name2>] ...\n", progname);
 	exit(2);
 }
