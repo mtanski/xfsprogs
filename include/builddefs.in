@@ -145,7 +145,8 @@ ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
 	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).a $(LIBNAME).la $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la; \
 	../$(INSTALL) -S $(LIBNAME).so.$(LT_CURRENT) $(PKG_LIB_DIR)/$(LIBNAME).so
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
