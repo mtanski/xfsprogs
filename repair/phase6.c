@@ -648,7 +648,6 @@ mk_rsumino(xfs_mount_t *mp)
 			libxfs_device_zero(mp->m_dev,
 				      XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 				      XFS_FSB_TO_BB(mp, ep->br_blockcount));
-				do_error(_("dev_zero of rtbitmap failed\n"));
 			bno += ep->br_blockcount;
 		}
 	}
