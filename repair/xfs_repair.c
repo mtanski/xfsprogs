@@ -72,7 +72,7 @@ char *o_opts[] = {
 static void
 usage(void)
 {
-	do_warn("Usage: %s [-nV] [-o subopt[=value]] [-l logdevice] devname\n",
+	do_warn("Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n",
 		progname);
 	exit(1);
 }
@@ -170,7 +170,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:flLnDvV:")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDvV")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -205,6 +205,10 @@ process_args(int argc, char **argv)
 		case 'l':
 			log_name = optarg;
 			log_spec = 1;
+			break;
+		case 'r':
+			rt_name = optarg;
+			rt_spec = 1;
 			break;
 		case 'f':
 			isa_file = 1;

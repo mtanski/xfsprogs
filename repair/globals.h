@@ -127,8 +127,10 @@ EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
 EXTERN int	force_geo;		/* can set geo on low confidence info */
 EXTERN int	assume_xfs;		/* assume we have an xfs fs */
 EXTERN int	pre_65_beta;		/* fs was mkfs'ed by a version earlier * than 6.5-beta */
-EXTERN char *log_name;			/* Name of log device */
-EXTERN int log_spec;			/* Log dev specified as option */
+EXTERN char	*log_name;		/* Name of log device */
+EXTERN int	log_spec;		/* Log dev specified as option */
+EXTERN char	*rt_name;		/* Name of realtime device */
+EXTERN int	rt_spec;		/* Realtime dev specified as option */
 
 /* misc status variables */
 

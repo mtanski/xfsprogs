@@ -3,9 +3,11 @@
 xfs_repair \- repair an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_repair\f1 [ \f3\-nL\f1 ] [ \f3\-o\f1 subopt[=value] ] xfs_special
+\f3xfs_repair\f1 [ \f3\-nLvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+	[\f3-l\f1 logdev] [\f3-r\f1 rtdev] xfs_special
 .sp .8v
-\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nL\f1 ] [ \f3\-o\f1 subopt[=value] ] ... file
+\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nLvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+	[\f3-l\f1 logfile] [\f3-r\f1 rtfile] file
 .fi
 .SH DESCRIPTION
 .I xfs_repair
@@ -34,6 +36,8 @@ Specifies that the special device is actually a file (see the
 \f2mkfs.xfs\f1 \f3\-d\f1 \f2file\f1 option).
 This might happen if an image copy
 of a filesystem has been copied or written into an ordinary file.
+This option implies that any external log or realtime section
+is also in an ordinary file.
 .TP
 .B \-L
 Force Log Zeroing.
@@ -44,13 +48,22 @@ When using this option the filesystem will likely appear to be corrupt,
 and can cause the loss of user files and/or data.
 .TP
 .B \-l
-Specifies the device special file where the filesystems external
+Specifies the device special file where the filesystem's external
 log resides.
 Only for those filesystems which use an external log.
 See the
 \f2mkfs.xfs\f1 \f3\-l\f1 option, and refer to
 .IR xfs (5)
 for a detailed description of the XFS log.
+.TP
+.B \-r
+Specifies the device special file where the filesystem's realtime
+section resides.
+Only for those filesystems which use a realtime section.
+See the
+\f2mkfs.xfs\f1 \f3\-r\f1 option, and refer to
+.IR xfs (5)
+for a detailed description of the XFS realtime section.
 .TP
 .B \-n
 No modify mode.
@@ -78,6 +91,9 @@ option is in effect,
 .I xfs_repair
 will assume that the filesystem is an XFS filesystem and
 will ignore an EFS superblock if one is found.
+.TP
+.B \-v
+Verbose output.
 .SS Checks Performed
 Inconsistencies corrected include the following:
 .TP

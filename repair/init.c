@@ -58,6 +58,12 @@ xfs_init(libxfs_init_t *args)
 		/* REVISIT: Need to do fs sanity / log validity checking */
 	}
 
+	if (rt_spec)  {	/* RT device specified */
+		args->rtname = rt_name;
+		args->risfile = (isa_file?1:0);
+		/* XXX assume data file also means rt file */
+	}
+
 	args->notvolmsg = "you should never get this message - %s";
 	args->notvolok = 1;
 	args->setblksize = 1;

@@ -1,3 +1,11 @@
+xfsprogs-1.3.19 (15 February 2002)
+	- fix xfs_repair option parsing for external logs
+	- add xfs_repair option parsing for realtime device
+	- fix xfs_repair version (-V) option - should not
+	  require an argument
+	- add -V option to usage string
+	- document verbose (-v) and -r options in manpage
+
 xfsprogs-1.3.18 (17 January 2002)
 	- fix mkfs.xfs buglet in overwriting signatures when run
 	  on a regular file
