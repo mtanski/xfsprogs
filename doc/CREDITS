@@ -20,3 +20,10 @@ E: jones@tacc.utexas.edu
 D: fsr port to Linux
 S: Austin, Texas, USA
 
+N: Jens Axboe
+E: axboe@suse.de
+D: Block/elevator/kiobuf hacking, IDE kiobuf support
+S: Peter Bangs Vej 258, 2TH
+S: 2500 Valby
+S: Denmark
+
