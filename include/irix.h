@@ -79,7 +79,6 @@ typedef flock64_t	xfs_flock64_t;
 #define UINT_MAX	UINT32_MAX
 #define PATH_MAX	MAXPATHLEN
 #define constpp		char * const *
-#define isset(a,i)	((a)[(i)/NBBY] & (1<<((i)%NBBY)))
 
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 {

@@ -230,7 +230,7 @@ process_rtbitmap(xfs_mount_t	*mp,
 		for (bit = 0;
 		     bit < bitsperblock && extno < mp->m_sb.sb_rextents;
 		     bit++, extno++) {
-			if (isset(words, bit)) {
+			if (xfs_isset(words, bit)) {
 				set_rtbno_state(mp, extno, XR_E_FREE);
 				sb_frextents++;
 				if (prevbit == 0) {

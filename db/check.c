@@ -3472,7 +3472,7 @@ process_rtbitmap(
 		for (bit = 0;
 		     bit < bitsperblock && extno < mp->m_sb.sb_rextents;
 		     bit++, extno++) {
-			if (isset(words, bit)) {
+			if (xfs_isset(words, bit)) {
 				rtbno = extno * mp->m_sb.sb_rextsize;
 				set_rdbmap(rtbno, mp->m_sb.sb_rextsize,
 					DBM_RTFREE);

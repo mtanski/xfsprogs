@@ -79,6 +79,8 @@
 #define XFS_SUPER_MAGIC 0x58465342
 #endif
 
+#define xfs_isset(a,i)	((a)[(i)/(sizeof((a))*NBBY)] & (1<<((i)%(sizeof((a))*NBBY))))
+
 /*
  * Argument structure for libxfs_init().
  */
