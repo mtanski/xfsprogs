@@ -94,6 +94,7 @@ printxattr(int flags, int verbose, int dofname, int dobraces, int doeol)
 		{ XFS_XFLAG_SYNC,	"s", "sync" },
 		{ XFS_XFLAG_NOATIME,	"A", "no-atime" },
 		{ XFS_XFLAG_NODUMP,	"d", "no-dump" },
+		{ XFS_XFLAG_RTINHERIT,	"R", "rt-inherit" },
 		{ 0, NULL, NULL }
 	};
 	int	first = 1;
@@ -471,6 +472,7 @@ chattr_f(
 		{ XFS_XFLAG_SYNC,	's' },
 		{ XFS_XFLAG_NOATIME,	'A' },
 		{ XFS_XFLAG_NODUMP,	'd' },
+		{ XFS_XFLAG_RTINHERIT,	'R' },
 		{ 0, '\0' }
 	};
 	struct fsxattr	attr;
