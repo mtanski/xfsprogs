@@ -46,8 +46,11 @@ HFILES = arch.h handle.h jdm.h libxfs.h libxlog.h xqm.h \
 
 DK_HFILES = mountinfo.h volume.h fstyp.h dvh.h
 LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules $(DK_HFILES)
+LDIRT = xfs
 
 default install :
+	rm -f xfs
+	$(LN_S) . xfs
 
 include $(BUILDRULES)
 

@@ -56,7 +56,7 @@ SHELL = /bin/sh
 IMAGES_DIR = $(TOPDIR)/all-images
 DIST_DIR = $(TOPDIR)/dist
 
-CCF	= $(CC) $(CFLAGS)
+CCF	= $(CC) $(CFLAGS) $(CPPFLAGS)
 MAKEF	= $(MAKE) $(MAKEOPTS)
 CXXF	= $(CXX) $(CXXFLAGS)
 LDF	= $(LD) $(LDFLAGS)
