@@ -129,7 +129,7 @@ dofile(char *fname)
 	struct getbmapx	*map;
 	int		map_size;
 	int		loop = 0;
-	xfs_fsop_geom_t fsgeo;
+	xfs_fsop_geom_v1_t fsgeo;
 
 	fd = open(fname, O_RDONLY);
 	if (fd < 0) {
@@ -147,7 +147,7 @@ dofile(char *fname)
         }
 
 	if (vflag) {
-		if (ioctl(fd, XFS_IOC_FSGEOMETRY, &fsgeo) < 0) {
+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
 			fprintf(stderr, "%s: can't get geometry [\"%s\"]: %s\n",
 				progname, fname, strerror(errno));
 			close(fd);

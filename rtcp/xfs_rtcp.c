@@ -388,7 +388,7 @@ int
 xfsrtextsize( char *path)
 {
 	int fd, rval, rtextsize;
-	xfs_fsop_geom_t geo;
+	xfs_fsop_geom_v1_t geo;
 
 	fd = open( path, O_RDONLY );
 	if ( fd < 0 ) {
@@ -396,12 +396,12 @@ xfsrtextsize( char *path)
 		perror(path);
 		return -1;
 	}
-	rval = ioctl(fd, XFS_IOC_FSGEOMETRY, &geo );
+	rval = ioctl( fd, XFS_IOC_FSGEOMETRY_V1, &geo );
 	close(fd);
+	if ( rval < 0 )
+		return -1;
 
 	rtextsize = geo.rtextsize * geo.blocksize;
 
-	if ( rval < 0 )
-		return -1;
 	return rtextsize;
 }

@@ -1,3 +1,9 @@
+xfsprogs-2.3.0 (03 September 2002)
+	- Several changes to geometry ioctl callers which will make
+	  the tools useable on older kernel versions too.
+	- Mainly affects xfs_bmap and xfs_growfs.
+	- Do some additional cleanup after autoconf has run.
+
 xfsprogs-2.2.3 (28 August 2002)
 	- Update libdisk for a few other filesystems.
 	- Fix call to lvdisplay on LVM volumes so that lvdisplay

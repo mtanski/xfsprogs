@@ -1218,7 +1218,7 @@ main(int argc, char **argv)
 	}
 
 	/* if lsu or lsunit was specified, automatically use v2 logs */
-	if (lsu || lsunit) {
+	if ((lsu || lsunit) && logversion == 1) {
 		fprintf(stderr, "log stripe unit specified, using v2 logs\n");
 		logversion = 2;
 	}

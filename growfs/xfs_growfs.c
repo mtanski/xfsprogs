@@ -270,10 +270,20 @@ main(int argc, char **argv)
 
 	/* get the current filesystem size & geometry */
 	if (ioctl(ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
-		fprintf(stderr, "%s: cannot determine geometry of filesystem"
-			" mounted at %s: %s\n",
-			progname, fname, strerror(errno));
-		exit(1);
+		/*
+		 * OK, new ioctl barfed - back off and try earlier version
+		 * as we're probably running an older kernel version.
+		 * Only field added in the v2 geometry ioctl is "logsunit"
+		 * so we'll zero that out for later display (as zero).
+		 */
+		geo.logsunit = 1;	/* 1 BB */
+		if (ioctl(ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
+			fprintf(stderr,
+				"%s: cannot determine geometry of filesystem"
+				" mounted at %s: %s\n",
+				progname, fname, strerror(errno));
+			exit(1);
+		}
 	}
 	isint = geo.logstart > 0;
 	unwritten = geo.flags & XFS_FSOP_GEOM_FLAGS_EXTFLG ? 1 : 0;
@@ -462,7 +472,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (ioctl(ffd, XFS_IOC_FSGEOMETRY, &ngeo) < 0) {
+	if (ioctl(ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
 		fprintf(stderr, "%s: ioctl failed - XFS_IOC_FSGEOMETRY: %s\n",
 			progname, strerror(errno));
 		exit(1);
