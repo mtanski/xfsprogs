@@ -1,3 +1,7 @@
+xfsprogs-2.3.4 (04 October 2002)
+	- xfs_repair: fix size calculation bug in repair's memory allocation,
+	  reduces memory usage by a factor of 4.
+
 xfsprogs-2.3.3 (16 September 2002)
 	- Fix mkfs bug when optimizing AG size on striped devices,
 	  ASSERT(agcount != 0) tripped on single-ag filesystems.
