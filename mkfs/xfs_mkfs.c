@@ -388,7 +388,7 @@ calc_default_ag_geometry(
 	 * always use the maximum AG size, the points at which we
 	 * always use the minimum, and a "small-step" for 16-128Mb.
 	 */
-	if (dblocks >= TERABYTES(64, blocklog)) {
+	if (dblocks >= TERABYTES(32, blocklog)) {
 		blocks = XFS_AG_MAX_BLOCKS(blocklog);
 		goto done;
 	} else if (dblocks < MEGABYTES(16, blocklog)) {
