@@ -31,8 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <errno.h>
-
 #include "globals.h"
 #include "err_protos.h"
 #include "attr_repair.h"

@@ -32,8 +32,6 @@
 
 #define ustat __kernel_ustat
 #include <libxfs.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <mntent.h>
 #include <sys/stat.h>
 #undef ustat

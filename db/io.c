@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <errno.h>
 #include "command.h"
 #include "data.h"
 #include "type.h"

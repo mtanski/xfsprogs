@@ -30,7 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <fcntl.h>
 #include <libxfs.h>
 #include "globals.h"
 #include "agheader.h"

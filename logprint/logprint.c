@@ -31,8 +31,6 @@
  */
 
 #include "logprint.h"
-#include <errno.h>
-#include <fcntl.h>
 
 int	print_data;
 int	print_only_data;

@@ -34,13 +34,9 @@
  * Bmap display utility for xfs.
  */
 
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <libxfs.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
 
 int aflag = 0;	/* Attribute fork. */
 int lflag = 0;	/* list number of blocks with each extent */

@@ -34,7 +34,6 @@
 
 #include "platform_defs.h"
 
-#include <uuid/uuid.h>
 #include <xfs_fs.h>
 #include <xfs_types.h>
 #include <arch.h>
@@ -467,9 +466,5 @@ extern void	libxfs_dir2_free_log_bests (xfs_trans_t *, xfs_dabuf_t *,
 
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);
-
-
-/* ick */
-extern __inline__ __const__ __u64 __fswab64 (__u64 x);
 
 #endif	/* __LIBXFS_H__ */

@@ -1,3 +1,13 @@
+xfsprogs (1.2.5) unstable; urgency=low
+
+  * Fix missing Makefile include entries for LVM headers
+  * Add experimental xfs_rtcp (realtime copy) command
+  * PowerPC build failure fixups - thanks to Robert Ramiega
+  * Cleanup arch-specific code, esp. the byteswab routines
+  * Suggests xfsdump and attr packages
+
+ -- Nathan Scott <nathans@debian.org>  Tue,  8 May 2001 15:50:27 +1000
+
 xfsprogs (1.2.4) unstable; urgency=low
 
   * Add -L option to mkfs.xfs (filesystem label)

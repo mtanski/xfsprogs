@@ -30,7 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <errno.h>
 #include <libxfs.h>
 #include "avl.h"
 #include "globals.h"

@@ -43,10 +43,6 @@
 # define __BYTE_ORDER	__BIG_ENDIAN
 #endif
 
-#else
-
-#include <linux/byteorder/swab.h>
-
 #endif	/* __KERNEL__ */
 
 /* do we need conversion? */

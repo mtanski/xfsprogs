@@ -7,6 +7,7 @@ Standards-Version: 3.1.1
 
 Package: xfsprogs
 Depends: ${shlibs:Depends}
+Suggests: xfsdump, attr
 Architecture: any
 Description: Utilities for managing the XFS filesystem
  A set of commands to use the XFS filesystem, including mkfs.xfs.

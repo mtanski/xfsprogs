@@ -31,8 +31,7 @@
  */
 
 #include <libxfs.h>
-#include <fcntl.h>
-#include <errno.h>
+
 #include "xfs_mkfs.h"
 #include "proto.h"
 #include "volume.h"

@@ -6,32 +6,33 @@ An XFS filesystem can reside on a regular disk partition or on a
 logical volume (see
 .IR lvm (8)).
 An XFS filesystem has up to three parts:
-a data section, a log section, and a real-time section.
-For disk partition filesystems,
-the real-time section is absent, and
+a data section, a log section, and a realtime section.
+Using the default
+.IR mkfs.xfs (8)
+options, the realtime section is absent, and
 the log area is contained within the data section.
 For logical volume filesystems,
-the real-time section is optional,
+the realtime section is optional,
 and the log section can be separate from the data section
 or contained within it.
 The filesystem sections are divided into a certain number of
 .IR blocks ,
 whose size is specified at
-.IR mkfs (8)
+.IR mkfs.xfs
 time with the
 .B \-b
 option.
 .PP
 The data section contains all the filesystem metadata
 (inodes, directories, indirect blocks)
-as well as the user file data for ordinary (non-real-time) files
+as well as the user file data for ordinary (non-realtime) files
 and the log area if the log is
 .I internal
 to the data section.
 The data section is divided into a number of
 \f2allocation groups\f1.
 The number and size of the allocation groups are chosen by
-.I mkfs
+.I mkfs.xfs
 so that there is normally a small number of equal-sized groups.
 The number of allocation groups controls the amount of parallelism
 available in file and block allocation.
@@ -55,23 +56,23 @@ When mounting a filesystem after a crash, the log
 is read to complete operations that were
 in progress at the time of the crash.
 .PP
-The real-time section is used to store the data of real-time files.
+The realtime section is used to store the data of realtime files.
 These files had an attribute bit set through
-.IR fcntl (2)
+.IR ioctl (2)
 after file creation, before any data was written to the file.
-The real-time section is divided into a number of
+The realtime section is divided into a number of
 .I extents
 of fixed size (specified at
-.I mkfs
+.I mkfs.xfs
 time).
-Each file in the real-time section has an extent size that
-is a multiple of the real-time section extent size.
+Each file in the realtime section has an extent size that
+is a multiple of the realtime section extent size.
 .PP
 Each allocation group contains several data structures.
 The first sector contains the superblock.
 For allocation groups after the first,
 the superblock is just a copy and is not updated after
-.IR mkfs .
+.IR mkfs.xfs .
 The next three sectors contain information for block and inode
 allocation within the allocation group.
 Also contained within each allocation group are data structures
@@ -85,30 +86,26 @@ is used to help distinguish one XFS filesystem from another,
 therefore you should avoid using
 .I dd
 or other block-by-block copying programs to copy XFS filesystems.
-If two XFS filesystems on the same machine have the UUID,
+If two XFS filesystems on the same machine have the same UUID,
 .I xfsdump
-may become confused when doing incremental and resumed dumps.
-(See
+may become confused when doing incremental and resumed dumps
+(refer to
 .IR xfsdump (8)
-for more details.)
-.I xfs_copy
-or
-.IR xfsdump / xfsrestore
+for more details).
+.I xfsdump
+and
+.I xfsrestore
 are recommended for making copies of XFS filesystems.
-.PP
-All these data structures are subject to change, and the
-headers that specify their layout on disk are not provided.
 .SH SEE ALSO
 fs(5),
 mkfs.xfs(8),
 xfs_bmap(8),
 xfs_check(8),
-xfs_copy(8),
 xfs_estimate(8),
 xfs_growfs(8),
 xfs_logprint(8),
 xfs_repair(8),
 xfsdump(8),
 xfsrestore(8),
-fcntl(2),
+ioctl(2),
 lvm(8).

@@ -31,8 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <fcntl.h>
-#include <errno.h>
 #include "proto.h"
 
 /*

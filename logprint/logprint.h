@@ -33,8 +33,6 @@
 #define XFS_LOGPRINT_H
 
 #include <libxfs.h>
-#include <string.h>
-#include <errno.h>
 
 /*
  * define the userlevel xlog_t to be the subset of the kernel's

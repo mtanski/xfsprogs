@@ -30,18 +30,10 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/errno.h>
-#include <sys/ioctl.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include "handle.h"
 #include <libxfs.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include "handle.h"
 
 /* just pick a value we know is more than big enough */
 #define	MAXHANSIZ	64
