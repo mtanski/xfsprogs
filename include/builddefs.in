@@ -107,6 +107,7 @@ endif
 ifeq ($(PKG_PLATFORM),freebsd)
 PLDLIBS = -L/usr/local/lib -lintl
 PCFLAGS = -I/usr/local/include
+LIBUUID =
 endif
 
 GCFLAGS += -O1 $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \

@@ -358,7 +358,7 @@ uuid_f(
 				dbprintf("failed to read UUID from AG 0\n");
 				return 0;
 			}
-			memcpy(&uu, *uup, sizeof(uuid_t));
+			memcpy(&uu, uup, sizeof(uuid_t));
 			uuid_unparse(uu, bp);
 			dbprintf("old UUID = %s\n", bp);
 		} else {
@@ -400,7 +400,7 @@ uuid_f(
 					break;
 				}
 			} else {
-				memcpy(uu, uup, sizeof(uuid_t));
+				memcpy(&uu, uup, sizeof(uuid_t));
 			}
 		}
 		if (mp->m_sb.sb_logstart) {

@@ -32,7 +32,7 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
 
     if test -z "$LIBTOOL"; then
-        AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+	AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin:/usr/local/bin)
     fi
     libtool=$LIBTOOL
     AC_SUBST(libtool)

@@ -132,7 +132,7 @@ libxfs_log_clear(
 	ASSIGN_ANY_LSN(head->h_lsn,	    1, 0, ARCH_CONVERT);
 	ASSIGN_ANY_LSN(head->h_tail_lsn,    1, 0, ARCH_CONVERT);
 
-	memcpy(head->h_fs_uuid,	 fs_uuid, sizeof(uuid_t));
+	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
 
 	if (len > 1) {
 		xfs_caddr_t	dp;
