@@ -152,11 +152,6 @@ typedef struct xfs_iocore {
 
 	/* I/O state */
 	xfs_fsize_t		io_new_size;	/* sz when write completes */
-	unsigned int		io_readio_blocks;	/* read buffer size */
-	unsigned int		io_writeio_blocks;	/* write buffer size */
-	uchar_t			io_readio_log;	/* log2 of read buffer size */
-	uchar_t			io_writeio_log;	/* log2 of write buffer size */
-	uchar_t			io_max_io_log;	/* max r/w io value */
 	int			io_queued_bufs;	/* count of xfsd queued bufs*/
 
 	/* Miscellaneous state. */
@@ -180,7 +175,6 @@ typedef struct xfs_iocore {
 #define XFS_IOCORE_ISXFS	0x01
 #define XFS_IOCORE_ISCXFS	0x02
 #define XFS_IOCORE_RT		0x04
-#define XFS_IOCORE_UIOSZ	0x08
 
 #define IO_IS_XFS(io)	((io)->io_flags & XFS_IOCORE_ISXFS)
 

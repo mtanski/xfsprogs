@@ -44,14 +44,6 @@
 #define XFS_SUPER_MAGIC 0x58465342
 #define XFS_NAME	"xfs"
 
-struct biosize {
-	__u32	 	biosz_flags;
-	__s32		biosz_read;
-	__s32		biosz_write;
-	__s32		dfl_biosz_read;
-	__s32		dfl_biosz_write;
-};
-	
 /* 
  * Direct I/O attribute record used with XFS_IOC_DIOINFO
  * d_miniosz is the min xfer size, xfer size multiple and file seek offset
@@ -433,8 +425,8 @@ typedef struct xfs_handle {
 #define	XFS_IOC_UNRESVSP64	_IOW ('X', 43, struct xfs_flock64)
 #define	XFS_IOC_GETBMAPA	_IOWR('X', 44, struct getbmap)
 #define	XFS_IOC_FSGETXATTRA	_IOR ('X', 45, struct fsxattr)
-#define	XFS_IOC_SETBIOSIZE	_IOW ('X', 46, struct biosize)
-#define	XFS_IOC_GETBIOSIZE	_IOR ('X', 47, struct biosize)
+/*      XFS_IOC_SETBIOSIZE ---- deprecated 46      */
+/*      XFS_IOC_GETBIOSIZE ---- deprecated 47      */
 #define	XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
 
 /*
