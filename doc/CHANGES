@@ -1,3 +1,21 @@
+xfsprogs-2.6.26 (08 March 2005)
+	- Fix compilation problem with version 4 of gcc
+	  (thanks to Andreas Jochens).
+	- Added a streamlined <xfs/xfs.h> for programs wanting
+	  to make use of the XFS-specific kernel interfaces (to
+	  address complaints that <xfs/libxfs.h> was "heavy").
+	- Add imap as an expert command in xfs_io, making it
+	  more easily accessible to those who need it.
+	- Extended statistics reporting for xfs_io command.
+	- Fixed readline support for current distributions.
+	- Add an --enable-termcap=[yes/no] configure option,
+	  and changed --enable-readline=[yes/no] to not force
+	  linking with libtermcap.  Builds on some platforms
+	  may need to use both options, but most distributions
+	  do not require --enable-termcap when linking against
+	  libreadline.
+	- Minor man page updates.
+
 xfsprogs-2.6.25 (08 October 2004)
 	- Fix build with really old glibc versions.
 
