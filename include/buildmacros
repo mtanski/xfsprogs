@@ -143,10 +143,12 @@ INSTALL_MAN = \
 
 ifeq ($(ENABLE_GETTEXT),yes)
 INSTALL_LINGUAS = \
-	@for l in $(LINGUAS); do \
-		ldir=$(PKG_LOCALE_DIR)/$$l/LC_MESSAGES; \
-		$(INSTALL) -m 755 -d $$ldir; \
-		$(INSTALL) -m 644 $$l.mo $$ldir/$(PKG_NAME).mo; \
+	@for l in $(LINGUAS) ""; do \
+		if test -f "$$l.mo" ; then \
+			ldir=$(PKG_LOCALE_DIR)/$$l/LC_MESSAGES; \
+			$(INSTALL) -m 755 -d $$ldir; \
+			$(INSTALL) -m 644 $$l.mo $$ldir/$(PKG_NAME).mo; \
+		fi; \
 	done
 endif
 
