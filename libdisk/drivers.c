@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -58,29 +58,30 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 	/* ... add new device drivers here */
 }
 
+#define DEVICES	"/proc/devices"
+
 /*
  * General purpose routine which dredges through procfs trying to
  * match up device driver names with the associated major numbers
  * being used in the running kernel.
  */
 int
-get_driver_block_major(const char *driver)
+get_driver_block_major(const char *driver, int major)
 {
 	FILE	*f;
 	char	buf[64], puf[64];
-	int	major = -1;
+	int	dmajor, match = 0;
 
-	if ((f = fopen("/proc/devices", "r")) == NULL)
-		return major;
+	if ((f = fopen(DEVICES, "r")) == NULL)
+		return match;
 	while (fgets(buf, sizeof(buf), f))	/* skip to block dev section */
 		if (strncmp("Block devices:\n", buf, sizeof(buf)) == 0)
 			break;
 	while (fgets(buf, sizeof(buf), f))
-		if ((sscanf(buf, "%u %s\n", &major, puf) == 2) &&
-		    (strncmp(puf, driver, sizeof(puf)) == 0))
-			goto found;
-	major = -1;
-found:
+		if ((sscanf(buf, "%u %s\n", &dmajor, puf) == 2) &&
+		    (strncmp(puf, driver, sizeof(puf)) == 0) &&
+		    (dmajor == major))
+			match = 1;
 	fclose(f);
-	return major;
+	return match;
 }

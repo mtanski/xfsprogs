@@ -26,13 +26,12 @@
 #include "evms.h"
 
 int
-mnt_is_evms_subvol(dev_t dev)
+mnt_is_evms_subvol(
+	dev_t		dev)
 {
 	if (major(dev) == EVMS_MAJOR)
 		return 1;
-	if (major(dev) == get_driver_block_major("evms"))
-		return 1;
-	return 0;
+	return get_driver_block_major("evms", major(dev));
 }
 
 int

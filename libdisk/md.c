@@ -34,13 +34,12 @@
 #include "md.h"
 
 int
-mnt_is_md_subvol(dev_t dev)
+mnt_is_md_subvol(
+	dev_t		dev)
 {
 	if (major(dev) == MD_MAJOR)
 		return 1;
-	if (major(dev) == get_driver_block_major("md"))
-		return 1;
-	return 0;
+	return get_driver_block_major("md", major(dev));
 }
 
 int

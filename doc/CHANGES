@@ -1,3 +1,8 @@
+xfsprogs-2.5.1 (23 June 2003)
+	- Fix libdisk device driver (volume managers) detection code
+	  used by mkfs, so that drivers with multiple majors are not
+	  incorrectly processed.
+
 xfsprogs-2.5.0 (18 June 2003)
 	- Fix libdisk (and hence mkfs) code which warns on MD devices
 	  with the clean flag not set, apparently this is not so wise.

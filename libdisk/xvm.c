@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -39,11 +40,10 @@
 #include "xvm.h"
 
 int
-mnt_is_xvm_subvol(dev_t dev)
+mnt_is_xvm_subvol(
+	dev_t		dev)
 {
-	if (major(dev) == get_driver_block_major("xvm"))
-		return 1;
-	return 0;
+	return get_driver_block_major("xvm", major(dev));
 }
 
 /*

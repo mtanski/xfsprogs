@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -37,13 +37,12 @@
 #endif
 
 int
-mnt_is_lvm_subvol(dev_t dev)
+mnt_is_lvm_subvol(
+	dev_t		dev)
 {
 	if (major(dev) == LVM_BLK_MAJOR)
 		return 1;
-	if (major(dev) == get_driver_block_major("lvm"))
-		return 1;
-	return 0;
+	return get_driver_block_major("lvm", major(dev));
 }
 
 int
