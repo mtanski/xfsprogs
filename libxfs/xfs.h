@@ -187,6 +187,8 @@
 /* memory management */
 #define KM_SLEEP	1
 #define KM_SLEEP_IO	2
+#define kmem_zone		xfs_zone	
+#define kmem_zone_t		xfs_zone_t
 #define kmem_zone_init(a, b)	libxfs_zone_init(a, b)
 #define kmem_zone_alloc(z, f)	libxfs_zone_zalloc(z)
 #define kmem_zone_zalloc(z, f)	libxfs_zone_zalloc(z)
@@ -461,6 +463,8 @@ int  xfs_alloc_split (xfs_btree_cur_t *, int, xfs_agblock_t *,
 
 /* xfs_da_btree.c */
 xfs_dabuf_t *xfs_da_buf_make (int, xfs_buf_t **, inst_t *);
+void xfs_da_binval (struct xfs_trans *, xfs_dabuf_t *);
+void xfs_da_buf_done (xfs_dabuf_t *);
 int  xfs_da_root_join (xfs_da_state_t *, xfs_da_state_blk_t *);
 int  xfs_da_root_split (xfs_da_state_t *, xfs_da_state_blk_t *,
 			xfs_da_state_blk_t *);
@@ -478,6 +482,21 @@ int  xfs_da_node_toosmall (xfs_da_state_t *, int *);
 uint xfs_da_node_lasthash (xfs_dabuf_t *, int *);
 int  xfs_da_do_buf (xfs_trans_t *, xfs_inode_t *, xfs_dablk_t, xfs_daddr_t *,
 			xfs_dabuf_t **, int, int, inst_t *);
+int  xfs_da_split (xfs_da_state_t *);
+int  xfs_da_node_create (xfs_da_args_t *, xfs_dablk_t, int,
+			xfs_dabuf_t **, int);
+int  xfs_da_join (xfs_da_state_t *);
+void xfs_da_fixhashpath (xfs_da_state_t *, xfs_da_state_path_t *);
+int  xfs_da_node_lookup_int (xfs_da_state_t *, int *);
+int  xfs_da_path_shift (xfs_da_state_t *, xfs_da_state_path_t *,
+			int, int, int *);
+int  xfs_da_blk_unlink (xfs_da_state_t *, xfs_da_state_blk_t *,
+			xfs_da_state_blk_t *);
+int  xfs_da_blk_link (xfs_da_state_t *, xfs_da_state_blk_t *,
+			xfs_da_state_blk_t *);
+xfs_da_state_t *xfs_da_state_alloc (void);
+void xfs_da_state_free (xfs_da_state_t *);
+void xfs_da_state_kill_altpath (xfs_da_state_t *);
 
 /* xfs_dir.c */
 int  xfs_dir_node_addname (xfs_da_args_t *);

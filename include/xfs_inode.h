@@ -566,10 +566,10 @@ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
 #define xfs_inobp_check(mp, bp)
 #endif /* DEBUG */
 
-extern struct xfs_zone	*xfs_chashlist_zone;
-extern struct xfs_zone	*xfs_ifork_zone;
-extern struct xfs_zone	*xfs_inode_zone;
-extern struct xfs_zone	*xfs_ili_zone;
+extern struct kmem_zone	*xfs_chashlist_zone;
+extern struct kmem_zone	*xfs_ifork_zone;
+extern struct kmem_zone	*xfs_inode_zone;
+extern struct kmem_zone	*xfs_ili_zone;
 extern struct vnodeops	xfs_vnodeops;
 
 #ifdef XFS_ILOCK_TRACE

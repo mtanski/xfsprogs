@@ -37,9 +37,10 @@
 #include <sys/stat.h>
 #include <volume.h>
 
-extern int  md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int   md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int  lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int  xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int evms_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
 
 void
 get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
@@ -53,13 +54,16 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 		fprintf(stderr, "Cannot stat %s: %s\n", dev, strerror(errno));
 		exit(1);
 	}
+        
+	if (  md_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+		return;
+	if ( lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+		return;
+	if ( xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+		return;
+	if (evms_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+		return;
 
-	if ( md_get_subvol_stripe(dev, type, sunit, swidth, &sb))
-		return;
-	if (lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
-		return;
-	if (xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
-		return;
 	/* ... add new device drivers here */
 }
 
@@ -79,11 +83,11 @@ get_driver_block_major(const char *driver)
 	if ((f = fopen(PROC_DEVICES, "r")) == NULL)
 		return major;
 	while (fgets(buf, sizeof(buf), f))	/* skip to block dev section */
-		if (strcmp("Block devices:\n", buf) == 0)
+		if (strncmp("Block devices:\n", buf, sizeof(buf)) == 0)
 			break;
 	while (fgets(buf, sizeof(buf), f))
 		if ((sscanf(buf, "%u %s\n", &major, puf) == 2) &&
-		    (strcmp(puf, driver) == 0))
+		    (strncmp(puf, driver, sizeof(puf)) == 0))
 			break;
 	fclose(f);
 	return major;

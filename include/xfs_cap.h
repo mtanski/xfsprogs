@@ -73,9 +73,9 @@ extern int xfs_cap_vremove(struct vnode *vp);
 #define _CAP_EXISTS		xfs_cap_vhascap
 
 #else
-#define xfs_cap_vset(v,p,sz)	(-ENOTSUP)
-#define xfs_cap_vget(v,p,sz)	(-ENOTSUP)
-#define xfs_cap_vremove(v)	(-ENOTSUP)
+#define xfs_cap_vset(v,p,sz)	(-EOPNOTSUPP)
+#define xfs_cap_vget(v,p,sz)	(-EOPNOTSUPP)
+#define xfs_cap_vremove(v)	(-EOPNOTSUPP)
 #define _CAP_EXISTS		(NULL)
 #endif
 

@@ -36,7 +36,6 @@
 
 #include <xfs_fs.h>
 #include <xfs_types.h>
-#include <arch.h>
 #include <xfs_arch.h>
 #include <xfs_sb.h>
 #include <xfs_bit.h>
@@ -303,9 +302,9 @@ extern int	libxfs_trans_read_buf (xfs_mount_t *, xfs_trans_t *, dev_t,
  * Simple memory interface
  */
 typedef struct xfs_zone {
-	int	zone_unitsize;  /* Size in bytes of zone unit           */
-	char	*zone_name;     /* tag name                             */
-        int     allocated;      /* debug: How many currently allocated  */
+	int	zone_unitsize;	/* Size in bytes of zone unit           */
+	char	*zone_name;	/* tag name                             */
+	int	allocated;	/* debug: How many currently allocated  */
 } xfs_zone_t;
 
 extern xfs_zone_t	*libxfs_zone_init (int, char *);

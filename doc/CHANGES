@@ -1,8 +1,16 @@
+xfsprogs-2.2.0 (08 August 2002)
+	- mkfs.xfs defaults to a blocksize of 4096 bytes, and no longer
+	  uses getpagesize(2) to dynamically configure the default size.
+	- Add EVMS stripe unit/width auto-detection support in mkfs.xfs
+	  (patch from Luciano Chavez).
+	- Sync user/kernel headers (arch.h incorporated into xfs_arch.h,
+	  and several other minor changes).
+
 xfsprogs-2.1.2 (17 July 2002)
 	- Fix up log stripe unit specification options, and update
 	  man page.  Also fix suffix handling for data su/sw options
-	  (disallow unit suffixes on -d sunit,swidth,sw and
-	  -l sunit).  Add "s" (512-byte sectors) as valid suffix.
+	  (disallow unit suffixes on -d sunit,swidth,sw and -l sunit).
+	  Add "s" (512-byte sectors) as valid suffix.
 	- Automatically select v2 logs if a log stripe unit is
 	  specified.
 
@@ -13,7 +21,7 @@ xfsprogs-2.1.1 (04 July 2002)
 	  now allows /lib64 and /lib32
 
 xfsprogs-2.1.0 (14 June 2002)
-	- support for xfs version 2 log format.
+	- Support for XFS version 2 log format.
 	- Fix for xfs_repair mangling i8count for dir2_sf directories
 	- Minor mkfs.xfs man page update for blocksize limits on Linux
 	- xfs_cred.h split into xfs_acl.h, xfs_cap.h and xfs_mac.h

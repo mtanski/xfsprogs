@@ -1,3 +1,10 @@
+xfsprogs (2.2.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Default mkfs.xfs blocksize is now 4096 bytes, not getpagesize(2)
+
+ -- Nathan Scott <nathans@debian.org>  Wed,  7 Aug 2002 11:37:23 +1000
+
 xfsprogs (2.1.2-1) unstable; urgency=low
 
   * New upstream release

@@ -80,7 +80,7 @@ extern int xfs_acl_vset(struct vnode *, void *, size_t, int);
 extern int xfs_acl_vget(struct vnode *, void *, size_t, int);
 extern int xfs_acl_vremove(struct vnode *vp, int);
 
-extern struct xfs_zone *xfs_acl_zone;
+extern struct kmem_zone *xfs_acl_zone;
 
 #define _ACL_TYPE_ACCESS	1
 #define _ACL_TYPE_DEFAULT	2
@@ -101,9 +101,9 @@ extern struct xfs_zone *xfs_acl_zone;
 #define _ACL_CLEAR_IFLAG(inode) ((inode)->i_flags &= ~S_POSIXACL)
 
 #else
-#define xfs_acl_vset(v,p,sz,t)	(-ENOTSUP)
-#define xfs_acl_vget(v,p,sz,t)	(-ENOTSUP)
-#define xfs_acl_vremove(v,t)	(-ENOTSUP)
+#define xfs_acl_vset(v,p,sz,t)	(-EOPNOTSUPP)
+#define xfs_acl_vget(v,p,sz,t)	(-EOPNOTSUPP)
+#define xfs_acl_vremove(v,t)	(-EOPNOTSUPP)
 #define _ACL_DECL(a)		((void)0)
 #define _ACL_ALLOC(a)		(1)	/* successfully allocate nothing */
 #define _ACL_FREE(a)		((void)0)

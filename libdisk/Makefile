@@ -38,8 +38,8 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-CFILES = fstype.c pttype.c md.c xvm.c lvm.c drivers.c mountinfo.c
-HFILES = fstype.h pttype.h md.h xvm.h
+CFILES = fstype.c pttype.c md.c xvm.c evms.c lvm.c drivers.c mountinfo.c
+HFILES = fstype.h pttype.h md.h xvm.h evms.h
 
 default: $(LTLIBRARY)
 

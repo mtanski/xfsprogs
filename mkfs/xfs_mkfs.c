@@ -340,19 +340,6 @@ calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *l
 }
 
 static int
-get_default_blocksize(void)
-{
-	size_t	pagesize = getpagesize();
-	int	i;
-
-	/* default is between 4K and 16K */
-	for (i = 12; i <= 16; i++)
-		if ((1 << i) == pagesize)
-			return pagesize;
-	return (1 << XFS_DFL_BLOCKSIZE_LOG);
-}
-
-static int
 check_overwrite(char *device)
 {
 	char *type;
@@ -514,8 +501,7 @@ main(int argc, char **argv)
 	agcount = 8;
 	blflag = bsflag = 0;
 	dasize = daflag = 0;
-	blocksize = get_default_blocksize();
-	blocklog = libxfs_highbit32(blocksize);
+	blocklog = blocksize = 0;
 	agsize = daflag = dblocks = 0;
 	ilflag = imflag = ipflag = isflag = 0;
 	liflag = laflag = lsflag = ldflag = lvflag = 0;
@@ -608,11 +594,7 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_AGSIZE);
 					if (dasize)
 						respec('d', dopts, D_AGSIZE);
-					if (blflag || bsflag)
-						agsize = cvtnum(blocksize,
-								value);
-					else
-						agsize = cvtnum(0, value);
+					agsize = cvtnum(blocksize, value);
 					dasize = 1;
 					break;
 				case D_FILE:
@@ -669,11 +651,7 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_SU);
 					if (dsu)
 						respec('d', dopts, D_SU);
-					if (blflag || bsflag)
-						dsu = cvtnum(blocksize,
-								value);
-					else
-						dsu = cvtnum(0, value);
+					dsu = cvtnum(blocksize, value);
 					break;
 				case D_SW:
 					if (!value)
@@ -854,11 +832,7 @@ main(int argc, char **argv)
 						reqval('l', lopts, L_SU);
 					if (lsu)
 						respec('l', lopts, L_SU);
-					if (blflag || bsflag)
-						lsu = cvtnum(blocksize,
-								value);
-					else
-						lsu = cvtnum(0, value);
+					lsu = cvtnum(blocksize, value);
 					break;
 				case L_SUNIT:
 					if (!value)
@@ -1041,6 +1015,13 @@ main(int argc, char **argv)
 	} else
 		dfile = xi.dname;
 	/* option post-processing */
+	/*
+	 * blocksize first, other things depend on it
+	 */
+	if (!blflag && !bsflag) {
+		blocklog = XFS_DFL_BLOCKSIZE_LOG;
+		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
+	}
 	if (blocksize < XFS_MIN_BLOCKSIZE || blocksize > XFS_MAX_BLOCKSIZE) {
 		fprintf(stderr, "illegal block size %d\n", blocksize);
 		usage();

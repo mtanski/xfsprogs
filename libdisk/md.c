@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <volume.h>
@@ -58,7 +59,7 @@ md_get_subvol_stripe(
 {
 	if (mnt_is_md_subvol(sb->st_rdev)) {
 		struct md_array_info	md;
-		int  fd;
+		int			fd;
 
 		/* Open device */
 		fd = open(dfile, O_RDONLY);
@@ -71,6 +72,7 @@ md_get_subvol_stripe(
 				dfile);
 			exit(1);
 		}
+		close(fd);
 
 		/* Check state */
 		if (md.state) {
