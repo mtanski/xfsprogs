@@ -1,3 +1,10 @@
+xfsprogs-2.6.27 (23 March 2005)
+	- Fix default mkfs allocation group size calculations
+	  for filesystem sizes in the range 32 - 64 terabytes.
+	- Add noalign mkfs suboptions for -d/-r to disable the
+	  sunit/swidth auto-alignment (based on logical volume
+	  geometry, extracted from the driver).
+
 xfsprogs-2.6.26 (08 March 2005)
 	- Fix compilation problem with version 4 of gcc
 	  (thanks to Andreas Jochens).
