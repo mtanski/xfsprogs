@@ -39,9 +39,10 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 
 	if (dev == NULL)
 		return;
-		
+
 	if (stat64(dev, &sb)) {
-		fprintf(stderr, "Cannot stat %s: %s\n", dev, strerror(errno));
+		fprintf(stderr, _("Cannot stat %s: %s\n"),
+			dev, strerror(errno));
 		exit(1);
 	}
         

@@ -108,8 +108,9 @@ typedef struct {
 	int		setblksize; 	/* attempt to set device block size */
 } libxfs_init_t;
 
-#define LIBXFS_ISREADONLY	0x0069	/* disallow all mounted filesystems */
-#define LIBXFS_ISINACTIVE	0x6900	/* allow mounted only if mounted ro */
+#define LIBXFS_EXIT_ON_FAILURE	0x0001	/* exit the program if a call fails */
+#define LIBXFS_ISREADONLY	0x0002	/* disallow all mounted filesystems */
+#define LIBXFS_ISINACTIVE	0x0004	/* allow mounted only if mounted ro */
 
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
@@ -144,6 +145,7 @@ typedef struct xfs_mount {
 	__uint8_t		m_dircook_elog;	/* log d-cookie entry bits */
 	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
 	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
+	__uint8_t		m_sectbb_log;	/* sectorlog - BBSHIFT */
 	__uint8_t		m_agno_log;	/* log #ag's */
 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
 	__uint16_t		m_inode_cluster_size;/* min inode buf size */

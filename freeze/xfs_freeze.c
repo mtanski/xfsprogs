@@ -38,11 +38,11 @@ char	*progname;
 static void
 usage(void)
 {
-	fprintf(stderr,
+	fprintf(stderr, _(
 "Usage: %s [options] mountpoint\n\n\
 Options:\n\
         -f          freeze filesystem access\n\
-        -u          unfreeze filesystem access\n",
+        -u          unfreeze filesystem access\n"),
 		progname);
 	exit(2);
 }
@@ -58,6 +58,10 @@ main(int argc, char **argv)
 
 	fflag = uflag = 0;
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	while ((c = getopt(argc, argv, "fu")) != EOF) {
 		switch (c) {
 		case 'f':
@@ -83,17 +87,17 @@ main(int argc, char **argv)
 	}
 	fstatfs(ffd, &buf);
 	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
-		fprintf(stderr,
-			"%s: specified file is not on an XFS filesystem\n",
-			progname);
+		fprintf(stderr, _("%s: specified file "
+			"[\"%s\"] is not on an XFS filesystem\n"),
+			progname, argv[optind]);
 		exit(1);
 	}
 
 	if (fflag) {
 		level = 1;
 		if (ioctl(ffd, XFS_IOC_FREEZE, &level) < 0) {
-			fprintf(stderr, "%s: cannot freeze filesystem"
-				" mounted at %s: %s\n",
+			fprintf(stderr, _("%s: cannot freeze filesystem"
+				" mounted at %s: %s\n"),
 				progname, argv[optind], strerror(errno));
 			exit(1);
 		}
@@ -101,8 +105,8 @@ main(int argc, char **argv)
 
 	if (uflag) {
 		if (ioctl(ffd, XFS_IOC_THAW, &level) < 0) {
-			fprintf(stderr, "%s: cannot unfreeze filesystem"
-				" mounted at %s: %s\n",
+			fprintf(stderr, _("%s: cannot unfreeze filesystem"
+				" mounted at %s: %s\n"),
 				progname, argv[optind], strerror(errno));
 			exit(1);
 		}

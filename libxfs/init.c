@@ -30,19 +30,9 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#define ustat __kernel_ustat
 #include <libxfs.h>
-#include <mntent.h>
 #include <sys/stat.h>
-#undef ustat
-#include <sys/ustat.h>
-#include <sys/ioctl.h>
-#include <sys/mount.h>
-
-/* Until glibc catches up... */
-#ifndef BLKGETSIZE64
-#define BLKGETSIZE64 _IOR(0x12,114,sizeof(__uint64_t))
-#endif
+#include "init.h"
 
 #define findrawpath(x)	x
 #define findblockpath(x) x
@@ -55,27 +45,9 @@ char *progname = "libxfs";	/* default, changed by each tool */
 #define MAX_DEVS 10	/* arbitary maximum */
 int nextfakedev = -1;	/* device number to give to next fake device */
 static struct dev_to_fd {
-	dev_t dev;
-	int fd;
+	dev_t	dev;
+	int	fd;
 } dev_map[MAX_DEVS]={{0}};
-
-static int
-check_ismounted(char *name, char *block)
-{
-	struct ustat	ust;
-	struct stat64	st;
-
-	if (stat64(block, &st) < 0)
-		return 0;
-	if ((st.st_mode & S_IFMT) != S_IFBLK)
-		return 0;
-	if (ustat(st.st_rdev, &ust) >= 0) {
-		fprintf(stderr, "%s: %s contains a mounted filesystem\n",
-			progname, name);
-		return 1;
-	}
-	return 0;
-}
 
 /*
  * Checks whether a given device has a mounted, writable
@@ -88,94 +60,16 @@ check_ismounted(char *name, char *block)
 static int
 check_isactive(char *name, char *block, int fatal)
 {
-#define PROC_MOUNTED	"/proc/mounts"
-	int		sts = 0;
-	FILE		*f;
-	struct mntent	*mnt;
-	struct stat64	st, mst;
-	struct ustat	ust;
-	char		mounts[MAXPATHLEN];
-
-	if (stat64(block, &st) < 0)
-		return sts;
-	if ((st.st_mode & S_IFMT) != S_IFBLK)
-		return sts;
-	if (ustat(st.st_rdev, &ust) < 0)
-		return sts;
-
-	strcpy(mounts, access(PROC_MOUNTED, R_OK)? PROC_MOUNTED : MOUNTED);
-	if ((f = setmntent(mounts, "r")) == NULL) {
-		fprintf(stderr, "%s: %s contains a possibly writable, mounted "
-				"filesystem\n", progname, name);
-			return fatal;
-	}
-	while ((mnt = getmntent(f)) != NULL) {
-		if (stat64(mnt->mnt_fsname, &mst) < 0)
-			continue;
-		if ((mst.st_mode & S_IFMT) != S_IFBLK)
-			continue;
-		if (mst.st_rdev == st.st_rdev
-		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
-			break;
-	}
-	if (mnt == NULL) {
-		fprintf(stderr, "%s: %s contains a writable, mounted "
-				"filesystem\n", progname, name);
-		sts = fatal;
-	}
-	endmntent(f);
-
-	return sts;
-}
-
-static __int64_t
-findsize(char *path)
-{
-	int	fd;
-	int	error;
-	__uint64_t	size;
 	struct stat64	st;
 
-	/* Test to see if we are dealing with a regular file rather than a
-	 * block device, if we are just use the size returned by stat64
-	 */
-	if (stat64(path, &st) < 0) {
-		fprintf(stderr, "%s: "
-			"cannot stat the device special file \"%s\": %s\n",
-			progname, path, strerror(errno));
-		exit(1);
-	}
-	if ((st.st_mode & S_IFMT) == S_IFREG) {
-		return (__int64_t)(st.st_size >> 9);
-	}
-
-	if ((fd = open(path, 0)) < 0) {
-		fprintf(stderr, "%s: "
-			"error opening the device special file \"%s\": %s\n",
-			progname, path, strerror(errno));
-		exit(1);
-	}
-	error = ioctl(fd, BLKGETSIZE64, &size);
-	if (error >= 0) {
-		/* BLKGETSIZE64 returns size in bytes not 512-byte blocks */
-		size = size >> 9;
-	} else {
-		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
-		unsigned long tmpsize;
-		error = ioctl(fd, BLKGETSIZE, &tmpsize);
-		if (error < 0) {
-			fprintf(stderr, "%s: can't determine device size\n",
-				progname);
-			exit(1);
-		}
-		size = (__uint64_t)tmpsize;
-	}
-
-	close(fd);
-
-	return (__int64_t)size;
+	if (stat64(block, &st) < 0)
+		return 0;
+	if ((st.st_mode & S_IFMT) != S_IFBLK)
+		return 0;
+	if (check_ismounted(name, block, &st, 0))
+		return 0;
+	return check_iswritable(name, block, &st, fatal);
 }
-
 
 /* libxfs_device_to_fd:
  *     lookup a device number in the device map
@@ -184,14 +78,14 @@ findsize(char *path)
 int
 libxfs_device_to_fd(dev_t device)
 {
-	int d;
+	int	d;
 
-	for (d=0;d<MAX_DEVS;d++)
+	for (d = 0; d < MAX_DEVS; d++)
 		if (dev_map[d].dev == device)
 			return dev_map[d].fd;
 
-	fprintf(stderr, "%s: device_to_fd: device %lld is not open\n",
-		progname, (long long)device);
+	fprintf(stderr, _("%s: %s: device %lld is not open\n"),
+		progname, __FUNCTION__, (long long)device);
 	exit(1);
 }
 
@@ -210,30 +104,19 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 			(readonly ? O_RDONLY : O_RDWR) |
 			(creat ? O_CREAT|O_TRUNC : 0),
 			0666)) < 0) {
-		fprintf(stderr, "%s: cannot open %s: %s\n",
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
 
 	if (stat(path, &statb)<0) {
-		fprintf(stderr, "%s: cannot stat %s: %s\n",
+		fprintf(stderr, _("%s: cannot stat %s: %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
 
-	/*
-	 * Set device blocksize to 512 bytes (see bug #801063)
-	 */
-#ifndef BLKBSZSET
-#define BLKBSZSET _IOW(0x12,113,sizeof(int))	/* set device block size */
-#endif
 	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
-		int blocksize = 512; /* bytes */
-		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
-			fprintf(stderr, "%s: warning - cannot set blocksize on "
-				"block device %s: %s\n",
-				progname, path, strerror(errno));
-		}
+		set_blocksize(fd, path, 512);
 	}
 
 	/*
@@ -245,7 +128,7 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 
 	for (d = 0; d < MAX_DEVS; d++)
 		if (dev_map[d].dev == dev) {
-			fprintf(stderr, "%s: device %lld is already open\n",
+			fprintf(stderr, _("%s: device %lld is already open\n"),
 			    progname, (long long)dev);
 			exit(1);
 		}
@@ -258,7 +141,8 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 			return dev;
 		}
 
-	fprintf(stderr, "%s: device_open: too many open devices\n", progname);
+	fprintf(stderr, _("%s: %s: too many open devices\n"),
+		progname, __FUNCTION__);
 	exit(1);
 }
 
@@ -275,15 +159,14 @@ libxfs_device_close(dev_t dev)
 			dev_map[d].dev = dev_map[d].fd = 0;
 
 			fsync(fd);
-			ioctl(fd, BLKFLSBUF, 0);
+			flush_device(fd);
 			close(fd);
 
 			return;
 		}
 
-	fprintf(stderr, "%s: device_close: device %lld is not open\n",
-			progname, (long long)dev);
-	ASSERT(0);
+	fprintf(stderr, _("%s: %s: device %lld is not open\n"),
+			progname, __FUNCTION__, (long long)dev);
 	exit(1);
 }
 
@@ -330,19 +213,19 @@ libxfs_init(libxfs_init_t *a)
 			goto done;
 		}
 		if (!(rawfile = findrawpath(a->volname))) {
-			fprintf(stderr, "%s: "
-				"can't find a character device matching %s\n",
+			fprintf(stderr, _("%s: "
+				"can't find a character device matching %s\n"),
 				progname, a->volname);
 			goto done;
 		}
 		if (!(blockfile = findblockpath(a->volname))) {
-			fprintf(stderr, "%s: "
-				"can't find a block device matching %s\n",
+			fprintf(stderr, _("%s: "
+				"can't find a block device matching %s\n"),
 				progname, a->volname);
 			goto done;
 		}
 		if (!readonly && !inactive && check_ismounted(
-					a->volname, blockfile))
+					a->volname, blockfile, NULL, 1))
 			goto done;
 		if (inactive && check_isactive(
 					a->volname, blockfile, readonly))
@@ -361,8 +244,8 @@ libxfs_init(libxfs_init_t *a)
 				a->volname = NULL;
 				goto voldone;
 			}
-			fprintf(stderr, "%s: "
-				"%s is not a volume device name\n",
+			fprintf(stderr, _("%s: "
+				"%s is not a volume device name\n"),
 				progname, a->volname);
 			if (a->notvolmsg)
 				fprintf(stderr, a->notvolmsg, a->volname);
@@ -370,20 +253,20 @@ libxfs_init(libxfs_init_t *a)
 		}
 #ifdef HAVE_VOLUME_MANAGER
 		if (getdev.data_subvol_dev && dname) {
-			fprintf(stderr, "%s: "
-				"%s has a data subvolume, cannot specify %s\n",
+			fprintf(stderr, _("%s: "
+				"%s has a data subvolume, cannot specify %s\n"),
 				progname, a->volname, dname);
 			goto done;
 		}
 		if (getdev.log_subvol_dev && logname) {
-			fprintf(stderr, "%s: "
-				"%s has a log subvolume, cannot specify %s\n",
+			fprintf(stderr, _("%s: "
+				"%s has a log subvolume, cannot specify %s\n"),
 				progname, a->volname, logname);
 			goto done;
 		}
 		if (getdev.rt_subvol_dev && rtname) {
-			fprintf(stderr, "%s: %s has a realtime subvolume, "
-				"cannot specify %s\n",
+			fprintf(stderr, _("%s: %s has a realtime subvolume, "
+				"cannot specify %s\n"),
 				progname, a->volname, rtname);
 			goto done;
 		}
@@ -392,7 +275,7 @@ libxfs_init(libxfs_init_t *a)
 			(void)mktemp(dpath);
 			if (mknod(dpath, S_IFCHR | 0600,
 				  getdev.data_subvol_dev) < 0) {
-				fprintf(stderr, "%s: mknod failed: %s\n",
+				fprintf(stderr, _("%s: mknod failed: %s\n"),
 					progname, strerror(errno));
 				goto done;
 			}
@@ -403,7 +286,7 @@ libxfs_init(libxfs_init_t *a)
 			(void)mktemp(logpath);
 			if (mknod(logpath, S_IFCHR | 0600,
 				  getdev.log_subvol_dev) < 0) {
-				fprintf(stderr, "%s: mknod failed: %s\n",
+				fprintf(stderr, _("%s: mknod failed: %s\n"),
 					progname, strerror(errno));
 				goto done;
 			}
@@ -414,7 +297,7 @@ libxfs_init(libxfs_init_t *a)
 			(void)mktemp(rtpath);
 			if (mknod(rtpath, S_IFCHR | 0600,
 				  getdev.rt_subvol_dev) < 0) {
-				fprintf(stderr, "%s: mknod failed: %s\n",
+				fprintf(stderr, _("%s: mknod failed: %s\n"),
 					progname, strerror(errno));
 				goto done;
 			}
@@ -432,22 +315,25 @@ voldone:
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {
 			if (stat64(dname, &stbuf) < 0) {
-				fprintf(stderr, "%s: stat64 failed on %s: %s\n",
+				fprintf(stderr,
+					_("%s: stat64 failed on %s: %s\n"),
 					progname, dname, strerror(errno));
 				goto done;
 			}
 			if (!(rawfile = findrawpath(dname))) {
-				fprintf(stderr, "%s: can't find a char device "
-					"matching %s\n", progname, dname);
+				fprintf(stderr,
+					_("%s: can't find a char device "
+					"matching %s\n"), progname, dname);
 				goto done;
 			}
 			if (!(blockfile = findblockpath(dname))) {
-				fprintf(stderr, "%s: can't find a block device "
-					"matching %s\n", progname, dname);
+				fprintf(stderr,
+					_("%s: can't find a block device "
+					"matching %s\n"), progname, dname);
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						dname, blockfile))
+						dname, blockfile, NULL, 1))
 				goto done;
 			if (inactive && check_isactive(
 						dname, blockfile, readonly))
@@ -469,22 +355,25 @@ voldone:
 			a->logfd = libxfs_device_to_fd(a->logdev);
 		} else {
 			if (stat64(logname, &stbuf) < 0) {
-				fprintf(stderr, "%s: stat64 failed on %s: %s\n",
+				fprintf(stderr,
+					_("%s: stat64 failed on %s: %s\n"),
 					progname, logname, strerror(errno));
 				goto done;
 			}
 			if (!(rawfile = findrawpath(logname))) {
-				fprintf(stderr, "%s: can't find a char device "
-					"matching %s\n", progname, logname);
+				fprintf(stderr,
+					_("%s: can't find a char device "
+					"matching %s\n"), progname, logname);
 				goto done;
 			}
 			if (!(blockfile = findblockpath(logname))) {
-				fprintf(stderr, "%s: can't find a block device "
-					"matching %s\n", progname, logname);
+				fprintf(stderr,
+					_("%s: can't find a block device "
+					"matching %s\n"), progname, logname);
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						logname, blockfile))
+						logname, blockfile, NULL, 1))
 				goto done;
 			else if (inactive && check_isactive(
 						logname, blockfile, readonly))
@@ -506,22 +395,25 @@ voldone:
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 		} else {
 			if (stat64(rtname, &stbuf) < 0) {
-				fprintf(stderr, "%s: stat64 failed on %s: %s\n",
+				fprintf(stderr,
+					_("%s: stat64 failed on %s: %s\n"),
 					progname, rtname, strerror(errno));
 				goto done;
 			}
 			if (!(rawfile = findrawpath(rtname))) {
-				fprintf(stderr, "%s: can't find a char device "
-					"matching %s\n", progname, rtname);
+				fprintf(stderr,
+					_("%s: can't find a char device "
+					"matching %s\n"), progname, rtname);
 				goto done;
 			}
 			if (!(blockfile = findblockpath(rtname))) {
-				fprintf(stderr, "%s: can't find a block device "
-					"matching %s\n", progname, rtname);
+				fprintf(stderr,
+					_("%s: can't find a block device "
+					"matching %s\n"), progname, rtname);
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						rtname, blockfile))
+						rtname, blockfile, NULL, 1))
 				goto done;
 			if (inactive && check_isactive(
 						rtname, blockfile, readonly))
@@ -535,17 +427,17 @@ voldone:
 	} else
 		a->rtsize = 0;
 	if (a->dsize < 0) {
-		fprintf(stderr, "%s: can't get size for data subvolume\n",
+		fprintf(stderr, _("%s: can't get size for data subvolume\n"),
 			progname);
 		goto done;
 	}
 	if (a->logBBsize < 0) {
-		fprintf(stderr, "%s: can't get size for log subvolume\n",
+		fprintf(stderr, _("%s: can't get size for log subvolume\n"),
 			progname);
 		goto done;
 	}
 	if (a->rtsize < 0) {
-		fprintf(stderr, "%s: can't get size for realtime subvolume\n",
+		fprintf(stderr, _("%s: can't get size for realtime subvolume\n"),
 			progname);
 		goto done;
 	}
@@ -629,7 +521,8 @@ rtmount_inodes(xfs_mount_t *mp)
 		return 0;
 	error = libxfs_iread(mp, NULL, sbp->sb_rbmino, &mp->m_rbmip, 0);
 	if (error) {
-		fprintf(stderr, "%s: cannot read realtime bitmap inode (%d)\n",
+		fprintf(stderr,
+			_("%s: cannot read realtime bitmap inode (%d)\n"),
 			progname, error);
 		return error;
 	}
@@ -637,7 +530,8 @@ rtmount_inodes(xfs_mount_t *mp)
 	ASSERT(sbp->sb_rsumino != NULLFSINO);
 	error = libxfs_iread(mp, NULL, sbp->sb_rsumino, &mp->m_rsumip, 0);
 	if (error) {
-		fprintf(stderr, "%s: cannot read realtime summary inode (%d)\n",
+		fprintf(stderr,
+			_("%s: cannot read realtime summary inode (%d)\n"),
 			progname, error);
 		return error;
 	}
@@ -660,7 +554,7 @@ rtmount_init(
 	if (sbp->sb_rblocks == 0)
 		return 0;
 	if (mp->m_rtdev == 0) {
-		fprintf(stderr, "%s: filesystem has a realtime subvolume\n",
+		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
 			progname);
 		return -1;
 	}
@@ -675,14 +569,16 @@ rtmount_init(
 	 */
 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
-		fprintf(stderr, "%s: realtime init - %llu != %llu\n", progname,
-			(unsigned long long) XFS_BB_TO_FSB(mp, d),
+		fprintf(stderr, _("%s: realtime init - %llu != %llu\n"),
+			progname, (unsigned long long) XFS_BB_TO_FSB(mp, d),
 			(unsigned long long) mp->m_sb.sb_rblocks);
 		return -1;
 	}
-	bp = libxfs_readbuf(mp->m_rtdev, d - 1, 1, 0);
+	bp = libxfs_readbuf(mp->m_rtdev,
+			d - XFS_FSB_TO_BB(mp, 1), XFS_FSB_TO_BB(mp, 1), 0);
 	if (bp == NULL) {
-		fprintf(stderr, "%s: realtime size check failed\n", progname);
+		fprintf(stderr, _("%s: realtime size check failed\n"),
+			progname);
 		return -1;
 	}
 	libxfs_putbuf(bp);
@@ -759,9 +655,9 @@ libxfs_mount(
 	/*
 	 * Check that the data (and log if separate) are an ok size.
 	 */
-	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+	d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
-		fprintf(stderr, "%s: size check failed\n", progname);
+		fprintf(stderr, _("%s: size check failed\n"), progname);
 		return NULL;
 	}
 
@@ -777,18 +673,21 @@ libxfs_mount(
 	if (dev == 0)	/* maxtrres, we have no device so leave now */
 		return mp;
 
-	bp = libxfs_readbuf(mp->m_dev, d - 1, 1, 0);
-	if (bp == NULL) {
-		fprintf(stderr, "%s: data size check failed\n", progname);
+	bp = libxfs_readbuf(mp->m_dev,
+			d - XFS_FSS_TO_BB(mp, 1), XFS_FSS_TO_BB(mp, 1), 1);
+	if (!bp) {
+		fprintf(stderr, _("%s: data size check failed\n"), progname);
 		return NULL;
 	}
 	libxfs_putbuf(bp);
 
 	if (mp->m_logdev && mp->m_logdev != mp->m_dev) {
-		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+		d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 		if ( (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) ||
-		     (!(bp = libxfs_readbuf(mp->m_logdev, d - 1, 1, 1)))) {
-			fprintf(stderr, "%s: log size checks failed\n",
+		     (!(bp = libxfs_readbuf(mp->m_logdev,
+					d - XFS_FSB_TO_BB(mp, 1),
+					XFS_FSB_TO_BB(mp, 1), 1)))) {
+			fprintf(stderr, _("%s: log size checks failed\n"),
 					progname);
 			return NULL;
 		}
@@ -797,14 +696,15 @@ libxfs_mount(
 
 	/* Initialize realtime fields in the mount structure */
 	if (rtmount_init(mp)) {
-		fprintf(stderr, "%s: realtime device init failed\n", progname);
+		fprintf(stderr, _("%s: realtime device init failed\n"),
+			progname);
 		return NULL;
 	}
 
 	/* Allocate and initialize the per-ag data */
 	size = sbp->sb_agcount * sizeof(xfs_perag_t);
 	if ((mp->m_perag = calloc(size, 1)) == NULL) {
-		fprintf(stderr, "%s: failed to alloc %ld bytes: %s\n",
+		fprintf(stderr, _("%s: failed to alloc %ld bytes: %s\n"),
 			progname, (long)size, strerror(errno));
 		exit(1);
 	}
@@ -818,7 +718,7 @@ libxfs_mount(
 		error = libxfs_iread(mp, NULL, sbp->sb_rootino,
 				&mp->m_rootip, 0);
 		if (error) {
-			fprintf(stderr, "%s: cannot read root inode (%d)\n",
+			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
 				progname, error);
 			return NULL;
 		}
@@ -830,7 +730,7 @@ libxfs_mount(
 }
 
 /*
- * Release any resourse obtained during a mount.
+ * Release any resource obtained during a mount.
  */
 void
 libxfs_umount(xfs_mount_t *mp)

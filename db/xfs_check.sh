@@ -30,18 +30,19 @@
 # 
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
-#ident "$Revision: 1.5 $"
+#ident "$Revision: 1.6 $"
 
 OPTS=" "
 ISFILE=" "
-USAGE="usage: xfs_check [-svf] [-i ino]... [-b bno]... special"
+USAGE="usage: xfs_check [-svfV] [-i ino]... [-b bno]... special"
 
 
-while getopts "b:fi:sv" c
+while getopts "b:fi:svV" c
 do
 	case $c in
 	s)	OPTS=$OPTS"-s ";;
 	v)	OPTS=$OPTS"-v ";;
+	V)	OPTS=$OPTS"-V ";;
 	i)	OPTS=$OPTS"-i "$OPTARG" ";;
 	b)	OPTS=$OPTS"-b "$OPTARG" ";;
 	f)	ISFILE=" -f";;

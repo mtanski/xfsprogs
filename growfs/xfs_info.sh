@@ -32,12 +32,13 @@
 #
 
 OPTS=""
-USAGE="Usage: xfs_info [-t mtab] mountpoint"
+USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
 
-while getopts "t:" c
+while getopts "t:V" c
 do
 	case $c in
 	t)	OPTS="-t $OPTARG" ;;
+	V)	OPTS="-V $OPTARG" ;;
 	*)	echo $USAGE 1>&2
 		exit 2
 		;;

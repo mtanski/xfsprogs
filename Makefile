@@ -45,7 +45,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
 	bmap db freeze fsck growfs imap logprint mkfile mkfs repair rtcp \
-	man doc debian build
+	man doc po debian build
 
 default: $(CONFIGURE)
 ifeq ($(HAVE_BUILDDEFS), no)

@@ -70,7 +70,7 @@ libxfs_inode_alloc(
 		xfs_trans_commit(*tp, 0, NULL);
 		*tp = ntp;
 		if ((i = xfs_trans_reserve(*tp, 0, 0, 0, 0, 0))) {
-			fprintf(stderr, "%s: cannot reserve space: %s\n",
+			fprintf(stderr, _("%s: cannot reserve space: %s\n"),
 				progname, strerror(errno));
 			exit(1);
 		}

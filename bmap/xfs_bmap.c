@@ -57,6 +57,10 @@ main(int argc, char **argv)
 	int	option;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	while ((option = getopt(argc, argv, "adln:pvV")) != EOF) {
 		switch (option) {
 		case 'a':
@@ -81,11 +85,12 @@ main(int argc, char **argv)
 			vflag++;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		default:
-			fprintf(stderr, "Usage: %s [-adlpV] [-n nx] file...\n",
-					progname);
+			fprintf(stderr,
+				_("Usage: %s [-adlpV] [-n nx] file...\n"),
+				progname);
 			exit(1);
 		}
 	}
@@ -102,14 +107,14 @@ main(int argc, char **argv)
 off64_t
 file_size(int	fd, char *fname)
 {
-	struct	stat64	st;
+	struct stat64	st;
 	int		i;
 	int		errno_save;
 
 	errno_save = errno;	/* in case fstat64 fails */
 	i = fstat64(fd, &st);
 	if (i < 0) {
-		fprintf(stderr, "%s: fstat64 failed for %s: %s\n",
+		fprintf(stderr, _("%s: fstat64 failed for %s: %s\n"),
 			progname, fname, strerror(errno));
 		errno = errno_save;
 		return -1;
@@ -132,14 +137,14 @@ dofile(char *fname)
 
 	fd = open(fname, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "%s: cannot open \"%s\": %s\n",
+		fprintf(stderr, _("%s: cannot open \"%s\": %s\n"),
 			progname, fname, strerror(errno));
 		return 1;
 	}
 	fstatfs(fd, &buf);
 	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
-		fprintf(stderr, "%s: "
-			"specified file [\"%s\"] is not on an XFS filesystem\n",
+		fprintf(stderr, _("%s: specified file "
+			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, fname);
 		close(fd);
 		return 1;
@@ -147,28 +152,30 @@ dofile(char *fname)
 
 	if (vflag) {
 		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
-			fprintf(stderr, "%s: can't get geometry [\"%s\"]: %s\n",
+			fprintf(stderr,
+				_("%s: can't get geometry [\"%s\"]: %s\n"),
 				progname, fname, strerror(errno));
 			close(fd);
 			return 1;
 		}
 		
 		if (vflag > 1)
-			printf(
-	"xfs_bmap: fsgeo.agblocks=%u, fsgeo.blocksize=%u, fsgeo.agcount=%u\n",
+			printf(_(
+	"xfs_bmap: fsgeo.agblocks=%u, fsgeo.blocksize=%u, fsgeo.agcount=%u\n"),
 					fsgeo.agblocks, fsgeo.blocksize,
 					fsgeo.agcount);
 
 		if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-			fprintf(stderr, "%s: cannot read attrs on \"%s\": %s\n",
+			fprintf(stderr,
+				_("%s: cannot read attrs on \"%s\": %s\n"),
 				progname, fname, strerror(errno));
 			close(fd);
 			return 1;
 		}
 
 		if (vflag > 1)
-			printf(
-    "xfs_bmap: fsx.dsx_xflags=%u, fsx.fsx_extsize=%u, fsx.fsx_nextents=%u\n",
+			printf(_(
+    "xfs_bmap: fsx.dsx_xflags=%u, fsx.fsx_extsize=%u, fsx.fsx_nextents=%u\n"),
 					fsx.fsx_xflags, fsx.fsx_extsize,
 					fsx.fsx_nextents);
 
@@ -184,7 +191,7 @@ dofile(char *fname)
 	map_size = nflag ? nflag+1 : 32;	/* initial guess - 256 for checkin KCM */
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
-		fprintf(stderr, "%s: malloc of %d bytes failed.\n",
+		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
 			progname, (int)(map_size * sizeof(*map)));
 		close(fd);
 		return 1;
@@ -229,9 +236,9 @@ dofile(char *fname)
 		i = ioctl(fd, XFS_IOC_GETBMAPX, map);
 
 		if (vflag > 1)
-			printf(
+			printf(_(
 		"xfs_bmap: i=%d map.bmv_offset=%lld, map.bmv_block=%lld, "
-		"map.bmv_length=%lld, map.bmv_count=%d, map.bmv_entries=%d\n",
+		"map.bmv_length=%lld, map.bmv_count=%d, map.bmv_entries=%d\n"),
 					i, (long long)map->bmv_offset,
 					(long long)map->bmv_block,
 					(long long)map->bmv_length,
@@ -241,8 +248,8 @@ dofile(char *fname)
 			    && !aflag && file_size(fd, fname) == 0) {
 				break;
 			} else	{
-				fprintf(stderr, "%s: ioctl(XFS_IOC_GETBMAPX) "
-					"iflags=0x%x [\"%s\"]: %s\n",
+				fprintf(stderr, _("%s: ioctl(XFS_IOC_GETBMAPX) "
+					"iflags=0x%x [\"%s\"]: %s\n"),
 					progname, map->bmv_iflags, fname,
 					strerror(errno));
 				close(fd);
@@ -259,8 +266,8 @@ dofile(char *fname)
 		 */
 		i = ioctl(fd, aflag ? XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
 		if (i < 0) {
-			fprintf(stderr, "%s: ioctl(XFS_IOC_FSGETXATTR%s) "
-				"[\"%s\"]: %s\n", progname, aflag ? "A" : "",
+			fprintf(stderr, _("%s: ioctl(XFS_IOC_FSGETXATTR%s) "
+				"[\"%s\"]: %s\n"), progname, aflag ? "A" : "",
 				fname, strerror(errno));
 			close(fd);
 			free(map);
@@ -270,7 +277,8 @@ dofile(char *fname)
 			map_size = 2*(fsx.fsx_nextents+1);
 			map = realloc(map, map_size*sizeof(*map));
 			if (map == NULL) {
-				fprintf(stderr, "%s: cannot realloc %d bytes\n",
+				fprintf(stderr,
+					_("%s: cannot realloc %d bytes\n"),
 					progname, (int)(map_size*sizeof(*map)));
 				close(fd);
 				return 1;
@@ -279,7 +287,7 @@ dofile(char *fname)
 	} while (++loop < 2);
 	if (!nflag) {
 		if (map->bmv_entries <= 0) {
-			printf("%s: no extents\n", fname);
+			printf(_("%s: no extents\n"), fname);
 			close(fd);
 			free(map);
 			return 0;
@@ -294,7 +302,7 @@ dofile(char *fname)
 				(long long)(map[i + 1].bmv_offset + 
 				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1)
-				printf("hole");
+				printf(_("hole"));
 			else {
 				printf("%lld..%lld",
 					(long long) map[i + 1].bmv_block,
@@ -303,7 +311,8 @@ dofile(char *fname)
 
 			}
 			if (lflag)
-				printf(" %lld blocks\n", (long long)map[i+1].bmv_length);
+				printf(_(" %lld blocks\n"),
+					(long long)map[i+1].bmv_length);
 			else
 				printf("\n");
 		}
@@ -359,12 +368,12 @@ dofile(char *fname)
 		}
 		agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount));
 		printf("%4s: %-*s %-*s %*s %-*s %*s\n", 
-			"EXT", 
-			foff_w, "FILE-OFFSET", 
-			boff_w, "BLOCK-RANGE", 
-			agno_w, "AG", 
-			aoff_w, "AG-OFFSET", 
-			tot_w, "TOTAL");
+			_("EXT"),
+			foff_w, _("FILE-OFFSET"),
+			boff_w, _("BLOCK-RANGE"),
+			agno_w, _("AG"),
+			aoff_w, _("AG-OFFSET"),
+			tot_w, _("TOTAL"));
 		for (i = 0; i < map->bmv_entries; i++) {
 			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
 				(long long) map[i + 1].bmv_offset,
@@ -374,7 +383,7 @@ dofile(char *fname)
 				printf("%4d: %-*s %-*s %*s %-*s %*lld\n", 
 					i, 
 					foff_w, rbuf, 
-					boff_w, "hole", 
+					boff_w, _("hole"),
 					agno_w, "",
 					aoff_w, "", 
 					tot_w, (long long)map[i+1].bmv_length);

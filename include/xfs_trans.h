@@ -378,7 +378,10 @@ typedef struct xfs_trans {
 	unsigned int		t_rtx_res_used; /* # of resvd rt extents used */
 	xfs_log_ticket_t	t_ticket;	/* log mgr ticket */
 	sema_t			t_sema;		/* sema for commit completion */
-	xfs_lsn_t		t_lsn;		/* log seq num of trans commit*/
+	xfs_lsn_t		t_lsn;		/* log seq num of start of
+						 * transaction. */
+	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of 
+						 * transaction. */
 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
 	struct xfs_dquot_acct	*t_dqinfo;	/* accting info for dquots */
 	xfs_trans_callback_t	t_callback;	/* transaction callback */
@@ -1023,11 +1026,6 @@ void		xfs_trans_unlocked_item(struct xfs_mount *,
 xfs_log_busy_slot_t *xfs_trans_add_busy(xfs_trans_t *tp,
 					xfs_agnumber_t ag,
 					xfs_extlen_t idx);
-
-/*
- * Not necessarily exported, but used outside a single file.
- */
-int		xfs_trans_lsn_danger(struct xfs_mount *, xfs_lsn_t);
 
 #endif	/* __KERNEL__ */
 

@@ -1085,7 +1085,7 @@ scan_freelist(
 		return;
 	agflbuf = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				XFS_AGFL_DADDR), 1, 0);
+				XFS_AGFL_DADDR(mp)), XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agflbuf)  {
 		do_abort("can't read agfl block for ag %d\n",
 			INT_GET(agf->agf_seqno, ARCH_CONVERT));
@@ -1106,7 +1106,7 @@ scan_freelist(
 		count++;
 		if (i == INT_GET(agf->agf_fllast, ARCH_CONVERT))
 			break;
-		if (++i == XFS_AGFL_SIZE)
+		if (++i == XFS_AGFL_SIZE(mp))
 			i = 0;
 	}
 	if (count != INT_GET(agf->agf_flcount, ARCH_CONVERT)) {
@@ -1156,7 +1156,8 @@ scan_ag(
 			XFS_SB_ALL_BITS);
 
 	agfbuf = libxfs_readbuf(mp->m_dev,
-			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR), 1, 0);
+			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+			XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agfbuf)  {
 		do_error("can't read agf block for ag %d\n", agno);
 		libxfs_putbuf(sbbuf);
@@ -1166,7 +1167,8 @@ scan_ag(
 	agf = XFS_BUF_TO_AGF(agfbuf);
 
 	agibuf = libxfs_readbuf(mp->m_dev,
-			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR), 1, 0);
+			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+			XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agibuf)  {
 		do_error("can't read agi block for ag %d\n", agno);
 		libxfs_putbuf(agfbuf);

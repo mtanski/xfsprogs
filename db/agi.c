@@ -108,8 +108,9 @@ agi_f(
 	} else if (cur_agno == NULLAGNUMBER)
 		cur_agno = 0;
 	ASSERT(typtab[TYP_AGI].typnm == TYP_AGI);
-	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, cur_agno, XFS_AGI_DADDR), 1,
-		DB_RING_ADD, NULL);
+	set_cur(&typtab[TYP_AGI],
+		XFS_AG_DADDR(mp, cur_agno, XFS_AGI_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_ADD, NULL);
 	return 0;
 }
 

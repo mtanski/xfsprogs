@@ -43,6 +43,7 @@
 #include "output.h"
 #include "mount.h"
 
+static int agfl_bno_size(void *obj, int startoff);
 static int agfl_f(int argc, char **argv);
 static void agfl_help(void);
 
@@ -50,17 +51,25 @@ static const cmdinfo_t agfl_cmd =
 	{ "agfl", NULL, agfl_f, 0, 1, 1, "[agno]", 
 	  "set address to agfl block", agfl_help };
 
-const field_t	agfl_hfld[] = {
-	{ "", FLDT_AGFL, OI(0), C1, 0, TYP_NONE },
+const field_t	agfl_hfld[] = { {
+	"", FLDT_AGFL, OI(0), C1, 0, TYP_NONE, },
 	{ NULL }
 };
 
 #define	OFF(f)	bitize(offsetof(xfs_agfl_t, agfl_ ## f))
 const field_t	agfl_flds[] = {
-	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(bno)), CI(XFS_AGFL_SIZE), FLD_ARRAY,
-	  TYP_DATA },
+	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(bno)), agfl_bno_size,
+	  FLD_ARRAY|FLD_COUNT, TYP_DATA },
 	{ NULL }
 };
+
+static int
+agfl_bno_size(
+	void	*obj,
+	int	startoff)
+{
+	return XFS_AGFL_SIZE(mp);
+}
 
 static void
 agfl_help(void)
@@ -73,7 +82,7 @@ agfl_help(void)
 "\n"
 " agfl 5"
 "\n"
-" Located in the 4th 512 byte block of each allocation group,\n"
+" Located in the fourth sector of each allocation group,\n"
 " the agfl freelist for internal btree space allocation is maintained\n"
 " for each allocation group.  This acts as a reserved pool of space\n" 
 " separate from the general filesystem freespace (not used for user data).\n"
@@ -100,8 +109,9 @@ agfl_f(
 	} else if (cur_agno == NULLAGNUMBER)
 		cur_agno = 0;
 	ASSERT(typtab[TYP_AGFL].typnm == TYP_AGFL);
-	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, cur_agno, XFS_AGFL_DADDR),
-		1, DB_RING_ADD, NULL);
+	set_cur(&typtab[TYP_AGFL],
+		XFS_AG_DADDR(mp, cur_agno, XFS_AGFL_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_ADD, NULL);
 	return 0;
 }
 

@@ -48,8 +48,24 @@
 						 * inode number that we'll
 						 * accept w/o warnings
 						 */
-extern void  usage (void);
+
+/* xfs_mkfs.c */
+extern void usage (void);
 extern int isdigits (char *str);
-extern long long  cvtnum (int blocksize, char *s);
+extern long long cvtnum (int blocksize, int sectorsize, char *s);
+
+/* proto.c */
+extern char *setup_proto (char *fname);
+extern void parseproto (xfs_mount_t *mp, xfs_inode_t *pip, char **pp, char *n);
+extern void res_failed (int err);
+
+#define DFL_S  (XFS_MAX_SECTORSIZE_LOG + 1 - XFS_MIN_SECTORSIZE_LOG)  /* 7 */
+#define DFL_B  (XFS_MAX_BLOCKSIZE_LOG  + 1 - XFS_MIN_BLOCKSIZE_LOG)   /* 8 */
+#define DFL_I  (XFS_DINODE_MAX_LOG     + 1 - XFS_DINODE_MIN_LOG)      /* 4 */
+#define DFL_D  (XFS_MAX_BLOCKSIZE_LOG  + 1 - XFS_MIN_BLOCKSIZE_LOG)   /* 8 */
+
+/* trtab.c */
+extern const int max_trres_v1[DFL_S][DFL_B][DFL_I];
+extern const int max_trres_v2[DFL_S][DFL_B][DFL_I][DFL_D];
 
 #endif	/* __XFS_MKFS_H__ */

@@ -51,6 +51,9 @@ int main(int argc, char **argv)
 	struct statfs	buf;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
 
 	if (argc < 2)
 		name = ".";
@@ -63,8 +66,8 @@ int main(int argc, char **argv)
 	}
 	fstatfs(fd, &buf);
 	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
-		fprintf(stderr, "%s: "
-			"specified file [\"%s\"] is not on an XFS filesystem\n",
+		fprintf(stderr, _("%s: specified file "
+			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, name);
 		exit(1);
 	}
@@ -85,7 +88,7 @@ int main(int argc, char **argv)
 		if (count == 0)
 			return 0;
 		for (i = 0; i < count; i++) {
-			printf("ino %10llu count %2d mask %016llx\n",
+			printf(_("ino %10llu count %2d mask %016llx\n"),
 				(unsigned long long)t[i].xi_startino,
 				t[i].xi_alloccount,
 				(unsigned long long)t[i].xi_allocmask);

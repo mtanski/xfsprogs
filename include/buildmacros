@@ -42,8 +42,12 @@ LDLIBS = $(LLDLIBS) $(MALLOCLIB)
 
 MAKEOPTS = --no-print-directory
 SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
-DIRT = $(LDIRT) dep dep.bak $(OBJECTS) $(LTOBJECTS) *.[1-9].gz \
-	$(LTCOMMAND) $(LTLIBRARY)
+
+DEPDIRT = dep dep.bak
+MANDIRT = *.[1-9].gz
+PODIRT = *.tmpo *.mo
+CDIRT = $(OBJECTS) $(LTOBJECTS) $(LTCOMMAND) $(LTLIBRARY)
+DIRT = $(LDIRT) $(DEPDIRT) $(MANDIRT) $(PODIRT) $(CDIRT)
 
 OBJECTS = $(ASFILES:.s=.o) \
           $(CFILES:.c=.o) \
@@ -136,6 +140,15 @@ INSTALL_MAN = \
 			first=false; \
 		done; \
 	done
+
+ifeq ($(ENABLE_GETTEXT),yes)
+INSTALL_LINGUAS = \
+	@for l in $(LINGUAS); do \
+		ldir=$(PKG_LOCALE_DIR)/$$l/LC_MESSAGES; \
+		$(INSTALL) -m 755 -d $$ldir; \
+		$(INSTALL) -m 644 $$l.mo $$ldir/$(PKG_NAME).mo; \
+	done
+endif
 
 SUBDIRS_MAKERULE = \
 	@for d in $(SUBDIRS) ""; do \

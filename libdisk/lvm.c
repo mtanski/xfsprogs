@@ -30,15 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <volume.h>
+#include "drivers.h"
 
 #ifndef LVM_BLK_MAJOR
 #define LVM_BLK_MAJOR	58
@@ -97,7 +89,7 @@ lvm_get_subvol_stripe(
 
 	/* Open pipe */
 	if (pipe(lvpipe) < 0) {
-		fprintf(stderr, "Could not open pipe\n");
+		fprintf(stderr, _("Could not open pipe\n"));
 		exit(1);
 	}
 
@@ -112,11 +104,11 @@ lvm_get_subvol_stripe(
 
 		execv(largv[0], largv);
 
-		fprintf(stderr, "\nFailed to execute %s\n", largv[0]);
+		fprintf(stderr, _("Failed to execute %s\n"), largv[0]);
 		exit(1);
 
 	case -1:
-		fprintf(stderr, "Failed forking lvdisplay process\n");
+		fprintf(stderr, _("Failed forking lvdisplay process\n"));
 		exit(1);
 
 	default:

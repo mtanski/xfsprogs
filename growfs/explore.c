@@ -52,19 +52,19 @@ explore_mtab(char *mtab, char *mntpoint)
 		mtab = MOUNTED;
 
 	if ((mtp = setmntent(mtab, "r")) == NULL) {
-		fprintf(stderr, "%s: cannot access mount list %s: %s\n",
+		fprintf(stderr, _("%s: cannot access mount list %s: %s\n"),
 			progname, MOUNTED, strerror(errno));
 		exit(1);
 	}
 	if (stat64(mntpoint, &statuser) < 0) {
-		fprintf(stderr, "%s: cannot access mount point %s: %s\n",
+		fprintf(stderr, _("%s: cannot access mount point %s: %s\n"),
 			progname, mntpoint, strerror(errno));
 		exit(1);
 	}
 
 	while ((mnt = getmntent(mtp)) != NULL) {
 		if (stat64(mnt->mnt_dir, &statmtab) < 0) {
-			fprintf(stderr, "%s: ignoring entry %s in %s: %s\n",
+			fprintf(stderr, _("%s: ignoring entry %s in %s: %s\n"),
 				progname, mnt->mnt_dir, mtab, strerror(errno));
 			continue;
 		}
@@ -72,7 +72,7 @@ explore_mtab(char *mtab, char *mntpoint)
 				statuser.st_dev != statmtab.st_dev)
 			continue;
 		else if (strcmp(mnt->mnt_type, "xfs") != 0) {
-			fprintf(stderr, "%s: %s is not an XFS filesystem\n",
+			fprintf(stderr, _("%s: %s is not an XFS filesystem\n"),
 				progname, mntpoint);
 			exit(1);
 		}
@@ -81,7 +81,7 @@ explore_mtab(char *mtab, char *mntpoint)
 
 	if (mnt == NULL) {
 		fprintf(stderr,
-		"%s: %s is not a filesystem mount point, according to %s\n",
+		_("%s: %s is not a filesystem mount point, according to %s\n"),
 			progname, mntpoint, MOUNTED);
 		exit(1);
 	}

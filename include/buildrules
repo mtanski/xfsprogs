@@ -55,6 +55,17 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
 	$(LTCOMPILE) -c $<
 endif
 
+ifdef LINGUAS
+%.pot: $(XGETTEXTFILES)
+	$(XGETTEXT) -o $@ $(XGETTEXTFILES)
+
+%.tmpo: %.po
+	$(MSGMERGE) -o $@ $< $(PKG_NAME).pot
+
+%.mo: %.tmpo
+	$(MSGFMT) -o $@ $<
+endif
+
 source :
 	$(SOURCE_MAKERULE)
 

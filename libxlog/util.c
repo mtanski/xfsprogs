@@ -46,8 +46,8 @@ header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
     uuid_unparse(mp->m_sb.sb_uuid, uu_sb);
     uuid_unparse(head->h_fs_uuid, uu_log);
 
-    printf("* ERROR: mismatched uuid in log\n"
-           "*            SB : %s\n*            log: %s\n",
+    printf(_("* ERROR: mismatched uuid in log\n"
+             "*            SB : %s\n*            log: %s\n"),
             uu_sb, uu_log);
 
     memcpy(&mp->m_sb.sb_uuid, head->h_fs_uuid, sizeof(uuid_t));
@@ -59,7 +59,7 @@ int
 xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
     if (print_record_header) 
-        printf("\nLOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n",
+        printf(_("\nLOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n"),
 	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT), 
                BLOCK_LSN(head->h_lsn, ARCH_CONVERT),
 	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT), 
@@ -67,7 +67,7 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
     
     if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
         
-        printf("* ERROR: bad magic number in log header: 0x%x\n",
+        printf(_("* ERROR: bad magic number in log header: 0x%x\n"),
                 INT_GET(head->h_magicno, ARCH_CONVERT));
         
     } else if (header_check_uuid(mp, head)) {
@@ -76,7 +76,7 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
         
     } else if (INT_GET(head->h_fmt, ARCH_CONVERT) != XLOG_FMT) {
         
-	printf("* ERROR: log format incompatible (log=%d, ours=%d)\n",
+	printf(_("* ERROR: log format incompatible (log=%d, ours=%d)\n"),
                 INT_GET(head->h_fmt, ARCH_CONVERT), XLOG_FMT);
         
     } else {
@@ -86,7 +86,7 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
     
     /* bail out now or just carry on regardless */
     if (print_exit)
-        xlog_exit("Bad log");
+        xlog_exit(_("Bad log"));
  
     return 0;   
 }
@@ -98,7 +98,7 @@ xlog_header_check_mount(xfs_mount_t *mp, xlog_rec_header_t *head)
     if (header_check_uuid(mp, head)) {
         /* bail out now or just carry on regardless */
         if (print_exit)
-            xlog_exit("Bad log");
+            xlog_exit(_("Bad log"));
     }
     return 0;
 }

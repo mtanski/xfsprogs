@@ -30,10 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include <libxfs.h>
 #include <sys/stat.h>
 #include <volume.h>
 

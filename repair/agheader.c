@@ -95,16 +95,18 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	 * check first/last AGF fields.  if need be, lose the free
 	 * space in the AGFL, we'll reclaim it later.
 	 */
-	if (INT_GET(agf->agf_flfirst, ARCH_CONVERT) >= XFS_AGFL_SIZE)  {
+	if (INT_GET(agf->agf_flfirst, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
 		do_warn("flfirst %d in agf %d too large (max = %d)\n",
-			INT_GET(agf->agf_flfirst, ARCH_CONVERT), i, XFS_AGFL_SIZE);
+			INT_GET(agf->agf_flfirst, ARCH_CONVERT),
+			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
 			INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
 	}
 
-	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) >= XFS_AGFL_SIZE)  {
+	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
 		do_warn("fllast %d in agf %d too large (max = %d)\n",
-			INT_GET(agf->agf_fllast, ARCH_CONVERT), i, XFS_AGFL_SIZE);
+			INT_GET(agf->agf_fllast, ARCH_CONVERT),
+			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
 			INT_ZERO(agf->agf_fllast, ARCH_CONVERT);
 	}
@@ -209,8 +211,11 @@ compare_sb(xfs_mount_t *mp, xfs_sb_t *sb)
  * zero and the shared version bit should be cleared for
  * current mkfs's.
  *
- * And everything else in the buffer beyond either sb_width
- * or sb_dirblklog (v2 dirs) should be zeroed.
+ * And everything else in the buffer beyond either sb_width,
+ * sb_dirblklog (v2 dirs), or sb_logsectsize can be zeroed.
+ *
+ * Note: contrary to the name, this routine is called for all
+ * superblocks, not just the secondary superblocks.
  */
 int
 secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
@@ -235,8 +240,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	    (sb->sb_versionnum & XR_GOOD_SECSB_VNMASK) == 0 ||
 	    sb->sb_versionnum < XFS_SB_VERSION_4)  {
 		/*
-		 * check for garbage beyond the last field set by the
-		 * pre-6.5 mkfs's.  Don't blindly use sizeof(sb).
+		 * Check for garbage beyond the last field.
 		 * Use field addresses instead so this code will still
 		 * work against older filesystems when the superblock
 		 * gets rev'ed again with new fields appended.
@@ -244,6 +248,9 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		if (XFS_SB_VERSION_HASLOGV2(sb))
 			size = (__psint_t)&sb->sb_logsunit
 				+ sizeof(sb->sb_logsunit) - (__psint_t)sb;
+		else if (XFS_SB_VERSION_HASSECTOR(sb))
+			size = (__psint_t)&sb->sb_logsectsize
+				+ sizeof(sb->sb_logsectsize) - (__psint_t)sb;
 		else if (XFS_SB_VERSION_HASDIRV2(sb))
 			size = (__psint_t)&sb->sb_dirblklog
 				+ sizeof(sb->sb_dirblklog) - (__psint_t)sb;
@@ -263,14 +270,14 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 			if (!no_modify)  {
 				do_warn(
-		"zeroing unused portion of secondary superblock %d sector\n",
-					i);
+		"zeroing unused portion of %s superblock (AG #%u)\n",
+					!i ? "primary" : "secondary", i);
 				bzero((void *)((__psint_t)sb + size),
 					mp->m_sb.sb_sectsize - size);
 			} else
 				do_warn(
-		"would zero unused portion of secondary superblock %d sector\n",
-					i);
+		"would zero unused portion of %s superblock (AG #%u)\n",
+					!i ? "primary" : "secondary", i);
 		}
 	}
 

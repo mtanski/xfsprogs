@@ -38,7 +38,12 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-CFILES = drivers.c fstype.c pttype.c md.c xvm.c evms.c lvm.c
+CFILES = drivers.c fstype.c pttype.c
+ifeq ($(PKG_PLATFORM),linux)
+CFILES += md.c xvm.c evms.c lvm.c
+else
+LSRCFILES = md.c xvm.c evms.c lvm.c
+endif
 HFILES = drivers.h fstype.h pttype.h md.h xvm.h evms.h
 
 default: $(LTLIBRARY)

@@ -46,6 +46,7 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
 	mp->m_maxagi = mp->m_sb.sb_agcount;
 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
 	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
 	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
 	mp->m_litino = sbp->sb_inodesize -
@@ -156,7 +157,8 @@ static struct {
     { offsetof(xfs_sb_t, sb_unit),	 0 },
     { offsetof(xfs_sb_t, sb_width),	 0 },
     { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
-    { offsetof(xfs_sb_t, sb_dummy),	 1 },
+    { offsetof(xfs_sb_t, sb_logsectlog), 0 },
+    { offsetof(xfs_sb_t, sb_logsectsize),0 },
     { offsetof(xfs_sb_t, sb_logsunit),	 0 },
     { sizeof(xfs_sb_t),			 0 }
 };

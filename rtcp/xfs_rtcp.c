@@ -43,7 +43,7 @@ char *progname;
 void
 usage()
 {
-	fprintf(stderr, "%s [-e extsize] [-p] source target\n", progname);
+	fprintf(stderr, _("%s [-e extsize] [-p] source target\n"), progname);
 	exit(2);
 }
 
@@ -51,11 +51,14 @@ int
 main(int argc, char **argv)
 {
 	register int	c, i, r, errflg = 0;
-	struct stat	s2;
+	struct stat64	s2;
 	int		eflag;
 	int		extsize = - 1;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
 
 	while ((c = getopt(argc, argv, "pe:V")) != EOF) {
 		switch (c) {
@@ -67,7 +70,7 @@ main(int argc, char **argv)
 			pflag = 1;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		default:
 			errflg++;
@@ -81,7 +84,8 @@ main(int argc, char **argv)
 	argv  = &argv[optind];
 
 	if (argc < 2) {
-		fprintf(stderr, "%s: must specify files to copy\n", progname);
+		fprintf(stderr, _("%s: must specify files to copy\n"),
+			progname);
 		errflg++;
 	}
 
@@ -94,14 +98,15 @@ main(int argc, char **argv)
 	 * which really exists.
 	 */
 	if (argc > 2) {
-		if (stat(argv[argc-1], &s2) < 0) {
-			fprintf(stderr, "%s: stat of %s failed\n",
+		if (stat64(argv[argc-1], &s2) < 0) {
+			fprintf(stderr, _("%s: stat64 of %s failed\n"),
 				progname, argv[argc-1]);
 			exit(2);
 		}
 
 		if (!S_ISDIR(s2.st_mode)) {
-			fprintf(stderr, "%s: final argument is not directory\n",
+			fprintf(stderr,
+				_("%s: final argument is not directory\n"),
 				progname);
 			usage();
 		}
@@ -128,7 +133,7 @@ rtcp( char *source, char *target, int fextsize)
 	int		remove = 0, rtextsize;
 	char 		*sp, *fbuf, *ptr;
 	char		tbuf[ PATH_MAX ];
-	struct	stat	s1, s2;
+	struct stat64	s1, s2;
 	struct fsxattr	fsxattr;
 	struct dioattr	dioattr;
 
@@ -147,9 +152,9 @@ rtcp( char *source, char *target, int fextsize)
 			*sp = '\0';
 	}
 
-	if ( stat(source, &s1) ) {
-		fprintf(stderr, "%s: failed stat on\n", progname);
-		perror(source);
+	if ( stat64(source, &s1) ) {
+		fprintf(stderr, _("%s: failed stat64 on %s: %s\n"),
+			progname, source, strerror(errno));
 		return( -1);
 	}
 
@@ -157,7 +162,7 @@ rtcp( char *source, char *target, int fextsize)
 	 * check for a realtime partition
 	 */
 	snprintf(tbuf, sizeof(tbuf), "%s", target);
-	if ( stat(target, &s2) ) {
+	if ( stat64(target, &s2) ) {
 		if (!S_ISDIR(s2.st_mode)) {
 			/* take out target file name */
 			if ((ptr = strrchr(tbuf, '/')) != NULL)
@@ -168,7 +173,8 @@ rtcp( char *source, char *target, int fextsize)
 	}
 
 	if ( (rtextsize = xfsrtextsize( tbuf ))  <= 0 ) {
-		fprintf(stderr, "%s: %s filesystem has no realtime partition\n",
+		fprintf(stderr,
+			_("%s: %s filesystem has no realtime partition\n"),
 			progname, tbuf);
 		return( -1 );
 	}
@@ -177,20 +183,20 @@ rtcp( char *source, char *target, int fextsize)
 	 * check if target is a directory
 	 */
 	snprintf(tbuf, sizeof(tbuf), "%s", target);
-	if ( !stat(target, &s2) ) {
+	if ( !stat64(target, &s2) ) {
 		if (S_ISDIR(s2.st_mode)) {
 			snprintf(tbuf, sizeof(tbuf), "%s/%s", target,
 				basename(source));
 		} 
 	}
 	
-	if ( stat(tbuf, &s2) ) {
+	if ( stat64(tbuf, &s2) ) {
 		/*
 		 * create the file if it does not exist
 		 */
 		if ( (tofd = open(tbuf, O_RDWR|O_CREAT|O_DIRECT, 0666)) < 0 ) {
-			fprintf(stderr, "%s: Open of %s failed.\n",
-				progname, tbuf);
+			fprintf(stderr, _("%s: open of %s failed: %s\n"),
+				progname, tbuf, strerror(errno));
 			return( -1 );
 		}
 		remove = 1;
@@ -205,8 +211,9 @@ rtcp( char *source, char *target, int fextsize)
 			fsxattr.fsx_extsize = 0;
 
 		if ( ioctl( tofd, XFS_IOC_FSSETXATTR, &fsxattr) ) { 
-			fprintf(stderr, "%s: Set attributes on %s failed.\n",
-				progname, tbuf);
+			fprintf(stderr,
+				_("%s: set attributes on %s failed: %s\n"),
+				progname, tbuf, strerror(errno));
 			close( tofd );
 			unlink( tbuf );
 			return( -1 );
@@ -216,14 +223,15 @@ rtcp( char *source, char *target, int fextsize)
 		 * open existing file
 		 */
 		if ( (tofd = open(tbuf, O_RDWR|O_DIRECT)) < 0 ) {
-			fprintf(stderr, "%s: Open of %s failed.\n",
-				progname, tbuf);
+			fprintf(stderr, _("%s: open of %s failed: %s\n"),
+				progname, tbuf, strerror(errno));
 			return( -1 );
 		}
 		
 		if ( ioctl( tofd, XFS_IOC_FSGETXATTR, &fsxattr) ) {
-			fprintf(stderr, "%s: Get attributes of %s failed.\n",
-				progname, tbuf);
+			fprintf(stderr,
+				_("%s: get attributes of %s failed: %s\n"),
+				progname, tbuf, strerror(errno));
 			close( tofd );
 			return( -1 );
 		}
@@ -232,7 +240,7 @@ rtcp( char *source, char *target, int fextsize)
 		 * check if the existing file is already a realtime file
 		 */
 		if ( !(fsxattr.fsx_xflags & XFS_XFLAG_REALTIME) ) {
-			fprintf(stderr, "%s: %s is not a realtime file.\n",
+			fprintf(stderr, _("%s: %s is not a realtime file.\n"),
 				progname, tbuf);
 			return( -1 );
 		}
@@ -241,8 +249,8 @@ rtcp( char *source, char *target, int fextsize)
 		 * check for matching extent size
 		 */
 		if ( (fextsize != -1) && (fsxattr.fsx_extsize != fextsize) ) {
-			fprintf(stderr, "%s: %s file extent size is %d, "
-					"instead of %d.\n",
+			fprintf(stderr, _("%s: %s file extent size is %d, "
+					"instead of %d.\n"),
 				progname, tbuf, fsxattr.fsx_extsize, fextsize);
 			return( -1 );
 		}
@@ -253,8 +261,8 @@ rtcp( char *source, char *target, int fextsize)
 	 */
 	reopen = 0;
 	if ( (fromfd = open(source, O_RDONLY|O_DIRECT)) < 0 ) {
-		fprintf(stderr, "%s: Open of %s source failed.\n",
-			progname, source);
+		fprintf(stderr, _("%s: open of %s source failed: %s\n"),
+			progname, source, strerror(errno));
 		close( tofd );
 		if (remove)
 			unlink( tbuf );
@@ -267,7 +275,7 @@ rtcp( char *source, char *target, int fextsize)
 		reopen = 1;
 	} else {
 		if (! (fsxattr.fsx_xflags & XFS_XFLAG_REALTIME) ){
-			fprintf(stderr, "%s: %s is not a realtime file.\n",
+			fprintf(stderr, _("%s: %s is not a realtime file.\n"),
 				progname, source);
 			reopen = 1;
 		}
@@ -276,8 +284,8 @@ rtcp( char *source, char *target, int fextsize)
 	if (reopen) {
 		close( fromfd );
 		if ( (fromfd = open(source, O_RDONLY )) < 0 ) {
-			fprintf(stderr, "%s: Open of %s source failed.\n",
-				progname, source);
+			fprintf(stderr, _("%s: open of %s source failed: %s\n"),
+				progname, source, strerror(errno));
 			close( tofd );
 			if (remove)
 				unlink( tbuf );
@@ -289,8 +297,9 @@ rtcp( char *source, char *target, int fextsize)
 	 * get direct I/O parameters
 	 */
 	if ( ioctl( tofd, XFS_IOC_DIOINFO, &dioattr) ) {
-		fprintf(stderr, "%s: Could not get direct I/O information.\n",
-			progname);
+		fprintf(stderr,
+			_("%s: couldn't get direct I/O information: %s\n"),
+			progname, strerror(errno));
 		close( fromfd );
 		close( tofd );
 		if ( remove ) 
@@ -299,7 +308,7 @@ rtcp( char *source, char *target, int fextsize)
 	}
 
 	if ( rtextsize % dioattr.d_miniosz ) {
-		fprintf(stderr, "%s: extent size %d not a multiple of %d.\n",
+		fprintf(stderr, _("%s: extent size %d not a multiple of %d.\n"),
 			progname, rtextsize, dioattr.d_miniosz);
 		close( fromfd );
 		close( tofd );
@@ -313,17 +322,17 @@ rtcp( char *source, char *target, int fextsize)
 	 * file system block size.
 	 */
 	if ( s1.st_size % dioattr.d_miniosz ) {
-		printf("The size of %s is not a multiple of %d.\n",
+		printf(_("The size of %s is not a multiple of %d.\n"),
 			source, dioattr.d_miniosz);
 		if ( pflag ) {
-			printf("%s will be padded to %lld bytes.\n",
+			printf(_("%s will be padded to %lld bytes.\n"),
 				tbuf, (long long)
 				(((s1.st_size / dioattr.d_miniosz) + 1)  *
 					dioattr.d_miniosz) );
 				
 		} else {
-			printf("Use the -p option to pad %s "
-				"to a size which is a multiple of %d bytes.\n",
+			printf(_("Use the -p option to pad %s to a "
+				"size which is a multiple of %d bytes.\n"),
 				tbuf, dioattr.d_miniosz);
 			close( fromfd );
 			close( tofd );
@@ -364,7 +373,8 @@ rtcp( char *source, char *target, int fextsize)
 		writect = write( tofd, fbuf, readct);
 
 		if ( writect != readct ) {
-			fprintf(stderr, "%s: Write error.\n", progname);
+			fprintf(stderr, _("%s: write error: %s\n"),
+				progname, strerror(errno));
 			close(fromfd);
 			close(tofd);
 			free( fbuf );
@@ -391,8 +401,8 @@ xfsrtextsize( char *path)
 
 	fd = open( path, O_RDONLY );
 	if ( fd < 0 ) {
-		fprintf(stderr, "%s: Could not open ", progname);
-		perror(path);
+		fprintf(stderr, _("%s: could not open %s: %s\n"),
+			progname, path, strerror(errno));
 		return -1;
 	}
 	rval = ioctl( fd, XFS_IOC_FSGEOMETRY_V1, &geo );

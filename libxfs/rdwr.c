@@ -48,8 +48,9 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 
 	size = BDSTRAT_SIZE <= BBTOB(len) ? BDSTRAT_SIZE : BBTOB(len);
 	if ((z = memalign(getpagesize(), size)) == NULL) {
-		fprintf(stderr, "%s: device_zero can't memalign %d bytes: %s\n",
-			progname, size, strerror(errno));
+		fprintf(stderr,
+			_("%s: %s can't memalign %d bytes: %s\n"),
+			progname, __FUNCTION__, size, strerror(errno));
 		exit(1);
 	}
 	memset(z, 0, size);
@@ -60,8 +61,9 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 			nblks = (uint)(start + len - bno);
 		if (pwrite64(fd, z, BBTOB(nblks), BBTOOFF64(bno)) <
 			       	BBTOB(nblks)) {
-			fprintf(stderr, "%s: device_zero write failed: %s\n",
-				progname, strerror(errno));
+			fprintf(stderr,
+				_("%s: %s write failed: %s\n"),
+				progname, __FUNCTION__, strerror(errno));
 			exit(1);
 		}
 		bno += nblks;
@@ -184,7 +186,7 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 
 	total = sizeof(xfs_buf_t) + BBTOB(len);
 	if ((buf = calloc(total, 1)) == NULL) {
-		fprintf(stderr, "%s: buf calloc failed (%ld bytes): %s\n",
+		fprintf(stderr, _("%s: buf calloc failed (%ld bytes): %s\n"),
 			progname, (long)total, strerror(errno));
 		exit(1);
 	}
@@ -202,7 +204,7 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 }
 
 int
-libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int die)
+libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int flags)
 {
 	int	fd = libxfs_device_to_fd(dev);
 
@@ -211,9 +213,9 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int die)
 	ASSERT(BBTOB(len) <= buf->b_bcount);
 
 	if (pread64(fd, buf->b_addr, BBTOB(len), BBTOOFF64(blkno)) < 0) {
-		fprintf(stderr, "%s: read failed: %s\n",
+		fprintf(stderr, _("%s: read failed: %s\n"),
 			progname, strerror(errno));
-		if (die)
+		if (flags & LIBXFS_EXIT_ON_FAILURE)
 			exit(1);
 		return errno;
 	}
@@ -225,13 +227,13 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int die)
 }
 
 xfs_buf_t *
-libxfs_readbuf(dev_t dev, xfs_daddr_t blkno, int len, int die)
+libxfs_readbuf(dev_t dev, xfs_daddr_t blkno, int len, int flags)
 {
 	xfs_buf_t	*buf;
 	int		error;
 
 	buf = libxfs_getbuf(dev, blkno, len);
-	error = libxfs_readbufr(dev, blkno, buf, len, die);
+	error = libxfs_readbufr(dev, blkno, buf, len, flags);
 	if (error) {
 		libxfs_putbuf(buf);
 		return NULL;
@@ -240,14 +242,14 @@ libxfs_readbuf(dev_t dev, xfs_daddr_t blkno, int len, int die)
 }
 
 xfs_buf_t *
-libxfs_getsb(xfs_mount_t *mp, int die)
+libxfs_getsb(xfs_mount_t *mp, int flags)
 {
 	return libxfs_readbuf(mp->m_dev, XFS_SB_DADDR,
-				XFS_FSB_TO_BB(mp, 1), die);
+				XFS_FSB_TO_BB(mp, 1), flags);
 }
 
 int
-libxfs_writebuf_int(xfs_buf_t *buf, int die)
+libxfs_writebuf_int(xfs_buf_t *buf, int flags)
 {
 	int	sts;
 	int	fd = libxfs_device_to_fd(buf->b_dev);
@@ -258,17 +260,16 @@ libxfs_writebuf_int(xfs_buf_t *buf, int die)
 #endif
 	sts = pwrite64(fd, buf->b_addr, buf->b_bcount, BBTOOFF64(buf->b_blkno));
 	if (sts < 0) {
-		fprintf(stderr, "%s: write failed: %s\n",
+		fprintf(stderr, _("%s: pwrite64 failed: %s\n"),
 			progname, strerror(errno));
-		ASSERT(0);
-		if (die)
+		if (flags & LIBXFS_EXIT_ON_FAILURE)
 			exit(1);
 		return errno;
 	}
 	else if (sts != buf->b_bcount) {
-		fprintf(stderr, "%s: error - wrote only %d of %d bytes\n",
+		fprintf(stderr, _("%s: error - wrote only %d of %d bytes\n"),
 			progname, sts, buf->b_bcount);
-		if (die)
+		if (flags & LIBXFS_EXIT_ON_FAILURE)
 			exit(1);
 		return EIO;
 	}
@@ -276,9 +277,9 @@ libxfs_writebuf_int(xfs_buf_t *buf, int die)
 }
 
 int
-libxfs_writebuf(xfs_buf_t *buf, int die)
+libxfs_writebuf(xfs_buf_t *buf, int flags)
 {
-	int error = libxfs_writebuf_int(buf, die);
+	int error = libxfs_writebuf_int(buf, flags);
 	libxfs_putbuf(buf);
 	return error;
 }
@@ -314,7 +315,7 @@ libxfs_zone_init(int size, char *name)
 	xfs_zone_t	*ptr;
 
 	if ((ptr = malloc(sizeof(xfs_zone_t))) == NULL) {
-		fprintf(stderr, "%s: zone init failed (%s, %d bytes): %s\n",
+		fprintf(stderr, _("%s: zone init failed (%s, %d bytes): %s\n"),
 			progname, name, (int)sizeof(xfs_zone_t), strerror(errno));
 		exit(1);
 	}
@@ -332,9 +333,8 @@ libxfs_zone_zalloc(xfs_zone_t *z)
 {
 	void	*ptr;
 
-	ASSERT(z != NULL);
 	if ((ptr = calloc(z->zone_unitsize, 1)) == NULL) {
-		fprintf(stderr, "%s: zone calloc failed (%s, %d bytes): %s\n",
+		fprintf(stderr, _("%s: zone calloc failed (%s, %d bytes): %s\n"),
 			progname, z->zone_name, z->zone_unitsize,
 			strerror(errno));
 		exit(1);
@@ -369,7 +369,7 @@ libxfs_malloc(size_t size)
 	void	*ptr;
 
 	if ((ptr = calloc(1, size)) == NULL) {
-		fprintf(stderr, "%s: calloc failed (%d bytes): %s\n",
+		fprintf(stderr, _("%s: calloc failed (%d bytes): %s\n"),
 			progname, (int)size, strerror(errno));
 		exit(1);
 	}
@@ -400,7 +400,7 @@ libxfs_realloc(void *ptr, size_t size)
 	void *optr=ptr;
 #endif
 	if ((ptr = realloc(ptr, size)) == NULL) {
-		fprintf(stderr, "%s: realloc failed (%d bytes): %s\n",
+		fprintf(stderr, _("%s: realloc failed (%d bytes): %s\n"),
 			progname, (int)size, strerror(errno));
 		exit(1);
 	}
@@ -462,5 +462,5 @@ libxfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
 	bp = libxfs_getbuf(mp->m_dev, XFS_SB_DADDR, 1);
 	libxfs_xlate_sb(XFS_BUF_PTR(bp), &mp->m_sb, -1, ARCH_CONVERT,
 			XFS_SB_ALL_BITS);
-	libxfs_writebuf(bp, 1);
+	libxfs_writebuf(bp, LIBXFS_EXIT_ON_FAILURE);
 }

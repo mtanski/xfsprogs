@@ -46,7 +46,8 @@ static char *progname;
 static void
 usage(void)
 {
-	fprintf(stderr, "%s: [-npv] <size> <name1> [<name2>] ...\n", progname);
+	fprintf(stderr, _("%s: [-npv] <size> <name1> [<name2>] ...\n"),
+		progname);
 	exit(2);
 }
 
@@ -64,8 +65,8 @@ openfd(char *name, int oflags)
 
 	fstatfs(fd, &buf);
 	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
-		fprintf(stderr, "%s: "
-			"file [\"%s\"] is not on an XFS filesystem\n",
+		fprintf(stderr, _("%s: "
+			"file [\"%s\"] is not on an XFS filesystem\n"),
 			progname, name);
 		return -1;
 	}
@@ -96,6 +97,10 @@ main(int argc, char **argv)
 	xfs_flock64_t flck;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	while ((c = getopt(argc, argv, "npvV")) != EOF) {
 		switch(c) {
 			case 'n':
@@ -108,7 +113,7 @@ main(int argc, char **argv)
 				verbose++;
 				break;
 			case 'V':
-				printf("%s version %s\n", progname, VERSION);
+				printf(_("%s version %s\n"), progname, VERSION);
 				exit(0);
 			default:
 				errflg++;
@@ -145,7 +150,7 @@ main(int argc, char **argv)
 			mult *= 1024;
 			break;
 		default:
-			fprintf(stderr, "unknown size %s\n", argv[optind]);
+			fprintf(stderr, _("unknown size %s\n"), argv[optind]);
 			usage();
 		}
 
@@ -158,10 +163,10 @@ main(int argc, char **argv)
 
 	while (optind < argc) {
 		if (verbose)
-			fprintf(stdout, "%s %lld bytes %s\n",
+			fprintf(stdout, _("%s %lld bytes %s\n"),
 						argv[optind], (long long)size,
 						prealloc
-						  ? "(pre-allocated)"
+						  ? _("(pre-allocated)")
 						  : "");
 
 		oflags = O_CREAT|O_TRUNC|O_WRONLY|(nobytes ? 0 : O_DIRECT);
@@ -194,11 +199,7 @@ main(int argc, char **argv)
 		}
 
 		if ((result = lseek64(fd, size - 1, SEEK_SET)) < 0LL) {
-			/*
-			 * This check doesn't actually work for 6.2
-			 * efs and nfs2, although it should.
-			 */
-			fprintf(stderr, "lseek64 error, result = %lld\n",
+			fprintf(stderr, _("lseek64 error, result = %lld\n"),
 				(long long)result);
 			if (errno)
 				perror(argv[optind]);
@@ -213,7 +214,7 @@ main(int argc, char **argv)
 			flck.l_start  = 0LL;
 			flck.l_len    = size;
 			if (prealloc)
-				(void)ioctl(fd, XFS_IOC_RESVSP64, &flck);
+				ioctl(fd, XFS_IOC_RESVSP64, &flck);
 			if (oflags & O_DIRECT) {
 				nbufalign = da.d_mem;
 

@@ -223,8 +223,9 @@ scan_ag(
 	xfs_agf_t	*agf;
 
 	push_cur();
-	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGF],
+		XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agf = iocur_top->data;
 	scan_freelist(agf);
 	if (countflag)
@@ -255,8 +256,8 @@ scan_freelist(
 		return;
 	push_cur();
 	set_cur(&typtab[TYP_AGFL],
-		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR), 1,
-		DB_RING_IGN, NULL);
+		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agfl = iocur_top->data;
 	i = INT_GET(agf->agf_flfirst, ARCH_CONVERT);
 	for (;;) {
@@ -264,7 +265,7 @@ scan_freelist(
 		addtohist(seqno, bno, 1);
 		if (i == INT_GET(agf->agf_fllast, ARCH_CONVERT))
 			break;
-		if (++i == XFS_AGFL_SIZE)
+		if (++i == XFS_AGFL_SIZE(mp))
 			i = 0;
 	}
 	pop_cur();

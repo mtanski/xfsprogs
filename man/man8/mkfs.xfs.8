@@ -4,7 +4,7 @@ mkfs.xfs \- construct an XFS filesystem
 .SH SYNOPSIS
 .nf
 \f3mkfs.xfs\f1 [ \f3\-b\f1 subopt=value ] [ \f3\-d\f1 subopt[=value] ]
-	[ \f3\-i\f1 subopt=value ] [ \f3\-l\f1 subopt[=value] ]
+	[ \f3\-i\f1 subopt=value ] [ \f3\-l\f1 subopt[=value] ] [ \f3\-f\f1 ]
 	[ \f3\-n\f1 subopt[=value] ] [ \f3\-p\f1 protofile ] [ \f3\-q\f1 ]
 	[ \f3\-r\f1 subopt[=value] ] [ \f3\-N\f1 ] [ \f3\-L\f1 label ] device
 .fi
@@ -51,9 +51,9 @@ kilobytes, megabytes, or gigabytes.
 Sizes are treated as hexadecimal if prefixed by 0x or 0X,
 octal if prefixed by 0, or decimal otherwise.
 If suffixed with \f3s\f1 then the size is converted by multiplying it
-by 512 (sector size).
+by the filesystems sector size (defaults to 512, see \f3\-s\f1 option below).
 If suffixed with \f3b\f1 then the size is converted by multiplying it
-by the filesystem's block size.
+by the filesystems block size (defaults to 4K, see \f3\-b\f1 option below).
 If suffixed with \f3k\f1 then the size is converted by multiplying it by 1024.
 If suffixed with \f3m\f1 then the size is converted by multiplying it by
 1048576 (1024 * 1024).
@@ -586,6 +586,25 @@ This suboption is only needed if the real-time section of the
 filesystem should occupy
 less space than the size of the partition or logical volume containing the section.
 .TP
+.B \-s
+Sector size options.
+.IP
+This option specifies the fundamental sector size of the filesystem.
+The valid suboptions are:
+.BI log= value
+and
+\f3size=\f1\f2value\f1;
+only one can be supplied.
+The sector size is specified either as a base two logarithm value with
+.BR log= ,
+or in bytes with
+.BR size= .
+The default value is 512 bytes.
+.\" The minimum value for sector size is 512; the maximum is 32768 (32 KB).
+.\" The sector size cannot be made larger than the filesystem block size.
+This option is not yet implemented and sector size other than 512
+bytes cannot be set at this stage.
+.TP
 \f3\-L\f1 \f2label\f1
 Set the filesystem label.
 XFS filesystem labels can be at most 12 characters long; if
@@ -602,6 +621,7 @@ manual entries for additional information.
 Causes the file system parameters to be printed out without really
 creating the file system.
 .SH SEE ALSO
+xfs(5),
 mkfs(8),
 mount(8),
 xfs_info(8),

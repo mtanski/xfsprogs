@@ -30,13 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <volume.h>
+#include "drivers.h"
 #include "md.h"
 
 int
@@ -68,7 +62,8 @@ md_get_subvol_stripe(
 
 		/* Is this thing on... */
 		if (ioctl(fd, GET_ARRAY_INFO, &md)) {
-			fprintf(stderr, "Error getting MD array info from %s\n",
+			fprintf(stderr,
+				_("Error getting MD array info from %s\n"),
 				dfile);
 			exit(1);
 		}
@@ -76,7 +71,7 @@ md_get_subvol_stripe(
 
 		/* Check state */
 		if (md.state) {
-			fprintf(stderr, "MD array %s not in clean state\n",
+			fprintf(stderr, _("MD array %s not in clean state\n"),
 				dfile);
 			exit(1);
 		}

@@ -38,7 +38,7 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-HFILES = xfs.h
+HFILES = xfs.h init.h
 CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
 	xfs_inode.c xfs_btree.c xfs_alloc_btree.c xfs_ialloc_btree.c \
@@ -46,7 +46,9 @@ CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
 	xfs_mount.c xfs_trans.c
-#LCFLAGS += -DHAVE_BLKBSZSET
+
+CFILES += $(PKG_PLATFORM).c
+LSRCFILES = $(shell echo linux.c | sed -e "s/$(PKG_PLATFORM).c//g")
 
 # 
 # Tracing flags:

@@ -137,14 +137,10 @@ max_trans_res(
 int
 main(int argc, char **argv)
 {
-	int		bl;
-	int		dl;
-	int		dv;
-	int		i;
-	int		il;
+	unsigned int	sl, bl, il, dl, dv;
+	unsigned int	i, mul;
 	xfs_mount_t	m;
 	xfs_sb_t	*sbp;
-	int		mul;
 
 	progname = basename(argv[0]);
 	if (argc > 1) {
@@ -154,37 +150,53 @@ main(int argc, char **argv)
 	memset(&m, 0, sizeof(m));
 	sbp = &m.m_sb;
 	sbp->sb_magicnum = XFS_SB_MAGIC;
-	sbp->sb_sectlog = 9;
-	sbp->sb_sectsize = 1 << sbp->sb_sectlog;
-	for (bl = XFS_MIN_BLOCKSIZE_LOG; bl <= XFS_MAX_BLOCKSIZE_LOG; bl++) {
-		sbp->sb_blocklog = bl;
-		sbp->sb_blocksize = 1 << bl;
-		sbp->sb_agblocks = XFS_AG_MIN_BYTES / (1 << bl);
-		for (il = XFS_DINODE_MIN_LOG; il <= XFS_DINODE_MAX_LOG; il++) {
-			if ((1 << il) > (1 << bl) / XFS_MIN_INODE_PERBLOCK)
+
+	for (sl = XFS_MIN_SECTORSIZE_LOG;
+	     sl <= XFS_MAX_SECTORSIZE_LOG;
+	     sl++) {
+		sbp->sb_sectlog = sl;
+		sbp->sb_sectsize = 1 << sbp->sb_sectlog;
+
+		for (bl = XFS_MIN_BLOCKSIZE_LOG;
+		     bl <= XFS_MAX_BLOCKSIZE_LOG;
+		     bl++) {
+			if (bl < sl)
 				continue;
-			sbp->sb_inodelog = il;
-			sbp->sb_inopblog = bl - il;
-			sbp->sb_inodesize = 1 << il;
-			sbp->sb_inopblock = 1 << (bl - il);
-			for (dl = bl; dl <= XFS_MAX_BLOCKSIZE_LOG; dl++) {
-				sbp->sb_dirblklog = dl - bl;
-				for (dv = 1; dv <= 2; dv++) {
-					if (dv == 1 && dl != bl)
-						continue;
-					sbp->sb_versionnum =
-						XFS_SB_VERSION_4 |
-						(dv == 2 ?
-						    XFS_SB_VERSION_DIRV2BIT :
-						    0);
-					libxfs_mount(&m, sbp, 0, 0, 0, 0);
-					i = max_trans_res(&m, &mul);
-					printf(
-				"#define\tMAXTRRES_B%d_I%d_D%d_V%d\t%lld\t"
-				"/* LOG_FACTOR %d */\n",
-						bl, il, dl, dv, (long long)
-						XFS_B_TO_FSB(&m, i), mul);
-					libxfs_umount(&m);
+			sbp->sb_blocklog = bl;
+			sbp->sb_blocksize = 1 << bl;
+			sbp->sb_agblocks = XFS_AG_MIN_BYTES / (1 << bl);
+
+			for (il = XFS_DINODE_MIN_LOG;
+			     il <= XFS_DINODE_MAX_LOG;
+			     il++) {
+				if ((1<<il) > (1<<bl) / XFS_MIN_INODE_PERBLOCK)
+					continue;
+				sbp->sb_inodelog = il;
+				sbp->sb_inopblog = bl - il;
+				sbp->sb_inodesize = 1 << il;
+				sbp->sb_inopblock = 1 << (bl - il);
+
+				for (dl = bl;
+				     dl <= XFS_MAX_BLOCKSIZE_LOG;
+				     dl++) {
+					sbp->sb_dirblklog = dl - bl;
+					for (dv = 1; dv <= 2; dv++) {
+						if (dv == 1 && dl != bl)
+							continue;
+						sbp->sb_versionnum =
+							XFS_SB_VERSION_4 |
+							(dv == 2 ?
+						  XFS_SB_VERSION_DIRV2BIT : 0);
+						libxfs_mount(&m, sbp, 0,0,0,0);
+						i = max_trans_res(&m, &mul);
+						printf(
+				"#define\tMAXTRRES_S%d_B%d_I%d_D%d_V%d\t%lld\t"
+				"/* LOG_FACTOR %d */\n", sl, bl, il, dl, dv,
+							(long long)
+							XFS_B_TO_FSB(&m, i),
+							mul);
+						libxfs_umount(&m);
+					}
 				}
 			}
 		}

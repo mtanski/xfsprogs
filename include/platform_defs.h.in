@@ -56,10 +56,7 @@
 #include <getopt.h>
 
 #include <endian.h>
-#if defined (__powerpc__) /* ppc fix from: Robert Ramiega (jedi@plukwa.net) */
-# define __BYTEORDER_HAS_U64__
-#endif
-#include <asm/byteorder.h>
+#include "swab.h"
 
 #ifndef O_DIRECT
 # if defined (__powerpc__)
@@ -114,8 +111,8 @@ typedef int __psint_t;
 #  ifdef HAVE_64BIT_LONG
 typedef long __psint_t;
 #  else
-/* This is a very strange architecture, which has 64 bit pointers but
- * not 64 bit longs. So, I'd just punt here and assume long long is Ok */
+/* This is a very strange architecture, which has 64 bit pointers but */
+/* not 64 bit longs.  So, just punt here and assume long long is OK.  */
 typedef long long __psint_t;
 #  endif
 # else
@@ -132,13 +129,24 @@ typedef unsigned int __psunsigned_t;
 #  ifdef HAVE_64BIT_LONG
 typedef long __psunsigned_t;
 #  else
-/* This is a very strange architecture, which has 64 bit pointers but
- * not 64 bit longs. So, I'd just punt here and assume long long is Ok */
+/* This is a very strange architecture, which has 64 bit pointers but */
+/* not 64 bit longs.  So, just punt here and assume long long is OK.  */
 typedef unsigned long long __psunsigned_t;
 #  endif
 # else
 #  error Unknown pointer size
 # endif
+#endif
+
+/* Define if you want gettext (I18N) support */
+#undef ENABLE_GETTEXT
+#ifdef ENABLE_GETTEXT
+# include <libintl.h>
+# define _(x)                   gettext(x)
+#else
+# define _(x)                   (x)
+# define textdomain(d)          do { } while (0)
+# define bindtextdomain(d,dir)  do { } while (0)
 #endif
 
 #ifdef DEBUG

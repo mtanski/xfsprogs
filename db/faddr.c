@@ -309,7 +309,7 @@ fa_dirblock(
 	if (nex > 1)
 		make_bbmap(&bbmap, nex, bmp);
 	set_cur(&typtab[next], (__int64_t)XFS_FSB_TO_DADDR(mp, dfsbno),
-		(int)XFS_FSB_TO_DADDR(mp, mp->m_dirblkfsbs), DB_RING_ADD, 
+		XFS_FSB_TO_BB(mp, mp->m_dirblkfsbs), DB_RING_ADD, 
 		nex > 1 ? &bbmap : NULL);
 	free(bmp);
 }

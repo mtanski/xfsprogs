@@ -35,7 +35,12 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_growfs
 
-CFILES = explore.c xfs_growfs.c
+CFILES = xfs_growfs.c
+ifeq ($(PKG_PLATFORM),linux)
+CFILES += explore.c
+else
+LSRCFILES = explore.c
+endif
 HFILES = explore.h
 
 LLDLIBS = $(LIBXFS) $(LIBUUID)

@@ -37,8 +37,8 @@ LTCOMMAND = mkfs.xfs
 MAXTRRES = maxtrres
 FSTYP = fstyp
 
-HFILES = xfs_mkfs.h proto.h
-CFILES = $(HFILES:.h=.c)
+HFILES = xfs_mkfs.h
+CFILES = trtab.c proto.c xfs_mkfs.c 
 
 LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)

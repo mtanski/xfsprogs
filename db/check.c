@@ -3821,8 +3821,9 @@ scan_ag(
 	agffreeblks = agflongest = 0;
 	agicount = agifreecount = 0;
 	push_cur();
-	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, agno, XFS_SB_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_SB],
+		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
         
 	if (!iocur_top->data) {
 		dbprintf("can't read superblock for ag %u\n", agno);
@@ -3856,8 +3857,9 @@ scan_ag(
 		set_dbmap(agno, XFS_FSB_TO_AGBNO(mp, sb->sb_logstart),
 			sb->sb_logblocks, DBM_LOG, agno, XFS_SB_BLOCK(mp));
 	push_cur();
-	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGF],
+		XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agf = iocur_top->data) == NULL) {
 		dbprintf("can't read agf block for ag %u\n", agno);
 		pop_cur();
@@ -3885,8 +3887,9 @@ scan_ag(
 			sb->sb_agblocks - INT_GET(agf->agf_length, ARCH_CONVERT),
 			DBM_MISSING, agno, XFS_SB_BLOCK(mp));
 	push_cur();
-	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGI],
+		XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agi = iocur_top->data) == NULL) {
 		dbprintf("can't read agi block for ag %u\n", agno);
 		serious_error++;
@@ -3989,7 +3992,8 @@ scan_freelist(
 		return;
 	push_cur();
 	set_cur(&typtab[TYP_AGFL],
-		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR), 1, DB_RING_IGN, NULL);
+		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agfl = iocur_top->data) == NULL) {
 		dbprintf("can't read agfl block for ag %u\n", seqno);
 		serious_error++;
@@ -4004,7 +4008,7 @@ scan_freelist(
 		count++;
 		if (i == INT_GET(agf->agf_fllast, ARCH_CONVERT))
 			break;
-		if (++i == XFS_AGFL_SIZE)
+		if (++i == XFS_AGFL_SIZE(mp))
 			i = 0;
 	}
 	if (count != INT_GET(agf->agf_flcount, ARCH_CONVERT)) {

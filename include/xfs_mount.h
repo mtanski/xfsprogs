@@ -232,6 +232,7 @@ typedef struct xfs_mount {
 	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
 	__uint8_t		m_inode_quiesce;/* call quiesce on new inodes.
 						   field governed by m_ilock */
+	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
 	__uint8_t		m_dirversion;	/* 1 or 2 */
 	xfs_dirops_t		m_dirops;	/* table of dir funcs */
 	int			m_dirblksize;	/* directory block sz--bytes */
@@ -421,7 +422,7 @@ int		xfs_unmountfs_writesb(xfs_mount_t *);
 int		xfs_unmount_flush(xfs_mount_t *, int);
 int		xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int, int);
 int		xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *, uint, int);
-int		xfs_readsb(xfs_mount_t *mp);
+int		xfs_readsb(xfs_mount_t *mp, unsigned int, int, int);
 struct xfs_buf	*xfs_getsb(xfs_mount_t *, int);
 void		xfs_freesb(xfs_mount_t *);
 void		xfs_do_force_shutdown(bhv_desc_t *, int, char *, int);

@@ -445,7 +445,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	 * as they will be *after* accounting for the free space
 	 * we've used up will need fewer blocks to to represent
 	 * than we've allocated.  We can use the AGFL to hold
-	 * XFS_AGFL_SIZE (128) blocks but that's it.
+	 * XFS_AGFL_SIZE (sector/xfs_agfl_t) blocks but that's it.
 	 * Thus we limit things to XFS_AGFL_SIZE/2 for each of the 2 btrees.
 	 * if the number of extra blocks is more than that,
 	 * we'll have to be called again.
@@ -1079,7 +1079,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 	int		i;
 
 	agi_buf = libxfs_getbuf(mp->m_dev,
-			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR),
+			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE);
 	agi = XFS_BUF_TO_AGI(agi_buf);
 	bzero(agi, mp->m_sb.sb_sectsize);
@@ -1258,8 +1258,8 @@ build_agf_agfl(xfs_mount_t	*mp,
 	xfs_agf_t		*agf;
 
 	agf_buf = libxfs_getbuf(mp->m_dev,
-				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR),
-				mp->m_sb.sb_sectsize/BBSIZE);
+			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+			mp->m_sb.sb_sectsize/BBSIZE);
 	agf = XFS_BUF_TO_AGF(agf_buf);
 	bzero(agf, mp->m_sb.sb_sectsize);
 
@@ -1306,7 +1306,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 		 * yes - grab the AGFL buffer
 		 */
 		agfl_buf = libxfs_getbuf(mp->m_dev,
-				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR),
+				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
 				mp->m_sb.sb_sectsize/BBSIZE);
 		agfl = XFS_BUF_TO_AGFL(agfl_buf);
 		bzero(agfl, mp->m_sb.sb_sectsize);
@@ -1314,13 +1314,13 @@ build_agf_agfl(xfs_mount_t	*mp,
 		 * ok, now grab as many blocks as we can
 		 */
 		i = j = 0;
-		while (bno_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE)  {
+		while (bno_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE(mp))  {
 			INT_SET(agfl->agfl_bno[i], ARCH_CONVERT,
 				get_next_blockaddr(agno, 0, bno_bt));
 			i++;
 		}
 
-		while (bcnt_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE)  {
+		while (bcnt_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE(mp))  {
 			INT_SET(agfl->agfl_bno[i], ARCH_CONVERT,
 				get_next_blockaddr(agno, 0, bcnt_bt));
 			i++;
@@ -1357,7 +1357,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 		libxfs_writebuf(agfl_buf, 0);
 	} else  {
 		INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
-		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE - 1);
+		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE(mp) - 1);
 		INT_ZERO(agf->agf_flcount, ARCH_CONVERT);
 	}
 
@@ -1553,8 +1553,8 @@ phase5(xfs_mount_t *mp)
 		/*
 		 * see if we can fit all the extra blocks into the AGFL
 		 */
-		extra_blocks = (extra_blocks - XFS_AGFL_SIZE > 0)
-				? extra_blocks - XFS_AGFL_SIZE
+		extra_blocks = (extra_blocks - XFS_AGFL_SIZE(mp) > 0)
+				? extra_blocks - XFS_AGFL_SIZE(mp)
 				: 0;
 
 		if (extra_blocks > 0)  {

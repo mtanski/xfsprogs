@@ -99,6 +99,8 @@ const field_t	sb_flds[] = {
 	{ "unit", FLDT_UINT32D, OI(OFF(unit)), C1, 0, TYP_NONE },
 	{ "width", FLDT_UINT32D, OI(OFF(width)), C1, 0, TYP_NONE },
 	{ "dirblklog", FLDT_UINT8D, OI(OFF(dirblklog)), C1, 0, TYP_NONE },
+	{ "logsectlog", FLDT_UINT8D, OI(OFF(logsectlog)), C1, 0, TYP_NONE },
+	{ "logsectsize", FLDT_UINT16D, OI(OFF(logsectsize)), C1, 0, TYP_NONE },
 	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
 	{ NULL }
 };
@@ -114,8 +116,8 @@ sb_help(void)
 "\n"
 " 'sb 7' - set location to 7th allocation group superblock, set type to 'sb'\n"
 "\n"
-" Located in the 1st 512 byte block of each allocation group,\n"
-" the superblock contains the base information for the filesystem.\n"
+" Located in the first sector of each allocation group, the superblock\n"
+" contains the base information for the filesystem.\n"
 " The superblock in allocation group 0 is the primary.  The copies in the\n"
 " remaining allocation groups only serve as backup for filesystem recovery.\n"
 " The icount/ifree/fdblocks/frextents are only updated in superblock 0.\n"
@@ -141,8 +143,9 @@ sb_f(
 	} else if (cur_agno == NULLAGNUMBER)
 		cur_agno = 0;
 	ASSERT(typtab[TYP_SB].typnm == TYP_SB);
-	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, cur_agno, XFS_SB_DADDR), 1,
-		DB_RING_ADD, NULL);
+	set_cur(&typtab[TYP_SB],
+		XFS_AG_DADDR(mp, cur_agno, XFS_SB_DADDR),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_ADD, NULL);
 	return 0;
 }
 

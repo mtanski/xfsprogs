@@ -1,3 +1,25 @@
+xfsprogs-2.3.8 (18 December 2002)
+	- Initial support for I18N (still more to do here).
+	- Initial changes for filesystems with greater than 512 byte
+	  sector sizes (still plenty more to do here too).
+	- Tidy up libxfs functions which take a "flags" argument.
+	- Sync up user/kernel source in lib{xfs,xlog} and headers.
+	- Fixed incorrect use of XFS_FSB_TO_DADDR macro in xfs_db's
+	  faddr.c::fa_dirblock routine - now use XFS_FSB_TO_BB here,
+	  as set_cur() takes basic blocks as its third parameter.
+	- Fixed obscure issue in mkfs where only the first AG would
+	  get its AGFL freelist "fixed" - not clear this caused any
+	  issues in practice (on Linux its always been this way, we
+	  now match up with IRIX though).
+	- Made xfs_growfs filesystem geometry output match up with
+	  that displayed by mkfs.xfs (xfs_growfs was missing a comma
+	  before the log version field).
+	- Fixed an issue in xfs_repair where data past the end of the
+	  valid superblock fields was sometimes not cleared, when it
+	  really should have been (due to a libxfs problem).
+	- Shell scripts (xfs_info, xfs_check, etc) now also report
+	  the xfsprogs version number via -V, like other commands.
+
 xfsprogs-2.3.7 (14 November 2002)
 	- Fix an endian bug in xfs_db freesp command when descending
 	  into multi-level agf cnt/bno btrees.
@@ -397,4 +419,3 @@ xfs-cmds-1.0.1 (5 July 2000)
 xfs-cmds-1.0.0 (16 June 2000)
 	- initial release for USENIX CDs
 	- early alpha code
-

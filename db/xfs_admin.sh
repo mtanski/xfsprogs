@@ -32,9 +32,9 @@
 #
 
 OPTS=""
-USAGE="Usage: xfs_admin [-flu] [-L label] [-U uuid] special"
+USAGE="Usage: xfs_admin [-fluV] [-L label] [-U uuid] special"
 
-while getopts "fluL:U:" c
+while getopts "fluL:U:V" c
 do
 	case $c in
 	f)	OPTS=$OPTS" -f";;
@@ -42,6 +42,7 @@ do
 	L)	OPTS=$OPTS" -c 'label "$OPTARG"'";;
 	u)	OPTS=$OPTS" -r -c uuid";;
 	U)	OPTS=$OPTS" -c 'uuid "$OPTARG"'";;
+	V)	OPTS=$OPTS" -V";;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;

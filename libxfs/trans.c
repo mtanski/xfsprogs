@@ -44,7 +44,7 @@ libxfs_trans_alloc(
 	xfs_trans_t	*ptr;
 
 	if ((ptr = calloc(sizeof(xfs_trans_t), 1)) == NULL) {
-		fprintf(stderr, "%s: xact calloc failed (%d bytes): %s\n",
+		fprintf(stderr, _("%s: xact calloc failed (%d bytes): %s\n"),
 			progname, (int)sizeof(xfs_trans_t), strerror(errno));
 		exit(1);
 	}
@@ -567,7 +567,7 @@ inode_item_done(
 	 */
 	error = libxfs_itobp(mp, NULL, ip, &dip, &bp, 0);
 	if (error) {
-		fprintf(stderr, "%s: warning - itobp failed (%d)\n",
+		fprintf(stderr, _("%s: warning - itobp failed (%d)\n"),
 			progname, error);
 		goto ili_done;
 	}
@@ -575,7 +575,7 @@ inode_item_done(
 	XFS_BUF_SET_FSPRIVATE(bp, iip);
 	error = libxfs_iflush_int(ip, bp);
 	if (error) {
-		fprintf(stderr, "%s: warning - iflush_int failed (%d)\n",
+		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
 			progname, error);
 		goto ili_done;
 	}
@@ -656,7 +656,7 @@ trans_chunk_committed(
 		else if (lip->li_type == XFS_LI_INODE)
 			inode_item_done((xfs_inode_log_item_t *)lidp->lid_item);
 		else {
-			fprintf(stderr, "%s: unrecognised log item type\n",
+			fprintf(stderr, _("%s: unrecognised log item type\n"),
 				progname);
 			ASSERT(0);
 		}
@@ -740,7 +740,7 @@ xfs_trans_unlock_chunk(
 			iip->ili_flags &= ~XFS_ILI_HOLD;
 		}
 		else {
-			fprintf(stderr, "%s: unrecognised log item type\n",
+			fprintf(stderr, _("%s: unrecognised log item type\n"),
 				progname);
 			ASSERT(0);
 		}

@@ -383,16 +383,18 @@ scan_ag(
 	xfs_agi_t	*agi;
 
 	push_cur();
-	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGF],
+		XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agf = iocur_top->data) == NULL) {
 		dbprintf("can't read agf block for ag %u\n", agno);
 		pop_cur();
 		return;
 	}
 	push_cur();
-	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGI],
+		XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agi = iocur_top->data) == NULL) {
 		dbprintf("can't read agi block for ag %u\n", agno);
 		pop_cur();
@@ -499,7 +501,7 @@ scanfunc_ino(
 			set_cur(&typtab[TYP_INODE],
 				XFS_AGB_TO_DADDR(mp, seqno,
 						 XFS_AGINO_TO_AGBNO(mp, agino)),
-				(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
+				XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
 				DB_RING_IGN, NULL);
 			if (iocur_top->data == NULL) {
 				dbprintf("can't read inode block %u/%u\n",

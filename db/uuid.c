@@ -105,8 +105,9 @@ static int
 get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 {
 	push_cur();
-	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, agno, XFS_SB_DADDR), 1,
-		DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_SB],
+		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
  
 	if (!iocur_top->data) {
 		dbprintf("can't read superblock for AG %u\n", agno);

@@ -120,11 +120,12 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 	int err = 0;
 	int agi_dirty = 0;
 
-	bp = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR),
-				mp->m_sb.sb_sectsize/BBSIZE, 0);
+	bp = libxfs_readbuf(mp->m_dev,
+			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+			mp->m_sb.sb_sectsize/BBSIZE, 0);
 	if (!bp) {
 		do_error("cannot read agi block %lld for ag %u\n",
-			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR), agno);
+			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)), agno);
 		exit(1);
 	}
 

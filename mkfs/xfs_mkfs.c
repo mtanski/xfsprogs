@@ -35,10 +35,7 @@
 #include <volume.h>
 #include <libxfs.h>
 #include <ctype.h>
-
 #include "xfs_mkfs.h"
-#include "maxtrres.h"
-#include "proto.h"
 
 /*
  * Prototypes for internal functions.
@@ -54,7 +51,7 @@ static int  max_trans_res(xfs_mount_t *mp);
 /*
  * option tables for getsubopt calls
  */
-char	*bopts[] = {
+char *bopts[] = {
 #define	B_LOG		0
 	"log",
 #define	B_SIZE		1
@@ -115,10 +112,14 @@ char	*lopts[] = {
 	"su",
 #define L_DEV		6
 	"logdev",
+#define	L_SECTLOG	7
+	"sectlog",
+#define	L_SECTSIZE	8
+	"sectsize",
 #ifdef MKFS_SIMULATION
-#define	L_FILE		7
+#define	L_FILE		9
 	"file",
-#define	L_NAME		8
+#define	L_NAME		10
 	"name",
 #endif
 	NULL
@@ -150,106 +151,20 @@ char	*ropts[] = {
 	NULL
 };
 
-/*
- * max transaction reservation values
- * version 1:
- * first dimension log(blocksize) (base XFS_MIN_BLOCKSIZE_LOG)
- * second dimension log(inodesize) (base XFS_DINODE_MIN_LOG)
- * version 2:
- * first dimension log(blocksize) (base XFS_MIN_BLOCKSIZE_LOG)
- * second dimension log(inodesize) (base XFS_DINODE_MIN_LOG)
- * third dimension log(dirblocksize) (base XFS_MIN_BLOCKSIZE_LOG)
- */
-#define	DFL_B	(XFS_MAX_BLOCKSIZE_LOG + 1 - XFS_MIN_BLOCKSIZE_LOG)
-#define	DFL_I	(XFS_DINODE_MAX_LOG + 1 - XFS_DINODE_MIN_LOG)
-#define	DFL_D	(XFS_MAX_BLOCKSIZE_LOG + 1 - XFS_MIN_BLOCKSIZE_LOG)
-
-static const int max_trres_v1[DFL_B][DFL_I] = {
-	{ MAXTRRES_B9_I8_D9_V1, 0, 0, 0 },
-	{ MAXTRRES_B10_I8_D10_V1, MAXTRRES_B10_I9_D10_V1, 0, 0 },
-	{ MAXTRRES_B11_I8_D11_V1, MAXTRRES_B11_I9_D11_V1,
-	  MAXTRRES_B11_I10_D11_V1, 0 },
-	{ MAXTRRES_B12_I8_D12_V1, MAXTRRES_B12_I9_D12_V1,
-	  MAXTRRES_B12_I10_D12_V1, MAXTRRES_B12_I11_D12_V1 },
-	{ MAXTRRES_B13_I8_D13_V1, MAXTRRES_B13_I9_D13_V1,
-	  MAXTRRES_B13_I10_D13_V1, MAXTRRES_B13_I11_D13_V1 },
-	{ MAXTRRES_B14_I8_D14_V1, MAXTRRES_B14_I9_D14_V1,
-	  MAXTRRES_B14_I10_D14_V1, MAXTRRES_B14_I11_D14_V1 },
-	{ MAXTRRES_B15_I8_D15_V1, MAXTRRES_B15_I9_D15_V1,
-	  MAXTRRES_B15_I10_D15_V1, MAXTRRES_B15_I11_D15_V1 },
-	{ MAXTRRES_B16_I8_D16_V1, MAXTRRES_B16_I9_D16_V1,
-	  MAXTRRES_B16_I10_D16_V1, MAXTRRES_B16_I11_D16_V1 },
-};
-
-static const int max_trres_v2[DFL_B][DFL_I][DFL_D] = {
-	{ { MAXTRRES_B9_I8_D9_V2, MAXTRRES_B9_I8_D10_V2, MAXTRRES_B9_I8_D11_V2,
-	    MAXTRRES_B9_I8_D12_V2, MAXTRRES_B9_I8_D13_V2, MAXTRRES_B9_I8_D14_V2,
-	    MAXTRRES_B9_I8_D15_V2, MAXTRRES_B9_I8_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 } },
-	{ { 0, MAXTRRES_B10_I8_D10_V2, MAXTRRES_B10_I8_D11_V2,
-	    MAXTRRES_B10_I8_D12_V2, MAXTRRES_B10_I8_D13_V2,
-	    MAXTRRES_B10_I8_D14_V2, MAXTRRES_B10_I8_D15_V2,
-	    MAXTRRES_B10_I8_D16_V2 },
-	  { 0, MAXTRRES_B10_I9_D10_V2, MAXTRRES_B10_I9_D11_V2,
-	    MAXTRRES_B10_I9_D12_V2, MAXTRRES_B10_I9_D13_V2,
-	    MAXTRRES_B10_I9_D14_V2, MAXTRRES_B10_I9_D15_V2,
-	    MAXTRRES_B10_I9_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 } },
-	{ { 0, 0, MAXTRRES_B11_I8_D11_V2, MAXTRRES_B11_I8_D12_V2,
-	    MAXTRRES_B11_I8_D13_V2, MAXTRRES_B11_I8_D14_V2,
-	    MAXTRRES_B11_I8_D15_V2, MAXTRRES_B11_I8_D16_V2 },
-	  { 0, 0, MAXTRRES_B11_I9_D11_V2, MAXTRRES_B11_I9_D12_V2,
-	    MAXTRRES_B11_I9_D13_V2, MAXTRRES_B11_I9_D14_V2,
-	    MAXTRRES_B11_I9_D15_V2, MAXTRRES_B11_I9_D16_V2 },
-	  { 0, 0, MAXTRRES_B11_I10_D11_V2, MAXTRRES_B11_I10_D12_V2,
-	    MAXTRRES_B11_I10_D13_V2, MAXTRRES_B11_I10_D14_V2,
-	    MAXTRRES_B11_I10_D15_V2, MAXTRRES_B11_I10_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, 0 } },
-	{ { 0, 0, 0, MAXTRRES_B12_I8_D12_V2, MAXTRRES_B12_I8_D13_V2,
-	    MAXTRRES_B12_I8_D14_V2, MAXTRRES_B12_I8_D15_V2,
-	    MAXTRRES_B12_I8_D16_V2 },
-	  { 0, 0, 0, MAXTRRES_B12_I9_D12_V2, MAXTRRES_B12_I9_D13_V2,
-	    MAXTRRES_B12_I9_D14_V2, MAXTRRES_B12_I9_D15_V2,
-	    MAXTRRES_B12_I9_D16_V2 },
-	  { 0, 0, 0, MAXTRRES_B12_I10_D12_V2, MAXTRRES_B12_I10_D13_V2,
-	    MAXTRRES_B12_I10_D14_V2, MAXTRRES_B12_I10_D15_V2,
-	    MAXTRRES_B12_I10_D16_V2 },
-	  { 0, 0, 0, MAXTRRES_B12_I11_D12_V2, MAXTRRES_B12_I11_D13_V2,
-	    MAXTRRES_B12_I11_D14_V2, MAXTRRES_B12_I11_D15_V2,
-	    MAXTRRES_B12_I11_D16_V2 } },
-	{ { 0, 0, 0, 0, MAXTRRES_B13_I8_D13_V2, MAXTRRES_B13_I8_D14_V2,
-	    MAXTRRES_B13_I8_D15_V2, MAXTRRES_B13_I8_D16_V2 },
-	  { 0, 0, 0, 0, MAXTRRES_B13_I9_D13_V2, MAXTRRES_B13_I9_D14_V2,
-	    MAXTRRES_B13_I9_D15_V2, MAXTRRES_B13_I9_D16_V2 },
-	  { 0, 0, 0, 0, MAXTRRES_B13_I10_D13_V2, MAXTRRES_B13_I10_D14_V2,
-	    MAXTRRES_B13_I10_D15_V2, MAXTRRES_B13_I10_D16_V2 },
-	  { 0, 0, 0, 0, MAXTRRES_B13_I11_D13_V2, MAXTRRES_B13_I11_D14_V2,
-	    MAXTRRES_B13_I11_D15_V2, MAXTRRES_B13_I11_D16_V2 } },
-	{ { 0, 0, 0, 0, 0, MAXTRRES_B14_I8_D14_V2, MAXTRRES_B14_I8_D15_V2,
-	    MAXTRRES_B14_I8_D16_V2 },
-	  { 0, 0, 0, 0, 0, MAXTRRES_B14_I9_D14_V2, MAXTRRES_B14_I9_D15_V2,
-	    MAXTRRES_B14_I9_D16_V2 },
-	  { 0, 0, 0, 0, 0, MAXTRRES_B14_I10_D14_V2, MAXTRRES_B14_I10_D15_V2,
-	    MAXTRRES_B14_I10_D16_V2 },
-	  { 0, 0, 0, 0, 0, MAXTRRES_B14_I11_D14_V2, MAXTRRES_B14_I11_D15_V2,
-	    MAXTRRES_B14_I11_D16_V2 } },
-	{ { 0, 0, 0, 0, 0, 0, MAXTRRES_B15_I8_D15_V2, MAXTRRES_B15_I8_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, MAXTRRES_B15_I9_D15_V2, MAXTRRES_B15_I9_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, MAXTRRES_B15_I10_D15_V2,
-	    MAXTRRES_B15_I10_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, MAXTRRES_B15_I11_D15_V2,
-	    MAXTRRES_B15_I11_D16_V2 } },
-	{ { 0, 0, 0, 0, 0, 0, 0, MAXTRRES_B16_I8_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, MAXTRRES_B16_I9_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, MAXTRRES_B16_I10_D16_V2 },
-	  { 0, 0, 0, 0, 0, 0, 0, MAXTRRES_B16_I11_D16_V2, } },
+char	*sopts[] = {
+#define	S_LOG		0
+	"log",
+#define	S_SECTLOG	1
+	"sectlog",
+#define	S_SIZE		2
+	"size",
+#define	S_SECTSIZE	3
+	"sectsize",
+	NULL
 };
 
 /*
- * Use this before we have a superblock, else would use XFS_DTOBT
+ * Use this macro before we have superblock and mount structure
  */
 #define	DTOBT(d)	((xfs_drfsbno_t)((d) >> (blocklog - BBSHIFT)))
 
@@ -264,19 +179,29 @@ static const int max_trres_v2[DFL_B][DFL_I][DFL_D] = {
 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
 
 static void
-calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *lsunit)
+calc_stripe_factors(
+	int		dsu,
+	int		dsw,
+	int		dsectsz,
+	int		lsu,
+	int		lsectsz,
+	int		*dsunit,
+	int		*dswidth,
+	int		*lsunit)
 {
 	/* Handle data sunit/swidth options */
 	if (*dsunit || *dswidth) {
 		if (dsu || dsw) {
 			fprintf(stderr,
-	"data su/sw should not be used in conjunction with data sunit/swidth\n");
+				_("data su/sw must not be used in "
+				"conjunction with data sunit/swidth\n"));
 			usage();
 		}
 
 		if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
 			fprintf(stderr,
-	"both data sunit and data swidth options must be specified\n");
+				_("both data sunit and data swidth options "
+				"must be specified\n"));
 			usage();
 		}
 	}
@@ -284,19 +209,22 @@ calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *l
 	if (dsu || dsw) {
 		if (*dsunit || *dswidth) {
 			fprintf(stderr,
-	"data sunit/swidth should not be used in conjunction with data su/sw\n");
+				_("data sunit/swidth must not be used in "
+				"conjunction with data su/sw\n"));
 			usage();
 		}
 
 		if ((dsu && !dsw) || (!dsu && dsw)) {
 			fprintf(stderr,
-	"both data su and data sw options must be specified\n");
+				_("both data su and data sw options "
+				"must be specified\n"));
 			usage();
 		}
 
-		if (dsu % BBSIZE) {
-			fprintf(stderr, "data su must be a multiple of %d\n",
-								BBSIZE);
+		if (dsu % dsectsz) {
+			fprintf(stderr,
+				_("data su must be a multiple of the "
+				"sector size (%d)\n"), dsectsz);
 			usage();
 		}
 
@@ -306,8 +234,8 @@ calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *l
 
 	if (*dsunit && (*dswidth % *dsunit != 0)) {
 		fprintf(stderr,
-	"data stripe width (%d) must be a multiple of the data stripe unit (%d)\n",
-			*dswidth, *dsunit);
+			_("data stripe width (%d) must be a multiple of the "
+			"data stripe unit (%d)\n"), *dswidth, *dsunit);
 		usage();
 	}
 
@@ -316,7 +244,8 @@ calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *l
 	if (*lsunit) {
 		if (lsu) {
 			fprintf(stderr,
-	"log su should not be used in conjunction with log sunit\n");
+				_("log su should not be used in "
+				"conjunction with log sunit\n"));
 			usage();
 		}
 	}
@@ -324,43 +253,46 @@ calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *l
 	if (lsu) {
 		if (*lsunit) {
 			fprintf(stderr,
-	"log sunit should not be used in conjunction with log su\n");
+				_("log sunit should not be used in "
+				"conjunction with log su\n"));
 			usage();
 		}
 
-		if (lsu % BBSIZE) {
-			fprintf(stderr, "log su must be a multiple of %d\n",
-							BBSIZE);
+		if (lsu % lsectsz) {
+			fprintf(stderr,
+				_("log su must be a multiple of the "
+				"sector size (%d)\n"), lsectsz);
 			usage();
 		}
 
-		*lsunit  = (int)BTOBBT(lsu);
+		*lsunit = (int)BTOBBT(lsu);
 	}
 }
 
 static int
-check_overwrite(char *device)
+check_overwrite(
+	char		*device)
 {
-	char *type;
+	char		*type;
 
 	if (device && *device) {
 		if ((type = fstype(device)) != NULL) {
 			fprintf(stderr,
-		"%s: %s appears to contain an existing filesystem (%s).\n",
-				progname, device, type);
+				_("%s: %s appears to contain an existing "
+				"filesystem (%s).\n"), progname, device, type);
 			return 1;
 		}
 		if ((type = pttype(device)) != NULL) {
 			fprintf(stderr,
-		"%s: %s appears to contain a partition table (%s).\n",
-				progname, device, type);
+				_("%s: %s appears to contain a partition "
+				"table (%s).\n"), progname, device, type);
 			return 1;
 		}
 	}
 	return 0;
 }
 
-xfs_dfsbno_t
+static xfs_dfsbno_t
 fixup_log_stripe(
 	xfs_mount_t	*mp,
 	int		lsflag,
@@ -392,24 +324,27 @@ fixup_log_stripe(
 			*logblocks = tmp_logblocks;
 		} else {
 			fprintf(stderr,
-	"internal log size %lld is not a multiple of the log stripe unit %d\n", 
-					(long long)*logblocks, sunit);
+				_("internal log size %lld is not a multiple "
+				"of the log stripe unit %d\n"),
+				(long long) *logblocks, sunit);
 			usage();
 		}
 	}
 
-	if (*logblocks > agsize-XFS_FSB_TO_AGBNO(mp,logstart)) {
+	if (*logblocks > agsize - XFS_FSB_TO_AGBNO(mp, logstart)) {
 		fprintf(stderr,
-	"Due to stripe alignment, the internal log size %lld is too large.\n"
-	"Must fit in allocation group\n",
-			(long long)*logblocks);
+			_("Due to stripe alignment, the internal log size "
+			"(%lld) is too large.\n"), (long long) *logblocks);
+		fprintf(stderr, _("Must fit within an allocation group.\n"));
 		usage();
 	}
 	return logstart;
 }
 
 int
-main(int argc, char **argv)
+main(
+	int			argc,
+	char			**argv)
 {
 	__uint64_t		agcount;
 	xfs_agf_t		*agf;
@@ -463,6 +398,8 @@ main(int argc, char **argv)
 	int			logversion;
 	int			lvflag;
 	int			lsflag;
+	int			lsectorlog;
+	int			lsectorsize;
 	int			lsu;
 	int			lsunit;
 	int			min_logblocks;
@@ -486,7 +423,10 @@ main(int argc, char **argv)
 	char			*rtfile;
 	char			*rtsize;
 	xfs_sb_t		*sbp;
-	int			sectlog;
+	int			sectorlog;
+	int			sectorsize;
+	int			slflag;
+	int			ssflag;
 	__uint64_t		tmp_agsize;
 	uuid_t			uuid;
 	int			worst_freelist;
@@ -495,11 +435,18 @@ main(int argc, char **argv)
 	int			xlv_dswidth;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	agcount = 8;
-	blflag = bsflag = 0;
-	dasize = daflag = 0;
+	blflag = bsflag = slflag = ssflag = 0;
 	blocklog = blocksize = 0;
-	agsize = daflag = dblocks = 0;
+	sectorlog = BBSHIFT;
+	sectorsize = BBSIZE;
+	lsectorlog = 0;
+	lsectorsize = 0;
+	agsize = daflag = dasize = dblocks = 0;
 	ilflag = imflag = ipflag = isflag = 0;
 	liflag = laflag = lsflag = ldflag = lvflag = 0;
 	loginternal = 1;
@@ -510,18 +457,18 @@ main(int argc, char **argv)
 	qflag = 0;
 	imaxpct = inodelog = inopblock = isize = 0;
 	iaflag = XFS_IFLAG_ALIGN;
-	bzero(&xi, sizeof(xi));
-	xi.notvolok = 1;
-	xi.setblksize = 1;
 	dfile = logfile = rtfile = NULL;
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-	opterr = 0;
 	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsu = lsunit = 0;
 	extent_flagging = 0;
 	force_overwrite = 0;
 	worst_freelist = 0;
 
-	while ((c = getopt(argc, argv, "b:d:i:l:L:n:Np:qr:CfV")) != EOF) {
+	bzero(&xi, sizeof(xi));
+	xi.notvolok = 1;
+	xi.setblksize = 1;
+
+	while ((c = getopt(argc, argv, "b:d:i:l:L:n:Np:qr:s:CfV")) != EOF) {
 		switch (c) {
 		case 'C':
 		case 'f':
@@ -555,7 +502,8 @@ main(int argc, char **argv)
 					if (blflag)
 						conflict('b', bopts, B_LOG,
 							 B_SIZE);
-					blocksize = cvtnum(0, value);
+					blocksize = cvtnum(
+						blocksize, sectorsize, value);
 					if (blocksize <= 0 ||
 					    !ispow2(blocksize))
 						illegal(value, "b size");
@@ -589,7 +537,8 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_AGSIZE);
 					if (dasize)
 						respec('d', dopts, D_AGSIZE);
-					agsize = cvtnum(blocksize, value);
+					agsize = cvtnum(
+						blocksize, sectorsize, value);
 					dasize = 1;
 					break;
 				case D_FILE:
@@ -622,11 +571,11 @@ main(int argc, char **argv)
 						respec('d', dopts, D_SUNIT);
 					if (!isdigits(value)) {
 						fprintf(stderr,
-		"%s: Specify data sunit in 512-byte blocks, no unit suffix\n",
+	_("%s: Specify data sunit in 512-byte blocks, no unit suffix\n"),
 							progname);
 						exit(1);
 					}
-					dsunit = cvtnum(0, value);
+					dsunit = cvtnum(0, 0, value);
 					break;
 				case D_SWIDTH:
 					if (!value)
@@ -635,18 +584,19 @@ main(int argc, char **argv)
 						respec('d', dopts, D_SWIDTH);
 					if (!isdigits(value)) {
 						fprintf(stderr,
-		"%s: Specify data swidth in 512-byte blocks, no unit suffix\n",
+	_("%s: Specify data swidth in 512-byte blocks, no unit suffix\n"),
 							progname);
 						exit(1);
 					}
-					dswidth = cvtnum(0, value);
+					dswidth = cvtnum(0, 0, value);
 					break;
 				case D_SU:
 					if (!value)
 						reqval('d', dopts, D_SU);
 					if (dsu)
 						respec('d', dopts, D_SU);
-					dsu = cvtnum(blocksize, value);
+					dsu = cvtnum(
+						blocksize, sectorsize, value);
 					break;
 				case D_SW:
 					if (!value)
@@ -655,11 +605,11 @@ main(int argc, char **argv)
 						respec('d', dopts, D_SW);
 					if (!isdigits(value)) {
 						fprintf(stderr,
-		"%s: Specify data sw as multiple of su, no unit suffix\n",
+		_("%s: Specify data sw as multiple of su, no unit suffix\n"),
 							progname);
 						exit(1);
 					}
-					dsw = cvtnum(0, value);
+					dsw = cvtnum(0, 0, value);
 					break;
 				case D_UNWRITTEN:
 					if (!value)
@@ -743,7 +693,7 @@ main(int argc, char **argv)
 							 I_SIZE);
 					if (isflag)
 						respec('i', iopts, I_SIZE);
-					isize = cvtnum(0, value);
+					isize = cvtnum(0, 0, value);
 					if (isize <= 0 || !ispow2(isize))
 						illegal(value, "i size");
 					inodelog = libxfs_highbit32(isize);
@@ -772,7 +722,8 @@ main(int argc, char **argv)
 					break;
 				case L_DEV:
 					if (!value) {
-						fprintf (stderr, "Must specify log device\n");
+						fprintf(stderr,
+					_("Must specify log device\n"));
 						usage();
 					}
 
@@ -827,7 +778,8 @@ main(int argc, char **argv)
 						reqval('l', lopts, L_SU);
 					if (lsu)
 						respec('l', lopts, L_SU);
-					lsu = cvtnum(blocksize, value);
+					lsu = cvtnum(
+						blocksize, sectorsize, value);
 					break;
 				case L_SUNIT:
 					if (!value)
@@ -836,10 +788,10 @@ main(int argc, char **argv)
 						respec('l', lopts, L_SUNIT);
 					if (!isdigits(value)) {
 						fprintf(stderr,
-		"Specify log sunit in 512-byte blocks, no size suffix\n");
+		_("Specify log sunit in 512-byte blocks, no size suffix\n"));
 						usage();
 					}
-					lsunit = cvtnum(0, value);
+					lsunit = cvtnum(0, 0, value);
 					break;
 #ifdef HAVE_VOLUME_MANAGER
 				case L_NAME:
@@ -870,6 +822,29 @@ main(int argc, char **argv)
 						respec('l', lopts, L_SIZE);
 					logsize = value;
 					lsflag = 1;
+					break;
+				case L_SECTLOG:
+					if (!value)
+						reqval('s', sopts, L_SECTLOG);
+					if (lsectorlog)
+						respec('s', sopts, L_SECTLOG);
+					lsectorlog = atoi(value);
+					if (lsectorlog <= 0)
+						illegal(value, "l sectlog");
+					lsectorsize = 1 << lsectorlog;
+					break;
+				case L_SECTSIZE:
+					if (!value)
+						reqval('l', lopts, L_SECTSIZE);
+					if (lsectorsize)
+						respec('l', lopts, L_SECTSIZE);
+					lsectorsize = cvtnum(
+						blocksize, sectorsize, value);
+					if (lsectorsize <= 0 ||
+					    !ispow2(lsectorsize))
+						illegal(value, "l sectsize");
+					lsectorlog =
+						libxfs_highbit32(lsectorsize);
 					break;
 				default:
 					unknown('l', value);
@@ -909,7 +884,8 @@ main(int argc, char **argv)
 					if (nlflag)
 						conflict('n', nopts, N_LOG,
 							 N_SIZE);
-					dirblocksize = cvtnum(0, value);
+					dirblocksize = cvtnum(
+						blocksize, sectorsize, value);
 					if (dirblocksize <= 0 ||
 					    !ispow2(dirblocksize))
 						illegal(value, "n size");
@@ -992,44 +968,122 @@ main(int argc, char **argv)
 				}
 			}
 			break;
+		case 's':
+			p = optarg;
+			while (*p != '\0') {
+				char	*value;
+
+				switch (getsubopt(&p, (constpp)sopts, &value)) {
+				case S_LOG:
+				case S_SECTLOG:
+					if (!value)
+						reqval('s', sopts, S_LOG);
+					if (slflag)
+						respec('s', sopts, S_LOG);
+					if (ssflag)
+						conflict('s', sopts, S_SIZE,
+							 S_LOG);
+					sectorlog = atoi(value);
+					if (sectorlog <= 0)
+						illegal(value, "s log");
+					sectorsize = 1 << sectorlog;
+					slflag = 1;
+					break;
+				case S_SIZE:
+				case S_SECTSIZE:
+					if (!value)
+						reqval('s', sopts, S_SIZE);
+					if (ssflag)
+						respec('s', sopts, S_SIZE);
+					if (slflag)
+						conflict('s', sopts, S_LOG,
+							 S_SIZE);
+					sectorsize = cvtnum(
+						blocksize, sectorsize, value);
+					if (sectorsize <= 0 ||
+					    !ispow2(sectorsize))
+						illegal(value, "s size");
+					sectorlog =
+						libxfs_highbit32(sectorsize);
+					ssflag = 1;
+					break;
+				default:
+					unknown('s', value);
+				}
+			}
+			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case '?':
 			unknown(optopt, "");
 		}
 	}
 	if (argc - optind > 1) {
-		fprintf(stderr, "extra arguments\n");
+		fprintf(stderr, _("extra arguments\n"));
 		usage();
 	} else if (argc - optind == 1) {
 		dfile = xi.volname = argv[optind];
 		if (xi.dname) {
 			fprintf(stderr,
-				"cannot specify both %s and -d name=%s\n",
+				_("cannot specify both %s and -d name=%s\n"),
 				xi.volname, xi.dname);
 			usage();
 		}
 	} else
 		dfile = xi.dname;
-	/* option post-processing */
+
 	/*
-	 * blocksize first, other things depend on it
+	 * Blocksize and sectorsize first, other things depend on them
 	 */
 	if (!blflag && !bsflag) {
 		blocklog = XFS_DFL_BLOCKSIZE_LOG;
 		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
 	}
 	if (blocksize < XFS_MIN_BLOCKSIZE || blocksize > XFS_MAX_BLOCKSIZE) {
-		fprintf(stderr, "illegal block size %d\n", blocksize);
+		fprintf(stderr, _("illegal block size %d\n"), blocksize);
 		usage();
 	}
+	if (sectorsize < XFS_MIN_SECTORSIZE ||
+	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
+		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+		usage();
+	}
+
+	/*
+	 * Support for non-512 byte sector sizes is a work-in-progress...
+	 */
+
+#ifdef EXPERIMENTAL_LARGE_SECTORS
+	if (!lsectorsize) {
+		lsectorlog = BBSHIFT;
+		lsectorsize = BBSIZE;
+	}
+	if (lsectorsize < XFS_MIN_SECTORSIZE ||
+	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > sectorsize) {
+		fprintf(stderr, _("illegal log sector size %d\n"), sectorsize);
+		usage();
+	}
+#else
+	if (sectorsize != BBSIZE) {
+		fprintf(stderr, _("illegal sector size %d\n"),
+			sectorsize);
+		usage();
+	}
+	if (lsectorsize != BBSIZE && lsectorsize) {
+		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
+		usage();
+	}
+	lsectorlog = BBSHIFT;
+	lsectorsize = BBSIZE;
+#endif
+
 	if (!nvflag)
 		dirversion = (nsflag || nlflag) ? 2 : XFS_DFL_DIR_VERSION;
 	switch (dirversion) {
 	case 1:
 		if ((nsflag || nlflag) && dirblocklog != blocklog) {
-			fprintf(stderr, "illegal directory block size %d\n",
+			fprintf(stderr, _("illegal directory block size %d\n"),
 				dirblocksize);
 			usage();
 		}
@@ -1039,7 +1093,7 @@ main(int argc, char **argv)
 			if (dirblocksize < blocksize ||
 			    dirblocksize > XFS_MAX_BLOCKSIZE) {
 				fprintf(stderr,
-					"illegal directory block size %d\n",
+					_("illegal directory block size %d\n"),
 					dirblocksize);
 				usage();
 			}
@@ -1055,7 +1109,7 @@ main(int argc, char **argv)
 
 	if (daflag && dasize) {
 		fprintf(stderr,
-	"both -d agcount= and agsize= specified, use one or the other\n");
+	_("both -d agcount= and agsize= specified, use one or the other\n"));
 		usage();
 	}
 
@@ -1064,23 +1118,23 @@ main(int argc, char **argv)
 
 	if (xi.disfile && (!dsize || !xi.dname)) {
 		fprintf(stderr,
-			"if -d file then -d name and -d size are required\n");
+	_("if -d file then -d name and -d size are required\n"));
 		usage();
 	}
 	if (dsize) {
 		__uint64_t dbytes;
 
-		dbytes = cvtnum(blocksize, dsize);
+		dbytes = cvtnum(blocksize, sectorsize, dsize);
 		if (dbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
-			"illegal data length %lld, not a multiple of %d\n",
+			_("illegal data length %lld, not a multiple of %d\n"),
 				(long long)dbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		dblocks = (xfs_drfsbno_t)(dbytes >> blocklog);
 		if (dbytes % blocksize)
-			fprintf(stderr,
-	"warning: data length %lld not a multiple of %d, truncated to %lld\n",
+			fprintf(stderr, _("warning: "
+	"data length %lld not a multiple of %d, truncated to %lld\n"),
 				(long long)dbytes, blocksize,
 				(long long)(dblocks << blocklog));
 	}
@@ -1094,48 +1148,48 @@ main(int argc, char **argv)
 #ifdef HAVE_VOLUME_MANAGER
 	if (xi.lisfile && (!logsize || !xi.logname)) {
 		fprintf(stderr,
-			"if -l file then -l name and -l size are required\n");
+		_("if -l file then -l name and -l size are required\n"));
 		usage();
 	}
 #endif
 	if (logsize) {
 		__uint64_t logbytes;
 
-		logbytes = cvtnum(blocksize, logsize);
+		logbytes = cvtnum(blocksize, sectorsize, logsize);
 		if (logbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
-			"illegal log length %lld, not a multiple of %d\n",
+			_("illegal log length %lld, not a multiple of %d\n"),
 				(long long)logbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		logblocks = (xfs_drfsbno_t)(logbytes >> blocklog);
 		if (logbytes % blocksize)
 			fprintf(stderr,
-	"warning: log length %lld not a multiple of %d, truncated to %lld\n",
+	_("warning: log length %lld not a multiple of %d, truncated to %lld\n"),
 				(long long)logbytes, blocksize,
 				(long long)(logblocks << blocklog));
 	}
 #ifdef HAVE_VOLUME_MANAGER
 	if (xi.risfile && (!rtsize || !xi.rtname)) {
 		fprintf(stderr,
-			"if -r file then -r name and -r size are required\n");
+		_("if -r file then -r name and -r size are required\n"));
 		usage();
 	}
 #endif
 	if (rtsize) {
 		__uint64_t rtbytes;
 
-		rtbytes = cvtnum(blocksize, rtsize);
+		rtbytes = cvtnum(blocksize, sectorsize, rtsize);
 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
-			"illegal rt length %lld, not a multiple of %d\n",
+			_("illegal rt length %lld, not a multiple of %d\n"),
 				(long long)rtbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		rtblocks = (xfs_drfsbno_t)(rtbytes >> blocklog);
 		if (rtbytes % blocksize)
 			fprintf(stderr,
-	"warning: rt length %lld not a multiple of %d, truncated to %lld\n",
+	_("warning: rt length %lld not a multiple of %d, truncated to %lld\n"),
 				(long long)rtbytes, blocksize,
 				(long long)(rtblocks << blocklog));
 	}
@@ -1145,22 +1199,22 @@ main(int argc, char **argv)
 	if (rtextsize) {
 		__uint64_t rtextbytes;
 
-		rtextbytes = cvtnum(blocksize, rtextsize);
+		rtextbytes = cvtnum(blocksize, sectorsize, rtextsize);
 		if (rtextbytes % blocksize) {
 			fprintf(stderr,
-			"illegal rt extent size %lld, not a multiple of %d\n",
+		_("illegal rt extent size %lld, not a multiple of %d\n"),
 				(long long)rtextbytes, blocksize);
 			usage();
 		}
 		if (rtextbytes > XFS_MAX_RTEXTSIZE) {
 			fprintf(stderr,
-				"rt extent size %s too large, maximum %d\n",
+				_("rt extent size %s too large, maximum %d\n"),
 				rtextsize, XFS_MAX_RTEXTSIZE);
 			usage();
 		}
 		if (rtextbytes < XFS_MIN_RTEXTSIZE) {
 			fprintf(stderr,
-				"rt extent size %s too small, minimum %d\n",
+				_("rt extent size %s too small, minimum %d\n"),
 				rtextsize, XFS_MIN_RTEXTSIZE);
 			usage();
 		}
@@ -1171,8 +1225,9 @@ main(int argc, char **argv)
 		 * and the underlying volume is striped, then set rtextblocks
 		 * to the stripe width.
 		 */
-		int dummy1, rswidth;
-		__uint64_t rtextbytes;
+		int		dummy1, rswidth;
+		__uint64_t	rtextbytes;
+
 		dummy1 = rswidth = 0;
                 
                 if (!xi.disfile)
@@ -1201,30 +1256,29 @@ main(int argc, char **argv)
 	    isize > XFS_DINODE_MAX_SIZE) {
 		int	maxsz;
 
-		fprintf(stderr, "illegal inode size %d\n", isize);
+		fprintf(stderr, _("illegal inode size %d\n"), isize);
 		maxsz = MIN(blocksize / XFS_MIN_INODE_PERBLOCK,
 			    XFS_DINODE_MAX_SIZE);
 		if (XFS_DINODE_MIN_SIZE == maxsz)
 			fprintf(stderr,
-			"allowable inode size with %d byte blocks is %d\n",
+			_("allowable inode size with %d byte blocks is %d\n"),
 				blocksize, XFS_DINODE_MIN_SIZE);
 		else
 			fprintf(stderr,
-	"allowable inode size with %d byte blocks is between %d and %d\n",
+	_("allowable inode size with %d byte blocks is between %d and %d\n"),
 				blocksize, XFS_DINODE_MIN_SIZE, maxsz);
 		usage();
 	}
 
 	/* if lsu or lsunit was specified, automatically use v2 logs */
 	if ((lsu || lsunit) && logversion == 1) {
-		fprintf(stderr, "log stripe unit specified, using v2 logs\n");
+		fprintf(stderr,
+			_("log stripe unit specified, using v2 logs\n"));
 		logversion = 2;
 	}
 
-	calc_stripe_factors(dsu, dsw, lsu, &dsunit, &dswidth, &lsunit);
-
-	/* other global variables */
-	sectlog = 9;		/* i.e. 512 bytes */
+	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
+				&dsunit, &dswidth, &lsunit);
 
 	/*
 	 * Initialize.  This will open the log and rt devices as well.
@@ -1232,7 +1286,7 @@ main(int argc, char **argv)
 	if (!libxfs_init(&xi))
 		usage();
 	if (!xi.ddev) {
-		fprintf(stderr, "no device name given in argument list\n");
+		fprintf(stderr, _("no device name given in argument list\n"));
 		usage();
 	}
 
@@ -1251,8 +1305,8 @@ main(int argc, char **argv)
 		if (check_overwrite(dfile) ||
 		    check_overwrite(logfile) ||
 		    check_overwrite(xi.rtname)) {
-			fprintf(stderr, "%s: "
-				"Use the -f option to force overwrite.\n",
+			fprintf(stderr,
+			_("%s: Use the -f option to force overwrite.\n"),
 				progname);
 			exit(1);
 		}
@@ -1263,62 +1317,71 @@ main(int argc, char **argv)
 	if (xi.logname)
 		logfile = xi.logname;
 	else if (loginternal)
-		logfile = "internal log";
+		logfile = _("internal log");
 	else if (xi.volname && xi.logdev)
-		logfile = "volume log";
+		logfile = _("volume log");
 	else if (!ldflag) {
-		fprintf(stderr, "no log subvolume or internal log\n");
+		fprintf(stderr, _("no log subvolume or internal log\n"));
 		usage();
 	}
 	if (xi.rtname)
 		rtfile = xi.rtname;
 	else
 	if (xi.volname && xi.rtdev)
-		rtfile = "volume rt";
+		rtfile = _("volume rt");
 	else if (!xi.rtdev)
-		rtfile = "none";
+		rtfile = _("none");
 	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
 		fprintf(stderr,
-"size %s specified for data subvolume is too large, maximum is %lld blocks\n",
+			_("size %s specified for data subvolume is too large, "
+			"maximum is %lld blocks\n"),
 			dsize, (long long)DTOBT(xi.dsize));
 		usage();
 	} else if (!dsize && xi.dsize > 0)
 		dblocks = DTOBT(xi.dsize);
 	else if (!dsize) {
-		fprintf(stderr, "can't get size of data subvolume\n");
+		fprintf(stderr, _("can't get size of data subvolume\n"));
 		usage();
 	} 
 	if (dblocks < XFS_MIN_DATA_BLOCKS) {
 		fprintf(stderr,
-		"size %lld of data subvolume is too small, minimum %d blocks\n",
+	_("size %lld of data subvolume is too small, minimum %d blocks\n"),
 			(long long)dblocks, XFS_MIN_DATA_BLOCKS);
 		usage();
 	}
-	if (xi.logdev && loginternal) {
-		fprintf(stderr, "can't have both external and internal logs\n");
+	if (loginternal && xi.logdev) {
+		fprintf(stderr,
+			_("can't have both external and internal logs\n"));
+		usage();
+	} else if (loginternal && sectorsize != lsectorsize) {
+		fprintf(stderr,
+	_("data and log sector sizes must be equal for internal logs\n"));
 		usage();
 	}
 	if (dirversion == 1)
-		i = max_trres_v1[blocklog - XFS_MIN_BLOCKSIZE_LOG]
+		i = max_trres_v1[sectorlog - XFS_MIN_SECTORSIZE_LOG]
+				[blocklog - XFS_MIN_BLOCKSIZE_LOG]
 				[inodelog - XFS_DINODE_MIN_LOG];
 	else
-		i = max_trres_v2[blocklog - XFS_MIN_BLOCKSIZE_LOG]
+		i = max_trres_v2[sectorlog - XFS_MIN_SECTORSIZE_LOG]
+				[blocklog - XFS_MIN_BLOCKSIZE_LOG]
 				[inodelog - XFS_DINODE_MIN_LOG]
 				[dirblocklog - XFS_MIN_BLOCKSIZE_LOG];
+	ASSERT(i);
 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, i * XFS_MIN_LOG_FACTOR);
 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
 		fprintf(stderr,
-"size %s specified for log subvolume is too large, maximum is %lld blocks\n",
+_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			logsize, (long long)DTOBT(xi.logBBsize));
 		usage();
 	} else if (!logsize && xi.logBBsize > 0)
 		logblocks = DTOBT(xi.logBBsize);
 	else if (logsize && !xi.logdev && !loginternal) {
 		fprintf(stderr,
-			"size specified for non-existent log subvolume\n");
+			_("size specified for non-existent log subvolume\n"));
 		usage();
 	} else if (loginternal && logsize && logblocks >= dblocks) {
-		fprintf(stderr, "size %lld too large for internal log\n",
+		fprintf(stderr, _("size %lld too large for internal log\n"),
 			(long long)logblocks);
 		usage();
 	} else if (!loginternal && !xi.logdev)
@@ -1342,32 +1405,33 @@ main(int argc, char **argv)
         } 
 	if (logblocks < min_logblocks) {
 		fprintf(stderr,
-		"log size %lld blocks too small, minimum size is %d blocks\n",
+	_("log size %lld blocks too small, minimum size is %d blocks\n"),
 			(long long)logblocks, min_logblocks);
 		usage();
 	}
 	if (logblocks > XFS_MAX_LOG_BLOCKS) {
 		fprintf(stderr,
-		"log size %lld blocks too large, maximum size is %d blocks\n",
+	_("log size %lld blocks too large, maximum size is %d blocks\n"),
 			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
 		usage();
 	}
 	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 		fprintf(stderr,
-		"log size %lld bytes too large, maximum size is %d bytes\n",
+	_("log size %lld bytes too large, maximum size is %d bytes\n"),
 			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
 		usage();
 	}
 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
 		fprintf(stderr,
-"size %s specified for rt subvolume is too large, maximum is %lld blocks\n",
+			_("size %s specified for rt subvolume is too large, "
+			"maximum is %lld blocks\n"),
 			rtsize, (long long)DTOBT(xi.rtsize));
 		usage();
 	} else if (!rtsize && xi.rtsize > 0)
 		rtblocks = DTOBT(xi.rtsize);
 	else if (rtsize && !xi.rtdev) {
 		fprintf(stderr,
-			"size specified for non-existent rt subvolume\n");
+			_("size specified for non-existent rt subvolume\n"));
 		usage();
 	}
 	if (xi.rtdev) {
@@ -1385,7 +1449,7 @@ main(int argc, char **argv)
 		 */
 		if (agsize % blocksize) {
 			fprintf(stderr,
-			"agsize (%lld) not a multiple of fs blk size (%d)\n",
+		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
 				(long long)agsize, blocksize);
 			usage();
 		}
@@ -1398,7 +1462,7 @@ main(int argc, char **argv)
 		 */
 		if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
 			fprintf(stderr,
-			"agsize (%lldb) too small, need at least %lld blocks\n",
+		_("agsize (%lldb) too small, need at least %lld blocks\n"),
 				(long long)agsize,
 				(long long)XFS_AG_MIN_BLOCKS(blocklog));
 			usage();
@@ -1406,7 +1470,7 @@ main(int argc, char **argv)
 
 		if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
 			fprintf(stderr,
-			"agsize (%lldb) too big, maximum is %lld blocks\n",
+		_("agsize (%lldb) too big, maximum is %lld blocks\n"),
 				(long long)agsize,
 				(long long)XFS_AG_MAX_BLOCKS(blocklog));
 			usage();
@@ -1414,7 +1478,7 @@ main(int argc, char **argv)
 
 		if (agsize > dblocks)  {
 			fprintf(stderr,
-			"agsize (%lldb) too big, data area is %lld blocks\n",
+		_("agsize (%lldb) too big, data area is %lld blocks\n"),
 				(long long)agsize, (long long)dblocks);
 			usage();
 		}
@@ -1431,9 +1495,10 @@ main(int argc, char **argv)
 	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
 		if (daflag || dasize) {
 			fprintf(stderr,
-				"too many allocation groups for size = %lld\n",
+			_("too many allocation groups for size = %lld\n"),
 				(long long)agsize);
-			fprintf(stderr, "need at most %lld allocation groups\n",
+			fprintf(stderr,
+				_("need at most %lld allocation groups\n"),
 				(long long)
 				(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
 				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
@@ -1455,10 +1520,11 @@ main(int argc, char **argv)
 	 */
 	else if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
 		if (daflag || dasize) {
-			fprintf(stderr, "too few allocation groups for size = %lld\n",
+			fprintf(stderr,
+			_("too few allocation groups for size = %lld\n"),
 				(long long)agsize);
 			fprintf(stderr,
-				"need at least %lld allocation groups\n",
+				_("need at least %lld allocation groups\n"),
 				(long long)
 				(dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
 				(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
@@ -1508,7 +1574,7 @@ main(int argc, char **argv)
 
 		if (dasize || daflag)
 			fprintf(stderr,
-		"agsize set to %lld, agcount %lld > max (%lld)\n",
+		_("agsize set to %lld, agcount %lld > max (%lld)\n"),
 				(long long)agsize, (long long)agcount,
 				(long long)XFS_MAX_AGNUMBER+1);
 
@@ -1516,7 +1582,7 @@ main(int argc, char **argv)
 			/*
 			 * We're confused.
 			 */
-			fprintf(stderr, "%s: can't compute agsize/agcount\n",
+			fprintf(stderr, _("%s: can't compute agsize/agcount\n"),
 				progname);
 			exit(1);
 		}
@@ -1529,13 +1595,15 @@ main(int argc, char **argv)
 	if (dsunit) {
 
 		if (xlv_dsunit && xlv_dsunit != dsunit) {
-			fprintf(stderr, "%s: "
-  "Specified data stripe unit %d is not the same as the xlv stripe unit %d\n", 
+			fprintf(stderr,
+				_("%s: Specified data stripe unit %d is not "
+				"the same as the volume stripe unit %d\n"),
 				progname, dsunit, xlv_dsunit);
 		}
 		if (xlv_dswidth && xlv_dswidth != dswidth) {
-			fprintf(stderr, "%s: "
-"Specified data stripe width %d is not the same as the xlv stripe width %d\n",
+			fprintf(stderr,
+				_("%s: Specified data stripe width %d is not "
+				"the same as the volume stripe width %d\n"),
 				progname, dswidth, xlv_dswidth);
 		}
 	} else {
@@ -1579,14 +1647,14 @@ main(int argc, char **argv)
 						(dblocks % agsize != 0);
 				if (dasize || daflag)
 					fprintf(stderr,
-					"agsize rounded to %lld, swidth = %d\n",
+				_("agsize rounded to %lld, swidth = %d\n"),
 						(long long)agsize, dswidth);
                 	} else {
 				if (nodsflag) {
 					dsunit = dswidth = 0;
 				} else { 
 					fprintf(stderr,
-"Allocation group size %lld is not a multiple of the stripe unit %d\n",
+_("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
 						(long long)agsize, dsunit);
 					exit(1);
 				}
@@ -1607,10 +1675,10 @@ main(int argc, char **argv)
 				}
 			}
 			if (daflag || dasize) {
-				fprintf(stderr,
+				fprintf(stderr, _(
 "Warning: AG size is a multiple of stripe width.  This can cause performance\n\
 problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
-an AG size that is one stripe unit smaller, for example %llu\n",
+an AG size that is one stripe unit smaller, for example %llu.\n"),
 					(unsigned long long)tmp_agsize);
 			} else {
 				agsize = tmp_agsize;
@@ -1632,8 +1700,9 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		if (nodsflag)
 			dsunit = dswidth = 0;
 		else { 
-			fprintf(stderr, "%s: "
-"Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n",
+			fprintf(stderr,
+				_("%s: Stripe unit(%d) or stripe width(%d) is "
+				"not a multiple of the block size(%d)\n"),
 				progname, BBTOB(dsunit), BBTOB(dswidth), 
 				blocksize); 	
 			exit(1);
@@ -1647,7 +1716,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	if (lsunit) {
 		if ((BBTOB(lsunit) % blocksize != 0)) {
 			fprintf(stderr,
-"log stripe unit (%d) must be a multiple of the block size (%d)\n",
+	_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
 			BBTOB(lsunit), blocksize);
 			exit(1);
 		}
@@ -1660,7 +1729,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 
 	if ((lsunit * blocksize) > 256 * 1024) {
 		fprintf(stderr,
-"log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n", 
+_("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
 			(lsunit * blocksize));
 		exit(1);
 	}
@@ -1671,8 +1740,11 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	sbp = &mp->m_sb;
 	bzero(mp, sizeof(xfs_mount_t));
 	sbp->sb_blocklog = (__uint8_t)blocklog;
+	sbp->sb_sectlog = (__uint8_t)sectorlog;
 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+
 	if (loginternal) {
 		/*
 		 * Readjust the log size to fit within an AG if it was sized
@@ -1684,14 +1756,14 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		}
 		if (logblocks > agsize - XFS_PREALLOC_BLOCKS(mp)) {
 			fprintf(stderr,
-	"internal log size %lld too large, must fit in allocation group\n",
+	_("internal log size %lld too large, must fit in allocation group\n"),
 				(long long)logblocks);
 			usage();
 		}
 		if (laflag) {
 			if (logagno >= agcount) {
 				fprintf(stderr,
-			"log ag number %d too large, must be less than %lld\n",
+		_("log ag number %d too large, must be less than %lld\n"),
 					logagno, (long long)agcount);
 				usage();
 			}
@@ -1716,6 +1788,29 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	} else
 		logstart = 0;
 
+	if (!qflag || Nflag) {
+		printf(_(
+		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+		   "         =%-22s sectsz=%-5u\n"
+		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+		   "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
+		   "naming   =version %-14u bsize=%-6u\n"
+		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+		   "         =%-22s sectsz=%-5u sunit=%d blks\n"
+		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+			dfile, isize, (long long)agcount, (long long)agsize,
+			"", sectorsize,
+			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
+			"", dsunit, dswidth, extent_flagging,
+			dirversion, dirversion == 1 ? blocksize : dirblocksize,
+			logfile, 1 << blocklog, (long long)logblocks,
+			logversion, "", lsectorsize, lsunit,
+			rtfile, rtextblocks << blocklog,
+			(long long)rtblocks, (long long)rtextents);
+		if (Nflag)
+			exit(0);
+	}
+
 	if (label)
 		strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
 	sbp->sb_magicnum = XFS_SB_MAGIC;
@@ -1732,10 +1827,10 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	sbp->sb_agcount = (xfs_agnumber_t)agcount;
 	sbp->sb_rbmblocks = nbmblocks;
 	sbp->sb_logblocks = (xfs_extlen_t)logblocks;
-	sbp->sb_sectsize = 1 << sectlog;
+	sbp->sb_sectsize = (__uint16_t)sectorsize;
 	sbp->sb_inodesize = (__uint16_t)isize;
 	sbp->sb_inopblock = (__uint16_t)(blocksize / isize);
-	sbp->sb_sectlog = (__uint8_t)sectlog;
+	sbp->sb_sectlog = (__uint8_t)sectorlog;
 	sbp->sb_inodelog = (__uint8_t)inodelog;
 	sbp->sb_inopblog = (__uint8_t)(blocklog - inodelog);
 	sbp->sb_rextslog =
@@ -1763,48 +1858,34 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		iaflag = sbp->sb_inoalignmt != 0;
 	} else
 		sbp->sb_inoalignmt = 0;
+	if (lsectorsize != BBSIZE || sectorsize != BBSIZE) {
+		sbp->sb_logsectlog = (__uint8_t)lsectorlog;
+		sbp->sb_logsectsize = (__uint16_t)lsectorsize;
+	} else {
+		sbp->sb_logsectlog = 0;
+		sbp->sb_logsectsize = 0;
+	}
 	sbp->sb_versionnum =
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
-			dirversion == 2, logversion == 2);
-
-	if (!qflag || Nflag) {
-		printf(
-		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-		   "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
-		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
-		   "naming   =version %-14d bsize=%-6d\n"
-		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-		   "         =%-22s sunit=%d blks\n"
-		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
-			dfile, isize, (long long)agcount, (long long)agsize,
-			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
-			"", dsunit, dswidth, extent_flagging,
-			dirversion, dirversion == 1 ? blocksize : dirblocksize,
-			logfile, 1 << blocklog, (long long)logblocks,
-			logversion, "", lsunit,
-			rtfile, rtextblocks << blocklog,
-			(long long)rtblocks, (long long)rtextents);
-		if (Nflag)
-			exit(0);
-	}
+			dirversion == 2, logversion == 2,
+			(sectorsize != BBSIZE || lsectorsize != BBSIZE));
 
 	/*
 	 * Zero out the first 68k in on the device, to obliterate any old 
 	 * filesystem signatures out there.  This should take care of 
 	 * swap (somewhere around the page size), jfs (32k), 
-	 * ext[2,3] and reiser (64k) - and hopefully all else.
+	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
 	 */
-	 
 	buf = libxfs_getbuf(xi.ddev, 0, 136);
 	bzero(XFS_BUF_PTR(buf), 136*BBSIZE);
-	libxfs_writebuf(buf, 1);
+	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/* OK, now write the superblock */
-	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, 1);
-	bzero(XFS_BUF_PTR(buf), BBSIZE);
+	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
+	bzero(XFS_BUF_PTR(buf), sectorsize);
 	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
 			XFS_SB_ALL_BITS);
-	libxfs_writebuf(buf, 1);
+	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/*
 	 * If the data area is a file, then grow it out to its final size
@@ -1812,7 +1893,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	 * will succeed.
 	 */
 	if (xi.disfile && ftruncate64(xi.dfd, dblocks * blocksize) < 0) {
-		fprintf(stderr, "%s: Growing the data section file failed\n",
+		fprintf(stderr, _("%s: Growing the data section file failed\n"),
 			progname);
 		exit(1);
 	}
@@ -1825,7 +1906,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(65536)), 
 				    BTOBB(65536));
 		bzero(XFS_BUF_PTR(buf), 65536);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 
 	/*
@@ -1834,23 +1915,21 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	if (loginternal)
 		xi.logdev = xi.ddev;
 	if (xi.logdev)
-		libxfs_log_clear(
-                    xi.logdev, 
-                    XFS_FSB_TO_DADDR(mp, logstart),
-		    (xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
-                    &sbp->sb_uuid,
-                    logversion, lsunit, XLOG_FMT);
+		libxfs_log_clear(xi.logdev, XFS_FSB_TO_DADDR(mp, logstart),
+			(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+			&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
 
 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
 	if (mp == NULL) {
-		fprintf(stderr, "%s: filesystem failed to initialize\n", progname);
+		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
+			progname);
 		exit(1);
 	}
 	if (xi.logdev &&
 	    XFS_FSB_TO_B(mp, logblocks) <
 	    XFS_MIN_LOG_FACTOR * max_trans_res(mp)) {
-		fprintf(stderr, "%s: log size (%lld) is too small for "
-				"transaction reservations\n",
+		fprintf(stderr,
+	_("%s: log size (%lld) is too small for transaction reservations\n"),
 			progname, (long long)logblocks);
 		exit(1);
 	}
@@ -1860,19 +1939,21 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		 * Superblock.
 		 */
 		buf = libxfs_getbuf(xi.ddev,
-				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR), 1);
-		bzero(XFS_BUF_PTR(buf), BBSIZE);
+				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+				XFS_FSS_TO_BB(mp, 1));
+		bzero(XFS_BUF_PTR(buf), sectorsize);
                 libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
 				XFS_SB_ALL_BITS);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
 		 * AG header block: freespace
 		 */
 		buf = libxfs_getbuf(mp->m_dev,
-				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR), 1);
+				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+				XFS_FSS_TO_BB(mp, 1));
 		agf = XFS_BUF_TO_AGF(buf);
-		bzero(agf, BBSIZE);
+		bzero(agf, sectorsize);
 		if (agno == agcount - 1)
 			agsize = dblocks - (xfs_drfsbno_t)(agno * agsize);
 		INT_SET(agf->agf_magicnum, ARCH_CONVERT, XFS_AGF_MAGIC);
@@ -1886,7 +1967,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		INT_SET(agf->agf_levels[XFS_BTNUM_BNOi], ARCH_CONVERT, 1);
 		INT_SET(agf->agf_levels[XFS_BTNUM_CNTi], ARCH_CONVERT, 1);
 		INT_SET(agf->agf_flfirst, ARCH_CONVERT, 0);
-		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE - 1);
+		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE(mp) - 1);
 		INT_SET(agf->agf_flcount, ARCH_CONVERT, 0);
 		nbmblocks = (xfs_extlen_t)(agsize - XFS_PREALLOC_BLOCKS(mp));
 		INT_SET(agf->agf_freeblks, ARCH_CONVERT, nbmblocks);
@@ -1898,15 +1979,16 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		}
 		if (XFS_MIN_FREELIST(agf, mp) > worst_freelist)
 			worst_freelist = XFS_MIN_FREELIST(agf, mp);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
 		 * AG header block: inodes
 		 */
 		buf = libxfs_getbuf(mp->m_dev,
-				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR), 1);
+				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+				XFS_FSS_TO_BB(mp, 1));
 		agi = XFS_BUF_TO_AGI(buf);
-		bzero(agi, BBSIZE);
+		bzero(agi, sectorsize);
 		INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
 		INT_SET(agi->agi_versionnum, ARCH_CONVERT, XFS_AGI_VERSION);
 		INT_SET(agi->agi_seqno, ARCH_CONVERT, agno);
@@ -1919,7 +2001,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		INT_SET(agi->agi_dirino, ARCH_CONVERT, NULLAGINO);
 		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
 			INT_SET(agi->agi_unlinked[i], ARCH_CONVERT, NULLAGINO);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
 		 * BNO btree root block
@@ -1962,7 +2044,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		INT_SET(arec->ar_blockcount, ARCH_CONVERT,
 			(xfs_extlen_t)(agsize -
 				INT_GET(arec->ar_startblock, ARCH_CONVERT)));
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
 		 * CNT btree root block
@@ -1999,7 +2081,8 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		}	
 		INT_SET(arec->ar_blockcount, ARCH_CONVERT, (xfs_extlen_t)
 			(agsize - INT_GET(arec->ar_startblock, ARCH_CONVERT)));
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+
 		/*
 		 * INO btree root block
 		 */
@@ -2013,7 +2096,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		INT_SET(block->bb_numrecs, ARCH_CONVERT, 0);
 		INT_SET(block->bb_leftsib, ARCH_CONVERT, NULLAGBLOCK);
 		INT_SET(block->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 
 	/*
@@ -2022,7 +2105,7 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	buf = libxfs_getbuf(mp->m_dev,
 		(xfs_daddr_t)XFS_FSB_TO_BB(mp, dblocks - 1LL), bsize);
 	bzero(XFS_BUF_PTR(buf), blocksize);
-	libxfs_writebuf(buf, 1);
+	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/*
 	 * Make sure we can write the last block in the realtime area.
@@ -2031,8 +2114,9 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		buf = libxfs_getbuf(mp->m_rtdev,
 				XFS_FSB_TO_BB(mp, rtblocks - 1LL), bsize);
 		bzero(XFS_BUF_PTR(buf), blocksize);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
+
 	/*
 	 * BNO, CNT free block list
 	 */
@@ -2045,13 +2129,13 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		args.mp = mp;
 		args.agno = agno;
 		args.alignment = 1;
-		args.minalignslop = UINT_MAX;
 		args.pag = &mp->m_perag[agno];
 		if ((i = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
 			res_failed(i);
 		libxfs_alloc_fix_freelist(&args, 0);
 		libxfs_trans_commit(tp, 0, NULL);
 	}
+
 	/*
 	 * Allocate the root inode and anything else in the proto file.
 	 */
@@ -2059,17 +2143,17 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	parseproto(mp, NULL, &protostring, NULL);
 
 	/*
-	 * protect ourselves against possible stupidity
+	 * Protect ourselves against possible stupidity
 	 */
 	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-		fprintf(stderr, "%s: root inode not created in AG 0, "
-				"created in AG %u",
+		fprintf(stderr,
+			_("%s: root inode created in AG %u, not AG 0\n"),
 			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
 		exit(1);
 	}
 
 	/*
-	 * write out multiple copies of superblocks with the rootinode field set
+	 * Write out multiple secondary superblocks with rootinode field set
 	 */
 	if (mp->m_sb.sb_agcount > 1) {
 		/*
@@ -2078,10 +2162,11 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		buf = libxfs_readbuf(mp->m_dev,
 				XFS_AGB_TO_DADDR(mp, mp->m_sb.sb_agcount-1,
 					XFS_SB_DADDR),
-				BTOBB(mp->m_sb.sb_sectsize), 1);
+				XFS_FSS_TO_BB(mp, 1),
+				LIBXFS_EXIT_ON_FAILURE);
 		INT_SET((XFS_BUF_TO_SBP(buf))->sb_rootino,
 				ARCH_CONVERT, mp->m_sb.sb_rootino);
-		libxfs_writebuf(buf, 1);
+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		/*
 		 * and one in the middle for luck
 		 */
@@ -2089,19 +2174,20 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 			buf = libxfs_readbuf(mp->m_dev,
 				XFS_AGB_TO_DADDR(mp, (mp->m_sb.sb_agcount-1)/2,
 					XFS_SB_DADDR),
-				BTOBB(mp->m_sb.sb_sectsize), 1);
+				XFS_FSS_TO_BB(mp, 1),
+				LIBXFS_EXIT_ON_FAILURE);
 			INT_SET((XFS_BUF_TO_SBP(buf))->sb_rootino,
 				ARCH_CONVERT, mp->m_sb.sb_rootino);
-			libxfs_writebuf(buf, 1);
+			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		}
 	}
 
 	/*
 	 * Mark the filesystem ok.
 	 */
-	buf = libxfs_getsb(mp, 1);
+	buf = libxfs_getsb(mp, LIBXFS_EXIT_ON_FAILURE);
 	(XFS_BUF_TO_SBP(buf))->sb_inprogress = 0;
-	libxfs_writebuf(buf, 1);
+	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	libxfs_umount(mp);
 	if (xi.rtdev)
@@ -2111,67 +2197,6 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 	libxfs_device_close(xi.ddev);
 
 	return 0;
-}
-
-static void
-conflict(
-	char	opt,
-	char	*tab[],
-	int	oldidx,
-	int	newidx)
-{
-	fprintf(stderr, "Cannot specify both -%c %s and -%c %s\n",
-		opt, tab[oldidx], opt, tab[newidx]);
-	usage();
-}
-
-
-static void
-illegal(
-	char	*value,
-	char	*opt)
-{
-	fprintf(stderr, "Illegal value %s for -%s option\n", value, opt);
-	usage();
-}
-
-static int
-ispow2(
-	unsigned int	i)
-{
-	return (i & (i - 1)) == 0;
-}
-
-static void
-reqval(
-	char	opt,
-	char	*tab[],
-	int	idx)
-{
-	fprintf(stderr, "-%c %s option requires a value\n", opt, tab[idx]);
-	usage();
-}
-
-static void
-respec(
-	char	opt,
-	char	*tab[],
-	int	idx)
-{
-	fprintf(stderr, "-%c ", opt);
-	if (tab)
-		fprintf(stderr, "%s ", tab[idx]);
-	fprintf(stderr, "option respecified\n");
-	usage();
-}
-
-static void
-unknown(
-	char	opt,
-	char	*s)
-{
-	fprintf(stderr, "unknown option -%c %s\n", opt, s);
-	usage();
 }
 
 static int
@@ -2191,13 +2216,76 @@ max_trans_res(
 	return rval;
 }
 
-/* returns 1 if string contains nothing but [0-9], 0 otherwise */
-
-int
-isdigits(char *str)
+static void
+conflict(
+	char		opt,
+	char		*tab[],
+	int		oldidx,
+	int		newidx)
 {
-	int	i;
-	int	n = strlen(str);
+	fprintf(stderr, _("Cannot specify both -%c %s and -%c %s\n"),
+		opt, tab[oldidx], opt, tab[newidx]);
+	usage();
+}
+
+
+static void
+illegal(
+	char		*value,
+	char		*opt)
+{
+	fprintf(stderr, _("Illegal value %s for -%s option\n"), value, opt);
+	usage();
+}
+
+static int
+ispow2(
+	unsigned int	i)
+{
+	return (i & (i - 1)) == 0;
+}
+
+static void
+reqval(
+	char		opt,
+	char		*tab[],
+	int		idx)
+{
+	fprintf(stderr, _("-%c %s option requires a value\n"), opt, tab[idx]);
+	usage();
+}
+
+static void
+respec(
+	char		opt,
+	char		*tab[],
+	int		idx)
+{
+	fprintf(stderr, "-%c ", opt);
+	if (tab)
+		fprintf(stderr, "%s ", tab[idx]);
+	fprintf(stderr, _("option respecified\n"));
+	usage();
+}
+
+static void
+unknown(
+	char		opt,
+	char		*s)
+{
+	fprintf(stderr, _("unknown option -%c %s\n"), opt, s);
+	usage();
+}
+
+/*
+ * isdigits -- returns 1 if string contains nothing but [0-9], 0 otherwise
+ */
+int
+isdigits(
+	char		*str)
+{
+	int		i;
+	int		n = strlen(str);
 
 	for (i = 0; i < n; i++) {
 		if (!isdigit(str[i]))
@@ -2209,11 +2297,11 @@ isdigits(char *str)
 long long
 cvtnum(
 	int		blocksize,
+	int		sectorsize,
 	char		*s)
 {
 	long long	i;
 	char		*sp;
-	extern void	usage(void);
 
 	i = strtoll(s, &sp, 0);
 	if (i == 0 && sp == s)
@@ -2224,13 +2312,14 @@ cvtnum(
 	if (*sp == 'b' && sp[1] == '\0') {
 		if (blocksize)
 			return i * blocksize;
-
-		fprintf(stderr, "blocksize not available yet.\n");
+		fprintf(stderr, _("blocksize not available yet.\n"));
 		usage();
 	}
-
-	if (*sp == 's' && sp[1] == '\0')
-		return 512LL * i;
+	if (*sp == 's' && sp[1] == '\0') {
+		if (sectorsize)
+			return i * sectorsize;
+		return i * BBSIZE;
+	}
 	if (*sp == 'k' && sp[1] == '\0')
 		return 1024LL * i;
 	if (*sp == 'm' && sp[1] == '\0')
@@ -2241,9 +2330,9 @@ cvtnum(
 }
 
 void
-usage(void)
+usage( void )
 {
-	fprintf(stderr, "Usage: %s\n\
+	fprintf(stderr, _("Usage: %s\n\
 /* blocksize */		[-b log=n|size=num]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
 			    (sunit=value,swidth=value|su=num,sw=num),\n\
@@ -2251,21 +2340,22 @@ usage(void)
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx\n\
 			    version=n,sunit=value|su=num]\n\
-/* naming */		[-n log=n|size=num,version=n]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
+/* naming */		[-n log=n|size=num,version=n]\n\
 /* prototype file */	[-p fname]\n\
 /* quiet */		[-q]\n\
-/* version */		[-V]\n\
 /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
+/* sectorsize */	[-s log=n|size=num]\n\
+/* version */		[-V]\n\
 			devicename\n\
 <devicename> is required unless -d name=xxx is given.\n\
 Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n\
 based on the filesystem size.  Default log reaches its largest size at 1TB.\n\
 This can be overridden with the -l options or using a volume manager with a\n\
 log subvolume.\n\
-<num> is xxx (bytes), xxxs (512 blocks), xxxb (fs blocks), xxxk (xxx KB),\n\
+<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KB),\n\
       or xxxm (xxx MB)\n\
-<value> is xxx (512 blocks).\n",
+<value> is xxx (512 blocks).\n"),
 		progname);
 	exit(1);
 }

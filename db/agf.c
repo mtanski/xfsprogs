@@ -97,8 +97,8 @@ agf_help(void)
 "\n"
 " agf 2 - move location to AGF in 2nd filesystem allocation group\n"
 "\n"
-" Located in the 2nd 512 byte block of each allocation group,\n"
-" the AGF contains the root of two different freespace btrees:\n"
+" Located in the second sector of each allocation group, the AGF\n"
+" contains the root of two different freespace btrees:\n"
 " The 'cnt' btree keeps track freespace indexed on section size.\n"
 " The 'bno' btree tracks sections of freespace indexed on block number.\n"
 );
@@ -122,8 +122,9 @@ agf_f(
 	} else if (cur_agno == NULLAGNUMBER)
 		cur_agno = 0;
 	ASSERT(typtab[TYP_AGF].typnm == TYP_AGF);
-	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, cur_agno, XFS_AGF_DADDR), 1,
-		DB_RING_ADD, NULL);
+	set_cur(&typtab[TYP_AGF],
+		XFS_AG_DADDR(mp, cur_agno, XFS_AGF_DADDR(mp)),
+		XFS_FSS_TO_BB(mp, 1), DB_RING_ADD, NULL);
 	return 0;
 }
 
