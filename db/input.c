@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -39,9 +39,11 @@
 #include "malloc.h"
 #include "init.h"
 
-#ifdef ENABLE_READLINE
+#if defined(ENABLE_READLINE)
 # include <readline/history.h>
 # include <readline/readline.h>
+#elif defined(ENABLE_EDITLINE)
+# include <histedit.h>
 #endif
 
 int	inputstacksize;
@@ -148,6 +150,16 @@ doneline(
 }
 
 static char *
+get_prompt(void)
+{
+	static char	prompt[FILENAME_MAX + 1];
+
+	if (!prompt[0])
+		snprintf(prompt, sizeof(prompt), "%s> ", progname);
+	return prompt;
+}
+
+static char *
 fetchline_internal(void)
 {
 	char	buf[1024];
@@ -162,7 +174,7 @@ fetchline_internal(void)
 			if (iscont)
 				dbprintf("... ");
 			else
-				dbprintf("%s> ", progname);
+				dbprintf(get_prompt(), progname);
 			fflush(stdin);
 		}
 		if (seenint() ||
@@ -223,29 +235,57 @@ fetchline_internal(void)
 char *
 fetchline(void)
 {
-	static char	prompt[FILENAME_MAX + 1];
-	char		*line;
-
-	if (!prompt[0])
-		snprintf(prompt, sizeof(prompt), "%s> ", progname);
+	char	*line;
 
 	if (inputstacksize == 1) {
-		line = readline(prompt);
-		if (line && *line)
+		line = readline(get_prompt());
+		if (line && *line) {
 			add_history(line);
-		else
 			logprintf("%s", line);
+		}
+	} else {
+		line = fetchline_internal();
+	}
+	return line;
+}
+#elif defined(ENABLE_EDITLINE)
+static char *el_get_prompt(EditLine *e) { return get_prompt(); }
+char *
+fetchline(void)
+{     
+	static EditLine	*el;
+	static History	*hist;
+	HistEvent	hevent;
+	char		*line;    
+	int		count;
+
+	if (!el) {
+		hist = history_init();
+		history(hist, &hevent, H_SETSIZE, 100);
+		el = el_init(progname, stdin, stdout, stderr);
+		el_source(el, NULL);
+		el_set(el, EL_SIGNAL, 1);
+		el_set(el, EL_PROMPT, el_get_prompt);
+		el_set(el, EL_HIST, history, (const char *)hist);
+	}
+
+	if (inputstacksize == 1) {
+		line = xstrdup(el_gets(el, &count));
+		if (line) {
+			if (count > 0)
+				line[count-1] = '\0';
+			if (*line) {
+				history(hist, &hevent, H_ENTER, line);
+				logprintf("%s", line);
+			}
+		}
 	} else {
 		line = fetchline_internal();
 	}
 	return line;
 }
 #else
-char *
-fetchline(void)
-{
-	return fetchline_internal();
-}
+char * fetchline(void) { return fetchline_internal(); }
 #endif
 
 static void

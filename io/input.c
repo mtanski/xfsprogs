@@ -34,19 +34,73 @@
 #include "input.h"
 #include "init.h"
 
-#ifdef ENABLE_READLINE
+#if defined(ENABLE_READLINE)
 # include <readline/history.h>
 # include <readline/readline.h>
+#elif defined(ENABLE_EDITLINE)
+# include <histedit.h>
+#endif
+
+static char *
+get_prompt(void)
+{
+	static char	prompt[FILENAME_MAX + 1];
+
+	if (!prompt[0])
+		snprintf(prompt, sizeof(prompt), "%s> ", progname);
+	return prompt;
+}
+
+#if defined(ENABLE_READLINE)
+char *
+fetchline(void)
+{
+	char	*line;
+
+	line = readline(get_prompt());
+	if (line && *line)
+		add_history(line);
+	return line;
+}
+#elif defined(ENABLE_EDITLINE)
+static char *el_get_prompt(EditLine *e) { return get_prompt(); }
+char *
+fetchline(void)
+{
+	static EditLine	*el;
+	static History	*hist;
+	HistEvent	hevent;
+	char		*line;
+	int		count;
+
+	if (!el) {
+		hist = history_init();
+		history(hist, &hevent, H_SETSIZE, 100);
+		el = el_init(progname, stdin, stdout, stderr);
+		el_source(el, NULL);
+		el_set(el, EL_SIGNAL, 1);
+		el_set(el, EL_PROMPT, el_get_prompt);
+		el_set(el, EL_HIST, history, (const char *)hist);
+	}
+	line = strdup(el_gets(el, &count));
+	if (line) {
+		if (count > 0)
+			line[count-1] = '\0';
+		if (*line)
+			history(hist, &hevent, H_ENTER, line);
+	}
+	return line;
+}
 #else
 # define MAXREADLINESZ	1024
-static char *
-readline(char *prompt)
+char *
+fetchline(void)
 {
 	char	*p, *line = malloc(MAXREADLINESZ);
 
 	if (!line)
 		return NULL;
-	printf(prompt);
+	printf(get_prompt());
 	fflush(stdout);
 	if (!fgets(line, MAXREADLINESZ, stdin)) {
 		free(line);
@@ -57,23 +111,7 @@ readline(char *prompt)
 		p[-1] = '\0';
 	return line;
 }
-static void add_history(char *line) { }
-# undef MAXREADLINESZ
 #endif
-
-char *
-fetchline(void)
-{
-	static char	prompt[FILENAME_MAX + 1];
-	char		*line;
-
-	if (!prompt[0])
-		snprintf(prompt, sizeof(prompt), "%s> ", progname);
-	line = readline(prompt);
-	if (line && *line)
-		add_history(line);
-	return line;
-}
 
 char **
 breakline(

@@ -2,6 +2,9 @@ xfsprogs-2.4.6 (11 April 2003)
 	- Fix a bug in detection of "clean" and "error" states with
 	  MD devices.
 	- Fix configure tests that used AC_PATH_PROG incorrectly.
+	- Add support for libedit, if libreadline is unavailable.
+	- Fix the libxfs build on big endian platforms.
+	- Sync up user/kernel source in libxfs and headers.
 
 xfsprogs-2.4.5 (03 April 2003)
 	- Sync up xfs_inode.c in libxfs.

@@ -40,6 +40,7 @@ OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
 LIBUUID = @libuuid@
+LIBEDITLINE = @libeditline@
 LIBREADLINE = @libreadline@
 LIBXFS = $(TOPDIR)/libxfs/libxfs.la
 LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
@@ -89,6 +90,7 @@ RPM_VERSION	= @rpm_version@
 
 ENABLE_SHARED = @enable_shared@
 ENABLE_GETTEXT = @enable_gettext@
+ENABLE_EDITLINE = @enable_editline@
 ENABLE_READLINE = @enable_readline@
 HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 
