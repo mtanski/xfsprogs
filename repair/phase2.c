@@ -65,8 +65,9 @@ zero_log(xfs_mount_t *mp)
 	log.l_mp = mp;
 
 	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk, 0))) {
-		do_error("xlog_find_tail returned error %d\n", error);
-		return;
+		do_warn("zero_log: cannot find log head/tail "
+			"(xlog_find_tail=%d), zeroing it anyway\n",
+			error);
 	} else {
 		if (verbose) {
 			do_warn("zero_log: head block %lld tail block %lld\n",

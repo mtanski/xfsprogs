@@ -3,6 +3,8 @@ xfsprogs-1.3.17 (14 January 2002)
 	  driver signatures.
 	- xfs_repair fix to prevent double insertion into the
 	  uncertain_inode AVL trees ("avl_insert: duplicate range")
+	- xfs_repair fix if the log is corrupted and we can't find
+	  the head, don't exit - just proceed on with zeroing it
 	- use snprintf instead of sprintf throughout
 
 xfsprogs-1.3.16 (17 December 2001)
