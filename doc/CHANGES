@@ -1,4 +1,7 @@
 
+xfsprogs-1.1.2 (10 February 2001)
+	- added libhandle routines to simplify dump/restore EA support
+
 xfsprogs-1.1.1 (30 January 2001)
 	- minor rpm and deb packaging work
 
