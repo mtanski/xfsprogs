@@ -33,9 +33,6 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-# [don't install COPYING for Debian builds - use Debian preferred method]
-HAVE_DEBIAN = $(shell test -f /etc/debian_version && echo yes || echo no)
-
 LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS README.LVM
 LDIRT = *.gz
 
@@ -48,7 +45,7 @@ CHANGES.gz:
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-ifeq ($(HAVE_DEBIAN), no)
+ifneq ($(PKG_DISTRIBUTION), debian)
 	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
 endif
 	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS README.LVM $(PKG_DOC_DIR)
