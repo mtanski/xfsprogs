@@ -9,6 +9,13 @@
 
 ----------
 
+N: Jens Axboe
+E: axboe@suse.de
+D: Block/elevator/kiobuf hacking, IDE kiobuf support
+S: Peter Bangs Vej 258, 2TH
+S: 2500 Valby
+S: Denmark
+
 N: Thomas Graichen
 E: thomas.graichen@innominate.de 
 D: XFS FAQ ( http://oss.sgi.com/projects/xfs/faq.html ) maintainer
@@ -20,10 +27,7 @@ E: jones@tacc.utexas.edu
 D: fsr port to Linux
 S: Austin, Texas, USA
 
-N: Jens Axboe
-E: axboe@suse.de
-D: Block/elevator/kiobuf hacking, IDE kiobuf support
-S: Peter Bangs Vej 258, 2TH
-S: 2500 Valby
-S: Denmark
-
+N: Robert Stickel
+E: rstickel@connex.com
+D: libacl port to Linux
+S: 2970 Brandywine Rd, Suite 120, Atlanta, GA 30431, USA
