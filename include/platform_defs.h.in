@@ -151,6 +151,9 @@ typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
 #define HAVE_FID	1
 #define HAVE_SWABMACROS	1
+#define INT_SWAP16(type,var) ((typeof(type))(__bswap16((__u16)(var))))
+#define INT_SWAP32(type,var) ((typeof(type))(__bswap32((__u32)(var))))
+#define INT_SWAP64(type,var) ((typeof(type))(__bswap64((__u64)(var))))
 
 
 #elif defined(__APPLE__)	/* Darwin */
