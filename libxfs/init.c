@@ -162,9 +162,6 @@ findsize(char *path)
 	} else {
 		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
 		unsigned long tmpsize;
-
-		fprintf(stderr, "%s: warning - BLKGETSIZE64 failed, falling "
-			"back to BLKGETSIZE (%s)\n", progname, strerror(errno));
 		error = ioctl(fd, BLKGETSIZE, &tmpsize);
 		if (error < 0) {
 			fprintf(stderr, "%s: can't determine device size\n",
