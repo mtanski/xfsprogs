@@ -750,6 +750,8 @@ xfs_iread(
 			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
 	}
 
+	INIT_LIST_HEAD(&ip->i_reclaim);
+
 	/*
 	 * The inode format changed when we moved the link count and
 	 * made it 32 bits long.  If this is an old format inode,

@@ -246,6 +246,7 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define m_ddev_targp	m_dev
 #define unlikely(x)	(x)
 #define kdev_none(x)	(!(x))
+#define INIT_LIST_HEAD(x)
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
 #define XFS_ERRLEVEL_LOW		1

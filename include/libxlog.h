@@ -58,12 +58,19 @@ typedef struct log {
 	int		l_grant_reserve_bytes;	/* */
 	int		l_grant_write_cycle;	/* */
 	int		l_grant_write_bytes;	/* */
+	uint		l_sectbb_log;   /* log2 of sector size in bbs */
 } xlog_t;
 
 #include <xfs/xfs_log_recover.h>
 #include <xfs/xfs_buf_item.h>
 #include <xfs/xfs_inode_item.h>
 #include <xfs/xfs_extfree_item.h>
+
+typedef union {
+	xlog_rec_header_t       hic_header;
+	xlog_rec_ext_header_t   hic_xheader;
+	char                    hic_sector[XLOG_HEADER_SIZE];
+} xlog_in_core_2_t;
 
 /*
  * macros mapping kernel code to user code
@@ -98,13 +105,15 @@ typedef struct log {
 	xlog_exit(__VA_ARGS__)
 #endif
 
-#define xlog_get_bp(nbblks, mp)	libxfs_getbuf(x.logdev, 0, (nbblks))
+#define xlog_get_bp(log,bbs)	libxfs_getbuf(x.logdev, 0, (bbs))
 #define xlog_put_bp(bp)		libxfs_putbuf(bp)
-#define xlog_bread(log,blkno,nbblks,bp)	\
+#define xlog_bread(log,blkno,bbs,bp)	\
 	(libxfs_readbufr(x.logdev,	\
-			(log)->l_logBBstart+(blkno), bp, (nbblks), 1), 0)
+			(log)->l_logBBstart+(blkno), bp, (bbs), 1), 0)
+#define xlog_align(log,blkno,nbblks,bp)	XFS_BUF_PTR(bp)
 
 #define kmem_zalloc(size, foo)			calloc(size,1)
+#define kmem_alloc(size, foo)			calloc(size,1)
 #define kmem_free(ptr, foo)			free(ptr)
 #define kmem_realloc(ptr, len, old, foo)	realloc(ptr, len)
 

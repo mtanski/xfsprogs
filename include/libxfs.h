@@ -175,7 +175,6 @@ typedef struct xfs_mount {
 	__uint64_t		m_maxicount;	/* maximum inode count */
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */
-	int			m_lstripemask;	/* log stripe mask */
 	int			m_sinoalign;	/* stripe unit inode alignmnt */
 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
 	__uint8_t		m_dirversion;	/* 1 or 2 */
