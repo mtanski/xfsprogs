@@ -71,7 +71,7 @@ dist : default $(MANIFEST)
 	if [ -x $(TAR) ]; then \
 	    ( echo "=== tar ===" && $(MAKEF) -C tar $@ || exit $$? ); \
 	fi; \
-	if [ -x $(RPM) ]; then \
+	if [ -x $(RPMBUILD) ]; then \
 	    ( echo "=== rpm ===" && $(MAKEF) -C rpm $@ || exit $$? ); \
 	fi; \
 	test -z "$$KEEP_DIST_ROOT" || rm -rf $$DIST_ROOT; echo Done

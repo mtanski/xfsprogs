@@ -77,16 +77,29 @@ test -z "$RPM" && AC_PATH_PROG(RPM, rpm, /bin/rpm)
 rpm=$RPM
 AC_SUBST(rpm)
 
-dnl check if the msgfmt program is available
-test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
-msgfmt=$MSGFMT
-AC_SUBST(msgfmt)
-
 dnl .. and what version is rpm
 rpm_version=0
 test -x $RPM && \
 	rpm_version=`$RPM --version | awk '{print $NF}' | awk -F. '{print $1}'`
 AC_SUBST(rpm_version)
+
+dnl At some point in rpm 4.0, rpm can no longer build rpms, and
+dnl rpmbuild is needed (rpmbuild may go way back; not sure)
+dnl So, if rpm version >= 4.0, look for rpmbuild.  Otherwise build w/ rpm
+
+if test $rpm_version -ge 4; then
+	AC_PATH_PROG(RPMBUILD, rpmbuild)
+	rpmbuild=$RPMBUILD
+else
+	rpmbuild=$RPM
+fi
+
+AC_SUBST(rpmbuild)
+	
+dnl check if the msgfmt program is available
+test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+msgfmt=$MSGFMT
+AC_SUBST(msgfmt)
 
 dnl check if the makedepend program is available
 test -z "$MAKEDEPEND" && AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)

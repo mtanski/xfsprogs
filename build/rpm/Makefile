@@ -45,7 +45,7 @@ include $(BUILDRULES)
 
 # generate a binary rpm file
 dist : default $(SPECF) rpm-$(RPM_VERSION).rc
-	$(RPM) -ba --rcfile ./rpm-$(RPM_VERSION).rc $(SPECF)
+	$(RPMBUILD) -ba --rcfile ./rpm-$(RPM_VERSION).rc $(SPECF)
 
 # Because rpm prior to v.2.90 does not support macros and old style config
 # is not supported by rpm v.3, we have to resort to such ugly hacks

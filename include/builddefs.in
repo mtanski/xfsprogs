@@ -70,6 +70,7 @@ LN_S	= @LN_S@
 ZIP	= @zip@
 TAR	= @tar@
 RPM	= @rpm@
+RPMBUILD= @rpmbuild@
 MSGFMT	= @msgfmt@
 
 RPM_VERSION = @rpm_version@
