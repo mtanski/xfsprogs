@@ -238,15 +238,15 @@ process_args(int argc, char **argv)
 		case 'n':
 			no_modify = 1;
 			break;
+		case 'd':
+			dangerously = 1;
+			break;
 		case 'v':
 			verbose = 1;
 			break;
 		case 'V':
 			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
-		case 'd': /* dangerously */
-			dangerously = 1;
-			break;
 		case '?':
 			usage();
 		}

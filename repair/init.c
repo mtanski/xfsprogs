@@ -66,14 +66,12 @@ xfs_init(libxfs_init_t *args)
 
 	args->notvolmsg = _("you should never get this message - %s");
 	args->notvolok = 1;
-	args->setblksize = 1;
+	args->setblksize = !dangerously;
 
 	if (no_modify)
 		args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
-	
-	if(dangerously)
+	else if (dangerously)
 		args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
-	
 
 	if (!libxfs_init(args))
 		do_error(_("couldn't initialize XFS library\n"));
