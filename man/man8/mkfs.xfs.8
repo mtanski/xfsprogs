@@ -349,6 +349,8 @@ Using the
 suboption to specify a version 2 log enables the
 .B sunit
 suboption, and allows the logbsize to be increased beyond 32K.
+Version 2 logs are automatically selected if a log stripe unit
+is specified.  See \f3sunit\f1 and \f3su\f1 suboptions, below.
 .IP
 The
 .B sunit 
@@ -364,6 +366,8 @@ such as software raid5 when the sunit is specified as the filesystem
 block size.
 The equivalent byte value must be a multiple of the filesystem block
 size.
+Version 2 logs are automatically selected if the log \f3su\f1
+suboption is specified.
 .IP
 The
 .B su
@@ -375,6 +379,8 @@ suboption is used to specify the log stripe.
 The suboption value has to be specified in bytes,
 (usually using the \f3s\f1 or \f3b\f1 suffixes).
 This value must be a multiple of the filesystem block size.
+Version 2 logs are automatically selected if the log \f3su\f1
+suboption is specified.
 .TP
 .B \-n
 Naming options.

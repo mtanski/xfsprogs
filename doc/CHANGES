@@ -3,6 +3,8 @@ xfsprogs-2.1.2 (17 July 2002)
 	  man page.  Also fix suffix handling for data su/sw options
 	  (disallow unit suffixes on -d sunit,swidth,sw and
 	  -l sunit).  Add "s" (512-byte sectors) as valid suffix.
+	- Automatically select v2 logs if a log stripe unit is
+	  specified.
 
 xfsprogs-2.1.1 (04 July 2002)
 	- Build infrastructure updates so that configure options can be

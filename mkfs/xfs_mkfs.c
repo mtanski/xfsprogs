@@ -1236,6 +1236,12 @@ main(int argc, char **argv)
 		usage();
 	}
 
+	/* if lsu or lsunit was specified, automatically use v2 logs */
+	if (lsu || lsunit) {
+		fprintf(stderr, "log stripe unit specified, using v2 logs\n");
+		logversion = 2;
+	}
+
 	calc_stripe_factors(dsu, dsw, lsu, &dsunit, &dswidth, &lsunit);
 
 	/* other global variables */
