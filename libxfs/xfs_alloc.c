@@ -2191,6 +2191,7 @@ xfs_alloc_vextent(
 	xfs_agnumber_t	sagno;	/* starting allocation group number */
 	xfs_alloctype_t	type;	/* input allocation type */
 	int		bump_rotor = 0;
+	int		no_min = 0;
 
 	mp = args->mp;
 	type = args->otype = args->type;
@@ -2218,6 +2219,8 @@ xfs_alloc_vextent(
 		TRACE_ALLOC("badargs", args);
 		return 0;
 	}
+	minleft = args->minleft;
+
 	switch (type) {
 	case XFS_ALLOCTYPE_THIS_AG:
 	case XFS_ALLOCTYPE_NEAR_BNO:
@@ -2228,7 +2231,6 @@ xfs_alloc_vextent(
 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
 		down_read(&mp->m_peraglock);
 		args->pag = &mp->m_perag[args->agno];
-		minleft = args->minleft;
 		args->minleft = 0;
 		error = xfs_alloc_fix_freelist(args, 0);
 		args->minleft = minleft;
@@ -2296,7 +2298,10 @@ xfs_alloc_vextent(
 		down_read(&mp->m_peraglock);
 		for (;;) {
 			args->pag = &mp->m_perag[args->agno];
-			if ((error = xfs_alloc_fix_freelist(args, flags))) {
+			if (no_min) args->minleft = 0;
+			error = xfs_alloc_fix_freelist(args, flags);
+			args->minleft = minleft;
+			if (error) {
 				TRACE_ALLOC("nofix", args);
 				goto error0;
 			}
@@ -2322,16 +2327,20 @@ xfs_alloc_vextent(
 			 * or switch to non-trylock mode.
 			 */
 			if (args->agno == sagno) {
-				if (flags == 0) {
+				if (no_min == 1) {
 					args->agbno = NULLAGBLOCK;
 					TRACE_ALLOC("allfailed", args);
 					break;
 				}
-				flags = 0;
-				if (type == XFS_ALLOCTYPE_START_BNO) {
-					args->agbno = XFS_FSB_TO_AGBNO(mp,
-						args->fsbno);
-					args->type = XFS_ALLOCTYPE_NEAR_BNO;
+				if (flags == 0) {
+					no_min = 1;
+				} else {
+					flags = 0;
+					if (type == XFS_ALLOCTYPE_START_BNO) {
+						args->agbno = XFS_FSB_TO_AGBNO(mp,
+							args->fsbno);
+						args->type = XFS_ALLOCTYPE_NEAR_BNO;
+					}
 				}
 			}
 		}
