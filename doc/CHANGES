@@ -1,3 +1,7 @@
+xfsprogs-2.3.7 (14 November 2002)
+	- Fix an endian bug in xfs_db freesp command when descending
+	  into multi-level agf cnt/bno btrees.
+
 xfsprogs-2.3.6 (31 October 2002)
 	- Sync up user/kernel source in lib{xfs,xlog} and headers.
 	- Fix several warnings from newer (3.2) versions of gcc.

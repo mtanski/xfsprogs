@@ -312,13 +312,15 @@ scanfunc_bno(
 			1, mp->m_alloc_mxr[0]);
 		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
 			addtohist(INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT), INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
+				INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
+				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
 		return;
 	}
 	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
 		mp->m_alloc_mxr[1]);
 	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_sbtree(agf, pp[i], typ, level, scanfunc_bno);
+		scan_sbtree(agf, INT_GET(pp[i], ARCH_CONVERT), typ, level,
+			    scanfunc_bno);
 }
 
 static void
@@ -338,13 +340,15 @@ scanfunc_cnt(
 			1, mp->m_alloc_mxr[0]);
 		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
 			addtohist(INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT), INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
+				INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
+				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
 		return;
 	}
 	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
 		mp->m_alloc_mxr[1]);
 	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_sbtree(agf, pp[i], typ, level, scanfunc_cnt);
+		scan_sbtree(agf, INT_GET(pp[i], ARCH_CONVERT), typ, level,
+			    scanfunc_cnt);
 }
 
 static void
