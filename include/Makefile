@@ -36,7 +36,7 @@ include $(TOPDIR)/include/builddefs
 HFILES = arch.h handle.h jdm.h libxfs.h libxlog.h xqm.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
-	xfs_buf_item.h xfs_cred.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \
+	xfs_buf_item.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \
 	xfs_dir.h xfs_dir2.h xfs_dir2_block.h xfs_dir2_data.h xfs_dir2_leaf.h \
 	xfs_dir2_node.h xfs_dir2_sf.h xfs_dir_leaf.h xfs_dir_sf.h xfs_dqblk.h \
 	xfs_dquot_item.h xfs_extfree_item.h xfs_fs.h xfs_ialloc.h \
@@ -44,8 +44,10 @@ HFILES = arch.h handle.h jdm.h libxfs.h libxlog.h xqm.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
-DK_HFILES = mountinfo.h volume.h fstyp.h dvh.h
-LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules $(DK_HFILES)
+LHFILES = xfs_acl.h xfs_cap.h xfs_mac.h
+DKHFILES = mountinfo.h volume.h fstyp.h dvh.h
+LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules \
+	$(LHFILES) $(DKHFILES)
 LDIRT = xfs
 
 default install :
@@ -59,4 +61,4 @@ install-dev: default
 	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
 	$(INSTALL) -m 644 platform_defs.h $(PKG_INC_DIR)
 	$(INSTALL) -m 755 -d $(DK_INC_DIR)
-	$(INSTALL) -m 644 $(DK_HFILES) $(DK_INC_DIR)
+	$(INSTALL) -m 644 $(DKHFILES) $(DK_INC_DIR)

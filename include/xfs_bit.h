@@ -64,9 +64,6 @@ __uint64_t xfs_mask64lo(int n);
 #define	XFS_MASK64LO(n)		(((__uint64_t)1 << (n)) - 1)
 #endif
 
-/* Get low bit set out of 32-bit argument, -1 if none set */
-extern int xfs_lowbit32(__uint32_t v);
-
 /* Get high bit set out of 32-bit argument, -1 if none set */
 extern int xfs_highbit32(__uint32_t v);
 

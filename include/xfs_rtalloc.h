@@ -81,6 +81,10 @@ struct xfs_trans;
 #define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
 #endif
 
+
+#ifdef __KERNEL__
+
+#ifdef CONFIG_XFS_RT
 /*
  * Function prototypes for exported functions.
  */
@@ -141,7 +145,6 @@ xfs_rtpick_extent(
 	xfs_extlen_t		len,	/* allocation length (rtextents) */
 	xfs_rtblock_t		*pick);	/* result rt extent */
 
-#ifdef XFSDEBUG
 /*
  * Debug code: print out the value of a range in the bitmap.
  */
@@ -159,6 +162,24 @@ void
 xfs_rtprint_summary(
 	struct xfs_mount	*mp,	/* file system mount structure */
 	struct xfs_trans	*tp);	/* transaction pointer */
-#endif	/* XFSDEBUG */
+
+/*
+ * Grow the realtime area of the filesystem.
+ */
+int
+xfs_growfs_rt(
+	struct xfs_mount	*mp,	/* file system mount structure */
+	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
+
+#else
+# define xfs_rtallocate_extent(t,b,min,max,l,a,f,p,rb)  (ENOSYS)
+# define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+# define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+# define xfs_growfs_rt(mp,in)                           (ENOSYS)
+# define xfs_rtmount_init(m)    (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+#endif	/* CONFIG_XFS_RT */
+
+#endif	/* __KERNEL__ */
 
 #endif	/* __XFS_RTALLOC_H__ */

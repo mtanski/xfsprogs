@@ -35,6 +35,7 @@
  */
 #include <xfs.h>
 
+extern int xfs_lowbit32(__uint32_t);
 
 /*
  * Get a buffer for the bitmap or summary file block specified.
@@ -46,10 +47,10 @@ xfs_rtbuf_get(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_rtblock_t	block,		/* block number in bitmap or summary */
 	int		issum,		/* is summary not bitmap */
-	xfs_buf_t		**bpp)		/* output: buffer for the block */
+	xfs_buf_t	**bpp)		/* output: buffer for the block */
 {
-	xfs_buf_t		*bp;		/* block buffer, result */
-	xfs_daddr_t		d;		/* disk addr of block */
+	xfs_buf_t	*bp;		/* block buffer, result */
+	xfs_daddr_t	d;		/* disk addr of block */
 	int		error;		/* error value */
 	xfs_fsblock_t	fsb;		/* fs block number for block */
 	xfs_inode_t	*ip;		/* bitmap or summary inode */
@@ -96,7 +97,7 @@ xfs_rtfind_back(
 	xfs_rtword_t	*b;		/* current word in buffer */
 	int		bit;		/* bit number in the word */
 	xfs_rtblock_t	block;		/* bitmap block number */
-	xfs_buf_t		*bp;		/* buf for the block */
+	xfs_buf_t	*bp;		/* buf for the block */
 	xfs_rtword_t	*bufp;		/* starting word in buffer */
 	int		error;		/* error value */
 	xfs_rtblock_t	firstbit;	/* first useful bit in the word */
@@ -271,7 +272,7 @@ xfs_rtfind_forw(
 	xfs_rtword_t	*b;		/* current word in buffer */
 	int		bit;		/* bit number in the word */
 	xfs_rtblock_t	block;		/* bitmap block number */
-	xfs_buf_t		*bp;		/* buf for the block */
+	xfs_buf_t	*bp;		/* buf for the block */
 	xfs_rtword_t	*bufp;		/* starting word in buffer */
 	int		error;		/* error value */
 	xfs_rtblock_t	i;		/* current bit number rel. to start */
@@ -436,7 +437,7 @@ xfs_rtfree_range(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_rtblock_t	start,		/* starting block to free */
 	xfs_extlen_t	len,		/* length to free */
-	xfs_buf_t		**rbpp,		/* in/out: summary block buffer */
+	xfs_buf_t	**rbpp,		/* in/out: summary block buffer */
 	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
 {
 	xfs_rtblock_t	end;		/* end of the freed extent */
@@ -670,10 +671,10 @@ xfs_rtmodify_summary(
 	int		log,		/* log2 of extent size */
 	xfs_rtblock_t	bbno,		/* bitmap block number */
 	int		delta,		/* change to make to summary info */
-	xfs_buf_t		**rbpp,		/* in/out: summary block buffer */
+	xfs_buf_t	**rbpp,		/* in/out: summary block buffer */
 	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
 {
-	xfs_buf_t		*bp;		/* buffer for the summary block */
+	xfs_buf_t	*bp;		/* buffer for the summary block */
 	int		error;		/* error value */
 	xfs_fsblock_t	sb;		/* summary fsblock */
 	int		so;		/* index into the summary file */
@@ -737,7 +738,7 @@ xfs_rtfree_extent(
 	xfs_inode_t	*ip;		/* bitmap file inode */
 	xfs_mount_t	*mp;		/* file system mount structure */
 	xfs_fsblock_t	sb;		/* summary file block number */
-	xfs_buf_t		*sumbp;		/* summary file block buffer */
+	xfs_buf_t	*sumbp;		/* summary file block buffer */
 
 	mp = tp->t_mountp;
 	/*

@@ -31,6 +31,9 @@
  */
 
 #include <libxfs.h>
+#include <xfs_acl.h>
+#include <xfs_cap.h>
+#include <xfs_mac.h>
 #include "globals.h"
 #include "err_protos.h"
 #include "attr_repair.h"
@@ -1032,23 +1035,23 @@ xfs_mac_valid(xfs_mac_label_t *lp)
   	 * appropriate level, category association.
          */
 	switch (lp->ml_msen_type) {
-		case MSEN_ADMIN_LABEL:
-		case MSEN_EQUAL_LABEL:
-		case MSEN_HIGH_LABEL:
-		case MSEN_MLD_HIGH_LABEL:
-		case MSEN_LOW_LABEL:
-		case MSEN_MLD_LOW_LABEL:
+		case XFS_MSEN_ADMIN_LABEL:
+		case XFS_MSEN_EQUAL_LABEL:
+		case XFS_MSEN_HIGH_LABEL:
+		case XFS_MSEN_MLD_HIGH_LABEL:
+		case XFS_MSEN_LOW_LABEL:
+		case XFS_MSEN_MLD_LOW_LABEL:
 			if (lp->ml_level != 0 || lp->ml_catcount > 0 )
 				return (0);
 			break;
-		case MSEN_TCSEC_LABEL:
-		case MSEN_MLD_LABEL:
+		case XFS_MSEN_TCSEC_LABEL:
+		case XFS_MSEN_MLD_LABEL:
 			if (lp->ml_catcount > 0 &&
 			    __check_setvalue(lp->ml_list,
 					     lp->ml_catcount) == -1)
 				return (0);
 			break;
-		case MSEN_UNKNOWN_LABEL:
+		case XFS_MSEN_UNKNOWN_LABEL:
 		default:
 			return (0);
 	}
@@ -1058,15 +1061,15 @@ xfs_mac_valid(xfs_mac_label_t *lp)
 	 * appropriate grade, division association.
 	 */
 	switch (lp->ml_mint_type) {
-		case MINT_BIBA_LABEL:
+		case XFS_MINT_BIBA_LABEL:
 			if (lp->ml_divcount > 0 &&
 			    __check_setvalue(lp->ml_list + lp->ml_catcount,
 					     lp->ml_divcount) == -1)
 				return(0);
 			break;
-		case MINT_EQUAL_LABEL:
-		case MINT_HIGH_LABEL:
-		case MINT_LOW_LABEL:
+		case XFS_MINT_EQUAL_LABEL:
+		case XFS_MINT_HIGH_LABEL:
+		case XFS_MINT_LOW_LABEL:
 			if (lp->ml_grade != 0 || lp->ml_divcount > 0 )
 				return(0);
 			break;

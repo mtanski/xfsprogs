@@ -175,11 +175,11 @@ typedef __uint16_t      xfs_qwarncnt_t;
 
 
 #ifdef __KERNEL__
+
+#ifdef CONFIG_XFS_QUOTA
 /*
  * External Interface to the XFS disk quota subsystem.
  */
-struct	bhv_desc;
-struct  vfs;
 struct  xfs_disk_dquot;
 struct  xfs_dqhash;
 struct  xfs_dquot;
@@ -202,15 +202,8 @@ extern int 		xfs_qm_unmount_quotas(struct xfs_mount *);
 extern void		xfs_qm_dqdettach_inode(struct xfs_inode *);
 extern int 		xfs_qm_sync(struct xfs_mount *, short);
 
-
 /*
- * system call interface
- */
-extern int		xfs_quotactl(xfs_mount_t *, struct vfs *, int, int,
-				     int, xfs_caddr_t);
-
-/*
- * dquot interface.
+ * Dquot interface.
  */
 extern void		xfs_dqlock(struct xfs_dquot *);
 extern void		xfs_dqunlock(struct xfs_dquot *);
@@ -240,12 +233,6 @@ extern int		xfs_qm_vop_dqalloc(struct xfs_mount *,
 					   struct xfs_dquot	**,
 					   struct xfs_dquot	**);
 
-extern int		xfs_qm_vop_chown_dqalloc(struct xfs_mount *,
-						 struct xfs_inode *,
-						 int, uid_t, gid_t,
-						 struct xfs_dquot **,
-						 struct xfs_dquot **);
-
 extern int		xfs_qm_vop_chown_reserve(struct xfs_trans *,
 						 struct xfs_inode *,
 						 struct xfs_dquot *,
@@ -270,7 +257,7 @@ extern void		xfs_trans_dup_dqinfo(struct xfs_trans *,
 extern void		xfs_trans_mod_dquot(struct xfs_trans *, 
 					    struct xfs_dquot *,
 					    uint, long);
-extern int		xfs_trans_mod_dquot_byino(struct xfs_trans *, 
+extern void		xfs_trans_mod_dquot_byino(struct xfs_trans *, 
 						  struct xfs_inode *,
 						  uint, long);
 extern void		xfs_trans_apply_dquot_deltas(struct xfs_trans *);
@@ -291,6 +278,46 @@ extern void		xfs_trans_dqjoin(struct xfs_trans *,
 					 struct xfs_dquot *);
 extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
 
+#else
+# define xfs_qm_init()					(NULL)
+# define xfs_qm_destroy(xqm)				do { } while (0)
+# define xfs_qm_dqflush_all(m,t)			(ENOSYS)
+# define xfs_qm_dqattach(i,t)				(ENOSYS)
+# define xfs_qm_dqpurge_all(m,t)			(ENOSYS)
+# define xfs_qm_mount_quotainit(m,t)			do { } while (0)
+# define xfs_qm_unmount_quotadestroy(m)			do { } while (0)
+# define xfs_qm_mount_quotas(m)				(ENOSYS)
+# define xfs_qm_unmount_quotas(m)			(ENOSYS)
+# define xfs_qm_dqdettach_inode(i)			do { } while (0)
+# define xfs_qm_sync(m,t)				(ENOSYS)
+# define xfs_dqlock(d)					do { } while (0)
+# define xfs_dqunlock(d)				do { } while (0)
+# define xfs_dqunlock_nonotify(d)			do { } while (0)
+# define xfs_dqlock2(d1,d2)				do { } while (0)
+# define xfs_qm_dqput(d)				do { } while (0)
+# define xfs_qm_dqrele(d)				do { } while (0)
+# define xfs_qm_dqid(d)					(-1)
+# define xfs_qm_dqget(m,i,di,t,f,d)			(ENOSYS)
+# define xfs_qm_dqcheck(dd,di,t,f,s)			(ENOSYS)
+# define xfs_trans_alloc_dqinfo(t)			do { } while (0)
+# define xfs_trans_free_dqinfo(t)			do { } while (0)
+# define xfs_trans_dup_dqinfo(t1,t2)			do { } while (0)
+# define xfs_trans_mod_dquot(t,d,f,x)			do { } while (0)
+# define xfs_trans_mod_dquot_byino(t,i,f,x)		do { } while (0)
+# define xfs_trans_apply_dquot_deltas(t)		do { } while (0)
+# define xfs_trans_unreserve_and_mod_dquots(t)		do { } while (0)
+# define xfs_trans_reserve_quota_nblks(t,i,nb,ni,f)	(ENOSYS)
+# define xfs_trans_reserve_quota_bydquots(t,x,y,b,i,f)	(ENOSYS)
+# define xfs_trans_log_dquot(t,d)			do { } while (0)
+# define xfs_trans_dqjoin(t,d)				do { } while (0)
+# define xfs_qm_dqrele_all_inodes(m,t)			do { } while (0)
+# define xfs_qm_vop_chown(t,i,d1,d2)			(NULL)
+# define xfs_qm_vop_dqalloc(m,i,u,g,f,d1,d2)		(ENOSYS)
+# define xfs_qm_vop_chown_reserve(t,i,d1,d2,f)		(ENOSYS)
+# define xfs_qm_vop_rename_dqattach(i)			(ENOSYS)
+# define xfs_qm_vop_dqattach_and_dqmod_newinode(t,i,x,y) do { } while (0)
+#endif	/* CONFIG_XFS_QUOTA */
+
 /* 
  * Regular disk block quota reservations 
  */
@@ -302,7 +329,7 @@ xfs_trans_reserve_quota_nblks(tp, ip, nblks, 0, \
 		XFS_QMOPT_RES_REGBLKS|XFS_QMOPT_FORCE_RES)
 
 #define 	xfs_trans_unreserve_blkquota(tp, ip, nblks) \
-xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_REGBLKS)
+(void)xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_REGBLKS)
 
 #define 	xfs_trans_reserve_quota(tp, udq, gdq, nb, ni, f) \
 xfs_trans_reserve_quota_bydquots(tp, udq, gdq, nb, ni, f|XFS_QMOPT_RES_REGBLKS) 
@@ -317,13 +344,14 @@ xfs_trans_reserve_quota_bydquots(tp, ud, gd, -(b), -(i), f|XFS_QMOPT_RES_REGBLKS
 xfs_trans_reserve_quota_nblks(tp, ip, nblks, 0, XFS_QMOPT_RES_RTBLKS)
 						  
 #define 	xfs_trans_unreserve_rtblkquota(tp, ip, nblks) \
-xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_RTBLKS)
+(void)xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_RTBLKS)
 
 #define 	xfs_trans_reserve_rtquota(mp, tp, uq, pq, blks, f) \
 xfs_trans_reserve_quota_bydquots(mp, tp, uq, pq, blks, 0, f|XFS_QMOPT_RES_RTBLKS) 
 
 #define 	xfs_trans_unreserve_rtquota(tp, uq, pq, blks) \
 xfs_trans_reserve_quota_bydquots(tp, uq, pq, -(blks), XFS_QMOPT_RES_RTBLKS)
+
 
 #endif	/* __KERNEL__ */
 

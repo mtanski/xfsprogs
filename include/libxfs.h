@@ -69,7 +69,6 @@
 #include <xfs_inode.h>
 #include <xfs_buf_item.h>
 #include <xfs_inode_item.h>
-#include <xfs_cred.h>
 #include <xfs_bmap.h>
 #include <xfs_imap.h>
 #include <xfs_log.h>

@@ -1,3 +1,10 @@
+xfsprogs (2.1.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Support for the XFS version 2 log format
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 20 Jun 2002 14:43:07 +1000
+
 xfsprogs (2.0.6-2) unstable; urgency=low
 
   * Fix a problem in xfs_repair's handling of ACLs
