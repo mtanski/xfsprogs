@@ -199,7 +199,7 @@ openfile(
 	if (!platform_test_xfs_fd(fd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
-			progname, file->name);
+			progname, path);
 		close(fd);
 		return -1;
 	}

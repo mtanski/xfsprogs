@@ -1,3 +1,7 @@
+xfsprogs-2.6.20 (28 July 2004)
+	- Fix a segfault on xfs_io open error path for non-XFS
+	  files.  Thanks to Steinar H. Gunderson for this fix.
+
 xfsprogs-2.6.19 (16 July 2004)
 	- Fix two byte count size wraps in xfs_copy.
 	- Minor man page fixes from Eric Raymond.
