@@ -937,6 +937,7 @@ typedef struct xfs_trans {
  */
 void		xfs_trans_init(struct xfs_mount *);
 xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
+xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint);
 xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
 int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
 				  uint, uint);
