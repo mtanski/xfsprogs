@@ -242,7 +242,9 @@ struct xfsstats {
 	__uint64_t		xs_xstrat_bytes;
 	__uint64_t		xs_write_bytes;
 	__uint64_t		xs_read_bytes;
-} xfsstats;
+};
+
+extern struct xfsstats xfsstats;
 
 # define XFS_STATS_INC(count)		( (count)++ )
 # define XFS_STATS_DEC(count)		( (count)-- )
