@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -34,29 +34,21 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = mkfs.xfs
-MAXTRRES = maxtrres
 FSTYP = fstyp
 
 HFILES = xfs_mkfs.h
-CFILES = trtab.c proto.c xfs_mkfs.c 
+CFILES = maxtrres.c proto.c xfs_mkfs.c 
 
 LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
 LLDFLAGS = -static
 
-MAXTRLIBS = $(LIBXFS) $(LIBUUID) $(PLDLIBS)
-LSRCFILES = $(MAXTRRES).c $(FSTYP).c
-LDIRT = $(MAXTRRES) $(MAXTRRES).o $(MAXTRRES).h $(FSTYP)
+LSRCFILES = $(FSTYP).c
+LDIRT = $(FSTYP)
 
-default: $(MAXTRRES).h $(FSTYP) $(LTCOMMAND)
+default: $(FSTYP) $(LTCOMMAND)
 
 include $(BUILDRULES)
-
-$(MAXTRRES): $(MAXTRRES).o
-	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(MAXTRLIBS)
-
-$(MAXTRRES).h: $(MAXTRRES)
-	$(LTEXEC) ./$(MAXTRRES) > $@ || ( rm -f $@ && exit 1 )
 
 $(FSTYP):
 	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)

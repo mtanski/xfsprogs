@@ -45,7 +45,6 @@ static void reqval(char opt, char *tab[], int idx);
 static void respec(char opt, char *tab[], int idx);
 static void unknown(char opt, char *s);
 static int  ispow2(unsigned int i);
-static int  max_trans_res(xfs_mount_t *mp);
 
 /*
  * option tables for getsubopt calls
@@ -351,6 +350,29 @@ fixup_log_stripe(
 }
 
 void
+validate_log_size(__uint64_t logblocks, int blocklog, int min_logblocks)
+{
+	if (logblocks < min_logblocks) {
+		fprintf(stderr,
+	_("log size %lld blocks too small, minimum size is %d blocks\n"),
+			(long long)logblocks, min_logblocks);
+		usage();
+	}
+	if (logblocks > XFS_MAX_LOG_BLOCKS) {
+		fprintf(stderr,
+	_("log size %lld blocks too large, maximum size is %d blocks\n"),
+			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
+		usage();
+	}
+	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
+		fprintf(stderr,
+	_("log size %lld bytes too large, maximum size is %d bytes\n"),
+			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
+		usage();
+	}
+}
+
+void
 calc_default_ag_geometry(
 	int		blocklog,
 	__uint64_t	dblocks,
@@ -513,7 +535,6 @@ main(
 	int			dswidth;
 	int			extent_flagging;
 	int			force_overwrite;
-	int			i;
 	int			iaflag;
 	int			ilflag;
 	int			imaxpct;
@@ -543,6 +564,7 @@ main(
 	int			lssflag;
 	int			lsu;
 	int			lsunit;
+	int			max_tr_res;
 	int			min_logblocks;
 	xfs_mount_t		*mp;
 	xfs_mount_t		mbuf;
@@ -753,10 +775,10 @@ main(
 				case D_UNWRITTEN:
 					if (!value)
 						reqval('d', dopts, D_UNWRITTEN);
-					i = atoi(value);
-					if (i < 0 || i > 1)
+					c = atoi(value);
+					if (c < 0 || c > 1)
 						illegal(value, "d unwritten");
-					extent_flagging = i;
+					extent_flagging = c;
 					break;
 				case D_SECTLOG:
 					if (!value)
@@ -1538,17 +1560,11 @@ reported by the device (%u).\n"),
 			sectorsize, xi.rtbsize);
 	}
 
-	if (dirversion == 1)
-		i = max_trres_v1[sectorlog - XFS_MIN_SECTORSIZE_LOG]
-				[blocklog - XFS_MIN_BLOCKSIZE_LOG]
-				[inodelog - XFS_DINODE_MIN_LOG];
-	else
-		i = max_trres_v2[sectorlog - XFS_MIN_SECTORSIZE_LOG]
-				[blocklog - XFS_MIN_BLOCKSIZE_LOG]
-				[inodelog - XFS_DINODE_MIN_LOG]
-				[dirblocklog - XFS_MIN_BLOCKSIZE_LOG];
-	ASSERT(i);
-	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, i * XFS_MIN_LOG_FACTOR);
+	max_tr_res = max_trans_res(dirversion,
+				   sectorlog, blocklog, inodelog, dirblocklog);
+	ASSERT(max_tr_res);
+	min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
+	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
 		min_logblocks = MAX(min_logblocks, (10*1024*1024)>>blocklog);
 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
@@ -1556,9 +1572,9 @@ reported by the device (%u).\n"),
 _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			logsize, (long long)DTOBT(xi.logBBsize));
 		usage();
-	} else if (!logsize && xi.logBBsize > 0)
+	} else if (!logsize && xi.logBBsize > 0) {
 		logblocks = DTOBT(xi.logBBsize);
-	else if (logsize && !xi.logdev && !loginternal) {
+	} else if (logsize && !xi.logdev && !loginternal) {
 		fprintf(stderr,
 			_("size specified for non-existent log subvolume\n"));
 		usage();
@@ -1566,9 +1582,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		fprintf(stderr, _("size %lld too large for internal log\n"),
 			(long long)logblocks);
 		usage();
-	} else if (!loginternal && !xi.logdev)
+	} else if (!loginternal && !xi.logdev) {
 		logblocks = 0;
-	else if (loginternal && !logsize) {
+	} else if (loginternal && !logsize) {
 		/*
 		 * logblocks grows from min_logblocks to XFS_MAX_LOG_BLOCKS
 		 * at 128GB
@@ -1579,30 +1595,15 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		logblocks = logblocks >> blocklog;
 		logblocks = MAX(min_logblocks, logblocks);
 		logblocks = MAX(logblocks,
-				MAX(XFS_DFL_LOG_SIZE, i * XFS_DFL_LOG_FACTOR));
+				MAX(XFS_DFL_LOG_SIZE,
+					max_tr_res * XFS_DFL_LOG_FACTOR));
 		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
 		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
 		}
-	} 
-	if (logblocks < min_logblocks) {
-		fprintf(stderr,
-	_("log size %lld blocks too small, minimum size is %d blocks\n"),
-			(long long)logblocks, min_logblocks);
-		usage();
 	}
-	if (logblocks > XFS_MAX_LOG_BLOCKS) {
-		fprintf(stderr,
-	_("log size %lld blocks too large, maximum size is %d blocks\n"),
-			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
-		usage();
-	}
-	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
-		fprintf(stderr,
-	_("log size %lld bytes too large, maximum size is %d bytes\n"),
-			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
-		usage();
-	}
+	validate_log_size(logblocks, blocklog, min_logblocks);
+
 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
 		fprintf(stderr,
 			_("size %s specified for rt subvolume is too large, "
@@ -1851,6 +1852,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 					agsize, dsunit, &logblocks, blocklog,
 					&lalign);
 		}
+		min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
+		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BLOCKS);
+		validate_log_size(logblocks, blocklog, min_logblocks);
 	} else
 		logstart = 0;
 
@@ -1994,14 +1998,6 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			progname);
 		exit(1);
 	}
-	if (xi.logdev &&
-	    XFS_FSB_TO_B(mp, logblocks) <
-	    XFS_MIN_LOG_FACTOR * max_trans_res(mp)) {
-		fprintf(stderr,
-	_("%s: log size (%lld) is too small for transaction reservations\n"),
-			progname, (long long)logblocks);
-		exit(1);
-	}
 
 	for (agno = 0; agno < agcount; agno++) {
 		/*
@@ -2068,8 +2064,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		INT_SET(agi->agi_freecount, ARCH_CONVERT, 0);
 		INT_SET(agi->agi_newino, ARCH_CONVERT, NULLAGINO);
 		INT_SET(agi->agi_dirino, ARCH_CONVERT, NULLAGINO);
-		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-			INT_SET(agi->agi_unlinked[i], ARCH_CONVERT, NULLAGINO);
+		for (c = 0; c < XFS_AGI_UNLINKED_BUCKETS; c++)
+			INT_SET(agi->agi_unlinked[c], ARCH_CONVERT, NULLAGINO);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2206,8 +2202,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		args.agno = agno;
 		args.alignment = 1;
 		args.pag = &mp->m_perag[agno];
-		if ((i = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
-			res_failed(i);
+		if ((c = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
+			res_failed(c);
 		libxfs_alloc_fix_freelist(&args, 0);
 		libxfs_trans_commit(tp, 0, NULL);
 	}
@@ -2273,23 +2269,6 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	libxfs_device_close(xi.ddev);
 
 	return 0;
-}
-
-static int
-max_trans_res(
-	xfs_mount_t			*mp)
-{
-	uint				*p;
-	int				rval;
-	xfs_trans_reservations_t	*tr;
-
-	tr = &mp->m_reservations;
-
-	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
-		if ((int)*p > rval)
-			rval = (int)*p;
-	}
-	return rval;
 }
 
 static void
