@@ -506,7 +506,7 @@ main(int argc, char **argv)
 	int		wbuf_miniosize;
 	int		source_is_file = 0;
 	int		buffered_output = 0;
-	int		duplicate_uuids = 0;
+	int		duplicate = 0;
 	uint		btree_levels, current_level;
 	ag_header_t	ag_hdr;
 	xfs_mount_t	*mp;
@@ -537,7 +537,7 @@ main(int argc, char **argv)
 			buffered_output = 1;
 			break;
 		case 'd':
-			duplicate_uuids = 1;
+			duplicate = 1;
 			break;
 		case 'L':
 			logfile_name = optarg;
@@ -862,7 +862,7 @@ main(int argc, char **argv)
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
-		if (!duplicate_uuids)
+		if (!duplicate)
 			uuid_generate(tcarg->uuid);
 		else
 			uuid_copy(tcarg->uuid, mp->m_sb.sb_uuid);
@@ -1119,30 +1119,33 @@ main(int argc, char **argv)
 	}
 
 	if (kids > 0)  {
-		/* write a clean log using the specified UUID */
+		if (!duplicate)  {
 
-		for (j = 0, tcarg = targ; j < num_targets; j++)  {
-			w_buf.owner = tcarg;
-			w_buf.length = rounddown(w_buf.size, w_buf.min_io_size);
+			/* write a clean log using the specified UUID */
+			for (j = 0, tcarg = targ; j < num_targets; j++)  {
+				w_buf.owner = tcarg;
+				w_buf.length = rounddown(w_buf.size,
+							 w_buf.min_io_size);
+				pos = write_log_header(
+							source_fd, &w_buf, mp);
+				end_pos = write_log_trailer(
+							source_fd, &w_buf, mp);
+				w_buf.position = pos;
+				memset(w_buf.data, 0, w_buf.length);
 
-			pos = write_log_header(source_fd, &w_buf, mp);
-			end_pos = write_log_trailer(source_fd, &w_buf, mp);
-
-			w_buf.position = pos;
-			memset(w_buf.data, 0, w_buf.length);
-
-			while (w_buf.position < end_pos)  {
-				do_write(tcarg);
-				w_buf.position += w_buf.length;
+				while (w_buf.position < end_pos)  {
+					do_write(tcarg);
+					w_buf.position += w_buf.length;
+				}
+				tcarg++;
 			}
-			tcarg++;
+		} else {
+			num_ags = 1;
 		}
 
 		/* reread and rewrite superblocks (UUID and in-progress) */
 		/* [backwards, so inprogress bit only updated when done] */
 
-		if (duplicate_uuids)
-			num_ags = 1;
 		for (i = num_ags - 1; i >= 0; i--)  {
 			read_ag_header(source_fd, i, &w_buf, &ag_hdr, mp,
 				source_blocksize, source_sectorsize);
