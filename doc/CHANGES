@@ -5,6 +5,7 @@ xfsprogs-2.5.2 (25 June 2003)
 	  for work-in-progress on xfs_repair and xfs_copy.
 	- Fix missing initialisation of stripe unit/width alignment
 	  information during libxfs_mount.
+	- Fix botched repair typecast for multi-terabyte filesystems.
 
 xfsprogs-2.5.1 (23 June 2003)
 	- Fix libdisk device driver (volume managers) detection code

@@ -276,9 +276,9 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 
 	if (sb->sb_dblocks == 0 ||
 		sb->sb_dblocks >
-			(__uint64_t)(sb->sb_agcount * sb->sb_agblocks) ||
+			((__uint64_t)sb->sb_agcount * sb->sb_agblocks) ||
 		sb->sb_dblocks <
-			(__uint64_t)((sb->sb_agcount - 1) * sb->sb_agblocks
+			((__uint64_t)(sb->sb_agcount - 1) * sb->sb_agblocks
 			+ XFS_MIN_AG_BLOCKS))
 		return(XR_BAD_FS_SIZE_DATA);
 
