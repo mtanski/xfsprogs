@@ -43,5 +43,19 @@ int
 xfs_lowbit32(
 	__uint32_t	v)
 {
-	return ffs(v)-1; 
+	int		i;
+
+	if (v & 0x0000ffff)
+		if (v & 0x000000ff)
+			i = 0;
+		else
+			i = 8;
+	else if (v & 0xffff0000)
+		if (v & 0x00ff0000)
+			i = 16;
+		else
+			i = 24;
+	else
+		return -1;
+	return i + xfs_lowbit[(v >> i) & 0xff];
 }
