@@ -50,7 +50,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 	if ((z = memalign(getpagesize(), zsize)) == NULL) {
 		fprintf(stderr,
 			_("%s: %s can't memalign %d bytes: %s\n"),
-			progname, __FUNCTION__, zsize, strerror(errno));
+			progname, __FUNCTION__, (int)zsize, strerror(errno));
 		exit(1);
 	}
 	memset(z, 0, zsize);
@@ -60,7 +60,8 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 
 	if ((lseek64(fd, start_offset, SEEK_SET)) < 0) {
 		fprintf(stderr, _("%s: %s seek to offset %llu failed: %s\n"),
-			progname, __FUNCTION__, start_offset, strerror(errno));
+			progname, __FUNCTION__,
+			(unsigned long long)start_offset, strerror(errno));
 		exit(1);
 	}
 
