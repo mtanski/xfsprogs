@@ -772,7 +772,7 @@ xfs_btree_read_bufs(
 		return error;
 	}
 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
-	if (bp != NULL)
+	if (bp != NULL) {
 		switch (refval) {
 		case XFS_ALLOC_BTREE_REF:
 			XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
@@ -781,6 +781,7 @@ xfs_btree_read_bufs(
 			XFS_BUF_SET_VTYPE_REF(bp, B_FS_INOMAP, refval);
 			break;
 		}
+	}
 	*bpp = bp;
 	return 0;
 }
