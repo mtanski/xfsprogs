@@ -1,3 +1,8 @@
+xfsprogs-2.6.17 (23 June 2004)
+	- Fix use of isset macro, getting realtime devices to
+	  function correctly in xfs_db and xfs_repair.
+	- Fix initialisation of realtime devices in libxfs.
+
 xfsprogs-2.6.16 (17 June 2004)
 	- Add sendfile command into xfs_io(8) to exercise that
 	  functionality.

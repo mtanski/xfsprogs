@@ -495,7 +495,8 @@ rtmount_inodes(xfs_mount_t *mp)
  */
 static int
 rtmount_init(
-	xfs_mount_t	*mp)	/* file system mount structure */
+	xfs_mount_t	*mp,	/* file system mount structure */
+	int		flags)
 {
 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
 	xfs_daddr_t	d;	/* address of last block of subvolume */
@@ -504,7 +505,7 @@ rtmount_init(
 	sbp = &mp->m_sb;
 	if (sbp->sb_rblocks == 0)
 		return 0;
-	if (mp->m_rtdev == 0) {
+	if (mp->m_rtdev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
 			progname);
 		return -1;
@@ -515,6 +516,13 @@ rtmount_init(
 		sbp->sb_rbmblocks;
 	mp->m_rsumsize = roundup(mp->m_rsumsize, sbp->sb_blocksize);
 	mp->m_rbmip = mp->m_rsumip = NULL;
+
+	/*
+	 * Allow debugger to be run without the realtime device present.
+	 */
+	if (flags & LIBXFS_MOUNT_DEBUGGER)
+		return 0;
+
 	/*
 	 * Check that the realtime section is an ok size.
 	 */
@@ -660,7 +668,7 @@ libxfs_mount(
 	}
 
 	/* Initialize realtime fields in the mount structure */
-	if (!(flags & LIBXFS_MOUNT_DEBUGGER) && rtmount_init(mp)) {
+	if (rtmount_init(mp, flags)) {
 		fprintf(stderr, _("%s: realtime device init failed\n"),
 			progname);
 			return NULL;
@@ -690,9 +698,7 @@ libxfs_mount(
 		}
 		ASSERT(mp->m_rootip != NULL);
 	}
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) &&
-	    !(flags & LIBXFS_MOUNT_DEBUGGER) &&
-	    rtmount_inodes(mp))
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp))
 		return NULL;
 	return mp;
 }
