@@ -320,6 +320,7 @@ typedef struct xfs_inode {
 	unsigned int		i_pincount;	/* inode pin count */
 	sv_t			i_pinsema;	/* inode pin sema */
 	lock_t			i_ipinlock;	/* inode pinning mutex */
+	struct xfs_inode	**i_refcache;	/* ptr to entry in ref cache */
 	struct xfs_inode	*i_release;	/* inode to unref */
 
 	/* I/O state */
