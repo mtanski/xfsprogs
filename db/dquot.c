@@ -34,7 +34,6 @@
 #include "bit.h"
 #include "bmap.h"
 #include "command.h"
-#include "dquot.h"
 #include "type.h"
 #include "faddr.h"
 #include "fprint.h"
@@ -43,6 +42,7 @@
 #include "io.h"
 #include "init.h"
 #include "output.h"
+#include "dquot.h"
 
 static int	dquot_f(int argc, char **argv);
 static void	dquot_help(void);

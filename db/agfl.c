@@ -31,7 +31,6 @@
  */
 
 #include <xfs/libxfs.h>
-#include "agfl.h"
 #include "command.h"
 #include "type.h"
 #include "faddr.h"
@@ -41,6 +40,7 @@
 #include "bit.h"
 #include "output.h"
 #include "init.h"
+#include "agfl.h"
 
 static int agfl_bno_size(void *obj, int startoff);
 static int agfl_f(int argc, char **argv);

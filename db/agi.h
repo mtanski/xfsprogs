@@ -30,8 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-struct field;
-
 extern const struct field	agi_flds[];
 extern const struct field	agi_hfld[];
 

@@ -30,8 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-struct field;
-
 extern const struct field	bnobt_flds[];
 extern const struct field	bnobt_hfld[];
 extern const struct field	bnobt_key_flds[];

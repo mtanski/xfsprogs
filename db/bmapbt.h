@@ -30,8 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-struct field;
-
 extern const struct field	bmapbta_flds[];
 extern const struct field	bmapbta_hfld[];
 extern const struct field	bmapbta_key_flds[];

@@ -31,7 +31,6 @@
  */
 
 #include <xfs/libxfs.h>
-#include "agi.h"
 #include "command.h"
 #include "type.h"
 #include "faddr.h"
@@ -41,6 +40,7 @@
 #include "bit.h"
 #include "output.h"
 #include "init.h"
+#include "agi.h"
 
 static int agi_f(int argc, char **argv);
 static void agi_help(void);

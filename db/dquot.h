@@ -30,8 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-struct field;
-
 extern const struct field	disk_dquot_flds[];
 extern const struct field	dqblk_flds[];
 extern const struct field	dqblk_hfld[];

@@ -30,8 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-struct field;
-
 extern const struct field	inobt_flds[];
 extern const struct field	inobt_hfld[];
 extern const struct field	inobt_key_flds[];
