@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -67,14 +67,6 @@ md_get_subvol_stripe(
 			exit(1);
 		}
 		close(fd);
-
-		/* Check state */
-		if (md.state & (1 << MD_SB_ERRORS)) {
-			fprintf(stderr,
-				_("warning - MD array %s in error state\n"),
-				dfile);
-			exit(1);
-		}
 
 		/* Deduct a disk from stripe width on RAID4/5 */
 		if (md.level == 4 || md.level == 5)
