@@ -1548,6 +1548,7 @@ main(int argc, char **argv)
 				inodebits = (libxfs_highbit32(blocksize/isize - 1) + 1)
 					  + (libxfs_highbit64(agsize - 1) + 1)
 					  + (libxfs_highbit64(agcount - 1) + 1);
+				inodelog = libxfs_highbit32(isize);
 				/* Let's not get too chatty, no fprintf here */
 			} else {
 				/*
