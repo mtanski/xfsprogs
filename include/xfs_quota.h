@@ -278,6 +278,8 @@ extern void		xfs_trans_dqjoin(struct xfs_trans *,
 					 struct xfs_dquot *);
 extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
 
+# define _XQM_ZONE_DESTROY(z)	((z)? kmem_cache_destroy(z) : (void)0)
+
 #else
 # define xfs_qm_init()					(NULL)
 # define xfs_qm_destroy(xqm)				do { } while (0)
@@ -316,6 +318,7 @@ extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
 # define xfs_qm_vop_chown_reserve(t,i,d1,d2,f)		(ENOSYS)
 # define xfs_qm_vop_rename_dqattach(i)			(ENOSYS)
 # define xfs_qm_vop_dqattach_and_dqmod_newinode(t,i,x,y) do { } while (0)
+# define _XQM_ZONE_DESTROY(z)				do { } while (0)
 #endif	/* CONFIG_XFS_QUOTA */
 
 /* 
