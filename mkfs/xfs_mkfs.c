@@ -356,7 +356,6 @@ fixup_log_stripe(
 {
 	__uint64_t	tmp_logblocks;
 
-	sunit = XFS_B_TO_FSB(mp, sunit);
 	logstart = ((logstart + (sunit - 1))/sunit) * sunit;
 	/* 
 	 * Make sure that the log size is a multiple of the
@@ -1647,9 +1646,9 @@ main(int argc, char **argv)
 			lsunit, blocksize);
 			exit(1);
 		}
-	} else {
-		if (dsunit)
-			lsunit = dsunit;
+	} else if (dsunit) {
+		/* lsunit is in bytes here, dsunit is fs blocks */
+		lsunit = dsunit << blocklog;
 	}
 
 	if (lsunit > 256 * 1024) {
@@ -1696,15 +1695,15 @@ main(int argc, char **argv)
 		 * Align the logstart at stripe unit boundary.
 		 */
 
-		if (lsunit && ((logstart % lsunit) != 0)) {
+		if (lsunit && ((logstart % XFS_B_TO_FSB(mp, lsunit)) != 0)) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
-						agsize, lsunit, &logblocks,
-						blocklog);
+					agsize, XFS_B_TO_FSB(mp, lsunit),
+					&logblocks, blocklog);
 			lalign = 1;
 		} else if (dsunit && ((logstart % dsunit) != 0)) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
-						agsize, dsunit, &logblocks,
-						blocklog);
+					agsize, dsunit, &logblocks,
+					blocklog);
 			lalign = 1;
 		}
 	} else
