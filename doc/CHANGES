@@ -1,3 +1,11 @@
+xfsprogs-2.0.2 (4 April 2002)
+	- Bumped version of libhandle to libhandle.so.1.0.1
+	  This changes open_by_handle() and friends so that 
+	  O_LARGEFILE is added to the open flags.
+	  This allows xfsdump to dump files greater than
+	  2^31-1 bytes instead of not dumping the large
+	  files and giving warning messages.
+
 xfsprogs-2.0.1 (12 March 2002)
 	- Fall back to BLKGETSIZE if BLKGETSIZE64 fails
 	- Sync user/kernel headers and shared code
