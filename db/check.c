@@ -2780,9 +2780,7 @@ process_inode(
 		default:
 		}
 		if (ic)
-			quota_add(dic->di_version >= XFS_DINODE_VERSION_2 ?
-					dic->di_projid : -1,
-				  dic->di_uid, 0, bc, ic, rc);
+			quota_add(dic->di_gid, dic->di_uid, 0, bc, ic, rc);
 	}
 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
 	if (totblocks != dic->di_nblocks) {
