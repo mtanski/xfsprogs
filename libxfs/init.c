@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -66,9 +66,9 @@ check_isactive(char *name, char *block, int fatal)
 		return 0;
 	if ((st.st_mode & S_IFMT) != S_IFBLK)
 		return 0;
-	if (check_ismounted(name, block, &st, 0) == 0)
+	if (platform_check_ismounted(name, block, &st, 0) == 0)
 		return 0;
-	return check_iswritable(name, block, &st, fatal);
+	return platform_check_iswritable(name, block, &st, fatal);
 }
 
 /* libxfs_device_to_fd:
@@ -116,7 +116,7 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 	}
 
 	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
-		set_blocksize(fd, path, 512);
+		platform_set_blocksize(fd, path, 512);
 	}
 
 	/*
@@ -159,7 +159,7 @@ libxfs_device_close(dev_t dev)
 			dev_map[d].dev = dev_map[d].fd = 0;
 
 			fsync(fd);
-			flush_device(fd);
+			platform_flush_device(fd);
 			close(fd);
 
 			return;
@@ -224,8 +224,8 @@ libxfs_init(libxfs_init_t *a)
 				progname, a->volname);
 			goto done;
 		}
-		if (!readonly && !inactive && check_ismounted(
-					a->volname, blockfile, NULL, 1))
+		if (!readonly && !inactive &&
+		    platform_check_ismounted(a->volname, blockfile, NULL, 1))
 			goto done;
 		if (inactive && check_isactive(
 					a->volname, blockfile, readonly))
@@ -332,8 +332,8 @@ voldone:
 					"matching %s\n"), progname, dname);
 				goto done;
 			}
-			if (!readonly && !inactive && check_ismounted(
-						dname, blockfile, NULL, 1))
+			if (!readonly && !inactive &&
+			    platform_check_ismounted(dname, blockfile, NULL, 1))
 				goto done;
 			if (inactive && check_isactive(
 						dname, blockfile, readonly))
@@ -341,7 +341,7 @@ voldone:
 			a->ddev = libxfs_device_open(rawfile,
 					a->dcreat, readonly, a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
-			a->dsize = findsize(rawfile);
+			a->dsize = platform_findsize(rawfile);
 		}
 		needcd = 1;
 	} else
@@ -372,8 +372,8 @@ voldone:
 					"matching %s\n"), progname, logname);
 				goto done;
 			}
-			if (!readonly && !inactive && check_ismounted(
-						logname, blockfile, NULL, 1))
+			if (!readonly && !inactive &&
+			    platform_check_ismounted(logname, blockfile, NULL, 1))
 				goto done;
 			else if (inactive && check_isactive(
 						logname, blockfile, readonly))
@@ -381,7 +381,7 @@ voldone:
 			a->logdev = libxfs_device_open(rawfile,
 					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
-			a->logBBsize = findsize(rawfile);
+			a->logBBsize = platform_findsize(rawfile);
 		}
 		needcd = 1;
 	} else
@@ -412,8 +412,8 @@ voldone:
 					"matching %s\n"), progname, rtname);
 				goto done;
 			}
-			if (!readonly && !inactive && check_ismounted(
-						rtname, blockfile, NULL, 1))
+			if (!readonly && !inactive &&
+			    platform_check_ismounted(rtname, blockfile, NULL, 1))
 				goto done;
 			if (inactive && check_isactive(
 						rtname, blockfile, readonly))
@@ -421,7 +421,7 @@ voldone:
 			a->rtdev = libxfs_device_open(rawfile,
 					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
-			a->rtsize = findsize(rawfile);
+			a->rtsize = platform_findsize(rawfile);
 		}
 		needcd = 1;
 	} else

@@ -10,7 +10,7 @@ AC_SUBST(pkg_name)
 # defaults (to change paths and/or executables, build parameters, etc):
 #
 #   DEBUG  OPTIMIZER  MALLOCLIB
-#   PLATFORM  DISTRIBUTION  BUILDER
+#   PLATFORM  DISTRIBUTION  INSTALL_USER  INSTALL_GROUP
 #   MAKE  CC  LD  TAR  ZIP  AWK  SED  ECHO  RPM  LIBTOOL
 #   MSGFMT  MSGMERGE  XGETTEXT
 #
@@ -41,15 +41,19 @@ AC_SUBST(pkg_release)
 
 pkg_platform=`uname -s`
 pkg_distribution="Generic $pkg_platform"
-pkg_platform=`echo $pkg_platform | tr 'A-Z' 'a-z'`
+pkg_platform=`echo $pkg_platform | tr 'A-Z' 'a-z' | sed -e 's/irix64/irix/'`
 test -z "$PLATFORM" || pkg_platform="$PLATFORM"
 test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
 AC_SUBST(pkg_distribution)
 AC_SUBST(pkg_platform)
 
-pkg_builder=`id -u -n`@`hostname`
-test -z "$BUILDER" || pkg_builder="$BUILDER"
-AC_SUBST(pkg_builder)
+pkg_user=root
+test -z "$INSTALL_USER" || pkg_user="$INSTALL_USER"
+AC_SUBST(pkg_user)
+
+pkg_group=root
+test -z "$INSTALL_GROUP" || pkg_group="$INSTALL_GROUP"
+AC_SUBST(pkg_group)
 
 dnl check if user wants their own C compiler
 test -z "$CC" && AC_PROG_CC
@@ -118,27 +122,6 @@ test -z "$ECHO" && AC_PATH_PROG(ECHO, echo, /bin/echo)
 echo=$ECHO
 AC_SUBST(echo)
 
-dnl check if the msgfmt program is available
-test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
-msgfmt=$MSGFMT
-AC_SUBST(msgfmt)
-
-dnl check if the msgmerge program is available
-test -z "$MSGMERGE" && AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
-msgmerge=$MSGMERGE
-AC_SUBST(msgmerge)
-
-dnl ensure xgettext is installed
-test -z "$XGETTEXT" && AC_CHECK_PROG(XGETTEXT, xgettext, /usr/bin/xgettext)
-if test "$XGETTEXT" = ""; then
-	echo
-	echo 'FATAL ERROR: xgettext does not seem to be installed.'
-	echo $pkg_name cannot be built without a working gettext installation.
-	exit 1
-fi
-xgettext=$XGETTEXT
-AC_SUBST(xgettext)
-
 dnl ensure libtool is installed
 test -z "$LIBTOOL" && AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
 if test "$LIBTOOL" = ""; then
@@ -156,19 +139,44 @@ AC_ARG_ENABLE(shared,
 	enable_shared=yes)
 AC_SUBST(enable_shared)
 
+dnl will we be making use of readline?
+AC_ARG_ENABLE(readline,
+	[ --enable-readline=[yes/no] Enable readline command editing [default=no]],,
+	enable_readline=no)
+if test $enable_readline = yes; then
+	libreadline="-lreadline -lncurses"
+else
+	libreadline=""
+fi
+AC_SUBST(libreadline)
+AC_SUBST(enable_readline)
+
 dnl will we be making use of gettext?
 AC_ARG_ENABLE(gettext,
 	[ --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
 	enable_gettext=yes)
 AC_SUBST(enable_gettext)
 
-dnl will we be making use of readline?
-AC_ARG_ENABLE(readline,
-	[ --enable-readline=[yes/no] Enable readline command editing [default=no]],,
-	enable_readline=no)
-libreadline="-lreadline -lncurses"
-AC_SUBST(libreadline)
-AC_SUBST(enable_readline)
+dnl check if the msgfmt, msgmerge, xgettext programs are available
+if test "$enable_gettext" = yes; then
+	test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+	msgfmt=$MSGFMT
+	AC_SUBST(msgfmt)
+	test -z "$MSGMERGE" && AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
+	msgmerge=$MSGMERGE
+	AC_SUBST(msgmerge)
+
+	test -z "$XGETTEXT" && AC_CHECK_PROG(XGETTEXT, xgettext, /usr/bin/xgettext)
+	xgettext=$XGETTEXT
+	AC_SUBST(xgettext)
+
+	if test "$XGETTEXT" = ""; then
+		echo
+		echo 'FATAL ERROR: xgettext does not seem to be installed.'
+		echo $pkg_name cannot be built without a working gettext installation.
+		exit 1
+	fi
+fi
 
 dnl Checks for UUID header and library.
 AC_CHECK_HEADER(uuid/uuid.h,, [
@@ -185,7 +193,7 @@ AC_CHECK_LIB(uuid, uuid_generate,, [
 ])
 
 dnl
-dnl Caution - using libuuid shared adds an additional runtime dependency,
+dnl Caution: using libuuid shared adds an additional runtime dependency,
 dnl but the rpm spec file and debian control file do _not_ enforce this.
 dnl We want to keep our runtime dependencies to an absolute minimum for
 dnl this particular package, but the option is there.

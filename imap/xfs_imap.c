@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -35,7 +35,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/ioctl.h>
 
 int main(int argc, char **argv)
 {
@@ -48,7 +47,6 @@ int main(int argc, char **argv)
 	__s64		last = 0;
 	xfs_inogrp_t	*t;
 	xfs_fsop_bulkreq_t bulkreq;
-	struct statfs	buf;
 
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
@@ -64,8 +62,7 @@ int main(int argc, char **argv)
 		perror(name);
 		return 1;
 	}
-	fstatfs(fd, &buf);
-	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
+	if (!platform_test_xfs_fd(fd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, name);
@@ -84,7 +81,7 @@ int main(int argc, char **argv)
 	bulkreq.ubuffer = t;
 	bulkreq.ocount  = &count;
 
-	while (ioctl(fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+	while (xfsctl(name, fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
 		if (count == 0)
 			return 0;
 		for (i = 0; i < count; i++) {
@@ -94,6 +91,6 @@ int main(int argc, char **argv)
 				(unsigned long long)t[i].xi_allocmask);
 		}
 	}
-	perror("ioctl(XFS_IOC_FSINUMBERS)");
+	perror("xfsctl(XFS_IOC_FSINUMBERS)");
 	return 1;
 }

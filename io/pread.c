@@ -91,7 +91,7 @@ dump_buffer(
 			printf("%02x ", *p);
 		printf(" ");
 		for (j = 0; j < 16 && i + j < len; j++, s++) {
-			if (isalnum(*s))
+			if (isalnum((int)*s))
 				printf("%c", *s);
 			else
 				printf(".");

@@ -1,9 +1,9 @@
-xfsprogs (2.4.3-1) unstable; urgency=low
+xfsprogs (2.4.4-1) unstable; urgency=low
 
   * New upstream release
   * Dependencies on libreadline4 and libreadline4-dev added
 
- -- Nathan Scott <nathans@debian.org>  Thu, 27 Mar 2003 10:30:18 +1100
+ -- Nathan Scott <nathans@debian.org>  Sun, 30 Mar 2003 10:30:18 +1000
 
 xfsprogs (2.4.1-1) unstable; urgency=low
 

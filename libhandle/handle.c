@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 1995, 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2.1 of the GNU Lesser General Public License
@@ -32,8 +32,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 
 /* attributes.h (purposefully) unavailable to xfsprogs, make do */
 struct attrlist_cursor { __u32 opaque[4]; };
@@ -58,20 +56,26 @@ typedef union {
 	char	*path;
 } comarg_t;
 
-int
+static int
 obj_to_handle (
+	char		*fspath,
 	int		fsfd,
 	unsigned int	opcode,
 	comarg_t	obj,
 	void		**hanp,
 	size_t		*hlen);
 
+static int
+handle_to_fsfd (
+	void		*hanp,
+	char		**path);
+
 
 /*
  * Filesystem Handle -> Open File Descriptor Cache
  *
  * Maps filesystem handles to a corresponding open file descriptor for that
- * filesystem. We need this because we're doing handle operations via ioctl
+ * filesystem. We need this because we're doing handle operations via xfsctl
  * and we need to remember the open file descriptor for each filesystem.
  */
 
@@ -79,9 +83,10 @@ struct fdhash {
 	int	fsfd;
 	char	fsh[FSIDSIZE];
 	struct fdhash *fnxt;
+	char	fspath[MAXPATHLEN];
 };
 
-struct fdhash *fdhash_head = NULL;
+static struct fdhash *fdhash_head = NULL;
 
 int
 path_to_fshandle (
@@ -103,12 +108,11 @@ path_to_fshandle (
 
 	obj.path = path;
 
-	result = obj_to_handle (fd, XFS_IOC_PATH_TO_FSHANDLE,
+	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
 				obj, hanp, hlen);
 
 	if (result >= 0) {
 		fdhp = malloc(sizeof(struct fdhash));
-
 		if (fdhp == NULL) {
 			errno = ENOMEM;
 			return -1;
@@ -116,7 +120,7 @@ path_to_fshandle (
 
 		fdhp->fsfd = fd;
 		fdhp->fnxt = NULL;
-
+		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
 		memcpy(fdhp->fsh, *hanp, FSIDSIZE);
 
 		if (fdhash_head)
@@ -148,25 +152,11 @@ path_to_handle (
 
 	obj.path = path;
 
-	result = obj_to_handle (fd, XFS_IOC_PATH_TO_HANDLE, obj, hanp, hlen);
+	result = obj_to_handle (path, fd, XFS_IOC_PATH_TO_HANDLE, obj, hanp, hlen);
 
 	close(fd);
 
 	return result;
-}
-
-
-int
-fd_to_handle (
-	int		fd,		/* input,  file descriptor */
-	void		**hanp,		/* output, pointer to data */
-	size_t		*hlen)		/* output, size of returned data */
-{
-	comarg_t	obj;
-
-	obj.fd = fd;
-
-	return obj_to_handle (fd, XFS_IOC_FD_TO_HANDLE, obj, hanp, hlen);
 }
 
 
@@ -193,21 +183,24 @@ handle_to_fshandle (
 }
 
 
-int
-handle_to_fsfd(void *hanp)
+static int
+handle_to_fsfd(void *hanp, char **path)
 {
 	struct fdhash	*fdhp;
 
 	for (fdhp = fdhash_head; fdhp != NULL; fdhp = fdhp->fnxt) {
-		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0)
+		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0) {
+			*path = fdhp->fspath;
 			return fdhp->fsfd;
+		}
 	}
 	return -1;
 }
 
 
-int
+static int
 obj_to_handle (
+	char		*fspath,
 	int		fsfd,
 	unsigned int	opcode,
 	comarg_t	obj,
@@ -232,13 +225,11 @@ obj_to_handle (
 	hreq.ohandle  = hbuf;
 	hreq.ohandlen = (__u32 *)hlen;
 
-	ret = (int) ioctl(fsfd, opcode, &hreq);
-
+	ret = xfsctl(fspath, fsfd, opcode, &hreq);
 	if (ret)
 		return ret;
 
 	*hanp = malloc(*hlen);	
-
 	if (*hanp == NULL) {
 		errno = ENOMEM;
 		return -1;
@@ -250,7 +241,6 @@ obj_to_handle (
 }
 
 
-
 int
 open_by_handle (
 	void		*hanp,
@@ -258,10 +248,10 @@ open_by_handle (
 	int		rw)
 {
 	int		fd;
-	int		result;
+	char		*path;
 	xfs_fsop_handlereq_t hreq;
 
-	if ((fd = handle_to_fsfd(hanp)) < 0) {
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -274,9 +264,7 @@ open_by_handle (
 	hreq.ohandle  = NULL;
 	hreq.ohandlen = NULL;
 
-	result = ioctl(fd, XFS_IOC_OPEN_BY_HANDLE, &hreq);
-
-	return result;
+	return xfsctl(path, fd, XFS_IOC_OPEN_BY_HANDLE, &hreq);
 }
 
 int
@@ -287,10 +275,11 @@ readlink_by_handle (
 	size_t		bufsiz)
 {
 	int		fd;
+	char		*path;
 	xfs_fsop_handlereq_t hreq;
 
 
-	if ((fd = handle_to_fsfd(hanp)) < 0) {
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -303,7 +292,7 @@ readlink_by_handle (
 	hreq.ohandle  = buf;
 	hreq.ohandlen = (__u32 *)&bufsiz;
 
-	return (int) ioctl(fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
+	return xfsctl(path, fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
 }
 
 int
@@ -315,9 +304,10 @@ attr_multi_by_handle(
 	int		flags)
 {
 	int		fd;
+	char		*path;
 	xfs_fsop_attrmulti_handlereq_t amhreq;
 
-	if ((fd = handle_to_fsfd(hanp)) < 0) {
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -333,7 +323,7 @@ attr_multi_by_handle(
 	amhreq.opcount = rtrvcnt;
 	amhreq.ops = buf;
 
-	return (int) ioctl(fd, XFS_IOC_ATTRMULTI_BY_HANDLE, &amhreq);
+	return xfsctl(path, fd, XFS_IOC_ATTRMULTI_BY_HANDLE, &amhreq);
 }
 
 int
@@ -346,9 +336,10 @@ attr_list_by_handle(
 	struct attrlist_cursor *cursor)
 {
 	int		fd;
+	char		*path;
 	xfs_fsop_attrlist_handlereq_t alhreq;
 
-	if ((fd = handle_to_fsfd(hanp)) < 0) {
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -366,7 +357,7 @@ attr_list_by_handle(
 	alhreq.buflen = bufsize;
 	alhreq.buffer = buf;
 
-	return (int) ioctl(fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
+	return xfsctl(path, fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
 }
 
 int
@@ -376,10 +367,11 @@ fssetdm_by_handle (
 	struct fsdmidata *fsdmidata)
 {
 	int		fd;
+	char		*path;
 	xfs_fsop_setdm_handlereq_t dmhreq;
 
 
-	if ((fd = handle_to_fsfd(hanp)) < 0) {
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -394,7 +386,7 @@ fssetdm_by_handle (
 
 	dmhreq.data = fsdmidata;
 
-	return (int) ioctl(fd, XFS_IOC_FSSETDM_BY_HANDLE, &dmhreq);
+	return xfsctl(path, fd, XFS_IOC_FSSETDM_BY_HANDLE, &dmhreq);
 }
 
 /*ARGSUSED*/

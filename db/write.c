@@ -520,16 +520,16 @@ convert_arg(
                     while (*arg=='-') arg++;
                     
                     /* get first nybble */
-                    if (!isxdigit(*arg)) return NULL;
-                    *rbuf=NYBBLE(*arg)<<4;
+                    if (!isxdigit((int)*arg)) return NULL;
+                    *rbuf=NYBBLE((int)*arg)<<4;
                     arg++;
                     
                     /* skip more hyphens */
                     while (*arg=='-') arg++;
                     
                     /* get second nybble */
-                    if (!isxdigit(*arg)) return NULL;
-                    *rbuf++|=NYBBLE(*arg);
+                    if (!isxdigit((int)*arg)) return NULL;
+                    *rbuf++|=NYBBLE((int)*arg);
                     arg++;
                 }
                 if (bytes<0&&*arg) return NULL;

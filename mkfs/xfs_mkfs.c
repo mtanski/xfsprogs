@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -2289,7 +2289,7 @@ isdigits(
 	int		n = strlen(str);
 
 	for (i = 0; i < n; i++) {
-		if (!isdigit(str[i]))
+		if (!isdigit((int)str[i]))
 			return 0;
 	}
 	return 1;

@@ -1,5 +1,21 @@
-CVS
-	- Correct display of imaxpct in mkfs output
+xfsprogs-2.4.4 (30 March 2003)
+	- Correct display of imaxpct in mkfs.xfs output.
+	- Portability changes; including some code to support use
+	  of several tools on Mac OS X (for Russell), also did a
+	  simplistic backport to IRIX (for me), so that I can run
+	  purify on some of the tools.
+	- See doc/INSTALL for more details on this.
+	- Sync up user/kernel source in libxfs and headers.
+	- Fix up some warnings when compiling libxfs on big endian
+	  platforms.
+	- Fix a configure.in botch which resulted in libreadline
+	  always being used even when it was not asked for.
+	- Fixed the configure.in script so that if gettext disabled,
+	  we don't check for the gettext tools (and no longer fails
+	  if they were not found).
+	- Added the ability to specify a different user and/or group
+	  to install as (previously, and still by default, root/root
+	  were always used here).
 
 xfsprogs-2.4.3 (27 March 2003)
 	- Cleanups to the build process, in particular the automatic

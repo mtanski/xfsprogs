@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -39,18 +39,31 @@ LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
 
 # TODO: db/ logprint/
 XGETTEXTFILES =	\
-		$(TOPDIR)/bmap/xfs_bmap.c \
 		$(TOPDIR)/freeze/xfs_freeze.c \
 		$(TOPDIR)/growfs/explore.c \
 		$(TOPDIR)/growfs/xfs_growfs.c \
 		$(TOPDIR)/imap/xfs_imap.c \
+		$(TOPDIR)/io/bmap.c \
+		$(TOPDIR)/io/command.c \
+		$(TOPDIR)/io/fsync.c \
+		$(TOPDIR)/io/help.c \
+		$(TOPDIR)/io/init.c \
+		$(TOPDIR)/io/open.c \
+		$(TOPDIR)/io/pread.c \
+		$(TOPDIR)/io/prealloc.c \
+		$(TOPDIR)/io/pwrite.c \
+		$(TOPDIR)/io/quit.c \
+		$(TOPDIR)/io/resblks.c \
+		$(TOPDIR)/io/truncate.c \
 		$(TOPDIR)/mkfile/xfs_mkfile.c \
 		$(TOPDIR)/mkfs/proto.c \
 		$(TOPDIR)/mkfs/xfs_mkfs.c \
 		$(TOPDIR)/libdisk/drivers.c \
 		$(TOPDIR)/libdisk/lvm.c \
 		$(TOPDIR)/libdisk/md.c \
+		$(TOPDIR)/libxfs/darwin.c \
 		$(TOPDIR)/libxfs/init.c \
+		$(TOPDIR)/libxfs/irix.c \
 		$(TOPDIR)/libxfs/linux.c \
 		$(TOPDIR)/libxfs/rdwr.c \
 		$(TOPDIR)/libxfs/trans.c \

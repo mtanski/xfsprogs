@@ -51,12 +51,12 @@ resblks_f(
 			printf(_("non-numeric argument -- %s\n"), argv[1]);
 			return 0;
 		}
-		if (ioctl(fdesc, XFS_IOC_SET_RESBLKS, &res) < 0) {
-			perror("XFS_IOC_SET_RESBLKS");
+		if (xfsctl(fname, fdesc, XFS_IOC_SET_RESBLKS, &res) < 0) {
+			perror("xfsctl(XFS_IOC_SET_RESBLKS)");
 			return 0;
 		}
-	} else if (ioctl(fdesc, XFS_IOC_GET_RESBLKS, &res) < 0) {
-		perror("XFS_IOC_GET_RESBLKS");
+	} else if (xfsctl(fname, fdesc, XFS_IOC_GET_RESBLKS, &res) < 0) {
+		perror("xfsctl(XFS_IOC_GET_RESBLKS)");
 		return 0;
 	}
 	printf(_("reserved blocks = %llu\n"),

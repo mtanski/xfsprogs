@@ -41,7 +41,7 @@ static int stat_f(int, char **);
 
 int
 openfile(
-	char		*filename,
+	char		*path,
 	int		aflag,
 	int		cflag,
 	int		dflag,
@@ -52,7 +52,6 @@ openfile(
 {
 	int		fd;
 	int		oflags;
-	struct statfs	buf;
 
 	oflags = (rflag ? O_RDONLY : O_RDWR);
 	if (aflag)
@@ -66,13 +65,12 @@ openfile(
 	if (tflag)
 		oflags |= O_TRUNC;
 
-	fd = open(filename, oflags, 0666);
+	fd = open(path, oflags, 0644);
 	if (fd < 0) {
-		perror(filename);
+		perror(path);
 		return -1;
 	}
-	fstatfs(fd, &buf);
-	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
+	if (!platform_test_xfs_fd(fd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, fname);
@@ -83,14 +81,14 @@ openfile(
 	if (!readonly && xflag) {	/* read/write and realtime */
 		struct fsxattr	attr;
 
-		if (ioctl(fd, XFS_IOC_FSGETXATTR, &attr) < 0) {
+		if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &attr) < 0) {
 			perror("XFS_IOC_FSGETXATTR");
 			close(fd);
 			return -1;
 		}
 		if (!(attr.fsx_xflags & XFS_XFLAG_REALTIME)) {
 			attr.fsx_xflags |= XFS_XFLAG_REALTIME;
-			if (ioctl(fd, XFS_IOC_FSSETXATTR, &attr) < 0) {
+			if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &attr) < 0) {
 				perror("XFS_IOC_FSSETXATTR");
 				close(fd);
 				return -1;
@@ -276,8 +274,8 @@ stat_f(
 			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
 		}
 	}
-	if ((ioctl(fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-		perror("XFS_IOC_FSGETXATTR");
+	if ((xfsctl(fname, fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		perror("xfsctl(XFS_IOC_FSGETXATTR)");
 	} else {
 		printf(_("xattr.xflags = 0x%x\n"), fsx.fsx_xflags);
 		printf(_("xattr.nextents = %u\n"), fsx.fsx_nextents);
@@ -296,15 +294,17 @@ statfs_f(
 
 	printf(_("fd.path = \"%s\"\n"),
 		realpath(fname, fullname) ? fullname : fname);
-	if (fstatfs(fdesc, &st) < 0) {
+	if (platform_fstatfs(fdesc, &st) < 0) {
 		perror("fstatfs");
 	} else {
 		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
 		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
+#if !defined(__sgi__)
 		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
+#endif
 	}
-	if ((ioctl(fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
-		perror("XFS_IOC_FSGEOMETRY_V1");
+	if ((xfsctl(fname, fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
+		perror("xfsctl(XFS_IOC_FSGEOMETRY_V1)");
 	} else {
 		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
 		printf(_("geom.agcount = %u\n"), fsgeo.agcount);

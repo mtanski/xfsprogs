@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -48,7 +48,8 @@ CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_mount.c xfs_trans.c
 
 CFILES += $(PKG_PLATFORM).c
-LSRCFILES = $(shell echo linux.c | sed -e "s/$(PKG_PLATFORM).c//g")
+PCFILES = darwin.c irix.c linux.c
+LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 
 # 
 # Tracing flags:

@@ -2674,8 +2674,8 @@ process_inode(
 		dbprintf("inode %lld mode %#o fmt %s "
 			 "afmt %s "
 			 "nex %d anex %d nblk %lld sz %lld%s%s\n",
-			id->ino, dic->di_mode, fmtnames[dic->di_format],
-			fmtnames[dic->di_aformat],
+			id->ino, dic->di_mode, fmtnames[(int)dic->di_format],
+			fmtnames[(int)dic->di_aformat],
 			dic->di_nextents,
 			dic->di_anextents,
 			dic->di_nblocks, dic->di_size,

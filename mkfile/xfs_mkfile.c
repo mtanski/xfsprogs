@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -35,8 +35,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <ctype.h>
 
 #define	MAXBUFFERSIZE	(256 * 1024)
@@ -54,7 +52,6 @@ usage(void)
 static int
 openfd(char *name, int oflags)
 {
-	struct statfs buf;
 	int fd;
 
 	fd = open(name, oflags, 0600);
@@ -63,8 +60,7 @@ openfd(char *name, int oflags)
 		return -1;
 	}
 
-	fstatfs(fd, &buf);
-	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
+	if (!platform_test_xfs_fd(fd)) {
 		fprintf(stderr, _("%s: "
 			"file [\"%s\"] is not on an XFS filesystem\n"),
 			progname, name);
@@ -77,6 +73,7 @@ int
 main(int argc, char **argv)
 {
 	int fd;
+	char *fname;
 	loff_t result;
 	loff_t size = 0;
 	loff_t mult = 0;
@@ -128,8 +125,8 @@ main(int argc, char **argv)
 
 	len = strlen(argv[optind]);
 
-	if (isalpha(argv[optind][len-1])) {
-		switch (argv[optind][len-1]) {
+	if (isalpha((int)argv[optind][len-1])) {
+		switch ((int)argv[optind][len-1]) {
 		case 'k':
 		case 'K':
 			mult = 1024;
@@ -170,8 +167,9 @@ main(int argc, char **argv)
 						  : "");
 
 		oflags = O_CREAT|O_TRUNC|O_WRONLY|(nobytes ? 0 : O_DIRECT);
+		fname = argv[optind];
 
-		if ((fd = openfd(argv[optind], oflags)) == -1) {
+		if ((fd = openfd(fname, oflags)) == -1) {
 			optind++;
 			errs++;
 			continue;
@@ -179,7 +177,7 @@ main(int argc, char **argv)
 
 		if (   (oflags & O_DIRECT)
 		    && (   (fd < 0 && errno == EINVAL)
-			|| ioctl(fd, XFS_IOC_DIOINFO, &da) < 0)) {
+			|| xfsctl(fname, fd, XFS_IOC_DIOINFO, &da) < 0)) {
 
 			close(fd);
 
@@ -214,7 +212,7 @@ main(int argc, char **argv)
 			flck.l_start  = 0LL;
 			flck.l_len    = size;
 			if (prealloc)
-				ioctl(fd, XFS_IOC_RESVSP64, &flck);
+				xfsctl(fname, fd, XFS_IOC_RESVSP64, &flck);
 			if (oflags & O_DIRECT) {
 				nbufalign = da.d_mem;
 

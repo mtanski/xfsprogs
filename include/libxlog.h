@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -68,8 +68,10 @@ typedef struct log {
 /*
  * macros mapping kernel code to user code
  */
+#ifndef EFSCORRUPTED
+#define EFSCORRUPTED           		 990
+#endif
 #define STATIC				static
-#define EFSCORRUPTED           	 990
 #define XFS_ERROR(e)			(e)
 #define XFS_ERROR_REPORT(e,l,mp)	((void) 0)
 #define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)

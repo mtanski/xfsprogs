@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -29,17 +29,49 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef LIBXFS_INIT_H
-#define LIBXFS_INIT_H
 
-struct stat64;
+#include <libxfs.h>
 
-extern int platform_check_ismounted (char *path, char *block,
-					struct stat64 *sptr, int verbose);
-extern int platform_check_iswritable (char *path, char *block,
-					struct stat64 *sptr, int fatal);
-extern __int64_t platform_findsize (char *path);
-extern void platform_set_blocksize (int fd, char *path, int blocksize);
-extern void platform_flush_device (int fd);
+extern char *progname;
+extern __int64_t findsize(char *);
 
-#endif	/* LIBXFS_INIT_H */
+int
+platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+{
+	return 0;
+}
+
+int
+platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+{
+	return 1;
+}
+
+void
+platform_set_blocksize(int fd, char *path, int blocksize)
+{
+	return;
+}
+
+void
+platform_flush_device(int fd)
+{
+	return;
+}
+
+__int64_t
+platform_findsize(char *path)
+{
+	struct stat64		st;
+
+	if (stat64(path, &st) < 0) {
+		fprintf(stderr,
+			_("%s: cannot stat the device file \"%s\": %s\n"),
+			progname, path, strerror(errno));
+		exit(1);
+	}
+	if ((st.st_mode & S_IFMT) == S_IFREG)
+		return (__int64_t)(st.st_size >> 9);
+
+	return findsize(path);
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -67,8 +67,13 @@
 
 #define xfs_xlatesb			libxfs_xlate_sb
 #define xfs_xlate_dinode_core		libxfs_xlate_dinode_core
+#if ARCH_CONVERT != ARCH_NOCONVERT
 #define xfs_bmbt_get_all		libxfs_bmbt_get_all
 #define xfs_bmbt_disk_get_all		libxfs_bmbt_disk_get_all
+#else
+#define xfs_bmbt_get_all		libxfs_bmbt_get_all
+#define xfs_bmbt_disk_get_all		libxfs_bmbt_get_all
+#endif
 #define xfs_da_hashname			libxfs_da_hashname
 #define xfs_da_log2_roundup		libxfs_da_log2_roundup
 #define xfs_highbit32			libxfs_highbit32
@@ -231,8 +236,10 @@
 #define xfs_alloc_mark_busy(tp,ag,b,len)		((void) 0)
 
 /* anything else */
+#if !defined(__sgi__)
 typedef __uint32_t uint_t;
 typedef __uint32_t inst_t;	/* an instruction */
+#endif
 typedef struct { dev_t dev; } xfs_buftarg_t;
 #undef MASK
 #define NBPP		getpagesize()
@@ -436,12 +443,48 @@ void xfs_bmap_insert_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t,
 int  xfs_check_nostate_extents (xfs_bmbt_rec_t *, xfs_extnum_t);
 void xfs_bmbt_log_ptrs (xfs_btree_cur_t *, xfs_buf_t *, int, int);
 void xfs_bmbt_log_keys (xfs_btree_cur_t *, xfs_buf_t *, int, int);
+int  xfs_bmbt_newroot (xfs_btree_cur_t *, int *, int *);
 int  xfs_bmbt_killroot (xfs_btree_cur_t *);
 int  xfs_bmbt_updkey (xfs_btree_cur_t *, xfs_bmbt_key_t *, int);
 int  xfs_bmbt_lshift (xfs_btree_cur_t *, int, int *);
 int  xfs_bmbt_rshift (xfs_btree_cur_t *, int, int *);
 int  xfs_bmbt_split (xfs_btree_cur_t *, int, xfs_fsblock_t *,
 			xfs_bmbt_key_t *, xfs_btree_cur_t **, int *);
+void xfs_bmbt_set_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
+void xfs_bmbt_set_allf (xfs_bmbt_rec_t *, xfs_fileoff_t, xfs_fsblock_t,
+			xfs_filblks_t, xfs_exntst_t);
+void xfs_bmbt_set_blockcount (xfs_bmbt_rec_t *, xfs_filblks_t);
+void xfs_bmbt_set_startblock (xfs_bmbt_rec_t *, xfs_fsblock_t);    
+void xfs_bmbt_set_startoff (xfs_bmbt_rec_t *, xfs_fileoff_t);
+void xfs_bmbt_set_state (xfs_bmbt_rec_t *, xfs_exntst_t);
+void xfs_bmbt_log_block (struct xfs_btree_cur *, struct xfs_buf *, int);
+void xfs_bmbt_log_recs (struct xfs_btree_cur *, struct xfs_buf *, int, int);
+int  xfs_bmbt_lookup_eq (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
+		        xfs_filblks_t, int *);
+xfs_fsblock_t xfs_bmbt_get_startblock (xfs_bmbt_rec_t *);
+xfs_filblks_t xfs_bmbt_get_blockcount (xfs_bmbt_rec_t *);
+xfs_fileoff_t xfs_bmbt_get_startoff (xfs_bmbt_rec_t *);
+xfs_exntst_t  xfs_bmbt_get_state (xfs_bmbt_rec_t *);
+xfs_bmbt_block_t * xfs_bmbt_get_block (xfs_btree_cur_t *, int,
+			struct xfs_buf **);
+int  xfs_bmbt_increment (struct xfs_btree_cur *, int, int *);
+int  xfs_bmbt_insert (struct xfs_btree_cur *, int *);
+int  xfs_bmbt_decrement (struct xfs_btree_cur *, int, int *);
+int  xfs_bmbt_delete (struct xfs_btree_cur *, int *);
+int  xfs_bmbt_update (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
+			xfs_filblks_t, xfs_exntst_t);      
+void xfs_bmbt_to_bmdr (xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
+void xfs_bmdr_to_bmbt (xfs_bmdr_block_t *, int, xfs_bmbt_block_t *, int);
+#if ARCH_CONVERT != ARCH_NOCONVERT
+xfs_fileoff_t xfs_bmbt_disk_get_startoff (xfs_bmbt_rec_t *);
+void xfs_bmbt_disk_set_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
+void xfs_bmbt_disk_set_allf (xfs_bmbt_rec_t *, xfs_fileoff_t, xfs_fsblock_t,
+			xfs_filblks_t, xfs_exntst_t);
+#else
+#define xfs_bmbt_disk_get_startoff(r) xfs_bmbt_get_startoff(r)
+#define xfs_bmbt_disk_set_all(r, s) xfs_bmbt_set_all(r, s)
+#define xfs_bmbt_disk_set_allf(r, o, b, c, v) xfs_bmbt_set_allf(r, o, b, c, v)
+#endif
 
 /* xfs_ialloc_btree.c */
 int  xfs_inobt_newroot (xfs_btree_cur_t *, int *);

@@ -85,7 +85,6 @@ ${SPECF} : ${SPECF}.in
 	    -e's|@pkg_version@|$(PKG_VERSION)|g' \
 	    -e's|@pkg_release@|$(PKG_RELEASE)|g' \
 	    -e's|@pkg_distribution@|$(PKG_DISTRIBUTION)|g' \
-	    -e's|@pkg_builder@|$(PKG_BUILDER)|g' \
 	    -e's|@build_root@|$(DIST_ROOT)|g' \
 	    -e'/^BuildRoot: *$$/d' \
 	    -e's|@make@|$(MAKE)|g' < $< > $@

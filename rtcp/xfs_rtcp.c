@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -31,8 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 
 int rtcp(char *, char *, int);
 int xfsrtextsize(char *path);
@@ -210,7 +208,7 @@ rtcp( char *source, char *target, int fextsize)
 		else
 			fsxattr.fsx_extsize = 0;
 
-		if ( ioctl( tofd, XFS_IOC_FSSETXATTR, &fsxattr) ) { 
+		if ( xfsctl(tbuf, tofd, XFS_IOC_FSSETXATTR, &fsxattr) ) { 
 			fprintf(stderr,
 				_("%s: set attributes on %s failed: %s\n"),
 				progname, tbuf, strerror(errno));
@@ -228,7 +226,7 @@ rtcp( char *source, char *target, int fextsize)
 			return( -1 );
 		}
 		
-		if ( ioctl( tofd, XFS_IOC_FSGETXATTR, &fsxattr) ) {
+		if ( xfsctl(tbuf, tofd, XFS_IOC_FSGETXATTR, &fsxattr) ) {
 			fprintf(stderr,
 				_("%s: get attributes of %s failed: %s\n"),
 				progname, tbuf, strerror(errno));
@@ -271,7 +269,7 @@ rtcp( char *source, char *target, int fextsize)
 
 	fsxattr.fsx_xflags = 0;
 	fsxattr.fsx_extsize = 0;
-	if ( ioctl( fromfd, XFS_IOC_FSGETXATTR, &fsxattr) ) {
+	if ( xfsctl(source, fromfd, XFS_IOC_FSGETXATTR, &fsxattr) ) {
 		reopen = 1;
 	} else {
 		if (! (fsxattr.fsx_xflags & XFS_XFLAG_REALTIME) ){
@@ -296,7 +294,7 @@ rtcp( char *source, char *target, int fextsize)
 	/*
 	 * get direct I/O parameters
 	 */
-	if ( ioctl( tofd, XFS_IOC_DIOINFO, &dioattr) ) {
+	if ( xfsctl(tbuf, tofd, XFS_IOC_DIOINFO, &dioattr) ) {
 		fprintf(stderr,
 			_("%s: couldn't get direct I/O information: %s\n"),
 			progname, strerror(errno));
@@ -405,7 +403,7 @@ xfsrtextsize( char *path)
 			progname, path, strerror(errno));
 		return -1;
 	}
-	rval = ioctl( fd, XFS_IOC_FSGEOMETRY_V1, &geo );
+	rval = xfsctl( path, fd, XFS_IOC_FSGEOMETRY_V1, &geo );
 	close(fd);
 	if ( rval < 0 )
 		return -1;

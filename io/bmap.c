@@ -130,14 +130,14 @@ bmap_f(
 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
 
 	if (vflag) {
-		if (ioctl(fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
+		if (xfsctl(fname, fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
 			fprintf(stderr,
 				_("%s: can't get geometry [\"%s\"]: %s\n"),
 				progname, fname, strerror(errno));
 			exitcode = 1;
 			return 0;
 		}
-		if ((ioctl(fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		if ((xfsctl(fname, fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
 			fprintf(stderr,
 				_("%s: cannot read attrs on \"%s\": %s\n"),
 				progname, fname, strerror(errno));
@@ -164,10 +164,10 @@ bmap_f(
 	}
 		
 
-/*	Try the ioctl(XFS_IOC_GETBMAPX) for the number of extents specified by
- *	nflag, or the initial guess number of extents (256).
+/*	Try the xfsctl(XFS_IOC_GETBMAPX) for the number of extents specified
+ *	by nflag, or the initial guess number of extents (256).
  *
- *	If there are more extents than we guessed, use ioctl 
+ *	If there are more extents than we guessed, use xfsctl
  *	(XFS_IOC_FSGETXATTR[A]) to get the extent count, realloc some more 
  *	space based on this count, and try again.
  *
@@ -176,7 +176,7 @@ bmap_f(
  *	EINVAL, check the length with fstat() and return "no extents"
  *	if the length == 0.
  *
- *	Why not do the ioctl(XFS_IOC_FSGETXATTR[A]) first?  Two reasons:
+ *	Why not do the xfsctl(XFS_IOC_FSGETXATTR[A]) first?  Two reasons:
  *	(1)	The extent count may be wrong for a file with delayed
  *		allocation blocks.  The XFS_IOC_GETBMAPX forces the real
  *		allocation and fixes up the extent count.
@@ -199,14 +199,14 @@ bmap_f(
 		map->bmv_count = map_size;
 		map->bmv_iflags = bmv_iflags;
 
-		i = ioctl(fdesc, XFS_IOC_GETBMAPX, map);
+		i = xfsctl(fname, fdesc, XFS_IOC_GETBMAPX, map);
 		if (i < 0) {
 			if (   errno == EINVAL
 			    && !aflag && filesize() == 0) {
 				break;
 			} else	{
-				fprintf(stderr, _("%s: ioctl(XFS_IOC_GETBMAPX) "
-					"iflags=0x%x [\"%s\"]: %s\n"),
+				fprintf(stderr, _("%s: xfsctl(XFS_IOC_GETBMAPX)"
+					" iflags=0x%x [\"%s\"]: %s\n"),
 					progname, map->bmv_iflags, fname,
 					strerror(errno));
 				free(map);
@@ -218,14 +218,14 @@ bmap_f(
 			break;
 		if (map->bmv_entries < map->bmv_count-1)
 			break;
-		/* Get number of extents from ioctl XFS_IOC_FSGETXATTR[A]
+		/* Get number of extents from xfsctl XFS_IOC_FSGETXATTR[A]
 		 * syscall.
 		 */
-		i = ioctl(fdesc, aflag ?
+		i = xfsctl(fname, fdesc, aflag ?
 				XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
 		if (i < 0) {
-			fprintf(stderr, _("%s: ioctl(XFS_IOC_FSGETXATTR%s) "
-				"[\"%s\"]: %s\n"), progname, aflag ? "A" : "",
+			fprintf(stderr, "%s: xfsctl(XFS_IOC_FSGETXATTR%s) "
+				"[\"%s\"]: %s\n", progname, aflag ? "A" : "",
 				fname, strerror(errno));
 			free(map);
 			exitcode = 1;

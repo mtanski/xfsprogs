@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -44,7 +44,7 @@ LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
 LLDFLAGS = -static
 
-MAXTRLIBS = $(LIBXFS) $(LIBUUID)
+MAXTRLIBS = $(LIBXFS) $(LIBUUID) $(PLDLIBS)
 LSRCFILES = $(MAXTRRES).c $(FSTYP).c
 LDIRT = $(MAXTRRES) $(MAXTRRES).o $(MAXTRRES).h $(FSTYP)
 
@@ -59,7 +59,7 @@ $(MAXTRRES).h: $(MAXTRRES)
 	$(LTEXEC) ./$(MAXTRRES) > $@ || ( rm -f $@ && exit 1 )
 
 $(FSTYP):
-	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK)
+	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)

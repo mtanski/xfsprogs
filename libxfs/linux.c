@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -51,7 +51,7 @@ extern char *progname;
 #define PROC_MOUNTED	"/proc/mounts"
 
 int
-check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 {
 	struct ustat	ust;
 	struct stat64	st;
@@ -75,7 +75,7 @@ check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 }
 
 int
-check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 {
 	int		sts = 0;
 	FILE		*f;
@@ -108,7 +108,7 @@ check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 }
 
 void
-set_blocksize(int fd, char *path, int blocksize)
+platform_set_blocksize(int fd, char *path, int blocksize)
 {
 	if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
 		fprintf(stderr, _("%s: warning - cannot set blocksize "
@@ -118,13 +118,13 @@ set_blocksize(int fd, char *path, int blocksize)
 }
 
 void
-flush_device(int fd)
+platform_flush_device(int fd)
 {
 	ioctl(fd, BLKFLSBUF, 0);
 }
 
 __int64_t
-findsize(char *path)
+platform_findsize(char *path)
 {
 	int		fd;
 	int		error;
@@ -165,6 +165,5 @@ findsize(char *path)
 	}
 
 	close(fd);
-
 	return ssize;
 }

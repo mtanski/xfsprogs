@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/ioctl.h>
 #include "explore.h"
 
 /*
@@ -211,16 +210,23 @@ main(int argc, char **argv)
 		return 1;
 	}
 
+	if (!platform_test_xfs_fd(ffd)) {
+		fprintf(stderr, _("%s: specified file "
+			"[\"%s\"] is not on an XFS filesystem\n"),
+			progname, fname);
+		exit(1);
+	}
+
 	/* get the current filesystem size & geometry */
-	if (ioctl(ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
+	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
 		/*
-		 * OK, new ioctl barfed - back off and try earlier version
+		 * OK, new xfsctl barfed - back off and try earlier version
 		 * as we're probably running an older kernel version.
-		 * Only field added in the v2 geometry ioctl is "logsunit"
+		 * Only field added in the v2 geometry xfsctl is "logsunit"
 		 * so we'll zero that out for later display (as zero).
 		 */
 		geo.logsunit = 0;
-		if (ioctl(ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
+		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
 			fprintf(stderr, _(
 				"%s: cannot determine geometry of filesystem"
 				" mounted at %s: %s\n"),
@@ -325,14 +331,14 @@ main(int argc, char **argv)
 		} else if (!error && !nflag) {
 			in.newblocks = (__u64)dsize;
 			in.imaxpct = (__u32)maxpct;
-			if (ioctl(ffd, XFS_IOC_FSGROWFSDATA, &in) < 0) {
+			if (xfsctl(fname, ffd, XFS_IOC_FSGROWFSDATA, &in) < 0) {
 				if (errno == EWOULDBLOCK)
 					fprintf(stderr, _(
 				 "%s: growfs operation in progress already\n"),
 						progname);
 				else
 					fprintf(stderr, _(
-				"%s: XFS_IOC_FSGROWFSDATA ioctl failed: %s\n"),
+				"%s: XFS_IOC_FSGROWFSDATA xfsctl failed: %s\n"),
 						progname, strerror(errno));
 				error = 1;
 			}
@@ -364,7 +370,7 @@ main(int argc, char **argv)
 		} else if (!error && !nflag) {
 			in.newblocks = (__u64)rsize;
 			in.extsize = (__u32)esize;
-			if (ioctl(ffd, XFS_IOC_FSGROWFSRT, &in) < 0) {
+			if (xfsctl(fname, ffd, XFS_IOC_FSGROWFSRT, &in) < 0) {
 				if (errno == EWOULDBLOCK)
 					fprintf(stderr, _(
 				"%s: growfs operation in progress already\n"),
@@ -375,7 +381,7 @@ main(int argc, char **argv)
 						progname);
 				else
 					fprintf(stderr, _(
-				"%s: XFS_IOC_FSGROWFSRT ioctl failed: %s\n"),
+				"%s: XFS_IOC_FSGROWFSRT xfsctl failed: %s\n"),
 						progname, strerror(errno));
 				error = 1;
 			}
@@ -399,7 +405,7 @@ main(int argc, char **argv)
 					_("log size unchanged, skipping\n"));
 		} else if (!nflag) {
 			in.newblocks = (__u32)lsize;
-			if (ioctl(ffd, XFS_IOC_FSGROWFSLOG, &in) < 0) {
+			if (xfsctl(fname, ffd, XFS_IOC_FSGROWFSLOG, &in) < 0) {
 				if (errno == EWOULDBLOCK)
 					fprintf(stderr,
 				_("%s: growfs operation in progress already\n"),
@@ -410,15 +416,15 @@ main(int argc, char **argv)
 						progname);
 				else
 					fprintf(stderr,
-				_("%s: XFS_IOC_FSGROWFSLOG ioctl failed: %s\n"),
+				_("%s: XFS_IOC_FSGROWFSLOG xfsctl failed: %s\n"),
 						progname, strerror(errno));
 				error = 1;
 			}
 		}
 	}
 
-	if (ioctl(ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
-		fprintf(stderr, _("%s: XFS_IOC_FSGEOMETRY ioctl failed: %s\n"),
+	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
+		fprintf(stderr, _("%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"),
 			progname, strerror(errno));
 		exit(1);
 	}

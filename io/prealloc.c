@@ -72,8 +72,8 @@ allocsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (ioctl(fdesc, XFS_IOC_ALLOCSP64, &segment) < 0) {
-		perror("XFS_IOC_ALLOCSP64");
+	if (xfsctl(fname, fdesc, XFS_IOC_ALLOCSP64, &segment) < 0) {
+		perror("xfsctl(XFS_IOC_ALLOCSP64)");
 		return 0;
 	}
 	return 0;
@@ -89,8 +89,8 @@ freesp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (ioctl(fdesc, XFS_IOC_FREESP64, &segment) < 0) {
-		perror("XFS_IOC_FREESP64");
+	if (xfsctl(fname, fdesc, XFS_IOC_FREESP64, &segment) < 0) {
+		perror("xfsctl(XFS_IOC_FREESP64)");
 		return 0;
 	}
 	return 0;
@@ -106,8 +106,8 @@ resvsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (ioctl(fdesc, XFS_IOC_RESVSP64, &segment) < 0) {
-		perror("XFS_IOC_RESVSP64");
+	if (xfsctl(fname, fdesc, XFS_IOC_RESVSP64, &segment) < 0) {
+		perror("xfsctl(XFS_IOC_RESVSP64)");
 		return 0;
 	}
 	return 0;
@@ -123,8 +123,8 @@ unresvsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (ioctl(fdesc, XFS_IOC_UNRESVSP64, &segment) < 0) {
-		perror("XFS_IOC_UNRESVSP64");
+	if (xfsctl(fname, fdesc, XFS_IOC_UNRESVSP64, &segment) < 0) {
+		perror("xfsctl(XFS_IOC_UNRESVSP64)");
 		return 0;
 	}
 	return 0;

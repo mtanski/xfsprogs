@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -44,19 +44,36 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 
 #if defined(__linux__)
 
 #include <sys/vfs.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
-#include <uuid/uuid.h>
 #include <linux/types.h>
 #include <malloc.h>
 #include <getopt.h>
-
 #include <endian.h>
 #include "swab.h"
+
+static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+{
+	return ioctl(fd, cmd, p);
+}
+
+static __inline__ int platform_test_xfs_fd(int fd)
+{
+	struct statfs buf;
+	if (fstatfs(fd, &buf) < 0)
+		return 0;
+	return (buf.f_type == 0x58465342);	/* XFSB */
+}
+
+static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+{
+	return fstatfs(fd, buf);
+}
 
 #ifndef O_DIRECT
 # if defined (__powerpc__)
@@ -74,7 +91,6 @@
 
 #define ENOATTR		ENODATA	/* Attribute not found */
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
-#define statfstype(bp)	((bp)->f_type)	/* statfs(2) fstyp */
 
 typedef loff_t		xfs_off_t;
 typedef __uint64_t	xfs_ino_t;
@@ -88,6 +104,187 @@ typedef unsigned char	uchar_t;
 #endif
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
+
+#elif defined(__APPLE__)	/* Darwin */
+
+#include <libgen.h>
+#include <sys/vm.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+
+#include <sys/syscall.h>
+#ifndef SYS_fsctl
+#define SYS_fsctl	242
+#endif
+static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+{
+	return syscall(SYS_fsctl, path, cmd, p, 0);
+}
+
+static __inline__ int platform_test_xfs_fd(int fd)
+{
+	struct statfs buf;
+	if (fstatfs(fd, &buf) < 0)
+		return 0;
+	return (strcmp(buf.f_fstypename, "xfs") == 0);
+}
+
+static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+{
+	return fstatfs(fd, buf);
+}
+
+#define __int8_t	int8_t
+#define __int16_t	int16_t
+#define __int32_t	int32_t
+#define __int32_t	int32_t
+#define __int64_t	int64_t
+#define __uint8_t	u_int8_t
+#define __uint16_t	u_int16_t
+#define __uint32_t	u_int32_t
+#define __uint64_t	u_int64_t
+#define __s8		int8_t
+#define __s16		int16_t
+#define __s32		int32_t
+#define __s64		int64_t
+#define __u8		u_int8_t
+#define __u16		u_int16_t
+#define __u32		u_int32_t
+#define __u64		u_int64_t
+#define loff_t		off_t
+#define off64_t		off_t
+
+typedef off_t		xfs_off_t;
+typedef u_int64_t	xfs_ino_t;
+typedef u_int32_t	xfs_dev_t;
+typedef int64_t		xfs_daddr_t;
+typedef char*		xfs_caddr_t;
+
+typedef unsigned char	uchar_t;
+#define stat64		stat
+#define fstat64		fstat
+#define lseek64		lseek
+#define pread64		pread
+#define pwrite64	pwrite
+#define ftruncate64	ftruncate
+#define fdatasync	fsync
+#define memalign(a,sz)	malloc(sz)
+
+#include <machine/endian.h>
+#define __BYTE_ORDER	BYTE_ORDER
+#define __BIG_ENDIAN	BIG_ENDIAN
+#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+#include "swab.h"
+
+#define O_LARGEFILE     0
+#ifndef O_DIRECT        
+#define O_DIRECT        0
+#endif
+#ifndef O_SYNC
+#define O_SYNC          0
+#endif
+
+#define B_FALSE		0
+#define B_TRUE		1
+
+#define ENOATTR		989     /* Attribute not found */
+#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+#define constpp		char * const *
+
+#define HAVE_FID	1
+
+
+#elif defined(__sgi__)	/* SGI IRIX */
+
+#include <libgen.h>
+#include <values.h>
+#include <strings.h>
+#include <inttypes.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/statfs.h>
+#include <sys/statvfs.h>
+#include <sys/sysmacros.h>
+
+#define __s8		char
+#define __s16		short
+#define __s32		__int32_t
+#define __s64		__int64_t
+#define __u8		unsigned char
+#define __u16		unsigned short
+#define __u32		__int32_t
+#define __u64		__int64_t
+#define __int8_t	char
+#define __int16_t	short
+#define __uint8_t	unsigned char
+#define __uint16_t	unsigned short
+#define loff_t		off64_t
+typedef off64_t		xfs_off_t;
+typedef __int64_t	xfs_ino_t;
+typedef __int32_t	xfs_dev_t;
+typedef __int64_t	xfs_daddr_t;
+typedef char*		xfs_caddr_t;
+
+#include <sys/endian.h>
+#define __BYTE_ORDER	BYTE_ORDER
+#define __BIG_ENDIAN	BIG_ENDIAN
+#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+#include "swab.h"
+
+#define INT_MAX		INT32_MAX
+#define UINT_MAX	UINT32_MAX
+#define PATH_MAX	MAXPATHLEN
+#define constpp		char * const *
+#define isset(a,i)	((a)[(i)/NBBY] & (1<<((i)%NBBY)))
+
+static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+{
+	fprintf(stderr, "%s: line %d syssgi/fcntl mapping not implemented\n", 
+			__FILE__, __LINE__);
+	errno = ENOSYS;
+	return -1;
+}
+
+static __inline__ int platform_test_xfs_fd(int fd)
+{
+	struct statvfs sbuf;
+	if (fstatvfs(fd, &sbuf) < 0)
+		return 0;
+	return (strcmp(sbuf.f_basetype, "xfs") == 0);
+}
+
+static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+{
+	return fstatfs(fd, buf, sizeof(struct statfs), 0);
+}
+
+static __inline__ char * strsep(char **s, const char *ct)
+{
+        char *sbegin = *s, *end;
+
+        if (!sbegin)
+                return NULL;
+        end = strpbrk(sbegin, ct);
+        if (end)
+                *end++ = '\0';
+        *s = end;
+        return sbegin;
+}
+
+#define HAVE_DIOATTR	1
+#define HAVE_FSXATTR	1
+#define HAVE_GETBMAP	1
+#define HAVE_GETBMAPX	1
+#define HAVE_FSDMIDATA	1
+#define HAVE_FID	1
+#define HAVE_BBMACROS	1
+
+
+#else
+# error unknown platform... have fun porting!
 #endif
 
 

@@ -67,7 +67,7 @@ fp_charns(
 	     i++, p++) {
 		if (*p == '\\' || *p == '\'' || *p == '"' || *p == '\?')
 			dbprintf("\\%c", *p);
-		else if (isgraph(*p) || *p == ' ')
+		else if (isgraph((int)*p) || *p == ' ')
 			dbprintf("%c", *p);
 		else if (*p == '\a' || *p == '\b' || *p == '\f' || *p == '\n' ||
 			 *p == '\r' || *p == '\t' || *p == '\v')

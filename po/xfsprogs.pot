@@ -1,116 +1,14 @@
 #, c-format
-msgid "%s version %s\n"
-msgstr ""
-
-#, c-format
-msgid "Usage: %s [-adlpV] [-n nx] file...\n"
-msgstr ""
-
-#, c-format
-msgid "%s: fstat64 failed for %s: %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot open \"%s\": %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
-msgstr ""
-
-#, c-format
-msgid "%s: can't get geometry [\"%s\"]: %s\n"
-msgstr ""
-
-#, c-format
-msgid "xfs_bmap: fsgeo.agblocks=%u, fsgeo.blocksize=%u, fsgeo.agcount=%u\n"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot read attrs on \"%s\": %s\n"
-msgstr ""
-
-#, c-format
-msgid "xfs_bmap: fsx.dsx_xflags=%u, fsx.fsx_extsize=%u, fsx.fsx_nextents=%u\n"
-msgstr ""
-
-#, c-format
-msgid "%s: malloc of %d bytes failed.\n"
-msgstr ""
-
-#, c-format
-msgid ""
-"xfs_bmap: i=%d map.bmv_offset=%lld, map.bmv_block=%lld, map.bmv_length=%lld, "
-"map.bmv_count=%d, map.bmv_entries=%d\n"
-msgstr ""
-
-#, c-format
-msgid "%s: ioctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: ioctl(XFS_IOC_FSGETXATTR%s) [\"%s\"]: %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot realloc %d bytes\n"
-msgstr ""
-
-#, c-format
-msgid "%s: no extents\n"
-msgstr ""
-
-msgid "hole"
-msgstr ""
-
-#, c-format
-msgid " %lld blocks\n"
-msgstr ""
-
-msgid "EXT"
-msgstr ""
-
-msgid "FILE-OFFSET"
-msgstr ""
-
-msgid "BLOCK-RANGE"
-msgstr ""
-
-msgid "AG"
-msgstr ""
-
-msgid "AG-OFFSET"
-msgstr ""
-
-msgid "TOTAL"
-msgstr ""
-
-msgid " FLG Values:\n"
-msgstr ""
-
-#, c-format
-msgid "    %5.5o Doesn't begin on stripe unit\n"
-msgstr ""
-
-#, c-format
-msgid "    %5.5o Doesn't end   on stripe unit\n"
-msgstr ""
-
-#, c-format
-msgid "    %5.5o Doesn't begin on stripe width\n"
-msgstr ""
-
-#, c-format
-msgid "    %5.5o Doesn't end   on stripe width\n"
-msgstr ""
-
-#, c-format
 msgid ""
 "Usage: %s [options] mountpoint\n"
 "\n"
 "Options:\n"
 "        -f          freeze filesystem access\n"
 "        -u          unfreeze filesystem access\n"
+msgstr ""
+
+#, c-format
+msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
 msgstr ""
 
 #, c-format
@@ -184,6 +82,10 @@ msgid "none"
 msgstr ""
 
 #, c-format
+msgid "%s version %s\n"
+msgstr ""
+
+#, c-format
 msgid "%s: cannot determine geometry of filesystem mounted at %s: %s\n"
 msgstr ""
 
@@ -218,7 +120,7 @@ msgid "%s: growfs operation in progress already\n"
 msgstr ""
 
 #, c-format
-msgid "%s: XFS_IOC_FSGROWFSDATA ioctl failed: %s\n"
+msgid "%s: XFS_IOC_FSGROWFSDATA xfsctl failed: %s\n"
 msgstr ""
 
 #, c-format
@@ -237,7 +139,7 @@ msgid "%s: realtime growth not implemented\n"
 msgstr ""
 
 #, c-format
-msgid "%s: XFS_IOC_FSGROWFSRT ioctl failed: %s\n"
+msgid "%s: XFS_IOC_FSGROWFSRT xfsctl failed: %s\n"
 msgstr ""
 
 msgid "log size unchanged, skipping\n"
@@ -248,11 +150,11 @@ msgid "%s: log growth not supported yet\n"
 msgstr ""
 
 #, c-format
-msgid "%s: XFS_IOC_FSGROWFSLOG ioctl failed: %s\n"
+msgid "%s: XFS_IOC_FSGROWFSLOG xfsctl failed: %s\n"
 msgstr ""
 
 #, c-format
-msgid "%s: XFS_IOC_FSGEOMETRY ioctl failed: %s\n"
+msgid "%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"
 msgstr ""
 
 #, c-format
@@ -281,6 +183,503 @@ msgstr ""
 
 #, c-format
 msgid "ino %10llu count %2d mask %016llx\n"
+msgstr ""
+
+msgid ""
+"\n"
+" prints the block mapping for an XFS file's data or attribute forks\n"
+" Example:\n"
+" 'bmap -vp' - tabular format verbose map, including unwritten extents\n"
+"\n"
+" bmap prints the map of disk blocks used by the current file.\n"
+" The map lists each extent used by the file, as well as regions in the\n"
+" file that do not have any corresponding blocks (holes).\n"
+" By default, each line of the listing takes the following form:\n"
+"     extent: [startoffset..endoffset]: startblock..endblock\n"
+" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
+" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
+" -a -- prints the attribute fork map instead of the data fork.\n"
+" -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
+" -l -- also displays the length of each extent in 512-byte blocks.\n"
+" Note: the bmap for non-regular files can be obtained provided the file\n"
+" was opened appropriately (in particular, must be opened read-only).\n"
+"\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't get geometry [\"%s\"]: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read attrs on \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: malloc of %d bytes failed.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: xfsctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot realloc %d bytes\n"
+msgstr ""
+
+#, c-format
+msgid "%s: no extents\n"
+msgstr ""
+
+msgid "hole"
+msgstr ""
+
+#, c-format
+msgid " %lld blocks\n"
+msgstr ""
+
+msgid "EXT"
+msgstr ""
+
+msgid "FILE-OFFSET"
+msgstr ""
+
+msgid "BLOCK-RANGE"
+msgstr ""
+
+msgid "AG"
+msgstr ""
+
+msgid "AG-OFFSET"
+msgstr ""
+
+msgid "TOTAL"
+msgstr ""
+
+msgid " FLG Values:\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't begin on stripe unit\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't end   on stripe unit\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't begin on stripe width\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't end   on stripe width\n"
+msgstr ""
+
+msgid "bmap"
+msgstr ""
+
+msgid "[-adlpv] [-n nx]"
+msgstr ""
+
+msgid "print block mapping for an XFS file"
+msgstr ""
+
+#, c-format
+msgid "command \"%s\" not found\n"
+msgstr ""
+
+#, c-format
+msgid "bad argument count %d to %s, expected at least %d arguments\n"
+msgstr ""
+
+#, c-format
+msgid "bad argument count %d to %s, expected %d arguments\n"
+msgstr ""
+
+#, c-format
+msgid "bad argument count %d to %s, expected between %d and %d arguments\n"
+msgstr ""
+
+msgid "fsync"
+msgstr ""
+
+msgid "s"
+msgstr ""
+
+msgid "calls fsync(2) to flush all in-core file state to disk"
+msgstr ""
+
+msgid "fdatasync"
+msgstr ""
+
+msgid "ds"
+msgstr ""
+
+msgid "calls fdatasync(2) to flush the files in-core data to disk"
+msgstr ""
+
+msgid ""
+"\n"
+"Use 'help commandname' for extended help.\n"
+msgstr ""
+
+#, c-format
+msgid "command %s not found\n"
+msgstr ""
+
+msgid "help"
+msgstr ""
+
+msgid "?"
+msgstr ""
+
+msgid "[command]"
+msgstr ""
+
+msgid "help for one or all commands"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s [-r] [-p prog] [-c cmd]... file\n"
+msgstr ""
+
+msgid ""
+"\n"
+" opens a new file in the requested mode, after closing the current file\n"
+"\n"
+" Example:\n"
+" 'open -d /tmp/data' - opens data file read-write for direct IO\n"
+"\n"
+" Opens a file for subsequent use by all of the other xfs_io commands.\n"
+" With no arguments, open uses the stat command to show the current file.\n"
+" -a -- open with the O_APPEND flag (append-only mode)\n"
+" -c -- open with O_CREAT (create the file if it doesn't exist)\n"
+" -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
+" -r -- open with O_RDONLY, the default is O_RDWR\n"
+" -s -- open with O_SYNC\n"
+" -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
+" -x -- mark the file as a realtime XFS file immediately after opening it\n"
+" Note1: read/write direct IO requests must be blocksize aligned.\n"
+" Note2: the bmap for non-regular files can be obtained provided the file\n"
+" was opened appropriately (in particular, must be opened read-only).\n"
+"\n"
+msgstr ""
+
+msgid "socket"
+msgstr ""
+
+msgid "directory"
+msgstr ""
+
+msgid "char device"
+msgstr ""
+
+msgid "block device"
+msgstr ""
+
+msgid "regular file"
+msgstr ""
+
+msgid "symbolic link"
+msgstr ""
+
+msgid "fifo"
+msgstr ""
+
+#, c-format
+msgid "fd.path = \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "fd.flags = %s,%s,%s%s%s\n"
+msgstr ""
+
+msgid "sync"
+msgstr ""
+
+msgid "non-sync"
+msgstr ""
+
+msgid "direct"
+msgstr ""
+
+msgid "non-direct"
+msgstr ""
+
+msgid "read-only"
+msgstr ""
+
+msgid "read-write"
+msgstr ""
+
+msgid ",real-time"
+msgstr ""
+
+msgid ",append-only"
+msgstr ""
+
+#, c-format
+msgid "stat.ino = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "stat.type = %s\n"
+msgstr ""
+
+#, c-format
+msgid "stat.size = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "stat.blocks = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "stat.atime = %s"
+msgstr ""
+
+#, c-format
+msgid "stat.mtime = %s"
+msgstr ""
+
+#, c-format
+msgid "stat.ctime = %s"
+msgstr ""
+
+#, c-format
+msgid "xattr.xflags = 0x%x\n"
+msgstr ""
+
+#, c-format
+msgid "xattr.nextents = %u\n"
+msgstr ""
+
+#, c-format
+msgid "statfs.f_bsize = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "statfs.f_blocks = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "statfs.f_bavail = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "geom.bsize = %u\n"
+msgstr ""
+
+#, c-format
+msgid "geom.agcount = %u\n"
+msgstr ""
+
+#, c-format
+msgid "geom.agblocks = %u\n"
+msgstr ""
+
+#, c-format
+msgid "geom.datablocks = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "geom.rtblocks = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "geom.rtextents = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "geom.rtextsize = %u\n"
+msgstr ""
+
+#, c-format
+msgid "geom.sunit = %u\n"
+msgstr ""
+
+#, c-format
+msgid "geom.swidth = %u\n"
+msgstr ""
+
+msgid "open"
+msgstr ""
+
+msgid "o"
+msgstr ""
+
+msgid "[-acdrstx] [path]"
+msgstr ""
+
+msgid "close the current file, open file specified by path"
+msgstr ""
+
+msgid "stat"
+msgstr ""
+
+msgid "[-v]"
+msgstr ""
+
+msgid "statistics on the currently open file"
+msgstr ""
+
+msgid "statfs"
+msgstr ""
+
+msgid "statistics on the filesystem of the currently open file"
+msgstr ""
+
+msgid ""
+"\n"
+" reads a range of bytes in a specified block size from the given offset\n"
+"\n"
+" Example:\n"
+" 'read -v 512 20' - dumps 20 bytes read from 512 bytes into the file\n"
+"\n"
+" Reads a segment of the currently open file, optionally dumping it to the\n"
+" standard output stream (with -v option) for subsequent inspection.\n"
+" The reads are performed in sequential blocks starting at offset, with the\n"
+" blocksize tunable using the -b option (default blocksize is 4096 bytes).\n"
+"\n"
+msgstr ""
+
+#, c-format
+msgid "non-numeric bsize -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "non-numeric offset argument -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "non-numeric length argument -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "read %u/%u bytes at offset %llu\n"
+msgstr ""
+
+msgid "pread"
+msgstr ""
+
+msgid "r"
+msgstr ""
+
+msgid "[-b bs] [-v] off len"
+msgstr ""
+
+msgid "reads a number of bytes at a specified offset"
+msgstr ""
+
+msgid "allocsp"
+msgstr ""
+
+msgid "off len"
+msgstr ""
+
+msgid "allocates zeroed space for part of a file"
+msgstr ""
+
+msgid "freesp"
+msgstr ""
+
+msgid "frees space associated with part of a file"
+msgstr ""
+
+msgid "resvsp"
+msgstr ""
+
+msgid "reserves space associated with part of a file"
+msgstr ""
+
+msgid "unresvsp"
+msgstr ""
+
+msgid "frees reserved space associated with part of a file"
+msgstr ""
+
+msgid ""
+"\n"
+" writes a range of bytes (in block size increments) from the given offset\n"
+"\n"
+" Example:\n"
+" 'write 512 20' - writes 20 bytes at 512 bytes into the open file\n"
+"\n"
+" Writes into a segment of the currently open file, using either a buffer\n"
+" filled with a set pattern (0xcdcdcdcd) or data read from an input file.\n"
+" -S -- use an alternate seed number\n"
+" -i -- specifies an input file from which to source data to write\n"
+" -d -- open the input file for direct IO\n"
+" -s -- skip a number of bytes at the start of the input file\n"
+" The writes are performed in sequential blocks starting at offset, with the\n"
+" blocksize tunable using the -b option (default blocksize is 4096 bytes).\n"
+"\n"
+msgstr ""
+
+#, c-format
+msgid "non-numeric skip -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "non-numeric seed -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "wrote %u/%u bytes at offset %llu\n"
+msgstr ""
+
+msgid "pwrite"
+msgstr ""
+
+msgid "w"
+msgstr ""
+
+msgid "[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len"
+msgstr ""
+
+msgid "writes a number of bytes at a specified offset"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "q"
+msgstr ""
+
+msgid "exit xfs_io"
+msgstr ""
+
+#, c-format
+msgid "non-numeric argument -- %s\n"
+msgstr ""
+
+#, c-format
+msgid "reserved blocks = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "available reserved blocks = %llu\n"
+msgstr ""
+
+msgid "resblks"
+msgstr ""
+
+msgid "[blocks]"
+msgstr ""
+
+msgid "get and/or set count of reserved filesystem blocks"
+msgstr ""
+
+#, c-format
+msgid "non-numeric truncate argument -- %s\n"
+msgstr ""
+
+msgid "truncate"
+msgstr ""
+
+msgid "off"
+msgstr ""
+
+msgid "truncates the current file at the given offset"
 msgstr ""
 
 #, c-format
@@ -804,6 +1203,22 @@ msgid "MD array %s not in clean state\n"
 msgstr ""
 
 #, c-format
+msgid "%s: error opening the device special file \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't tell if \"%s\" is writable: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot stat the device file \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't determine device size: %s\n"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: device %lld is not open\n"
 msgstr ""
 
@@ -925,14 +1340,6 @@ msgstr ""
 
 #, c-format
 msgid "%s: warning - cannot set blocksize on block device %s: %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: cannot stat the device file \"%s\": %s\n"
-msgstr ""
-
-#, c-format
-msgid "%s: error opening the device special file \"%s\": %s\n"
 msgstr ""
 
 #, c-format
@@ -3243,9 +3650,6 @@ msgstr ""
 
 #, c-format
 msgid "couldn't allocate realtime summary inode, error = %d\n"
-msgstr ""
-
-msgid "dev_zero of rtbitmap failed\n"
 msgstr ""
 
 #, c-format

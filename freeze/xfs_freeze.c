@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <sys/ioctl.h>
 
 char	*progname;
 
@@ -54,7 +53,7 @@ main(int argc, char **argv)
 	int			ffd;	/* mount point file descriptor */
 	int			fflag, uflag;
 	int			level;
-	struct statfs		buf;
+	char			*fname;
 
 	fflag = uflag = 0;
 	progname = basename(argv[0]);
@@ -80,13 +79,14 @@ main(int argc, char **argv)
 	if ((fflag + uflag) != 1)
 		usage();
 
-	ffd = open(argv[optind], O_RDONLY);
+	fname = argv[optind];
+	ffd = open(fname, O_RDONLY);
 	if (ffd < 0) {
-		perror(argv[optind]);
+		perror(fname);
 		return 1;
 	}
-	fstatfs(ffd, &buf);
-	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
+	
+	if (!platform_test_xfs_fd(ffd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, argv[optind]);
@@ -95,7 +95,7 @@ main(int argc, char **argv)
 
 	if (fflag) {
 		level = 1;
-		if (ioctl(ffd, XFS_IOC_FREEZE, &level) < 0) {
+		if (xfsctl(fname, ffd, XFS_IOC_FREEZE, &level) < 0) {
 			fprintf(stderr, _("%s: cannot freeze filesystem"
 				" mounted at %s: %s\n"),
 				progname, argv[optind], strerror(errno));
@@ -104,7 +104,7 @@ main(int argc, char **argv)
 	}
 
 	if (uflag) {
-		if (ioctl(ffd, XFS_IOC_THAW, &level) < 0) {
+		if (xfsctl(fname, ffd, XFS_IOC_THAW, &level) < 0) {
 			fprintf(stderr, _("%s: cannot unfreeze filesystem"
 				" mounted at %s: %s\n"),
 				progname, argv[optind], strerror(errno));
