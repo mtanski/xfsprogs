@@ -299,11 +299,16 @@ fixup_log_stripe(
 	__uint64_t	agsize,
 	int		sunit,
 	xfs_drfsbno_t	*logblocks,
-	int		blocklog)
+	int		blocklog,
+	int		*lalign)
 {
 	__uint64_t	tmp_logblocks;
 
-	logstart = ((logstart + (sunit - 1))/sunit) * sunit;
+	if ((logstart % sunit) != 0) {
+		logstart = ((logstart + (sunit - 1))/sunit) * sunit;
+		*lalign = 1;
+	}
+
 	/* 
 	 * Make sure that the log size is a multiple of the
 	 * stripe unit
@@ -1831,15 +1836,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * Align the logstart at stripe unit boundary.
 		 */
-		if (lsunit && ((logstart % lsunit) != 0)) {
+		if (lsunit) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
-					agsize, lsunit, &logblocks, blocklog);
-			lalign = 1;
-		} else if (dsunit && ((logstart % dsunit) != 0)) {
+					agsize, lsunit, &logblocks, blocklog,
+					&lalign);
+		} else if (dsunit) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
-					agsize, dsunit, &logblocks,
-					blocklog);
-			lalign = 1;
+					agsize, dsunit, &logblocks, blocklog,
+					&lalign);
 		}
 	} else
 		logstart = 0;
@@ -2082,6 +2086,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			if (lalign) {
 				/*
 				 * Have to insert two records
+				 * Insert pad record for stripe align of log
 				 */
 				INT_SET(arec->ar_blockcount, ARCH_CONVERT, 
 					(xfs_extlen_t)(XFS_FSB_TO_AGBNO(
@@ -2089,6 +2094,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				  	- (INT_GET(arec->ar_startblock,
 						ARCH_CONVERT))));
 				nrec = arec + 1;
+				/*
+				 * Insert record at start of internal log
+				 */
 				INT_SET(nrec->ar_startblock, ARCH_CONVERT,
 					INT_GET(arec->ar_startblock,
 						ARCH_CONVERT) +
@@ -2097,6 +2105,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				arec = nrec;
 				INT_MOD(block->bb_numrecs, ARCH_CONVERT, 1);
 			} 
+			/*
+			 * Change record start to after the internal log
+			 */
 			INT_MOD(arec->ar_startblock, ARCH_CONVERT, logblocks);
 		} 
 		INT_SET(arec->ar_blockcount, ARCH_CONVERT,

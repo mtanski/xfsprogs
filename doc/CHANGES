@@ -1,3 +1,8 @@
+xfsprogs-2.6.5 (20 February 2003)
+	- Fix up mkfs to ensure that the log size is a multiple of
+	  the v2 log stripe size even if the log happens to be aligned
+	  on a log stripe boundary (always check it).
+
 xfsprogs-2.6.4 (17 February 2003)
 	- Fix a few more libxfs/repair leaks.
 	- Fix up some libhandle routines, add the open_by_fshandle
