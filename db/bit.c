@@ -139,7 +139,7 @@ getbitval(
 #else
 			if ((i == (nbits - 1)) && signext && nbits < 64)
 				rval |= (-1LL << nbits); 
-			rval |= 1LL << i;
+			rval |= 1LL << (nbits - i - 1);
 #endif
 		}
 	}
