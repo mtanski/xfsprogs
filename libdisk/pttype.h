@@ -39,3 +39,13 @@ typedef struct {
 #define	AIX_LABEL_MAGIC		0xc9c2d4c1
 #define	AIX_LABEL_MAGIC_SWAPPED	0xc1d4c2c9
 #define aixlabel(x) ((aix_partition *)x)
+
+typedef struct {
+	unsigned short magic;
+	/* ... */
+} mac_partition;
+
+#define MAC_LABEL_MAGIC		0x4552
+#define MAC_PARTITION_MAGIC	0x504d
+#define MAC_OLD_PARTITION_MAGIC	0x5453
+#define maclabel(x) ((mac_partition *)x)

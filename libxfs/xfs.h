@@ -272,6 +272,10 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)
 #undef  XFS_DIR_SHORTFORM_VALIDATE_ONDISK
 #define XFS_DIR_SHORTFORM_VALIDATE_ONDISK(mp,dip) 0
+#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)
+#define XFS_TRANS_RESERVE_BLKQUOTA(mp,tp,ip,nblks)	0
+#define XFS_TRANS_UNRESERVE_BLKQUOTA(mp,tp,ip,nblks)
+#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)
 
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
 # define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )

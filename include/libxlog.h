@@ -64,8 +64,6 @@ typedef struct log {
 #include <xfs_buf_item.h>
 #include <xfs_inode_item.h>
 #include <xfs_extfree_item.h>
-#include <xfs_dquot_item.h>
-
 
 /*
  * macros mapping kernel code to user code

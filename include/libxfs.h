@@ -62,7 +62,6 @@
 #include <xfs_dinode.h>
 #include <xfs_attr_leaf.h>
 #include <xfs_quota.h>
-#include <xfs_dqblk.h>
 #include <xfs_mount.h>
 #include <xfs_trans_space.h>
 #include <xfs_inode.h>

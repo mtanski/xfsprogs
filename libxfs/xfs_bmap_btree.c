@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -364,8 +364,8 @@ xfs_bmbt_delrec(
 	xfs_bmbt_log_block(cur, lbp, XFS_BB_RIGHTSIB | XFS_BB_NUMRECS);
 	if (INT_GET(left->bb_rightsib, ARCH_CONVERT) != NULLDFSBNO) {
 		if ((error = xfs_btree_read_bufl(mp, cur->bc_tp,
-				INT_GET(left->bb_rightsib, ARCH_CONVERT), 0, &rrbp,
-				XFS_BMAP_BTREE_REF))) {
+				INT_GET(left->bb_rightsib, ARCH_CONVERT),
+				0, &rrbp, XFS_BMAP_BTREE_REF))) {
 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
 			goto error0;
 		}
@@ -381,10 +381,7 @@ xfs_bmbt_delrec(
 		cur->bc_private.b.flist, mp);
 	cur->bc_private.b.ip->i_d.di_nblocks--;
 	xfs_trans_log_inode(cur->bc_tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
-	if (XFS_IS_QUOTA_ON(mp) &&
-	    cur->bc_private.b.ip->i_ino != mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(cur->bc_tp, cur->bc_private.b.ip,
+	XFS_TRANS_MOD_DQUOT_BYINO(mp, cur->bc_tp, cur->bc_private.b.ip,
 			XFS_TRANS_DQ_BCOUNT, -1L);
 	xfs_trans_binval(cur->bc_tp, rbp);
 	if (bp != lbp) {
@@ -680,13 +677,10 @@ xfs_bmbt_killroot(
 #endif
 	memcpy(pp, cpp, INT_GET(block->bb_numrecs, ARCH_CONVERT) * sizeof(*pp));
 	xfs_bmap_add_free(XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(cbp)), 1,
-		cur->bc_private.b.flist, cur->bc_mp);
+			cur->bc_private.b.flist, cur->bc_mp);
 	ip->i_d.di_nblocks--;
-	if (XFS_IS_QUOTA_ON(cur->bc_mp) &&
-	    ip->i_ino != cur->bc_mp->m_sb.sb_uquotino &&
-	    ip->i_ino != cur->bc_mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(cur->bc_tp, ip, XFS_TRANS_DQ_BCOUNT,
-			-1L);
+	XFS_TRANS_MOD_DQUOT_BYINO(cur->bc_mp, cur->bc_tp, ip,
+			XFS_TRANS_DQ_BCOUNT, -1L);
 	xfs_trans_binval(cur->bc_tp, cbp);
 	cur->bc_bufs[level - 1] = NULL;
 	INT_MOD(block->bb_level, ARCH_CONVERT, -1);
@@ -1283,10 +1277,7 @@ xfs_bmbt_split(
 	cur->bc_private.b.allocated++;
 	cur->bc_private.b.ip->i_d.di_nblocks++;
 	xfs_trans_log_inode(args.tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
-	if (XFS_IS_QUOTA_ON(args.mp) &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(args.tp, cur->bc_private.b.ip,
+	XFS_TRANS_MOD_DQUOT_BYINO(args.mp, args.tp, cur->bc_private.b.ip,
 			XFS_TRANS_DQ_BCOUNT, 1L);
 	rbp = xfs_btree_get_bufl(args.mp, args.tp, args.fsbno, 0);
 	right = XFS_BUF_TO_BMBT_BLOCK(rbp);
@@ -2081,11 +2072,8 @@ xfs_bmbt_newroot(
 	cur->bc_private.b.firstblock = args.fsbno;
 	cur->bc_private.b.allocated++;
 	cur->bc_private.b.ip->i_d.di_nblocks++;
-	if (XFS_IS_QUOTA_ON(args.mp) &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(args.tp, cur->bc_private.b.ip,
-					  XFS_TRANS_DQ_BCOUNT, 1L);
+	XFS_TRANS_MOD_DQUOT_BYINO(args.mp, args.tp, cur->bc_private.b.ip,
+			  XFS_TRANS_DQ_BCOUNT, 1L);
 	bp = xfs_btree_get_bufl(args.mp, cur->bc_tp, args.fsbno, 0);
 	cblock = XFS_BUF_TO_BMBT_BLOCK(bp);
 	*cblock = *block;

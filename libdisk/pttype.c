@@ -93,6 +93,14 @@ sun_parttable(char *base)
 	return !csum;
 }
 
+static int
+mac_parttable(char *base)
+{
+	return (ntohs(maclabel(base)->magic) == MAC_LABEL_MAGIC ||
+		ntohs(maclabel(base)->magic) == MAC_PARTITION_MAGIC ||
+		ntohs(maclabel(base)->magic) == MAC_OLD_PARTITION_MAGIC);
+}
+
 
 char *
 pttype(char *device)
@@ -114,6 +122,8 @@ pttype(char *device)
 			type = "AIX";
 		else if (dos_parttable(buf))
 			type = "DOS";
+		else if (mac_parttable(buf))
+			type = "Mac";
 	}
 
 	if (fd >= 0)

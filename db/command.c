@@ -64,8 +64,6 @@
 cmdinfo_t	*cmdtab;
 int		ncmds;
 
-static int	cmd_compare(const void *a, const void *b);
-
 static int
 cmd_compare(const void *a, const void *b)
 {

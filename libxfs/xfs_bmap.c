@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -1678,7 +1678,7 @@ xfs_bmap_alloc(
 	 */
 	mp = ap->ip->i_mount;
 	nullfb = ap->firstblock == NULLFSBLOCK;
-	rt = (ap->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) && ap->userdata;
+	rt = XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata;
 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, ap->firstblock);
 #ifdef __KERNEL__
 	if (rt) {
@@ -2000,14 +2000,10 @@ xfs_bmap_alloc(
 			 * Adjust the disk quota also. This was reserved
 			 * earlier.
 			 */
-			if (XFS_IS_QUOTA_ON(mp) &&
-			    ap->ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ap->ip->i_ino != mp->m_sb.sb_gquotino)
-				xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
-					ap->wasdel ?
-						XFS_TRANS_DQ_DELRTBCOUNT :
+			XFS_TRANS_MOD_DQUOT_BYINO(mp, ap->tp, ap->ip,
+				ap->wasdel ? XFS_TRANS_DQ_DELRTBCOUNT :
 						XFS_TRANS_DQ_RTBCOUNT,
-					(long)ralen);
+				(long) ralen);
 		} else
 			ap->alen = 0;
 #endif	/* __KERNEL__ */
@@ -2224,14 +2220,10 @@ xfs_bmap_alloc(
 			 * Adjust the disk quota also. This was reserved
 			 * earlier.
 			 */
-			if (XFS_IS_QUOTA_ON(mp) &&
-			    ap->ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ap->ip->i_ino != mp->m_sb.sb_gquotino)
-				xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
-					ap->wasdel ?
-						XFS_TRANS_DQ_DELBCOUNT :
+			XFS_TRANS_MOD_DQUOT_BYINO(mp, ap->tp, ap->ip,
+				ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT :
 						XFS_TRANS_DQ_BCOUNT,
-					(long)args.len);
+				(long) args.len);
 		} else {
 			ap->rval = NULLFSBLOCK;
 			ap->alen = 0;
@@ -2288,10 +2280,7 @@ xfs_bmap_btree_to_extents(
 		return error;
 	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
 	ip->i_d.di_nblocks--;
-	if (XFS_IS_QUOTA_ON(mp) &&
-	    ip->i_ino != mp->m_sb.sb_uquotino &&
-	    ip->i_ino != mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+	XFS_TRANS_MOD_DQUOT_BYINO(mp, tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
 	xfs_trans_binval(tp, cbp);
 	if (cur->bc_bufs[0] == cbp)
 		cur->bc_bufs[0] = NULL;
@@ -2387,10 +2376,7 @@ xfs_bmap_del_extent(
 				goto done;
 			do_fx = 0;
 			nblks = len * mp->m_sb.sb_rextsize;
-			if (XFS_IS_QUOTA_ON(mp) &&
-			    ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ip->i_ino != mp->m_sb.sb_gquotino)
-				qfield = XFS_TRANS_DQ_RTBCOUNT;
+			qfield = XFS_TRANS_DQ_RTBCOUNT;
 		}
 		/*
 		 * Ordinary allocation.
@@ -2398,10 +2384,7 @@ xfs_bmap_del_extent(
 		else {
 			do_fx = 1;
 			nblks = del->br_blockcount;
-			if (XFS_IS_QUOTA_ON(mp) &&
-			    ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ip->i_ino != mp->m_sb.sb_gquotino)
-				qfield = XFS_TRANS_DQ_BCOUNT;
+			qfield = XFS_TRANS_DQ_BCOUNT;
 		}
 		/*
 		 * Set up del_endblock and cur for later.
@@ -2621,7 +2604,8 @@ xfs_bmap_del_extent(
 	 * Adjust quota data.
 	 */
 	if (qfield)
-		xfs_trans_mod_dquot_byino(tp, ip, qfield, (long)-nblks);
+		XFS_TRANS_MOD_DQUOT_BYINO(mp, tp, ip, qfield, (long)-nblks);
+
 	/*
 	 * Account for change in delayed indirect blocks.
 	 * Nothing to do for disk quota accounting here.
@@ -2772,10 +2756,7 @@ xfs_bmap_extents_to_btree(
 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
 	cur->bc_private.b.allocated++;
 	ip->i_d.di_nblocks++;
-	if (XFS_IS_QUOTA_ON(mp) &&
-	    ip->i_ino != mp->m_sb.sb_uquotino &&
-	    ip->i_ino != mp->m_sb.sb_gquotino)
-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+	XFS_TRANS_MOD_DQUOT_BYINO(mp, tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
 	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
 	/*
 	 * Fill in the child block.
@@ -2918,11 +2899,8 @@ xfs_bmap_local_to_extents(
 		xfs_bmap_trace_post_update(fname, "new", ip, 0, whichfork);
 		XFS_IFORK_NEXT_SET(ip, whichfork, 1);
 		ip->i_d.di_nblocks = 1;
-		if (XFS_IS_QUOTA_ON(args.mp) &&
-		    ip->i_ino != args.mp->m_sb.sb_uquotino &&
-		    ip->i_ino != args.mp->m_sb.sb_gquotino)
-			xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
-				1L);
+		XFS_TRANS_MOD_DQUOT_BYINO(args.mp, tp, ip,
+			XFS_TRANS_DQ_BCOUNT, 1L);
 		flags |= XFS_ILOG_FEXT(whichfork);
 	} else
 		ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
@@ -3635,8 +3613,8 @@ xfs_bmapi(
 	cur = NULL;
 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
 		ASSERT(wr && tp);
-		if ((error = xfs_bmap_local_to_extents(tp, ip, firstblock, total,
-				&logflags, whichfork)))
+		if ((error = xfs_bmap_local_to_extents(tp, ip,
+				firstblock, total, &logflags, whichfork)))
 			goto error0;
 	}
 	if (wr && *firstblock == NULLFSBLOCK) {
@@ -3710,9 +3688,8 @@ xfs_bmapi(
 				 * We return EDQUOT if we haven't allocated
 				 * blks already inside this loop;
 				 */
-				if (XFS_IS_QUOTA_ON(ip->i_mount) &&
-				    xfs_trans_reserve_blkquota(NULL, ip,
-					    (long)alen)) {
+				if (XFS_TRANS_RESERVE_BLKQUOTA(
+						mp, NULL, ip, (long)alen)) {
 					if (n == 0) {
 						*nmap = 0;
 						ASSERT(cur == NULL);
@@ -3720,12 +3697,10 @@ xfs_bmapi(
 					}
 					break;
 				}
-				if (xfs_mod_incore_sb(ip->i_mount,
-						XFS_SBS_FDBLOCKS,
+				if (xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
 						-(alen + indlen), rsvd)) {
-					if (XFS_IS_QUOTA_ON(ip->i_mount))
-						xfs_trans_unreserve_blkquota(
-							NULL, ip, (long)alen);
+					XFS_TRANS_UNRESERVE_BLKQUOTA(
+						mp, NULL, ip, (long)alen);
 					break;
 				}
 				ip->i_delayed_blks += alen;
@@ -3788,15 +3763,11 @@ xfs_bmapi(
 				alen = bma.alen;
 				aoff = bma.off;
 				ASSERT(*firstblock == NULLFSBLOCK ||
-				       XFS_FSB_TO_AGNO(ip->i_mount,
-					       *firstblock) ==
-				       XFS_FSB_TO_AGNO(ip->i_mount,
-					       bma.firstblock) ||
+				       XFS_FSB_TO_AGNO(mp, *firstblock) ==
+				       XFS_FSB_TO_AGNO(mp, bma.firstblock) ||
 				       (flist->xbf_low &&
-					XFS_FSB_TO_AGNO(ip->i_mount,
-						*firstblock) <
-					XFS_FSB_TO_AGNO(ip->i_mount,
-						bma.firstblock)));
+					XFS_FSB_TO_AGNO(mp, *firstblock) <
+					XFS_FSB_TO_AGNO(mp, bma.firstblock)));
 				*firstblock = bma.firstblock;
 				if (cur)
 					cur->bc_private.b.firstblock =
@@ -3804,7 +3775,7 @@ xfs_bmapi(
 				if (abno == NULLFSBLOCK)
 					break;
 				if ((ifp->if_flags & XFS_IFBROOT) && !cur) {
-					cur = xfs_btree_init_cursor(ip->i_mount,
+					cur = xfs_btree_init_cursor(mp,
 						tp, NULL, 0, XFS_BTNUM_BMAP,
 						ip, whichfork);
 					cur->bc_private.b.firstblock =
@@ -3921,7 +3892,7 @@ xfs_bmapi(
 			 */
 			ASSERT(mval->br_blockcount <= len);
 			if ((ifp->if_flags & XFS_IFBROOT) && !cur) {
-				cur = xfs_btree_init_cursor(ip->i_mount,
+				cur = xfs_btree_init_cursor(mp,
 					tp, NULL, 0, XFS_BTNUM_BMAP,
 					ip, whichfork);
 				cur->bc_private.b.firstblock =
@@ -4043,12 +4014,12 @@ error0:
 	if (cur) {
 		if (!error) {
 			ASSERT(*firstblock == NULLFSBLOCK ||
-			       XFS_FSB_TO_AGNO(ip->i_mount, *firstblock) ==
-			       XFS_FSB_TO_AGNO(ip->i_mount,
+			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
+			       XFS_FSB_TO_AGNO(mp,
 				       cur->bc_private.b.firstblock) ||
 			       (flist->xbf_low &&
-				XFS_FSB_TO_AGNO(ip->i_mount, *firstblock) <
-				XFS_FSB_TO_AGNO(ip->i_mount,
+				XFS_FSB_TO_AGNO(mp, *firstblock) <
+				XFS_FSB_TO_AGNO(mp,
 					cur->bc_private.b.firstblock)));
 			*firstblock = cur->bc_private.b.firstblock;
 		}
@@ -4358,16 +4329,11 @@ xfs_bunmapi(
 			ASSERT(STARTBLOCKVAL(del.br_startblock) > 0);
 			xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
 				(int)del.br_blockcount, rsvd);
-			if (XFS_IS_QUOTA_ON(ip->i_mount)) {
-				ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
-				ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
-				if (!isrt)
-					xfs_trans_unreserve_blkquota(NULL, ip,
-					      (long)del.br_blockcount);
-				else
-					xfs_trans_unreserve_rtblkquota(NULL, ip,
-					      (long)del.br_blockcount);
-			}
+			/* Unreserve our quota space */
+			XFS_TRANS_RESERVE_QUOTA_NBLKS(
+				mp, NULL, ip, -((long)del.br_blockcount), 0,
+				isrt ?	XFS_QMOPT_RES_RTBLKS :
+					XFS_QMOPT_RES_REGBLKS);
 			ip->i_delayed_blks -= del.br_blockcount;
 			if (cur)
 				cur->bc_private.b.flags |=

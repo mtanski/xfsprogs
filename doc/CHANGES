@@ -1,3 +1,12 @@
+xfsprogs-2.4.1 (18 March 2002)
+	- Fix error reporting when zeroing parts of the realtime
+	  device in phase6 of xfs_repair.
+	- Add a mkfs.xfs check for Mac partitions before writing
+	  to the device.
+	- Thanks to Ethan Benson <erbenson@alaska.net> for this.
+	- Minor fix to the xfs_bmap(8) man page.
+	- Sync up user/kernel source in libxfs and headers.
+
 xfsprogs-2.4.0 (06 March 2002)
 	- Enable unwritten extents by default in mkfs.xfs.
 	- Add a command to xfs_db to enable unwritten extents.
