@@ -464,7 +464,7 @@ typedef struct xfs_mod_sb {
 void		xfs_mod_sb(xfs_trans_t *, __int64_t);
 xfs_mount_t	*xfs_mount_init(void);
 void		xfs_mount_free(xfs_mount_t *mp, int remove_bhv);
-int		xfs_mountfs(struct vfs *, xfs_mount_t *mp, dev_t, int);
+int		xfs_mountfs(struct vfs *, xfs_mount_t *mp, kdev_t, int);
 int		xfs_mountargs(struct mounta *, struct xfs_args *);
 
 int		xfs_unmountfs(xfs_mount_t *, int, struct cred *);
@@ -473,7 +473,7 @@ int             xfs_unmountfs_writesb(xfs_mount_t *);
 int             xfs_unmount_flush(xfs_mount_t *, int);
 int		xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int, int);
 int		xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *, uint, int);
-int		xfs_readsb(xfs_mount_t *mp, dev_t);
+int		xfs_readsb(xfs_mount_t *mp);
 struct xfs_buf	*xfs_getsb(xfs_mount_t *, int);
 void            xfs_freesb(xfs_mount_t *);
 void		_xfs_force_shutdown(struct xfs_mount *, int, char *, int);

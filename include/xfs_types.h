@@ -274,7 +274,6 @@ extern struct xfsstats xfsstats;
                                     | (minor&IRIX_DEV_MAXMIN)))
                                     
 #define IRIX_DEV_TO_KDEVT(dev)  MKDEV(IRIX_DEV_MAJOR(dev),IRIX_DEV_MINOR(dev))
-#define IRIX_DEV_TO_DEVT(dev)   ((IRIX_DEV_MAJOR(dev)<<8)|IRIX_DEV_MINOR(dev))
 
 #ifdef __KERNEL__
 /* __psint_t is the same size as a pointer */

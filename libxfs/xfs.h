@@ -241,6 +241,7 @@ typedef struct { dev_t dev; } buftarg_t;
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define m_rtdev_targp(m)(&(m)->m_rtdev)
+#define kdev_none(x)	(!(x))
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
