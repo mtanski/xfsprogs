@@ -30,8 +30,8 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <fstyp.h>
+#include <xfs/libxfs.h>
+#include <disk/fstyp.h>
 
 /*
  * fstyp allows the user to determine the filesystem identifier of

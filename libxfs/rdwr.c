@@ -30,9 +30,9 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <xfs_log.h>
-#include <xfs_log_priv.h>
+#include <xfs/libxfs.h>
+#include <xfs/xfs_log.h>
+#include <xfs/xfs_log_priv.h>
 
 #define BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
 #define BDSTRAT_SIZE	(256 * 1024)

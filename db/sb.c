@@ -30,8 +30,8 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <libxlog.h>
+#include <xfs/libxfs.h>
+#include <xfs/libxlog.h>
 #include "command.h"
 #include "type.h"
 #include "faddr.h"

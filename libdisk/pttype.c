@@ -35,7 +35,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <dvh.h>
+#include <disk/dvh.h>
 #include "pttype.h"
 
 #define blksize 512

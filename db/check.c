@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include <math.h>
 #include <sys/time.h>
 #include "bmap.h"

@@ -35,7 +35,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <volume.h>
+#include <disk/volume.h>
 #include "xvm.h"
 
 int

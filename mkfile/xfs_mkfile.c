@@ -34,7 +34,7 @@
  * Make file utility for xfs.
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include <ctype.h>
 
 #define	MAXBUFFERSIZE	(256 * 1024)

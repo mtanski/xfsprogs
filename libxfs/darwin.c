@@ -34,7 +34,7 @@
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <sys/ioctl.h>
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 
 extern char *progname;
 

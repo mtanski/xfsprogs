@@ -34,7 +34,7 @@
  * Inode map display utility for XFS.
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 
 int main(int argc, char **argv)
 {

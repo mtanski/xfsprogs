@@ -32,7 +32,7 @@
 #ifndef LOGPRINT_H
 #define LOGPRINT_H
 
-#include <libxlog.h>
+#include <xfs/libxlog.h>
 
 /* command line flags */
 extern int	print_data;

@@ -48,11 +48,12 @@ LHFILES = xfs_acl.h xfs_cap.h xfs_mac.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules \
 	$(LHFILES) $(DKHFILES)
-LDIRT = xfs
+LDIRT = xfs disk
 
 default install :
-	rm -f xfs
+	rm -f xfs disk
 	$(LN_S) . xfs
+	$(LN_S) . disk
 
 include $(BUILDRULES)
 

@@ -30,10 +30,9 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <fstyp.h>
-#include <stdio.h>
-#include <volume.h>
-#include <libxfs.h>
+#include <xfs/libxfs.h>
+#include <disk/fstyp.h>
+#include <disk/volume.h>
 #include <ctype.h>
 #include "xfs_mkfs.h"
 

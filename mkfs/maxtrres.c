@@ -40,7 +40,7 @@
  * and minimum log sizes.
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include "xfs_mkfs.h"
 
 xfs_trans_reservations_t tr_count = {

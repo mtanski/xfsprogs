@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxlog.h>
+#include <xfs/libxlog.h>
 
 int print_exit;
 int print_record_header;

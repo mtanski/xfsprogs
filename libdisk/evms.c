@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/sysmacros.h>
-#include <volume.h>
+#include <disk/volume.h>
 #include "evms.h"
 
 int

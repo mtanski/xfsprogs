@@ -31,12 +31,12 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 
 /* attributes.h (purposefully) unavailable to xfsprogs, make do */
 struct attrlist_cursor { __u32 opaque[4]; };
 
-#include <handle.h>
+#include <xfs/handle.h>
 
 /* just pick a value we know is more than big enough */
 #define	MAXHANSIZ	64

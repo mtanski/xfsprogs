@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxlog.h>
+#include <xfs/libxlog.h>
 #include "avl.h"
 #include "globals.h"
 #include "agheader.h"

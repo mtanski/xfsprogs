@@ -32,7 +32,7 @@
  */
 
 #define ustat __kernel_ustat
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <sys/ioctl.h>

@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxlog.h>
+#include <xfs/libxlog.h>
 
 /*
  * This routine finds (to an approximation) the first block in the physical

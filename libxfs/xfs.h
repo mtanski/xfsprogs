@@ -56,10 +56,7 @@
  *         specifically there to support the user level build.
  */
 
-#include <libxfs.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/stat.h>
+#include <xfs/libxfs.h>
 
 /*
  * Map XFS kernel routine names to libxfs.h names
