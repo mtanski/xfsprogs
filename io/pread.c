@@ -57,6 +57,7 @@ pread_help(void)
 }
 
 void	*buffer;
+ssize_t	highwater;
 ssize_t	buffersize;
 
 int
@@ -65,16 +66,18 @@ alloc_buffer(
 	int		uflag,
 	unsigned int	seed)
 {
-	if (bsize > buffersize) {
+	if (bsize > highwater) {
 		if (buffer)
 			free(buffer);
-		buffer = memalign(pagesize, buffersize = bsize);
+		buffer = memalign(pagesize, bsize);
 		if (!buffer) {
 			perror("memalign");
-			buffersize = 0;
+			highwater = buffersize = 0;
 			return -1;
 		}
+		highwater = bsize;
 	}
+	buffersize = bsize;
 	if (!uflag)
 		memset(buffer, seed, buffersize);
 	return 0;
