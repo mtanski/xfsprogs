@@ -1,3 +1,7 @@
+xfsprogs-current
+	- fix xfs_repair bug in handling a corrupt root directory
+	  inode with multiple "lost+found" entries
+
 xfsprogs-1.3.8 (19 September 2001)
 	- rewrote the LVM support used by mkfs.xfs to call external
 	  lvdisplay program to get volume geometry (mkp@mkp.net)

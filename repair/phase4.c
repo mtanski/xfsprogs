@@ -1019,7 +1019,7 @@ delete_orphanage(xfs_mount_t *mp)
 		else
 			res = shortform_delete_orphanage(mp, ino, dino, dbp,
 				&dirty);
-		ASSERT((res == 0 && dirty == 0) || (res == 1 && dirty == 1));
+		ASSERT((res == 0 && dirty == 0) || (res > 0 && dirty == 1));
 		break;
 	default:
 		break;
@@ -1028,12 +1028,12 @@ delete_orphanage(xfs_mount_t *mp)
 	if (res)  {
 		switch (dino->di_core.di_version)  {
 		case XFS_DINODE_VERSION_1:
-			INT_MOD(dino->di_core.di_onlink, ARCH_CONVERT, -1);
+			INT_MOD(dino->di_core.di_onlink, ARCH_CONVERT, -res);
 			INT_SET(dino->di_core.di_nlink, ARCH_CONVERT,
 				INT_GET(dino->di_core.di_onlink, ARCH_CONVERT));
 			break;
 		case XFS_DINODE_VERSION_2:
-			INT_MOD(dino->di_core.di_nlink, ARCH_CONVERT, -1);
+			INT_MOD(dino->di_core.di_nlink, ARCH_CONVERT, -res);
 			break;
 		default:
 			do_error("unknown version #%d in root inode\n",
