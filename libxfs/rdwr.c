@@ -454,6 +454,20 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
 }
 
 void
+libxfs_idestroy(xfs_inode_t *ip)
+{
+	switch (ip->i_d.di_mode & S_IFMT) {
+		case S_IFREG:
+		case S_IFDIR:
+		case S_IFLNK:
+			libxfs_idestroy_fork(ip, XFS_DATA_FORK);
+			break;
+	}
+	if (ip->i_afp)
+		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
+}
+
+void
 libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 {
 	extern xfs_zone_t	*xfs_ili_zone;
@@ -465,7 +479,7 @@ libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 		if (ip->i_itemp)
 			libxfs_zone_free(xfs_ili_zone, ip->i_itemp);
 		ip->i_itemp = NULL;
-
+		libxfs_idestroy(ip);
 		libxfs_zone_free(xfs_inode_zone, ip);
 		ip = NULL;
 	}

@@ -102,6 +102,7 @@
 #define xfs_iread			libxfs_iread
 #define xfs_ialloc			libxfs_ialloc
 #define xfs_idata_realloc		libxfs_idata_realloc
+#define xfs_idestroy_fork              libxfs_idestroy_fork
 #define xfs_itobp			libxfs_itobp
 #define xfs_ichgtime			libxfs_ichgtime
 #define xfs_bmapi			libxfs_bmapi
