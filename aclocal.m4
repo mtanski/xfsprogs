@@ -180,7 +180,7 @@ AC_DEFUN([AC_PACKAGE_NEED_UUID_UUID_H],
 	echo 'FATAL ERROR: could not find a valid UUID header.'
 	echo 'Install the Universally Unique Identifiers development package.'
 	exit 1])
-    fi
+    ])
   ])
 
 AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE_LIBUUID],
