@@ -1011,7 +1011,7 @@ xfs_iext_realloc(
 			  kmem_realloc(ifp->if_u1.if_extents,
 					rnew_size,
 					ifp->if_real_bytes,
-					KM_SLEEP);
+					KM_NOFS);
 		}
 	}
 	ifp->if_real_bytes = rnew_size;

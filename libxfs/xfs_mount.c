@@ -171,59 +171,66 @@ static struct {
  *     fields	  - which fields to copy (bitmask)
  */
 void
-xfs_xlatesb(void *data, xfs_sb_t *sb, int dir, xfs_arch_t arch,
-	    __int64_t fields)
+xfs_xlatesb(
+	void		*data,
+	xfs_sb_t	*sb,
+	int		dir,
+	xfs_arch_t	arch,
+	__int64_t	fields)
 {
-    xfs_caddr_t	    buf_ptr;
-    xfs_caddr_t	    mem_ptr;
-
-    ASSERT(dir);
-    ASSERT(fields);
-
-    if (!fields)
-	return;
-
-    buf_ptr=(xfs_caddr_t)data;
-    mem_ptr=(xfs_caddr_t)sb;
-
-    while (fields) {
+	xfs_caddr_t	buf_ptr;
+	xfs_caddr_t	mem_ptr;
 	xfs_sb_field_t	f;
 	int		first;
 	int		size;
 
-	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
-	first = xfs_sb_info[f].offset;
-	size = xfs_sb_info[f + 1].offset - first;
+	ASSERT(dir);
+	ASSERT(fields);
 
-	ASSERT(xfs_sb_info[f].type==0 || xfs_sb_info[f].type==1);
+	if (!fields)
+		return;
 
-	if (arch == ARCH_NOCONVERT || size==1 || xfs_sb_info[f].type==1) {
-	    if (dir>0) {
-		bcopy(buf_ptr + first, mem_ptr + first, size);
-	    } else {
-		bcopy(mem_ptr + first, buf_ptr + first, size);
-	    }
-	} else {
-	    switch (size) {
-		case 2:
-		    INT_XLATE(*(__uint16_t*)(buf_ptr+first),
-			     *(__uint16_t*)(mem_ptr+first), dir, arch);
-		    break;
-		case 4:
-		    INT_XLATE(*(__uint32_t*)(buf_ptr+first),
-			     *(__uint32_t*)(mem_ptr+first), dir, arch);
-		    break;
-		case 8:
-		    INT_XLATE(*(__uint64_t*)(buf_ptr+first),
-			     *(__uint64_t*)(mem_ptr+first), dir, arch);
-		    break;
-		default:
-		    ASSERT(0);
-	    }
+	buf_ptr = (xfs_caddr_t)data;
+	mem_ptr = (xfs_caddr_t)sb;
+
+	while (fields) {
+		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
+		first = xfs_sb_info[f].offset;
+		size = xfs_sb_info[f + 1].offset - first;
+
+		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
+
+		if (arch == ARCH_NOCONVERT ||
+		    size == 1 ||
+		    xfs_sb_info[f].type == 1) {
+			if (dir > 0) {
+				bcopy(buf_ptr + first, mem_ptr + first, size);
+			} else {
+				bcopy(mem_ptr + first, buf_ptr + first, size);
+			}
+		} else {
+			switch (size) {
+			case 2:
+				INT_XLATE(*(__uint16_t*)(buf_ptr+first),
+					  *(__uint16_t*)(mem_ptr+first),
+					  dir, arch);
+				break;
+			case 4:
+				INT_XLATE(*(__uint32_t*)(buf_ptr+first),
+					  *(__uint32_t*)(mem_ptr+first),
+					  dir, arch);
+				break;
+			case 8:
+				INT_XLATE(*(__uint64_t*)(buf_ptr+first),
+					  *(__uint64_t*)(mem_ptr+first), dir, arch);
+				break;
+			default:
+				ASSERT(0);
+			}
+		}
+
+		fields &= ~(1LL << f);
 	}
-	fields &= ~(1LL << f);
-    }
-
 }
 
 void

@@ -41,7 +41,6 @@
  * SGI's XFS filesystem's major stuff (constants, structures)
  */
 
-#define XFS_SUPER_MAGIC 0x58465342
 #define XFS_NAME	"xfs"
 
 /*

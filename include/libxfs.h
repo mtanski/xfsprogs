@@ -73,6 +73,10 @@
 #include <xfs_log.h>
 #include <xfs_log_priv.h>
 
+#ifndef XFS_SUPER_MAGIC
+#define XFS_SUPER_MAGIC 0x58465342
+#endif
+
 /*
  * Argument structure for libxfs_init().
  */
@@ -128,7 +132,7 @@ typedef struct xfs_mount {
 	int			m_bsize;	/* fs logical block size */
 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
-	xfs_agnumber_t	m_maxagi;		/* highest inode alloc group */
+	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
 	uint			m_rsumlevels;	/* rt summary levels */
 	uint			m_rsumsize;	/* size of rt summary, bytes */
 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */

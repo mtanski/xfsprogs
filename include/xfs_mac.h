@@ -98,6 +98,10 @@ typedef struct xfs_mac_label {
 
 /* NOT YET IMPLEMENTED */
 
+#define MACEXEC		00100
+#define MACWRITE	00200
+#define MACREAD		00400
+
 struct xfs_inode;
 extern int  xfs_mac_iaccess(struct xfs_inode *, mode_t, cred_t *);
 

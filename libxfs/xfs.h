@@ -235,14 +235,13 @@
 typedef __uint32_t uint_t;
 typedef __uint32_t inst_t;	/* an instruction */
 typedef enum { B_FALSE, B_TRUE } boolean_t;
-typedef struct { dev_t dev; } buftarg_t;
+typedef struct { dev_t dev; } xfs_buftarg_t;
 #define STATIC
 #define ATTR_ROOT	0x0002	/* use attrs in root namespace */
 #define ENOATTR		ENODATA	/* Attribute not found */
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
-#define m_rtdev_targp(m)(&(m)->m_rtdev)
 #define kdev_none(x)	(!(x))
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
@@ -560,9 +559,9 @@ void xfs_trans_free_item (xfs_trans_t *, xfs_log_item_desc_t *);
 void xfs_trans_free_items (xfs_trans_t *, int);
 
 /* xfs_trans_buf.c */
-xfs_buf_t *xfs_trans_buf_item_match (xfs_trans_t *, buftarg_t *,
+xfs_buf_t *xfs_trans_buf_item_match (xfs_trans_t *, xfs_buftarg_t *,
 			xfs_daddr_t, int);
-xfs_buf_t *xfs_trans_buf_item_match_all (xfs_trans_t *, buftarg_t *,
+xfs_buf_t *xfs_trans_buf_item_match_all (xfs_trans_t *, xfs_buftarg_t *,
 			xfs_daddr_t, int);
 
 /* xfs_inode_item.c */

@@ -645,6 +645,50 @@ rtmount_inodes(xfs_mount_t *mp)
 	return 0;
 }
 
+/*
+ * Initialize realtime fields in the mount structure.
+ */
+static int
+rtmount_init(
+	xfs_mount_t	*mp)	/* file system mount structure */
+{
+	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
+	xfs_daddr_t	d;	/* address of last block of subvolume */
+	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
+
+	sbp = &mp->m_sb;
+	if (sbp->sb_rblocks == 0)
+		return 0;
+	if (mp->m_rtdev != 0) {
+		fprintf(stderr, "%s: filesystem has a realtime subvolume\n",
+			progname);
+		return -1;
+	}
+	mp->m_rsumlevels = sbp->sb_rextslog + 1;
+	mp->m_rsumsize =
+		(uint)sizeof(xfs_suminfo_t) * mp->m_rsumlevels *
+		sbp->sb_rbmblocks;
+	mp->m_rsumsize = roundup(mp->m_rsumsize, sbp->sb_blocksize);
+	mp->m_rbmip = mp->m_rsumip = NULL;
+	/*
+	 * Check that the realtime section is an ok size.
+	 */
+	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
+	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
+		fprintf(stderr, "%s: realtime init - %llu != %llu\n", progname,
+			(unsigned long long) XFS_BB_TO_FSB(mp, d),
+			(unsigned long long) mp->m_sb.sb_rblocks);
+		return -1;
+	}
+	bp = libxfs_readbuf(mp->m_rtdev, d - 1, 1, 0);
+	if (bp == NULL) {
+		fprintf(stderr, "%s: realtime size check failed\n", progname);
+		return -1;
+	}
+	libxfs_putbuf(bp);
+	return 0;
+}
+
 #define XFS_MOUNT_32BITINODES	0x1
 /*
  * Mount structure initialization, provides a filled-in xfs_mount_t
@@ -752,8 +796,8 @@ libxfs_mount(
 	}
 
 	/* Initialize realtime fields in the mount structure */
-	if (libxfs_rtmount_init(mp)) {
-		fprintf(stderr, "%s: real-time device init failed\n", progname);
+	if (rtmount_init(mp)) {
+		fprintf(stderr, "%s: realtime device init failed\n", progname);
 		return NULL;
 	}
 

@@ -186,14 +186,10 @@ typedef struct xfs_mount {
 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
 	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
-	buftarg_t		m_ddev_targ;	/* ptr to data device */
-	buftarg_t		m_logdev_targ;	/* ptr to log device */
-	buftarg_t		m_rtdev_targ;	/* ptr to rt device */
-	buftarg_t		*m_ddev_targp;	/* saves taking the address */
-#define m_rtdev_targp(m)(&(m)->m_rtdev_targ)
-#define m_dev		m_ddev_targ.dev
-#define m_logdev	m_logdev_targ.dev
-#define m_rtdev		m_rtdev_targ.dev
+	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+#define m_dev		m_ddev_targp->pbr_dev
 	__uint8_t		m_dircook_elog; /* log d-cookie entry bits */
 	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
 	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */

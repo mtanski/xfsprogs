@@ -431,8 +431,7 @@ void xfs_ifork_next_set(xfs_inode_t *ip, int w, int n);
 #define XFS_ITRUNC_MAYBE	0x2
 
 /*
- * if XFS_BIG_FILES, 2^(31+PAGE_SHIFT) - 1 (due to linux page cache),
- * else 2^40 - 1 (40=31+9) (might be an int holding a block #)
+ * max file offset is 2^(31+PAGE_SHIFT) - 1 (due to linux page cache)
  *
  * NOTE: XFS itself can handle 2^63 - 1 (largest positive value of xfs_fsize_t)
  * but Linux can't go above 2^(31+PAGE_SHIFT)-1: the Linux VM uses a 32 bit

@@ -118,7 +118,7 @@ typedef struct xfs_trans_header {
 
 #ifdef __KERNEL__
 struct xfs_buf;
-struct buftarg;
+struct xfs_buftarg;
 struct xfs_efd_log_item;
 struct xfs_efi_log_item;
 struct xfs_inode;
@@ -974,10 +974,10 @@ int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
 void		xfs_trans_callback(xfs_trans_t *,
 				   void (*)(xfs_trans_t *, void *), void *);
 void		xfs_trans_mod_sb(xfs_trans_t *, uint, long);
-struct xfs_buf	*xfs_trans_get_buf(xfs_trans_t *, struct buftarg *, xfs_daddr_t,
+struct xfs_buf	*xfs_trans_get_buf(xfs_trans_t *, struct xfs_buftarg *, xfs_daddr_t,
 				   int, uint);
 int		xfs_trans_read_buf(struct xfs_mount *, xfs_trans_t *,
-				   struct buftarg *, xfs_daddr_t, int, uint,
+				   struct xfs_buftarg *, xfs_daddr_t, int, uint,
 				   struct xfs_buf **);
 struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
 

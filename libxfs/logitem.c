@@ -247,7 +247,7 @@ xfs_trans_free_items(
 STATIC xfs_buf_t *
 xfs_trans_buf_item_match(
 	xfs_trans_t	*tp,
-	buftarg_t	*target,
+	xfs_buftarg_t	*target,
 	xfs_daddr_t	blkno,
 	int		len)
 {
@@ -322,7 +322,7 @@ xfs_trans_buf_item_match(
 STATIC xfs_buf_t *
 xfs_trans_buf_item_match_all(
 	xfs_trans_t	*tp,
-	buftarg_t	*target,
+	xfs_buftarg_t	*target,
 	xfs_daddr_t	blkno,
 	int		len)
 {
