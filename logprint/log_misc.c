@@ -754,7 +754,7 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     xfs_dq_logformat_t	*f;
     xfs_dq_logformat_t	lbuf = {0};
     xfs_disk_dquot_t	ddq;
-    xlog_op_header_t	*head;
+    xlog_op_header_t	*head = NULL;
     int			num, skip;
 
     /*
