@@ -47,7 +47,7 @@
 #include <sys/syssgi.h>
 #include <sys/sysmacros.h>
 #include <sys/fs/xfs_fsops.h>
-//#include <sys/fs/xfs_itable.h>
+#include <sys/fs/xfs_itable.h>
 
 #define __s8		char
 #define __s16		short
@@ -73,7 +73,15 @@ typedef flock64_t	xfs_flock64_t;
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#include <xfs/swab.h>
+#define __fswab16(x)	(x)
+#define __fswab32(x)	(x)
+#define __fswab64(x)	(x)
+
+/* Map some gcc macros for the MipsPRO compiler */
+#ifndef __GNUC__
+#define __sgi__		__sgi
+#define __inline__	__inline
+#endif
 
 #define INT_MAX		INT32_MAX
 #define UINT_MAX	UINT32_MAX
@@ -135,7 +143,7 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define HAVE_IOCMACROS	1
 #define HAVE_BBMACROS	1
 
-#define __XFS_FS_H__
+#define __XFS_FS_H__	1
 
 #define XFS_IOC_DIOINFO			F_DIOINFO
 #define XFS_IOC_FSGETXATTR		F_FSGETXATTR
@@ -175,16 +183,5 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_ATTRMULTI_BY_HANDLE	/* TODO */
 #define XFS_IOC_FSGEOMETRY		XFS_FS_GEOMETRY
 #define XFS_IOC_GOINGDOWN		XFS_FS_GOINGDOWN
-
-#define XFS_XFLAG_REALTIME      0x00000001      /* data in realtime volume */
-#define XFS_XFLAG_PREALLOC      0x00000002      /* preallocated file extents */
-#define XFS_XFLAG_IMMUTABLE     0x00000008      /* file cannot be modified */
-#define XFS_XFLAG_APPEND        0x00000010      /* all writes append */
-#define XFS_XFLAG_SYNC          0x00000020      /* all writes synchronous */
-#define XFS_XFLAG_NOATIME       0x00000040      /* do not update access time */
-#define XFS_XFLAG_NODUMP        0x00000080      /* do not include in backups */
-#define XFS_XFLAG_RTINHERIT     0x00000100      /* new files have rt bit set */
-#define XFS_XFLAG_HASATTR       0x80000000      /* no DIFLAG for this   */
-
 
 #endif	/* __XFS_IRIX_H__ */

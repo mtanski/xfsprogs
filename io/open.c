@@ -43,6 +43,8 @@ static cmdinfo_t setfl_cmd;
 static cmdinfo_t statfs_cmd;
 static cmdinfo_t chattr_cmd;
 static cmdinfo_t lsattr_cmd;
+static cmdinfo_t chproj_cmd;
+static cmdinfo_t lsproj_cmd;
 static cmdinfo_t extsize_cmd;
 
 off64_t
@@ -95,6 +97,8 @@ printxattr(int flags, int verbose, int dofname, int dobraces, int doeol)
 		{ XFS_XFLAG_NOATIME,	"A", "no-atime" },
 		{ XFS_XFLAG_NODUMP,	"d", "no-dump" },
 		{ XFS_XFLAG_RTINHERIT,	"R", "rt-inherit" },
+		{ XFS_XFLAG_PROJINHERIT,"P", "proj-inherit" },
+		{ XFS_XFLAG_NOSYMLINKS,	"S", "nosymlinks" },
 		{ 0, NULL, NULL }
 	};
 	int	first = 1;
@@ -450,6 +454,9 @@ lsattr_help(void)
 " s -- all updates are synchronous\n"
 " A -- the access time is not updated for this inode\n"
 " d -- do not include this file in a dump of the filesystem\n"
+" R -- child created in this directory has realtime bit set by default\n"
+" P -- child created in this directory has parents project ID by default\n"
+" S -- symbolic links cannot be created in this directory\n"
 "\n"
 " Options:\n"
 " -a -- show all flags which can be set alongside those which are set\n"
@@ -473,6 +480,8 @@ chattr_f(
 		{ XFS_XFLAG_NOATIME,	'A' },
 		{ XFS_XFLAG_NODUMP,	'd' },
 		{ XFS_XFLAG_RTINHERIT,	'R' },
+		{ XFS_XFLAG_PROJINHERIT,'P' },
+		{ XFS_XFLAG_NOSYMLINKS,	'S' },
 		{ 0, '\0' }
 	};
 	struct fsxattr	attr;
@@ -540,12 +549,58 @@ chattr_help(void)
 " +/-s -- set/clear the sync flag\n"
 " +/-A -- set/clear the no-atime flag\n"
 " +/-d -- set/clear the no-dump flag\n"
+" +/-R -- set/clear the realtime inheritance flag\n"
+" +/-P -- set/clear the project ID inheritance flag\n"
+" +/-S -- set/clear the no-symbolic-links flag\n"
 " Note1: user must have certain capabilities to modify immutable/append-only.\n"
 " Note2: immutable/append-only files cannot be deleted; removing these files\n"
 "        requires the immutable/append-only flag to be cleared first.\n"
 " Note3: the realtime flag can only be set if the filesystem has a realtime\n"
 "        section, and the (regular) file must be empty when the flag is set.\n"
 "\n"));
+}
+
+static int
+lsproj_f(
+	int		argc,
+	char		**argv)
+{
+	__uint32_t	id;
+
+#if defined(__sgi__)
+	struct stat64	st;
+	if (fstat64(file->fd, &st) < 0) {
+		perror("fstat64");
+		return 0;
+	}
+	id = st.st_projid;
+#else
+	id = 0;
+#endif
+	printf("projid = %u\n", (unsigned int)id);
+	return 0;
+}
+
+static int
+chproj_f(
+	int		argc,
+	char		**argv)
+{
+	__uint32_t	id;
+	char		*sp;
+
+	id = (__uint32_t) strtoul(argv[1], &sp, 0);
+	if (!sp || sp == argv[1]) {
+		printf(_("non-numeric project ID -- %s\n"), argv[1]);
+		return 0;
+	}
+#if defined(__sgi__)
+	if (fchproj(file->fd, id) < 0)
+		perror("fchproj");
+#else
+	printf(_("Not yet implemented\n"));
+#endif
+	return 0;
 }
 
 static int
@@ -620,6 +675,7 @@ statfs_f(
 	int			argc,
 	char			**argv)
 {
+	struct xfs_fsop_counts	fscounts;
 	struct xfs_fsop_geom	fsgeo;
 	struct statfs		st;
 
@@ -654,6 +710,18 @@ statfs_f(
 		printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
 		printf(_("geom.sunit = %u\n"), fsgeo.sunit);
 		printf(_("geom.swidth = %u\n"), fsgeo.swidth);
+	}
+	if ((xfsctl(file->name, file->fd, XFS_IOC_FSCOUNTS, &fscounts)) < 0) {
+		perror("XFS_IOC_FSCOUNTS");
+	} else {
+		printf(_("counts.freedata = %llu\n"),
+			(unsigned long long) fscounts.freedata);
+		printf(_("counts.freertx = %llu\n"),
+			(unsigned long long) fscounts.freertx);
+		printf(_("counts.freeino = %llu\n"),
+			(unsigned long long) fscounts.freeino);
+		printf(_("counts.allocino = %llu\n"),
+			(unsigned long long) fscounts.allocino);
 	}
 	return 0;
 }
@@ -720,6 +788,23 @@ open_init(void)
 		_("list extended inode flags set on the currently open file");
 	lsattr_cmd.help = lsattr_help;
 
+	chproj_cmd.name = _("chproj");
+	chproj_cmd.cfunc = chproj_f;
+	chproj_cmd.args = _("projid");
+	chproj_cmd.argmin = 1;
+	chproj_cmd.argmax = 1;
+	chproj_cmd.flags = CMD_NOMAP_OK;
+	chproj_cmd.oneline =
+		_("change project identifier on the currently open file");
+
+	lsproj_cmd.name = _("lsproj");
+	lsproj_cmd.cfunc = lsproj_f;
+	lsproj_cmd.argmin = 0;
+	lsproj_cmd.argmax = 0;
+	lsproj_cmd.flags = CMD_NOMAP_OK;
+	lsproj_cmd.oneline =
+		_("list project identifier set on the currently open file");
+
 	extsize_cmd.name = _("extsize");
 	extsize_cmd.cfunc = extsize_f;
 	extsize_cmd.argmin = 1;
@@ -735,6 +820,8 @@ open_init(void)
 	add_command(&statfs_cmd);
 	add_command(&chattr_cmd);
 	add_command(&lsattr_cmd);
+	add_command(&chproj_cmd);
+	add_command(&lsproj_cmd);
 
 	if (expert)
 		add_command(&extsize_cmd);

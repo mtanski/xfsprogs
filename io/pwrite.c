@@ -54,6 +54,8 @@ pwrite_help(void)
 " -i -- specifies an input file from which to source data to write\n"
 " -d -- open the input file for direct IO\n"
 " -s -- skip a number of bytes at the start of the input file\n"
+" -w -- call fdatasync(2) at the end (included in timing results)\n"
+" -W -- call fsync(2) at the end (included in timing results)\n"
 " The writes are performed in sequential blocks starting at offset, with the\n"
 " blocksize tunable using the -b option (default blocksize is 4096 bytes).\n"
 "\n"));
@@ -104,14 +106,14 @@ pwrite_f(
 	off64_t		offset, skip = 0;
 	long long	count, total;
 	unsigned int	seed = 0xcdcdcdcd;
-	unsigned int	blocksize, sectsize;
+	int		blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
-	int		c, fd = -1, uflag = 0, dflag = 0;
+	int		c, fd = -1, uflag = 0, dflag = 0, wflag = 0, Wflag = 0;
 
 	init_cvtnum(&blocksize, &sectsize);
-	while ((c = getopt(argc, argv, "b:df:i:s:S:u")) != EOF) {
+	while ((c = getopt(argc, argv, "b:df:i:s:S:uwW")) != EOF) {
 		switch (c) {
 		case 'b':
 			blocksize = cvtnum(blocksize, sectsize, optarg);
@@ -144,6 +146,12 @@ pwrite_f(
 		case 'u':
 			uflag = 1;
 			break;
+		case 'w':
+			wflag = 1;
+			break;
+		case 'W':
+			Wflag = 1;
+			break;
 		default:
 			return command_usage(&pwrite_cmd);
 		}
@@ -175,6 +183,10 @@ pwrite_f(
 		close(fd);
 		return 0;
 	}
+	if (Wflag)
+		fsync(file->fd);
+	if (wflag)
+		fdatasync(file->fd);
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
 
@@ -199,7 +211,7 @@ pwrite_init(void)
 	pwrite_cmd.argmax = -1;
 	pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	pwrite_cmd.args =
-		_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len");
+		_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] [-wW] off len");
 	pwrite_cmd.oneline =
 		_("writes a number of bytes at a specified offset");
 	pwrite_cmd.help = pwrite_help;

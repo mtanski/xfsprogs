@@ -72,7 +72,7 @@ print_mapping(
 	printf("%c%d%c 0x%lx - 0x%lx %s  %14s (%lld : %ld)\n",
 		braces? '[' : ' ', index, braces? ']' : ' ',
 		(unsigned long)map->addr,
-		(unsigned long)(map->addr + map->length),
+		(unsigned long)((char *)map->addr + map->length),
 		buffer, map->name ? map->name : "???",
 		(long long)map->offset, (long)map->length);
 }
@@ -103,13 +103,13 @@ check_mapping_range(
 			(long long)mapping->offset, (long)mapping->length);
 		return NULL;
 	}
-	if (pagealign && (long)(mapping->addr + relative) % pagesize) {
+	if (pagealign && (long)((char *)mapping->addr + relative) % pagesize) {
 		printf(_("offset address (%p) is not page aligned\n"),
-			mapping->addr + relative);
+			(char *)mapping->addr + relative);
 		return NULL;
 	}
 
-	return mapping->addr + relative;
+	return (char *)mapping->addr + relative;
 }
 
 int
@@ -168,7 +168,7 @@ mmap_f(
 	char		**argv)
 {
 	off64_t		offset;
-	size_t		length;
+	ssize_t		length;
 	void		*address;
 	char		*filename;
 	int		blocksize, sectsize;
@@ -284,7 +284,7 @@ msync_f(
 	char		**argv)
 {
 	off64_t		offset;
-	size_t		length;
+	ssize_t		length;
 	void		*start;
 	int		c, flags = 0, blocksize, sectsize;
 
@@ -387,7 +387,8 @@ mread_f(
 	char		**argv)
 {
 	off64_t		offset, tmp;
-	size_t		length, dumplen;
+	ssize_t		length;
+	size_t		dumplen;
 	char		*bp;
 	void		*start;
 	int		dump = 0, rflag = 0;
@@ -476,7 +477,7 @@ munmap_f(
 	int		argc,
 	char		**argv)
 {
-	size_t		length;
+	ssize_t		length;
 	unsigned int	offset;
 
 	if (munmap(mapping->addr, mapping->length) < 0) {
@@ -531,7 +532,7 @@ mwrite_f(
 	char		**argv)
 {
 	off64_t		offset, tmp;
-	size_t		length;
+	ssize_t		length;
 	void		*start;
 	char		*sp;
 	int		seed = 'X';

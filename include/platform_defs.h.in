@@ -52,7 +52,7 @@
 #include <xfs/freebsd.h>
 #elif defined(__APPLE__)
 #include <xfs/darwin.h>
-#elif defined(__sgi__)
+#elif defined(__sgi__) || defined(___sgi)
 #include <xfs/irix.h>
 #else
 # error unknown platform... have fun porting!

@@ -1,5 +1,13 @@
-[cvs]
+xfsprogs-2.6.22 (10 September 2004)
+	- Update xfs_io to get a clean compile on IRIX with the
+	  MIPSPro compilers.
 	- Add documentation about additional XFS inode flags.
+	- Add xfs_io write options to include fsync/fdatasync
+	  in the timing results it displays.
+	- Add xfs_fsop_counts output to the xfs_io statfs data,
+	  which also shows free realtime space, etc.
+	- Add knowledge of additional inode flags for nosymlinks
+	  and project ID inheritance.
 
 xfsprogs-2.6.21 (09 August 2004)
 	- Support realtime bit inheritance on directories.
