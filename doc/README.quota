@@ -202,10 +202,10 @@ GETTING STARTED
 
      To use quota under XFS you will need the following:
      o   An XFS aware kernel;
-     o   Quota must be enabled at the time the kernel is built
-         (CONFIG_QUOTA, at the start of the Filesystems menu);
      o   XFS quota must be enabled at the time XFS is built
-         (CONFIG_XFS_QUOTA, below XFS in the Filesystems menu);
+         (CONFIG_XFS_QUOTA, below XFS in the Filesystems menu) -
+	 in older kernel versions this also required CONFIG_QUOTA
+	 to be set, but this is no longer true;
      o   Userspace quota tools which are aware of XFS quota.
 
      User tools which support XFS can be downloaded from the Linux
@@ -295,5 +295,12 @@ On IRIX, XFS supports project quota.  This is not (ever) likely to be
 supported on Linux/XFS, as the concept of a project is specific to IRIX.
 A filesystem that has used user quota on IRIX, however, can be migrated
 to Linux, and vice-versa, as the ondisk format is shared between both
-versions of XFS (and Linux/XFS is "endian clean").
+versions of XFS (and Linux/XFS is "endian clean").  Group quota support
+is planned for a future release of IRIX, and the same level of ondisk
+compatibility will be available as for user quota, once this work has
+been completed.
+
+Have fun,
+
+		-- nathans@sgi.com
 
