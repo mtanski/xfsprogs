@@ -228,6 +228,7 @@
 
 
 /* anything else */
+typedef __uint32_t uint_t;
 typedef __uint32_t inst_t;	/* an instruction */
 typedef enum { B_FALSE, B_TRUE } boolean_t;
 typedef struct { dev_t dev; } buftarg_t;
