@@ -62,6 +62,10 @@ xvm_get_subvol_stripe(
 	int		*swidth,
 	struct stat64	*sb)
 {
+	if (!mnt_is_xvm_subvol(sb->st_dev))
+		return 0;
+
 	/* TODO - DeanJ? - for now, always return false */
-	return 1;
+
+	return 0;
 }
