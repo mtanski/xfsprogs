@@ -254,9 +254,12 @@ struct xfsstats {
 #endif	/* !CONFIG_PROC_FS */
 
 
-#ifdef __KERNEL__
 
 /* juggle IRIX device numbers - still used in ondisk structures */
+
+#ifndef __KERNEL__
+#define MKDEV(major, minor)	makedev(major, minor)
+#endif
 
 #define IRIX_DEV_BITSMAJOR      14
 #define IRIX_DEV_BITSMINOR      18 
@@ -271,6 +274,7 @@ struct xfsstats {
 #define IRIX_DEV_TO_KDEVT(dev)  MKDEV(IRIX_DEV_MAJOR(dev),IRIX_DEV_MINOR(dev))
 #define IRIX_DEV_TO_DEVT(dev)   ((IRIX_DEV_MAJOR(dev)<<8)|IRIX_DEV_MINOR(dev))
 
+#ifdef __KERNEL__
 /* __psint_t is the same size as a pointer */
 #if (BITS_PER_LONG == 32)
 typedef __int32_t __psint_t;

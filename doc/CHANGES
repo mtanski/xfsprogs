@@ -1,4 +1,8 @@
-xfsprogs-1.3.0 (19 Jul 2001)
+xfsprogs-1.3.1 (12 Jul 2001)
+	- updated xfs_types.h file from the kernel changes needed for
+	  an xfsdump fix.
+
+xfsprogs-1.3.0 (11 Jul 2001)
 	- reworked Makefiles to use libtool
 	- new libdisk to allow sharing of generic mount/disk code and
 	- also abstracts individual driver support (LVM, MD, XVM..)
