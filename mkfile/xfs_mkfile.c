@@ -184,21 +184,8 @@ main(int argc, char **argv)
 			flck.l_whence = SEEK_SET;
 			flck.l_start  = 0LL;
 			flck.l_len    = size;
-#if 0
-			(void)ioctl(fd, XFS_IOC_RESVSP64, &flck);
-
-			if (prealloc) {
-				if ( close(fd) < 0 ) {
-					perror(argv[optind]);
-					unlink(argv[optind]);
-					errs++;
-				}
-
-				optind++;
-
-				continue;
-			}
-#endif
+			if (prealloc)
+				(void)ioctl(fd, XFS_IOC_RESVSP64, &flck);
 			if (oflags & O_DIRECT) {
 				nbufalign = da.d_mem;
 

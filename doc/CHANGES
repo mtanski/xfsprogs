@@ -1,3 +1,7 @@
+xfsprogs-current
+	- enable preallocation in xfs_mkfile [missed during port?]
+	- fix xfs_db core dump when reporting freespace
+
 xfsprogs-1.3.6 (31 August 2001)
 	- make mkfs.xfs aware of geometries that might cause
 	  inode numbers to exceed 32 significant bits.

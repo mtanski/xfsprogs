@@ -282,10 +282,15 @@ scan_sbtree(
 				int			level,
 				xfs_agf_t		*agf))
 {
+	xfs_agnumber_t	seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+
 	push_cur();
-	set_cur(&typtab[typ],
-		XFS_AGB_TO_DADDR(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT), root),
+	set_cur(&typtab[typ], XFS_AGB_TO_DADDR(mp, seqno, root),
 		blkbb, DB_RING_IGN, NULL);
+	if (iocur_top->data == NULL) {
+		dbprintf("can't read btree block %u/%u\n", seqno, root);
+                return;
+	}
 	(*func)((xfs_btree_sblock_t *)iocur_top->data, typ, nlevels - 1, agf);
 	pop_cur();
 }
