@@ -18,8 +18,8 @@ that operate on individual files, and operations that operate on
 the filesystem itself.
 Care should be taken when issuing
 .I xfsctl
-calls to ensure the target path and file descriptor do indeed
-represent a file from an XFS filesystem.
+calls to ensure the target path and file descriptor (both must
+be supplied) do indeed represent a file from an XFS filesystem.
 The
 .IR statfs (2)
 and
