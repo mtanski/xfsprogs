@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include "data.h"
 #include "type.h"
 #include "faddr.h"
 #include "inode.h"

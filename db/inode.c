@@ -32,7 +32,6 @@
 
 #include <libxfs.h>
 #include "command.h"
-#include "data.h"
 #include "type.h"
 #include "faddr.h"
 #include "fprint.h"

@@ -34,7 +34,6 @@
 #include <sys/time.h>
 #include "bmap.h"
 #include "command.h"
-#include "data.h"
 #include "frag.h"
 #include "io.h"
 #include "output.h"

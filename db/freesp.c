@@ -32,7 +32,6 @@
 
 #include <libxfs.h>
 #include "command.h"
-#include "data.h"
 #include "freesp.h"
 #include "io.h"
 #include "type.h"

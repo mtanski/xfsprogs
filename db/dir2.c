@@ -39,7 +39,6 @@
 #include "dir.h"
 #include "dir2.h"
 #include "init.h"
-#include "data.h"
 
 static int	dir2_block_hdr_count(void *obj, int startoff);
 static int	dir2_block_leaf_count(void *obj, int startoff);

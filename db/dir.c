@@ -38,7 +38,6 @@
 #include "field.h"
 #include "dir.h"
 #include "io.h"
-#include "data.h"
 #include "init.h"
 
 static int	dir_leaf_entries_count(void *obj, int startoff);

@@ -32,7 +32,6 @@
 
 #include <libxfs.h>
 #include "command.h"
-#include "data.h"
 #include "convert.h"
 #include "output.h"
 #include "init.h"

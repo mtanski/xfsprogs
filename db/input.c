@@ -33,7 +33,6 @@
 #include <libxfs.h>
 #include <signal.h>
 #include "command.h"
-#include "data.h"
 #include "input.h"
 #include "output.h"
 #include "sig.h"

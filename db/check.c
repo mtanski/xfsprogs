@@ -36,7 +36,6 @@
 #include "bmap.h"
 #include "check.h"
 #include "command.h"
-#include "data.h"
 #include "io.h"
 #include "output.h"
 #include "type.h"

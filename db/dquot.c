@@ -34,7 +34,6 @@
 #include "bit.h"
 #include "bmap.h"
 #include "command.h"
-#include "data.h"
 #include "dquot.h"
 #include "type.h"
 #include "faddr.h"

@@ -32,7 +32,6 @@
 
 #include <libxfs.h>
 #include "command.h"
-#include "data.h"
 #include "type.h"
 #include "bmap.h"
 #include "io.h"
