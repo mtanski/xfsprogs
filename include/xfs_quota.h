@@ -123,6 +123,11 @@ typedef __uint16_t      xfs_qwarncnt_t;
 #define XFS_QMOPT_ASYNC		0x2000000
 #define XFS_QMOPT_DELWRI	0x4000000
 
+/*
+ * flags for dqalloc.
+ */
+#define XFS_QMOPT_INHERIT	0x8000000
+
 /* 
  * flags to xfs_trans_mod_dquot.
  */

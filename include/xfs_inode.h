@@ -492,6 +492,13 @@ xfs_inode_t *xfs_bhvtoi(struct bhv_desc *bhvp);
  */
 #define XFS_CHASH(mp,blk) ((mp)->m_chash + (((uint)blk) % (mp)->m_chsize))
 
+/*
+ * For multiple groups support: if ISGID bit is set in the parent
+ * directory, group of new file is set to that of the parent, and
+ * new subdirectory gets ISGID bit from parent.
+ */
+#define XFS_INHERIT_GID(pip, vfsp)	((pip) != NULL && \
+	(((vfsp)->vfs_flag & VFS_GRPID) || ((pip)->i_d.di_mode & ISGID)))
 
 /*
  * xfs_iget.c prototypes.
