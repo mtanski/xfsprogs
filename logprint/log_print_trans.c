@@ -34,32 +34,33 @@
 
 void
 xlog_recover_print_trans_head(
-	xlog_recover_t *tr)
+	xlog_recover_t	*tr)
 {
 	printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n",
 	       tr->r_log_tid, trans_type[tr->r_theader.th_type],
 	       tr->r_theader.th_num_items,
 	       tr->r_theader.th_tid, (long)tr->r_itemq);
-}       /* xlog_recover_print_trans_head */
+}
 
 int
-xlog_recover_do_trans(xlog_t	     *log,
-		      xlog_recover_t *trans,
-		      int	     pass)
+xlog_recover_do_trans(
+	xlog_t		*log,
+	xlog_recover_t	*trans,
+	int		pass)
 {
 	xlog_recover_print_trans(trans, trans->r_itemq, 3);
 	return 0;
-}	/* xlog_recover_do_trans */
-
+}
 
 void
-xfs_log_print_trans(xlog_t      *log,
-		    int		print_block_start)
+xfs_log_print_trans(
+	xlog_t		*log,
+	int		print_block_start)
 {
 	xfs_daddr_t	head_blk, tail_blk;
 
 	if (xlog_find_tail(log, &head_blk, &tail_blk, 0))
-	    exit(1);
+		exit(1);
 
 	printf("    log tail: %lld head: %lld state: %s\n",
 		(long long)tail_blk,
@@ -67,14 +68,15 @@ xfs_log_print_trans(xlog_t      *log,
 		(tail_blk == head_blk)?"<CLEAN>":"<DIRTY>");
 
 	if (print_block_start != -1) {
-	    printf("    override tail: %lld\n",
-		    (long long)print_block_start);
-	    tail_blk = print_block_start;
+		printf("    override tail: %d\n", print_block_start);
+		tail_blk = print_block_start;
 	}
 	printf("\n");
 
-	print_record_header=1;
-	if (xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))
-	    exit(1);
+	print_record_header = 1;
 
-}	/* xfs_log_print_trans */
+	if (head_blk == tail_blk)
+		return;
+	if (xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))
+		exit(1);
+}
