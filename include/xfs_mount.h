@@ -341,6 +341,7 @@ typedef struct xfs_mount {
 #define XFS_MOUNT_NOUUID	0x00004000	/* ignore uuid during mount */
 #define XFS_MOUNT_32BITINODES	0x00008000	/* do not create inodes above
 						 * 32 bits in size */
+#define XFS_MOUNT_IRIXSGID	0x00010000	/* Irix-style sgid inheritance */
 
 /*
  * Flags for m_cxfstype
