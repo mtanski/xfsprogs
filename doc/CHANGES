@@ -1,3 +1,7 @@
+xfsprogs-2.6.13 (03 May 2004)
+	- zero out more at beginning and end of device at mkfs time
+	  (get all old MD superblocks at the end, for mount by label).
+
 xfsprogs-2.6.12 (30 April 2004)
 	- Extract stripe unit/width from device mapper devices
 	  (added libdisk infrastructure, used by mkfs.xfs).

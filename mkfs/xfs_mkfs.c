@@ -185,6 +185,11 @@ char	*sopts[] = {
 	((uint)(MKFS_BLOCKRES_INODE + XFS_DA_NODE_MAXDEPTH + \
 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
 
+/* amount (in bytes) we zero at the beginning and end of the device to
+ * remove traces of other filesystems, raid superblocks, etc.
+ */
+#define WHACK_SIZE (128 * 1024)
+
 static void
 calc_stripe_factors(
 	int		dsu,
@@ -1934,13 +1939,13 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			(sectorsize != BBSIZE || lsectorsize != BBSIZE), 0);
 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0);
 	/*
-	 * Zero out the first 68k in on the device, to obliterate any old 
+	 * Zero out the beginning of the device, to obliterate any old 
 	 * filesystem signatures out there.  This should take care of 
 	 * swap (somewhere around the page size), jfs (32k), 
 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
 	 */
-	buf = libxfs_getbuf(xi.ddev, 0, 136);
-	bzero(XFS_BUF_PTR(buf), 136*BBSIZE);
+	buf = libxfs_getbuf(xi.ddev, 0, BTOBB(WHACK_SIZE));
+	bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/* OK, now write the superblock */
@@ -1962,13 +1967,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	}
 
 	/*
-	 * Zero out the last 64k on the device, to obliterate any
+	 * Zero out the end of the device, to obliterate any
 	 * old MD RAID (or other) metadata at the end of the device.
+ 	 * (MD sb is ~64k from the end, take out a wider swath to be sure)
 	 */
 	if (!xi.disfile) {
-		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(65536)), 
-				    BTOBB(65536));
-		bzero(XFS_BUF_PTR(buf), 65536);
+		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(WHACK_SIZE)), 
+				    BTOBB(WHACK_SIZE));
+		bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 
