@@ -17,7 +17,7 @@ pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; LOCAL_CONFIGURE_OPTIONS=--enable-readline=yes; export DEBUG DISTRIBUTION LOCAL_CONFIGURE_OPTIONS;
-diopts = $(options) OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
+diopts = $(options) OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
 checkdir = test -f debian/rules
 
 build: built

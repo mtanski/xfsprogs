@@ -1,3 +1,17 @@
+xfsprogs-2.6.7 (19 March 2003)
+	- Fix up UUID library checks again, previous fix didn't work
+	  for older versions of autconf.
+	- Allow for future extensions to the XFS ondisk structure by
+	  reserving an extra 32 bits in the superblock for feature
+	  bits (update xfs_db to dump them).
+	- Fix xfs_repair handling of version 2 directories with a
+	  hole at the start.
+	- Fix an endian bug in xfs_copy, when operating on allocation
+	  groups with multi-level freespace btrees.
+	- Ensure xfs_repair "dangerous" mode does not attempt to set
+	  the device blocksize, this generates an error when target
+	  filesystem is mounted readonly.
+
 xfsprogs-2.6.6 (03 March 2003)
 	- mkfs now opens the devices it's operating on with the
 	  O_EXCL flag set, which is used by the Linux 2.6 block
