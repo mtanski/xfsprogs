@@ -202,7 +202,8 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 
 		if (avl_insert(inode_uncertain_tree_ptrs[agno],
 				(avlnode_t *) ino_rec) == NULL)  {
-			do_error("xfs_repair:  duplicate inode range\n");
+			do_error("xfs_repair: add_aginode_uncertain - "
+				"duplicate inode range\n");
 		}
 	}
 
@@ -253,6 +254,13 @@ findfirst_uncertain_inode_rec(xfs_agnumber_t agno)
 		inode_uncertain_tree_ptrs[agno]->avl_firstino);
 }
 
+ino_tree_node_t *
+find_uncertain_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino)
+{
+	return((ino_tree_node_t *)
+		avl_findrange(inode_uncertain_tree_ptrs[agno], ino));
+}
+
 void
 clear_uncertain_ino_cache(xfs_agnumber_t agno)
 {
@@ -296,7 +304,7 @@ add_inode(xfs_agnumber_t agno, xfs_agino_t ino)
 
 	if (avl_insert(inode_tree_ptrs[agno],
 			(avlnode_t *) ino_rec) == NULL)  {
-		do_error("xfs_repair:  duplicate inode range\n");
+		do_warn("xfs_repair: add_inode - duplicate inode range\n");
 	}
 
 	return(ino_rec);

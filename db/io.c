@@ -618,8 +618,8 @@ stack_f(
 	int	i;
 	char	tagbuf[8];
 
-	for (i = iocur_sp; i >= 0; i--) {
-		sprintf(tagbuf, "%d: ", i);
+	for (i = iocur_sp; i > 0; i--) {
+		snprintf(tagbuf, sizeof(tagbuf), "%d: ", i);
 		print_iocur(tagbuf, &iocur_base[i]);
 	}
 	return 0;

@@ -124,7 +124,6 @@ avl_findadjacent(
 	__psunsigned_t value,
 	int		dir);
 
-#ifdef AVL_FUTURE_ENHANCEMENTS
 void
 avl_findranges(
 	register avltree_desc_t *tree,
@@ -132,7 +131,6 @@ avl_findranges(
 	register __psunsigned_t end,
 	avlnode_t 	        **startp,
 	avlnode_t		**endp);
-#endif
 
 #define AVL_PRECEED	0x1
 #define AVL_SUCCEED	0x2

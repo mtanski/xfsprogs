@@ -126,7 +126,6 @@ avl64_findadjacent(
 	__uint64_t	value,
 	int		dir);
 
-#ifdef AVL_FUTURE_ENHANCEMENTS
 void
 avl64_findranges(
 	register avl64tree_desc_t *tree,
@@ -134,7 +133,6 @@ avl64_findranges(
 	register __uint64_t	end,
 	avl64node_t 	        **startp,
 	avl64node_t		**endp);
-#endif
 
 /*
  * avoid complaints about multiple def's since these are only used by

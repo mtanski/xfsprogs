@@ -157,14 +157,14 @@ rtcp( char *source, char *target, int fextsize)
 	/*
 	 * check for a realtime partition
 	 */
-	sprintf(tbuf,"%s",target);
+	snprintf(tbuf, sizeof(tbuf), "%s", target);
 	if ( stat(target, &s2) ) {
 		if (!S_ISDIR(s2.st_mode)) {
 			/* take out target file name */
 			if ((ptr = strrchr(tbuf, '/')) != NULL)
 				*ptr = '\0';
 			else
-				sprintf(tbuf, ".");
+				snprintf(tbuf, sizeof(tbuf), ".");
 		} 
 	}
 
@@ -177,10 +177,11 @@ rtcp( char *source, char *target, int fextsize)
 	/*
 	 * check if target is a directory
 	 */
-	sprintf(tbuf,"%s",target);
+	snprintf(tbuf, sizeof(tbuf), "%s", target);
 	if ( !stat(target, &s2) ) {
 		if (S_ISDIR(s2.st_mode)) {
-			sprintf(tbuf,"%s/%s",target, basename(source));
+			snprintf(tbuf, sizeof(tbuf), "%s/%s", target,
+				basename(source));
 		} 
 	}
 	

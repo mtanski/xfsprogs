@@ -66,7 +66,7 @@ include $(BUILDRULES)
 # -DXR_BLD_ADD_EXTENT	track phase 5 block extent creation
 # -DXR_BCKPTR_DBG	parent list debugging info
 #
-CFLAGS += -DAVL_USER_MODE -DAVL_FUTURE_ENHANCEMENTS
+#CFLAGS += ...
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)

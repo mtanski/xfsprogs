@@ -822,7 +822,7 @@ mv_orphanage(xfs_mount_t	*mp,
 	char		fname[MAXPATHLEN + 1];
 	int		nres;
 
-	sprintf(fname, "%llu", (unsigned long long)ino);
+	snprintf(fname, sizeof(fname), "%llu", (unsigned long long)ino);
 
 	if ((err = libxfs_iget(mp, NULL, dir_ino, 0, &dir_ino_p, 0)))
 		do_error("%d - couldn't iget orphanage inode\n", err);

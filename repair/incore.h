@@ -383,6 +383,8 @@ void		print_uncertain_inode_list(xfs_agnumber_t agno);
  * separate trees for uncertain inodes (they may not exist).
  */
 ino_tree_node_t		*findfirst_uncertain_inode_rec(xfs_agnumber_t agno);
+ino_tree_node_t		*find_uncertain_inode_rec(xfs_agnumber_t agno,
+						xfs_agino_t ino);
 void			add_inode_uncertain(xfs_mount_t *mp,
 						xfs_ino_t ino, int free);
 void			add_aginode_uncertain(xfs_agnumber_t agno,

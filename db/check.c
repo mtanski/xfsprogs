@@ -1898,7 +1898,7 @@ prepend_path(
 
 	len = (int)(strlen(oldpath) + strlen(parent) + 2);
 	path = xmalloc(len);
-	sprintf(path, "%s/%s", parent, oldpath);
+	snprintf(path, len, "%s/%s", parent, oldpath);
 	return path;
 }
 

@@ -34,10 +34,6 @@
 
 #include <libxfs.h>
 
-#if defined(STAND_ALONE_DEBUG) || defined(AVL_USER_MODE_DEBUG)
-#define AVL_DEBUG
-#endif
-
 #include "avl.h"
 
 #define CERT	ASSERT
@@ -1056,19 +1052,10 @@ avl_insert(
 
 	if ((np = avl_insert_find_growth(tree, start, end, &growth)) == NULL) {
 		if (start != end)  { /* non-zero length range */
-#ifdef	AVL_USER_MODE
-			printf(
-			"avl_insert: Warning! duplicate range [0x%llx,0x%lx)\n",
-				(unsigned long long)start, (unsigned long)end);
-#else
-			/*
-			 * lockmetering tree can't afford printfs here.
-			 */
-			if (!(tree->avl_flags & AVLF_DUPLICITY))
-			cmn_err(CE_CONT,
-			"!avl_insert: Warning! duplicate range [0x%x,0x%x)\n",
-			start, end);
-#endif
+			fprintf(stderr,
+			"avl_insert: Warning! duplicate range [%llu,%llu]\n",
+				(unsigned long long)start,
+				(unsigned long long)end);
 		}
 		return(NULL);
 	}
@@ -1151,12 +1138,6 @@ avl_firstino(register avlnode_t *root)
 	return np;
 }
 
-#ifdef AVL_USER_MODE
-/*
- * leave this as a user-mode only routine until someone actually
- * needs it in the kernel
- */
-
 /*
  *	Returns last in order node
  */
@@ -1172,7 +1153,6 @@ avl_lastino(register avlnode_t *root)
 		np = np->avl_forw;
 	return np;
 }
-#endif
 
 void
 avl_init_tree(avltree_desc_t *tree, avlops_t *ops)
@@ -1409,7 +1389,6 @@ avl_findadjacent(
 }
 
 
-#ifdef AVL_FUTURE_ENHANCEMENTS
 /*
  *  	avl_findranges:
  *
@@ -1461,5 +1440,3 @@ avl_findranges(
 	*endp = avl_findadjacent(tree, (end-1), AVL_PRECEED);
 	ASSERT(*endp);
 }
-
-#endif /* AVL_FUTURE_ENHANCEMENTS */

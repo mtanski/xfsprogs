@@ -32,16 +32,6 @@
  *									  *
  **************************************************************************/
 
-/* to allow use by user-level utilities */
-
-#ifdef STAND_ALONE_DEBUG
-#define AVL_USER_MODE
-#endif
-
-#if defined(STAND_ALONE_DEBUG) || defined(AVL_USER_MODE_DEBUG)
-#define AVL_DEBUG
-#endif
-
 #include <stdio.h>
 #include <libxfs.h>
 #include "avl64.h"
@@ -1054,14 +1044,10 @@ avl64_insert(
 	if ((np = avl64_insert_find_growth(tree, start, end, &growth))
 			== NULL) {
 		if (start != end)  { /* non-zero length range */
-#ifdef	AVL_USER_MODE
-		printf("avl_insert: Warning! duplicate range [0x%llx,0x%llx)\n",
-			(unsigned long long)start, (unsigned long long)end);
-#else
-			cmn_err(CE_CONT,
-		"!avl_insert: Warning! duplicate range [0x%llx,0x%llx)\n",
-				start, end);
-#endif
+			fprintf(stderr,
+			"avl_insert: Warning! duplicate range [%llu,%llu]\n",
+				(unsigned long long)start,
+				(unsigned long long)end);
 		}
 		return(NULL);
 	}
@@ -1144,12 +1130,6 @@ avl64_firstino(register avl64node_t *root)
 	return np;
 }
 
-#ifdef AVL_USER_MODE
-/*
- * leave this as a user-mode only routine until someone actually
- * needs it in the kernel
- */
-
 /*
  *	Returns last in order node
  */
@@ -1165,7 +1145,6 @@ avl64_lastino(register avl64node_t *root)
 		np = np->avl_forw;
 	return np;
 }
-#endif
 
 void
 avl64_init_tree(avl64tree_desc_t *tree, avl64ops_t *ops)
@@ -1402,7 +1381,6 @@ avl64_findadjacent(
 }
 
 
-#ifdef AVL_FUTURE_ENHANCEMENTS
 /*
  *  	avl_findranges:
  *
@@ -1454,5 +1432,3 @@ avl64_findranges(
 	*endp = avl64_findadjacent(tree, (end-1), AVL_PRECEED);
 	ASSERT(*endp);
 }
-
-#endif /* AVL_FUTURE_ENHANCEMENTS */

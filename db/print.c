@@ -131,11 +131,11 @@ print_flist_1(
 			add_strvec(&pfx, fl->name);
 		if (fl->flags & FL_OKLOW) {
 			add_strvec(&pfx, "[");
-			sprintf(buf, "%d", fl->low);
+			snprintf(buf, sizeof(buf), "%d", fl->low);
 			add_strvec(&pfx, buf);
 			if (fl->low != fl->high) {
 				add_strvec(&pfx, "-");
-				sprintf(buf, "%d", fl->high);
+				snprintf(buf, sizeof(buf), "%d", fl->high);
 				add_strvec(&pfx, buf);
 			}
 			add_strvec(&pfx, "]");

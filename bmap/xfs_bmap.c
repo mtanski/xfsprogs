@@ -333,7 +333,7 @@ dofile(char *fname)
 		 * needed for all columns.
 		 */
 		for (i = 0; i < map->bmv_entries; i++) {
-			sprintf(rbuf, "[%lld..%lld]:", 
+			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
@@ -342,13 +342,13 @@ dofile(char *fname)
 				tot_w = max(tot_w, 
 					numlen(map[i+1].bmv_length));
 			} else {
-				sprintf(bbuf, "%lld..%lld", 
+				snprintf(bbuf, sizeof(bbuf), "%lld..%lld", 
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				sprintf(abuf, "(%lld..%lld)", 
+				snprintf(abuf, sizeof(abuf), "(%lld..%lld)", 
 					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
 				foff_w = max(foff_w, strlen(rbuf)); 
@@ -367,7 +367,7 @@ dofile(char *fname)
 			aoff_w, "AG-OFFSET", 
 			tot_w, "TOTAL");
 		for (i = 0; i < map->bmv_entries; i++) {
-			sprintf(rbuf, "[%lld..%lld]:", 
+			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
@@ -380,13 +380,13 @@ dofile(char *fname)
 					aoff_w, "", 
 					tot_w, (long long)map[i+1].bmv_length);
 			} else {
-				sprintf(bbuf, "%lld..%lld", 
+				snprintf(bbuf, sizeof(bbuf), "%lld..%lld", 
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				sprintf(abuf, "(%lld..%lld)", 
+				snprintf(abuf, sizeof(abuf), "(%lld..%lld)", 
 					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
 				printf("%4d: %-*s %-*s %*d %-*s %*lld\n", 

@@ -248,10 +248,12 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			return(0);
 
 		/*
-		 * ok, put the record into the tree.  we know that it's
-		 * not already there since the inode is guaranteed
-		 * not to be in the tree.
+		 * ok, put the record into the tree, if no conflict.
 		 */
+		if (find_uncertain_inode_rec(agno,
+				XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0)))
+			return(0);
+
 		start_agino = XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0);
 		*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
 
