@@ -35,6 +35,7 @@ include $(TOPDIR)/include/builddefs
 
 CMDTARGET = mkfs.xfs
 MAXTRRES = maxtrres
+FSTYP = fstyp
 
 CFILES = xfs_mkfs.c mountinfo.c proto.c
 HFILES = xfs_mkfs.h mountinfo.h proto.h volume.h
@@ -43,8 +44,8 @@ LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBLVM)
 LLDFLAGS = -L$(TOPDIR)/libxfs
 
 MAXTRLIBS = $(LIBXFS) $(LIBUUID)
-LSRCFILES = $(MAXTRRES).c
-LDIRT = $(MAXTRRES) $(MAXTRRES).h
+LSRCFILES = $(MAXTRRES).c $(FSTYP).c
+LDIRT = $(MAXTRRES) $(MAXTRRES).h $(FSTYP)
 
 default: $(MAXTRRES).h $(CMDTARGET)
 
@@ -56,6 +57,9 @@ $(MAXTRRES):
 $(MAXTRRES).h: $(MAXTRRES)
 	LD_LIBRARY_PATH=../libxfs; export LD_LIBRARY_PATH; \
 	./$(MAXTRRES) > $@ || ( rm -f $@ && exit 1 )
+
+$(FSTYP): $(CMDTARGET)
+	$(CCF) $@.c -o $@ $(LDFLAGS) mountinfo.o
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
