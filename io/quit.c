@@ -49,8 +49,8 @@ quit_init(void)
 	quit_cmd.name = _("quit");
 	quit_cmd.altname = _("q");
 	quit_cmd.cfunc = quit_f;
-	quit_cmd.foreign = 1;
-	quit_cmd.oneline = _("exit xfs_io");
+	quit_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
+	quit_cmd.oneline = _("exit the program");
 
 	add_command(&quit_cmd);
 }

@@ -30,17 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-extern int	exitcode;
 extern char	*progname;
-
-extern int	fdesc;
-extern char	*fname;
-extern struct xfs_fsop_geom	fgeom;
-
-extern int	readonly;
-extern int	directio;
-extern int	realtime;
-extern int	foreign;
-extern int	append;
-extern int	osync;
-extern int	trunc;
+extern int	exitcode;
+extern int	expert;
+extern size_t	pagesize;

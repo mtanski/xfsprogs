@@ -1,13 +1,13 @@
 .TH xfs_io 8
 .SH NAME
-xfs_io \- debug the IO path of an XFS filesystem
+xfs_io \- debug the I/O path of an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_io\f1 [ \f3\-c\f1 cmd ] ... [ \f3\-p\f1 prog ] [ \f3\-Ffr\f1 ] file
+\f3xfs_io\f1 [ \f3\-c\f1 cmd ] ... [ \f3\-p\f1 prog ] [ \f3\-adFfmrRstx\f1 ] file
 .fi
 .SH DESCRIPTION
 \f2xfs_io\f1 is a debugging tool like \f2xfs_db\f1(8), but is aimed
-at examining the regular file IO path rather than the raw XFS volume
+at examining the regular file I/O path rather than the raw XFS volume
 itself.
 .PP
 The options to \f2xfs_io\f1 are:
@@ -17,7 +17,6 @@ The options to \f2xfs_io\f1 are:
 or as arguments on the command line.
 Multiple \f3\-c\f1 arguments may be given.
 The commands are run in the sequence given, then the program exits.
-This is the mechanism used to implement \f2xfs_bmap\f1(8).
 .TP
 \f3\-p\f1 \f2prog\f1
 Set the program name for prompts and some error messages,
@@ -32,45 +31,37 @@ Create \f2file\f1 if it does not already exist.
 .TP
 \f3\-r\f1
 Open \f2file\f1 read-only, initially.
-.SH CONCEPTS
-\f2xfs_io\f1 always maintains one current open file in the filesystem.
-This is initially specified on the command line, but alternate files
-can be specified later (one at a time \- see the ``open'' command).
+.TP
+\f3\-x\f1
+Expert mode.
+Dangerous commands are only available in this mode.
+These commands also tend to require additional privileges.
 .PP
-\f2xfs_io\f1 commands can be broken up into two distinct classes.
-Most commands are for doing IO to the file in some way - reads, writes,
-or space preallocation.
-Other commands are for the navigation and display of data structures
-relating to the open file or the filesystem it resides in.
-.SH COMMANDS
+The other \f2open\f1(2) options described below are also available
+from the command line.
+.SH CONCEPTS
+\f2xfs_io\f1 maintains a number of open files and memory mappings.
+Files can be initially opened on the command line (optionally),
+and additional files can also be opened later.
+.PP
+\f2xfs_io\f1 commands can be broken up into three groups.
+Some commands are aimed at doing regular file I/O - read, write,
+sync, space preallocation, etc.
+.PP
+The second set of commands exist for manipulating memory mapped regions
+of a file - mapping, accessing, storing, unmapping, flushing, etc.
+.PP
+The remaining commands are for the navigation and display of data
+structures relating to the open files, mappings, and the filesystems
+where they reside.
 .PP
 Many commands have extensive online help.
 Use the \f3help\f1 command for more details on any command.
+.SH FILE I/O COMMANDS
 .TP 10
-\f3allocsp\f1 \f2offset\f1 \f2length\f1
-Allocates zeroed space for part of a file using the XFS_IOC_ALLOCSP
-system call described in \f2xfs\f1(5).
-.TP
-\f3freesp\f1 \f2offset\f1 \f2length\f1
-Frees space for part of a file using the XFS_IOC_FREESP
-system call described in \f2xfs\f1(5).
-.TP
-\f3bmap\f1 [ \f2-adlpv\f1 ] [ \f2-n nx\f1 ]
-Prints the block mapping for the open file.
-Refer to \f2xfs_bmap\f1(8) for complete documentation.
-.TP
-\f3fdatasync\f1
-Calls \f2fdatasync\f1(2) to flush the open file's in-core data to disk.
-.TP
-\f3fsync\f1
-Calls \f2fsync\f1(2) to flush all in-core file state to disk.
-.TP
-\f3o\f1
-See the \f3open\f1 command.
-.TP
-\f3open\f1 [ \f2-Facdrstx\f1 ] [ \f2path\f1 ]
+\f3open\f1 [ \f2\-FacdfrstR\f1 ] [ \f2path\f1 ]
 Closes the current file, and opens the file specified by \f2path\f1 instead.
-Without any arguments, displays statistics about the currently open file \-
+Without any arguments, displays statistics about the current file \-
 see the \f3stat\f1 command.
 .br
 The \f3\-F\f1 option allows non-XFS (foreign) files to be opened and
@@ -78,20 +69,30 @@ operated on with a restricted command set.
 .br
 The \f3\-a\f1 option opens append-only (O_APPEND).
 .br
-The \f3\-c\f1 option creates the file if it doesn't already exist (O_CREAT).
+The \f3\-d\f1 option opens for direct I/O (O_DIRECT).
 .br
-The \f3\-d\f1 option opens for direct IO (O_DIRECT).
+The \f3\-f\f1 option creates the file if it doesn't already exist (O_CREAT).
 .br
 The \f3\-r\f1 option opens read-only (O_RDONLY).
 .br
-The \f3\-s\f1 option opens for synchronous IO (O_SYNC).
+The \f3\-s\f1 option opens for synchronous I/O (O_SYNC).
 .br
 The \f3\-t\f1 option truncates on open (O_TRUNC).
 .br
-The \f3\-x\f1 option marks the file as a realtime XFS file after
+The \f3\-R\f1 option marks the file as a realtime XFS file after
 opening it, if it is not already marked as such.
 .TP
-\f3pread\f1
+\f3o\f1
+See the \f3open\f1 command.
+.TP
+\f3close\f1
+Closes the current open file, marking the next open file as current
+(if one exists).
+.TP
+\f3c\f1
+See the \f3close\f1 command.
+.TP
+\f3pread\f1 [ \f2\-b bsize\f1 ] [ \f2\-v\f1 ]
 Reads a range of bytes in a specified blocksize from the given offset.
 .br
 The \f3\-b\f1 option can be used to set the blocksize into which the
@@ -101,7 +102,10 @@ The default blocksize is 4096 bytes.
 The \f3\-v\f1 option will dump the contents of the buffer after reading,
 by default only the count of bytes actually read is dumped.
 .TP
-\f3pwrite\f1
+\f3r\f1
+See the \f3pread\f1 command.
+.TP
+\f3pwrite\f1 [ \f2\-i file\f1 ] [ \f2\-d\f1 ] [ \f2\-s skip\f1 ] [ \f2\-b size\f1 ] [ \f2\-S seed\f1 ]
 Writes a range of bytes in a specified blocksize from the given offset.
 The bytes written can be either a set pattern or read in from another
 file before writing.
@@ -109,33 +113,48 @@ file before writing.
 The \f3\-i\f1 option allows an input file to be specified as the source
 of the data to be written.
 .br
-The \f3\-d\f1 option will cause direct IO, rather than the usual buffered
-IO, to be used when reading the input file.
+The \f3\-d\f1 option will cause direct I/O, rather than the usual buffered
+I/O, to be used when reading the input file.
 .br
 The \f3\-s\f1 options specifies the number of bytes to skip from the
 start of the input file before starting to read.
 .br
 The \f3\-b\f1 option can be used to set the blocksize into which the
-\f2read\f1(2) requests will be split.
+\f2write\f1(2) requests will be split.
 The default blocksize is 4096 bytes.
 The \f3\-S\f1 option is used to set the (repeated) fill pattern which
 is used when the data to write is not coming from a file.
 The default buffer fill pattern value is 0xcdcdcdcd.
 .TP
-\f3q\f1
-See the \f3quit\f1 command.
+\f3w\f1
+See the \f3pwrite\f1 command.
 .TP
-\f3quit\f1
-Exit \f2xfs_io\f1.
+\f3bmap\f1 [ \f2\-adlpv\f1 ] [ \f2\-n nx\f1 ]
+Prints the block mapping for the current open file.
+Refer to \f2xfs_bmap\f1(8) for complete documentation.
 .TP
-\f3r\f1
-See the \f3pread\f1 command.
+\f3allocsp\f1 \f2offset\f1 \f2length\f1
+Allocates zeroed space for part of a file using the XFS_IOC_ALLOCSP
+system call described in \f2xfs\f1(5).
 .TP
-\f3resblks\f1 [ \f2blocks\f1 ]
-Get and/or set count of reserved filesystem blocks using the
-XFS_IOC_GET_RESBLKS or XFS_IOC_SET_RESBLKS system calls, as
-described in \f2xfs\f1(5).
-Note \-\- this can be useful for exercising out of space behavior.
+\f3freesp\f1 \f2offset\f1 \f2length\f1
+Frees space for part of a file using the XFS_IOC_FREESP
+system call described in \f2xfs\f1(5).
+.TP
+\f3fadvise\f1 [ \f2\-dnrsw\f1 ]
+On platforms which support it, allows hints be given to the system
+regarding the expected I/O patterns on the file.
+The hints are similar to those of the \f3madvise\f1 command,
+discussed later.
+.TP
+\f3fdatasync\f1
+Calls \f2fdatasync\f1(2) to flush the file's in-core data to disk.
+.TP
+\f3fsync\f1
+Calls \f2fsync\f1(2) to flush all in-core file state to disk.
+.TP
+\f3s\f1
+See the \f3fsync\f1 command.
 .TP
 \f3resvsp\f1 \f2offset\f1 \f2length\f1
 Allocates reserved, unwritten space for part of a file using the XFS_IOC_RESVSP
@@ -145,25 +164,136 @@ system call described in \f2xfs\f1(5).
 Frees reserved space for part of a file using the XFS_IOC_UNRESVSP
 system call described in \f2xfs\f1(5).
 .TP
-\f3s\f1
-See the \f3fsync\f1 command.
+\f3truncate\f1 \f2offset\f1
+Truncates the current file at the given offset using \f2ftruncate\f1(2).
+
+.SH MEMORY MAPPED I/O COMMANDS
 .TP
-\f3stat\f1 [ \f2-v\f1 ]
+\f3mmap\f1 [ \f2-rwx\f1 ] [ \f2offset\f1 \f2length\f1 ]
+With no arguments, \f3mmap\f1 shows the current mappings.
+Specifying a single numeric argument sets the current mapping.
+If two arguments are specified (a range), a new mapping is created
+spanning the range, and the protection mode can be given as a combination of
+PROT_READ (\f2-r\f1), PROT_WRITE (\f2-w\f1), and PROT_EXEC (\f2-x\f1).
+.TP
+\f3mm\f1
+See the \f3mmap\f1 command.
+.TP
+\f3munmap\f1
+Unmaps the current memory mapping.
+.TP
+\f3mu\f1
+See the \f3munmap\f1 command.
+.TP
+\f3mread\f1 [ \-\f2frv\f1 ]
+Accesses a segment of the current memory mapping, optionally dumping it to
+the standard output stream (with \f2-v\f1 or \f2-f\f1 option) for inspection.
+The accesses are performed sequentially from the start offset by default,
+but can also be done from the end backwards through the mapping if
+the \f2-r\f1 option in specified.
+The two verbose modes differ only in the relative offsets they display,
+the \f2-f\f1 option is relative to file start, whereas \f2-v\f1 shows
+offsets relative to the start of the mapping.
+.TP
+\f3mr\f1
+See the \f3mread\f1 command.
+.TP
+\f3mwrite\f1 [ \f2-r\f1 ] [ \f2-S seed\f1 ]
+Stores a byte into memory for a range within a mapping.
+The default stored value is 'X', repeated to fill the range specified,
+but this can be changed using the \f2-S\f1 option.
+The memory stores are performed sequentially from the start offset by default,
+but can also be done from the end backwards through the mapping if the \-\f2r\f1
+option in specified.
+.TP
+\f3mw\f1
+See the \f3mwrite\f1 command.
+.TP
+\f3msync\f1
+Writes all modified copies of pages over the specified range (or entire
+mapping if no range specified) to their backing storage locations.
+Also, optionally invalidates (\f2-i\f1) so that subsequent references to
+the pages will be obtained from their backing storage locations (instead
+of cached copies).
+The flush can be done synchronously (\f2-s\f1) or asynchronously (\f2-a\f1).
+.TP
+\f3ms\f1
+See the \f3msync\f1 command.
+.TP
+\f3madvise\f1 [ \-\f2drwsw\f1 ] [ \f2offset\f1 \f2length\f1 ]
+Modifies page cache behavior when operating on the current mapping.
+The range arguments are required by some advise commands ([*] below).
+With no arguments, the POSIX_MADV_NORMAL advice is implied (default readahead).
+The \f2-d\f1 option says the pages will not be needed (POSIX_MADV_DONTNEED[*]).
+The \f2-r\f1 option says to expect random page references (POSIX_MADV_RANDOM),
+which sets readahead to zero.
+The \f2-s\f1 option says to expect sequential page references
+(POSIX_MADV_SEQUENTIAL), which doubles the default readahead on the file.
+The \f2-w\f1 option advises the specified pages will be needed
+again (POSIX_MADV_WILLNEED[*]) which forces the maximum readahead.
+.TP
+\f3mincore\f1
+Dumps a list of pages or ranges of pages that are currently in core,
+for the current memory mapping.
+
+.SH OTHER COMMANDS
+.TP
+\f3print\f1
+Display a list of all open files and memory mapped regions.
+The current file and current mapping are distinguishable from
+any others.
+.TP
+\f3p\f1
+See the \f3print\f1 command.
+.TP
+\f3quit\f1
+Exit \f2xfs_io\f1.
+.TP
+\f3q\f1
+See the \f3quit\f1 command.
+.TP
+\f3lsattr\f1
+List extended inode flags on the currently open file.
+.TP
+\f3chattr\f1 [ \f2+/\-riasAd\f1 ]
+Change extended inode flags on the currently open file.
+.TP
+\f3freeze\f1
+Suspend all write I/O requests to the filesystem of the current file.
+Only available in expert mode and requires privileges.
+.TP
+\f3thaw\f1
+Undo the effects of a filesystem freeze operation.
+Only available in expert mode and requires privileges.
+.TP
+\f3inject\f1 [ \f2tag\f1 ]
+Inject errors into a filesystem to observe filesystem behavior at
+specific points under adverse conditions.
+Without an argument, displays the list of error tags available.
+Only available in expert mode and requires privileges.
+.TP
+\f3resblks\f1 [ \f2blocks\f1 ]
+Get and/or set count of reserved filesystem blocks using the
+XFS_IOC_GET_RESBLKS or XFS_IOC_SET_RESBLKS system calls,
+as described in \f2xfs\f1(5).
+Note \-\- this can be useful for exercising out of space behavior.
+Only available in expert mode and requires privileges.
+.TP
+\f3shutdown\f1 [ \f2\-f\f1 ]
+Force the filesystem to shutdown (with or without flushing the log).
+Only available in expert mode and requires privileges.
+.TP
+\f3stat\f1 [ \f2\-v\f1 ]
 Selected statistics from \f2stat\f1(2) and the XFS_IOC_GETXATTR
-system call from \f2xfs\f1(5) on the currently open file.
+system call from \f2xfs\f1(5) on the current file.
 If the \f2-v\f1 option is specified, the atime (last access), mtime
 (last modify), and ctime (last change) timestamps are also displayed.
 .TP
 \f3statfs\f1
 Selected statistics from \f2statfs\f1(2) and the XFS_IOC_FSGEOMETRY
-system call from \f2xfs\f1(5) on the filesystem where the currently
-open file resides.
-.TP
-\f3truncate\f1 \f2offset\f1
-Truncates the current file at the given offset using \f2ftruncate\f1(2).
-.TP
-\f3w\f1
-See the \f3pwrite\f1 command.
+system call from \f2xfs\f1(5) on the filesystem where the current
+file resides.
+
 .SH SEE ALSO
 fdatasync(2),
 fstat(2),
@@ -171,6 +301,7 @@ fstatfs(2),
 fsync(2),
 ftruncate(2),
 mkfs.xfs(8),
+mmap(2),
 open(2),
 pread(2),
 pwrite(2),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -33,6 +33,7 @@
 #include <xfs/libxfs.h>
 #include "input.h"
 #include "init.h"
+#include "io.h"
 
 #if defined(ENABLE_READLINE)
 # include <readline/history.h>
@@ -141,6 +142,20 @@ doneline(
 {
 	free(input);
 	free(vec);
+}
+
+void
+init_cvtnum(
+	int		*blocksize,
+	int		*sectsize)
+{
+	if (!file || (file->flags & IO_FOREIGN)) {
+		*blocksize = 4096;
+		*sectsize = 512;
+	} else {
+		*blocksize = file->geom.blocksize;
+		*sectsize = file->geom.sectsize;
+	}
 }
 
 #define EXABYTES(x)	((long long)(x) << 60)

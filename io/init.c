@@ -31,23 +31,14 @@
  */
 
 #include <xfs/libxfs.h>
-#include "input.h"
 #include "command.h"
+#include "input.h"
+#include "io.h"
 
 char	*progname;
 int	exitcode;
-
-int	fdesc;
-char	*fname;
-xfs_fsop_geom_t	fgeom;
-
-int	readonly;
-int	directio;
-int	realtime;
-int	foreign;
-int	append;
-int	osync;
-int	trunc;
+int	expert;
+size_t	pagesize;
 
 static int	ncmdline;
 static char	**cmdline;
@@ -56,7 +47,7 @@ void
 usage(void)
 {
 	fprintf(stderr,
-		_("Usage: %s [-adFfrstx] [-p prog] [-c cmd]... file\n"),
+		_("Usage: %s [-adFfmrRstx] [-p prog] [-c cmd]... file\n"),
 		progname);
 	exit(1);
 }
@@ -66,18 +57,21 @@ init(
 	int		argc,
 	char		**argv)
 {
-	int		fflag = 0;
-	int		c;
+	int		c, flags = 0;
+	char		*sp;
+	mode_t		mode = 0600;
+	xfs_fsop_geom_t	geometry = { 0 };
 
 	progname = basename(argv[0]);
+	pagesize = getpagesize();
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	while ((c = getopt(argc, argv, "ac:dFfp:rstVx")) != EOF) {
+	while ((c = getopt(argc, argv, "ac:dFfmp:rRstVx")) != EOF) {
 		switch (c) {
 		case 'a':	/* append */
-			append = 1;
+			flags |= IO_APPEND;
 			break;
 		case 'c':	/* commands */
 			ncmdline++;
@@ -88,29 +82,40 @@ init(
 			}
 			cmdline[ncmdline-1] = optarg;
 			break;
-		case 'd':	/* directIO */
-			directio = 1;
+		case 'd':
+			flags |= IO_DIRECT;
 			break;
-		case 'F':	/* foreign */
-			foreign = 1;
+		case 'F':
+			flags |= IO_FOREIGN;
 			break;
-		case 'f':	/* create */
-			fflag = 1;
+		case 'f':
+			flags |= IO_CREAT;
 			break;
-		case 'p':	/* progname */
+		case 'm':
+			mode = strtoul(optarg, &sp, 0);
+			if (!sp || sp == optarg) {
+				fprintf(stderr, _("non-numeric mode -- %s\n"),
+					optarg);
+				exit(1);
+			}
+			break;
+		case 'p':
 			progname = optarg;
 			break;
-		case 'r':	/* readonly */
-			readonly = 1;
+		case 'r':
+			flags |= IO_READONLY;
 			break;
-		case 's':	/* sync */
-			osync = 1;
+		case 's':
+			flags |= IO_OSYNC;
 			break;
-		case 't':	/* truncate */
-			trunc = 1;
+		case 't':
+			flags |= IO_TRUNC;
 			break;
-		case 'x':	/* realtime */
-			realtime = 1;
+		case 'R':
+			flags |= IO_REALTIME;
+			break;
+		case 'x':
+			expert = 1;
 			break;
 		case 'V':
 			printf(_("%s version %s\n"), progname, VERSION);
@@ -120,14 +125,14 @@ init(
 		}
 	}
 
-	if (optind != argc - 1)
-		usage();
-
-	fname = strdup(argv[optind]);
-	if ((fdesc = openfile(fname, foreign ? NULL : &fgeom,
-				append, fflag, directio,
-				readonly, osync, trunc, realtime)) < 0)
-		exit(1);
+	while (optind < argc) {
+		if ((c = openfile(argv[optind], flags & IO_FOREIGN ?
+					NULL : &geometry, flags, mode)) < 0)
+			exit(1);
+		if (addfile(argv[optind], c, &geometry, flags) < 0)
+			exit(1);
+		optind++;
+	}
 
 	init_commands();
 }

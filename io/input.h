@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -33,6 +33,7 @@
 extern char	**breakline(char *input, int *count);
 extern void	doneline(char *input, char **vec);
 extern char	*fetchline(void);
+extern void	init_cvtnum(int *blocksize, int *sectorsize);
 extern long long cvtnum(int blocksize, int sectorsize, char *s);
 extern void	cvtstr(double value, char *str, size_t sz);
 extern struct timeval tsub(struct timeval t1, struct timeval t2);

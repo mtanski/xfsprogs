@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2001-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -36,42 +36,62 @@
 #include "init.h"
 #include "io.h"
 
-static cmdinfo_t truncate_cmd;
+static cmdinfo_t freeze_cmd;
+static cmdinfo_t thaw_cmd;
 
-static int
-truncate_f(
+int
+freeze_f(
 	int		argc,
 	char		**argv)
 {
-	off64_t		offset;
-	int		blocksize, sectsize;
+	int		level = 1;
 
-	init_cvtnum(&blocksize, &sectsize);
-	offset = cvtnum(blocksize, sectsize, argv[1]);
-	if (offset < 0) {
-		printf(_("non-numeric truncate argument -- %s\n"), argv[1]);
+	if (xfsctl(file->name, file->fd, XFS_IOC_FREEZE, &level) < 0) {
+		fprintf(stderr,
+			_("%s: cannot freeze filesystem at %s: %s\n"),
+			progname, file->name, strerror(errno));
+		exitcode = 1;
 		return 0;
 	}
+	return 0;
+}
 
-	if (ftruncate64(file->fd, offset) < 0) {
-		perror("ftruncate");
+int
+thaw_f(
+	int		argc,
+	char		**argv)
+{
+	int		level = 1;
+
+	if (xfsctl(file->name, file->fd, XFS_IOC_THAW, &level) < 0) {
+		fprintf(stderr,
+			_("%s: cannot unfreeze filesystem mounted at %s: %s\n"),
+			progname, file->name, strerror(errno));
+		exitcode = 1;
 		return 0;
 	}
 	return 0;
 }
 
 void
-truncate_init(void)
+freeze_init(void)
 {
-	truncate_cmd.name = _("truncate");
-	truncate_cmd.altname = _("t");
-	truncate_cmd.cfunc = truncate_f;
-	truncate_cmd.argmin = 1;
-	truncate_cmd.argmax = 1;
-	truncate_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-	truncate_cmd.args = _("off");
-	truncate_cmd.oneline =
-		_("truncates the current file at the given offset");
+	freeze_cmd.name = _("freeze");
+	freeze_cmd.cfunc = freeze_f;
+	freeze_cmd.argmin = 0;
+	freeze_cmd.argmax = 0;
+	freeze_cmd.flags = CMD_NOMAP_OK;
+	freeze_cmd.oneline = _("freeze filesystem of current file");
 
-	add_command(&truncate_cmd);
+	thaw_cmd.name = _("thaw");
+	thaw_cmd.cfunc = thaw_f;
+	thaw_cmd.argmin = 0;
+	thaw_cmd.argmax = 0;
+	thaw_cmd.flags = CMD_NOMAP_OK;
+	thaw_cmd.oneline = _("unfreeze filesystem of current file");
+
+	if (expert) {
+		add_command(&freeze_cmd);
+		add_command(&thaw_cmd);
+	}
 }

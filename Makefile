@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -44,7 +44,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
-	copy db freeze fsck growfs io imap logprint mkfile mkfs repair rtcp \
+	copy db fsck growfs io imap logprint mkfile mkfs repair rtcp \
 	m4 man doc po debian build
 
 default: $(CONFIGURE)

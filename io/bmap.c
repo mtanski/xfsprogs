@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -33,15 +33,9 @@
 #include <xfs/libxfs.h>
 #include "command.h"
 #include "init.h"
+#include "io.h"
 
 static cmdinfo_t bmap_cmd;
-
-static int
-usage(void)
-{
-	printf("%s %s\n", bmap_cmd.name, bmap_cmd.oneline);
-	return 0;
-}
 
 static void
 bmap_help(void)
@@ -123,24 +117,26 @@ bmap_f(
 			vflag++;
 			break;
 		default:
-			return usage();
+			return command_usage(&bmap_cmd);
 		}
 	}
 	if (aflag)
 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
 
 	if (vflag) {
-		if (xfsctl(fname, fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
+		c = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo);
+		if (c < 0) {
 			fprintf(stderr,
 				_("%s: can't get geometry [\"%s\"]: %s\n"),
-				progname, fname, strerror(errno));
+				progname, file->name, strerror(errno));
 			exitcode = 1;
 			return 0;
 		}
-		if ((xfsctl(fname, fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		c = xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTR, &fsx);
+		if (c < 0) {
 			fprintf(stderr,
 				_("%s: cannot read attrs on \"%s\": %s\n"),
-				progname, fname, strerror(errno));
+				progname, file->name, strerror(errno));
 			exitcode = 1;
 			return 0;
 		}
@@ -199,7 +195,7 @@ bmap_f(
 		map->bmv_count = map_size;
 		map->bmv_iflags = bmv_iflags;
 
-		i = xfsctl(fname, fdesc, XFS_IOC_GETBMAPX, map);
+		i = xfsctl(file->name, file->fd, XFS_IOC_GETBMAPX, map);
 		if (i < 0) {
 			if (   errno == EINVAL
 			    && !aflag && filesize() == 0) {
@@ -207,7 +203,7 @@ bmap_f(
 			} else	{
 				fprintf(stderr, _("%s: xfsctl(XFS_IOC_GETBMAPX)"
 					" iflags=0x%x [\"%s\"]: %s\n"),
-					progname, map->bmv_iflags, fname,
+					progname, map->bmv_iflags, file->name,
 					strerror(errno));
 				free(map);
 				exitcode = 1;
@@ -221,12 +217,12 @@ bmap_f(
 		/* Get number of extents from xfsctl XFS_IOC_FSGETXATTR[A]
 		 * syscall.
 		 */
-		i = xfsctl(fname, fdesc, aflag ?
+		i = xfsctl(file->name, file->fd, aflag ?
 				XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
 		if (i < 0) {
 			fprintf(stderr, "%s: xfsctl(XFS_IOC_FSGETXATTR%s) "
 				"[\"%s\"]: %s\n", progname, aflag ? "A" : "",
-				fname, strerror(errno));
+				file->name, strerror(errno));
 			free(map);
 			exitcode = 1;
 			return 0;
@@ -245,12 +241,12 @@ bmap_f(
 	} while (++loop < 2);
 	if (!nflag) {
 		if (map->bmv_entries <= 0) {
-			printf(_("%s: no extents\n"), fname);
+			printf(_("%s: no extents\n"), file->name);
 			free(map);
 			return 0;
 		}
 	}
-	printf("%s:\n", fname);
+	printf("%s:\n", file->name);
 	if (!vflag) {
 		for (i = 0; i < map->bmv_entries; i++) {
 			printf("\t%d: [%lld..%lld]: ", i,
@@ -430,6 +426,7 @@ bmap_init(void)
 	bmap_cmd.cfunc = bmap_f;
 	bmap_cmd.argmin = 0;
 	bmap_cmd.argmax = -1;
+	bmap_cmd.flags = CMD_NOMAP_OK;
 	bmap_cmd.args = _("[-adlpv] [-n nx]");
 	bmap_cmd.oneline = _("print block mapping for an XFS file");
 	bmap_cmd.help = bmap_help;

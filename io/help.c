@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "io.h"
 
 static cmdinfo_t help_cmd;
 static void help_onecmd(const char *cmd, const cmdinfo_t *ct);
@@ -102,7 +103,7 @@ help_init(void)
 	help_cmd.cfunc = help_f;
 	help_cmd.argmin = 0;
 	help_cmd.argmax = 1;
-	help_cmd.foreign = 1;
+	help_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
 	help_cmd.args = _("[command]");
 	help_cmd.oneline = _("help for one or all commands");
 

@@ -34,6 +34,7 @@
 #include "command.h"
 #include "input.h"
 #include "init.h"
+#include "io.h"
 
 static cmdinfo_t pwrite_cmd;
 
@@ -45,7 +46,7 @@ pwrite_help(void)
 " writes a range of bytes (in block size increments) from the given offset\n"
 "\n"
 " Example:\n"
-" 'write 512 20' - writes 20 bytes at 512 bytes into the open file\n"
+" 'pwrite 512 20' - writes 20 bytes at 512 bytes into the open file\n"
 "\n"
 " Writes into a segment of the currently open file, using either a buffer\n"
 " filled with a set pattern (0xcdcdcdcd) or data read from an input file.\n"
@@ -78,7 +79,7 @@ write_buffer(
 				break;
 		}
 		bytes_requested = min(bar, count);
-		bytes = pwrite64(fdesc, buffer, bytes_requested, offset);
+		bytes = pwrite64(file->fd, buffer, bytes_requested, offset);
 		if (bytes == 0)
 			break;
 		if (bytes < 0) {
@@ -107,16 +108,10 @@ pwrite_f(
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
-	int		c, fd = -1, dflag = 0;
+	int		c, fd = -1, uflag = 0, dflag = 0;
 
-	if (foreign) {
-		blocksize = 4096;
-		sectsize = 512;
-	} else {
-		blocksize = fgeom.blocksize;
-		sectsize = fgeom.sectsize;
-	}
-	while ((c = getopt(argc, argv, "b:df:i:s:S:")) != EOF) {
+	init_cvtnum(&blocksize, &sectsize);
+	while ((c = getopt(argc, argv, "b:df:i:s:S:u")) != EOF) {
 		switch (c) {
 		case 'b':
 			blocksize = cvtnum(blocksize, sectsize, optarg);
@@ -146,15 +141,15 @@ pwrite_f(
 				return 0;
 			}
 			break;
+		case 'u':
+			uflag = 1;
+			break;
 		default:
-			printf("%s %s\n", pwrite_cmd.name, pwrite_cmd.oneline);
-			return 0;
+			return command_usage(&pwrite_cmd);
 		}
 	}
-	if ( ((skip || dflag) && !infile) || (optind != argc - 2)) {
-		printf("%s %s\n", pwrite_cmd.name, pwrite_cmd.oneline);
-		return 0;
-	}
+	if ( ((skip || dflag) && !infile) || (optind != argc - 2))
+		return command_usage(&pwrite_cmd);
 	offset = cvtnum(blocksize, sectsize, argv[optind]);
 	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
@@ -167,11 +162,11 @@ pwrite_f(
 		return 0;
 	}
 
-	if (!alloc_buffer(blocksize, seed))
+	if (alloc_buffer(blocksize, uflag, seed) < 0)
 		return 0;
 
-	if (infile &&
-	    ((fd = openfile(infile, NULL, 0, 0, dflag, 1, 0, 0, 0)) < 0))
+	c = O_RDONLY | (dflag ? IO_DIRECT : 0);
+	if (infile && ((fd = openfile(infile, NULL, c, 0)) < 0))
 		return 0;
 
 	gettimeofday(&t1, NULL);
@@ -188,7 +183,7 @@ pwrite_f(
 	cvtstr((double)total, s1, sizeof(s1));
 	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
 	timestr(&t2, ts, sizeof(ts));
-	printf(_("----- %s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+	printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
 		s1, c, ts, s2, tdiv((double)c, t2));
 	close(fd);
 	return 0;
@@ -202,7 +197,7 @@ pwrite_init(void)
 	pwrite_cmd.cfunc = pwrite_f;
 	pwrite_cmd.argmin = 2;
 	pwrite_cmd.argmax = -1;
-	pwrite_cmd.foreign = 1;
+	pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	pwrite_cmd.args =
 		_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len");
 	pwrite_cmd.oneline =

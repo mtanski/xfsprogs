@@ -33,6 +33,7 @@
 #include <xfs/libxfs.h>
 #include "command.h"
 #include "init.h"
+#include "io.h"
 
 static cmdinfo_t fsync_cmd;
 static cmdinfo_t fdatasync_cmd;
@@ -42,7 +43,7 @@ fsync_f(
 	int			argc,
 	char			**argv)
 {
-	if (fsync(fdesc) < 0) {
+	if (fsync(file->fd) < 0) {
 		perror("fsync");
 		return 0;
 	}
@@ -54,7 +55,7 @@ fdatasync_f(
 	int			argc,
 	char			**argv)
 {
-	if (fdatasync(fdesc) < 0) {
+	if (fdatasync(file->fd) < 0) {
 		perror("fdatasync");
 		return 0;
 	}
@@ -67,14 +68,14 @@ fsync_init(void)
 	fsync_cmd.name = _("fsync");
 	fsync_cmd.altname = _("s");
 	fsync_cmd.cfunc = fsync_f;
-	fsync_cmd.foreign = 1;
+	fsync_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	fsync_cmd.oneline =
 		_("calls fsync(2) to flush all in-core file state to disk");
 
 	fdatasync_cmd.name = _("fdatasync");
 	fdatasync_cmd.altname = _("ds");
 	fdatasync_cmd.cfunc = fdatasync_f;
-	fdatasync_cmd.foreign = 1;
+	fdatasync_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	fdatasync_cmd.oneline =
 		_("calls fdatasync(2) to flush the files in-core data to disk");
 

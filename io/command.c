@@ -33,6 +33,7 @@
 #include <xfs/libxfs.h>
 #include "command.h"
 #include "init.h"
+#include "io.h"
 
 cmdinfo_t	*cmdtab;
 int		ncmds;
@@ -54,6 +55,14 @@ add_command(
 }
 
 int
+command_usage(
+	const cmdinfo_t *ci)
+{
+	printf("%s %s\n", ci->name, ci->oneline);
+	return 0;
+}
+
+int
 command(
 	int		argc,
 	char		**argv)
@@ -67,10 +76,20 @@ command(
 		fprintf(stderr, _("command \"%s\" not found\n"), cmd);
 		return 0;
 	}
-	if (foreign && !ct->foreign) {
+	if (!file && !(ct->flags & CMD_NOFILE_OK)) {
+		fprintf(stderr, _("no files are open, try 'help open'\n"));
+		return 0;
+	}
+	if (!mapping && !(ct->flags & CMD_NOMAP_OK)) {
+		fprintf(stderr, _("no mapped regions, try 'help mmap'\n"));
+		return 0;
+	}
+	if (file && !(ct->flags & CMD_FOREIGN_OK) &&
+					(file->flags & IO_FOREIGN)) {
 		fprintf(stderr,
-	_("foreign file is open, %s command is for XFS filesystems only\n"),
+	_("foreign file active, %s command is for XFS filesystems only\n"),
 			cmd);
+		return 0;
 	}
 	if (argc-1 < ct->argmin || (ct->argmax != -1 && argc-1 > ct->argmax)) {
 		if (ct->argmax == -1)
@@ -109,13 +128,19 @@ void
 init_commands(void)
 {
 	bmap_init();
+	fadvise_init();
+	file_init();
+	freeze_init();
+	fsync_init();
 	help_init();
+	inject_init();
+	mmap_init();
 	open_init();
 	pread_init();
 	prealloc_init();
 	pwrite_init();
 	quit_init();
 	resblks_init();
-	fsync_init();
+	shutdown_init();
 	truncate_init();
 }

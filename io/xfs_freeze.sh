@@ -1,5 +1,6 @@
+#!/bin/sh -f
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2004 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -30,19 +31,45 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ..
-include $(TOPDIR)/include/builddefs
+OPTS=""
+USAGE="Usage: xfs_freeze -f | -u <mountpoint>"
+DIRNAME=`dirname $0`
+VERSION=false
+FREEZE=false
+THAW=false
 
-LTCOMMAND = xfs_freeze
+while getopts "fuV" c
+do
+	case $c in
+	f)	FREEZE=true;;
+	u)	THAW=true;;
+	V)	VERSION=true;;
+	\?)	echo $USAGE 1>&2
+		exit 2
+		;;
+	esac
+done
+if $VERSION ; then
+	$DIRNAME/xfs_io -p xfs_freeze -V
+	exit 0
+fi
 
-CFILES = xfs_freeze.c
-LLDFLAGS += -static
+shift `expr $OPTIND - 1`
+if [ "$1" = "" ]; then
+	echo $USAGE 1>&2
+	exit 2
+fi
 
-default: $(LTCOMMAND)
-
-include $(BUILDRULES)
-
-install: default
-	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
-install-dev:
+if $FREEZE ; then
+	$DIRNAME/xfs_io -r -p xfs_freeze -x -c "freeze" "$1"
+	status=$?
+	[ $status -ne 0 ] && exit $status
+elif $THAW ; then
+	$DIRNAME/xfs_io -r -p xfs_freeze -x -c "thaw" "$1"
+	status=$?
+	[ $status -ne 0 ] && exit $status
+else
+	echo $USAGE 1>&2
+	exit 2
+fi
+exit 0

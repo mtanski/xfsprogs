@@ -35,6 +35,10 @@
 typedef int (*cfunc_t)(int argc, char **argv);
 typedef void (*helpfunc_t)(void);
 
+#define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
+#define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
+
 typedef struct cmdinfo {
 	const char	*name;
 	const char	*altname;
@@ -42,7 +46,7 @@ typedef struct cmdinfo {
 	int		argmin;
 	int		argmax;
 	int		canpush;
-	int		foreign;
+	int		flags;
 	const char	*args;
 	const char	*oneline;
 	helpfunc_t      help;
@@ -52,27 +56,29 @@ extern cmdinfo_t	*cmdtab;
 extern int		ncmds;
 
 extern void		add_command(const cmdinfo_t *ci);
+extern int		command_usage(const cmdinfo_t *ci);
 extern int		command(int argc, char **argv);
 extern const cmdinfo_t	*find_command(const char *cmd);
 extern void		init_commands(void);
 
 extern void		bmap_init(void);
+#ifdef HAVE_FADVISE
+extern void		fadvise_init(void);
+#else
+# define fadvise_init()	do { } while (0)
+#endif
+extern void		file_init(void);
+extern void		freeze_init(void);
+extern void		fsync_init(void);
 extern void		help_init(void);
+extern void		inject_init(void);
+extern void		mmap_init(void);
 extern void		open_init(void);
 extern void		pread_init(void);
 extern void		prealloc_init(void);
 extern void		pwrite_init(void);
 extern void		quit_init(void);
 extern void		resblks_init(void);
-extern void		fsync_init(void);
+extern void		shutdown_init(void);
 extern void		truncate_init(void);
 
-extern off64_t		filesize(void);
-extern int		openfile(char *, xfs_fsop_geom_t *,
-					int, int, int, int, int, int, int);
-
-extern void		*buffer;
-extern ssize_t		buffersize;
-extern int		alloc_buffer(ssize_t, unsigned int);
-extern int		read_buffer(int, off64_t, long long, long long *,
-					int, int);

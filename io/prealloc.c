@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -34,6 +34,7 @@
 #include "command.h"
 #include "input.h"
 #include "init.h"
+#include "io.h"
 
 static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
@@ -46,14 +47,17 @@ offset_length(
 	char		*length,
 	xfs_flock64_t	*segment)
 {
+	int		blocksize, sectsize;
+
+	init_cvtnum(&blocksize, &sectsize);
 	memset(segment, 0, sizeof(*segment));
 	segment->l_whence = SEEK_SET;
-	segment->l_start = cvtnum(fgeom.blocksize, fgeom.sectsize, offset);
+	segment->l_start = cvtnum(blocksize, sectsize, offset);
 	if (segment->l_start < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), offset);
 		return 0;
 	}
-	segment->l_len = cvtnum(fgeom.blocksize, fgeom.sectsize, length);
+	segment->l_len = cvtnum(blocksize, sectsize, length);
 	if (segment->l_len < 0) {
 		printf(_("non-numeric length argument -- %s\n"), length);
 		return 0;
@@ -71,8 +75,8 @@ allocsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (xfsctl(fname, fdesc, XFS_IOC_ALLOCSP64, &segment) < 0) {
-		perror("xfsctl(XFS_IOC_ALLOCSP64)");
+	if (xfsctl(file->name, file->fd, XFS_IOC_ALLOCSP64, &segment) < 0) {
+		perror("XFS_IOC_ALLOCSP64");
 		return 0;
 	}
 	return 0;
@@ -88,8 +92,8 @@ freesp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (xfsctl(fname, fdesc, XFS_IOC_FREESP64, &segment) < 0) {
-		perror("xfsctl(XFS_IOC_FREESP64)");
+	if (xfsctl(file->name, file->fd, XFS_IOC_FREESP64, &segment) < 0) {
+		perror("XFS_IOC_FREESP64");
 		return 0;
 	}
 	return 0;
@@ -105,8 +109,8 @@ resvsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (xfsctl(fname, fdesc, XFS_IOC_RESVSP64, &segment) < 0) {
-		perror("xfsctl(XFS_IOC_RESVSP64)");
+	if (xfsctl(file->name, file->fd, XFS_IOC_RESVSP64, &segment) < 0) {
+		perror("XFS_IOC_RESVSP64");
 		return 0;
 	}
 	return 0;
@@ -122,8 +126,8 @@ unresvsp_f(
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
 
-	if (xfsctl(fname, fdesc, XFS_IOC_UNRESVSP64, &segment) < 0) {
-		perror("xfsctl(XFS_IOC_UNRESVSP64)");
+	if (xfsctl(file->name, file->fd, XFS_IOC_UNRESVSP64, &segment) < 0) {
+		perror("XFS_IOC_UNRESVSP64");
 		return 0;
 	}
 	return 0;
@@ -136,6 +140,7 @@ prealloc_init(void)
 	allocsp_cmd.cfunc = allocsp_f;
 	allocsp_cmd.argmin = 2;
 	allocsp_cmd.argmax = 2;
+	allocsp_cmd.flags = CMD_NOMAP_OK;
 	allocsp_cmd.args = _("off len");
 	allocsp_cmd.oneline = _("allocates zeroed space for part of a file");
 
@@ -143,6 +148,7 @@ prealloc_init(void)
 	freesp_cmd.cfunc = freesp_f;
 	freesp_cmd.argmin = 2;
 	freesp_cmd.argmax = 2;
+	freesp_cmd.flags = CMD_NOMAP_OK;
 	freesp_cmd.args = _("off len");
 	freesp_cmd.oneline = _("frees space associated with part of a file");
 
@@ -150,6 +156,7 @@ prealloc_init(void)
 	resvsp_cmd.cfunc = resvsp_f;
 	resvsp_cmd.argmin = 2;
 	resvsp_cmd.argmax = 2;
+	resvsp_cmd.flags = CMD_NOMAP_OK;
 	resvsp_cmd.args = _("off len");
 	resvsp_cmd.oneline =
 		_("reserves space associated with part of a file");
@@ -159,6 +166,7 @@ prealloc_init(void)
 	unresvsp_cmd.argmin = 2;
 	unresvsp_cmd.argmax = 2;
 	unresvsp_cmd.args = _("off len");
+	unresvsp_cmd.flags = CMD_NOMAP_OK;
 	unresvsp_cmd.oneline =
 		_("frees reserved space associated with part of a file");
 

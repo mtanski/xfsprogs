@@ -35,6 +35,7 @@
 #include "command.h"
 #include "input.h"
 #include "init.h"
+#include "io.h"
 
 static cmdinfo_t pread_cmd;
 
@@ -46,7 +47,7 @@ pread_help(void)
 " reads a range of bytes in a specified block size from the given offset\n"
 "\n"
 " Example:\n"
-" 'read -v 512 20' - dumps 20 bytes read from 512 bytes into the file\n"
+" 'pread -v 512 20' - dumps 20 bytes read from 512 bytes into the file\n"
 "\n"
 " Reads a segment of the currently open file, optionally dumping it to the\n"
 " standard output stream (with -v option) for subsequent inspection.\n"
@@ -61,6 +62,7 @@ ssize_t	buffersize;
 int
 alloc_buffer(
 	ssize_t		bsize,
+	int		uflag,
 	unsigned int	seed)
 {
 	if (bsize > buffersize) {
@@ -70,14 +72,15 @@ alloc_buffer(
 		if (!buffer) {
 			perror("memalign");
 			buffersize = 0;
-			return 0;
+			return -1;
 		}
 	}
-	memset(buffer, seed, buffersize);
-	return 1;
+	if (!uflag)
+		memset(buffer, seed, buffersize);
+	return 0;
 }
 
-static void
+void
 dump_buffer(
 	off64_t		offset,
 	ssize_t		len)
@@ -146,17 +149,11 @@ pread_f(
 	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
-	int		vflag = 0;
+	int		uflag = 0, vflag = 0;
 	int		c;
 
-	if (foreign) {
-		blocksize = 4096;
-		sectsize = 512;
-	} else {
-		blocksize = fgeom.blocksize;
-		sectsize = fgeom.sectsize;
-	}
-	while ((c = getopt(argc, argv, "b:v")) != EOF) {
+	init_cvtnum(&blocksize, &sectsize);
+	while ((c = getopt(argc, argv, "b:uv")) != EOF) {
 		switch (c) {
 		case 'b':
 			blocksize = cvtnum(blocksize, sectsize, optarg);
@@ -165,18 +162,19 @@ pread_f(
 				return 0;
 			}
 			break;
+		case 'u':
+			uflag = 1;
+			break;
 		case 'v':
 			vflag = 1;
 			break;
 		default:
-			printf("%s %s\n", pread_cmd.name, pread_cmd.oneline);
-			return 0;
+			return command_usage(&pread_cmd);
 		}
 	}
-	if (optind != argc - 2) {
-		printf("%s %s\n", pread_cmd.name, pread_cmd.oneline);
-		return 0;
-	}
+	if (optind != argc - 2)
+		return command_usage(&pread_cmd);
+
 	offset = cvtnum(blocksize, sectsize, argv[optind]);
 	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
@@ -189,11 +187,11 @@ pread_f(
 		return 0;
 	}
 
-	if (!alloc_buffer(blocksize, 0xabababab))
+	if (alloc_buffer(blocksize, uflag, 0xabababab) < 0)
 		return 0;
 
 	gettimeofday(&t1, NULL);
-	if ((c = read_buffer(fdesc, offset, count, &total, vflag, 0)) < 0)
+	if ((c = read_buffer(file->fd, offset, count, &total, vflag, 0)) < 0)
 		return 0;
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
@@ -203,7 +201,7 @@ pread_f(
 	cvtstr((double)total, s1, sizeof(s1));
 	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
 	timestr(&t2, ts, sizeof(ts));
-	printf(_("---- %s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+	printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
 		s1, c, ts, s2, tdiv((double)c, t2));
 	return 0;
 }
@@ -216,7 +214,7 @@ pread_init(void)
 	pread_cmd.cfunc = pread_f;
 	pread_cmd.argmin = 2;
 	pread_cmd.argmax = -1;
-	pread_cmd.foreign = 1;
+	pread_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	pread_cmd.args = _("[-b bs] [-v] off len");
 	pread_cmd.oneline = _("reads a number of bytes at a specified offset");
 	pread_cmd.help = pread_help;

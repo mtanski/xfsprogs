@@ -1,3 +1,12 @@
+xfsprogs-2.6.8 (25 March 2003)
+	- Fix xfs_db when dumping v2 dirs larger than the fsb size.
+	- Several xfs_io additions - support for memory mapped areas,
+	  multiple open files, expert mode (freeze, shutdown, error
+	  injection, etc), fadvise (Linux-specific), allow user to
+	  specify a create mode to open(2).
+	- Fix xfs_bmap verbose mode stripe alignment information.
+	- Fix typo on xfs(5) man page.
+
 xfsprogs-2.6.7 (19 March 2003)
 	- Fix up UUID library checks again, previous fix didn't work
 	  for older versions of autconf.

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -33,14 +33,20 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-# TODO: mmap, file locking, fadvise
-
 LTCOMMAND = xfs_io
+LSRCFILES = xfs_bmap.sh xfs_freeze.sh
 HFILES = command.h input.h init.h
 CFILES = command.c input.c init.c \
-	bmap.c fsync.c help.c open.c pread.c prealloc.c pwrite.c \
-	quit.c resblks.c truncate.c
-LSRCFILES = xfs_bmap.sh
+	bmap.c file.c freeze.c fsync.c help.c inject.c \
+	mmap.c open.c pread.c prealloc.c pwrite.c quit.c \
+	resblks.c shutdown.c truncate.c
+
+ifeq ($(PKG_PLATFORM),linux)
+CFILES += fadvise.c
+LCFLAGS += -DHAVE_FADVISE
+else
+LSRCFILES += fadvise.c
+endif
 
 ifeq ($(ENABLE_READLINE),yes)
 LLDLIBS += $(LIBREADLINE)
@@ -60,4 +66,5 @@ install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 	$(LTINSTALL) -m 755 xfs_bmap.sh $(PKG_BIN_DIR)/xfs_bmap
+	$(LTINSTALL) -m 755 xfs_freeze.sh $(PKG_BIN_DIR)/xfs_freeze
 install-dev:
