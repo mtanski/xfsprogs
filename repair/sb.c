@@ -36,6 +36,10 @@
 #include "protos.h"
 #include "err_protos.h"
 
+#define BSIZE	(1024 * 1024)
+
+#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
+#define	XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
 
 /*
  * copy the fields of a superblock that are present in primary and
@@ -89,8 +93,6 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 
 	bzero(source->sb_fname, 12);
 }
-
-#define BSIZE	(1024 * 1024)
 
 /*
  * find a secondary superblock, copy it into the sb buffer
