@@ -400,7 +400,7 @@ removed from the file.  The file size does not change.
 .\" using small random I/Os, resulting in little or no use of the
 .\" additional data read in near the random I/Os.
 .\" 
-.\" To explicitly set the the preferred I/O sizes, the
+.\" To explicitly set the preferred I/O sizes, the
 .\" .B biosz_flags
 .\" field should be set to zero and the
 .\" .B biosz_read
@@ -422,7 +422,7 @@ removed from the file.  The file size does not change.
 .\" If biosizes have already been explicitly set due to a prior use
 .\" of
 .\" .BR XFS_IOC_SETBIOSIZE ,
-.\" and the requested sizes are larger then the
+.\" and the requested sizes are larger than the
 .\" existing sizes, the
 .\" .I ioctl
 .\" call will return successfully and the
