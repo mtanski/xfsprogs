@@ -612,8 +612,9 @@ process_bmbt_reclist_int(
 			 * XXX - verify that the blocks listed in the record
 			 * are multiples of an extent
 			 */
-			if (s % mp->m_sb.sb_rextsize != 0 ||
-					c % mp->m_sb.sb_rextsize != 0)  {
+			if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) == 0
+			   && (s % mp->m_sb.sb_rextsize != 0 ||
+					c % mp->m_sb.sb_rextsize != 0))  {
 				do_warn(
 "malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n",
 					s, c, mp->m_sb.sb_rextsize);
@@ -2023,7 +2024,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 */
 	if (type != XR_INO_RTDATA && INT_GET(dinoc->di_extsize, ARCH_CONVERT) != 0)  {
 		do_warn(
-"bad non-zero extent size value %u for non-realtime inode %llu,",
+"bad non-zero extent size value %u for non-realtime inode %llu, ",
 			INT_GET(dinoc->di_extsize, ARCH_CONVERT), lino);
 
 		if (!no_modify)  {
