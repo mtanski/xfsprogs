@@ -1,0 +1,1082 @@
+#, c-format
+msgid "%s version %s\n"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s [-adlpV] [-n nx] file...\n"
+msgstr ""
+
+#, c-format
+msgid "%s: fstat64 failed for %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot open \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't get geometry [\"%s\"]: %s\n"
+msgstr ""
+
+#, c-format
+msgid "xfs_bmap: fsgeo.agblocks=%u, fsgeo.blocksize=%u, fsgeo.agcount=%u\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read attrs on \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "xfs_bmap: fsx.dsx_xflags=%u, fsx.fsx_extsize=%u, fsx.fsx_nextents=%u\n"
+msgstr ""
+
+#, c-format
+msgid "%s: malloc of %d bytes failed.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"xfs_bmap: i=%d map.bmv_offset=%lld, map.bmv_block=%lld, map.bmv_length=%lld, "
+"map.bmv_count=%d, map.bmv_entries=%d\n"
+msgstr ""
+
+#, c-format
+msgid "%s: ioctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: ioctl(XFS_IOC_FSGETXATTR%s) [\"%s\"]: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot realloc %d bytes\n"
+msgstr ""
+
+#, c-format
+msgid "%s: no extents\n"
+msgstr ""
+
+msgid "hole"
+msgstr ""
+
+#, c-format
+msgid " %lld blocks\n"
+msgstr ""
+
+msgid "EXT"
+msgstr ""
+
+msgid "FILE-OFFSET"
+msgstr ""
+
+msgid "BLOCK-RANGE"
+msgstr ""
+
+msgid "AG"
+msgstr ""
+
+msgid "AG-OFFSET"
+msgstr ""
+
+msgid "TOTAL"
+msgstr ""
+
+#, c-format
+msgid ""
+"Usage: %s [options] mountpoint\n"
+"\n"
+"Options:\n"
+"        -f          freeze filesystem access\n"
+"        -u          unfreeze filesystem access\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot freeze filesystem mounted at %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot unfreeze filesystem mounted at %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot access mount list %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot access mount point %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: ignoring entry %s in %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s is not an XFS filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s is not a filesystem mount point, according to %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Usage: %s [options] mountpoint\n"
+"\n"
+"Options:\n"
+"        -d          grow data/metadata section\n"
+"        -l          grow log section\n"
+"        -r          grow realtime section\n"
+"        -n          don't change anything, just show geometry\n"
+"        -I          allow inode numbers to exceed %d significant bits\n"
+"        -i          convert log from external to internal format\n"
+"        -t          alternate location for mount table (/etc/mtab)\n"
+"        -x          convert log from internal to external format\n"
+"        -D size     grow data/metadata section to size blks\n"
+"        -L size     grow/shrink log section to size blks\n"
+"        -R size     grow realtime section to size blks\n"
+"        -e size     set realtime extent size to size blks\n"
+"        -m imaxpct  set inode max percent to imaxpct\n"
+"        -V          print version information\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
+"         =%-22s sectsz=%-5u\n"
+"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+"         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
+"naming   =version %-14u bsize=%-6u\n"
+"log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
+"         =%-22s sectsz=%-5u sunit=%u blks\n"
+"realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"
+msgstr ""
+
+msgid "internal"
+msgstr ""
+
+msgid "external"
+msgstr ""
+
+msgid "none"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot determine geometry of filesystem mounted at %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed to access data device for %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed to access external log for %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed to access realtime device for %s\n"
+msgstr ""
+
+#, c-format
+msgid "data size %lld too large, maximum is %lld\n"
+msgstr ""
+
+#, c-format
+msgid "data size %lld too small, old size is %lld\n"
+msgstr ""
+
+msgid "data size unchanged, skipping\n"
+msgstr ""
+
+msgid "inode max pct unchanged, skipping\n"
+msgstr ""
+
+#, c-format
+msgid "%s: growfs operation in progress already\n"
+msgstr ""
+
+#, c-format
+msgid "%s: XFS_IOC_FSGROWFSDATA ioctl failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "realtime size %lld too large, maximum is %lld\n"
+msgstr ""
+
+#, c-format
+msgid "realtime size %lld too small, old size is %lld\n"
+msgstr ""
+
+msgid "realtime size unchanged, skipping\n"
+msgstr ""
+
+#, c-format
+msgid "%s: realtime growth not implemented\n"
+msgstr ""
+
+#, c-format
+msgid "%s: XFS_IOC_FSGROWFSRT ioctl failed: %s\n"
+msgstr ""
+
+msgid "log size unchanged, skipping\n"
+msgstr ""
+
+#, c-format
+msgid "%s: log growth not supported yet\n"
+msgstr ""
+
+#, c-format
+msgid "%s: XFS_IOC_FSGROWFSLOG ioctl failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: XFS_IOC_FSGEOMETRY ioctl failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "data blocks changed from %lld to %lld\n"
+msgstr ""
+
+#, c-format
+msgid "inode max percent changed from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "log blocks changed from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "log changed from %s to %s\n"
+msgstr ""
+
+#, c-format
+msgid "realtime blocks changed from %lld to %lld\n"
+msgstr ""
+
+#, c-format
+msgid "realtime extent size changed from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "ino %10llu count %2d mask %016llx\n"
+msgstr ""
+
+#, c-format
+msgid "%s: [-npv] <size> <name1> [<name2>] ...\n"
+msgstr ""
+
+#, c-format
+msgid "%s: file [\"%s\"] is not on an XFS filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "unknown size %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s %lld bytes %s\n"
+msgstr ""
+
+msgid "(pre-allocated)"
+msgstr ""
+
+#, c-format
+msgid "lseek64 error, result = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed to open %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: read failed on %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: proto file %s premature EOF\n"
+msgstr ""
+
+msgid "cannot reserve space"
+msgstr ""
+
+#, c-format
+msgid "%s: premature EOF in prototype file\n"
+msgstr ""
+
+msgid "error reserving space for a file"
+msgstr ""
+
+msgid "error allocating space for a file"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot allocate space for file\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot open %s: %s\n"
+msgstr ""
+
+msgid "directory createname error"
+msgstr ""
+
+msgid "directory create error"
+msgstr ""
+
+#, c-format
+msgid "%s: bad format string %s\n"
+msgstr ""
+
+msgid "Inode allocation failed"
+msgstr ""
+
+msgid "Inode pre-allocation failed"
+msgstr ""
+
+msgid "Pre-allocated file creation failed"
+msgstr ""
+
+msgid "Directory creation failed"
+msgstr ""
+
+msgid "Error encountered creating file from prototype file"
+msgstr ""
+
+msgid "Realtime bitmap inode allocation failed"
+msgstr ""
+
+msgid "Realtime summary inode allocation failed"
+msgstr ""
+
+msgid "Allocation of the realtime bitmap failed"
+msgstr ""
+
+msgid "Completion of the realtime bitmap failed"
+msgstr ""
+
+msgid "Allocation of the realtime summary failed"
+msgstr ""
+
+msgid "Completion of the realtime summary failed"
+msgstr ""
+
+msgid "Error initializing the realtime space"
+msgstr ""
+
+msgid "Error completing the realtime space"
+msgstr ""
+
+msgid "data su/sw must not be used in conjunction with data sunit/swidth\n"
+msgstr ""
+
+msgid "both data sunit and data swidth options must be specified\n"
+msgstr ""
+
+msgid "data sunit/swidth must not be used in conjunction with data su/sw\n"
+msgstr ""
+
+msgid "both data su and data sw options must be specified\n"
+msgstr ""
+
+#, c-format
+msgid "data su must be a multiple of the sector size (%d)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"
+msgstr ""
+
+msgid "log su should not be used in conjunction with log sunit\n"
+msgstr ""
+
+msgid "log sunit should not be used in conjunction with log su\n"
+msgstr ""
+
+#, c-format
+msgid "log su must be a multiple of the sector size (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s appears to contain an existing filesystem (%s).\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s appears to contain a partition table (%s).\n"
+msgstr ""
+
+#, c-format
+msgid "internal log size %lld is not a multiple of the log stripe unit %d\n"
+msgstr ""
+
+#, c-format
+msgid "Due to stripe alignment, the internal log size (%lld) is too large.\n"
+msgstr ""
+
+msgid "Must fit within an allocation group.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Specify data sunit in 512-byte blocks, no unit suffix\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Specify data swidth in 512-byte blocks, no unit suffix\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Specify data sw as multiple of su, no unit suffix\n"
+msgstr ""
+
+msgid "Must specify log device\n"
+msgstr ""
+
+msgid "Specify log sunit in 512-byte blocks, no size suffix\n"
+msgstr ""
+
+msgid "extra arguments\n"
+msgstr ""
+
+#, c-format
+msgid "cannot specify both %s and -d name=%s\n"
+msgstr ""
+
+#, c-format
+msgid "illegal block size %d\n"
+msgstr ""
+
+#, c-format
+msgid "illegal sector size %d\n"
+msgstr ""
+
+#, c-format
+msgid "illegal log sector size %d\n"
+msgstr ""
+
+#, c-format
+msgid "illegal directory block size %d\n"
+msgstr ""
+
+msgid "both -d agcount= and agsize= specified, use one or the other\n"
+msgstr ""
+
+msgid "if -d file then -d name and -d size are required\n"
+msgstr ""
+
+#, c-format
+msgid "illegal data length %lld, not a multiple of %d\n"
+msgstr ""
+
+#, c-format
+msgid "warning: data length %lld not a multiple of %d, truncated to %lld\n"
+msgstr ""
+
+msgid "if -l file then -l name and -l size are required\n"
+msgstr ""
+
+#, c-format
+msgid "illegal log length %lld, not a multiple of %d\n"
+msgstr ""
+
+#, c-format
+msgid "warning: log length %lld not a multiple of %d, truncated to %lld\n"
+msgstr ""
+
+msgid "if -r file then -r name and -r size are required\n"
+msgstr ""
+
+#, c-format
+msgid "illegal rt length %lld, not a multiple of %d\n"
+msgstr ""
+
+#, c-format
+msgid "warning: rt length %lld not a multiple of %d, truncated to %lld\n"
+msgstr ""
+
+#, c-format
+msgid "illegal rt extent size %lld, not a multiple of %d\n"
+msgstr ""
+
+#, c-format
+msgid "rt extent size %s too large, maximum %d\n"
+msgstr ""
+
+#, c-format
+msgid "rt extent size %s too small, minimum %d\n"
+msgstr ""
+
+#, c-format
+msgid "illegal inode size %d\n"
+msgstr ""
+
+#, c-format
+msgid "allowable inode size with %d byte blocks is %d\n"
+msgstr ""
+
+#, c-format
+msgid "allowable inode size with %d byte blocks is between %d and %d\n"
+msgstr ""
+
+msgid "log stripe unit specified, using v2 logs\n"
+msgstr ""
+
+msgid "no device name given in argument list\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Use the -f option to force overwrite.\n"
+msgstr ""
+
+msgid "internal log"
+msgstr ""
+
+msgid "volume log"
+msgstr ""
+
+msgid "no log subvolume or internal log\n"
+msgstr ""
+
+msgid "volume rt"
+msgstr ""
+
+#, c-format
+msgid ""
+"size %s specified for data subvolume is too large, maximum is %lld blocks\n"
+msgstr ""
+
+msgid "can't get size of data subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "size %lld of data subvolume is too small, minimum %d blocks\n"
+msgstr ""
+
+msgid "can't have both external and internal logs\n"
+msgstr ""
+
+msgid "data and log sector sizes must be equal for internal logs\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"size %s specified for log subvolume is too large, maximum is %lld blocks\n"
+msgstr ""
+
+msgid "size specified for non-existent log subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "size %lld too large for internal log\n"
+msgstr ""
+
+#, c-format
+msgid "log size %lld blocks too small, minimum size is %d blocks\n"
+msgstr ""
+
+#, c-format
+msgid "log size %lld blocks too large, maximum size is %d blocks\n"
+msgstr ""
+
+#, c-format
+msgid "log size %lld bytes too large, maximum size is %d bytes\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"size %s specified for rt subvolume is too large, maximum is %lld blocks\n"
+msgstr ""
+
+msgid "size specified for non-existent rt subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "agsize (%lld) not a multiple of fs blk size (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "agsize (%lldb) too small, need at least %lld blocks\n"
+msgstr ""
+
+#, c-format
+msgid "agsize (%lldb) too big, maximum is %lld blocks\n"
+msgstr ""
+
+#, c-format
+msgid "agsize (%lldb) too big, data area is %lld blocks\n"
+msgstr ""
+
+#, c-format
+msgid "too many allocation groups for size = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "need at most %lld allocation groups\n"
+msgstr ""
+
+#, c-format
+msgid "too few allocation groups for size = %lld\n"
+msgstr ""
+
+#, c-format
+msgid "need at least %lld allocation groups\n"
+msgstr ""
+
+#, c-format
+msgid "agsize set to %lld, agcount %lld > max (%lld)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't compute agsize/agcount\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: Specified data stripe unit %d is not the same as the volume stripe unit "
+"%d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: Specified data stripe width %d is not the same as the volume stripe "
+"width %d\n"
+msgstr ""
+
+#, c-format
+msgid "agsize rounded to %lld, swidth = %d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Warning: AG size is a multiple of stripe width.  This can cause performance\n"
+"problems by aligning all AGs on the same disk.  To avoid this, run mkfs "
+"with\n"
+"an AG size that is one stripe unit smaller, for example %llu.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block "
+"size(%d)\n"
+msgstr ""
+
+#, c-format
+msgid "log stripe unit (%d) must be a multiple of the block size (%d)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"
+msgstr ""
+
+#, c-format
+msgid "internal log size %lld too large, must fit in allocation group\n"
+msgstr ""
+
+#, c-format
+msgid "log ag number %d too large, must be less than %lld\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+"         =%-22s sectsz=%-5u\n"
+"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+"         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
+"naming   =version %-14u bsize=%-6u\n"
+"log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+"         =%-22s sectsz=%-5u sunit=%d blks\n"
+"realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Growing the data section file failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: filesystem failed to initialize\n"
+msgstr ""
+
+#, c-format
+msgid "%s: log size (%lld) is too small for transaction reservations\n"
+msgstr ""
+
+#, c-format
+msgid "%s: root inode created in AG %u, not AG 0\n"
+msgstr ""
+
+#, c-format
+msgid "Cannot specify both -%c %s and -%c %s\n"
+msgstr ""
+
+#, c-format
+msgid "Illegal value %s for -%s option\n"
+msgstr ""
+
+#, c-format
+msgid "-%c %s option requires a value\n"
+msgstr ""
+
+msgid "option respecified\n"
+msgstr ""
+
+#, c-format
+msgid "unknown option -%c %s\n"
+msgstr ""
+
+msgid "blocksize not available yet.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Usage: %s\n"
+"/* blocksize */\t\t[-b log=n|size=num]\n"
+"/* data subvol */\t[-d agcount=n,agsize=n,file,name=xxx,size=num,\n"
+"\t\t\t    (sunit=value,swidth=value|su=num,sw=num),\n"
+"\t\t\t    unwritten=0|1]\n"
+"/* inode size */\t[-i log=n|perblock=n|size=num,maxpct=n]\n"
+"/* log subvol */\t[-l agnum=n,internal,size=num,logdev=xxx\n"
+"\t\t\t    version=n,sunit=value|su=num]\n"
+"/* label */\t\t[-L label (maximum 12 characters)]\n"
+"/* naming */\t\t[-n log=n|size=num,version=n]\n"
+"/* prototype file */\t[-p fname]\n"
+"/* quiet */\t\t[-q]\n"
+"/* realtime subvol */\t[-r extsize=num,size=num,rtdev=xxx]\n"
+"/* sectorsize */\t[-s log=n|size=num]\n"
+"/* version */\t\t[-V]\n"
+"\t\t\tdevicename\n"
+"<devicename> is required unless -d name=xxx is given.\n"
+"Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n"
+"based on the filesystem size.  Default log reaches its largest size at 1TB.\n"
+"This can be overridden with the -l options or using a volume manager with a\n"
+"log subvolume.\n"
+"<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KB),\n"
+"      or xxxm (xxx MB)\n"
+"<value> is xxx (512 blocks).\n"
+msgstr ""
+
+#, c-format
+msgid "Cannot stat %s: %s\n"
+msgstr ""
+
+msgid "Could not open pipe\n"
+msgstr ""
+
+#, c-format
+msgid "Failed to execute %s\n"
+msgstr ""
+
+msgid "Failed forking lvdisplay process\n"
+msgstr ""
+
+#, c-format
+msgid "Error getting MD array info from %s\n"
+msgstr ""
+
+#, c-format
+msgid "MD array %s not in clean state\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s: device %lld is not open\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot stat %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: device %lld is already open\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s: too many open devices\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't find a character device matching %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't find a block device matching %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s is not a volume device name\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s has a data subvolume, cannot specify %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s has a log subvolume, cannot specify %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s has a realtime subvolume, cannot specify %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: mknod failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: stat64 failed on %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't find a char device matching %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't get size for data subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't get size for log subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't get size for realtime subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read realtime bitmap inode (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read realtime summary inode (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: filesystem has a realtime subvolume\n"
+msgstr ""
+
+#, c-format
+msgid "%s: realtime init - %llu != %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s: realtime size check failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: size check failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: data size check failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: log size checks failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: realtime device init failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed to alloc %ld bytes: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read root inode (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s contains a mounted filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s contains a possibly writable, mounted filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s contains a mounted and writable filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "%s: warning - cannot set blocksize on block device %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot stat the device file \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: error opening the device special file \"%s\": %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't determine device size\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s can't memalign %d bytes: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s write failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: buf calloc failed (%ld bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: read failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: pwrite64 failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: error - wrote only %d of %d bytes\n"
+msgstr ""
+
+#, c-format
+msgid "%s: zone init failed (%s, %d bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: zone calloc failed (%s, %d bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: calloc failed (%d bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: realloc failed (%d bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: xact calloc failed (%d bytes): %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: warning - itobp failed (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: warning - iflush_int failed (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: unrecognised log item type\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot reserve space: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"* ERROR: mismatched uuid in log\n"
+"*            SB : %s\n"
+"*            log: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"\n"
+"LOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n"
+msgstr ""
+
+#, c-format
+msgid "* ERROR: bad magic number in log header: 0x%x\n"
+msgstr ""
+
+#, c-format
+msgid "* ERROR: log format incompatible (log=%d, ours=%d)\n"
+msgstr ""
+
+msgid "Bad log"
+msgstr ""
+
+#, c-format
+msgid "%s [-e extsize] [-p] source target\n"
+msgstr ""
+
+#, c-format
+msgid "%s: must specify files to copy\n"
+msgstr ""
+
+#, c-format
+msgid "%s: stat64 of %s failed\n"
+msgstr ""
+
+#, c-format
+msgid "%s: final argument is not directory\n"
+msgstr ""
+
+#, c-format
+msgid "%s: failed stat64 on %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s filesystem has no realtime partition\n"
+msgstr ""
+
+#, c-format
+msgid "%s: open of %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: set attributes on %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: get attributes of %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s is not a realtime file.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: %s file extent size is %d, instead of %d.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: open of %s source failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't get direct I/O information: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: extent size %d not a multiple of %d.\n"
+msgstr ""
+
+#, c-format
+msgid "The size of %s is not a multiple of %d.\n"
+msgstr ""
+
+#, c-format
+msgid "%s will be padded to %lld bytes.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Use the -p option to pad %s to a size which is a multiple of %d bytes.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: write error: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: could not open %s: %s\n"
+msgstr ""

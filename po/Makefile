@@ -34,29 +34,29 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 # Currently LINGUAS is undefined, so buildmacros provides no targets.
-LINGUAS =
-LSRCFILES = $(LINGUAS:%=%.po)
-# LSRCFILES += $(PKG_NAME).pot
+LINGUAS = 
+LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
 
 # TODO: db/ logprint/ repair/
-XGETTEXTFILES =	$(TOPDIR)/bmap/xfs_bmap.c \
-		$(TOPDIR)/imap/xfs_imap.c \
-		$(TOPDIR)/rtcp/xfs_rtcp.c \
+XGETTEXTFILES =	\
+		$(TOPDIR)/bmap/xfs_bmap.c \
+		$(TOPDIR)/freeze/xfs_freeze.c \
 		$(TOPDIR)/growfs/explore.c \
 		$(TOPDIR)/growfs/xfs_growfs.c \
-		$(TOPDIR)/freeze/xfs_freeze.c \
+		$(TOPDIR)/imap/xfs_imap.c \
 		$(TOPDIR)/mkfile/xfs_mkfile.c \
 		$(TOPDIR)/mkfs/proto.c \
 		$(TOPDIR)/mkfs/xfs_mkfs.c \
-		$(TOPDIR)/libxfs/$(PKG_PLATFORM).c \
-		$(TOPDIR)/libxfs/init.c \
-		$(TOPDIR)/libxfs/rdwr.c \
-		$(TOPDIR)/libxfs/util.c \
-		$(TOPDIR)/libxfs/trans.c \
-		$(TOPDIR)/libxlog/util.c \
 		$(TOPDIR)/libdisk/drivers.c \
 		$(TOPDIR)/libdisk/lvm.c \
-		$(TOPDIR)/libdisk/md.c
+		$(TOPDIR)/libdisk/md.c \
+		$(TOPDIR)/libxfs/init.c \
+		$(TOPDIR)/libxfs/linux.c \
+		$(TOPDIR)/libxfs/rdwr.c \
+		$(TOPDIR)/libxfs/trans.c \
+		$(TOPDIR)/libxfs/util.c \
+		$(TOPDIR)/libxlog/util.c \
+		$(TOPDIR)/rtcp/xfs_rtcp.c
 
 default: $(LINGUAS:%=%.mo)
 
