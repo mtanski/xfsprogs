@@ -1,4 +1,7 @@
-xfsprogs-1.2.0 (1 April 2001)
+xfsprogs-1.2.1 (04 April 2001)
+	- sync up with recent changes to XFS kernel headers
+
+xfsprogs-1.2.0 (01 April 2001)
 	- support for group quota added
 	- some headers updated, in particular <xqm.h>
 	- now in late stages of beta

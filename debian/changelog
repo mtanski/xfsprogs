@@ -1,10 +1,11 @@
-xfsprogs (1.2.0) unstable; urgency=low
+xfsprogs (1.2.1) unstable; urgency=low
 
   * Support for group quota added
   * Stripe unit/stripe width extraction for MD devices
   * Added mkfs.xfs heuristics for size of internal log
+  * Sync up with recent changes to XFS kernel headers
 
- -- Nathan Scott <nathans@debian.org>  Sun,  1 Apr 2001 16:49:26 +1000
+ -- Nathan Scott <nathans@debian.org>  Wed,  4 Apr 2001 13:54:00 +1000
 
 xfsprogs (1.1.6) unstable; urgency=low
 

@@ -338,12 +338,19 @@ xfs_btree_cur_t *xfs_btree_init_cursor (xfs_mount_t *, xfs_trans_t *,
 int  xfs_btree_islastblock (xfs_btree_cur_t *, int);
 int  xfs_btree_lastrec (xfs_btree_cur_t *, int);
 void xfs_btree_offsets (__int64_t, const short *, int, int *, int *);
-int  xfs_btree_readahead (xfs_btree_cur_t *, int, int);
 void xfs_btree_setbuf (xfs_btree_cur_t *, int, xfs_buf_t *);
 int  xfs_btree_read_bufs (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t,
 			xfs_agblock_t, uint, xfs_buf_t **, int);
 int  xfs_btree_read_bufl (xfs_mount_t *, xfs_trans_t *, xfs_fsblock_t,
 			uint, xfs_buf_t **, int);
+int  xfs_btree_readahead_core (xfs_btree_cur_t *, int, int);
+static inline int xfs_btree_readahead (xfs_btree_cur_t *cur, int lev, int lr)
+{
+	if ((cur->bc_ra[lev] | lr) == cur->bc_ra[lev])
+		return 0;
+	return xfs_btree_readahead_core(cur, lev, lr);
+}
+
 
 /* xfs_inode.c */
 int  xfs_ialloc (xfs_trans_t *, xfs_inode_t *, mode_t, nlink_t, dev_t, cred_t *,
