@@ -45,7 +45,7 @@ io_init(void)
 
 	ASSERT(fs_name != NULL && *fs_name != '\0');
 
-	if ((fs_fd = open (fs_name, O_RDWR)) < 0)  {
+	if ((fs_fd = open (fs_name, (no_modify? O_RDONLY : O_RDWR))) < 0)  {
 		do_error("couldn't open filesystem \"%s\"\n",
 			 fs_name);
 	}
