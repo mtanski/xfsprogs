@@ -299,7 +299,7 @@ int	xfs_attr_leaf_newentsize(struct xfs_da_args *args, int blocksize,
 					int *local);
 int	xfs_attr_leaf_entsize(struct xfs_attr_leafblock *leaf, int index);
 int	xfs_attr_put_listent(struct xfs_attr_list_context *context,
-				    char *name, int namelen, int valuelen);
+			     int ns, char *name, int namelen, int valuelen);
 int	xfs_attr_rolltrans(struct xfs_trans **transp, struct xfs_inode *dp);
 
 #endif	/* __XFS_ATTR_LEAF_H__ */

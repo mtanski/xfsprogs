@@ -66,6 +66,7 @@ typedef struct xfs_attr_sf_sort {
 	__uint8_t	entno;		/* entry number in original list */
 	__uint8_t	namelen;	/* length of name value (no null) */
 	__uint8_t	valuelen;	/* length of value */
+	__uint8_t	flags;		/* flags bits (see xfs_attr_leaf.h) */
 	xfs_dahash_t	hash;		/* this entry's hash value */
 	char		*name;		/* name value, pointer into buffer */
 } xfs_attr_sf_sort_t;

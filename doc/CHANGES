@@ -5,7 +5,9 @@ xfsprogs-2.0.0 (26 February 2002)
 	  the reworked extended attributes handle ioctl interface
 	- xfs_repair in no-modify mode opens the filesystem device
 	  read-only now (fix from Chris Pascoe)
-	- sync up with recent changes to kernel headers
+	- sync up with recent (minor) changes to shared kernel code
+	- switch to using the BLKGETSIZE64 ioctl in libxfs, instead
+	  of the (previously busted) BLKGETSIZE ioctl
 
 xfsprogs-1.3.19 (15 February 2002)
 	- fix xfs_repair option parsing for external logs

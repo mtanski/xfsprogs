@@ -111,11 +111,7 @@ typedef struct xfs_mac_label {
 #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
 
 /* On-disk XFS extended attribute names (mandatory access control) */
-#define SGI_BI_FILE	"SGI_BI_FILE"
-#define SGI_BLS_FILE	"SGI_BLS_FILE"
 #define SGI_MAC_FILE	"SGI_MAC_FILE"
-#define SGI_BI_FILE_SIZE	(sizeof(SGI_BI_FILE)-1)
-#define SGI_BLS_FILE_SIZE	(sizeof(SGI_BLS_FILE)-1)
 #define SGI_MAC_FILE_SIZE	(sizeof(SGI_MAC_FILE)-1)
 
 /* On-disk XFS extended attribute names (capabilities) */

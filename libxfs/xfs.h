@@ -373,9 +373,9 @@ int  xfs_iextents_copy (xfs_inode_t *, xfs_bmbt_rec_32_t *, int);
 int  xfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 int  xfs_iflush_fork (xfs_inode_t *, xfs_dinode_t *, xfs_inode_log_item_t *,
 		int, xfs_buf_t *);
-int  xfs_iformat_local (xfs_inode_t *, xfs_dinode_t *, int, int, int);
-int  xfs_iformat_extents (xfs_inode_t *, xfs_dinode_t *, int, int);
-int  xfs_iformat_btree (xfs_inode_t *, xfs_dinode_t *, int, int);
+int  xfs_iformat_local (xfs_inode_t *, xfs_dinode_t *, int, int);
+int  xfs_iformat_extents (xfs_inode_t *, xfs_dinode_t *, int);
+int  xfs_iformat_btree (xfs_inode_t *, xfs_dinode_t *, int);
 void xfs_iroot_realloc (xfs_inode_t *, int, int);
 void xfs_idata_realloc (xfs_inode_t *, int, int);
 void xfs_iext_realloc (xfs_inode_t *, int, int);
@@ -455,7 +455,7 @@ int  xfs_alloc_split (xfs_btree_cur_t *, int, xfs_agblock_t *,
 			xfs_alloc_key_t *, xfs_btree_cur_t **, int *);
 
 /* xfs_da_btree.c */
-xfs_dabuf_t *xfs_da_buf_make (int, xfs_buf_t **, inst_t *, int);
+xfs_dabuf_t *xfs_da_buf_make (int, xfs_buf_t **, inst_t *);
 int  xfs_da_root_join (xfs_da_state_t *, xfs_da_state_blk_t *);
 int  xfs_da_root_split (xfs_da_state_t *, xfs_da_state_blk_t *,
 			xfs_da_state_blk_t *);
