@@ -36,7 +36,7 @@ void
 xlog_recover_print_trans_head(
         xlog_recover_t *tr)
 {
-        printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:%lx\n",
+        printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n",
                tr->r_log_tid, trans_type[tr->r_theader.th_type],
                tr->r_theader.th_num_items,
                tr->r_theader.th_tid, (long)tr->r_itemq);

@@ -569,7 +569,7 @@ xlog_recover_print_item(xlog_recover_item_t *item)
 */
 	printf(": cnt:%d total:%d ", item->ri_cnt, item->ri_total);
 	for (i=0; i<item->ri_cnt; i++) {
-		printf("a:%lx len:%d ",
+		printf("a:0x%lx len:%d ",
 		       (long)item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
 	}
 	printf("\n");
