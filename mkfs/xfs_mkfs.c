@@ -937,14 +937,15 @@ main(int argc, char **argv)
 		if (dbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
 			"illegal data length %lld, not a multiple of %d\n",
-				dbytes, XFS_MIN_BLOCKSIZE);
+				(long long)dbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		dblocks = (xfs_drfsbno_t)(dbytes >> blocklog);
 		if (dbytes % blocksize)
 			fprintf(stderr,
 	"warning: data length %lld not a multiple of %d, truncated to %lld\n",
-				dbytes, blocksize, dblocks << blocklog);
+				(long long)dbytes, blocksize,
+				(long long)(dblocks << blocklog));
 	}
 	if (ipflag) {
 		inodelog = blocklog - libxfs_highbit32(inopblock);
@@ -967,14 +968,15 @@ main(int argc, char **argv)
 		if (logbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
 			"illegal log length %lld, not a multiple of %d\n",
-				logbytes, XFS_MIN_BLOCKSIZE);
+				(long long)logbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		logblocks = (xfs_drfsbno_t)(logbytes >> blocklog);
 		if (logbytes % blocksize)
 			fprintf(stderr,
 	"warning: log length %lld not a multiple of %d, truncated to %lld\n",
-				logbytes, blocksize, logblocks << blocklog);
+				(long long)logbytes, blocksize,
+				(long long)(logblocks << blocklog));
 	}
 #ifdef HAVE_VOLUME_MANAGER
 	if (xi.risfile && (!rtsize || !xi.rtname)) {
@@ -990,14 +992,15 @@ main(int argc, char **argv)
 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
 			fprintf(stderr,
 			"illegal rt length %lld, not a multiple of %d\n",
-				rtbytes, XFS_MIN_BLOCKSIZE);
+				(long long)rtbytes, XFS_MIN_BLOCKSIZE);
 			usage();
 		}
 		rtblocks = (xfs_drfsbno_t)(rtbytes >> blocklog);
 		if (rtbytes % blocksize)
 			fprintf(stderr,
 	"warning: rt length %lld not a multiple of %d, truncated to %lld\n",
-				rtbytes, blocksize, rtblocks << blocklog);
+				(long long)rtbytes, blocksize,
+				(long long)(rtblocks << blocklog));
 	}
 	/*
 	 * If specified, check rt extent size against its constraints.
@@ -1009,7 +1012,7 @@ main(int argc, char **argv)
 		if (rtextbytes % blocksize) {
 			fprintf(stderr,
 			"illegal rt extent size %lld, not a multiple of %d\n",
-				rtextbytes, blocksize);
+				(long long)rtextbytes, blocksize);
 			usage();
 		}
 		if (rtextbytes > XFS_MAX_RTEXTSIZE) {
@@ -1214,7 +1217,7 @@ main(int argc, char **argv)
 	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
 		fprintf(stderr,
 "size %s specified for data subvolume is too large, maximum is %lld blocks\n",
-			dsize, DTOBT(xi.dsize));
+			dsize, (long long)DTOBT(xi.dsize));
 		usage();
 	} else if (!dsize && xi.dsize > 0)
 		dblocks = DTOBT(xi.dsize);
@@ -1225,7 +1228,7 @@ main(int argc, char **argv)
 	if (dblocks < XFS_MIN_DATA_BLOCKS) {
 		fprintf(stderr,
 		"size %lld of data subvolume is too small, minimum %d blocks\n",
-			dblocks, XFS_MIN_DATA_BLOCKS);
+			(long long)dblocks, XFS_MIN_DATA_BLOCKS);
 		usage();
 	}
 	if (xi.logdev && loginternal) {
@@ -1243,7 +1246,7 @@ main(int argc, char **argv)
 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
 		fprintf(stderr,
 "size %s specified for log subvolume is too large, maximum is %lld blocks\n",
-			logsize, DTOBT(xi.logBBsize));
+			logsize, (long long)DTOBT(xi.logBBsize));
 		usage();
 	} else if (!logsize && xi.logBBsize > 0)
 		logblocks = DTOBT(xi.logBBsize);
@@ -1253,7 +1256,7 @@ main(int argc, char **argv)
 		usage();
 	} else if (loginternal && logsize && logblocks >= dblocks) {
 		fprintf(stderr, "size %lld too large for internal log\n",
-			logblocks);
+			(long long)logblocks);
 		usage();
 	} else if (!loginternal && !xi.logdev)
 		logblocks = 0;
@@ -1265,25 +1268,25 @@ main(int argc, char **argv)
 	if (logblocks < min_logblocks) {
 		fprintf(stderr,
 		"log size %lld blocks too small, minimum size is %d blocks\n",
-			logblocks, min_logblocks);
+			(long long)logblocks, min_logblocks);
 		usage();
 	}
 	if (logblocks > XFS_MAX_LOG_BLOCKS) {
 		fprintf(stderr,
 		"log size %lld blocks too large, maximum size is %d blocks\n",
-			logblocks, XFS_MAX_LOG_BLOCKS);
+			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
 		usage();
 	}
 	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 		fprintf(stderr,
 		"log size %lld bytes too large, maximum size is %d bytes\n",
-			logblocks << blocklog, XFS_MAX_LOG_BYTES);
+			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
 		usage();
 	}
 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
 		fprintf(stderr,
 "size %s specified for rt subvolume is too large, maximum is %lld blocks\n",
-			rtsize, DTOBT(xi.rtsize));
+			rtsize, (long long)DTOBT(xi.rtsize));
 		usage();
 	} else if (!rtsize && xi.rtsize > 0)
 		rtblocks = DTOBT(xi.rtsize);
@@ -1310,8 +1313,9 @@ main(int argc, char **argv)
 			fprintf(stderr,
 				"too many allocation groups for size\n");
 			fprintf(stderr, "need at most %lld allocation groups\n",
-				dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
-				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0));
+				(long long)
+				(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
+				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
 			usage();
 		}
 		agsize = XFS_AG_MIN_BLOCKS(blocklog);
@@ -1331,8 +1335,9 @@ main(int argc, char **argv)
 			fprintf(stderr, "too few allocation groups for size\n");
 			fprintf(stderr,
 				"need at least %lld allocation groups\n",
-				dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
-				(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0));
+				(long long)
+				(dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
+				(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
 			usage();
 		}
 		agsize = XFS_AG_MAX_BLOCKS(blocklog);
@@ -1421,7 +1426,7 @@ main(int argc, char **argv)
 				else { 
 					fprintf(stderr,
 "Allocation group size %lld is not a multiple of the stripe unit %d\n",
-						agsize, dsunit);
+						(long long)agsize, dsunit);
 					exit(1);
 				}
         		}
@@ -1450,14 +1455,14 @@ main(int argc, char **argv)
 		if (logblocks > agsize - XFS_PREALLOC_BLOCKS(mp)) {
 			fprintf(stderr,
 	"internal log size %lld too large, must fit in allocation group\n",
-				logblocks);
+				(long long)logblocks);
 			usage();
 		}
 		if (laflag) {
 			if (logagno >= agcount) {
 				fprintf(stderr,
 			"log ag number %d too large, must be less than %lld\n",
-					logagno, agcount);
+					logagno, (long long)agcount);
 				usage();
 			}
 		} else
@@ -1481,7 +1486,7 @@ main(int argc, char **argv)
 			   else {
 				fprintf(stderr,
 	"internal log size %lld is not a multiple of the stripe unit %d\n", 
-					logblocks, dsunit);
+					(long long)logblocks, dsunit);
 				usage();
 			   }
 
@@ -1489,7 +1494,7 @@ main(int argc, char **argv)
 				fprintf(stderr,
 	"Due to stripe alignment, the internal log size %lld is too large.\n"
 	"Must fit in allocation group\n",
-					logblocks);
+					(long long)logblocks);
 				usage();
 			}
 			lalign = 1;
@@ -1554,12 +1559,13 @@ main(int argc, char **argv)
 		   "naming   =version %-14d bsize=%-6d\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
-			dfile, isize, agcount, agsize,
-			"", blocksize, dblocks, sbp->sb_imax_pct,
+			dfile, isize, (long long)agcount, (long long)agsize,
+			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
 			"", dsunit, dswidth, extent_flagging,
 			dirversion, dirversion == 1 ? blocksize : dirblocksize,
-			logfile, 1 << blocklog, logblocks,
-			rtfile, rtextblocks << blocklog, rtblocks, rtextents);
+			logfile, 1 << blocklog, (long long)logblocks,
+			rtfile, rtextblocks << blocklog,
+			(long long)rtblocks, (long long)rtextents);
 	/*
 	 * If the data area is a file, then grow it out to its final size
 	 * so that the reads for the end of the device in the mount code
@@ -1593,7 +1599,7 @@ main(int argc, char **argv)
 	    XFS_MIN_LOG_FACTOR * max_trans_res(mp)) {
 		fprintf(stderr, "%s: log size (%lld) is too small for "
 				"transaction reservations\n",
-			progname, logblocks);
+			progname, (long long)logblocks);
 		exit(1);
 	}
 

@@ -1058,8 +1058,8 @@ avl_insert(
 		if (start != end)  { /* non-zero length range */
 #ifdef	AVL_USER_MODE
 			printf(
-			"avl_insert: Warning! duplicate range [0x%x,0x%x)\n",
-				start, end);
+			"avl_insert: Warning! duplicate range [0x%llx,0x%lx)\n",
+				(unsigned long long)start, (unsigned long)end);
 #else
 			/*
 			 * lockmetering tree can't afford printfs here.

@@ -130,8 +130,8 @@ xlog_recover_print_buffer(
 	    }
 	} 
 	if (f->blf_type == XFS_LI_BUF) {
-		printf("#regs:%d   start blkno:0x%Lx   len:%d   bmap size:%d\n",
-		       f->blf_size, f->blf_blkno, f->blf_len, f->blf_map_size);
+		printf("#regs:%d   start blkno:0x%llx   len:%d   bmap size:%d\n",
+		       f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size);
 		blkno = (xfs_daddr_t)f->blf_blkno;
 	} else {
 		printf("#regs:%d   start blkno:0x%x   len:%d   bmap size:%d\n",
@@ -201,9 +201,9 @@ xlog_recover_print_buffer(
 			ddq = (xfs_disk_dquot_t *)p;
 			printf("	DQUOT Buffer:\n");
 			if (!print_buffer) continue;
-			printf("		UIDs 0x%x-0x%x\n", 
-			       INT_GET(ddq->d_id, ARCH_CONVERT),
-			       INT_GET(ddq->d_id, ARCH_CONVERT) +
+			printf("		UIDs 0x%lx-0x%lx\n", 
+			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT),
+			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT) +
 			       (BBTOB(f->blf_len) / sizeof(xfs_dqblk_t)) - 1);
 		} else {
 			printf("	BUF DATA\n");
@@ -242,8 +242,8 @@ xlog_recover_print_dquot(
 	ASSERT(f);
 	ASSERT(f->qlf_len == 1);
 	d = (xfs_disk_dquot_t *)item->ri_buf[1].i_addr;
-	printf("\tDQUOT: #regs:%d  blkno:%Ld  boffset:%u id: %d\n",
-	       f->qlf_size, f->qlf_blkno, f->qlf_boffset, f->qlf_id);
+	printf("\tDQUOT: #regs:%d  blkno:%lld  boffset:%u id: %d\n",
+	       f->qlf_size, (long long)f->qlf_blkno, f->qlf_boffset, f->qlf_id);
 	if (!print_quota)
 		return;
 	printf("\t\tmagic 0x%x\tversion 0x%x\tID 0x%x (%d)\t\n",
@@ -282,10 +282,10 @@ xlog_recover_print_inode_core(
 	       di->di_uid, di->di_gid, di->di_nlink, (uint)di->di_projid);
 	printf("		atime:%d  mtime:%d  ctime:%d\n",
 	       di->di_atime.t_sec, di->di_mtime.t_sec, di->di_ctime.t_sec);
-	printf("		size:0x%Lx  nblks:0x%Lx  exsize:%d  nextents:%d"
-	       "  anextents:%d\n",
-	       di->di_size, di->di_nblocks, di->di_extsize, di->di_nextents,
-	       (int)di->di_anextents);
+	printf("		size:0x%llx  nblks:0x%llx  exsize:%d  "
+	     "nextents:%d  anextents:%d\n", (unsigned long long)
+	       di->di_size, (unsigned long long)di->di_nblocks,
+	       di->di_extsize, di->di_nextents, (int)di->di_anextents);
 	printf("		forkoff:%d  dmevmask:0x%x  dmstate:%d  flags:0x%x  "
 	     "gen:%d\n",
 	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
@@ -304,8 +304,9 @@ xlog_recover_print_inode(
 
 	f = (xfs_inode_log_format_t *)item->ri_buf[0].i_addr;
 	ASSERT(item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t));
-	printf("	INODE: #regs:%d   ino:0x%Lx  flags:0x%x   dsize:%d\n",
-	       f->ilf_size, f->ilf_ino, f->ilf_fields, f->ilf_dsize);
+	printf("	INODE: #regs:%d   ino:0x%llx  flags:0x%x   dsize:%d\n",
+	       f->ilf_size, (unsigned long long)f->ilf_ino, f->ilf_fields,
+	       f->ilf_dsize);
 
 	/* core inode comes 2nd */
 	ASSERT(item->ri_buf[1].i_len == sizeof(xfs_dinode_core_t));
@@ -423,12 +424,13 @@ xlog_recover_print_efd(
 	ASSERT(item->ri_buf[0].i_len == 
 	       sizeof(xfs_efd_log_format_t) + sizeof(xfs_extent_t) *
 	       (f->efd_nextents-1));
-	printf("	EFD:  #regs: %d    num_extents: %d  id: 0x%Lx\n",
-	       f->efd_size, f->efd_nextents, f->efd_efi_id);
+	printf("	EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
+	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
 	ex = f->efd_extents;
 	printf("	");
 	for (i=0; i < f->efd_size; i++) {
-		printf("(s: 0x%Lx, l: %d) ", ex->ext_start, ex->ext_len);
+		printf("(s: 0x%llx, l: %d) ",
+			(unsigned long long) ex->ext_start, ex->ext_len);
 		if (i % 4 == 3)
 			printf("\n");
 		ex++;
@@ -455,12 +457,13 @@ xlog_recover_print_efi(
 	       sizeof(xfs_efi_log_format_t) + sizeof(xfs_extent_t) *
 	       (f->efi_nextents-1));
 	
-	printf("	EFI:  #regs:%d    num_extents:%d  id:0x%Lx\n",
-	       f->efi_size, f->efi_nextents, f->efi_id);
+	printf("	EFI:  #regs:%d    num_extents:%d  id:0x%llx\n",
+	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
 	ex = f->efi_extents;
 	printf("	");
 	for (i=0; i< f->efi_nextents; i++) {
-		printf("(s: 0x%Lx, l: %d) ", ex->ext_start, ex->ext_len);
+		printf("(s: 0x%llx, l: %d) ",
+			(unsigned long long)ex->ext_start, ex->ext_len);
 		if (i % 4 == 3) printf("\n");
 		ex++;
 	}
@@ -566,8 +569,8 @@ xlog_recover_print_item(xlog_recover_item_t *item)
 */
 	printf(": cnt:%d total:%d ", item->ri_cnt, item->ri_total);
 	for (i=0; i<item->ri_cnt; i++) {
-		printf("a:%p len:%d ",
-		       item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
+		printf("a:%lx len:%d ",
+		       (long)item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
 	}
 	printf("\n");
 	xlog_recover_print_logitem(item);

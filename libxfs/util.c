@@ -236,30 +236,31 @@ libxfs_iprint(xfs_inode_t *ip)
 	xfs_extnum_t	i;
 	xfs_extnum_t	nextents;
 
-	printf("Inode %p\n", ip);
-	printf("    i_dev %x\n", (uint)ip->i_dev);
-	printf("    i_ino %Lx\n", ip->i_ino);
+	printf("Inode %lx\n", (unsigned long)ip);
+	printf("    i_dev %llx\n", (unsigned long long)ip->i_dev);
+	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
 
 	if (ip->i_df.if_flags & XFS_IFEXTENTS)
 		printf("EXTENTS ");
 	printf("\n");
 	printf("    i_df.if_bytes %d\n", ip->i_df.if_bytes);
-	printf("    i_df.if_u1.if_extents/if_data %p\n", ip->i_df.if_u1.if_extents);
+	printf("    i_df.if_u1.if_extents/if_data %lx\n",
+		(unsigned long)ip->i_df.if_u1.if_extents);
 	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
 		nextents = ip->i_df.if_bytes / (uint)sizeof(*ep);
 		for (ep = ip->i_df.if_u1.if_extents, i = 0; i < nextents; i++, ep++) {
 			xfs_bmbt_irec_t	rec;
 
 			xfs_bmbt_get_all(ep, &rec);
-			printf("\t%d: startoff %Lu, startblock 0x%Lx,"
-			" blockcount %Lu, state %d\n",
-				i, (xfs_dfiloff_t)rec.br_startoff,
-				(xfs_dfsbno_t)rec.br_startblock,
-				(xfs_dfilblks_t)rec.br_blockcount,
+			printf("\t%d: startoff %llu, startblock 0x%llx,"
+				" blockcount %llu, state %d\n",
+				i, (unsigned long long)rec.br_startoff,
+				(unsigned long long)rec.br_startblock,
+				(unsigned long long)rec.br_blockcount,
 				(int)rec.br_state);
 		}
 	}
-	printf("    i_df.if_broot %p\n", ip->i_df.if_broot);
+	printf("    i_df.if_broot %lx\n", (unsigned long)ip->i_df.if_broot);
 	printf("    i_df.if_broot_bytes %x\n", ip->i_df.if_broot_bytes);
 
 	dip = &(ip->i_d);
@@ -285,11 +286,11 @@ libxfs_iprint(xfs_inode_t *ip)
 	printf("   di_uid %d\n", dip->di_uid);
 	printf("   di_gid %d\n", dip->di_gid);
 	printf("   di_nextents %d\n", dip->di_nextents);
-	printf("   di_size %Ld\n", dip->di_size);
+	printf("   di_size %llu\n", (unsigned long long)dip->di_size);
 	printf("   di_gen %x\n", dip->di_gen);
 	printf("   di_extsize %d\n", dip->di_extsize);
 	printf("   di_flags %x\n", dip->di_flags);
-	printf("   di_nblocks %Ld\n", dip->di_nblocks);
+	printf("   di_nblocks %llu\n", (unsigned long long)dip->di_nblocks);
 }
 
 /*

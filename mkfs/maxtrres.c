@@ -182,7 +182,7 @@ main(int argc, char **argv)
 					printf(
 				"#define\tMAXTRRES_B%d_I%d_D%d_V%d\t%lld\t"
 				"/* LOG_FACTOR %d */\n",
-						bl, il, dl, dv,
+						bl, il, dl, dv, (long long)
 						XFS_B_TO_FSB(&m, i), mul);
 					libxfs_umount(&m);
 				}

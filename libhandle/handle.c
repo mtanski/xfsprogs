@@ -65,7 +65,7 @@ typedef union {
 int
 obj_to_handle (
 	int		fsfd,
-	int		opcode,
+	unsigned int	opcode,
 	comarg_t	obj,
 	void		**hanp,
 	size_t		*hlen);
@@ -213,7 +213,7 @@ handle_to_fsfd(void *hanp)
 int
 obj_to_handle (
 	int		fsfd,
-	int		opcode,
+	unsigned int	opcode,
 	comarg_t	obj,
 	void		**hanp,
 	size_t		*hlen)
@@ -234,7 +234,7 @@ obj_to_handle (
 	hreq.ihandle  = NULL;
 	hreq.ihandlen = 0;
 	hreq.ohandle  = hbuf;
-	hreq.ohandlen = hlen;
+	hreq.ohandlen = (__u32 *)hlen;
 
 	ret = (int) ioctl(fsfd, opcode, &hreq);
 
@@ -305,7 +305,7 @@ readlink_by_handle (
 	hreq.ihandle  = hanp;
 	hreq.ihandlen = hlen;
 	hreq.ohandle  = buf;
-	hreq.ohandlen = &bufsiz;
+	hreq.ohandlen = (__u32 *)&bufsiz;
 
 	return (int) ioctl(fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
 }

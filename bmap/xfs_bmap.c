@@ -180,7 +180,7 @@ dofile(char *fname)
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
 		fprintf(stderr, "malloc of %d bytes failed.\n",
-							map_size*sizeof(*map));
+				(int)(map_size * sizeof(*map)));
 		close(fd);
 		return 1;
 	}
@@ -227,9 +227,10 @@ dofile(char *fname)
 			printf(
 		"xfs_bmap: i=%d map.bmv_offset=%lld, map.bmv_block=%lld, "
 		"map.bmv_length=%lld, map.bmv_count=%d, map.bmv_entries=%d\n",
-					i, map->bmv_offset, map->bmv_block,
-					map->bmv_length, map->bmv_count,
-					map->bmv_entries);
+					i, (long long)map->bmv_offset,
+					(long long)map->bmv_block,
+					(long long)map->bmv_length,
+					map->bmv_count, map->bmv_entries);
 		if (i < 0) {
 			if (   errno == EINVAL
 			    && !aflag && file_size(fd, fname) == 0) {
@@ -263,8 +264,8 @@ dofile(char *fname)
 			map_size = 2*(fsx.fsx_nextents+1);
 			map = realloc(map, map_size*sizeof(*map));
 			if (map == NULL) {
-				fprintf(stderr,"cannot realloc %d bytes.\n",
-						map_size*sizeof(*map));
+				fprintf(stderr, "cannot realloc %d bytes.\n",
+						(int)(map_size * sizeof(*map)));
 				close(fd);
 				return 1;
 			}
@@ -283,19 +284,20 @@ dofile(char *fname)
 	if (!vflag) {
 		for (i = 0; i < map->bmv_entries; i++) {
 			printf("\t%d: [%lld..%lld]: ", i,
-				map[i + 1].bmv_offset,
-				map[i + 1].bmv_offset + 
-				map[i + 1].bmv_length - 1LL);
+				(long long) map[i + 1].bmv_offset,
+				(long long)(map[i + 1].bmv_offset + 
+				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1)
 				printf("hole");
 			else {
-				printf("%lld..%lld", map[i + 1].bmv_block,
-					map[i + 1].bmv_block +
-						map[i + 1].bmv_length - 1LL);
+				printf("%lld..%lld",
+					(long long) map[i + 1].bmv_block,
+					(long long)(map[i + 1].bmv_block +
+						map[i + 1].bmv_length - 1LL));
 
 			}
 			if (lflag)
-				printf(" %lld blocks\n", map[i+1].bmv_length);
+				printf(" %lld blocks\n", (long long)map[i+1].bmv_length);
 			else
 				printf("\n");
 		}
@@ -325,22 +327,22 @@ dofile(char *fname)
 		 */
 		for (i = 0; i < map->bmv_entries; i++) {
 			sprintf(rbuf, "[%lld..%lld]:", 
-				map[i + 1].bmv_offset,
-				map[i + 1].bmv_offset +
-				map[i + 1].bmv_length - 1LL);
+				(long long) map[i + 1].bmv_offset,
+				(long long)(map[i + 1].bmv_offset +
+				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1) {
 				foff_w = max(foff_w, strlen(rbuf)); 
 				tot_w = max(tot_w, 
 					numlen(map[i+1].bmv_length));
 			} else {
 				sprintf(bbuf, "%lld..%lld", 
-					map[i + 1].bmv_block,
-					map[i + 1].bmv_block +
-						map[i + 1].bmv_length - 1LL);
+					(long long) map[i + 1].bmv_block,
+					(long long)(map[i + 1].bmv_block +
+						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
 				sprintf(abuf, "(%lld..%lld)", 
-					agoff, 
+					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
 				foff_w = max(foff_w, strlen(rbuf)); 
 				boff_w = max(boff_w, strlen(bbuf)); 
@@ -359,9 +361,9 @@ dofile(char *fname)
 			tot_w, "TOTAL");
 		for (i = 0; i < map->bmv_entries; i++) {
 			sprintf(rbuf, "[%lld..%lld]:", 
-				map[i + 1].bmv_offset,
-				map[i + 1].bmv_offset +
-				map[i + 1].bmv_length - 1LL);
+				(long long) map[i + 1].bmv_offset,
+				(long long)(map[i + 1].bmv_offset +
+				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1) {
 				printf("%4d: %-*s %-*s %*s %-*s %*lld\n", 
 					i, 
@@ -369,16 +371,16 @@ dofile(char *fname)
 					boff_w, "hole", 
 					agno_w, "",
 					aoff_w, "", 
-					tot_w, map[i+1].bmv_length);
+					tot_w, (long long)map[i+1].bmv_length);
 			} else {
 				sprintf(bbuf, "%lld..%lld", 
-					map[i + 1].bmv_block,
-					map[i + 1].bmv_block +
-						map[i + 1].bmv_length - 1LL);
+					(long long) map[i + 1].bmv_block,
+					(long long)(map[i + 1].bmv_block +
+						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
 				sprintf(abuf, "(%lld..%lld)", 
-					agoff, 
+					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
 				printf("%4d: %-*s %-*s %*d %-*s %*lld\n", 
 					i, 
@@ -386,7 +388,7 @@ dofile(char *fname)
 					boff_w, bbuf, 
 					agno_w, agno, 
 					aoff_w, abuf, 
-					tot_w, map[i+1].bmv_length);
+					tot_w, (long long)map[i+1].bmv_length);
 			}
 		}
 	}

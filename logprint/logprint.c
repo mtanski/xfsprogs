@@ -216,22 +216,22 @@ main(int argc, char **argv)
 
 	logstat(&x);
 
-        logfd=(x.logfd<0)?(x.dfd):(x.logfd);
-        
-        printf("    data device: 0x%Lx\n", x.ddev);
-        
-        if (x.logname) {
-                printf("    log file: \"%s\" ", x.logname);
-        } else {
-                printf("    log device: 0x%Lx ", x.logdev);
-        }
+	logfd=(x.logfd<0)?(x.dfd):(x.logfd);
+ 
+	printf("    data device: 0x%llx\n", (unsigned long long)x.ddev);
 
-        printf("daddr: %Ld length: %Ld\n\n",
-                (__int64_t)x.logBBstart, (__int64_t)x.logBBsize);
-        
-        ASSERT(x.logBBstart <= INT_MAX);
+	if (x.logname) {
+		printf("    log file: \"%s\" ", x.logname);
+	} else {
+		printf("    log device: 0x%llx ", (unsigned long long)x.logdev);
+	}
 
-        /* init log structure */
+	printf("daddr: %lld length: %lld\n\n",
+		(long long)x.logBBstart, (long long)x.logBBsize);
+
+	ASSERT(x.logBBstart <= INT_MAX);
+
+	/* init log structure */
 	log.l_dev	   = x.logdev;
 	log.l_logsize     = BBTOB(x.logBBsize);
 	log.l_logBBstart  = x.logBBstart;

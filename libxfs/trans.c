@@ -43,7 +43,7 @@ libxfs_trans_alloc(xfs_mount_t *mp, int type)
 
 	if ((ptr = calloc(sizeof(xfs_trans_t), 1)) == NULL) {
 		fprintf(stderr, "%s: xact calloc failed (%d bytes): %s\n",
-			progname, sizeof(xfs_trans_t), strerror(errno));
+			progname, (int)sizeof(xfs_trans_t), strerror(errno));
 		exit(1);
 	}
 	ptr->t_mountp = mp;

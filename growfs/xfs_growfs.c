@@ -79,12 +79,13 @@ report_info(
 	       "log      =%-22s bsize=%-6d blocks=%d\n"
 	       "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 	       mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
-	       "", geo.blocksize, geo.datablocks, geo.imaxpct,
+	       "", geo.blocksize, (long long)geo.datablocks, geo.imaxpct,
 	       "", geo.sunit, geo.swidth, unwritten,
 	       dirversion, geo.dirblocksize,
 	       isint ? "internal" : "external", geo.blocksize, geo.logblocks,
 	       geo.rtblocks ? "external" : "none",
-	       geo.rtextsize * geo.blocksize, geo.rtblocks, geo.rtextents);
+	       geo.rtextsize * geo.blocksize,
+	       (long long)geo.rtblocks, (long long)geo.rtextents);
 }
 
 void
@@ -319,14 +320,15 @@ main(int argc, char **argv)
 			dsize = ddsize / (geo.blocksize / BBSIZE);
 		else if (dsize > ddsize / (geo.blocksize / BBSIZE)) {
 			fprintf(stderr,
-				"data size %llu too large, maximum is %lld\n",
-				(__u64)dsize, ddsize/(geo.blocksize/BBSIZE));
+				"data size %lld too large, maximum is %lld\n",
+				(long long)dsize,
+				(long long)(ddsize/(geo.blocksize/BBSIZE)));
 			error = 1;
 		}
 		if (!error && dsize < geo.datablocks) {
-			fprintf(stderr, "data size %llu too small,"
+			fprintf(stderr, "data size %lld too small,"
 				" old size is %lld\n",
-				(__u64)dsize, geo.datablocks);
+				(long long)dsize, (long long)geo.datablocks);
 			error = 1;
 		} else if (!error &&
 			   dsize == geo.datablocks && maxpct == geo.imaxpct) {
@@ -369,7 +371,7 @@ main(int argc, char **argv)
 		if (!error && rsize < geo.rtblocks) {
 			fprintf(stderr,
 			"realtime size %lld too small, old size is %lld\n",
-				rsize, geo.rtblocks);
+				(long long)rsize, (long long)geo.rtblocks);
 			error = 1;
 		} else if (!error && rsize == geo.rtblocks) {
 			if (rflag)
@@ -437,7 +439,7 @@ main(int argc, char **argv)
 	}
 	if (geo.datablocks != ngeo.datablocks)
 		printf("data blocks changed from %lld to %lld\n",
-			geo.datablocks, ngeo.datablocks);
+			(long long)geo.datablocks, (long long)ngeo.datablocks);
 	if (geo.imaxpct != ngeo.imaxpct)
 		printf("inode max percent changed from %d to %d\n",
 			geo.imaxpct, ngeo.imaxpct);
@@ -450,7 +452,7 @@ main(int argc, char **argv)
 			ngeo.logstart ? "internal" : "external");
 	if (geo.rtblocks != ngeo.rtblocks)
 		printf("realtime blocks changed from %lld to %lld\n",
-			geo.rtblocks, ngeo.rtblocks);
+			(long long)geo.rtblocks, (long long)ngeo.rtblocks);
 	if (geo.rtextsize != ngeo.rtextsize)
 		printf("realtime extent size changed from %d to %d\n",
 			geo.rtextsize, ngeo.rtextsize);

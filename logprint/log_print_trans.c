@@ -36,10 +36,10 @@ void
 xlog_recover_print_trans_head(
         xlog_recover_t *tr)
 {
-        printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:%p\n",
+        printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:%lx\n",
                tr->r_log_tid, trans_type[tr->r_theader.th_type],
                tr->r_theader.th_num_items,
-               tr->r_theader.th_tid, tr->r_itemq);
+               tr->r_theader.th_tid, (long)tr->r_itemq);
 }       /* xlog_recover_print_trans_head */
 
 int
@@ -63,13 +63,13 @@ xfs_log_print_trans(xlog_t      *log,
             exit(1);
         
 	printf("    log tail: %lld head: %lld state: %s\n",
-                (__int64_t)tail_blk, 
-                (__int64_t)head_blk,
+                (long long)tail_blk, 
+                (long long)head_blk,
                 (tail_blk == head_blk)?"<CLEAN>":"<DIRTY>");
         
         if (print_block_start != -1) {
 	    printf("    override tail: %lld\n",
-		    (__int64_t)print_block_start);
+		    (long long)print_block_start);
 	    tail_blk = print_block_start;
         }
         printf("\n");

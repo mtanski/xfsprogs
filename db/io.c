@@ -567,7 +567,7 @@ set_cur(
 
 #ifdef DEBUG
 	if (bbmap)
-		printf("xfs_db got a bbmap for %lld\n", d);
+		printf("xfs_db got a bbmap for %lld\n", (long long)d);
 #endif
 	ino = iocur_top->ino;
 	dirino = iocur_top->dirino;

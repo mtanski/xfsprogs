@@ -1056,7 +1056,7 @@ avl64_insert(
 		if (start != end)  { /* non-zero length range */
 #ifdef	AVL_USER_MODE
 		printf("avl_insert: Warning! duplicate range [0x%llx,0x%llx)\n",
-				start, end);
+			(unsigned long long)start, (unsigned long long)end);
 #else
 			cmn_err(CE_CONT,
 		"!avl_insert: Warning! duplicate range [0x%llx,0x%llx)\n",

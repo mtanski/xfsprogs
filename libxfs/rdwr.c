@@ -169,8 +169,8 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 
 	total = sizeof(xfs_buf_t) + BBTOB(len);
 	if ((buf = calloc(total, 1)) == NULL) {
-		fprintf(stderr, "%s: buf calloc failed (%d bytes): %s\n",
-			progname, total, strerror(errno));
+		fprintf(stderr, "%s: buf calloc failed (%ld bytes): %s\n",
+			progname, (long)total, strerror(errno));
 		exit(1);
 	}
 	/* by default, we allocate buffer directly after the header */
@@ -196,8 +196,8 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int die)
 	ASSERT(BBTOB(len) <= buf->b_bcount);
 
 	if (lseek64(fd, BBTOOFF64(blkno), SEEK_SET) < 0) {
-		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n",
-			progname, BBTOOFF64(blkno), strerror(errno));
+		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n", progname,
+			(unsigned long long)BBTOOFF64(blkno), strerror(errno));
 		ASSERT(0);
 		if (die)
 			exit(1);
@@ -246,8 +246,8 @@ libxfs_writebuf_int(xfs_buf_t *buf, int die)
 	int	fd = libxfs_device_to_fd(buf->b_dev);
 
 	if (lseek64(fd, BBTOOFF64(buf->b_blkno), SEEK_SET) < 0) {
-		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n",
-			progname, BBTOOFF64(buf->b_blkno), strerror(errno));
+		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n", progname,
+			(unsigned long long)BBTOOFF64(buf->b_blkno), strerror(errno));
 		ASSERT(0);
 		if (die)
 			exit(1);
@@ -316,7 +316,7 @@ libxfs_zone_init(int size, char *name)
 
 	if ((ptr = malloc(sizeof(xfs_zone_t))) == NULL) {
 		fprintf(stderr, "%s: zone init failed (%s, %d bytes): %s\n",
-			progname, name, sizeof(xfs_zone_t), strerror(errno));
+			progname, name, (int)sizeof(xfs_zone_t), strerror(errno));
 		exit(1);
 	}
 	ptr->zone_unitsize = size;
@@ -371,7 +371,7 @@ libxfs_malloc(size_t size)
 
 	if ((ptr = malloc(size)) == NULL) {
 		fprintf(stderr, "%s: malloc failed (%d bytes): %s\n",
-			progname, size, strerror(errno));
+			progname, (int)size, strerror(errno));
 		exit(1);
 	}
 #ifdef MEM_DEBUG
@@ -402,7 +402,7 @@ libxfs_realloc(void *ptr, size_t size)
 #endif
 	if ((ptr = realloc(ptr, size)) == NULL) {
 		fprintf(stderr, "%s: realloc failed (%d bytes): %s\n",
-			progname, size, strerror(errno));
+			progname, (int)size, strerror(errno));
 		exit(1);
 	}
 #ifdef MEM_DEBUG

@@ -77,14 +77,25 @@ typedef struct log {
 #define EFSCORRUPTED            990
 #define XFS_ERROR(e)		(e)
 
-#define xlog_warn(fmt,args...) \
+#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
+# define xlog_warn(fmt,args...) \
 	( fprintf(stderr,fmt,## args), fputc('\n', stderr) )
-#define cmn_err(sev,fmt,args...) \
-        xlog_warn(fmt,## args)
-#define xlog_exit(fmt,args...) \
+# define cmn_err(sev,fmt,args...) \
+	xlog_warn(fmt,## args)
+# define xlog_exit(fmt,args...) \
 	( xlog_warn(fmt,## args), exit(1) )
-#define xlog_panic(fmt,args...) \
+# define xlog_panic(fmt,args...) \
 	xlog_exit(fmt,## args)
+#else
+# define xlog_warn(...) \
+	( fprintf(stderr,__VA_ARGS__), fputc('\n', stderr) )
+# define cmn_err(sev,...) \
+	xlog_warn(__VA_ARGS__)
+# define xlog_exit(...) \
+	( xlog_warn(__VA_ARGS__), exit(1) )
+# define xlog_panic(...) \
+	xlog_exit(__VA_ARGS__)
+#endif
 
 #define xlog_get_bp(nbblks, mp)	libxfs_getbuf(x.logdev, 0, (nbblks))
 #define xlog_put_bp(bp)		libxfs_putbuf(bp)

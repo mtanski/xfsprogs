@@ -136,7 +136,7 @@ main(int argc, char **argv)
 	while (optind < argc) {
 		if (verbose)
 			fprintf(stdout, "%s %lld bytes %s\n",
-						argv[optind], size,
+						argv[optind], (long long)size,
 						prealloc
 						  ? "(pre-allocated)"
 						  : "");
@@ -174,8 +174,8 @@ main(int argc, char **argv)
 			 * This check doesn't actually work for 6.2
 			 * efs and nfs2, although it should.
 			 */
-			fprintf(stderr,
-				"lseek64 error, result = %lld\n", result);
+			fprintf(stderr, "lseek64 error, result = %lld\n",
+				(long long)result);
 			if (errno)
 				perror(argv[optind]);
 			errs++;

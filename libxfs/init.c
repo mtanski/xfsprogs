@@ -169,8 +169,8 @@ libxfs_device_to_fd(dev_t device)
 		if (dev_map[d].dev == device) 
 			return dev_map[d].fd;
 	
-	fprintf(stderr, "%s: device_to_fd: device %Ld is not open\n", 
-		progname, device);
+	fprintf(stderr, "%s: device_to_fd: device %lld is not open\n", 
+		progname, (long long)device);
 	exit(1);
 }
 
@@ -218,8 +218,8 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 
 	for (d=0;d<MAX_DEVS;d++)
 		if (dev_map[d].dev == dev) {
-			fprintf(stderr, "%s: device %Ld is already open\n", 
-			    progname, dev);
+			fprintf(stderr, "%s: device %lld is already open\n", 
+			    progname, (long long)dev);
 			exit(1);
 		}
 
@@ -254,8 +254,8 @@ libxfs_device_close(dev_t dev)
 			return;
 		}
 
-	fprintf(stderr, "%s: device_close: device %Ld is not open\n",
-			progname, dev);
+	fprintf(stderr, "%s: device_close: device %lld is not open\n",
+			progname, (long long)dev);
 	ASSERT(0);
 	exit(1);
 }
@@ -731,8 +731,8 @@ libxfs_mount(
 	/* Allocate and initialize the per-ag data */
 	size = sbp->sb_agcount * sizeof(xfs_perag_t);
 	if ((mp->m_perag = calloc(size, 1)) == NULL) {
-		fprintf(stderr, "%s: failed to alloc %d bytes: %s\n",
-			progname, size, strerror(errno));
+		fprintf(stderr, "%s: failed to alloc %ld bytes: %s\n",
+			progname, (long)size, strerror(errno));
 		exit(1);
 	}
 

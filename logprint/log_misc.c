@@ -297,7 +297,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     if (len >= struct_size) {
 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
 	printf("#regs: %d   start blkno: %lld (0x%llx)  len: %d  bmap size: %d\n",
-	       size, blkno, blkno, blen, map_size);
+	       size, (long long)blkno, (unsigned long long)blkno, blen, map_size);
 	if (blkno == 0)
 	    super_block = 1;
     } else {
@@ -420,16 +420,22 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 				INT_GET(dq->d_flags, ARCH_CONVERT),
 				INT_GET(dq->d_id, ARCH_CONVERT));
 			printf("blk limits  hard: %llu  soft: %llu\n",
+				(unsigned long long)
 				INT_GET(dq->d_blk_hardlimit, ARCH_CONVERT),
+				(unsigned long long)
 				INT_GET(dq->d_blk_softlimit, ARCH_CONVERT));
 			printf("blk  count: %llu  warns: %d  timer: %d\n",
+				(unsigned long long)
 				INT_GET(dq->d_bcount, ARCH_CONVERT),
 				INT_GET(dq->d_bwarns, ARCH_CONVERT),
 				INT_GET(dq->d_btimer, ARCH_CONVERT));
 			printf("ino limits  hard: %llu  soft: %llu\n",
+				(unsigned long long)
 				INT_GET(dq->d_ino_hardlimit, ARCH_CONVERT),
+				(unsigned long long)
 				INT_GET(dq->d_ino_softlimit, ARCH_CONVERT));
 			printf("ino  count: %llu  warns: %d  timer: %d\n",
+				(unsigned long long)
 				INT_GET(dq->d_icount, ARCH_CONVERT),
 				INT_GET(dq->d_iwarns, ARCH_CONVERT),
 				INT_GET(dq->d_itimer, ARCH_CONVERT));
@@ -478,10 +484,11 @@ xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
     *ptr += len;
     if (len >= sizeof(xfs_efd_log_format_t)) {
 	printf("EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
-	       f->efd_size, f->efd_nextents, f->efd_efi_id);
+	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
 	ex = f->efd_extents;
 	for (i=0; i< f->efd_size; i++) {
-		printf("(s: 0x%llx, l: %d) ", ex->ext_start, ex->ext_len);
+		printf("(s: 0x%llx, l: %d) ",
+			(unsigned long long)ex->ext_start, ex->ext_len);
 		if (i % 4 == 3) printf("\n");
 		ex++;
 	}
@@ -511,10 +518,11 @@ xlog_print_trans_efi(xfs_caddr_t *ptr, uint len)
     *ptr += len;
     if (len >= sizeof(xfs_efi_log_format_t)) {
 	printf("EFI:  #regs: %d    num_extents: %d  id: 0x%llx\n",
-	       f->efi_size, f->efi_nextents, f->efi_id);
+	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
 	ex = f->efi_extents;
 	for (i=0; i< f->efi_size; i++) {
-		printf("(s: 0x%llx, l: %d) ", ex->ext_start, ex->ext_len);
+		printf("(s: 0x%llx, l: %d) ",
+			(unsigned long long)ex->ext_start, ex->ext_len);
 		if (i % 4 == 3) printf("\n");
 		ex++;
 	}
@@ -540,7 +548,8 @@ xlog_print_trans_inode_core(xfs_dinode_core_t *ip)
     printf("atime 0x%x mtime 0x%x ctime 0x%x\n",
 	   ip->di_atime.t_sec, ip->di_mtime.t_sec, ip->di_ctime.t_sec);
     printf("size 0x%llx nblocks 0x%llx extsize 0x%x nextents 0x%x\n",
-	   ip->di_size, ip->di_nblocks, ip->di_extsize, ip->di_nextents);
+	   (unsigned long long)ip->di_size, (unsigned long long)ip->di_nblocks,
+	   ip->di_extsize, ip->di_nextents);
     printf("naextents 0x%x forkoff %d dmevmask 0x%x dmstate 0x%hx\n",
 	   ip->di_anextents, (int)ip->di_forkoff, ip->di_dmevmask,
 	   ip->di_dmstate);
@@ -569,7 +578,7 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 	printf("SHORTFORM DIRECTORY size %d count %d\n",
 	       size, sfp->hdr.count);
 	bcopy(&(sfp->hdr.parent), &ino, sizeof(ino));
-	printf(".. ino 0x%llx\n", INT_GET(ino, ARCH_CONVERT));
+	printf(".. ino 0x%llx\n", (unsigned long long)INT_GET(ino, ARCH_CONVERT));
 
 	count = (uint)(sfp->hdr.count);
 	sfep = &(sfp->list[0]);
@@ -578,7 +587,7 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 		bcopy((sfep->name), namebuf, sfep->namelen);
 		namebuf[sfep->namelen] = '\0';
 		printf("%s ino 0x%llx namelen %d\n",
-		       namebuf, ino, sfep->namelen);
+		       namebuf, (unsigned long long)ino, sfep->namelen);
 		sfep = XFS_DIR_SF_NEXTENTRY(sfep);
 	}
 }
@@ -612,7 +621,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	old_f = (xfs_inode_log_format_t_v1 *)f;
 	if (len == sizeof(xfs_inode_log_format_t_v1)) {
 	    printf("5.3 INODE: #regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n",
-		   old_f->ilf_size, old_f->ilf_ino,
+		   old_f->ilf_size, (unsigned long long)old_f->ilf_ino,
 		   old_f->ilf_fields, old_f->ilf_dsize);
 	} else {
 	    ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
@@ -626,9 +635,10 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 		printf("6.1 INODE: ");
 	    else printf("INODE: ");
 	    printf("#regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n",
-		   f->ilf_size, f->ilf_ino, f->ilf_fields, f->ilf_dsize);
+		   f->ilf_size, (unsigned long long)f->ilf_ino,
+		   f->ilf_fields, f->ilf_dsize);
 	    printf("        blkno: %lld  len: %d  boff: %d\n",
-		   f->ilf_blkno, f->ilf_len, f->ilf_boffset);
+		   (long long)f->ilf_blkno, f->ilf_len, f->ilf_boffset);
 	} else {
 	    ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
 	    printf("INODE: #regs: %d   Not printing rest of data\n",
@@ -738,7 +748,7 @@ xlog_print_lseek(xlog_t *log, int fd, xfs_daddr_t blkno, int whence)
 		offset = BBTOOFF64(blkno);
 	if (lseek64(fd, offset, whence) < 0) {
 		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n",
-			progname, offset, strerror(errno));
+			progname, (unsigned long long)offset, strerror(errno));
 		exit(1);
 	}
 }	/* xlog_print_lseek */
@@ -984,7 +994,7 @@ print_xlog_bad_zeroed(xfs_daddr_t blkno)
 {
         print_stars();
 	printf("* ERROR: found data after zeroed blocks block=%-21lld  *\n",
-                (__int64_t)blkno);
+                (long long)blkno);
         print_stars();
 	if (print_exit)
 	    xlog_exit("Bad log - data after zeroed blocks");
@@ -995,7 +1005,7 @@ print_xlog_bad_header(xfs_daddr_t blkno, xfs_caddr_t buf)
 {
         print_stars();
 	printf("* ERROR: header cycle=%-11d block=%-21lld        *\n",
-		GET_CYCLE(buf, ARCH_CONVERT), (__int64_t)blkno);
+		GET_CYCLE(buf, ARCH_CONVERT), (long long)blkno);
         print_stars();
 	if (print_exit)
 	    xlog_exit("Bad log record header");
@@ -1006,7 +1016,7 @@ print_xlog_bad_data(xfs_daddr_t blkno)
 {
         print_stars();
 	printf("* ERROR: data block=%-21lld                             *\n", 
-                (__int64_t)blkno);
+                (long long)blkno);
         print_stars();
 	if (print_exit)
 	    xlog_exit("Bad data in log");
@@ -1052,7 +1062,7 @@ void xfs_log_print(xlog_t       *log,
 	    break;
         }
 	if (print_only_data) {
-		printf("BLKNO: %lld\n", (__int64_t)blkno);
+		printf("BLKNO: %lld\n", (long long)blkno);
 		xlog_recover_print_data(hbuf, 512);
 		blkno++;
 		goto loop;
@@ -1139,7 +1149,7 @@ loop:
 		xlog_panic("xlog_find_head: bad read");
 	    }
 	    if (print_only_data) {
-		printf("BLKNO: %lld\n", (__int64_t)blkno);
+		printf("BLKNO: %lld\n", (long long)blkno);
 		xlog_recover_print_data(hbuf, 512);
 		blkno++;
 		goto loop2;

@@ -424,11 +424,11 @@ print_inode_list_int(xfs_agnumber_t agno, int uncertain)
 
 	while(ino_rec != NULL)  {
 		fprintf(stderr,
-	"\tptr = %p, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n",
-			ino_rec,
+	"\tptr = %lx, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n",
+			(unsigned long)ino_rec,
 			ino_rec->ino_startnum,
-			ino_rec->ir_free,
-			ino_rec->ino_confirmed);
+			(unsigned long long)ino_rec->ir_free,
+			(unsigned long long)ino_rec->ino_confirmed);
 		if (ino_rec->ino_startnum == 0)
 			ino_rec = ino_rec;
 		ino_rec = next_ino_rec(ino_rec);

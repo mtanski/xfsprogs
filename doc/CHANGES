@@ -1,3 +1,8 @@
+
+xfsprogs-1.2.2 (09 April 2001)
+	- fix problem in xfs_db (check) group quota logic
+	- fixes to warnings from recent gcc and/or 64-bit builds
+
 xfsprogs-1.2.1 (04 April 2001)
 	- sync up with recent changes to XFS kernel headers
 

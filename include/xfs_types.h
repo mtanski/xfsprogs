@@ -143,7 +143,7 @@ typedef enum {
 } xfs_btnum_t;
 
 
-#ifdef CONFIG_PROC_FS
+#if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
 /*
  * XFS global statistics
  */

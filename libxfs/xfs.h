@@ -237,8 +237,6 @@ typedef struct { dev_t dev; } buftarg_t;
 #define m_ddev_targp	m_dev
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
-#define xfs_fs_cmn_err(a,b,msg,args...)	( fprintf(stderr, msg, ## args) )
-#define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
 #define TRACE_FREE(s,a,b,x,f)		((void) 0)
 #define TRACE_ALLOC(s,a)		((void) 0)
@@ -258,6 +256,14 @@ typedef struct { dev_t dev; } buftarg_t;
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)
 #undef  XFS_DIR_SHORTFORM_VALIDATE_ONDISK
 #define XFS_DIR_SHORTFORM_VALIDATE_ONDISK(mp,dip) 0
+
+#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
+# define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )
+# define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
+#else
+# define xfs_fs_cmn_err(a,b,...)	( fprintf(stderr, __VA_ARGS__) )
+# define printk(...)			( fprintf(stderr, __VA_ARGS__) )
+#endif
 
 #define do_mod(a, b)	((a) % (b))
 #define do_div(n,base)	({ \

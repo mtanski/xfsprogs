@@ -98,10 +98,11 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	ASSERT(dinoc->di_forkoff != 0);
 
 	if (!no_modify)
-		fprintf(stderr, "clearing inode %llu attributes \n", ino_num);
+		fprintf(stderr, "clearing inode %llu attributes \n",
+			(unsigned long long)ino_num);
 	else
 		fprintf(stderr, "would have cleared inode %llu attributes\n",
-			ino_num);
+			(unsigned long long)ino_num);
 
 	if (INT_GET(dinoc->di_anextents, ARCH_CONVERT) != 0)  {
 		if (no_modify)
