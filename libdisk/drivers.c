@@ -88,7 +88,9 @@ get_driver_block_major(const char *driver)
 	while (fgets(buf, sizeof(buf), f))
 		if ((sscanf(buf, "%u %s\n", &major, puf) == 2) &&
 		    (strncmp(puf, driver, sizeof(puf)) == 0))
-			break;
+			goto found;
+	major = -1;
+found:
 	fclose(f);
 	return major;
 }
