@@ -2085,8 +2085,13 @@ process_dinode_int(xfs_mount_t *mp,
 	 * are extent format files.  If anything's wrong, clear
 	 * the inode -- we'll recreate it in phase 6.
 	 */
-	if (do_rt && INT_GET(dinoc->di_size, ARCH_CONVERT)
-			!= mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize)  {
+	if (do_rt &&
+	    ((lino == mp->m_sb.sb_rbmino &&
+	      INT_GET(dinoc->di_size, ARCH_CONVERT)
+			  != mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize) ||
+	     (lino == mp->m_sb.sb_rsumino &&
+	      INT_GET(dinoc->di_size, ARCH_CONVERT) != mp->m_rsumsize))) {
+
 		do_warn(_("bad size %llu for realtime %s inode %llu\n"),
 			INT_GET(dinoc->di_size, ARCH_CONVERT), rstring, lino);
 
