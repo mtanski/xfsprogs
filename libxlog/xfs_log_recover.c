@@ -77,17 +77,18 @@ xlog_find_cycle_start(xlog_t	*log,
  * test.  If the region is completely good, we end up returning the same
  * last block number.
  *
- * Return -1 if we encounter no errors.  This is an invalid block number
+ * Set blkno to -1 if we encounter no errors.  This is an invalid block number
  * since we don't ever expect logs to get this large.
  */
 
-STATIC xfs_daddr_t
+STATIC int
 xlog_find_verify_cycle( xlog_t 		*log,
 		       	xfs_daddr_t	start_blk,
 		       	int		nbblks,
-		       	uint		stop_on_cycle_no)
+		       	uint		stop_on_cycle_no,
+			xfs_daddr_t	*new_blk)
 {
-	int			i, j;
+	xfs_daddr_t		i, j;
 	uint			cycle;
     	xfs_buf_t		*bp;
     	char                    *buf        = NULL;
@@ -98,7 +99,7 @@ xlog_find_verify_cycle( xlog_t 		*log,
                 /* can't get enough memory to do everything in one big buffer */
 		bufblks >>= 1;
 	        if (!bufblks)
-	                return -ENOMEM;
+	                return ENOMEM;
         }
         
 
@@ -112,7 +113,7 @@ xlog_find_verify_cycle( xlog_t 		*log,
 		for (j = 0; j < bcount; j++) {
 			cycle = GET_CYCLE(buf, ARCH_CONVERT);
 			if (cycle == stop_on_cycle_no) {
-				error = i;
+				*new_blk = i;
 				goto out;
 			}
                 
@@ -120,7 +121,7 @@ xlog_find_verify_cycle( xlog_t 		*log,
 		}
 	}
 
-	error = -1;
+	*new_blk = -1;
 
 out:
 	xlog_put_bp(bp);
@@ -160,7 +161,7 @@ xlog_find_verify_log_record(xlog_t	*log,
 
     if (!(bp = xlog_get_bp(num_blks, log->l_mp))) {
         if (!(bp = xlog_get_bp(1, log->l_mp))) 
-    	    return -ENOMEM;
+    	    return ENOMEM;
         smallmem = 1;
         buf = XFS_BUF_PTR(bp);
     } else {
@@ -272,7 +273,7 @@ xlog_find_head(xlog_t  *log,
     first_blk = 0;				/* get cycle # of 1st block */
     bp = xlog_get_bp(1,log->l_mp);
     if (!bp)
-	return -ENOMEM;
+	return ENOMEM;
     if ((error = xlog_bread(log, 0, 1, bp)))
 	goto bp_err;
     first_half_cycle = GET_CYCLE(XFS_BUF_PTR(bp), ARCH_CONVERT);
@@ -360,14 +361,11 @@ xlog_find_head(xlog_t  *log,
 	 * in one buffer.
 	 */
 	start_blk = head_blk - num_scan_bblks;
-	new_blk = xlog_find_verify_cycle(log, start_blk, num_scan_bblks,
-					 stop_on_cycle);
-	if (new_blk >= 0)
-	    head_blk = new_blk;
-	else if (new_blk != -1) {
-	    error = new_blk;
+	if ((error = xlog_find_verify_cycle(log, start_blk, num_scan_bblks,
+					 stop_on_cycle, &new_blk)))
 	    goto bp_err;
-	}
+	if (new_blk != -1)
+	    head_blk = new_blk;
     } else {			/* need to read 2 parts of log */
         /*
 	 * We are going to scan backwards in the log in two parts.  First
@@ -396,14 +394,13 @@ xlog_find_head(xlog_t  *log,
 	 */
 	start_blk = log_bbnum - num_scan_bblks + head_blk;
 	ASSERT(head_blk <= INT_MAX && (xfs_daddr_t) num_scan_bblks-head_blk >= 0);
-	new_blk= xlog_find_verify_cycle(log, start_blk,
-		     num_scan_bblks-(int)head_blk, (stop_on_cycle - 1));
-	if (new_blk >= 0) {
+	if ((error = xlog_find_verify_cycle(log, start_blk,
+			num_scan_bblks-(int)head_blk, (stop_on_cycle - 1),
+			&new_blk)))
+	    	goto bp_err;
+	if (new_blk != -1) {
 	    head_blk = new_blk;
 	    goto bad_blk;
-	} else if (new_blk != -1) {
-		error = new_blk;
-		goto bp_err;
 	}
 
 	/*
@@ -413,14 +410,11 @@ xlog_find_head(xlog_t  *log,
 	 */
 	start_blk = 0;
 	ASSERT(head_blk <= INT_MAX);
-	new_blk = xlog_find_verify_cycle(log, start_blk, (int) head_blk,
-					 stop_on_cycle);
-	if (new_blk >= 0)
+	if ((error = xlog_find_verify_cycle(log, start_blk, (int) head_blk,
+					 stop_on_cycle, &new_blk)))
+	    goto bp_err;
+	if (new_blk != -1)
 	    head_blk = new_blk;
-	else if (new_blk != -1) {
-		error = new_blk;
-		goto bp_err;
-	}
     }
 
 bad_blk:
@@ -529,7 +523,7 @@ xlog_find_tail(xlog_t  *log,
 
 	bp = xlog_get_bp(1,log->l_mp);
 	if (!bp)
-		return -ENOMEM;
+		return ENOMEM;
 	if (*head_blk == 0) {				/* special case */
 		if ((error = xlog_bread(log, 0, 1, bp)))
 			goto bread_err;
@@ -690,7 +684,7 @@ xlog_find_zeroed(struct log	*log,
 	/* check totally zeroed log */
 	bp = xlog_get_bp(1,log->l_mp);
 	if (!bp)
-		return -ENOMEM;
+		return ENOMEM;
 	if ((error = xlog_bread(log, 0, 1, bp)))
 		goto bp_err;
 	first_cycle = GET_CYCLE(XFS_BUF_PTR(bp), ARCH_CONVERT);
@@ -741,14 +735,11 @@ xlog_find_zeroed(struct log	*log,
 	 *        1 ... | 0 | 1 | 0...
 	 *                       ^ binary search ends here
 	 */
-	new_blk = xlog_find_verify_cycle(log, start_blk,
-					 (int)num_scan_bblks, 0);
-	if (new_blk >= 0)
-		last_blk = new_blk;
-	else if (new_blk != -1) {
-		error = new_blk;
+	if ((error = xlog_find_verify_cycle(log, start_blk,
+					 (int)num_scan_bblks, 0, &new_blk)))
 		goto bp_err;
-	}
+	if (new_blk != -1)
+		last_blk = new_blk;
 
 	/*
 	 * Potentially backup over partial log record write.  We don't need
@@ -1143,11 +1134,11 @@ xlog_do_recovery_pass(xlog_t	*log,
     error = 0;
     hbp = xlog_get_bp(1,log->l_mp);
     if (!hbp)
-	return -ENOMEM;
+	return ENOMEM;
     dbp = xlog_get_bp(BTOBB(XLOG_MAX_RECORD_BSIZE),log->l_mp);
     if (!dbp) {
 	xlog_put_bp(hbp);
-	return -ENOMEM;
+	return ENOMEM;
     }
     bzero(rhash, sizeof(rhash));
     if (tail_blk <= head_blk) {
