@@ -1,9 +1,10 @@
 xfsprogs-2.4.4 (30 March 2003)
 	- Correct display of imaxpct in mkfs.xfs output.
 	- Portability changes; including some code to support use
-	  of several tools on Mac OS X (for Russell), also did a
-	  simplistic backport to IRIX (for me), so that I can run
-	  purify on some of the tools.
+	  of several tools on Mac OS X (for Russell), ditto for
+	  FreeBSD (from Russell); also did a simplistic backport
+	  to IRIX (for me), so that I can run purify on some of
+	  the tools.
 	- See doc/INSTALL for more details on this.
 	- Sync up user/kernel source in libxfs and headers.
 	- Fix up some warnings when compiling libxfs on big endian

@@ -1219,6 +1219,22 @@ msgid "%s: can't determine device size: %s\n"
 msgstr ""
 
 #, c-format
+msgid "%s: can't figure out partition info\n"
+msgstr ""
+
+#, c-format
+msgid "%s: can't read disk label: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: partition %s is unavailable\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot stat the device special file \"%s\": %s\n"
+msgstr ""
+
+#, c-format
 msgid "%s: %s: device %lld is not open\n"
 msgstr ""
 

@@ -116,7 +116,7 @@ getdisksize(int fd, const char *fname)
 		part = *s2++ - 'a';
 	}
 	if (!s2 || (*s2 && *s2 != '.')) {
-		fprintf(stderr, "%s: can't figure out partition info\n",
+		fprintf(stderr, _("%s: can't figure out partition info\n"),
 		    progname);
 		exit(1);
 	}
@@ -140,7 +140,7 @@ getdisksize(int fd, const char *fname)
 			errno = e;
 		}
 		if (i == -1) {
-			fprintf(stderr, "%s: can't read disk label: %s\n",
+			fprintf(stderr, _("%s: can't read disk label: %s\n"),
 			    progname, strerror(errno));
 			exit(1);
 		}
@@ -149,8 +149,9 @@ getdisksize(int fd, const char *fname)
 				part = RAW_PART;
 			if (part >= lp->d_npartitions ||
 			    !lp->d_partitions[part].p_size) {
-				fprintf(stderr, "%s: partition %s is unavailable\n", 
-				    progname, fname);
+				fprintf(stderr,
+					_("%s: partition %s is unavailable\n"),
+					progname, fname);
 				exit(1);
 			}
 			size = lp->d_partitions[part].p_size;
@@ -170,8 +171,8 @@ platform_findsize(char *path)
 	 * block device, if we are just use the size returned by stat64
 	 */
 	if (stat(path, &st) < 0) {
-		fprintf(stderr, "%s: "
-			"cannot stat the device special file \"%s\": %s\n",
+		fprintf(stderr, _("%s: "
+			"cannot stat the device special file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
@@ -180,8 +181,8 @@ platform_findsize(char *path)
 	}
 
 	if ((fd = open(path, 0)) < 0) {
-		fprintf(stderr, "%s: "
-			"error opening the device special file \"%s\": %s\n",
+		fprintf(stderr, _("%s: "
+			"error opening the device special file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}

@@ -128,6 +128,7 @@ IRIX Instructions
    Building xfsprogs:
 
 	[firstly set these environment variables to these values]
+	INSTALL_GROUP=sys
 	CC=/usr/freeware/bin/gcc
 	TAR=/usr/freeware/bin/tar
 	MAKE=/usr/freeware/bin/gmake
@@ -135,8 +136,6 @@ IRIX Instructions
 	MSGFMT=/usr/freeware/bin/msgfmt
 	MSGMERGE=/usr/freeware/bin/msgmerge
 	XGETTEXT=/usr/freeware/bin/xgettext
-	INSTALL_GROUP=sys
-	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"
 
 	$ make
 	$ su root

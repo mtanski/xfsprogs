@@ -41,10 +41,10 @@
 #include <asm/byteorder.h>
 
 #ifdef __LITTLE_ENDIAN
-# define __BYTE_ORDER	__LITTLE_ENDIAN
+#define __BYTE_ORDER	__LITTLE_ENDIAN
 #endif
 #ifdef __BIG_ENDIAN
-# define __BYTE_ORDER	__BIG_ENDIAN
+#define __BYTE_ORDER	__BIG_ENDIAN
 #endif
 
 #endif	/* __KERNEL__ */
@@ -60,7 +60,7 @@
 
 /* generic swapping macros */
 
-#if defined(__linux__)
+#ifndef HAVE_SWABMACROS
 #define INT_SWAP16(type,var) ((typeof(type))(__swab16((__u16)(var))))
 #define INT_SWAP32(type,var) ((typeof(type))(__swab32((__u32)(var))))
 #define INT_SWAP64(type,var) ((typeof(type))(__swab64((__u64)(var))))

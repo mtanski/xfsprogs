@@ -62,6 +62,7 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/libdisk/lvm.c \
 		$(TOPDIR)/libdisk/md.c \
 		$(TOPDIR)/libxfs/darwin.c \
+		$(TOPDIR)/libxfs/freebsd.c \
 		$(TOPDIR)/libxfs/init.c \
 		$(TOPDIR)/libxfs/irix.c \
 		$(TOPDIR)/libxfs/linux.c \

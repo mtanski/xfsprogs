@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #include <uuid/uuid.h>
 
+
 #if defined(__linux__)
 
 #include <sys/vfs.h>
@@ -104,13 +105,16 @@ typedef unsigned char	uchar_t;
 #endif
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
+
 #elif defined(__FreeBSD__)
+
 #include <sys/stat.h>
 #include <libgen.h>
 #include <machine/endian.h>
 #include <sys/param.h>
 #include <paths.h>
 #include <ctype.h>
+
 /* FreeBSD file API is 64-bit aware */
 #define	fstat64		fstat
 #define	ftruncate64	ftruncate
@@ -139,13 +143,15 @@ typedef __uint32_t	xfs_dev_t;
 typedef __int64_t	xfs_daddr_t;
 typedef char*		xfs_caddr_t;
 
-
 #ifndef	_UCHAR_T_DEFINED
 typedef unsigned char	uchar_t;
 #define	_UCHAR_T_DEFINED	1
 #endif
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
+
 #define HAVE_FID	1
+#define HAVE_SWABMACROS	1
+
 
 #elif defined(__APPLE__)	/* Darwin */
 

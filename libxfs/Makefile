@@ -48,7 +48,7 @@ CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_mount.c xfs_trans.c
 
 CFILES += $(PKG_PLATFORM).c
-PCFILES = darwin.c irix.c linux.c
+PCFILES = darwin.c freebsd.c irix.c linux.c
 LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 
 # 

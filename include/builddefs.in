@@ -105,7 +105,7 @@ PLDLIBS = -ldisk -lgen
 endif
 ifeq ($(PKG_PLATFORM),freebsd)
 PLDLIBS = -L/usr/local/lib -lintl
-CFLAGS += -I/usr/local/include
+PCFLAGS = -I/usr/local/include
 endif
 
 GCFLAGS += $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \
