@@ -61,35 +61,38 @@ pwrite_help(void)
 static int
 write_buffer(
 	off64_t		offset,
-	ssize_t		count,
+	long long	count,
 	ssize_t		bs,
 	int		fd,
 	off64_t		skip,
-	ssize_t		*total)
+	long long	*total)
 {
-	ssize_t		bytes, bytes_requested, itotal = min(bs, count);
+	ssize_t		bytes, bytes_requested;
+	long long	bar = min(bs, count);
+	int		ops = 0;
 
 	*total = 0;
 	while (count > 0) {
 		if (fd > 0) {	/* input file given, read buffer first */
-			if (!read_buffer(fd, skip + *total, bs, &itotal, 0, 1))
+			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
 				break;
 		}
-		bytes_requested = min(itotal, count);
+		bytes_requested = min(bar, count);
 		bytes = pwrite64(fdesc, buffer, bytes_requested, offset);
 		if (bytes == 0)
 			break;
 		if (bytes < 0) {
 			perror("pwrite64");
-			return 0;
+			return -1;
 		}
+		ops++;
 		*total += bytes;
 		if (bytes < bytes_requested)
 			break;
 		offset += bytes;
 		count -= bytes;
 	}
-	return 1;
+	return ops;
 }
 
 static int
@@ -98,17 +101,19 @@ pwrite_f(
 	char		**argv)
 {
 	off64_t		offset, skip = 0;
-	ssize_t		count, total;
+	long long	count, total;
 	unsigned int	seed = 0xcdcdcdcd;
 	unsigned int	bsize = 4096;
+	struct timeval	t1, t2;
+	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
 	int		c, fd = -1, dflag = 0;
 
 	while ((c = getopt(argc, argv, "b:df:i:s:S:")) != EOF) {
 		switch (c) {
 		case 'b':
-			bsize = strtoul(optarg, &sp, 0);
-			if (!sp || sp == optarg) {
+			bsize = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
+			if (bsize < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
@@ -149,7 +154,7 @@ pwrite_f(
 		return 0;
 	}
 	optind++;
-	count = (ssize_t)cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	count = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
 	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
@@ -162,12 +167,21 @@ pwrite_f(
 	    ((fd = openfile(infile, NULL, 0, 0, dflag, 1, 0, 0, 0)) < 0))
 		return 0;
 
-	if (!write_buffer(offset, count, bsize, fd, skip, &total)) {
+	gettimeofday(&t1, NULL);
+	if ((c = write_buffer(offset, count, bsize, fd, skip, &total)) < 0) {
 		close(fd);
 		return 0;
 	}
+	gettimeofday(&t2, NULL);
+	t2 = tsub(t2, t1);
+
 	printf(_("wrote %ld/%ld bytes at offset %lld\n"),
 		(long)total, (long)count, (long long)offset);
+	cvtstr((double)total, s1, sizeof(s1));
+	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+	timestr(&t2, ts, sizeof(ts));
+	printf(_("----- %s, %d ops; %s (%s/sec and %.f ops/sec)\n"),
+		s1, c, ts, s2, tdiv((double)c, t2));
 	close(fd);
 	return 0;
 }

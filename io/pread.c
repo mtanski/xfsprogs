@@ -106,31 +106,34 @@ int
 read_buffer(
 	int		fd,
 	off64_t		offset,
-	ssize_t		count,
-	ssize_t		*total,
+	long long	count,
+	long long	*total,
 	int		verbose,
 	int		onlyone)
 {
-	ssize_t		bytes;
+	ssize_t		bytes, bytes_requested;
+	int		ops = 0;
 
 	*total = 0;
 	while (count > 0) {
-		bytes = pread64(fd, buffer, min(count,buffersize), offset);
+		bytes_requested = min(count, buffersize);
+		bytes = pread64(fd, buffer, bytes_requested, offset);
 		if (bytes == 0)
 			break;
 		if (bytes < 0) {
 			perror("pread64");
-			return 0;
+			return -1;
 		}
+		ops++;
 		if (verbose)
 			dump_buffer(offset, bytes);
 		*total += bytes;
-		if (onlyone || bytes < count)
+		if (onlyone || bytes < bytes_requested)
 			break;
 		offset += bytes;
 		count -= bytes;
 	}
-	return 1;
+	return ops;
 }
 
 static int
@@ -139,17 +142,18 @@ pread_f(
 	char		**argv)
 {
 	off64_t		offset;
-	ssize_t		count, total;
+	long long	count, total;
 	unsigned int	bsize = 4096;
-	char		*sp;
+	struct timeval	t1, t2;
+	char		s1[64], s2[64], ts[64];
 	int		vflag = 0;
 	int		c;
 
 	while ((c = getopt(argc, argv, "b:v")) != EOF) {
 		switch (c) {
 		case 'b':
-			bsize = strtoul(optarg, &sp, 0);
-			if (!sp || sp == optarg) {
+			bsize = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
+			if (bsize < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
@@ -172,7 +176,7 @@ pread_f(
 		return 0;
 	}
 	optind++;
-	count = (ssize_t)cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	count = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
 	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
@@ -181,11 +185,19 @@ pread_f(
 	if (!alloc_buffer(bsize, 0xabababab))
 		return 0;
 
-	if (!read_buffer(fdesc, offset, count, &total, vflag, 0))
+	gettimeofday(&t1, NULL);
+	if ((c = read_buffer(fdesc, offset, count, &total, vflag, 0)) < 0)
 		return 0;
+	gettimeofday(&t2, NULL);
+	t2 = tsub(t2, t1);
 
 	printf(_("read %ld/%ld bytes at offset %lld\n"),
 		(long)total, (long)count, (long long)offset);
+	cvtstr((double)total, s1, sizeof(s1));
+	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+	timestr(&t2, ts, sizeof(ts));
+	printf(_("---- %s, %d ops; %s (%s/sec and %.f ops/sec)\n"),
+		s1, c, ts, s2, tdiv((double)c, t2));
 	return 0;
 }
 

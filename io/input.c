@@ -143,6 +143,13 @@ doneline(
 	free(vec);
 }
 
+#define EXABYTES(x)	((long long)(x) << 60)
+#define PETABYTES(x)	((long long)(x) << 50)
+#define TERABYTES(x)	((long long)(x) << 40)
+#define GIGABYTES(x)	((long long)(x) << 30)
+#define MEGABYTES(x)	((long long)(x) << 20)
+#define KILOBYTES(x)	((long long)(x) << 10)
+
 long long
 cvtnum(
 	int		blocksize,
@@ -163,14 +170,96 @@ cvtnum(
 	if (*sp == 's' && sp[1] == '\0')
 		return i * sectorsize;
 	if (*sp == 'k' && sp[1] == '\0')
-		return 1024LL * i;
+		return KILOBYTES(i);
 	if (*sp == 'm' && sp[1] == '\0')
-		return 1024LL * 1024LL * i;
+		return MEGABYTES(i);
 	if (*sp == 'g' && sp[1] == '\0')
-		return 1024LL * 1024LL * 1024LL * i;
+		return GIGABYTES(i);
 	if (*sp == 't' && sp[1] == '\0')
-		return 1024LL * 1024LL * 1024LL * 1024LL * i;
+		return TERABYTES(i);
 	if (*sp == 'p' && sp[1] == '\0')
-		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
+		return PETABYTES(i);
+	if (*sp == 'e' && sp[1] == '\0')
+		return  EXABYTES(i);
 	return -1LL;
+}
+
+#define TO_EXABYTES(x)	((x) / EXABYTES(1))
+#define TO_PETABYTES(x)	((x) / PETABYTES(1))
+#define TO_TERABYTES(x)	((x) / TERABYTES(1))
+#define TO_GIGABYTES(x)	((x) / GIGABYTES(1))
+#define TO_MEGABYTES(x)	((x) / MEGABYTES(1))
+#define TO_KILOBYTES(x)	((x) / KILOBYTES(1))
+
+void
+cvtstr(
+	double		value,
+	char		*str,
+	size_t		size)
+{
+	char		*fmt;
+	int		precise;
+
+	precise = ((double)value * 1000 == (double)(int)value * 1000);
+
+	if (value >= EXABYTES(1)) {
+		fmt = precise ? "%.f EiB" : "%.3f EiB";
+		snprintf(str, size, fmt, TO_EXABYTES(value));
+	} else if (value >= PETABYTES(1)) {
+		fmt = precise ? "%.f PiB" : "%.3f PiB";
+		snprintf(str, size, fmt, TO_PETABYTES(value));
+	} else if (value >= TERABYTES(1)) {
+		fmt = precise ? "%.f TiB" : "%.3f TiB";
+		snprintf(str, size, fmt, TO_TERABYTES(value));
+	} else if (value >= GIGABYTES(1)) {
+		fmt = precise ? "%.f GiB" : "%.3f GiB";
+		snprintf(str, size, fmt, TO_GIGABYTES(value));
+	} else if (value >= MEGABYTES(1)) {
+		fmt = precise ? "%.f MiB" : "%.3f MiB";
+		snprintf(str, size, fmt, TO_MEGABYTES(value));
+	} else if (value >= KILOBYTES(1)) {
+		fmt = precise ? "%.f KiB" : "%.3f KiB";
+		snprintf(str, size, fmt, TO_KILOBYTES(value));
+	} else {
+		snprintf(str, size, "%f bytes", value);
+	}
+}
+
+struct timeval
+tsub(struct timeval t1, struct timeval t2)
+{
+	t1.tv_usec -= t2.tv_usec;
+	if (t1.tv_usec < 0) {
+		t1.tv_usec += 1000000;
+		t1.tv_sec--;
+	}
+	t1.tv_sec -= t2.tv_sec;
+	return t1;
+}
+
+double
+tdiv(double value, struct timeval tv)
+{
+	return value / ((double)tv.tv_sec + ((double)tv.tv_usec / 1000000.0));
+}
+
+#define HOURS(sec)	((sec) / (60 * 60))
+#define MINUTES(sec)	(((sec) % (60 * 60)) / 60)
+#define SECONDS(sec)	((sec) % 60)
+
+void
+timestr(
+	struct timeval	*tv,
+	char		*ts,
+	size_t		size)
+{
+	if (!tv->tv_sec)
+		snprintf(ts, size, "%.4f sec",
+			((double) tv->tv_usec / 1000000.0));
+	else
+		snprintf(ts, size, "%02u:%02u:%02u.%-u",
+			(unsigned int) HOURS(tv->tv_sec),
+			(unsigned int) MINUTES(tv->tv_sec),
+			(unsigned int) SECONDS(tv->tv_sec),
+			(unsigned int) tv->tv_usec);
 }

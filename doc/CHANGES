@@ -1,3 +1,8 @@
+xfsprogs-2.6.1 (27 November 2003)
+	- Human-friendly xfs_io read/write bsize specifications.
+	- Dump throughput and IOPs values after xfs_io reads/writes.
+	- Sync up user/kernel source in libxfs, libxlog and headers.
+
 xfsprogs-2.6.0 (28 October 2003)
 	- Change to mkfs strategy for allocation group count and size
 	  default.  Scales significantly better for large filesystems.

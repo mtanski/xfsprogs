@@ -73,4 +73,5 @@ extern int		openfile(char *, xfs_fsop_geom_t *,
 extern void		*buffer;
 extern ssize_t		buffersize;
 extern int		alloc_buffer(ssize_t, unsigned int);
-extern int		read_buffer(int, off64_t, ssize_t, ssize_t *, int, int);
+extern int		read_buffer(int, off64_t, long long, long long *,
+					int, int);
