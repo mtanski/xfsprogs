@@ -1,36 +1,36 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 #ifndef __XFS_DIR2_BLOCK_H__
-#define	__XFS_DIR2_BLOCK_H__
+#define __XFS_DIR2_BLOCK_H__
 
 /*
  * xfs_dir2_block.h
@@ -55,7 +55,7 @@ struct xfs_trans;
  * xfs_dir2_block_tail_t structure
  */
 
-#define	XFS_DIR2_BLOCK_MAGIC	0x58443242	/* XD2B: for one block dirs */
+#define XFS_DIR2_BLOCK_MAGIC	0x58443242	/* XD2B: for one block dirs */
 
 typedef struct xfs_dir2_block_tail {
 	__uint32_t	count;			/* count of leaf entries */
@@ -78,9 +78,9 @@ typedef struct xfs_dir2_block {
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BLOCK_TAIL_P)
 xfs_dir2_block_tail_t *
 xfs_dir2_block_tail_p(struct xfs_mount *mp, xfs_dir2_block_t *block);
-#define	XFS_DIR2_BLOCK_TAIL_P(mp,block)	xfs_dir2_block_tail_p(mp,block) 
+#define XFS_DIR2_BLOCK_TAIL_P(mp,block) xfs_dir2_block_tail_p(mp,block)
 #else
-#define	XFS_DIR2_BLOCK_TAIL_P(mp,block)	\
+#define XFS_DIR2_BLOCK_TAIL_P(mp,block) \
 	(((xfs_dir2_block_tail_t *)((char *)(block) + (mp)->m_dirblksize)) - 1)
 #endif
 
@@ -89,11 +89,11 @@ xfs_dir2_block_tail_p(struct xfs_mount *mp, xfs_dir2_block_t *block);
  */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BLOCK_LEAF_P)
 struct xfs_dir2_leaf_entry *xfs_dir2_block_leaf_p_arch(
-        xfs_dir2_block_tail_t *btp, xfs_arch_t arch);
-#define	XFS_DIR2_BLOCK_LEAF_P_ARCH(btp,arch) \
-        xfs_dir2_block_leaf_p_arch(btp,arch)
+	xfs_dir2_block_tail_t *btp, xfs_arch_t arch);
+#define XFS_DIR2_BLOCK_LEAF_P_ARCH(btp,arch) \
+	xfs_dir2_block_leaf_p_arch(btp,arch)
 #else
-#define	XFS_DIR2_BLOCK_LEAF_P_ARCH(btp,arch)	\
+#define XFS_DIR2_BLOCK_LEAF_P_ARCH(btp,arch)	\
 	(((struct xfs_dir2_leaf_entry *)(btp)) - INT_GET((btp)->count, arch))
 #endif
 

@@ -1,36 +1,36 @@
 /*
  * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 #ifndef __XFS_BMAP_H__
-#define	__XFS_BMAP_H__
+#define __XFS_BMAP_H__
 
 struct getbmap;
 struct xfs_bmbt_irec;
@@ -52,19 +52,19 @@ typedef struct xfs_bmap_free_item
 /*
  * Header for free extent list.
  */
-typedef	struct xfs_bmap_free
+typedef struct xfs_bmap_free
 {
 	xfs_bmap_free_item_t	*xbf_first;	/* list of to-be-free extents */
 	int			xbf_count;	/* count of items on list */
 	int			xbf_low;	/* kludge: alloc in low mode */
 } xfs_bmap_free_t;
 
-#define	XFS_BMAP_MAX_NMAP	4
+#define XFS_BMAP_MAX_NMAP	4
 
 /*
  * Flags for xfs_bmapi
  */
-#define	XFS_BMAPI_WRITE		0x001	/* write operation: allocate space */
+#define XFS_BMAPI_WRITE		0x001	/* write operation: allocate space */
 #define XFS_BMAPI_DELAY		0x002	/* delayed write operation */
 #define XFS_BMAPI_ENTIRE	0x004	/* return entire extent, not trimmed */
 #define XFS_BMAPI_METADATA	0x008	/* mapping metadata not user data */
@@ -72,10 +72,10 @@ typedef	struct xfs_bmap_free
 #define XFS_BMAPI_ATTRFORK	0x020	/* use attribute fork not data */
 #define XFS_BMAPI_ASYNC		0x040	/* bunmapi xactions can be async */
 #define XFS_BMAPI_RSVBLOCKS	0x080	/* OK to alloc. reserved data blocks */
-#define	XFS_BMAPI_PREALLOC	0x100	/* preallocation op: unwritten space */
-#define	XFS_BMAPI_IGSTATE	0x200	/* Ignore state - */
+#define XFS_BMAPI_PREALLOC	0x100	/* preallocation op: unwritten space */
+#define XFS_BMAPI_IGSTATE	0x200	/* Ignore state - */
 					/* combine contig. space */
-#define	XFS_BMAPI_CONTIG	0x400	/* must allocate only one extent */
+#define XFS_BMAPI_CONTIG	0x400	/* must allocate only one extent */
 #define XFS_BMAPI_DIRECT_IO	0x800	/* Flag from cxfs client, not used
 					 * by xfs directly. Indicates alloc
 					 * request is for direct I/O not
@@ -83,30 +83,30 @@ typedef	struct xfs_bmap_free
 
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_BMAPI_AFLAG)
 int xfs_bmapi_aflag(int w);
-#define	XFS_BMAPI_AFLAG(w)	xfs_bmapi_aflag(w)
+#define XFS_BMAPI_AFLAG(w)	xfs_bmapi_aflag(w)
 #else
-#define	XFS_BMAPI_AFLAG(w)	((w) == XFS_ATTR_FORK ? XFS_BMAPI_ATTRFORK : 0)
+#define XFS_BMAPI_AFLAG(w)	((w) == XFS_ATTR_FORK ? XFS_BMAPI_ATTRFORK : 0)
 #endif
 
 /*
  * Special values for xfs_bmbt_irec_t br_startblock field.
  */
-#define	DELAYSTARTBLOCK		((xfs_fsblock_t)-1LL)
-#define	HOLESTARTBLOCK		((xfs_fsblock_t)-2LL)
+#define DELAYSTARTBLOCK		((xfs_fsblock_t)-1LL)
+#define HOLESTARTBLOCK		((xfs_fsblock_t)-2LL)
 
 /*
  * Trace operations for bmap extent tracing
  */
-#define	XFS_BMAP_KTRACE_DELETE	1
-#define	XFS_BMAP_KTRACE_INSERT	2
-#define	XFS_BMAP_KTRACE_PRE_UP	3
-#define	XFS_BMAP_KTRACE_POST_UP	4
+#define XFS_BMAP_KTRACE_DELETE	1
+#define XFS_BMAP_KTRACE_INSERT	2
+#define XFS_BMAP_KTRACE_PRE_UP	3
+#define XFS_BMAP_KTRACE_POST_UP 4
 
-#define	XFS_BMAP_TRACE_SIZE	4096	/* size of global trace buffer */
-#define	XFS_BMAP_KTRACE_SIZE	32	/* size of per-inode trace buffer */
+#define XFS_BMAP_TRACE_SIZE	4096	/* size of global trace buffer */
+#define XFS_BMAP_KTRACE_SIZE	32	/* size of per-inode trace buffer */
 
 #if defined(XFS_ALL_TRACE)
-#define	XFS_BMAP_TRACE
+#define XFS_BMAP_TRACE
 #endif
 
 #if !defined(DEBUG)
@@ -116,9 +116,9 @@ int xfs_bmapi_aflag(int w);
 
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_BMAP_INIT)
 void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp);
-#define	XFS_BMAP_INIT(flp,fbp)	xfs_bmap_init(flp,fbp)
+#define XFS_BMAP_INIT(flp,fbp)	xfs_bmap_init(flp,fbp)
 #else
-#define	XFS_BMAP_INIT(flp,fbp)	\
+#define XFS_BMAP_INIT(flp,fbp)	\
 	((flp)->xbf_first = NULL, (flp)->xbf_count = 0, \
 	 (flp)->xbf_low = 0, *(fbp) = NULLFSBLOCK)
 #endif
@@ -132,17 +132,17 @@ typedef struct xfs_bmalloca {
 	xfs_fileoff_t		off;	/* offset in file filling in */
 	struct xfs_trans	*tp;	/* transaction pointer */
 	struct xfs_inode	*ip;	/* incore inode pointer */
-	struct xfs_bmbt_irec	*prevp;	/* extent before the new one */
+	struct xfs_bmbt_irec	*prevp; /* extent before the new one */
 	struct xfs_bmbt_irec	*gotp;	/* extent after, or delayed */
 	xfs_extlen_t		alen;	/* i/o length asked/allocated */
 	xfs_extlen_t		total;	/* total blocks needed for xaction */
-	xfs_extlen_t		minlen;	/* mininum allocation size (blocks) */
+	xfs_extlen_t		minlen; /* mininum allocation size (blocks) */
 	xfs_extlen_t		minleft; /* amount must be left after alloc */
 	char			eof;	/* set if allocating past last extent */
-	char			wasdel;	/* replacing a delayed allocation */
+	char			wasdel; /* replacing a delayed allocation */
 	char			userdata;/* set if is user data */
 	char			low;	/* low on space, using seq'l ags */
-	char			aeof;   /* allocated space at eof */
+	char			aeof;	/* allocated space at eof */
 } xfs_bmalloca_t;
 
 #ifdef __KERNEL__
@@ -181,9 +181,9 @@ int
 xfs_bmap_check_swappable(
 	struct xfs_inode	*ip);		/* incore inode */
 
-/* 
+/*
  * Compute and fill in the value of the maximum depth of a bmap btree
- * in this filesystem.  Done once, during mount.
+ * in this filesystem.	Done once, during mount.
  */
 void
 xfs_bmap_compute_maxlevels(
@@ -191,7 +191,7 @@ xfs_bmap_compute_maxlevels(
 	int			whichfork);	/* data or attr fork */
 
 /*
- * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi 
+ * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
  * caller.  Frees all the extents that need freeing, which must be done
  * last due to locking considerations.
  *
@@ -275,7 +275,7 @@ xfs_bmap_trace_exlist(
 	xfs_extnum_t		cnt,		/* count of entries in list */
 	int			whichfork);	/* data or attr fork */
 #else
-#define	xfs_bmap_trace_exlist(f,ip,c,w)
+#define xfs_bmap_trace_exlist(f,ip,c,w)
 #endif
 
 /*
@@ -289,7 +289,7 @@ xfs_bmap_trace_exlist(
  * must be remembered and presented to subsequent calls in "firstblock".
  * An upper bound for the number of blocks to be allocated is supplied to
  * the first call in "total"; if no allocation group has that many free
- * blocks then the call will fail (return NULLFSBLOCK in "firstblock"). 
+ * blocks then the call will fail (return NULLFSBLOCK in "firstblock").
  */
 int						/* error */
 xfs_bmapi(
@@ -323,7 +323,7 @@ xfs_bmapi_single(
 /*
  * Unmap (remove) blocks from a file.
  * If nexts is nonzero then the number of extents to remove is limited to
- * that value.  If not all extents in the block range can be removed then
+ * that value.	If not all extents in the block range can be removed then
  * *done is set.
  */
 int						/* error */
@@ -357,21 +357,21 @@ xfs_getbmap(
  */
 int
 xfs_bmap_isaeof(
-        struct xfs_inode	*ip,
-        xfs_fileoff_t   	off,
-        int             	whichfork,
-        char             	*aeof);
+	struct xfs_inode	*ip,
+	xfs_fileoff_t		off,
+	int			whichfork,
+	char			*aeof);
 
 /*
- * Check if the endoff is outside the last extent. If so the caller will grow 
+ * Check if the endoff is outside the last extent. If so the caller will grow
  * the allocation to a stripe unit boundary
  */
 int
 xfs_bmap_eof(
-        struct xfs_inode        *ip,
-        xfs_fileoff_t           endoff,
-        int                     whichfork,
-        int                     *eof);
+	struct xfs_inode	*ip,
+	xfs_fileoff_t		endoff,
+	int			whichfork,
+	int			*eof);
 
 /*
  * Count fsblocks of the given fork.

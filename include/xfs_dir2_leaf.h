@@ -1,36 +1,36 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 #ifndef __XFS_DIR2_LEAF_H__
-#define	__XFS_DIR2_LEAF_H__
+#define __XFS_DIR2_LEAF_H__
 
 /*
  * Directory version 2, leaf block structures.
@@ -52,9 +52,9 @@ struct xfs_trans;
  * Offset of the leaf/node space.  First block in this space
  * is the btree root.
  */
-#define	XFS_DIR2_LEAF_SPACE	1
-#define	XFS_DIR2_LEAF_OFFSET	(XFS_DIR2_LEAF_SPACE * XFS_DIR2_SPACE_SIZE)
-#define	XFS_DIR2_LEAF_FIRSTDB(mp)	\
+#define XFS_DIR2_LEAF_SPACE	1
+#define XFS_DIR2_LEAF_OFFSET	(XFS_DIR2_LEAF_SPACE * XFS_DIR2_SPACE_SIZE)
+#define XFS_DIR2_LEAF_FIRSTDB(mp)	\
 	XFS_DIR2_BYTE_TO_DB(mp, XFS_DIR2_LEAF_OFFSET)
 
 /*
@@ -64,9 +64,9 @@ struct xfs_trans;
 /*
  * Offset in data space of a data entry.
  */
-typedef	__uint32_t	xfs_dir2_dataptr_t;
-#define	XFS_DIR2_MAX_DATAPTR	((xfs_dir2_dataptr_t)0x7fffffff)
-#define	XFS_DIR2_NULL_DATAPTR	((xfs_dir2_dataptr_t)0)
+typedef __uint32_t	xfs_dir2_dataptr_t;
+#define XFS_DIR2_MAX_DATAPTR	((xfs_dir2_dataptr_t)0x7fffffff)
+#define XFS_DIR2_NULL_DATAPTR	((xfs_dir2_dataptr_t)0)
 
 /*
  * Structures.
@@ -117,10 +117,10 @@ typedef struct xfs_dir2_leaf {
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_MAX_LEAF_ENTS)
 int
 xfs_dir2_max_leaf_ents(struct xfs_mount *mp);
-#define	XFS_DIR2_MAX_LEAF_ENTS(mp)	\
+#define XFS_DIR2_MAX_LEAF_ENTS(mp)	\
 	xfs_dir2_max_leaf_ents(mp)
 #else
-#define	XFS_DIR2_MAX_LEAF_ENTS(mp)	\
+#define XFS_DIR2_MAX_LEAF_ENTS(mp)	\
 	((int)(((mp)->m_dirblksize - (uint)sizeof(xfs_dir2_leaf_hdr_t)) / \
 	       (uint)sizeof(xfs_dir2_leaf_entry_t)))
 #endif
@@ -131,10 +131,10 @@ xfs_dir2_max_leaf_ents(struct xfs_mount *mp);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_LEAF_TAIL_P)
 xfs_dir2_leaf_tail_t *
 xfs_dir2_leaf_tail_p(struct xfs_mount *mp, xfs_dir2_leaf_t *lp);
-#define	XFS_DIR2_LEAF_TAIL_P(mp,lp)	\
+#define XFS_DIR2_LEAF_TAIL_P(mp,lp)	\
 	xfs_dir2_leaf_tail_p(mp, lp)
 #else
-#define	XFS_DIR2_LEAF_TAIL_P(mp,lp)	\
+#define XFS_DIR2_LEAF_TAIL_P(mp,lp)	\
 	((xfs_dir2_leaf_tail_t *)\
 	 ((char *)(lp) + (mp)->m_dirblksize - \
 	  (uint)sizeof(xfs_dir2_leaf_tail_t)))
@@ -146,9 +146,9 @@ xfs_dir2_leaf_tail_p(struct xfs_mount *mp, xfs_dir2_leaf_t *lp);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_LEAF_BESTS_P)
 xfs_dir2_data_off_t *
 xfs_dir2_leaf_bests_p_arch(xfs_dir2_leaf_tail_t *ltp, xfs_arch_t arch);
-#define	XFS_DIR2_LEAF_BESTS_P_ARCH(ltp,arch)	xfs_dir2_leaf_bests_p_arch(ltp,arch)
+#define XFS_DIR2_LEAF_BESTS_P_ARCH(ltp,arch)	xfs_dir2_leaf_bests_p_arch(ltp,arch)
 #else
-#define	XFS_DIR2_LEAF_BESTS_P_ARCH(ltp,arch)	\
+#define XFS_DIR2_LEAF_BESTS_P_ARCH(ltp,arch)	\
 	((xfs_dir2_data_off_t *)(ltp) - INT_GET((ltp)->bestcount, arch))
 #endif
 
@@ -158,9 +158,9 @@ xfs_dir2_leaf_bests_p_arch(xfs_dir2_leaf_tail_t *ltp, xfs_arch_t arch);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_DATAPTR_TO_BYTE)
 xfs_dir2_off_t
 xfs_dir2_dataptr_to_byte(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
-#define	XFS_DIR2_DATAPTR_TO_BYTE(mp,dp)	xfs_dir2_dataptr_to_byte(mp, dp)
+#define XFS_DIR2_DATAPTR_TO_BYTE(mp,dp) xfs_dir2_dataptr_to_byte(mp, dp)
 #else
-#define	XFS_DIR2_DATAPTR_TO_BYTE(mp,dp)	\
+#define XFS_DIR2_DATAPTR_TO_BYTE(mp,dp) \
 	((xfs_dir2_off_t)(dp) << XFS_DIR2_DATA_ALIGN_LOG)
 #endif
 
@@ -170,9 +170,9 @@ xfs_dir2_dataptr_to_byte(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BYTE_TO_DATAPTR)
 xfs_dir2_dataptr_t
 xfs_dir2_byte_to_dataptr(struct xfs_mount *mp, xfs_dir2_off_t by);
-#define	XFS_DIR2_BYTE_TO_DATAPTR(mp,by)	xfs_dir2_byte_to_dataptr(mp,by)
+#define XFS_DIR2_BYTE_TO_DATAPTR(mp,by) xfs_dir2_byte_to_dataptr(mp,by)
 #else
-#define	XFS_DIR2_BYTE_TO_DATAPTR(mp,by)	\
+#define XFS_DIR2_BYTE_TO_DATAPTR(mp,by) \
 	((xfs_dir2_dataptr_t)((by) >> XFS_DIR2_DATA_ALIGN_LOG))
 #endif
 
@@ -182,9 +182,9 @@ xfs_dir2_byte_to_dataptr(struct xfs_mount *mp, xfs_dir2_off_t by);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_DATAPTR_TO_DB)
 xfs_dir2_db_t
 xfs_dir2_dataptr_to_db(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
-#define	XFS_DIR2_DATAPTR_TO_DB(mp,dp)	xfs_dir2_dataptr_to_db(mp, dp)
+#define XFS_DIR2_DATAPTR_TO_DB(mp,dp)	xfs_dir2_dataptr_to_db(mp, dp)
 #else
-#define	XFS_DIR2_DATAPTR_TO_DB(mp,dp)	\
+#define XFS_DIR2_DATAPTR_TO_DB(mp,dp)	\
 	XFS_DIR2_BYTE_TO_DB(mp, XFS_DIR2_DATAPTR_TO_BYTE(mp, dp))
 #endif
 
@@ -194,9 +194,9 @@ xfs_dir2_dataptr_to_db(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_DATAPTR_TO_OFF)
 xfs_dir2_data_aoff_t
 xfs_dir2_dataptr_to_off(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
-#define	XFS_DIR2_DATAPTR_TO_OFF(mp,dp)	xfs_dir2_dataptr_to_off(mp, dp)
+#define XFS_DIR2_DATAPTR_TO_OFF(mp,dp)	xfs_dir2_dataptr_to_off(mp, dp)
 #else
-#define	XFS_DIR2_DATAPTR_TO_OFF(mp,dp)	\
+#define XFS_DIR2_DATAPTR_TO_OFF(mp,dp)	\
 	XFS_DIR2_BYTE_TO_OFF(mp, XFS_DIR2_DATAPTR_TO_BYTE(mp, dp))
 #endif
 
@@ -207,10 +207,10 @@ xfs_dir2_dataptr_to_off(struct xfs_mount *mp, xfs_dir2_dataptr_t dp);
 xfs_dir2_off_t
 xfs_dir2_db_off_to_byte(struct xfs_mount *mp, xfs_dir2_db_t db,
 			xfs_dir2_data_aoff_t o);
-#define	XFS_DIR2_DB_OFF_TO_BYTE(mp,db,o)	\
+#define XFS_DIR2_DB_OFF_TO_BYTE(mp,db,o)	\
 	xfs_dir2_db_off_to_byte(mp, db, o)
 #else
-#define	XFS_DIR2_DB_OFF_TO_BYTE(mp,db,o)	\
+#define XFS_DIR2_DB_OFF_TO_BYTE(mp,db,o)	\
 	(((xfs_dir2_off_t)(db) << \
 	 ((mp)->m_sb.sb_blocklog + (mp)->m_sb.sb_dirblklog)) + (o))
 #endif
@@ -220,9 +220,9 @@ xfs_dir2_db_off_to_byte(struct xfs_mount *mp, xfs_dir2_db_t db,
  */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BYTE_TO_DB)
 xfs_dir2_db_t xfs_dir2_byte_to_db(struct xfs_mount *mp, xfs_dir2_off_t by);
-#define	XFS_DIR2_BYTE_TO_DB(mp,by)	xfs_dir2_byte_to_db(mp, by)
+#define XFS_DIR2_BYTE_TO_DB(mp,by)	xfs_dir2_byte_to_db(mp, by)
 #else
-#define	XFS_DIR2_BYTE_TO_DB(mp,by)	\
+#define XFS_DIR2_BYTE_TO_DB(mp,by)	\
 	((xfs_dir2_db_t)((by) >> \
 			 ((mp)->m_sb.sb_blocklog + (mp)->m_sb.sb_dirblklog)))
 #endif
@@ -232,9 +232,9 @@ xfs_dir2_db_t xfs_dir2_byte_to_db(struct xfs_mount *mp, xfs_dir2_off_t by);
  */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BYTE_TO_DA)
 xfs_dablk_t xfs_dir2_byte_to_da(struct xfs_mount *mp, xfs_dir2_off_t by);
-#define	XFS_DIR2_BYTE_TO_DA(mp,by)	xfs_dir2_byte_to_da(mp, by)
+#define XFS_DIR2_BYTE_TO_DA(mp,by)	xfs_dir2_byte_to_da(mp, by)
 #else
-#define	XFS_DIR2_BYTE_TO_DA(mp,by)	\
+#define XFS_DIR2_BYTE_TO_DA(mp,by)	\
 	XFS_DIR2_DB_TO_DA(mp, XFS_DIR2_BYTE_TO_DB(mp, by))
 #endif
 
@@ -244,9 +244,9 @@ xfs_dablk_t xfs_dir2_byte_to_da(struct xfs_mount *mp, xfs_dir2_off_t by);
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_BYTE_TO_OFF)
 xfs_dir2_data_aoff_t
 xfs_dir2_byte_to_off(struct xfs_mount *mp, xfs_dir2_off_t by);
-#define	XFS_DIR2_BYTE_TO_OFF(mp,by)	xfs_dir2_byte_to_off(mp, by)
+#define XFS_DIR2_BYTE_TO_OFF(mp,by)	xfs_dir2_byte_to_off(mp, by)
 #else
-#define	XFS_DIR2_BYTE_TO_OFF(mp,by)	\
+#define XFS_DIR2_BYTE_TO_OFF(mp,by)	\
 	((xfs_dir2_data_aoff_t)((by) & \
 				((1 << ((mp)->m_sb.sb_blocklog + \
 					(mp)->m_sb.sb_dirblklog)) - 1)))
@@ -259,10 +259,10 @@ xfs_dir2_byte_to_off(struct xfs_mount *mp, xfs_dir2_off_t by);
 xfs_dir2_dataptr_t
 xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
 			   xfs_dir2_data_aoff_t o);
-#define	XFS_DIR2_DB_OFF_TO_DATAPTR(mp,db,o)	\
+#define XFS_DIR2_DB_OFF_TO_DATAPTR(mp,db,o)	\
 	xfs_dir2_db_off_to_dataptr(mp, db, o)
 #else
-#define	XFS_DIR2_DB_OFF_TO_DATAPTR(mp,db,o)	\
+#define XFS_DIR2_DB_OFF_TO_DATAPTR(mp,db,o)	\
 	XFS_DIR2_BYTE_TO_DATAPTR(mp, XFS_DIR2_DB_OFF_TO_BYTE(mp, db, o))
 #endif
 
@@ -271,9 +271,9 @@ xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
  */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_DB_TO_DA)
 xfs_dablk_t xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db);
-#define	XFS_DIR2_DB_TO_DA(mp,db)	xfs_dir2_db_to_da(mp, db)
+#define XFS_DIR2_DB_TO_DA(mp,db)	xfs_dir2_db_to_da(mp, db)
 #else
-#define	XFS_DIR2_DB_TO_DA(mp,db)	\
+#define XFS_DIR2_DB_TO_DA(mp,db)	\
 	((xfs_dablk_t)((db) << (mp)->m_sb.sb_dirblklog))
 #endif
 
@@ -282,9 +282,9 @@ xfs_dablk_t xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db);
  */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR2_DA_TO_DB)
 xfs_dir2_db_t xfs_dir2_da_to_db(struct xfs_mount *mp, xfs_dablk_t da);
-#define	XFS_DIR2_DA_TO_DB(mp,da)	xfs_dir2_da_to_db(mp, da)
+#define XFS_DIR2_DA_TO_DB(mp,da)	xfs_dir2_da_to_db(mp, da)
 #else
-#define	XFS_DIR2_DA_TO_DB(mp,da)	\
+#define XFS_DIR2_DA_TO_DB(mp,da)	\
 	((xfs_dir2_db_t)((da) >> (mp)->m_sb.sb_dirblklog))
 #endif
 
@@ -295,7 +295,7 @@ xfs_dir2_db_t xfs_dir2_da_to_db(struct xfs_mount *mp, xfs_dablk_t da);
 xfs_dir2_off_t xfs_dir2_da_to_byte(struct xfs_mount *mp, xfs_dablk_t da);
 #define XFS_DIR2_DA_TO_BYTE(mp,da)	xfs_dir2_da_to_byte(mp, da)
 #else
-#define	XFS_DIR2_DA_TO_BYTE(mp,da)	\
+#define XFS_DIR2_DA_TO_BYTE(mp,da)	\
 	XFS_DIR2_DB_OFF_TO_BYTE(mp, XFS_DIR2_DA_TO_DB(mp, da), 0)
 #endif
 

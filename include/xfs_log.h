@@ -1,35 +1,35 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef	__XFS_LOG_H__
+#ifndef __XFS_LOG_H__
 #define __XFS_LOG_H__
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -41,7 +41,7 @@
 #endif
 
 /* get lsn fields */
-    
+
 #define CYCLE_LSN(lsn,arch) (INT_GET(((uint *)&(lsn))[LSN_FIELD_CYCLE(arch)], arch))
 #define BLOCK_LSN(lsn,arch) (INT_GET(((uint *)&(lsn))[LSN_FIELD_BLOCK(arch)], arch))
 /* this is used in a spot where we might otherwise double-endian-flip */
@@ -63,16 +63,16 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2, xfs_arch_t arch)
 	if (CYCLE_LSN(lsn1, arch) != CYCLE_LSN(lsn2, arch))
 		return (CYCLE_LSN(lsn1, arch)<CYCLE_LSN(lsn2, arch))? -999 : 999;
 
-        if (BLOCK_LSN(lsn1, arch) != BLOCK_LSN(lsn2, arch))
-                return (BLOCK_LSN(lsn1, arch)<BLOCK_LSN(lsn2, arch))? -999 : 999;
-        
-        return 0;
+	if (BLOCK_LSN(lsn1, arch) != BLOCK_LSN(lsn2, arch))
+		return (BLOCK_LSN(lsn1, arch)<BLOCK_LSN(lsn2, arch))? -999 : 999;
+
+	return 0;
 }
 
-#define	XFS_LSN_CMP_ARCH(x,y,arch)	_lsn_cmp(x, y, arch)
-#define	XFS_LSN_CMP(x,y) XFS_LSN_CMP_ARCH(x,y,ARCH_NOCONVERT)
-#define	XFS_LSN_DIFF_ARCH(x,y,arch)	_lsn_cmp(x, y, arch)
-#define	XFS_LSN_DIFF(x,y) XFS_LSN_DIFF_ARCH(x,y,ARCH_NOCONVERT)
+#define XFS_LSN_CMP_ARCH(x,y,arch)	_lsn_cmp(x, y, arch)
+#define XFS_LSN_CMP(x,y) XFS_LSN_CMP_ARCH(x,y,ARCH_NOCONVERT)
+#define XFS_LSN_DIFF_ARCH(x,y,arch)	_lsn_cmp(x, y, arch)
+#define XFS_LSN_DIFF(x,y) XFS_LSN_DIFF_ARCH(x,y,ARCH_NOCONVERT)
 
 /*
  * Macros, structures, prototypes for interface to the log manager.
@@ -86,7 +86,7 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2, xfs_arch_t arch)
 /*
  * Flags to xfs_log_done()
  */
-#define XFS_LOG_REL_PERM_RESERV	0x1
+#define XFS_LOG_REL_PERM_RESERV 0x1
 
 
 /*
@@ -137,9 +137,9 @@ typedef void* xfs_log_ticket_t;
  * to the log manager.
  */
 typedef struct xfs_log_callback {
-	struct xfs_log_callback	*cb_next;
+	struct xfs_log_callback *cb_next;
 	void			(*cb_func)(void *, int);
-	void 			*cb_arg;
+	void			*cb_arg;
 } xfs_log_callback_t;
 
 
@@ -170,13 +170,13 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
 			  __uint8_t	   clientid,
 			  uint		   flags);
 int	  xfs_log_write(struct xfs_mount *mp,
-			xfs_log_iovec_t  region[],
+			xfs_log_iovec_t	 region[],
 			int		 nentries,
 			xfs_log_ticket_t ticket,
 			xfs_lsn_t	 *start_lsn);
 int	  xfs_log_unmount(struct xfs_mount *mp);
 int	  xfs_log_unmount_write(struct xfs_mount *mp);
-void      xfs_log_unmount_dealloc(struct xfs_mount *mp);
+void	  xfs_log_unmount_dealloc(struct xfs_mount *mp);
 int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
 int	  xfs_log_need_covered(struct xfs_mount *mp);
 

@@ -31,6 +31,8 @@
  */
 
 #include "logprint.h"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int	print_data;
 int	print_only_data;
@@ -90,21 +92,29 @@ logstat(libxfs_init_t *x)
 	} 
         close (fd);
 
-	/* 
-	 * Conjure up a mount structure 
-	 */
-	libxfs_xlate_sb(buf, &(mp.m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
-	sb = &(mp.m_sb);
-	mp.m_blkbb_log = sb->sb_blocklog - BBSHIFT;
+	if (!x->disfile) {
+		/* 
+		 * Conjure up a mount structure 
+		 */
+		libxfs_xlate_sb(buf, &(mp.m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+		sb = &(mp.m_sb);
+		mp.m_blkbb_log = sb->sb_blocklog - BBSHIFT;
 
-	x->logBBsize = XFS_FSB_TO_BB(&mp, sb->sb_logblocks);
-	x->logBBstart = XFS_FSB_TO_DADDR(&mp, sb->sb_logstart);
+		x->logBBsize = XFS_FSB_TO_BB(&mp, sb->sb_logblocks);
+		x->logBBstart = XFS_FSB_TO_DADDR(&mp, sb->sb_logstart);
+		if (!x->logname && sb->sb_logstart == 0) {
+			fprintf(stderr, "    external log device not specified\n\n");
+			usage();
+			/*NOTREACHED*/
+		}	    
+	} else {
+		struct stat	s;
 
-	if (!x->logname && sb->sb_logstart == 0) {
-		fprintf(stderr, "    external log device not specified\n\n");
-                usage();
-                /*NOTREACHED*/
-	}	    
+		stat(x->dname, &s);
+		x->logBBsize = s.st_size >> 9;
+		x->logBBstart = 0;
+	}
+
 
 	if (x->logname && *x->logname) {    /* External log */
 		if ((fd = open(x->logname, O_RDONLY)) == -1) {

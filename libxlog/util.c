@@ -49,8 +49,10 @@ header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
     printf("* ERROR: mismatched uuid in log\n"
            "*            SB : %s\n*            log: %s\n",
             uu_sb, uu_log);
+
+    memcpy(&mp->m_sb.sb_uuid, head->h_fs_uuid, sizeof(uuid_t));
     
-    return 1;
+    return 0;
 }
 
 int

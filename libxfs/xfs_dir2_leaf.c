@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -584,7 +584,7 @@ xfs_dir2_leaf_compact(
 	xfs_dabuf_t	*bp)		/* leaf buffer */
 {
 	int		from;		/* source leaf index */
-	xfs_dir2_leaf_t	*leaf;		/* leaf structure */
+	xfs_dir2_leaf_t *leaf;		/* leaf structure */
 	int		loglow;		/* first leaf entry to log */
 	int		to;		/* target leaf index */
 
@@ -640,7 +640,7 @@ xfs_dir2_leaf_compact_x1(
 	int		highstale;	/* stale entry at/after index */
 	int		index;		/* insertion index */
 	int		keepstale;	/* source index of kept stale */
-	xfs_dir2_leaf_t	*leaf;		/* leaf structure */
+	xfs_dir2_leaf_t *leaf;		/* leaf structure */
 	int		lowstale;	/* stale entry before index */
 	int		newindex=0;	/* new insertion index */
 	int		to;		/* destination copy index */
@@ -768,7 +768,7 @@ xfs_dir2_leaf_init(
 	 */
 	INT_SET(leaf->hdr.info.magic, ARCH_CONVERT, magic);
 	INT_ZERO(leaf->hdr.info.forw, ARCH_CONVERT);
-        INT_ZERO(leaf->hdr.info.back, ARCH_CONVERT);
+	INT_ZERO(leaf->hdr.info.back, ARCH_CONVERT);
 	INT_ZERO(leaf->hdr.count, ARCH_CONVERT);
 	INT_ZERO(leaf->hdr.stale, ARCH_CONVERT);
 	xfs_dir2_leaf_log_header(tp, bp);
@@ -1303,7 +1303,7 @@ xfs_dir2_leaf_trim_data(
 	data = dbp->data;
 	ASSERT(INT_GET(data->hdr.magic, ARCH_CONVERT) == XFS_DIR2_DATA_MAGIC);
 #endif
-	/* this seems to be an error 
+	/* this seems to be an error
 	 * data is only valid if DEBUG is defined?
 	 * RMC 09/08/1999
 	 */

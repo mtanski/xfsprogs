@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -81,7 +81,7 @@ check_ismounted(char *name, char *block)
  * Checks whether a given device has a mounted, writable
  * filesystem, returns 1 if it does & fatal (just warns
  * if not fatal, but allows us to proceed).
- * 
+ *
  * Useful to tools which will produce uncertain results
  * if the filesystem is active - repair, check, logprint.
  */
@@ -177,7 +177,7 @@ findsize(char *path)
 }
 
 
-/* libxfs_device_to_fd: 
+/* libxfs_device_to_fd:
  *     lookup a device number in the device map
  *     return the associated fd
  */
@@ -185,12 +185,12 @@ int
 libxfs_device_to_fd(dev_t device)
 {
 	int d;
-	
+
 	for (d=0;d<MAX_DEVS;d++)
-		if (dev_map[d].dev == device) 
+		if (dev_map[d].dev == device)
 			return dev_map[d].fd;
-	
-	fprintf(stderr, "%s: device_to_fd: device %lld is not open\n", 
+
+	fprintf(stderr, "%s: device_to_fd: device %lld is not open\n",
 		progname, (long long)device);
 	exit(1);
 }
@@ -204,7 +204,7 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 	int		fd;
 	dev_t		dev;
 	int		d;
-	struct stat     statb;
+	struct stat	statb;
 
 	if ((fd = open(path,
 			(readonly ? O_RDONLY : O_RDWR) |
@@ -245,7 +245,7 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 
 	for (d=0;d<MAX_DEVS;d++)
 		if (dev_map[d].dev == dev) {
-			fprintf(stderr, "%s: device %lld is already open\n", 
+			fprintf(stderr, "%s: device %lld is already open\n",
 			    progname, (long long)dev);
 			exit(1);
 		}
@@ -254,7 +254,7 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 		if (!dev_map[d].dev) {
 			dev_map[d].dev=dev;
 			dev_map[d].fd=fd;
-			
+
 			return dev;
 		}
 
@@ -265,19 +265,19 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 void
 libxfs_device_close(dev_t dev)
 {
-	int     d;
+	int	d;
 
 	for (d=0;d<MAX_DEVS;d++)
 		if (dev_map[d].dev == dev) {
 			int fd;
-			
+
 			fd=dev_map[d].dev;
 			dev_map[d].dev=dev_map[d].fd=0;
-			
+
 			fsync(fd);
 			ioctl(fd, BLKFLSBUF, 0);
 			close(fd);
-			
+
 			return;
 		}
 
@@ -427,7 +427,7 @@ voldone:
 		if (dname[0] != '/' && needcd)
 			chdir(curdir);
 		if (a->disfile) {
-			a->ddev= libxfs_device_open(dname, a->dcreat, readonly, 
+			a->ddev= libxfs_device_open(dname, a->dcreat, readonly,
 						    a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {

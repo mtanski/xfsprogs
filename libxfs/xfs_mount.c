@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -111,81 +111,81 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
 
 static struct {
     short offset;
-    short type;     /* 0 = integer
-                     * 1 = binary / string (no translation)
-                     */
+    short type;	    /* 0 = integer
+		     * 1 = binary / string (no translation)
+		     */
 } xfs_sb_info[] = {
-    { offsetof(xfs_sb_t, sb_magicnum),   0 },
-    { offsetof(xfs_sb_t, sb_blocksize),  0 },
-    { offsetof(xfs_sb_t, sb_dblocks),    0 },
-    { offsetof(xfs_sb_t, sb_rblocks),    0 },
-    { offsetof(xfs_sb_t, sb_rextents),   0 },
-    { offsetof(xfs_sb_t, sb_uuid),       1 },
-    { offsetof(xfs_sb_t, sb_logstart),   0 },
-    { offsetof(xfs_sb_t, sb_rootino),    0 },
-    { offsetof(xfs_sb_t, sb_rbmino),     0 },
-    { offsetof(xfs_sb_t, sb_rsumino),    0 },
-    { offsetof(xfs_sb_t, sb_rextsize),   0 },
-    { offsetof(xfs_sb_t, sb_agblocks),   0 },
-    { offsetof(xfs_sb_t, sb_agcount),    0 },
-    { offsetof(xfs_sb_t, sb_rbmblocks),  0 },
-    { offsetof(xfs_sb_t, sb_logblocks),  0 },
+    { offsetof(xfs_sb_t, sb_magicnum),	 0 },
+    { offsetof(xfs_sb_t, sb_blocksize),	 0 },
+    { offsetof(xfs_sb_t, sb_dblocks),	 0 },
+    { offsetof(xfs_sb_t, sb_rblocks),	 0 },
+    { offsetof(xfs_sb_t, sb_rextents),	 0 },
+    { offsetof(xfs_sb_t, sb_uuid),	 1 },
+    { offsetof(xfs_sb_t, sb_logstart),	 0 },
+    { offsetof(xfs_sb_t, sb_rootino),	 0 },
+    { offsetof(xfs_sb_t, sb_rbmino),	 0 },
+    { offsetof(xfs_sb_t, sb_rsumino),	 0 },
+    { offsetof(xfs_sb_t, sb_rextsize),	 0 },
+    { offsetof(xfs_sb_t, sb_agblocks),	 0 },
+    { offsetof(xfs_sb_t, sb_agcount),	 0 },
+    { offsetof(xfs_sb_t, sb_rbmblocks),	 0 },
+    { offsetof(xfs_sb_t, sb_logblocks),	 0 },
     { offsetof(xfs_sb_t, sb_versionnum), 0 },
-    { offsetof(xfs_sb_t, sb_sectsize),   0 },
-    { offsetof(xfs_sb_t, sb_inodesize),  0 },
-    { offsetof(xfs_sb_t, sb_inopblock),  0 },
-    { offsetof(xfs_sb_t, sb_fname[0]),   1 },
-    { offsetof(xfs_sb_t, sb_blocklog),   0 },
-    { offsetof(xfs_sb_t, sb_sectlog),    0 },
-    { offsetof(xfs_sb_t, sb_inodelog),   0 },
-    { offsetof(xfs_sb_t, sb_inopblog),   0 },
-    { offsetof(xfs_sb_t, sb_agblklog),   0 },
-    { offsetof(xfs_sb_t, sb_rextslog),   0 },
+    { offsetof(xfs_sb_t, sb_sectsize),	 0 },
+    { offsetof(xfs_sb_t, sb_inodesize),	 0 },
+    { offsetof(xfs_sb_t, sb_inopblock),	 0 },
+    { offsetof(xfs_sb_t, sb_fname[0]),	 1 },
+    { offsetof(xfs_sb_t, sb_blocklog),	 0 },
+    { offsetof(xfs_sb_t, sb_sectlog),	 0 },
+    { offsetof(xfs_sb_t, sb_inodelog),	 0 },
+    { offsetof(xfs_sb_t, sb_inopblog),	 0 },
+    { offsetof(xfs_sb_t, sb_agblklog),	 0 },
+    { offsetof(xfs_sb_t, sb_rextslog),	 0 },
     { offsetof(xfs_sb_t, sb_inprogress), 0 },
-    { offsetof(xfs_sb_t, sb_imax_pct),   0 },
-    { offsetof(xfs_sb_t, sb_icount),     0 },
-    { offsetof(xfs_sb_t, sb_ifree),      0 },
-    { offsetof(xfs_sb_t, sb_fdblocks),   0 },
-    { offsetof(xfs_sb_t, sb_frextents),  0 },
-    { offsetof(xfs_sb_t, sb_uquotino),   0 },
-    { offsetof(xfs_sb_t, sb_gquotino),   0 },
-    { offsetof(xfs_sb_t, sb_qflags),     0 },
-    { offsetof(xfs_sb_t, sb_flags),      0 },
-    { offsetof(xfs_sb_t, sb_shared_vn),  0 },
+    { offsetof(xfs_sb_t, sb_imax_pct),	 0 },
+    { offsetof(xfs_sb_t, sb_icount),	 0 },
+    { offsetof(xfs_sb_t, sb_ifree),	 0 },
+    { offsetof(xfs_sb_t, sb_fdblocks),	 0 },
+    { offsetof(xfs_sb_t, sb_frextents),	 0 },
+    { offsetof(xfs_sb_t, sb_uquotino),	 0 },
+    { offsetof(xfs_sb_t, sb_gquotino),	 0 },
+    { offsetof(xfs_sb_t, sb_qflags),	 0 },
+    { offsetof(xfs_sb_t, sb_flags),	 0 },
+    { offsetof(xfs_sb_t, sb_shared_vn),	 0 },
     { offsetof(xfs_sb_t, sb_inoalignmt), 0 },
-    { offsetof(xfs_sb_t, sb_unit),       0 },
-    { offsetof(xfs_sb_t, sb_width),      0 },
-    { offsetof(xfs_sb_t, sb_dirblklog),  0 },
-    { offsetof(xfs_sb_t, sb_dummy),      1 },
-    { offsetof(xfs_sb_t, sb_logsunit),   0 },
-    { sizeof(xfs_sb_t),                  0 }
+    { offsetof(xfs_sb_t, sb_unit),	 0 },
+    { offsetof(xfs_sb_t, sb_width),	 0 },
+    { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
+    { offsetof(xfs_sb_t, sb_dummy),	 1 },
+    { offsetof(xfs_sb_t, sb_logsunit),	 0 },
+    { sizeof(xfs_sb_t),			 0 }
 };
 
 /*
  * xfs_xlatesb
- *     data       - on disk version of sb
- *     sb         - a superblock
- *     dir        - conversion direction: <0 - convert sb to buf
- *                                        >0 - convert buf to sb
- *     arch       - architecture to read/write from/to buf
- *     fields     - which fields to copy (bitmask)
+ *     data	  - on disk version of sb
+ *     sb	  - a superblock
+ *     dir	  - conversion direction: <0 - convert sb to buf
+ *					  >0 - convert buf to sb
+ *     arch	  - architecture to read/write from/to buf
+ *     fields	  - which fields to copy (bitmask)
  */
 void
-xfs_xlatesb(void *data, xfs_sb_t *sb, int dir, xfs_arch_t arch, 
-            __int64_t fields)
+xfs_xlatesb(void *data, xfs_sb_t *sb, int dir, xfs_arch_t arch,
+	    __int64_t fields)
 {
-    xfs_caddr_t     buf_ptr;
-    xfs_caddr_t     mem_ptr;
-           
+    xfs_caddr_t	    buf_ptr;
+    xfs_caddr_t	    mem_ptr;
+
     ASSERT(dir);
     ASSERT(fields);
 
     if (!fields)
-        return;
-    
+	return;
+
     buf_ptr=(xfs_caddr_t)data;
     mem_ptr=(xfs_caddr_t)sb;
-    
+
     while (fields) {
 	xfs_sb_field_t	f;
 	int		first;
@@ -194,36 +194,36 @@ xfs_xlatesb(void *data, xfs_sb_t *sb, int dir, xfs_arch_t arch,
 	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
 	first = xfs_sb_info[f].offset;
 	size = xfs_sb_info[f + 1].offset - first;
-        
-        ASSERT(xfs_sb_info[f].type==0 || xfs_sb_info[f].type==1);
-        
-        if (arch == ARCH_NOCONVERT || size==1 || xfs_sb_info[f].type==1) {
-            if (dir>0) {
-   	        bcopy(buf_ptr + first, mem_ptr + first, size);
-            } else {
-   	        bcopy(mem_ptr + first, buf_ptr + first, size);
-            }
-        } else {
-            switch (size) {
-                case 2:  
-                    INT_XLATE(*(__uint16_t*)(buf_ptr+first),
-                             *(__uint16_t*)(mem_ptr+first), dir, arch);
-                    break;
-                case 4:  
-                    INT_XLATE(*(__uint32_t*)(buf_ptr+first),
-                             *(__uint32_t*)(mem_ptr+first), dir, arch);
-                    break;
-                case 8:  
-                    INT_XLATE(*(__uint64_t*)(buf_ptr+first),
-                             *(__uint64_t*)(mem_ptr+first), dir, arch);
-                    break;
-                default: 
-                    ASSERT(0);
-            }
-        }
+
+	ASSERT(xfs_sb_info[f].type==0 || xfs_sb_info[f].type==1);
+
+	if (arch == ARCH_NOCONVERT || size==1 || xfs_sb_info[f].type==1) {
+	    if (dir>0) {
+		bcopy(buf_ptr + first, mem_ptr + first, size);
+	    } else {
+		bcopy(mem_ptr + first, buf_ptr + first, size);
+	    }
+	} else {
+	    switch (size) {
+		case 2:
+		    INT_XLATE(*(__uint16_t*)(buf_ptr+first),
+			     *(__uint16_t*)(mem_ptr+first), dir, arch);
+		    break;
+		case 4:
+		    INT_XLATE(*(__uint32_t*)(buf_ptr+first),
+			     *(__uint32_t*)(mem_ptr+first), dir, arch);
+		    break;
+		case 8:
+		    INT_XLATE(*(__uint64_t*)(buf_ptr+first),
+			     *(__uint64_t*)(mem_ptr+first), dir, arch);
+		    break;
+		default:
+		    ASSERT(0);
+	    }
+	}
 	fields &= ~(1LL << f);
     }
-    
+
 }
 
 void

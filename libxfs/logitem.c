@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -135,12 +135,12 @@ xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
 
 /*
  * Free the given descriptor.
- * 
+ *
  * This requires setting the bit in the chunk's free mask corresponding
  * to the given slot.
  */
 void
-xfs_trans_free_item(xfs_trans_t	*tp, xfs_log_item_desc_t *lidp)
+xfs_trans_free_item(xfs_trans_t *tp, xfs_log_item_desc_t *lidp)
 {
 	uint			slot;
 	xfs_log_item_chunk_t	*licp;
@@ -158,7 +158,7 @@ xfs_trans_free_item(xfs_trans_t	*tp, xfs_log_item_desc_t *lidp)
 	 * the chunk. First pull it from the chunk list and then
 	 * free it back to the heap.  We didn't bother with a doubly
 	 * linked list here because the lists should be very short
-	 * and this is not a performance path.  It's better to save
+	 * and this is not a performance path.	It's better to save
 	 * the memory of the extra pointer.
 	 *
 	 * Also decrement the transaction structure's count of free items
@@ -180,13 +180,13 @@ xfs_trans_free_item(xfs_trans_t	*tp, xfs_log_item_desc_t *lidp)
  * This is called to find the descriptor corresponding to the given
  * log item.  It returns a pointer to the descriptor.
  * The log item MUST have a corresponding descriptor in the given
- * transaction.  This routine does not return NULL, it panics.
+ * transaction.	 This routine does not return NULL, it panics.
  *
  * The descriptor pointer is kept in the log item's li_desc field.
  * Just return it.
  */
 xfs_log_item_desc_t *
-xfs_trans_find_item(xfs_trans_t	*tp, xfs_log_item_t *lip)
+xfs_trans_find_item(xfs_trans_t *tp, xfs_log_item_t *lip)
 {
 	ASSERT(lip->li_desc != NULL);
 
@@ -294,7 +294,7 @@ xfs_trans_buf_item_match(
 			    (XFS_BUF_ADDR(bp) == blkno) &&
 			    (XFS_BUF_COUNT(bp) == len)) {
 				/*
-				 * We found it.  Break out and
+				 * We found it.	 Break out and
 				 * return the pointer to the buffer.
 				 */
 #ifdef LI_DEBUG
@@ -376,7 +376,7 @@ xfs_trans_buf_item_match_all(
 			    (XFS_BUF_ADDR(bp) == blkno) &&
 			    (XFS_BUF_COUNT(bp) == len)) {
 				/*
-				 * We found it.  Break out and
+				 * We found it.	 Break out and
 				 * return the pointer to the buffer.
 				 */
 #ifdef LI_DEBUG
@@ -415,7 +415,7 @@ xfs_buf_item_init(
 
 	/*
 	 * Check to see if there is already a buf log item for
-	 * this buffer.  If there is, it is guaranteed to be
+	 * this buffer.	 If there is, it is guaranteed to be
 	 * the first.  If we do already have one, there is
 	 * nothing to do here so return.
 	 */

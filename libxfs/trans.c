@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -76,7 +76,7 @@ libxfs_trans_reserve(xfs_trans_t *tp,
 
 	/*
 	 * Attempt to reserve the needed disk blocks by decrementing
-	 * the number needed from the number available.  This will
+	 * the number needed from the number available.	 This will
 	 * fail if the count would go below zero.
 	 */
 	if (blocks > 0) {
@@ -91,7 +91,7 @@ void
 libxfs_trans_cancel(xfs_trans_t *tp, int flags)
 {
 #ifdef XACT_DEBUG
-        xfs_trans_t *otp = tp;
+	xfs_trans_t *otp = tp;
 #endif
 	if (tp != NULL) {
 		xfs_trans_free_items(tp, flags);
@@ -242,7 +242,7 @@ xfs_trans_log_inode(
  * This is called to mark bytes first through last inclusive of the given
  * buffer as needing to be logged when the transaction is committed.
  * The buffer must already be associated with the given transaction.
- * 
+ *
  * First and last are numbers relative to the beginning of this buffer,
  * so the first byte in the buffer is numbered 0 regardless of the
  * value of b_blkno.
@@ -452,7 +452,7 @@ libxfs_trans_read_buf(xfs_mount_t *mp, xfs_trans_t *tp, dev_t dev,
  * to the file system's superblock when the transaction commits.
  * For now, just store the change in the transaction structure.
  * Mark the transaction structure to indicate that the superblock
- * needs to be updated before committing. 
+ * needs to be updated before committing.
  *
  * Originally derived from xfs_trans_mod_sb().
  */
@@ -643,13 +643,13 @@ trans_committed(xfs_trans_t *tp)
  * Unlock each item pointed to by a descriptor in the given chunk.
  * Free descriptors pointing to items which are not dirty if freeing_chunk
  * is zero. If freeing_chunk is non-zero, then we need to unlock all
- * items in the chunk.  Return the number of descriptors freed.
+ * items in the chunk.	Return the number of descriptors freed.
  * Originally based on xfs_trans_unlock_chunk() - adapted for libxfs
  * transactions though.
  */
 int
 xfs_trans_unlock_chunk(
-	xfs_log_item_chunk_t 	*licp,
+	xfs_log_item_chunk_t	*licp,
 	int			freeing_chunk,
 	int			abort,
 	xfs_lsn_t		commit_lsn)	/* nb: unused */

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -199,7 +199,7 @@ xfs_attr_leaf_add(xfs_dabuf_t *bp, xfs_da_args_t *args)
 
 	/*
 	 * After compaction, the block is guaranteed to have only one
-	 * free region, in freemap[0].  If it is not big enough, give up.
+	 * free region, in freemap[0].	If it is not big enough, give up.
 	 */
 	if (INT_GET(hdr->freemap[0].size, ARCH_CONVERT)
 				< (entsize + sizeof(xfs_attr_leaf_entry_t)))
@@ -283,7 +283,7 @@ xfs_attr_leaf_add_work(xfs_dabuf_t *bp, xfs_da_args_t *args, int mapindex)
 	/*
 	 * Copy the attribute name and value into the new space.
 	 *
-	 * For "remote" attribute values, simply note that we need to 
+	 * For "remote" attribute values, simply note that we need to
 	 * allocate space for the "remote" value.  We can't actually
 	 * allocate the extents in this transaction, and we can't decide
 	 * which blocks they should be as we might allocate more blocks
@@ -402,7 +402,7 @@ xfs_attr_leaf_compact(xfs_trans_t *trans, xfs_dabuf_t *bp)
  *
  * This code adjusts the args->index/blkno and args->index2/blkno2 fields
  * to match what it is doing in splitting the attribute leaf block.  Those
- * values are used in "atomic rename" operations on attributes.  Note that
+ * values are used in "atomic rename" operations on attributes.	 Note that
  * the "new" and "old" values can end up in different blocks.
  */
 STATIC void
@@ -619,7 +619,7 @@ xfs_attr_leaf_figure_balance(xfs_da_state_t *state,
 	entry = &leaf1->entries[0];
 	for (count = index = 0; count < max; entry++, index++, count++) {
 
-#define XFS_ATTR_ABS(A)	(((A) < 0) ? -(A) : (A))
+#define XFS_ATTR_ABS(A) (((A) < 0) ? -(A) : (A))
 		/*
 		 * The new entry is in the first block, account for it.
 		 */
@@ -662,7 +662,7 @@ xfs_attr_leaf_figure_balance(xfs_da_state_t *state,
 	 */
 	totallen -= count * sizeof(*entry);
 	if (foundit) {
-		totallen -= sizeof(*entry) + 
+		totallen -= sizeof(*entry) +
 				xfs_attr_leaf_newentsize(state->args,
 							 state->blocksize,
 							 NULL);
@@ -870,7 +870,7 @@ xfs_attr_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 		bzero(tmpbuffer, state->blocksize);
 		tmp_leaf = (xfs_attr_leafblock_t *)tmpbuffer;
 		tmp_hdr = &tmp_leaf->hdr;
-		tmp_hdr->info = save_hdr->info;	/* struct copy */
+		tmp_hdr->info = save_hdr->info; /* struct copy */
 		INT_ZERO(tmp_hdr->count, ARCH_CONVERT);
 		INT_SET(tmp_hdr->firstused, ARCH_CONVERT, state->blocksize);
 		if (INT_ISZERO(tmp_hdr->firstused, ARCH_CONVERT)) {
@@ -948,11 +948,11 @@ xfs_attr_leaf_moveents(xfs_attr_leafblock_t *leaf_s, int start_s,
 	ASSERT((INT_GET(hdr_s->count, ARCH_CONVERT) > 0)
 				&& (INT_GET(hdr_s->count, ARCH_CONVERT)
 						< (XFS_LBSIZE(mp)/8)));
-	ASSERT(INT_GET(hdr_s->firstused, ARCH_CONVERT) >= 
+	ASSERT(INT_GET(hdr_s->firstused, ARCH_CONVERT) >=
 		((INT_GET(hdr_s->count, ARCH_CONVERT)
 					* sizeof(*entry_s))+sizeof(*hdr_s)));
 	ASSERT(INT_GET(hdr_d->count, ARCH_CONVERT) < (XFS_LBSIZE(mp)/8));
-	ASSERT(INT_GET(hdr_d->firstused, ARCH_CONVERT) >= 
+	ASSERT(INT_GET(hdr_d->firstused, ARCH_CONVERT) >=
 		((INT_GET(hdr_d->count, ARCH_CONVERT)
 					* sizeof(*entry_d))+sizeof(*hdr_d)));
 
@@ -985,7 +985,7 @@ xfs_attr_leaf_moveents(xfs_attr_leafblock_t *leaf_s, int start_s,
 #ifdef GROT
 		/*
 		 * Code to drop INCOMPLETE entries.  Difficult to use as we
-		 * may also need to change the insertion index.  Code turned
+		 * may also need to change the insertion index.	 Code turned
 		 * off for 6.2, should be revisited later.
 		 */
 		if (entry_s->flags & XFS_ATTR_INCOMPLETE) { /* skip partials? */
@@ -1089,7 +1089,7 @@ xfs_attr_leaf_order(xfs_dabuf_t *leaf1_bp, xfs_dabuf_t *leaf2_bp)
 	    && (INT_GET(leaf2->hdr.count, ARCH_CONVERT) > 0)
 	    && (   (INT_GET(leaf2->entries[ 0 ].hashval, ARCH_CONVERT) <
 		      INT_GET(leaf1->entries[ 0 ].hashval, ARCH_CONVERT))
-	        || (INT_GET(leaf2->entries[INT_GET(leaf2->hdr.count,
+		|| (INT_GET(leaf2->entries[INT_GET(leaf2->hdr.count,
 				ARCH_CONVERT)-1].hashval, ARCH_CONVERT) <
 		      INT_GET(leaf1->entries[INT_GET(leaf1->hdr.count,
 				ARCH_CONVERT)-1].hashval, ARCH_CONVERT))) ) {
@@ -1154,7 +1154,7 @@ xfs_attr_leaf_newentsize(xfs_da_args_t *args, int blocksize, int *local)
 	int size;
 
 	size = XFS_ATTR_LEAF_ENTSIZE_LOCAL(args->namelen, args->valuelen);
-	if (size < XFS_ATTR_LEAF_ENTSIZE_LOCAL_MAX(blocksize)) { 
+	if (size < XFS_ATTR_LEAF_ENTSIZE_LOCAL_MAX(blocksize)) {
 		if (local) {
 			*local = 1;
 		}

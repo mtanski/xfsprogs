@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -42,8 +42,8 @@
  */
 int
 libxfs_inode_alloc(
-	xfs_trans_t     **tp,
-	xfs_inode_t     *pip,
+	xfs_trans_t	**tp,
+	xfs_inode_t	*pip,
 	mode_t		mode,
 	ushort		nlink,
 	dev_t		rdev,
@@ -92,14 +92,14 @@ libxfs_inode_alloc(
 
 /*
  * Change the requested timestamp in the given inode.
- * 
+ *
  * This was once shared with the kernel, but has diverged to the point
  * where its no longer worth the hassle of maintaining common code.
  */
 void
 libxfs_ichgtime(xfs_inode_t *ip, int flags)
 {
-	struct timespec	tv;
+	struct timespec tv;
 	struct timeval	stv;
 
 	gettimeofday(&stv, (struct timezone *)0);
@@ -185,7 +185,7 @@ libxfs_ialloc(
 	    ip->i_d.di_version == XFS_DINODE_VERSION_1) {
 		ip->i_d.di_version = XFS_DINODE_VERSION_2;
 		/* old link count, projid field, pad field already zeroed */
-        }
+	}
 
 	ip->i_d.di_size = 0;
 	ip->i_d.di_nextents = 0;
@@ -251,7 +251,7 @@ libxfs_iprint(xfs_inode_t	*ip)
 	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
 		nextents = ip->i_df.if_bytes / (uint)sizeof(*ep);
 		for (ep = ip->i_df.if_u1.if_extents, i = 0; i < nextents; i++, ep++) {
-			xfs_bmbt_irec_t	rec;
+			xfs_bmbt_irec_t rec;
 
 			xfs_bmbt_get_all(ep, &rec);
 			printf("\t%d: startoff %llu, startblock 0x%llx,"
@@ -400,10 +400,10 @@ libxfs_bmap_next_offset(
 	xfs_fileoff_t	bno;			/* current block */
 	int		eof;			/* hit end of file */
 	int		error;			/* error return value */
-	xfs_bmbt_irec_t	got;			/* current extent value */
+	xfs_bmbt_irec_t got;			/* current extent value */
 	xfs_ifork_t	*ifp;			/* inode fork pointer */
 	xfs_extnum_t	lastx;			/* last extent used */
-	xfs_bmbt_irec_t	prev;			/* previous extent value */
+	xfs_bmbt_irec_t prev;			/* previous extent value */
 
 	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
 	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
@@ -430,7 +430,7 @@ libxfs_bmap_next_offset(
  * Like xfs_dir_removename, but only for removing entries with
  * (name, hashvalue) pairs that may not be consistent (hashvalue
  * may not be correctly set for the name).
- * 
+ *
  * This was originally in the kernel, but only used in xfs_repair.
  */
 int
@@ -485,7 +485,7 @@ xfs_dir_bogus_removename(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
  * Like xfs_dir_removename, but only for removing entries with
  * (name, hashvalue) pairs that may not be consistent (hashvalue
  * may not be correctly set for the name).
- * 
+ *
  * This was originally in the kernel, but only used in xfs_repair.
  */
 int
@@ -494,7 +494,7 @@ xfs_dir2_bogus_removename(
 	xfs_inode_t	*dp,		/* incore directory inode */
 	char		*name,		/* name of entry to remove */
 	xfs_fsblock_t	*first,		/* bmap's firstblock */
-	xfs_bmap_free_t	*flist,		/* bmap's freeblock list */
+	xfs_bmap_free_t *flist,		/* bmap's freeblock list */
 	xfs_extlen_t	total,		/* bmap's total block count */
 	xfs_dahash_t	hash,		/* name's real hash value */
 	int		namelen)	/* entry's name length */
@@ -572,7 +572,7 @@ libxfs_mod_incore_sb(xfs_mount_t *mp, xfs_sb_field_t field, int delta, int rsvd)
 int
 libxfs_bmap_finish(
 	xfs_trans_t	**tp,
-	xfs_bmap_free_t	*flist,
+	xfs_bmap_free_t *flist,
 	xfs_fsblock_t	firstblock,
 	int		*committed)
 {
@@ -613,9 +613,9 @@ libxfs_alloc_file_space(
 	xfs_filblks_t	allocated_fsb;
 	xfs_filblks_t	allocatesize_fsb;
 	xfs_fsblock_t	firstfsb;
-	xfs_bmap_free_t	free_list;
-	xfs_bmbt_irec_t	*imapp;
-	xfs_bmbt_irec_t	imaps[1];
+	xfs_bmap_free_t free_list;
+	xfs_bmbt_irec_t *imapp;
+	xfs_bmbt_irec_t imaps[1];
 	int		reccount;
 	uint		resblks;
 	xfs_fileoff_t	startoffset_fsb;
@@ -689,7 +689,7 @@ libxfs_log2_roundup(unsigned int i)
 /*
  * Get a buffer for the dir/attr block, fill in the contents.
  * Don't check magic number, the caller will (it's xfs_repair).
- * 
+ *
  * Originally from xfs_da_btree.c in the kernel, but only used
  * in userspace so it now resides here.
  */
@@ -708,7 +708,7 @@ libxfs_da_read_bufr(
 
 /*
  * Hold dabuf at transaction commit.
- * 
+ *
  * Originally from xfs_da_btree.c in the kernel, but only used
  * in userspace so it now resides here.
  */
@@ -723,7 +723,7 @@ libxfs_da_bhold(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
 
 /*
  * Join dabuf to transaction.
- * 
+ *
  * Originally from xfs_da_btree.c in the kernel, but only used
  * in userspace so it now resides here.
  */

@@ -1,36 +1,36 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 #ifndef __XFS_DIR_LEAF_H__
-#define	__XFS_DIR_LEAF_H__
+#define __XFS_DIR_LEAF_H__
 
 /*
  * Directory layout, internal structure, access macros, etc.
@@ -38,7 +38,7 @@
  * Large directories are structured around Btrees where all the data
  * elements are in the leaf nodes.  Filenames are hashed into an int,
  * then that int is used as the index into the Btree.  Since the hashval
- * of a filename may not be unique, we may have duplicate keys.  The
+ * of a filename may not be unique, we may have duplicate keys.	 The
  * internal links in the Btree are logical block offsets into the file.
  */
 
@@ -61,8 +61,8 @@ struct xfs_trans;
 /*
  * This is the structure of the leaf nodes in the Btree.
  *
- * Struct leaf_entry's are packed from the top.  Names grow from the bottom
- * but are not packed.  The freemap contains run-length-encoded entries
+ * Struct leaf_entry's are packed from the top.	 Names grow from the bottom
+ * but are not packed.	The freemap contains run-length-encoded entries
  * for the free bytes after the leaf_entry's, but only the N largest such,
  * smaller runs are dropped.  When the freemap doesn't show enough space
  * for an allocation, we compact the namelist area and try again.  If we
@@ -77,7 +77,7 @@ struct xfs_trans;
  * The parent directory and the self-pointer are explicitly represented
  * (ie: there are entries for "." and "..").
  *
- * Note that the count being a __uint16_t limits us to something like a 
+ * Note that the count being a __uint16_t limits us to something like a
  * blocksize of 1.3MB in the face of worst case (short) filenames.
  */
 #define XFS_DIR_LEAF_MAPSIZE	3	/* how many freespace slots */
@@ -115,7 +115,7 @@ typedef struct xfs_dir_leaf_name xfs_dir_leaf_name_t;
  * Length of name for which a 512-byte block filesystem
  * can get a double split.
  */
-#define	XFS_DIR_LEAF_CAN_DOUBLE_SPLIT_LEN	\
+#define XFS_DIR_LEAF_CAN_DOUBLE_SPLIT_LEN	\
 	(512 - (uint)sizeof(xfs_dir_leaf_hdr_t) - \
 	 (uint)sizeof(xfs_dir_leaf_entry_t) * 2 - \
 	 (uint)sizeof(xfs_dir_leaf_name_t) * 2 - (MAXNAMELEN - 2) + 1 + 1)
@@ -138,12 +138,12 @@ typedef union {
 	} s;
 } xfs_dircook_t;
 
-#define	XFS_PUT_COOKIE(c,mp,bno,entry,hash)	\
+#define XFS_PUT_COOKIE(c,mp,bno,entry,hash)	\
 	((c).s.be = XFS_DA_MAKE_BNOENTRY(mp, bno, entry), (c).s.h = (hash))
 
-#define	XFS_GET_DIR_INO_ARCH(mp,di,arch) \
+#define XFS_GET_DIR_INO_ARCH(mp,di,arch) \
     DIRINO_GET_ARCH(&(di),arch)
-#define	XFS_GET_DIR_INO(mp,di) \
+#define XFS_GET_DIR_INO(mp,di) \
     XFS_GET_DIR_INO_ARCH(mp,di,ARCH_NOCONVERT)
 
 typedef struct xfs_dir_put_args

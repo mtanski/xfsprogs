@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -192,7 +192,7 @@ xfs_dir2_leafn_add(
 	ASSERT(index == 0 || INT_GET(leaf->ents[index - 1].hashval, ARCH_CONVERT) <= args->hashval);
 	ASSERT(index == INT_GET(leaf->hdr.count, ARCH_CONVERT) ||
 	       INT_GET(leaf->ents[index].hashval, ARCH_CONVERT) >= args->hashval);
-	
+
 	if (args->justcheck)
 		return 0;
 
@@ -312,7 +312,7 @@ xfs_dir2_leafn_check(
 	xfs_dabuf_t	*bp)			/* leaf buffer */
 {
 	int		i;			/* leaf index */
-	xfs_dir2_leaf_t	*leaf;			/* leaf structure */
+	xfs_dir2_leaf_t *leaf;			/* leaf structure */
 	xfs_mount_t	*mp;			/* filesystem mount point */
 	int		stale;			/* count of stale leaves */
 
@@ -324,7 +324,7 @@ xfs_dir2_leafn_check(
 		if (i + 1 < INT_GET(leaf->hdr.count, ARCH_CONVERT)) {
 			ASSERT(INT_GET(leaf->ents[i].hashval, ARCH_CONVERT) <=
 			       INT_GET(leaf->ents[i + 1].hashval, ARCH_CONVERT));
-                }
+		}
 		if (INT_GET(leaf->ents[i].address, ARCH_CONVERT) == XFS_DIR2_NULL_DATAPTR)
 			stale++;
 	}
@@ -341,7 +341,7 @@ xfs_dir2_leafn_lasthash(
 	xfs_dabuf_t	*bp,			/* leaf buffer */
 	int		*count)			/* count of entries in leaf */
 {
-	xfs_dir2_leaf_t	*leaf;			/* leaf structure */
+	xfs_dir2_leaf_t *leaf;			/* leaf structure */
 
 	leaf = bp->data;
 	ASSERT(INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) == XFS_DIR2_LEAFN_MAGIC);
@@ -600,8 +600,8 @@ xfs_dir2_leafn_moveents(
 	int		start_d,		/* destination leaf index */
 	int		count)			/* count of leaves to copy */
 {
-	xfs_dir2_leaf_t	*leaf_d;		/* destination leaf structure */
-	xfs_dir2_leaf_t	*leaf_s;		/* source leaf structure */
+	xfs_dir2_leaf_t *leaf_d;		/* destination leaf structure */
+	xfs_dir2_leaf_t *leaf_s;		/* source leaf structure */
 	int		stale;			/* count stale leaves copied */
 	xfs_trans_t	*tp;			/* transaction pointer */
 
@@ -678,8 +678,8 @@ xfs_dir2_leafn_order(
 	xfs_dabuf_t	*leaf1_bp,		/* leaf1 buffer */
 	xfs_dabuf_t	*leaf2_bp)		/* leaf2 buffer */
 {
-	xfs_dir2_leaf_t	*leaf1;			/* leaf1 structure */
-	xfs_dir2_leaf_t	*leaf2;			/* leaf2 structure */
+	xfs_dir2_leaf_t *leaf1;			/* leaf1 structure */
+	xfs_dir2_leaf_t *leaf2;			/* leaf2 structure */
 
 	leaf1 = leaf1_bp->data;
 	leaf2 = leaf2_bp->data;
@@ -758,7 +758,7 @@ xfs_dir2_leafn_rebalance(
 	else
 		isleft = 1;
 	/*
-	 * Calculate moved entry count.  Positive means left-to-right,
+	 * Calculate moved entry count.	 Positive means left-to-right,
 	 * negative means right-to-left.  Then move the entries.
 	 */
 	count = INT_GET(leaf1->hdr.count, ARCH_CONVERT) - mid + (isleft == 0);
@@ -868,7 +868,7 @@ xfs_dir2_leafn_remove(
 		xfs_dabuf_t	*fbp;		/* freeblock buffer */
 		xfs_dir2_db_t	fdb;		/* freeblock block number */
 		int		findex;		/* index in freeblock entries */
-		xfs_dir2_free_t	*free;		/* freeblock structure */
+		xfs_dir2_free_t *free;		/* freeblock structure */
 		int		logfree;	/* need to log free entry */
 
 		/*
@@ -1341,7 +1341,7 @@ xfs_dir2_node_addname_int(
 	length = XFS_DIR2_DATA_ENTSIZE(args->namelen);
 	/*
 	 * If we came in with a freespace block that means that lookup
-	 * found an entry with our hash value.  This is the freespace
+	 * found an entry with our hash value.	This is the freespace
 	 * block for that data entry.
 	 */
 	if (fblk) {
@@ -1382,7 +1382,7 @@ xfs_dir2_node_addname_int(
 		findex = 0;
 	}
 	/*
-	 * If we don't have a data block yet, we're going to scan the 
+	 * If we don't have a data block yet, we're going to scan the
 	 * freespace blocks looking for one.  Figure out what the
 	 * highest freespace block number is.
 	 */
@@ -1397,7 +1397,7 @@ xfs_dir2_node_addname_int(
 	}
 	/*
 	 * While we haven't identified a data block, search the freeblock
-	 * data for a good data block.  If we find a null freeblock entry,
+	 * data for a good data block.	If we find a null freeblock entry,
 	 * indicating a hole in the data blocks, remember that.
 	 */
 	while (dbno == -1) {
@@ -1513,7 +1513,7 @@ xfs_dir2_node_addname_int(
 		INT_SET(free->hdr.magic, ARCH_CONVERT, XFS_DIR2_FREE_MAGIC);
 		INT_SET(free->hdr.firstdb, ARCH_CONVERT, (fbno - XFS_DIR2_FREE_FIRSTDB(mp)) *
 			XFS_DIR2_MAX_FREE_BESTS(mp));
-                INT_ZERO(free->hdr.nused, ARCH_CONVERT);
+		INT_ZERO(free->hdr.nused, ARCH_CONVERT);
 		INT_ZERO(free->hdr.nvalid, ARCH_CONVERT);
 		foundindex = 0;
 		foundbno = fbno;
@@ -1618,7 +1618,7 @@ xfs_dir2_node_addname_int(
 		 * change again.
 		 */
 		data = dbp->data;
-		INT_COPY(free->bests[findex], data->hdr.bestfree[0].length, ARCH_CONVERT); 
+		INT_COPY(free->bests[findex], data->hdr.bestfree[0].length, ARCH_CONVERT);
 		logfree = 1;
 	}
 	/*

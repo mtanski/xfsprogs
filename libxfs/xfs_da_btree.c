@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -62,7 +62,7 @@ xfs_da_node_create(xfs_da_args_t *args, xfs_dablk_t blkno, int level,
 	ASSERT(bp != NULL);
 	node = bp->data;
 	INT_ZERO(node->hdr.info.forw, ARCH_CONVERT);
-        INT_ZERO(node->hdr.info.back, ARCH_CONVERT);
+	INT_ZERO(node->hdr.info.back, ARCH_CONVERT);
 	INT_SET(node->hdr.info.magic, ARCH_CONVERT, XFS_DA_NODE_MAGIC);
 	INT_ZERO(node->hdr.info.pad, ARCH_CONVERT);
 	INT_ZERO(node->hdr.count, ARCH_CONVERT);
@@ -379,7 +379,7 @@ xfs_da_node_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
 		error = xfs_da_grow_inode(state->args, &blkno);
 		if (error)
 			return(error);	/* GROT: dir is inconsistent */
-		
+
 		error = xfs_da_node_create(state->args, blkno, treelevel,
 					   &newblk->bp, state->args->whichfork);
 		if (error)
@@ -692,7 +692,7 @@ xfs_da_join(xfs_da_state_t *state)
 }
 
 /*
- * We have only one entry in the root.  Copy the only remaining child of
+ * We have only one entry in the root.	Copy the only remaining child of
  * the old root to block 0 as the new root node.
  */
 STATIC int
@@ -923,7 +923,7 @@ xfs_da_fixhashpath(xfs_da_state_t *state, xfs_da_state_path_t *path)
 		if (INT_GET(btree->hashval, ARCH_CONVERT) == lasthash)
 			break;
 		blk->hashval = lasthash;
-                INT_SET(btree->hashval, ARCH_CONVERT, lasthash);
+		INT_SET(btree->hashval, ARCH_CONVERT, lasthash);
 		xfs_da_log_buf(state->args->trans, blk->bp,
 				  XFS_DA_LOGRANGE(node, btree, sizeof(*btree)));
 
@@ -1139,7 +1139,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 				blkno = INT_GET(node->btree[ max-1 ].before, ARCH_CONVERT);
 			} else {
 				blk->index = probe;
-				blkno = INT_GET(btree->before, ARCH_CONVERT);	
+				blkno = INT_GET(btree->before, ARCH_CONVERT);
 			}
 		}
 #ifdef __KERNEL__
@@ -1200,7 +1200,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 		break;
 	}
 	*result = retval;
-	return(0);	
+	return(0);
 }
 
 
@@ -1321,7 +1321,7 @@ xfs_da_node_order(xfs_dabuf_t *node1_bp, xfs_dabuf_t *node2_bp)
 	node2 = node2_bp->data;
 	ASSERT((INT_GET(node1->hdr.info.magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC) &&
 	       (INT_GET(node2->hdr.info.magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC));
-	if ((INT_GET(node1->hdr.count, ARCH_CONVERT) > 0) && (INT_GET(node2->hdr.count, ARCH_CONVERT) > 0) && 
+	if ((INT_GET(node1->hdr.count, ARCH_CONVERT) > 0) && (INT_GET(node2->hdr.count, ARCH_CONVERT) > 0) &&
 	    ((INT_GET(node2->btree[ 0 ].hashval, ARCH_CONVERT) <
 	      INT_GET(node1->btree[ 0 ].hashval, ARCH_CONVERT)) ||
 	     (INT_GET(node2->btree[ INT_GET(node2->hdr.count, ARCH_CONVERT)-1 ].hashval, ARCH_CONVERT) <
@@ -1555,7 +1555,7 @@ xfs_da_hashname(uchar_t *name, int namelen)
 {
 	xfs_dahash_t hash;
 
-#define	ROTL(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
+#define ROTL(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
 #ifdef SLOWVERSION
 	/*
 	 * This is the old one-byte-at-a-time version.
@@ -1601,7 +1601,7 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 {
 	xfs_fileoff_t bno, b;
 	xfs_bmbt_irec_t map;
-	xfs_bmbt_irec_t	*mapp;
+	xfs_bmbt_irec_t *mapp;
 	xfs_inode_t *dp;
 	int nmap, error, w, count, c, got, i, mapi;
 	xfs_fsize_t size;
@@ -1649,7 +1649,7 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 	}
 	/*
 	 * If we didn't get it and the block might work if fragmented,
-	 * try without the CONTIG flag.  Loop until we get it all.
+	 * try without the CONTIG flag.	 Loop until we get it all.
 	 */
 	else if (nmap == 0 && count > 1) {
 		mapp = kmem_alloc(sizeof(*mapp) * count, KM_SLEEP);
@@ -1707,7 +1707,7 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 
 
 /*
- * Ick.  We need to always be able to remove a btree block, even
+ * Ick.	 We need to always be able to remove a btree block, even
  * if there's no space reservation because the filesystem is full.
  * This is called if xfs_bunmapi on a btree block fails due to ENOSPC.
  * It swaps the target block with the last block in the file.  The
@@ -1967,7 +1967,7 @@ done:
 STATIC int
 xfs_da_map_covers_blocks(
 	int		nmap,
-	xfs_bmbt_irec_t	*mapp,
+	xfs_bmbt_irec_t *mapp,
 	xfs_dablk_t	bno,
 	int		count)
 {
@@ -2006,8 +2006,8 @@ xfs_da_do_buf(
 	xfs_buf_t	**bplist;
 	int		error=0;
 	int		i;
-	xfs_bmbt_irec_t	map;
-	xfs_bmbt_irec_t	*mapp;
+	xfs_bmbt_irec_t map;
+	xfs_bmbt_irec_t *mapp;
 	xfs_daddr_t	mappedbno;
 	xfs_mount_t	*mp;
 	int		nbplist=0;
@@ -2116,7 +2116,7 @@ xfs_da_do_buf(
 			continue;
 		if (caller == 1) {
 			if (whichfork == XFS_ATTR_FORK) {
-				XFS_BUF_SET_VTYPE_REF(bp, B_FS_ATTR_BTREE, 
+				XFS_BUF_SET_VTYPE_REF(bp, B_FS_ATTR_BTREE,
 						XFS_ATTR_BTREE_REF);
 			} else {
 				XFS_BUF_SET_VTYPE_REF(bp, B_FS_DIR_BTREE,
@@ -2384,7 +2384,7 @@ xfs_da_buf_clean(xfs_dabuf_t *dabuf)
 void
 xfs_da_buf_done(xfs_dabuf_t *dabuf)
 {
-        ASSERT(dabuf);
+	ASSERT(dabuf);
 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
 	if (dabuf->dirty)
 		xfs_da_buf_clean(dabuf);
@@ -2441,7 +2441,7 @@ xfs_da_log_buf(xfs_trans_t *tp, xfs_dabuf_t *dabuf, uint first, uint last)
 			l = last;
 		if (f <= l)
 			xfs_trans_log_buf(tp, bp, f - off, l - off);
-		/* 
+		/*
 		 * B_DONE is set by xfs_trans_log buf.
 		 * If we don't set it on a new buffer (get not read)
 		 * then if we don't put anything in the buffer it won't

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
+ * or the like.	 Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -103,7 +103,7 @@ xfs_dir2_data_check(
 		dup = (xfs_dir2_data_unused_t *)p;
 		/*
 		 * If it's unused, look for the space in the bestfree table.
-		 * If we find it, account for that, else make sure it 
+		 * If we find it, account for that, else make sure it
 		 * doesn't need to be there.
 		 */
 		if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG) {
@@ -123,7 +123,7 @@ xfs_dir2_data_check(
 		}
 		/*
 		 * It's a real entry.  Validate the fields.
-		 * If this is a block directory then make sure it's 
+		 * If this is a block directory then make sure it's
 		 * in the leaf section of the block.
 		 * The linear search is crude but this is DEBUG code.
 		 */
@@ -251,7 +251,7 @@ xfs_dir2_data_freeinsert(
 	       INT_GET(d->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC);
 #endif
 	dfp = d->hdr.bestfree;
-	INT_COPY(new.length, dup->length, ARCH_CONVERT); 
+	INT_COPY(new.length, dup->length, ARCH_CONVERT);
 	INT_SET(new.offset, ARCH_CONVERT, (xfs_dir2_data_off_t)((char *)dup - (char *)d));
 	/*
 	 * Insert at position 0, 1, or 2; or not at all.
@@ -310,7 +310,7 @@ xfs_dir2_data_freeremove(
 	/*
 	 * Clear the 3rd entry, must be zero now.
 	 */
-        INT_ZERO(d->hdr.bestfree[2].length, ARCH_CONVERT);
+	INT_ZERO(d->hdr.bestfree[2].length, ARCH_CONVERT);
 	INT_ZERO(d->hdr.bestfree[2].offset, ARCH_CONVERT);
 	*loghead = 1;
 }
@@ -395,7 +395,7 @@ xfs_dir2_data_init(
 	int			i;		/* bestfree index */
 	xfs_mount_t		*mp;		/* filesystem mount point */
 	xfs_trans_t		*tp;		/* transaction pointer */
-        int                     t;              /* temp */
+	int			t;		/* temp */
 
 	dp = args->dp;
 	mp = dp->i_mount;
@@ -416,17 +416,17 @@ xfs_dir2_data_init(
 	INT_SET(d->hdr.magic, ARCH_CONVERT, XFS_DIR2_DATA_MAGIC);
 	INT_SET(d->hdr.bestfree[0].offset, ARCH_CONVERT, (xfs_dir2_data_off_t)sizeof(d->hdr));
 	for (i = 1; i < XFS_DIR2_DATA_FD_COUNT; i++) {
-                INT_ZERO(d->hdr.bestfree[i].length, ARCH_CONVERT);
+		INT_ZERO(d->hdr.bestfree[i].length, ARCH_CONVERT);
 		INT_ZERO(d->hdr.bestfree[i].offset, ARCH_CONVERT);
-        }
+	}
 	/*
 	 * Set up an unused entry for the block's body.
 	 */
 	dup = &d->u[0].unused;
 	INT_SET(dup->freetag, ARCH_CONVERT, XFS_DIR2_DATA_FREE_TAG);
-        
-        t=mp->m_dirblksize - (uint)sizeof(d->hdr);
-        INT_SET(d->hdr.bestfree[0].length, ARCH_CONVERT, t);
+
+	t=mp->m_dirblksize - (uint)sizeof(d->hdr);
+	INT_SET(d->hdr.bestfree[0].length, ARCH_CONVERT, t);
 	INT_SET(dup->length, ARCH_CONVERT, t);
 	INT_SET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup, ARCH_CONVERT), ARCH_CONVERT,
 		(xfs_dir2_data_off_t)((char *)dup - (char *)d));
@@ -471,7 +471,7 @@ xfs_dir2_data_log_header(
 	d = bp->data;
 	ASSERT(INT_GET(d->hdr.magic, ARCH_CONVERT) == XFS_DIR2_DATA_MAGIC ||
 	       INT_GET(d->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC);
-	xfs_da_log_buf(tp, bp, (uint)((char *)&d->hdr - (char *)d), 
+	xfs_da_log_buf(tp, bp, (uint)((char *)&d->hdr - (char *)d),
 		(uint)(sizeof(d->hdr) - 1));
 }
 
@@ -541,7 +541,7 @@ xfs_dir2_data_make_free(
 		endptr = (char *)XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
 	}
 	/*
-	 * If this isn't the start of the block, then back up to 
+	 * If this isn't the start of the block, then back up to
 	 * the previous entry and see if it's free.
 	 */
 	if (offset > sizeof(d->hdr)) {
@@ -567,7 +567,7 @@ xfs_dir2_data_make_free(
 	ASSERT(*needscanp == 0);
 	needscan = 0;
 	/*
-	 * Previous and following entries are both free, 
+	 * Previous and following entries are both free,
 	 * merge everything into a single free entry.
 	 */
 	if (prevdup && postdup) {
@@ -594,7 +594,7 @@ xfs_dir2_data_make_free(
 		xfs_dir2_data_log_unused(tp, bp, prevdup);
 		if (!needscan) {
 			/*
-			 * Has to be the case that entries 0 and 1 are 
+			 * Has to be the case that entries 0 and 1 are
 			 * dfp and dfp2 (don't know which is which), and
 			 * entry 2 is empty.
 			 * Remove entry 1 first then entry 0.
