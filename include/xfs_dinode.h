@@ -457,7 +457,7 @@ xfs_dinode_t *xfs_buf_to_dinode(struct xfs_buf *bp);
 #define XFS_DIFLAG_NOATIME_BIT   6	/* do not update atime */
 #define XFS_DIFLAG_NODUMP_BIT    7	/* do not dump */
 #define XFS_DIFLAG_RTINHERIT_BIT 8	/* create with realtime bit set */
-#define XFS_DIFLAG_PROJINHERIT_BIT  9	/* create with parents project id */
+#define XFS_DIFLAG_PROJINHERIT_BIT  9	/* create with parents projid */
 #define XFS_DIFLAG_NOSYMLINKS_BIT  10	/* disallow symlink creation */
 #define XFS_DIFLAG_REALTIME      (1 << XFS_DIFLAG_REALTIME_BIT)
 #define XFS_DIFLAG_PREALLOC      (1 << XFS_DIFLAG_PREALLOC_BIT)

@@ -57,9 +57,15 @@ If suffixed with \f3b\f1 then the size is converted by multiplying it
 by the filesystems block size (defaults to 4K, see \f3\-b\f1 option below).
 If suffixed with \f3k\f1 then the size is converted by multiplying it by 1024.
 If suffixed with \f3m\f1 then the size is converted by multiplying it by
-1048576 (1024 * 1024).
+one megabyte (1024 * 1024 bytes).
 If suffixed with \f3g\f1 then the size is converted by multiplying it by
-1073741824 (1024 * 1024 * 1024).
+one gigabyte (1024 * 1024 * 1024 bytes).
+If suffixed with \f3t\f1 then the size is converted by multiplying it by
+one terabyte (1024 * 1024 * 1024 * 1024 bytes).
+If suffixed with \f3p\f1 then the size is converted by multiplying it by
+one petabyte (1024 * 1024 * 1024 * 1024 * 1024 bytes).
+If suffixed with \f3e\f1 then the size is converted by multiplying it by
+one exabyte (1024 * 1024 * 1024 * 1024 * 1024 * 1024 bytes).
 .TP
 .B \-b
 Block size options.
@@ -74,8 +80,8 @@ The block size is specified either as a base two logarithm value with
 .BR log= ,
 or in bytes with
 .BR size= .
-The default value is 4096 bytes (4 KB), the minimum is 512, and the
-maximum is 65536 (64 KB).
+The default value is 4096 bytes (4 KiB), the minimum is 512, and the
+maximum is 65536 (64 KiB).
 XFS on Linux currently only supports pagesize or smaller blocks.
 .TP
 .B \-d
@@ -103,12 +109,12 @@ The data section of the filesystem is divided into allocation groups
 to improve the performance of XFS.
 More allocation groups imply that more parallelism can be achieved
 when allocating blocks and inodes.
-The minimum allocation group size is 16 MB;
-the maximum size is just under 4 GB.
+The minimum allocation group size is 16 MiB;
+the maximum size is just under 1 TiB.
 The data section of the filesystem is divided into
 .I agcount
-allocation groups (default value 8, unless the filesystem is smaller
-than 128 MB or larger than 8 GB).
+allocation groups (default value is scaled automatically based
+on the underlying device size).
 Setting
 .I agcount
 to a very large number should be avoided, since this causes an unreasonable
@@ -123,7 +129,7 @@ The argument provided to
 is the desired size of the allocation group expressed in bytes
 (usually using the \f3m\f1 or \f3g\f1 suffixes).
 This value must be a multiple of the filesystem block size, and
-must be at least 16MB, and no more than 4GB, and may
+must be at least 16MiB, and no more than 1TiB, and may
 be automatically adjusted to properly align with the stripe geometry.
 The
 .B agcount
@@ -170,7 +176,7 @@ Use the
 suboption to specify the stripe unit size in bytes.
 This suboption ensures that data allocations will be stripe unit aligned
 when the current end of file is being extended and the file size is larger
-than 512KB.
+than 512KiB.
 Also inode allocations and the internal log will be stripe unit aligned.
 .IP
 The
@@ -271,7 +277,7 @@ in bytes with
 or as the number fitting in a filesystem block with
 .BR perblock= .
 The mininum (and default) value is 256 bytes.
-The maximum value is 2048 (2 KB) subject to the restriction that
+The maximum value is 2048 (2 KiB) subject to the restriction that
 the inode size cannot exceed one half of the filesystem block size.
 .IP
 XFS uses 64-bit inode numbers internally; however, the number of
@@ -420,7 +426,7 @@ The block size is specified either as a base two logarithm value with
 .BR log= ,
 or in bytes with
 .BR size= .
-The default size value for version 2 directories is 4096 bytes (4 KB), 
+The default size value for version 2 directories is 4096 bytes (4 KiB), 
 unless the filesystem block size is larger than 4096,
 in which case the default value is the filesystem block size.
 For version 1 directories the block size is the same as the 
@@ -607,10 +613,10 @@ suboption is used to specify the size of the blocks in the real-time
 section of the filesystem.
 This size must be a multiple of the filesystem block size.
 The minimum allowed value is the filesystem block size
-or 4 KB (whichever is larger);
-the default value is the stripe width for striped volumes or 64 KB for
+or 4 KiB (whichever is larger);
+the default value is the stripe width for striped volumes or 64 KiB for
 non-striped volumes;
-the maximum allowed value is 1 GB.
+the maximum allowed value is 1 GiB.
 The real-time extent size should be carefully chosen to match the
 parameters of the physical media used.
 .IP
@@ -635,7 +641,7 @@ The sector size is specified either as a base two logarithm value with
 or in bytes with
 .BR size= .
 The default value is 512 bytes.
-The minimum value for sector size is 512; the maximum is 32768 (32 KB).
+The minimum value for sector size is 512; the maximum is 32768 (32 KiB).
 The sector size must be a power of 2 size and cannot be made larger
 than the filesystem block size.
 .TP

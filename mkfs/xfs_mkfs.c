@@ -2385,6 +2385,8 @@ cvtnum(
 		return 1024LL * 1024LL * 1024LL * 1024LL * i;
 	if (*sp == 'p' && sp[1] == '\0')
 		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
+	if (*sp == 'e' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
 	return -1LL;
 }
 

@@ -682,7 +682,7 @@ libxfs_mount(
 		exit(1);
 	}
 
-	libxfs_initialize_perag(mp, sbp->sb_agcount);
+	mp->m_maxagi = libxfs_initialize_perag(mp, sbp->sb_agcount);
 
 	/*
 	 * mkfs calls mount before the root inode is allocated.

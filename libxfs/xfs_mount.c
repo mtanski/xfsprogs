@@ -228,10 +228,10 @@ xfs_xlatesb(
 	}
 }
 
-void
-xfs_initialize_perag(xfs_mount_t *mp, int agcount)
+xfs_agnumber_t
+xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount)
 {
-	int		index, max_metadata;
+	xfs_agnumber_t	index, max_metadata;
 	xfs_perag_t	*pag;
 	xfs_agino_t	agino;
 	xfs_ino_t	ino;
@@ -287,5 +287,5 @@ xfs_initialize_perag(xfs_mount_t *mp, int agcount)
 			pag->pagi_inodeok = 1;
 		}
 	}
-	mp->m_maxagi = index;
+	return index;
 }

@@ -746,9 +746,9 @@ Data blocks start at offset 0 in the file.
 There are two kinds of data blocks: single-block directories have
 the leaf information embedded at the end of the block, data blocks
 in multi-block directories do not.
-Node and leaf blocks start at offset 32GB (with either a single
+Node and leaf blocks start at offset 32GiB (with either a single
 leaf block or the root node block).
-Freespace blocks start at offset 64GB.
+Freespace blocks start at offset 64GiB.
 The node and leaf blocks form a Btree, with references to the data
 in the data blocks.
 The freespace blocks form an index of longest free spaces within the
@@ -834,7 +834,7 @@ The quota information is stored in files referred to by the superblock
 Each filesystem block in a quota file contains a constant number of
 quota entries.
 The quota entry size is currently 136 bytes,
-so with a 4KB filesystem block size there are 30 quota entries per block.
+so with a 4KiB filesystem block size there are 30 quota entries per block.
 The \f3dquot\f1 command is used to locate these entries in the filesystem.
 The file entries are indexed by the user or project identifier
 to determine the block and offset.
