@@ -202,15 +202,15 @@ compare_sb(xfs_mount_t *mp, xfs_sb_t *sb)
 }
 
 /*
- * possible fields that may have been set at mkfs time,
- * sb_inoalignmt, sb_unit, sb_width.  We know that
- * the quota inode fields in the secondaries should be zero.
+ * Possible fields that may have been set at mkfs time,
+ * sb_inoalignmt, sb_unit, sb_width and sb_dirblklog.
+ * The quota inode fields in the secondaries should be zero.
  * Likewise, the sb_flags and sb_shared_vn should also be
  * zero and the shared version bit should be cleared for
  * current mkfs's.
  *
- * And everything else in the buffer beyond sb_width should
- * be zeroed.
+ * And everything else in the buffer beyond either sb_width
+ * or sb_dirblklog (v2 dirs) should be zeroed.
  */
 int
 secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
@@ -241,8 +241,12 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		 * work against older filesystems when the superblock
 		 * gets rev'ed again with new fields appended.
 		 */
-		size = (__psint_t)&sb->sb_width + sizeof(sb->sb_width)
-			- (__psint_t)sb;
+		if (XFS_SB_VERSION_HASDIRV2(sb))
+			size = (__psint_t)&sb->sb_dirblklog
+				+ sizeof(sb->sb_dirblklog) - (__psint_t)sb;
+		else
+			size = (__psint_t)&sb->sb_width
+				+ sizeof(sb->sb_width) - (__psint_t)sb;
 		for (ip = (int *)((__psint_t)sb + size);
 		     ip < (int *)((__psint_t)sb + mp->m_sb.sb_sectsize);
 		     ip++)  {
