@@ -367,7 +367,7 @@ xfs_ialloc_ag_select(
 	 */
 	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
 	mp = tp->t_mountp;
-	agcount = mp->m_sb.sb_agcount;
+	agcount = mp->m_maxagi;
 	if (S_ISDIR(mode))
 		pagno = atomicIncWithWrap((int *)&mp->m_agirotor, agcount);
 	else
@@ -393,6 +393,12 @@ xfs_ialloc_ag_select(
 			}
 		} else
 			agbp = NULL;
+
+		if (!pag->pagi_inodeok) {
+			atomicIncWithWrap((int *)&mp->m_agirotor, agcount);
+			goto unlock_nextag;
+		}
+
 		/*
 		 * Is there enough free space for the file plus a block
 		 * of inodes (if we need to allocate some)?
@@ -424,6 +430,7 @@ xfs_ialloc_ag_select(
 				return agbp;
 			}
 		}
+unlock_nextag:
 		mraccunlock(&mp->m_peraglock);
 		if (agbp)
 			xfs_trans_brelse(tp, agbp);
@@ -605,6 +612,10 @@ nextag:
 			return noroom ? ENOSPC : 0;
 		}
 		mraccess(&mp->m_peraglock);
+		if (mp->m_perag[tagno].pagi_inodeok == 0) {
+			mraccunlock(&mp->m_peraglock);
+			goto nextag;
+		}
 		error = xfs_ialloc_read_agi(mp, tp, tagno, &agbp);
 		mraccunlock(&mp->m_peraglock);
 		if (error)

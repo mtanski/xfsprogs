@@ -246,8 +246,9 @@ typedef struct { dev_t dev; } buftarg_t;
 #define TRACE_ALLOC(s,a)		((void) 0)
 #define TRACE_MODAGF(a,b,c)		((void) 0)
 #define XFS_FORCED_SHUTDOWN(mp)		0
-#define XFS_MOUNT_WSYNC			0
-#define XFS_MOUNT_NOALIGN		0
+#define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
+#define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
+#define XFS_MOUNT_32BITINODES		0x1	/* enforce in userspace */
 #define XFS_ILOCK_EXCL			0
 #define mrlock(a,b,c)			((void) 0)
 #define mraccunlock(a)			((void) 0)

@@ -3794,7 +3794,15 @@ xfs_bmapi(
 					bma.prevp = &prev;
 					bma.gotp = &got;
 					bma.total = total;
-					bma.userdata = userdata;
+					bma.userdata = 0;
+				}
+				/* Indicate if this is the first user data
+				 * in the file, or just any user data.
+				 */
+				if (userdata) {
+					bma.userdata = (aoff == 0) ? 
+						XFS_ALLOC_INITIAL_USER_DATA : 
+						XFS_ALLOC_USERDATA;
 				}
 				/*
 				 * Fill in changeable bma fields.

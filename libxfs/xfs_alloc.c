@@ -1769,6 +1769,16 @@ xfs_alloc_fix_freelist(
 		}
 	} else
 		agbp = NULL;
+
+	/* If this is a metadata prefered pag and we are user data
+	 * then try somewhere else if we are not being asked to
+	 * try harder at this point
+	 */
+	if (pag->pagf_metadata && args->userdata && flags) {
+		args->agbp = NULL;
+		return 0;
+	}
+
 	need = XFS_MIN_FREELIST_PAG(pag, mp);
 	delta = need > pag->pagf_flcount ? need - pag->pagf_flcount : 0;
 	/*
@@ -2168,6 +2178,7 @@ xfs_alloc_vextent(
 	xfs_mount_t	*mp;	/* mount structure pointer */
 	xfs_agnumber_t	sagno;	/* starting allocation group number */
 	xfs_alloctype_t	type;	/* input allocation type */
+	int		bump_rotor = 0;
 
 	mp = args->mp;
 	type = args->otype = args->type;
@@ -2228,6 +2239,11 @@ xfs_alloc_vextent(
 		 * Try near allocation first, then anywhere-in-ag after
 		 * the first a.g. fails.
 		 */
+		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
+		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
+			args->fsbno = XFS_AGB_TO_FSB(mp, mp->m_agfrotor, 0);
+			bump_rotor = 1;
+		}
 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
 		args->type = XFS_ALLOCTYPE_NEAR_BNO;
 		/* FALLTHROUGH */
@@ -2309,7 +2325,8 @@ xfs_alloc_vextent(
 				}
 			}
 		}
-		mp->m_agfrotor = (args->agno + 1) % mp->m_sb.sb_agcount;
+		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG))
+			mp->m_agfrotor = (args->agno + 1) % mp->m_sb.sb_agcount;
 		break;
 	default:
 		ASSERT(0);
