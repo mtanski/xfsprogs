@@ -1,3 +1,7 @@
+xfsprogs-2.5.9 (19 September 2003)
+	- Sync up user/kernel source in libxfs, libxlog and headers.
+	- Add new inode flags into xfs_db too.
+
 xfsprogs-2.5.8 (12 September 2003)
 	- Add missing options to xfs_db frag command one-line summary.
 	- Add xfs_io commands for setting and clearing new inode flags

@@ -94,8 +94,6 @@ ENABLE_EDITLINE = @enable_editline@
 ENABLE_READLINE = @enable_readline@
 HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 
-LCFLAGS += -DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
-
 ifeq ($(PKG_PLATFORM),linux)
 PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 endif

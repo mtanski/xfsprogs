@@ -32,6 +32,9 @@
 #ifndef __LIBXFS_H__
 #define __LIBXFS_H__
 
+#define XFS_BIG_INUMS	1
+#define XFS_BIG_BLKNOS	1
+
 #include <xfs/platform_defs.h>
 
 #include <xfs/xfs_fs.h>

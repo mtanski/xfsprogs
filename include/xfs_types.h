@@ -75,30 +75,25 @@ typedef __uint64_t __psunsigned_t;
 #error BITS_PER_LONG must be 32 or 64
 #endif
 
-#endif	/* __KERNEL__ */
-
 /*
- * Some types are conditional based on the selected configuration.
- * Set XFS_BIG_FILESYSTEMS=1 or 0 depending on the desired configuration.
- * XFS_BIG_FILESYSTEMS needs daddr_t to be 64 bits
- *
- * On linux right now we are limited to 2^32 512 byte blocks in a
- * filesystem, Once this limit is changed, setting this to 1
- * will allow XFS to go larger. With BIG_FILESYSTEMS set to 0
- * a 4K block filesystem could still theoretically be 16Gbytes
- * long, so on an ia32 box the 32 bit page index will then be
- * the limiting factor.
+ * Some types are conditional depending on the target system.
+ * XFS_BIG_BLKNOS needs block layer disk addresses to be 64 bits.
+ * XFS_BIG_INUMS needs the VFS inode number to be 64 bits, as well
+ * as requiring XFS_BIG_BLKNOS to be set.
  */
-
 #if defined(CONFIG_LBD) || (defined(HAVE_SECTOR_T) && (BITS_PER_LONG == 64))
-#  ifndef XFS_BIG_FILESYSTEMS
-#  define XFS_BIG_FILESYSTEMS	1
-#  endif
+# define XFS_BIG_BLKNOS	1
+# if BITS_PER_LONG == 64
+#  define XFS_BIG_INUMS	1
+# else
+#  define XFS_BIG_INUMS	0
+# endif
 #else
-#  ifndef XFS_BIG_FILESYSTEMS
-#  define XFS_BIG_FILESYSTEMS	0
-#  endif
+# define XFS_BIG_BLKNOS	0
+# define XFS_BIG_INUMS	0
 #endif
+
+#endif	/* __KERNEL__ */
 
 typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
 typedef	__uint32_t	xfs_extlen_t;	/* extent length in blocks */
@@ -132,7 +127,7 @@ typedef	__uint64_t	xfs_dfilblks_t;	/* number of blocks in a file */
 /*
  * Memory based types are conditional.
  */
-#if XFS_BIG_FILESYSTEMS
+#if XFS_BIG_BLKNOS
 typedef	__uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
 typedef __uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
 typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
@@ -216,6 +211,6 @@ typedef enum {
 #define XFS_MKDEV(major,minor) ((xfs_dev_t)(((major)<<XFS_DEV_BITSMINOR) \
 				    | (minor&XFS_DEV_MAXMIN)))
 
-#define XFS_DEV_TO_KDEVT(dev)	mk_kdev(XFS_DEV_MAJOR(dev),XFS_DEV_MINOR(dev))
+#define XFS_DEV_TO_KDEVT(dev)	MKDEV(XFS_DEV_MAJOR(dev),XFS_DEV_MINOR(dev))
 
-#endif	/* !__XFS_TYPES_H */
+#endif	/* __XFS_TYPES_H__ */

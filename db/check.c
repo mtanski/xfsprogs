@@ -2679,15 +2679,19 @@ process_inode(
 	if (verbose || id->ilist || CHECK_BLIST(bno))
 		dbprintf("inode %lld mode %#o fmt %s "
 			 "afmt %s "
-			 "nex %d anex %d nblk %lld sz %lld%s%s\n",
+			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n",
 			id->ino, dic->di_mode, fmtnames[(int)dic->di_format],
 			fmtnames[(int)dic->di_aformat],
 			dic->di_nextents,
 			dic->di_anextents,
 			dic->di_nblocks, dic->di_size,
 			dic->di_flags & XFS_DIFLAG_REALTIME ? " rt" : "",
-			dic->di_flags & XFS_DIFLAG_PREALLOC ? " pre" : ""
-				);
+			dic->di_flags & XFS_DIFLAG_PREALLOC ? " pre" : "",
+			dic->di_flags & XFS_DIFLAG_IMMUTABLE? " imm" : "",
+			dic->di_flags & XFS_DIFLAG_APPEND   ? " app" : "",
+			dic->di_flags & XFS_DIFLAG_SYNC     ? " syn" : "",
+			dic->di_flags & XFS_DIFLAG_NOATIME  ? " noa" : "",
+			dic->di_flags & XFS_DIFLAG_NODUMP   ? " nod" : "");
 	security = 0;
 	switch (dic->di_mode & IFMT) {
 	case IFDIR:
