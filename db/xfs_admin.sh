@@ -38,9 +38,9 @@ while getopts "fluL:U:" c
 do
 	case $c in
 	f)	OPTS=$OPTS" -f";;
-	l)	OPTS=$OPTS" -c label";;
+	l)	OPTS=$OPTS" -r -c label";;
 	L)	OPTS=$OPTS" -c 'label "$OPTARG"'";;
-	u)	OPTS=$OPTS" -c uuid";;
+	u)	OPTS=$OPTS" -r -c uuid";;
 	U)	OPTS=$OPTS" -c 'uuid "$OPTARG"'";;
 	\?)	echo $USAGE 1>&2
 		exit 2
