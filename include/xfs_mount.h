@@ -351,22 +351,20 @@ typedef struct xfs_mount {
 /*
  * Default minimum read and write sizes.
  */
-#define	XFS_READIO_LOG_SMALL	15	/* <= 32MB memory */
-#define	XFS_WRITEIO_LOG_SMALL	15
-#define	XFS_READIO_LOG_LARGE	16	/* > 32MB memory */
-#define	XFS_WRITEIO_LOG_LARGE	16
+#define	XFS_READIO_LOG_LARGE	12	/* > 32MB memory */
+#define	XFS_WRITEIO_LOG_LARGE	12
 
 /*
  * max and min values for UIO and mount-option defined I/O sizes
  * min value can't be less than a page.  Lower limit for 4K machines
- * is 8K because that's what was tested.
+ * is 4K because that's what was tested.
  */
 #define XFS_MAX_IO_LOG		16	/* 64K */
 
 #if (_PAGESZ == 16384) || (_PAGESZ == 8192)
 #define XFS_MIN_IO_LOG		14	/* 16K */
 #elif _PAGESZ == 4096
-#define XFS_MIN_IO_LOG		13	/* 8K */
+#define XFS_MIN_IO_LOG		12	/* 4K */
 #else
 #error	"Unknown page size"
 #endif
