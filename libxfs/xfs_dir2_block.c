@@ -101,7 +101,7 @@ xfs_dir2_block_addname(
 	/*
 	 * No stale entries?  Need space for entry and new leaf.
 	 */
-	if (INT_GET(btp->stale, ARCH_CONVERT) == 0) {
+	if (INT_ISZERO(btp->stale, ARCH_CONVERT)) {
 		/*
 		 * Tag just before the first leaf entry.
 		 */
@@ -289,7 +289,7 @@ xfs_dir2_block_addname(
 	/*
 	 * No stale entries, will use enddup space to hold new leaf.
 	 */
-	if (INT_GET(btp->stale, ARCH_CONVERT) == 0) {
+	if (INT_ISZERO(btp->stale, ARCH_CONVERT)) {
 		/*
 		 * Mark the space needed for the new leaf entry, now in use.
 		 */
@@ -828,7 +828,7 @@ xfs_dir2_leaf_to_block(
 	 */
 	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
 	INT_SET(btp->count, ARCH_CONVERT, INT_GET(leaf->hdr.count, ARCH_CONVERT) - INT_GET(leaf->hdr.stale, ARCH_CONVERT));
-	INT_SET(btp->stale, ARCH_CONVERT, 0);
+	INT_ZERO(btp->stale, ARCH_CONVERT);
 	xfs_dir2_block_log_tail(tp, dbp);
 	/*
 	 * Initialize the block leaf area.  We compact out stale entries.

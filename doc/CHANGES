@@ -1,3 +1,7 @@
+xfsprogs-2.0.4 (17 April 2002)
+	- Minor update sync'ing with kernel changes (less endian
+	  swabbing in libxfs code)
+
 xfsprogs-2.0.3 (13 April 2002)
 	- Important build system update, was causing libxfs to be
 	  built incorrectly, which can cause xfs_repair to fail by

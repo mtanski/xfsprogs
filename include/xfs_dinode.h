@@ -206,7 +206,7 @@ int xfs_cfork_q(xfs_dinode_core_t *dcp);
 #define	XFS_CFORK_Q_ARCH(dcp,arch)          xfs_cfork_q_arch(dcp,arch)
 #define	XFS_CFORK_Q(dcp)                    xfs_cfork_q(dcp)
 #else
-#define	XFS_CFORK_Q_ARCH(dcp,arch)	    (INT_GET((dcp)->di_forkoff, arch) != 0)
+#define	XFS_CFORK_Q_ARCH(dcp,arch)	    (!INT_ISZERO((dcp)->di_forkoff, arch))
 #define XFS_CFORK_Q(dcp)                    ((dcp)->di_forkoff != 0)
 
 #endif

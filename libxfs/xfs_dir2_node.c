@@ -950,7 +950,7 @@ xfs_dir2_leafn_remove(
 			 * If there are no useful entries left in the block,
 			 * get rid of the block if we can.
 			 */
-			if (INT_GET(free->hdr.nused, ARCH_CONVERT) == 0) {
+			if (INT_ISZERO(free->hdr.nused, ARCH_CONVERT)) {
 				error = xfs_dir2_shrink_inode(args, fdb, fbp);
 				if (error == 0) {
 					fbp = NULL;

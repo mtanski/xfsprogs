@@ -44,6 +44,8 @@
     
 #define CYCLE_LSN(lsn,arch) (INT_GET(((uint *)&(lsn))[LSN_FIELD_CYCLE(arch)], arch))
 #define BLOCK_LSN(lsn,arch) (INT_GET(((uint *)&(lsn))[LSN_FIELD_BLOCK(arch)], arch))
+/* this is used in a spot where we might otherwise double-endian-flip */
+#define CYCLE_LSN_NOCONV(lsn,arch) (((uint *)&(lsn))[LSN_FIELD_CYCLE(arch)])
 
 #ifdef __KERNEL__
 /*

@@ -458,7 +458,7 @@ xfs_dir_leaf_to_shortform(xfs_da_args_t *iargs)
 	args.justcheck = 0;
 	args.addname = args.oknoent = 1;
 	for (i = 0; i < INT_GET(hdr->count, ARCH_CONVERT); entry++, i++) {
-		if (INT_GET(entry->nameidx, ARCH_CONVERT) == 0)
+		if (INT_ISZERO(entry->nameidx, ARCH_CONVERT))
 			continue;
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
 		args.name = (char *)(namest->name);
@@ -652,7 +652,7 @@ xfs_dir_leaf_add(xfs_dabuf_t *bp, xfs_da_args_t *args, int index)
 			sum += INT_GET(map->size, ARCH_CONVERT);
 			continue;
 		}
-		if (INT_GET(map->size, ARCH_CONVERT) == 0)
+		if (INT_ISZERO(map->size, ARCH_CONVERT))
 			continue;	/* no space in this map */
 		tmp = entsize;
 		if (INT_GET(map->base, ARCH_CONVERT) < INT_GET(hdr->firstused, ARCH_CONVERT))
@@ -817,7 +817,7 @@ xfs_dir_leaf_compact(xfs_trans_t *trans, xfs_dabuf_t *bp, int musthave,
 	hdr_d = &leaf_d->hdr;
 	hdr_d->info = hdr_s->info;	/* struct copy */
 	INT_SET(hdr_d->firstused, ARCH_CONVERT, lbsize);
-	if (INT_GET(hdr_d->firstused, ARCH_CONVERT) == 0)
+	if (INT_ISZERO(hdr_d->firstused, ARCH_CONVERT))
 		INT_SET(hdr_d->firstused, ARCH_CONVERT, lbsize - 1);
 	INT_ZERO(hdr_d->namebytes, ARCH_CONVERT);
 	INT_ZERO(hdr_d->count, ARCH_CONVERT);
@@ -1333,7 +1333,7 @@ xfs_dir_leaf_remove(xfs_trans_t *trans, xfs_dabuf_t *bp, int index)
 				tmp = INT_GET(entry->nameidx, ARCH_CONVERT);
 		}
 		INT_SET(hdr->firstused, ARCH_CONVERT, tmp);
-		if (INT_GET(hdr->firstused, ARCH_CONVERT) == 0)
+		if (INT_ISZERO(hdr->firstused, ARCH_CONVERT))
 			INT_SET(hdr->firstused, ARCH_CONVERT, tmp - 1);
 	} else {
 		hdr->holes = 1;		/* mark as needing compaction */
@@ -1415,7 +1415,7 @@ xfs_dir_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 		tmp_hdr->info = save_hdr->info;	/* struct copy */
 		INT_ZERO(tmp_hdr->count, ARCH_CONVERT);
 		INT_SET(tmp_hdr->firstused, ARCH_CONVERT, state->blocksize);
-		if (INT_GET(tmp_hdr->firstused, ARCH_CONVERT) == 0)
+		if (INT_ISZERO(tmp_hdr->firstused, ARCH_CONVERT))
 			INT_SET(tmp_hdr->firstused, ARCH_CONVERT, state->blocksize - 1);
 		INT_ZERO(tmp_hdr->namebytes, ARCH_CONVERT);
 		if (xfs_dir_leaf_order(save_blk->bp, drop_blk->bp)) {
@@ -1490,7 +1490,7 @@ xfs_dir_leaf_lookup_int(xfs_dabuf_t *bp, xfs_da_args_t *args, int *index)
 			break;
 	}
 	ASSERT((probe >= 0) && \
-	       ((INT_GET(leaf->hdr.count, ARCH_CONVERT) == 0) || (probe < INT_GET(leaf->hdr.count, ARCH_CONVERT))));
+	       ((INT_ISZERO(leaf->hdr.count, ARCH_CONVERT)) || (probe < INT_GET(leaf->hdr.count, ARCH_CONVERT))));
 	ASSERT((span <= 4) || (INT_GET(entry->hashval, ARCH_CONVERT) == hashval));
 
 	/*
@@ -1684,7 +1684,7 @@ xfs_dir_leaf_lasthash(xfs_dabuf_t *bp, int *count)
 	ASSERT(INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) == XFS_DIR_LEAF_MAGIC);
 	if (count)
 		*count = INT_GET(leaf->hdr.count, ARCH_CONVERT);
-	if (INT_GET(leaf->hdr.count, ARCH_CONVERT) == 0)
+	if (INT_ISZERO(leaf->hdr.count, ARCH_CONVERT))
 		return(0);
 	return(INT_GET(leaf->entries[ INT_GET(leaf->hdr.count, ARCH_CONVERT)-1 ].hashval, ARCH_CONVERT));
 }

@@ -237,7 +237,7 @@ xfs_dir2_leaf_addname(
 	 * How many bytes do we need in the leaf block?
 	 */
 	needbytes =
-		(INT_GET(leaf->hdr.stale, ARCH_CONVERT) != 0 ? 0 : (uint)sizeof(leaf->ents[0])) +
+		(!INT_ISZERO(leaf->hdr.stale, ARCH_CONVERT) ? 0 : (uint)sizeof(leaf->ents[0])) +
 		(use_block != -1 ? 0 : (uint)sizeof(leaf->bests[0]));
 	/*
 	 * Now kill use_block if it refers to a missing block, so we
@@ -419,7 +419,7 @@ xfs_dir2_leaf_addname(
 	 * Now we need to make room to insert the leaf entry.
 	 * If there are no stale entries, we just insert a hole at index.
 	 */
-	if (INT_GET(leaf->hdr.stale, ARCH_CONVERT) == 0) {
+	if (INT_ISZERO(leaf->hdr.stale, ARCH_CONVERT)) {
 		/*
 		 * lep is still good as the index leaf entry.
 		 */
@@ -589,7 +589,7 @@ xfs_dir2_leaf_compact(
 	int		to;		/* target leaf index */
 
 	leaf = bp->data;
-	if (INT_GET(leaf->hdr.stale, ARCH_CONVERT) == 0) {
+	if (INT_ISZERO(leaf->hdr.stale, ARCH_CONVERT)) {
 		return;
 	}
 	/*
@@ -613,7 +613,7 @@ xfs_dir2_leaf_compact(
 	 */
 	ASSERT(INT_GET(leaf->hdr.stale, ARCH_CONVERT) == from - to);
 	INT_MOD(leaf->hdr.count, ARCH_CONVERT, -(INT_GET(leaf->hdr.stale, ARCH_CONVERT)));
-	INT_SET(leaf->hdr.stale, ARCH_CONVERT, 0);
+	INT_ZERO(leaf->hdr.stale, ARCH_CONVERT);
 	xfs_dir2_leaf_log_header(args->trans, bp);
 	if (loglow != -1)
 		xfs_dir2_leaf_log_ents(args->trans, bp, loglow, to - 1);
@@ -779,7 +779,7 @@ xfs_dir2_leaf_init(
 	 */
 	if (magic == XFS_DIR2_LEAF1_MAGIC) {
 		ltp = XFS_DIR2_LEAF_TAIL_P(mp, leaf);
-		INT_SET(ltp->bestcount, ARCH_CONVERT, 0);
+		INT_ZERO(ltp->bestcount, ARCH_CONVERT);
 		xfs_dir2_leaf_log_tail(tp, bp);
 	}
 	*bpp = bp;
@@ -1233,7 +1233,7 @@ xfs_dir2_leaf_search_hash(
 
 	leaf = lbp->data;
 #ifndef __KERNEL__
-	if (INT_GET(leaf->hdr.count, ARCH_CONVERT) == 0)
+	if (INT_ISZERO(leaf->hdr.count, ARCH_CONVERT))
 		return 0;
 #endif
 	/*

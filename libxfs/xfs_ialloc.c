@@ -370,8 +370,11 @@ xfs_ialloc_ag_select(
 	agcount = mp->m_maxagi;
 	if (S_ISDIR(mode))
 		pagno = atomicIncWithWrap((int *)&mp->m_agirotor, agcount);
-	else
+	else {
 		pagno = XFS_INO_TO_AGNO(mp, parent);
+		if (pagno >= agcount)
+			pagno = 0;
+	}
 	ASSERT(pagno < agcount);
 	/*
 	 * Loop through allocation groups, looking for one with a little
@@ -442,7 +445,7 @@ nextag:
 		if (XFS_FORCED_SHUTDOWN(mp))
 			return (xfs_buf_t *)0;
 		agno++;
-		if (agno == agcount)
+		if (agno >= agcount)
 			agno = 0;
 		if (agno == pagno) {
 			if (flags == 0)
@@ -565,7 +568,7 @@ xfs_dialloc(
 	 * allocation groups upward, wrapping at the end.
 	 */
 	*alloc_done = B_FALSE;
-	while (INT_GET(agi->agi_freecount, ARCH_CONVERT) == 0) {
+	while (INT_ISZERO(agi->agi_freecount, ARCH_CONVERT)) {
 		/* 
 		 * Don't do anything if we're not supposed to allocate
 		 * any blocks, just go on to the next ag.
@@ -1166,7 +1169,7 @@ xfs_ialloc_read_agi(
 	}
 #ifdef DEBUG
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-		ASSERT(INT_GET(agi->agi_unlinked[i], ARCH_CONVERT) != 0);
+		ASSERT(!INT_ISZERO(agi->agi_unlinked[i], ARCH_CONVERT));
 #endif
 	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
 	*bpp = bp;

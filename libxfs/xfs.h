@@ -235,7 +235,7 @@ typedef __uint32_t inst_t;	/* an instruction */
 typedef enum { B_FALSE, B_TRUE } boolean_t;
 typedef struct { dev_t dev; } buftarg_t;
 #define STATIC
-#define ATTR_ROOT	1	/* use attrs in root namespace */
+#define ATTR_ROOT	0x0002	/* use attrs in root namespace */
 #define ENOATTR		ENODATA	/* Attribute not found */
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
 #define ktrace_t	void

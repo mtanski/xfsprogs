@@ -766,7 +766,8 @@ xlog_unpack_data(xlog_rec_header_t *rhead,
 #endif
 
 	for (i=0; i<BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT)); i++) {
-		INT_SET(*(uint *)dp, ARCH_CONVERT, INT_GET(*(uint *)&rhead->h_cycle_data[i], ARCH_CONVERT));
+		/* these are both on-disk, so don't endian flip twice */
+		*(uint *)dp = *(uint *)&rhead->h_cycle_data[i];
 		dp += BBSIZE;
 	}
 #if defined(DEBUG) && defined(XFS_LOUD_RECOVERY)
