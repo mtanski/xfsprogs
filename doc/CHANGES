@@ -3,6 +3,7 @@ xfsprogs-2.1.0 (14 Jun 2002)
 	- Fix for xfs_repair mangling i8count for dir2_sf directories
 	- Minor mkfs.xfs man page update for blocksize limits on Linux
 	- xfs_cred.h split into xfs_acl.h, xfs_cap.h and xfs_mac.h
+	- Fix typo in mkfs realtime summary inode alloc failure message
 
 xfsprogs-2.0.6 (30 May 2002)
 	- Fix error returns from log recovery (affects xfs_repair).

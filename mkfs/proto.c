@@ -655,7 +655,7 @@ rtinit(
 	error = libxfs_inode_alloc(&tp, mp->m_rootip, IFREG, 1,
 				mp->m_dev, &creds, &rsumip);
 	if (error) {
-		fail("Realtime bitmap inode allocation failed", error);
+		fail("Realtime summary inode allocation failed", error);
 	}
 	mp->m_sb.sb_rsumino = rsumip->i_ino;
 	rsumip->i_d.di_size = mp->m_rsumsize;
