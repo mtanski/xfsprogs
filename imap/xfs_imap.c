@@ -86,9 +86,10 @@ int main(int argc, char **argv)
 		if (count == 0)
 			return 0;
 		for (i = 0; i < count; i++) {
-			printf("ino %10lld count %2d mask %016llx\n",
-				t[i].xi_startino, t[i].xi_alloccount,
-				t[i].xi_allocmask);
+			printf("ino %10llu count %2d mask %016llx\n",
+				(unsigned long long)t[i].xi_startino,
+				t[i].xi_alloccount,
+				(unsigned long long)t[i].xi_allocmask);
 		}
 	}
 	perror("ioctl(XFS_IOC_FSINUMBERS)");
