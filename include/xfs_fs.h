@@ -364,16 +364,6 @@ typedef struct xfs_fsop_attrmulti_handlereq {
 } xfs_fsop_attrmulti_handlereq_t;
 
 /*
- * Structure for XFS_IOC_ATTRCTL_BY_HANDLE ioctl, will be removed later.
- */
-typedef struct xfs_fsop_attr_handlereq {
-	struct xfs_fsop_handlereq *hreq;/* handle request interface	*/
-					/* structure			*/
-	struct attr_op	*ops;		/* array of attribute ops	*/
-	int		count;		/* number of attribute ops	*/
-} xfs_fsop_attr_handlereq_t;
-
-/*
  * File system identifier. Should be unique (at least per machine).
  */
 typedef struct {
@@ -469,18 +459,12 @@ typedef struct xfs_handle {
 #define XFS_IOC_ERROR_INJECTION      _IOW ('X', 116, struct xfs_error_injection)
 #define XFS_IOC_ERROR_CLEARALL       _IOW ('X', 117, struct xfs_error_injection)
 /*      XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118      */
-#define	XFS_IOC_ATTRCTL_BY_HANDLE    _IOWR('X', 118, struct xfs_fsop_attr_handlereq)
 #define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
 #define XFS_IOC_THAW		     _IOWR('X', 120, int)
 #define	XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
 #define	XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
 #define	XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
-/*
- * ioctl command to export information not in standard interfaces
- * 	140: IRIX statvfs.f_fstr field - UUID from the superblock
- */
-/*      XFS_IOC_GETFSUUID --[TODO]-- deprecated 140      */
-#define XFS_IOC_GETFSUUID            _IOR ('X', 140, unsigned char[16])
+/*      XFS_IOC_GETFSUUID ---------- deprecated 140      */
 
 
 /*

@@ -34,7 +34,11 @@
 #include <libxfs.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include "handle.h"
+
+/* attributes.h (purposefully) unavailable to xfsprogs, make do */
+struct attrlist_cursor { __u32 opaque[4]; };
+
+#include <handle.h>
 
 /* just pick a value we know is more than big enough */
 #define	MAXHANSIZ	64
@@ -53,7 +57,6 @@ typedef union {
 	int	fd;
 	char	*path;
 } comarg_t;
-
 
 int
 obj_to_handle (
@@ -301,6 +304,69 @@ readlink_by_handle (
 	hreq.ohandlen = (__u32 *)&bufsiz;
 
 	return (int) ioctl(fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
+}
+
+int
+attr_multi_by_handle(
+	void		*hanp,
+	size_t		hlen,
+	void		*buf,
+	int		rtrvcnt,
+	int		flags)
+{
+	int		fd;
+	xfs_fsop_attrmulti_handlereq_t amhreq;
+
+	if ((fd = handle_to_fsfd(hanp)) < 0) {
+		errno = EBADF;
+		return -1;
+	}
+
+	amhreq.hreq.fd       = 0;
+	amhreq.hreq.path     = NULL;
+	amhreq.hreq.oflags   = 0;
+	amhreq.hreq.ihandle  = hanp;
+	amhreq.hreq.ihandlen = hlen;
+	amhreq.hreq.ohandle  = NULL;
+	amhreq.hreq.ohandlen = NULL;
+
+	amhreq.opcount = rtrvcnt;
+	amhreq.ops = buf;
+
+	return (int) ioctl(fd, XFS_IOC_ATTRMULTI_BY_HANDLE, &amhreq);
+}
+
+int
+attr_list_by_handle(
+	void		*hanp,
+	size_t		hlen,
+	void		*buf,
+	size_t		bufsize,
+	int		flags,
+	struct attrlist_cursor *cursor)
+{
+	int		fd;
+	xfs_fsop_attrlist_handlereq_t alhreq;
+
+	if ((fd = handle_to_fsfd(hanp)) < 0) {
+		errno = EBADF;
+		return -1;
+	}
+
+	alhreq.hreq.fd       = 0;
+	alhreq.hreq.path     = NULL;
+	alhreq.hreq.oflags   = 0;
+	alhreq.hreq.ihandle  = hanp;
+	alhreq.hreq.ihandlen = hlen;
+	alhreq.hreq.ohandle  = NULL;
+	alhreq.hreq.ohandlen = NULL;
+
+	memcpy(&alhreq.pos, cursor, sizeof(alhreq.pos));
+	alhreq.flags = flags;
+	alhreq.buflen = bufsize;
+	alhreq.buffer = buf;
+
+	return (int) ioctl(fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
 }
 
 int

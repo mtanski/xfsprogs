@@ -29,15 +29,8 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-
 #ifndef __XFS_CRED_H__
 #define __XFS_CRED_H__
-
-#include <asm/param.h>		/* For NGROUPS */
-#ifdef __KERNEL__
-#include <linux/capability.h>
-#include <linux/sched.h>
-#endif
 
 /*
  * Access Control Lists
@@ -45,7 +38,7 @@
 typedef ushort  xfs_acl_perm_t;
 typedef int     xfs_acl_type_t;
 typedef int     xfs_acl_tag_t;
-typedef uid_t	xfs_acl_id_t;
+typedef int	xfs_acl_id_t;
 
 #define XFS_ACL_MAX_ENTRIES 25
 #define XFS_ACL_NOT_PRESENT (-1)
@@ -64,13 +57,13 @@ typedef struct xfs_acl {
 /*
  * Capabilities
  */
-typedef __uint64_t cap_value_t;
+typedef __uint64_t xfs_cap_value_t;
 
-typedef struct cap_set {
-	cap_value_t	cap_effective;	/* use in capability checks */
-	cap_value_t	cap_permitted;	/* combined with file attrs */
-	cap_value_t	cap_inheritable;/* pass through exec */
-} cap_set_t;
+typedef struct xfs_cap_set {
+	xfs_cap_value_t	cap_effective;	/* use in capability checks */
+	xfs_cap_value_t	cap_permitted;	/* combined with file attrs */
+	xfs_cap_value_t	cap_inheritable;/* pass through exec */
+} xfs_cap_set_t;
 
 
 /*
@@ -99,8 +92,8 @@ typedef struct cap_set {
  *      | division M                  | (where M = ml_divcount)
  *      -------------------------------
  */
-#define MAC_MAX_SETS	250
-typedef struct mac_label {
+#define XFS_MAC_MAX_SETS	250
+typedef struct xfs_mac_label {
 	unsigned char	ml_msen_type;	/* MSEN label type */
 	unsigned char	ml_mint_type;	/* MINT label type */
 	unsigned char	ml_level;	/* Hierarchical level  */
@@ -108,51 +101,8 @@ typedef struct mac_label {
 	unsigned short	ml_catcount;	/* Category count */
 	unsigned short	ml_divcount;	/* Division count */
 					/* Category set, then Division set */
-	unsigned short	ml_list[MAC_MAX_SETS];
-} mac_label;
-
-/* Data types required by POSIX P1003.1eD15 */
-typedef struct mac_label * mac_t;
-
-
-/*
- * Credentials
- */
-typedef struct cred {
-	int	cr_ref;			/* reference count */
-	ushort	cr_ngroups;		/* number of groups in cr_groups */
-	uid_t	cr_uid;			/* effective user id */
-	gid_t	cr_gid;		 	/* effective group id */
-	uid_t	cr_ruid;		/* real user id */
-	gid_t	cr_rgid;		/* real group id */
-	uid_t	cr_suid;		/* "saved" user id (from exec) */
-	gid_t	cr_sgid;		/* "saved" group id (from exec) */
-	struct mac_label *cr_mac;	/* MAC label for B1 and beyond */
-	cap_set_t	  cr_cap;	/* capability (privilege) sets */
-	gid_t	cr_groups[NGROUPS];	/* supplementary group list */
-} cred_t;
-
-
-#ifdef __KERNEL__
-extern int mac_enabled;
-extern mac_label *mac_high_low_lp;
-static __inline void mac_never(void) {}
-struct xfs_inode;
-extern int mac_xfs_iaccess(struct xfs_inode *, mode_t, cred_t *);
-#define _MAC_XFS_IACCESS(i,m,c)	\
-	(mac_enabled? (mac_never(), mac_xfs_iaccess(i,m,c)): 0)
-extern int mac_xfs_vaccess(vnode_t *, cred_t *, mode_t);
-#define _MAC_VACCESS(v,c,m)	\
-	(mac_enabled? (mac_never(), mac_xfs_vaccess(v,c,m)): 0)
-
-#define VREAD		00400
-#define VWRITE		00200
-#define VEXEC		00100
-#define MACEXEC		00100
-#define MACWRITE	00200
-#define MACREAD		00400
-#endif	/* __KERNEL__ */
-
+	unsigned short	ml_list[XFS_MAC_MAX_SETS];
+} xfs_mac_label_t;
 
 /* On-disk XFS extended attribute names (access control lists) */
 #define SGI_ACL_FILE	"SGI_ACL_FILE"
@@ -191,6 +141,35 @@ extern int mac_xfs_vaccess(vnode_t *, cred_t *, mode_t);
 
 
 #ifdef __KERNEL__
+
+#include <asm/param.h>		/* For NGROUPS */
+#include <linux/capability.h>
+#include <linux/sched.h>
+
+/*
+ * Credentials
+ */
+typedef struct cred {
+	int	cr_ref;			/* reference count */
+	ushort	cr_ngroups;		/* number of groups in cr_groups */
+	uid_t	cr_uid;			/* effective user id */
+	gid_t	cr_gid;		 	/* effective group id */
+	uid_t	cr_ruid;		/* real user id */
+	gid_t	cr_rgid;		/* real group id */
+	uid_t	cr_suid;		/* "saved" user id (from exec) */
+	gid_t	cr_sgid;		/* "saved" group id (from exec) */
+	xfs_mac_label_t	*cr_mac;	/* MAC label for B1 and beyond */
+	xfs_cap_set_t	cr_cap;		/* capability (privilege) sets */
+	gid_t	cr_groups[NGROUPS];	/* supplementary group list */
+} cred_t;
+
+#define VREAD		00400
+#define VWRITE		00200
+#define VEXEC		00100
+#define MACEXEC		00100
+#define MACWRITE	00200
+#define MACREAD		00400
+
 extern void cred_init(void);
 static __inline cred_t *get_current_cred(void) { return NULL; }
 /* 

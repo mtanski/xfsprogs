@@ -37,7 +37,7 @@ typedef void	jdm_fshandle_t;		/* filesystem handle */
 typedef void	jdm_filehandle_t;	/* filehandle */
 
 struct xfs_bstat;
-
+struct attrlist_cursor;
 
 extern jdm_fshandle_t *
 jdm_getfshandle( char *mntpnt);
@@ -62,6 +62,17 @@ jdm_readlink( jdm_fshandle_t *fshandlep,
 	      struct xfs_bstat *sp,
 	      char *bufp,
 	      size_t bufsz);
+
+extern intgen_t
+jdm_attr_multi(	jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		char *bufp, int rtrvcnt, int flags);
+
+extern intgen_t
+jdm_attr_list(	jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		char *bufp, size_t bufsz, int flags,
+		struct attrlist_cursor *cursor);
 
 /* macro for determining the size of a structure member */
 #define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )

@@ -1,3 +1,12 @@
+xfsprogs-2.0.0 (26 February 2002)
+	- Major release to coincide with switch to new extended
+	  attributes system call interfaces
+	- bumped version of libhandle, added new symbols to use
+	  the reworked extended attributes handle ioctl interface
+	- xfs_repair in no-modify mode opens the filesystem device
+	  read-only now (fix from Chris Pascoe)
+	- sync up with recent changes to kernel headers
+
 xfsprogs-1.3.19 (15 February 2002)
 	- fix xfs_repair option parsing for external logs
 	- add xfs_repair option parsing for realtime device

@@ -34,7 +34,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LTLIBRARY = libhandle.la
-LT_CURRENT = 0
+LT_CURRENT = 1
 LT_REVISION = 0
 LT_AGE = 0
 

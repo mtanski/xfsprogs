@@ -32,6 +32,10 @@
  */
 
 #include <libxfs.h>
+
+/* attributes.h (purposefully) unavailable to xfsprogs, make do */
+struct attrlist_cursor { __u32 opaque[4]; };
+
 #include <handle.h>
 #include <jdm.h>
 
@@ -150,5 +154,39 @@ jdm_readlink( jdm_fshandle_t *fshp,
 				   sizeof( filehandle ),
 				   ( void * )bufp,
 				   bufsz );
+	return rval;
+}
+
+int
+jdm_attr_multi(	jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		char *bufp, int rtrvcnt, int flags)
+{
+	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
+	filehandle_t filehandle;
+	int rval;
+
+	jdm_fill_filehandle( &filehandle, fshandlep, statp );
+	rval = attr_multi_by_handle ( ( void * )&filehandle,
+				      sizeof( filehandle ),
+				      (void *) bufp,
+				      rtrvcnt, flags);
+	return rval;
+}
+
+int
+jdm_attr_list(	jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		char *bufp, size_t bufsz, int flags,
+		struct attrlist_cursor *cursor)
+{
+	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
+	filehandle_t filehandle;
+	int rval;
+
+	jdm_fill_filehandle( &filehandle, fshandlep, statp );
+	rval = attr_list_by_handle (( void * )&filehandle,
+			sizeof( filehandle ),
+			bufp, bufsz, flags, cursor);
 	return rval;
 }

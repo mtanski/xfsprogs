@@ -334,6 +334,11 @@ typedef struct xfs_inode {
 	xfs_dinode_core_t	i_d;		/* most of ondisk inode */
 } xfs_inode_t;
 
+typedef struct {
+	uid_t	cr_uid;
+	gid_t	cr_gid;
+} cred_t;
+
 extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
 				ushort, dev_t, cred_t *, xfs_inode_t **);
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);

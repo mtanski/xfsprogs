@@ -39,7 +39,7 @@
 #include "bmap.h"
 
 static int xfs_acl_valid(xfs_acl_t *aclp);
-static int xfs_mac_valid(mac_t lp);
+static int xfs_mac_valid(xfs_mac_label_t *lp);
 
 
 /*
@@ -98,7 +98,7 @@ int
 valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 {
 	/* for proper alignment issues, get the structs and bcopy the values */
-	mac_label macl;
+	xfs_mac_label_t macl;
 	xfs_acl_t thisacl;
 	void *valuep;
 	int clearit = 0;
@@ -119,13 +119,13 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 		}
 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
 		if (value == NULL) {
-			bzero(&macl, sizeof(mac_label));
+			bzero(&macl, sizeof(xfs_mac_label_t));
 			bcopy(namevalue+namelen, &macl, valuelen);
 			valuep = &macl;
 		} else 
 			valuep = value;
 
-		if (xfs_mac_valid((mac_label *) valuep) != 1) { /* 1 is valid */
+		if (xfs_mac_valid((xfs_mac_label_t *)valuep) != 1) { /* 1 is valid */
 			 /*
 			 *if sysconf says MAC enabled, 
 			 *	temp = mac_from_text("msenhigh/mintlow", NULL)
@@ -138,7 +138,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			do_warn("entry contains illegal value in attribute named SGI_MAC_LABEL\n");
 		}
 	} else if (strncmp(namevalue, SGI_CAP_FILE, SGI_CAP_FILE_SIZE) == 0) {
-		if ( valuelen != sizeof(cap_set_t)) {
+		if ( valuelen != sizeof(xfs_cap_set_t)) {
 			clearit = 1;
 			do_warn("entry contains illegal value in attribute named SGI_CAP_FILE\n");
 		}
@@ -1010,10 +1010,10 @@ __check_setvalue(const unsigned short *list, unsigned short count)
 
 /*
  * xfs_mac_valid(lp)
- * check the validity of a mac label
+ * Check the validity of a MAC label.
  */
 static int
-xfs_mac_valid(mac_t lp)
+xfs_mac_valid(xfs_mac_label_t *lp)
 {
 	if (lp == NULL)
 		return (0);
@@ -1022,7 +1022,7 @@ xfs_mac_valid(mac_t lp)
 	 * if the total category set and division set is greater than 250
 	 * report error
 	 */
-	if ((lp->ml_catcount + lp->ml_divcount) > MAC_MAX_SETS)
+	if ((lp->ml_catcount + lp->ml_divcount) > XFS_MAC_MAX_SETS)
 		return(0);
 
 	/*

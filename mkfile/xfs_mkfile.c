@@ -38,12 +38,41 @@
 #include <malloc.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/vfs.h>
 #include <ctype.h>
 
 #define	MAXBUFFERSIZE	(256 * 1024)
 
-static void usage(void);
 static char *progname;
+
+static void
+usage(void)
+{
+	fprintf(stderr, "%s: [-npv] <size> <name1> [<name2>] ...\n", progname);
+	exit(2);
+}
+
+static int
+openfd(char *name, int oflags)
+{
+	struct statfs buf;
+	int fd;
+
+	fd = open(name, oflags, 0600);
+	if (fd < 0) {
+		perror(name);
+		return -1;
+	}
+
+	fstatfs(fd, &buf);
+	if (buf.f_type != XFS_SUPER_MAGIC) {
+		fprintf(stderr, "%s: "
+			"file [\"%s\"] is not on an XFS filesystem\n",
+			progname, name);
+		return -1;
+	}
+	return fd;
+}
 
 int
 main(int argc, char **argv)
@@ -139,7 +168,11 @@ main(int argc, char **argv)
 
 		oflags = O_CREAT|O_TRUNC|O_WRONLY|(nobytes ? 0 : O_DIRECT);
 
-		fd = open(argv[optind], oflags, 0600);
+		if ((fd = openfd(argv[optind], oflags)) == -1) {
+			optind++;
+			errs++;
+			continue;
+		}
 
 		if (   (oflags & O_DIRECT)
 		    && (   (fd < 0 && errno == EINVAL)
@@ -149,14 +182,11 @@ main(int argc, char **argv)
 
 			oflags &= ~O_DIRECT;
 
-			fd = open(argv[optind], oflags, 0600);
-		}
-
-		if (fd < 0) {
-			perror(argv[optind]);
-			optind++;
-			errs++;
-			continue;
+			if ((fd = openfd(argv[optind], oflags)) == -1) {
+				optind++;
+				errs++;
+				continue;
+			}
 		}
 
 		if (size == 0) {
@@ -254,11 +284,4 @@ main(int argc, char **argv)
 	}
 
 	return errs != 0;
-}
-
-static void
-usage(void)
-{
-	fprintf(stderr, "%s: [-npv] <size> <name1> [<name2>] ...\n", progname);
-	exit(2);
 }
