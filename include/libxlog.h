@@ -80,7 +80,11 @@ typedef union {
 #endif
 #define STATIC				static
 #define XFS_ERROR(e)			(e)
+#ifdef DEBUG
+#define XFS_ERROR_REPORT(e,l,mp)	fprintf(stderr, "ERROR: %s\n", e)
+#else
 #define XFS_ERROR_REPORT(e,l,mp)	((void) 0)
+#endif
 #define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)
 #define unlikely(x)			(x)
 #define min(a,b)			((a) < (b) ? (a) : (b))

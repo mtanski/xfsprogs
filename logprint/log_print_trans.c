@@ -58,9 +58,13 @@ xfs_log_print_trans(
 	int		print_block_start)
 {
 	xfs_daddr_t	head_blk, tail_blk;
+	int		error;
 
-	if (xlog_find_tail(log, &head_blk, &tail_blk, 0))
+	if ((error = xlog_find_tail(log, &head_blk, &tail_blk, 0))) {
+		fprintf(stderr, "%s: failed to find head and tail, error: %d\n", 
+			progname, error);
 		exit(1);
+	}
 
 	printf("    log tail: %lld head: %lld state: %s\n",
 		(long long)tail_blk,
@@ -77,6 +81,9 @@ xfs_log_print_trans(
 
 	if (head_blk == tail_blk)
 		return;
-	if (xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))
+	if ((error = xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))) {
+		fprintf(stderr, "%s: failed in xfs_do_recovery_pass, error: %d\n", 
+			progname, error);
 		exit(1);
+	}
 }
