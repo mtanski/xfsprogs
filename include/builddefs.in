@@ -140,6 +140,9 @@ INSTALL_LTLIB = \
 	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_SLIB_DIR)
 endif
 
+# Libtool thinks the static and shared libs should be in the same dir, so
+# make the static lib appear in the place we chose as rpath (using the two
+# symlinks below).
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
@@ -148,7 +151,9 @@ INSTALL_LTLIB_DEV = \
 	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
 	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
 	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_SLIB_DIR); \
-	$(INSTALL_LTLIB_OLDLIB_SYMLINK)
+	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_SLIB_DIR)/$(LIBNAME).a; \
+	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).la $(PKG_SLIB_DIR)/$(LIBNAME).la
+
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
 endif
@@ -157,11 +162,6 @@ INSTALL_LTLIB_STATIC = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
 	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
 	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR)
-
-# Libtool thinks the static and shared libs should be in the same dir, so
-# make the static lib appear in the place we chose as rpath.
-INSTALL_LTLIB_OLDLIB_SYMLINK = \
-	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_SLIB_DIR)/$(LIBNAME).a
 
 INSTALL_MAN = \
     @for d in $(MAN_PAGES); do \
