@@ -165,7 +165,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
 			  int		   length,
 			  int		   count,
 			  xfs_log_ticket_t *ticket,
-			  char		   clientid,
+			  __uint8_t	   clientid,
 			  uint		   flags);
 int	  xfs_log_write(struct xfs_mount *mp,
 			xfs_log_iovec_t  region[],

@@ -479,12 +479,13 @@ typedef struct xfs_handle {
  * ioctl command to export information not in standard interfaces
  * 	140: IRIX statvfs.f_fstr field - UUID from the superblock
  */
+/*      XFS_IOC_GETFSUUID --[TODO]-- deprecated 140      */
 #define XFS_IOC_GETFSUUID            _IOR ('X', 140, unsigned char[16])
 
 
 /*
  * Block I/O parameterization.  A basic block (BB) is the lowest size of
- * filesystem allocation, and must == NBPSCTR.  Length units given to bio
+ * filesystem allocation, and must equal 512.  Length units given to bio
  * routines are in BB's.
  */
 #define	BBSHIFT		9

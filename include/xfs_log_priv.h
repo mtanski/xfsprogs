@@ -338,10 +338,10 @@ typedef struct xlog_ticket {
 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4 */
 	int		   t_curr_res;	 /* current reservation in bytes : 4 */
 	int		   t_unit_res;	 /* unit reservation in bytes    : 4 */
-	char		   t_ocnt;	 /* original count		 : 1 */
-	char		   t_cnt;	 /* current count		 : 1 */
-	char		   t_clientid;	 /* who does this belong to;	 : 1 */
-	char		   t_flags;	 /* properties of reservation	 : 1 */
+	__uint8_t	   t_ocnt;	 /* original count		 : 1 */
+	__uint8_t	   t_cnt;	 /* current count		 : 1 */
+	__uint8_t	   t_clientid;	 /* who does this belong to;	 : 1 */
+	__uint8_t	   t_flags;	 /* properties of reservation	 : 1 */
 } xlog_ticket_t;
 #endif
 
@@ -349,8 +349,8 @@ typedef struct xlog_ticket {
 typedef struct xlog_op_header {
 	xlog_tid_t oh_tid;	/* transaction id of operation	:  4 b */
 	int	   oh_len;	/* bytes in data region		:  2 b */
-	char	   oh_clientid;	/* who sent me this		:  1 b */
-	char	   oh_flags;	/* 				:  1 b */
+	__uint8_t  oh_clientid;	/* who sent me this		:  1 b */
+	__uint8_t  oh_flags;	/* 				:  1 b */
 	ushort	   oh_res2;	/* 32 bit align			:  2 b */
 } xlog_op_header_t;
 
@@ -433,7 +433,7 @@ typedef struct xlog_in_core {
 		xlog_rec_header_t hic_header;
 		char		  hic_sector[XLOG_HEADER_SIZE];
 	} ic_h2;
-	char		       ic_data[1];
+	__uint8_t		  ic_data[1];
 } xlog_in_core_t;
 
 /*
