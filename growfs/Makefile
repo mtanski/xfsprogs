@@ -35,7 +35,9 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_growfs
 
-CFILES = xfs_growfs.c
+CFILES = explore.c xfs_growfs.c
+HFILES = explore.h
+
 LLDLIBS = $(LIBXFS) $(LIBUUID)
 LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static

@@ -30,10 +30,10 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef _LINUX_XQM_H
-#define _LINUX_XQM_H
+#ifndef __XQM_H__
+#define __XQM_H__
 
-#include <linux/types.h>
+#include <libxfs.h>
 
 /*
  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
@@ -156,4 +156,4 @@ typedef struct fs_quota_stat {
 	__u16		qs_iwarnlimit;	/* limit for num warnings */
 } fs_quota_stat_t;
 
-#endif	/* _LINUX_XQM_H */
+#endif	/* __XQM_H__ */

@@ -31,8 +31,8 @@
  */
 
 #include <libxfs.h>
-#include <mntent.h>
 #include <sys/ioctl.h>
+#include "explore.h"
 
 /*
  * When growing a filesystem, this is the most significant
@@ -42,10 +42,10 @@
 
 #define XFS_MAX_INODE_SIG_BITS 32
 
-static char	*fname;		/* mount point name */
-static char	*datadev;	/* data device name */
-static char	*logdev;	/*  log device name */
-static char	*rtdev;		/*   RT device name */
+char	*fname;		/* mount point name */
+char	*datadev;	/* data device name */
+char	*logdev;	/*  log device name */
+char	*rtdev;		/*   RT device name */
 
 static void
 usage(void)
@@ -99,73 +99,6 @@ report_info(
 	       (long long)geo.rtblocks, (long long)geo.rtextents);
 }
 
-void
-explore_mtab(char *mtab, char *mntpoint)
-{
-	struct mntent	*mnt;
-	struct stat64	statuser;
-	struct stat64	statmtab;
-	FILE		*mtp;
-	char		*rtend;
-	char		*logend;
-
-	if ((mtp = setmntent(mtab, "r")) == NULL) {
-		fprintf(stderr, "%s: cannot access mount list %s: %s\n",
-			progname, MOUNTED, strerror(errno));
-		exit(1);
-	}
-	if (stat64(mntpoint, &statuser) < 0) {
-		fprintf(stderr, "%s: cannot access mount point %s: %s\n",
-			progname, mntpoint, strerror(errno));
-		exit(1);
-	}
-
-	while ((mnt = getmntent(mtp)) != NULL) {
-		if (stat64(mnt->mnt_dir, &statmtab) < 0) {
-			fprintf(stderr, "%s: ignoring entry %s in %s: %s\n",
-				progname, mnt->mnt_dir, mtab, strerror(errno));
-			continue;
-		}
-		if (statuser.st_ino != statmtab.st_ino ||
-				statuser.st_dev != statmtab.st_dev)
-			continue;
-		else if (strcmp(mnt->mnt_type, "xfs") != 0) {
-			fprintf(stderr, "%s: %s is not an XFS filesystem\n",
-				progname, mntpoint);
-			exit(1);
-		}
-		break;	/* we've found it */
-	}
-
-	if (mnt == NULL) {
-		fprintf(stderr,
-		"%s: %s is not a filesystem mount point, according to %s\n",
-			progname, mntpoint, MOUNTED);
-		exit(1);
-	}
-
-	/* find the data, log (logdev=), and realtime (rtdev=) devices */
-	rtend = logend = NULL;
-	fname = mnt->mnt_dir;
-	datadev = mnt->mnt_fsname;
-	if ((logdev = hasmntopt(mnt, "logdev="))) {
-		logdev += 7;
-		logend = strtok(logdev, " ,");
-	}
-	if ((rtdev = hasmntopt(mnt, "rtdev="))) {
-		rtdev += 6;
-		rtend = strtok(rtdev, " ,");
-	}
-
-	/* Do this only after we've finished processing mount options */
-	if (logdev && logend != logdev)
-		*logend = '\0';	/* terminate end of log device name */
-	if (rtdev && rtend != rtdev)
-		*rtend = '\0';	/* terminate end of rt device name */
-
-	endmntent(mtp);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -197,15 +130,17 @@ main(int argc, char **argv)
 	int			xflag;	/* -x flag */
 	libxfs_init_t		xi;	/* libxfs structure */
 
-	mtab = MOUNTED;
 	progname = basename(argv[0]);
-	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
+
+	mtab = NULL;
 	maxpct = esize = 0;
 	dsize = lsize = rsize = 0LL;
+	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
+
 	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
 		switch (c) {
 		case 'D':
-			dsize = atoll(optarg);
+			dsize = strtoll(optarg, NULL, 10);
 			/* fall through */
 		case 'd':
 			dflag = 1;
@@ -218,7 +153,7 @@ main(int argc, char **argv)
 			lflag = iflag = 1;
 			break;
 		case 'L':
-			lsize = atoll(optarg);
+			lsize = strtoll(optarg, NULL, 10);
 			/* fall through */
 		case 'l':
 			lflag = 1;
@@ -234,7 +169,7 @@ main(int argc, char **argv)
 			progname = optarg;
 			break;
 		case 'R':
-			rsize = atoll(optarg);
+			rsize = strtoll(optarg, NULL, 10);
 			/* fall through */
 		case 'r':
 			rflag = 1;
