@@ -1849,9 +1849,10 @@ _("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
 	sbp->sb_width = dswidth;
 	if (dirversion == 2)
 		sbp->sb_dirblklog = dirblocklog - blocklog;
-	if (logversion == 2)	/* This is stored in bytes */
-		sbp->sb_logsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
-	else
+	if (logversion == 2) {	/* This is stored in bytes */
+		lsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
+		sbp->sb_logsunit = lsunit;
+	} else
 		sbp->sb_logsunit = 0;
 	if (iaflag) {
 		sbp->sb_inoalignmt = XFS_INODE_BIG_CLUSTER_SIZE >> blocklog;

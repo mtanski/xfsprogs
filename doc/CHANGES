@@ -1,4 +1,8 @@
-[cvs]
+xfsprogs-2.4.10 (12 May 2003)
+	- Fix a bug in mkfs - creating version 2 logs, an incorrect
+	  stripe unit value was being passed to libxfs_clear_log.
+	  All recent versions of xfs_repair will fix this, however,
+	  because xfs_repair uses the correct stripe unit value.
 	- Fix a bug in xfs_logprint, when dumping a corrupt log.
 	- FreeBSD updates from Alexander Kabaev.
 

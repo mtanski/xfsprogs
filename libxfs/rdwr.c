@@ -105,7 +105,7 @@ libxfs_log_clear(
 		len = 1;
 	buf = libxfs_getbuf(device, start, len);
 	if (!buf)
-	    return -1;
+		return -1;
 
 	memset(XFS_BUF_PTR(buf), 0, BBSIZE * len);
 	head = (xlog_rec_header_t *)XFS_BUF_PTR(buf);
@@ -147,11 +147,11 @@ libxfs_log_clear(
 	}
 
 	if (libxfs_writebuf(buf, 0))
-	    return -1;
+		return -1;
 
 	buf = libxfs_getbuf(device, start + 1, 1);
 	if (!buf)
-	    return -1;
+		return -1;
 
 	/* now a log unmount op */
 	memset(XFS_BUF_PTR(buf), 0, BBSIZE);
@@ -169,7 +169,7 @@ libxfs_log_clear(
 		sizeof(magic));
 
 	if (libxfs_writebuf(buf, 0))
-	    return -1;
+		return -1;
 
 	return 0;
 }

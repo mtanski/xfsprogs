@@ -1,8 +1,14 @@
+xfsprogs (2.4.10-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Nathan Scott <nathans@debian.org>  Mon, 12 May 2003 16:16:49 +1000
+
 xfsprogs (2.4.9-1) unstable; urgency=low
 
   * New upstream release
 
- -- Nathan Scott <nathans@debian.org>  Fri, 02 May 2003 09:34:17 +1000
+ -- Nathan Scott <nathans@debian.org>  Fri,  2 May 2003 09:34:17 +1000
 
 xfsprogs (2.4.4-1) unstable; urgency=low
 
