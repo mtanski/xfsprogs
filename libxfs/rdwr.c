@@ -59,12 +59,8 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 		nblks = (uint)BTOBB(size);
 		if (bno + nblks > start + len)
 			nblks = (uint)(start + len - bno);
-		if (lseek64(fd, BBTOOFF64(bno), SEEK_SET) < 0) {
-			fprintf(stderr, "%s: device_zero lseek64 failed: %s\n",
-				progname, strerror(errno));
-			exit(1);
-		}
-		if (write(fd, z, BBTOB(nblks)) < BBTOB(nblks)) {
+		if (pwrite64(fd, z, BBTOB(nblks), BBTOOFF64(bno)) <
+			       	BBTOB(nblks)) {
 			fprintf(stderr, "%s: device_zero write failed: %s\n",
 				progname, strerror(errno));
 			exit(1);
@@ -215,15 +211,7 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int die)
 	buf->b_blkno = blkno;
 	ASSERT(BBTOB(len) <= buf->b_bcount);
 
-	if (lseek64(fd, BBTOOFF64(blkno), SEEK_SET) < 0) {
-		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n", progname,
-			(unsigned long long)BBTOOFF64(blkno), strerror(errno));
-		ASSERT(0);
-		if (die)
-			exit(1);
-		return errno;
-	}
-	if (read(fd, buf->b_addr, BBTOB(len)) < 0) {
+	if (pread64(fd, buf->b_addr, BBTOB(len), BBTOOFF64(blkno)) < 0) {
 		fprintf(stderr, "%s: read failed: %s\n",
 			progname, strerror(errno));
 		if (die)
@@ -265,19 +253,11 @@ libxfs_writebuf_int(xfs_buf_t *buf, int die)
 	int	sts;
 	int	fd = libxfs_device_to_fd(buf->b_dev);
 
-	if (lseek64(fd, BBTOOFF64(buf->b_blkno), SEEK_SET) < 0) {
-		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n", progname,
-			(unsigned long long)BBTOOFF64(buf->b_blkno), strerror(errno));
-		ASSERT(0);
-		if (die)
-			exit(1);
-		return errno;
-	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "writing %ubytes at blkno=%llu(%llu), %p\n",
 		buf->b_bcount, BBTOOFF64(buf->b_blkno), buf->b_blkno, buf);
 #endif
-	sts = write(fd, buf->b_addr, buf->b_bcount);
+	sts = pwrite64(fd, buf->b_addr, buf->b_bcount, BBTOOFF64(buf->b_blkno));
 	if (sts < 0) {
 		fprintf(stderr, "%s: write failed: %s\n",
 			progname, strerror(errno));
