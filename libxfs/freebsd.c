@@ -31,13 +31,11 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#define ustat __kernel_ustat
 #include <xfs/libxfs.h>
 #include <sys/stat.h>
+#include <sys/disk.h>
 #include <sys/mount.h>
 #include <sys/ioctl.h>
-#include <sys/diskslice.h>
-#include <sys/disklabel.h>
 
 extern char *progname;
 
@@ -45,25 +43,66 @@ int
 platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 {
 	struct stat	st;
+        int cnt, i;
+        struct statfs *fsinfo;
 
 	if (!s) {
 		if (stat(block, &st) < 0)
 			return 0;
-		if ((st.st_mode & S_IFMT) != S_IFBLK)
-			return 0;
 		s = &st;
 	}
+
 	/* Remember, FreeBSD can now mount char devices! -- adrian */
 	if (((st.st_mode & S_IFMT) != S_IFBLK) &&
-	    ((st.st_mode & S_IFMT) != S_IFCHR))
+	    ((st.st_mode & S_IFMT) != S_IFCHR)) 
 		return 0;
 
-	return 0;
+	if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
+		fprintf(stderr,
+		    _("%s: %s possibly contains a mounted filesystem\n"),
+		    progname, name);
+		return 1;
+	}
+
+        for (i = 0; i < cnt; i++) {
+                if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
+			continue;
+		
+		if (verbose)
+			fprintf(stderr,
+			    _("%s: %s contains a mounted filesystem\n"),
+			    progname, name);
+		break;
+	}
+
+        return (i < cnt);
 }
 
 int
 platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 {
+        int cnt, i;
+        struct statfs *fsinfo;
+
+        if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
+		fprintf(stderr, _("%s: %s contains a possibly writable, "
+				"mounted filesystem\n"), progname, name);
+			return fatal;
+	}
+
+        for (i = 0; i < cnt; i++) {
+                if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
+			continue;
+		
+		if (fsinfo[i].f_flags &= MNT_RDONLY)
+			break;
+	}
+
+        if (i == cnt) {
+		fprintf(stderr, _("%s: %s contains a mounted and writable "
+				"filesystem\n"), progname, name);
+		return fatal;
+	}
 	return 0;
 }
 
@@ -77,93 +116,12 @@ platform_flush_device(int fd)
 {
 }
 
-/*
- * Get disk slice and partition information.
- */
-static __int64_t
-getdisksize(int fd, const char *fname)
-{
-	//struct	diskslices ds;
-	struct	disklabel dl, *lp;
-	const	char *s1, *s2;
-	char	*s;
-	int	slice, part, fd1, i, e;
-	__int64_t size = 0LL;
-
-	slice = part = -1;
-	s1 = fname;
-	if ((s2 = strrchr(s1, '/')))
-		s1 = s2 + 1;
-	for (s2 = s1; *s2 && !isdigit(*s2); s2++);
-	if (!*s2 || s2 == s1)
-		s2 = NULL;
-	else
-		while (isdigit(*++s2));
-	s1 = s2;
-	if (s2 && *s2 == 's') {
-		slice = strtol(s2 + 1, &s, 10);
-		if (slice < 1 || slice > MAX_SLICES - BASE_SLICE)
-			s2 = NULL;
-		else {
-			slice = BASE_SLICE + slice - 1;
-			s2 = s;
-		}
-	}
-	if (s2 && *s2 >= 'a' && *s2 <= 'a' + MAXPARTITIONS - 1) {
-		if (slice == -1)
-			slice = COMPATIBILITY_SLICE;
-		part = *s2++ - 'a';
-	}
-	if (!s2 || (*s2 && *s2 != '.')) {
-		fprintf(stderr, _("%s: can't figure out partition info\n"),
-		    progname);
-		exit(1);
-	}
-
-	if (slice == -1 || part != -1) {
-		lp = &dl;
-		i = ioctl(fd, DIOCGDINFO, lp);
-		if (i == -1 && slice != -1 && part == -1) {
-			e = errno;
-			if (!(s = strdup(fname))) {
-				fprintf(stderr, "%s: %s\n",
-				    progname, strerror(errno));
-				exit(1);
-			}
-			s[s1 - fname] = 0;
-			if ((fd1 = open(s, O_RDONLY)) != -1) {
-				i = ioctl(fd1, DIOCGDINFO, lp);
-				close(fd1);
-			}
-			free(s);
-			errno = e;
-		}
-		if (i == -1) {
-			fprintf(stderr, _("%s: can't read disk label: %s\n"),
-			    progname, strerror(errno));
-			exit(1);
-		}
-		if (slice == -1 || part != -1) {
-			if (part == -1)
-				part = RAW_PART;
-			if (part >= lp->d_npartitions ||
-			    !lp->d_partitions[part].p_size) {
-				fprintf(stderr,
-					_("%s: partition %s is unavailable\n"),
-					progname, fname);
-				exit(1);
-			}
-			size = lp->d_partitions[part].p_size;
-		}
-	}
-	return size;
-}
-
 void
 platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 {
 	struct stat	st;
 	__int64_t	size;
+	u_int		ssize;
 
 	if (fstat(fd, &st) < 0) {
 		fprintf(stderr, _("%s: "
@@ -171,12 +129,34 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 			progname, path, strerror(errno));
 		exit(1);
 	}
+
 	if ((st.st_mode & S_IFMT) == S_IFREG) {
 		*sz = (long long)(st.st_size >> 9);
-		*bsz = BBSIZE;
+		*bsz = 512;
 		return;
 	}
 
-	*sz = (long long) getdisksize(fd, path);
-	*bsz = BBSIZE;
+	if ((st.st_mode & S_IFMT) != S_IFCHR) {
+		fprintf(stderr, _("%s: "
+			"Not a device or file: \"%s\"n"),
+			progname, path);
+		exit(1);
+	}
+	
+	if (ioctl(fd, DIOCGMEDIASIZE, &size) != 0) {
+		fprintf(stderr, _("%s: "
+			"DIOCGMEDIASIZE failed on \"%s\": %s\n"),
+			progname, path, strerror(errno));
+		exit(1);
+	}
+	
+	if (ioctl(fd, DIOCGSECTORSIZE, &ssize) != 0) {
+		fprintf(stderr, _("%s: "
+			"DIOCGSECTORSIZE failed on \"%s\": %s\n"),
+			progname, path, strerror(errno));
+		exit(1);
+	}
+
+	*sz = (long long) (size / ssize);
+	*bsz = (int)ssize;
 }
