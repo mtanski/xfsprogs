@@ -184,13 +184,14 @@ struct cramfs_super_block {
 #define cramfsmagic(s)	assemble4le(s.s_magic)
 
 #define HFS_SUPER_MAGIC 0x4244
+#define HFSPLUS_SUPER_MAGIC 0x482B
+#define HFSPLUS_SUPER_VERSION 0x004
 struct hfs_super_block {
 	u_char    s_magic[2];
-	u_char    s_dummy[18];
-	u_char    s_blksize[4];
+	u_char    s_version[2];
 };
 #define hfsmagic(s)	assemble2le(s.s_magic)
-#define hfsblksize(s)	assemble4le(s.s_blksize)
+#define hfsversion(s)	assemble2le(s.s_version)
 
 #define HPFS_SUPER_MAGIC 0xf995e849
 struct hpfs_super_block {

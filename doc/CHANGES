@@ -1,3 +1,14 @@
+xfsprogs-2.5.3 (07 July 2003)
+	- Update xfs_io commands which take user input in terms of
+	  byte counts to now also allow unit prefixes like mkfs.xfs.
+	- Tweak build to avoid unnecessary rebuilds of international
+	  language files (if present), suggested by Steve Langasek.
+	- Fix usage message in mkfs.xfs, it was out of date.
+	- Fix some filesystem type detection code, in particular the
+	  bfs probe code was broken for 64 bit machines (found by QA
+	  test 032) and the hfs code was broken too (originally found
+	  by Ethan Benson).  We now also detect hfs+ filesystems.
+
 xfsprogs-2.5.2 (25 June 2003)
 	- Fix xvm stripe detection in libdisk - pass correctly
 	  sized structures to xvm ioctls.

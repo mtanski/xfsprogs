@@ -101,6 +101,7 @@ pwrite_f(
 	ssize_t		count, total;
 	unsigned int	seed = 0xcdcdcdcd;
 	unsigned int	bsize = 4096;
+	xfs_fsop_geom_t	geometry;
 	char		*sp, *infile = NULL;
 	int		c, fd = -1, dflag = 0;
 
@@ -121,8 +122,8 @@ pwrite_f(
 			infile = optarg;
 			break;
 		case 's':
-			skip = (off64_t) strtoull(optarg, &sp, 0);
-			if (!sp || sp == optarg) {
+			skip = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
+			if (skip < 0) {
 				printf(_("non-numeric skip -- %s\n"), optarg);
 				return 0;
 			}
@@ -143,14 +144,14 @@ pwrite_f(
 		printf("%s %s\n", pwrite_cmd.name, pwrite_cmd.oneline);
 		return 0;
 	}
-	offset = (off64_t) strtoull(argv[optind], &sp, 0);
-	if (!sp || sp == argv[optind]) {
+	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 	optind++;
-	count = strtoul(argv[optind], &sp, 0);
-	if (!sp || sp == argv[optind]) {
+	count = (ssize_t)cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
@@ -158,14 +159,16 @@ pwrite_f(
 	if (!alloc_buffer(bsize, seed))
 		return 0;
 
-	if (infile && ((fd = openfile(infile, 0, 0, dflag, 1, 0, 0, 0)) < 0))
+	if (infile &&
+	    ((fd = openfile(infile, &geometry, 0, 0, dflag, 1, 0, 0, 0)) < 0))
 		return 0;
 
 	if (!write_buffer(offset, count, bsize, fd, skip, &total)) {
 		close(fd);
 		return 0;
 	}
-	printf(_("wrote %u/%u bytes at offset %llu\n"), total, count, offset);
+	printf(_("wrote %ld/%ld bytes at offset %lld\n"),
+		(long)total, (long)count, (long long)offset);
 	close(fd);
 	return 0;
 }

@@ -34,10 +34,12 @@
 #include "input.h"
 #include "command.h"
 
-int	fdesc;
-char	*fname;
 char	*progname;
 int	exitcode;
+
+int	fdesc;
+char	*fname;
+xfs_fsop_geom_t	fgeom;
 
 int	readonly;
 int	directio;
@@ -117,7 +119,7 @@ init(
 		usage();
 
 	fname = strdup(argv[optind]);
-	if ((fdesc = openfile(fname, append, fflag, directio,
+	if ((fdesc = openfile(fname, &fgeom, append, fflag, directio,
 				readonly, osync, trunc, realtime)) < 0)
 		exit(1);
 

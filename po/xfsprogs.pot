@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 
 #: ../freeze/xfs_freeze.c:90 ../growfs/xfs_growfs.c:214 ../imap/xfs_imap.c:66
-#: ../io/open.c:76
+#: ../io/open.c:78
 #, c-format
 msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
 msgstr ""
@@ -94,11 +94,11 @@ msgstr ""
 msgid "external"
 msgstr ""
 
-#: ../growfs/xfs_growfs.c:101 ../mkfs/xfs_mkfs.c:1366
+#: ../growfs/xfs_growfs.c:101 ../mkfs/xfs_mkfs.c:1351
 msgid "none"
 msgstr ""
 
-#: ../growfs/xfs_growfs.c:191 ../io/init.c:109 ../mkfile/xfs_mkfile.c:113
+#: ../growfs/xfs_growfs.c:191 ../io/init.c:111 ../mkfile/xfs_mkfile.c:113
 #: ../mkfs/xfs_mkfs.c:1054 ../repair/xfs_repair.c:245 ../rtcp/xfs_rtcp.c:71
 #, c-format
 msgid "%s version %s\n"
@@ -423,12 +423,12 @@ msgstr ""
 msgid "help for one or all commands"
 msgstr ""
 
-#: ../io/init.c:56
+#: ../io/init.c:58
 #, c-format
 msgid "Usage: %s [-r] [-p prog] [-c cmd]... file\n"
 msgstr ""
 
-#: ../io/open.c:114
+#: ../io/open.c:122
 msgid ""
 "\n"
 " opens a new file in the requested mode, after closing the current file\n"
@@ -451,249 +451,249 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/open.c:232
+#: ../io/open.c:242
 msgid "socket"
 msgstr ""
 
-#: ../io/open.c:234
+#: ../io/open.c:244
 msgid "directory"
 msgstr ""
 
-#: ../io/open.c:236
+#: ../io/open.c:246
 msgid "char device"
 msgstr ""
 
-#: ../io/open.c:238
+#: ../io/open.c:248
 msgid "block device"
 msgstr ""
 
-#: ../io/open.c:240
+#: ../io/open.c:250
 msgid "regular file"
 msgstr ""
 
-#: ../io/open.c:242
+#: ../io/open.c:252
 msgid "symbolic link"
 msgstr ""
 
-#: ../io/open.c:244
+#: ../io/open.c:254
 msgid "fifo"
 msgstr ""
 
-#: ../io/open.c:258 ../io/open.c:364
+#: ../io/open.c:268 ../io/open.c:373
 #, c-format
 msgid "fd.path = \"%s\"\n"
 msgstr ""
 
-#: ../io/open.c:260
+#: ../io/open.c:270
 #, c-format
 msgid "fd.flags = %s,%s,%s%s%s\n"
 msgstr ""
 
-#: ../io/open.c:261
+#: ../io/open.c:271
 msgid "sync"
 msgstr ""
 
-#: ../io/open.c:261
+#: ../io/open.c:271
 msgid "non-sync"
 msgstr ""
 
-#: ../io/open.c:262
+#: ../io/open.c:272
 msgid "direct"
 msgstr ""
 
-#: ../io/open.c:262
+#: ../io/open.c:272
 msgid "non-direct"
 msgstr ""
 
-#: ../io/open.c:263
+#: ../io/open.c:273
 msgid "read-only"
 msgstr ""
 
-#: ../io/open.c:263
+#: ../io/open.c:273
 msgid "read-write"
 msgstr ""
 
-#: ../io/open.c:264
+#: ../io/open.c:274
 msgid ",real-time"
 msgstr ""
 
-#: ../io/open.c:265
+#: ../io/open.c:275
 msgid ",append-only"
 msgstr ""
 
-#: ../io/open.c:269
+#: ../io/open.c:279
 #, c-format
 msgid "stat.ino = %lld\n"
 msgstr ""
 
-#: ../io/open.c:270
+#: ../io/open.c:280
 #, c-format
 msgid "stat.type = %s\n"
 msgstr ""
 
-#: ../io/open.c:271
+#: ../io/open.c:281
 #, c-format
 msgid "stat.size = %lld\n"
 msgstr ""
 
-#: ../io/open.c:272
+#: ../io/open.c:282
 #, c-format
 msgid "stat.blocks = %lld\n"
 msgstr ""
 
-#: ../io/open.c:274
+#: ../io/open.c:284
 #, c-format
 msgid "stat.atime = %s"
 msgstr ""
 
-#: ../io/open.c:275
+#: ../io/open.c:285
 #, c-format
 msgid "stat.mtime = %s"
 msgstr ""
 
-#: ../io/open.c:276
+#: ../io/open.c:286
 #, c-format
 msgid "stat.ctime = %s"
 msgstr ""
 
-#: ../io/open.c:282
+#: ../io/open.c:292
 #, c-format
 msgid "xattr.xflags = 0x%x\n"
 msgstr ""
 
-#: ../io/open.c:283
+#: ../io/open.c:293
 #, c-format
 msgid "xattr.extsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:284
+#: ../io/open.c:294
 #, c-format
 msgid "xattr.nextents = %u\n"
 msgstr ""
 
-#: ../io/open.c:317
+#: ../io/open.c:327
 #, c-format
 msgid "invalid setfl argument -- '%c'\n"
 msgstr ""
 
-#: ../io/open.c:339
+#: ../io/open.c:348
 #, c-format
 msgid "non-numeric extsize argument -- %s\n"
 msgstr ""
 
-#: ../io/open.c:369
+#: ../io/open.c:378
 #, c-format
 msgid "statfs.f_bsize = %lld\n"
 msgstr ""
 
-#: ../io/open.c:370
+#: ../io/open.c:379
 #, c-format
 msgid "statfs.f_blocks = %lld\n"
 msgstr ""
 
-#: ../io/open.c:372
+#: ../io/open.c:381
 #, c-format
 msgid "statfs.f_bavail = %lld\n"
 msgstr ""
 
-#: ../io/open.c:378
+#: ../io/open.c:387
 #, c-format
 msgid "geom.bsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:379
+#: ../io/open.c:388
 #, c-format
 msgid "geom.agcount = %u\n"
 msgstr ""
 
-#: ../io/open.c:380
+#: ../io/open.c:389
 #, c-format
 msgid "geom.agblocks = %u\n"
 msgstr ""
 
-#: ../io/open.c:381
+#: ../io/open.c:390
 #, c-format
 msgid "geom.datablocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:383
+#: ../io/open.c:392
 #, c-format
 msgid "geom.rtblocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:385
+#: ../io/open.c:394
 #, c-format
 msgid "geom.rtextents = %llu\n"
 msgstr ""
 
-#: ../io/open.c:387
+#: ../io/open.c:396
 #, c-format
 msgid "geom.rtextsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:388
+#: ../io/open.c:397
 #, c-format
 msgid "geom.sunit = %u\n"
 msgstr ""
 
-#: ../io/open.c:389
+#: ../io/open.c:398
 #, c-format
 msgid "geom.swidth = %u\n"
 msgstr ""
 
-#: ../io/open.c:397
+#: ../io/open.c:406
 msgid "open"
 msgstr ""
 
-#: ../io/open.c:398
+#: ../io/open.c:407
 msgid "o"
 msgstr ""
 
-#: ../io/open.c:402
+#: ../io/open.c:411
 msgid "[-acdrstx] [path]"
 msgstr ""
 
-#: ../io/open.c:404
+#: ../io/open.c:413
 msgid "close the current file, open file specified by path"
 msgstr ""
 
-#: ../io/open.c:407
+#: ../io/open.c:416
 msgid "stat"
 msgstr ""
 
-#: ../io/open.c:411
+#: ../io/open.c:420
 msgid "[-v]"
 msgstr ""
 
-#: ../io/open.c:413
+#: ../io/open.c:422
 msgid "statistics on the currently open file"
 msgstr ""
 
-#: ../io/open.c:415
+#: ../io/open.c:424
 msgid "setfl"
 msgstr ""
 
-#: ../io/open.c:417
+#: ../io/open.c:426
 msgid "[-adx]"
 msgstr ""
 
-#: ../io/open.c:419
+#: ../io/open.c:428
 msgid "set/clear append/direct flags on the open file"
 msgstr ""
 
-#: ../io/open.c:421
+#: ../io/open.c:430
 msgid "statfs"
 msgstr ""
 
-#: ../io/open.c:424
+#: ../io/open.c:433
 msgid "statistics on the filesystem of the currently open file"
 msgstr ""
 
-#: ../io/open.c:426
+#: ../io/open.c:435
 msgid "extsize"
 msgstr ""
 
-#: ../io/open.c:431
+#: ../io/open.c:440
 msgid "set prefered extent size (in bytes) for the open file"
 msgstr ""
 
@@ -712,76 +712,76 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pread.c:153 ../io/pwrite.c:111
+#: ../io/pread.c:153 ../io/pwrite.c:113
 #, c-format
 msgid "non-numeric bsize -- %s\n"
 msgstr ""
 
-#: ../io/pread.c:171 ../io/prealloc.c:54 ../io/pwrite.c:147
+#: ../io/pread.c:171 ../io/prealloc.c:53 ../io/pwrite.c:149
 #, c-format
 msgid "non-numeric offset argument -- %s\n"
 msgstr ""
 
-#: ../io/pread.c:177 ../io/prealloc.c:59 ../io/pwrite.c:153
+#: ../io/pread.c:177 ../io/prealloc.c:58 ../io/pwrite.c:155
 #, c-format
 msgid "non-numeric length argument -- %s\n"
 msgstr ""
 
 #: ../io/pread.c:187
 #, c-format
-msgid "read %u/%u bytes at offset %llu\n"
-msgstr ""
-
-#: ../io/pread.c:194
-msgid "pread"
+msgid "read %ld/%ld bytes at offset %lld\n"
 msgstr ""
 
 #: ../io/pread.c:195
+msgid "pread"
+msgstr ""
+
+#: ../io/pread.c:196
 msgid "r"
 msgstr ""
 
-#: ../io/pread.c:199
+#: ../io/pread.c:200
 msgid "[-b bs] [-v] off len"
 msgstr ""
 
-#: ../io/pread.c:200
+#: ../io/pread.c:201
 msgid "reads a number of bytes at a specified offset"
 msgstr ""
 
-#: ../io/prealloc.c:136
+#: ../io/prealloc.c:135
 msgid "allocsp"
 msgstr ""
 
-#: ../io/prealloc.c:140 ../io/prealloc.c:147 ../io/prealloc.c:154
-#: ../io/prealloc.c:162
+#: ../io/prealloc.c:139 ../io/prealloc.c:146 ../io/prealloc.c:153
+#: ../io/prealloc.c:161
 msgid "off len"
 msgstr ""
 
-#: ../io/prealloc.c:141
+#: ../io/prealloc.c:140
 msgid "allocates zeroed space for part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:143
+#: ../io/prealloc.c:142
 msgid "freesp"
 msgstr ""
 
-#: ../io/prealloc.c:148
+#: ../io/prealloc.c:147
 msgid "frees space associated with part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:150
+#: ../io/prealloc.c:149
 msgid "resvsp"
 msgstr ""
 
-#: ../io/prealloc.c:156
+#: ../io/prealloc.c:155
 msgid "reserves space associated with part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:158
+#: ../io/prealloc.c:157
 msgid "unresvsp"
 msgstr ""
 
-#: ../io/prealloc.c:164
+#: ../io/prealloc.c:163
 msgid "frees reserved space associated with part of a file"
 msgstr ""
 
@@ -804,34 +804,34 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pwrite.c:125
+#: ../io/pwrite.c:127
 #, c-format
 msgid "non-numeric skip -- %s\n"
 msgstr ""
 
-#: ../io/pwrite.c:132
+#: ../io/pwrite.c:134
 #, c-format
 msgid "non-numeric seed -- %s\n"
 msgstr ""
 
-#: ../io/pwrite.c:167
+#: ../io/pwrite.c:170
 #, c-format
-msgid "wrote %u/%u bytes at offset %llu\n"
+msgid "wrote %ld/%ld bytes at offset %lld\n"
 msgstr ""
 
-#: ../io/pwrite.c:175
+#: ../io/pwrite.c:179
 msgid "pwrite"
 msgstr ""
 
-#: ../io/pwrite.c:176
+#: ../io/pwrite.c:180
 msgid "w"
 msgstr ""
 
-#: ../io/pwrite.c:181
+#: ../io/pwrite.c:185
 msgid "[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len"
 msgstr ""
 
-#: ../io/pwrite.c:183
+#: ../io/pwrite.c:187
 msgid "writes a number of bytes at a specified offset"
 msgstr ""
 
@@ -847,30 +847,30 @@ msgstr ""
 msgid "exit xfs_io"
 msgstr ""
 
-#: ../io/resblks.c:51
+#: ../io/resblks.c:52
 #, c-format
 msgid "non-numeric argument -- %s\n"
 msgstr ""
 
-#: ../io/resblks.c:62
+#: ../io/resblks.c:64
 #, c-format
 msgid "reserved blocks = %llu\n"
 msgstr ""
 
-#: ../io/resblks.c:64
+#: ../io/resblks.c:66
 #, c-format
 msgid "available reserved blocks = %llu\n"
 msgstr ""
 
-#: ../io/resblks.c:72
+#: ../io/resblks.c:74
 msgid "resblks"
 msgstr ""
 
-#: ../io/resblks.c:76
+#: ../io/resblks.c:78
 msgid "[blocks]"
 msgstr ""
 
-#: ../io/resblks.c:78
+#: ../io/resblks.c:80
 msgid "get and/or set count of reserved filesystem blocks"
 msgstr ""
 
@@ -1135,286 +1135,276 @@ msgstr ""
 msgid "illegal log sector size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1105
-#, c-format
-msgid "unsupported sector size %d\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1109
-#, c-format
-msgid "unsupported log sector size %d\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1119 ../mkfs/xfs_mkfs.c:1129
+#: ../mkfs/xfs_mkfs.c:1104 ../mkfs/xfs_mkfs.c:1114
 #, c-format
 msgid "illegal directory block size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1145
+#: ../mkfs/xfs_mkfs.c:1130
 msgid "both -d agcount= and agsize= specified, use one or the other\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1154
+#: ../mkfs/xfs_mkfs.c:1139
 msgid "if -d file then -d name and -d size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1163
+#: ../mkfs/xfs_mkfs.c:1148
 #, c-format
 msgid "illegal data length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1169
+#: ../mkfs/xfs_mkfs.c:1154
 #, c-format
 msgid "warning: data length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1184
+#: ../mkfs/xfs_mkfs.c:1169
 msgid "if -l file then -l name and -l size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1194
+#: ../mkfs/xfs_mkfs.c:1179
 #, c-format
 msgid "illegal log length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1201
+#: ../mkfs/xfs_mkfs.c:1186
 #, c-format
 msgid "warning: log length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1208
+#: ../mkfs/xfs_mkfs.c:1193
 msgid "if -r file then -r name and -r size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1218
+#: ../mkfs/xfs_mkfs.c:1203
 #, c-format
 msgid "illegal rt length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1225
+#: ../mkfs/xfs_mkfs.c:1210
 #, c-format
 msgid "warning: rt length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1238
+#: ../mkfs/xfs_mkfs.c:1223
 #, c-format
 msgid "illegal rt extent size %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1244
+#: ../mkfs/xfs_mkfs.c:1229
 #, c-format
 msgid "rt extent size %s too large, maximum %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1250
+#: ../mkfs/xfs_mkfs.c:1235
 #, c-format
 msgid "rt extent size %s too small, minimum %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1292
+#: ../mkfs/xfs_mkfs.c:1277
 #, c-format
 msgid "illegal inode size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1297
+#: ../mkfs/xfs_mkfs.c:1282
 #, c-format
 msgid "allowable inode size with %d byte blocks is %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1301
+#: ../mkfs/xfs_mkfs.c:1286
 #, c-format
 msgid "allowable inode size with %d byte blocks is between %d and %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1309
+#: ../mkfs/xfs_mkfs.c:1294
 msgid "log stripe unit specified, using v2 logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1322
+#: ../mkfs/xfs_mkfs.c:1307
 msgid "no device name given in argument list\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1342
+#: ../mkfs/xfs_mkfs.c:1327
 #, c-format
 msgid "%s: Use the -f option to force overwrite.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1353
+#: ../mkfs/xfs_mkfs.c:1338
 msgid "internal log"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1355
+#: ../mkfs/xfs_mkfs.c:1340
 msgid "volume log"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1357
+#: ../mkfs/xfs_mkfs.c:1342
 msgid "no log subvolume or internal log\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1364
+#: ../mkfs/xfs_mkfs.c:1349
 msgid "volume rt"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1369
+#: ../mkfs/xfs_mkfs.c:1354
 #, c-format
 msgid ""
 "size %s specified for data subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1376
+#: ../mkfs/xfs_mkfs.c:1361
 msgid "can't get size of data subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1381
+#: ../mkfs/xfs_mkfs.c:1366
 #, c-format
 msgid "size %lld of data subvolume is too small, minimum %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1388
+#: ../mkfs/xfs_mkfs.c:1373
 msgid "can't have both external and internal logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1392
+#: ../mkfs/xfs_mkfs.c:1377
 msgid "data and log sector sizes must be equal for internal logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1398
+#: ../mkfs/xfs_mkfs.c:1383
 #, c-format
 msgid ""
 "Warning: the data subvolume sector size %u is less than the sector size \n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1404
+#: ../mkfs/xfs_mkfs.c:1389
 #, c-format
 msgid ""
 "Warning: the log subvolume sector size %u is less than the sector size\n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1410
+#: ../mkfs/xfs_mkfs.c:1395
 #, c-format
 msgid ""
 "Warning: the realtime subvolume sector size %u is less than the sector size\n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1428
+#: ../mkfs/xfs_mkfs.c:1415
 #, c-format
 msgid ""
 "size %s specified for log subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1435
+#: ../mkfs/xfs_mkfs.c:1422
 msgid "size specified for non-existent log subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1438
+#: ../mkfs/xfs_mkfs.c:1425
 #, c-format
 msgid "size %lld too large for internal log\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1462
+#: ../mkfs/xfs_mkfs.c:1449
 #, c-format
 msgid "log size %lld blocks too small, minimum size is %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1468
+#: ../mkfs/xfs_mkfs.c:1455
 #, c-format
 msgid "log size %lld blocks too large, maximum size is %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1474
+#: ../mkfs/xfs_mkfs.c:1461
 #, c-format
 msgid "log size %lld bytes too large, maximum size is %d bytes\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1480
+#: ../mkfs/xfs_mkfs.c:1467
 #, c-format
 msgid ""
 "size %s specified for rt subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1488
+#: ../mkfs/xfs_mkfs.c:1475
 msgid "size specified for non-existent rt subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1506
+#: ../mkfs/xfs_mkfs.c:1493
 #, c-format
 msgid "agsize (%lld) not a multiple of fs blk size (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1519
+#: ../mkfs/xfs_mkfs.c:1506
 #, c-format
 msgid "agsize (%lldb) too small, need at least %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1527
+#: ../mkfs/xfs_mkfs.c:1514
 #, c-format
 msgid "agsize (%lldb) too big, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1535
+#: ../mkfs/xfs_mkfs.c:1522
 #, c-format
 msgid "agsize (%lldb) too big, data area is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1552
+#: ../mkfs/xfs_mkfs.c:1539
 #, c-format
 msgid "too many allocation groups for size = %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1555
+#: ../mkfs/xfs_mkfs.c:1542
 #, c-format
 msgid "need at most %lld allocation groups\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1578
+#: ../mkfs/xfs_mkfs.c:1565
 #, c-format
 msgid "too few allocation groups for size = %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1581
+#: ../mkfs/xfs_mkfs.c:1568
 #, c-format
 msgid "need at least %lld allocation groups\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1631
+#: ../mkfs/xfs_mkfs.c:1618
 #, c-format
 msgid "agsize set to %lld, agcount %lld > max (%lld)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1639
+#: ../mkfs/xfs_mkfs.c:1626
 #, c-format
 msgid "%s: can't compute agsize/agcount\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1653
+#: ../mkfs/xfs_mkfs.c:1640
 #, c-format
 msgid ""
 "%s: Specified data stripe unit %d is not the same as the volume stripe unit %"
 "d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1659
+#: ../mkfs/xfs_mkfs.c:1646
 #, c-format
 msgid ""
 "%s: Specified data stripe width %d is not the same as the volume stripe "
 "width %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1704
+#: ../mkfs/xfs_mkfs.c:1691
 #, c-format
 msgid "agsize rounded to %lld, swidth = %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1711
+#: ../mkfs/xfs_mkfs.c:1698
 #, c-format
 msgid ""
 "Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1733
+#: ../mkfs/xfs_mkfs.c:1720
 #, c-format
 msgid ""
 "Warning: AG size is a multiple of stripe width.  This can cause performance\n"
@@ -1423,35 +1413,35 @@ msgid ""
 "an AG size that is one stripe unit smaller, for example %llu.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1758
+#: ../mkfs/xfs_mkfs.c:1745
 #, c-format
 msgid ""
 "%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%"
 "d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1773
+#: ../mkfs/xfs_mkfs.c:1760
 #, c-format
 msgid "log stripe unit (%d) must be a multiple of the block size (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1786
+#: ../mkfs/xfs_mkfs.c:1773
 #, c-format
 msgid ""
 "log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1813
+#: ../mkfs/xfs_mkfs.c:1800
 #, c-format
 msgid "internal log size %lld too large, must fit in allocation group\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1820
+#: ../mkfs/xfs_mkfs.c:1807
 #, c-format
 msgid "log ag number %d too large, must be less than %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1846
+#: ../mkfs/xfs_mkfs.c:1833
 #, c-format
 msgid ""
 "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
@@ -1464,55 +1454,55 @@ msgid ""
 "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1951
+#: ../mkfs/xfs_mkfs.c:1938
 #, c-format
 msgid "%s: Growing the data section file failed\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1979
+#: ../mkfs/xfs_mkfs.c:1966
 #, c-format
 msgid "%s: filesystem failed to initialize\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1987
+#: ../mkfs/xfs_mkfs.c:1974
 #, c-format
 msgid "%s: log size (%lld) is too small for transaction reservations\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2205
+#: ../mkfs/xfs_mkfs.c:2192
 #, c-format
 msgid "%s: root inode created in AG %u, not AG 0\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2281
+#: ../mkfs/xfs_mkfs.c:2268
 #, c-format
 msgid "Cannot specify both -%c %s and -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2292
+#: ../mkfs/xfs_mkfs.c:2279
 #, c-format
 msgid "Illegal value %s for -%s option\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2309
+#: ../mkfs/xfs_mkfs.c:2296
 #, c-format
 msgid "-%c %s option requires a value\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2322 ../repair/xfs_repair.c:143
+#: ../mkfs/xfs_mkfs.c:2309 ../repair/xfs_repair.c:143
 msgid "option respecified\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2331 ../repair/xfs_repair.c:150
+#: ../mkfs/xfs_mkfs.c:2318 ../repair/xfs_repair.c:150
 #, c-format
 msgid "unknown option -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2370
+#: ../mkfs/xfs_mkfs.c:2357
 msgid "blocksize not available yet.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2390
+#: ../mkfs/xfs_mkfs.c:2381
 #, c-format
 msgid ""
 "Usage: %s\n"
@@ -1532,13 +1522,9 @@ msgid ""
 "/* version */\t\t[-V]\n"
 "\t\t\tdevicename\n"
 "<devicename> is required unless -d name=xxx is given.\n"
-"Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n"
-"based on the filesystem size.  Default log reaches its largest size at 1TB.\n"
-"This can be overridden with the -l options or using a volume manager with a\n"
-"log subvolume.\n"
-"<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KB),\n"
-"      or xxxm (xxx MB)\n"
-"<value> is xxx (512 blocks).\n"
+"<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KiB),\n"
+"      xxxm (xxx MiB), xxxg (xxx GiB), xxxt (xxx TiB) or xxxp (xxx PiB).\n"
+"<value> is xxx (512 byte blocks).\n"
 msgstr ""
 
 #: ../libdisk/drivers.c:44
@@ -1546,36 +1532,30 @@ msgstr ""
 msgid "Cannot stat %s: %s\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:92
+#: ../libdisk/lvm.c:91
 msgid "Could not open pipe\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:107
+#: ../libdisk/lvm.c:106
 #, c-format
 msgid "Failed to execute %s\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:111
+#: ../libdisk/lvm.c:110
 msgid "Failed forking lvdisplay process\n"
 msgstr ""
 
-#: ../libdisk/md.c:66
+#: ../libdisk/md.c:65
 #, c-format
 msgid "Error getting MD array info from %s\n"
 msgstr ""
 
-#: ../libdisk/md.c:75
-#, c-format
-msgid "warning - MD array %s not in clean state\n"
-msgstr ""
-
-#: ../libdisk/md.c:80
+#: ../libdisk/md.c:74
 #, c-format
 msgid "warning - MD array %s in error state\n"
 msgstr ""
 
-#: ../libxfs/darwin.c:53 ../libxfs/darwin.c:103 ../libxfs/freebsd.c:190
-#: ../libxfs/linux.c:162
+#: ../libxfs/darwin.c:53
 #, c-format
 msgid "%s: error opening the device special file \"%s\": %s\n"
 msgstr ""
@@ -1585,34 +1565,30 @@ msgstr ""
 msgid "%s: can't tell if \"%s\" is writable: %s\n"
 msgstr ""
 
-#: ../libxfs/darwin.c:95 ../libxfs/irix.c:75 ../libxfs/linux.c:153
+#: ../libxfs/darwin.c:87 ../libxfs/freebsd.c:169 ../libxfs/irix.c:75
+#: ../libxfs/linux.c:137
 #, c-format
 msgid "%s: cannot stat the device file \"%s\": %s\n"
 msgstr ""
 
-#: ../libxfs/darwin.c:110
+#: ../libxfs/darwin.c:97
 #, c-format
 msgid "%s: can't determine device size: %s\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:125
+#: ../libxfs/freebsd.c:118
 #, c-format
 msgid "%s: can't figure out partition info\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:149
+#: ../libxfs/freebsd.c:142
 #, c-format
 msgid "%s: can't read disk label: %s\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:159
+#: ../libxfs/freebsd.c:152
 #, c-format
 msgid "%s: partition %s is unavailable\n"
-msgstr ""
-
-#: ../libxfs/freebsd.c:180
-#, c-format
-msgid "%s: cannot stat the device special file \"%s\": %s\n"
 msgstr ""
 
 #: ../libxfs/init.c:87 ../libxfs/init.c:168
@@ -1710,32 +1686,32 @@ msgstr ""
 msgid "%s: realtime size check failed\n"
 msgstr ""
 
-#: ../libxfs/init.c:612
+#: ../libxfs/init.c:620
 #, c-format
 msgid "%s: size check failed\n"
 msgstr ""
 
-#: ../libxfs/init.c:633
+#: ../libxfs/init.c:641
 #, c-format
 msgid "%s: data size check failed\n"
 msgstr ""
 
-#: ../libxfs/init.c:646
+#: ../libxfs/init.c:654
 #, c-format
 msgid "%s: log size checks failed\n"
 msgstr ""
 
-#: ../libxfs/init.c:656
+#: ../libxfs/init.c:664
 #, c-format
 msgid "%s: realtime device init failed\n"
 msgstr ""
 
-#: ../libxfs/init.c:664
+#: ../libxfs/init.c:672
 #, c-format
 msgid "%s: failed to alloc %ld bytes: %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:678
+#: ../libxfs/init.c:686
 #, c-format
 msgid "%s: cannot read root inode (%d)\n"
 msgstr ""
@@ -1760,14 +1736,14 @@ msgstr ""
 msgid "%s: warning - cannot set blocksize on block device %s: %s\n"
 msgstr ""
 
-#: ../libxfs/linux.c:129
-#, c-format
-msgid "%s: warning - cannot get sector size from block device %s: %s\n"
-msgstr ""
-
-#: ../libxfs/linux.c:177
+#: ../libxfs/linux.c:158
 #, c-format
 msgid "%s: can't determine device size\n"
+msgstr ""
+
+#: ../libxfs/linux.c:166
+#, c-format
+msgid "%s: warning - cannot get sector size from block device %s: %s\n"
 msgstr ""
 
 #: ../libxfs/rdwr.c:52
@@ -1775,47 +1751,57 @@ msgstr ""
 msgid "%s: %s can't memalign %d bytes: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:65
+#: ../libxfs/rdwr.c:62
+#, c-format
+msgid "%s: %s seek to offset %llu failed: %s\n"
+msgstr ""
+
+#: ../libxfs/rdwr.c:72
 #, c-format
 msgid "%s: %s write failed: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:189
+#: ../libxfs/rdwr.c:76
+#, c-format
+msgid "%s: %s not progressing?\n"
+msgstr ""
+
+#: ../libxfs/rdwr.c:200
 #, c-format
 msgid "%s: buf calloc failed (%ld bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:216
+#: ../libxfs/rdwr.c:227
 #, c-format
 msgid "%s: read failed: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:263
+#: ../libxfs/rdwr.c:274
 #, c-format
 msgid "%s: pwrite64 failed: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:270
+#: ../libxfs/rdwr.c:281
 #, c-format
 msgid "%s: error - wrote only %d of %d bytes\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:318
+#: ../libxfs/rdwr.c:329
 #, c-format
 msgid "%s: zone init failed (%s, %d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:337
+#: ../libxfs/rdwr.c:348
 #, c-format
 msgid "%s: zone calloc failed (%s, %d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:372
+#: ../libxfs/rdwr.c:383
 #, c-format
 msgid "%s: calloc failed (%d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:403
+#: ../libxfs/rdwr.c:414
 #, c-format
 msgid "%s: realloc failed (%d bytes): %s\n"
 msgstr ""
@@ -5299,54 +5285,54 @@ msgstr ""
 msgid "unable to verify superblock, continuing...\n"
 msgstr ""
 
-#: ../repair/sb.c:433
+#: ../repair/sb.c:468
 msgid "failed to malloc superblock buffer\n"
 msgstr ""
 
-#: ../repair/sb.c:439
+#: ../repair/sb.c:474
 msgid "couldn't seek to offset 0 in filesystem\n"
 msgstr ""
 
-#: ../repair/sb.c:446
+#: ../repair/sb.c:481
 msgid "primary superblock write failed!\n"
 msgstr ""
 
-#: ../repair/sb.c:463
+#: ../repair/sb.c:498
 #, c-format
 msgid "error reading superblock %u -- failed to malloc buffer\n"
 msgstr ""
 
-#: ../repair/sb.c:472
+#: ../repair/sb.c:507
 #, c-format
 msgid "error reading superblock %u -- seek to offset %lld failed\n"
 msgstr ""
 
-#: ../repair/sb.c:480
+#: ../repair/sb.c:515
 #, c-format
 msgid "superblock read failed, offset %lld, size %d, ag %u, rval %d\n"
 msgstr ""
 
-#: ../repair/sb.c:553
+#: ../repair/sb.c:588
 msgid "couldn't malloc geometry structure\n"
 msgstr ""
 
-#: ../repair/sb.c:698
+#: ../repair/sb.c:733
 msgid "calloc failed in verify_set_primary_sb\n"
 msgstr ""
 
-#: ../repair/sb.c:766
+#: ../repair/sb.c:801
 msgid "Only two AGs detected and they do not match - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:778
+#: ../repair/sb.c:813
 msgid "Only one AG detected - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:790
+#: ../repair/sb.c:825
 msgid "Not enough matching superblocks - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:805
+#: ../repair/sb.c:840
 msgid "could not read superblock\n"
 msgstr ""
 

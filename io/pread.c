@@ -88,7 +88,7 @@ dump_buffer(
 	for (i = 0, p = (char *)buffer; i < len; i += 16) {
 		char	*s = p;
 
-		printf("%08llx:  ", (off64_t)i + offset);
+		printf("%08llx:  ", (unsigned long long)offset + i);
 		for (j = 0; j < 16 && i + j < len; j++, p++)
 			printf("%02x ", *p);
 		printf(" ");
@@ -166,14 +166,14 @@ pread_f(
 		printf("%s %s\n", pread_cmd.name, pread_cmd.oneline);
 		return 0;
 	}
-	offset = (off64_t) strtoull(argv[optind], &sp, 0);
-	if (!sp || sp == argv[optind]) {
+	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 	optind++;
-	count = strtoul(argv[optind], &sp, 0);
-	if (!sp || sp == argv[optind]) {
+	count = (ssize_t)cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
@@ -184,7 +184,8 @@ pread_f(
 	if (!read_buffer(fdesc, offset, count, &total, vflag, 0))
 		return 0;
 
-	printf(_("read %u/%u bytes at offset %llu\n"), total, count, offset);
+	printf(_("read %ld/%ld bytes at offset %lld\n"),
+		(long)total, (long)count, (long long)offset);
 	return 0;
 }
 

@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "input.h"
 #include "init.h"
 
 static cmdinfo_t truncate_cmd;
@@ -42,10 +43,9 @@ truncate_f(
 	char			**argv)
 {
 	off64_t			offset;
-	char			*sp;
 
-	offset = (off64_t) strtoull(argv[1], &sp, 10);
-	if (!sp || sp == argv[1]) {
+	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[1]);
+	if (offset < 0) {
 		printf(_("non-numeric truncate argument -- %s\n"), argv[1]);
 		return 0;
 	}

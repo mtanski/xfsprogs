@@ -142,3 +142,35 @@ doneline(
 	free(input);
 	free(vec);
 }
+
+long long
+cvtnum(
+	int		blocksize,
+	int		sectorsize,
+	char		*s)
+{
+	long long	i;
+	char		*sp;
+
+	i = strtoll(s, &sp, 0);
+	if (i == 0 && sp == s)
+		return -1LL;
+	if (*sp == '\0')
+		return i;
+
+	if (*sp == 'b' && sp[1] == '\0')
+		return i * blocksize;
+	if (*sp == 's' && sp[1] == '\0')
+		return i * sectorsize;
+	if (*sp == 'k' && sp[1] == '\0')
+		return 1024LL * i;
+	if (*sp == 'm' && sp[1] == '\0')
+		return 1024LL * 1024LL * i;
+	if (*sp == 'g' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * i;
+	if (*sp == 't' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * 1024LL * i;
+	if (*sp == 'p' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
+	return -1LL;
+}

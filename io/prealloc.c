@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "input.h"
 #include "init.h"
 
 static cmdinfo_t allocsp_cmd;
@@ -45,17 +46,15 @@ offset_length(
 	char		*length,
 	xfs_flock64_t	*segment)
 {
-	char		*sp;
-
 	memset(segment, 0, sizeof(*segment));
 	segment->l_whence = SEEK_SET;
-	segment->l_start = strtoull(offset, &sp, 0);
-	if (!sp || sp == offset) {
+	segment->l_start = cvtnum(fgeom.blocksize, fgeom.sectsize, offset);
+	if (segment->l_start < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), offset);
 		return 0;
 	}
-	segment->l_len = strtoull(length, &sp, 0);
-	if (!sp || sp == length) {
+	segment->l_len = cvtnum(fgeom.blocksize, fgeom.sectsize, length);
+	if (segment->l_len < 0) {
 		printf(_("non-numeric length argument -- %s\n"), length);
 		return 0;
 	}

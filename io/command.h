@@ -67,7 +67,8 @@ extern void		fsync_init(void);
 extern void		truncate_init(void);
 
 extern off64_t		filesize(void);
-extern int		openfile(char *, int, int, int, int, int, int, int);
+extern int		openfile(char *, xfs_fsop_geom_t *,
+					int, int, int, int, int, int, int);
 
 extern void		*buffer;
 extern ssize_t		buffersize;

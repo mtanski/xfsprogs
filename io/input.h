@@ -33,3 +33,5 @@
 extern char	**breakline(char *input, int *count);
 extern void	doneline(char *input, char **vec);
 extern char	*fetchline(void);
+extern long long cvtnum(int blocksize, int sectorsize, char *s);
+

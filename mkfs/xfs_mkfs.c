@@ -2368,6 +2368,10 @@ cvtnum(
 		return 1024LL * 1024LL * i;
 	if (*sp == 'g' && sp[1] == '\0')
 		return 1024LL * 1024LL * 1024LL * i;
+	if (*sp == 't' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * 1024LL * i;
+	if (*sp == 'p' && sp[1] == '\0')
+		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
 	return -1LL;
 }
 
@@ -2391,13 +2395,9 @@ usage( void )
 /* version */		[-V]\n\
 			devicename\n\
 <devicename> is required unless -d name=xxx is given.\n\
-Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n\
-based on the filesystem size.  Default log reaches its largest size at 1TB.\n\
-This can be overridden with the -l options or using a volume manager with a\n\
-log subvolume.\n\
-<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KB),\n\
-      or xxxm (xxx MB)\n\
-<value> is xxx (512 blocks).\n"),
+<num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KiB),\n\
+      xxxm (xxx MiB), xxxg (xxx GiB), xxxt (xxx TiB) or xxxp (xxx PiB).\n\
+<value> is xxx (512 byte blocks).\n"),
 		progname);
 	exit(1);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -184,12 +184,13 @@ fstype(const char *device) {
 	struct ext_super_block es;
 	struct ext2_super_block e2s;
 	struct vxfs_super_block vs;
+	struct hfs_super_block hs;
     } sb;			/* stuff at 1024 */
     union {
 	struct xiafs_super_block xiasb;
 	char romfs_magic[8];
 	char qnx4fs_magic[10];	/* ignore first 4 bytes */
-	long bfs_magic;
+	unsigned int bfs_magic;
 	struct ntfs_super_block ntfssb;
 	struct fat_super_block fatsb;
 	struct xfs_super_block xfsb;
@@ -202,7 +203,6 @@ fstype(const char *device) {
     } isosb;
     struct reiserfs_super_block reiserfssb;	/* block 64 or 8 */
     struct jfs_super_block jfssb;		/* block 32 */
-    struct hfs_super_block hfssb;
     struct hpfs_super_block hpfssb;
     struct adfs_super_block adfssb;
     struct sysv_super_block svsb;
@@ -301,23 +301,11 @@ fstype(const char *device) {
 
 	else if (vxfsmagic(sb.vs) == VXFS_SUPER_MAGIC)
 		type = "vxfs";
-    }
 
-    if (!type) {
-	/* block 1 */
-        if (lseek(fd, 0x400, SEEK_SET) != 0x400
-            || read(fd, (char *) &hfssb, sizeof(hfssb)) != sizeof(hfssb))
-             goto io_error;
-
-        /* also check if block size is equal to 512 bytes,
-           since the hfs driver currently only has support
-           for block sizes of 512 bytes long, and to be
-           more accurate (sb magic is only a short int) */
-        if ((hfsmagic(hfssb) == HFS_SUPER_MAGIC &&
-	     hfsblksize(hfssb) == 0x20000) ||
-            (swapped(hfsmagic(hfssb)) == HFS_SUPER_MAGIC &&
-             hfsblksize(hfssb) == 0x200))
-             type = "hfs";
+	else if (hfsmagic(sb.hs) == swapped(HFS_SUPER_MAGIC) ||
+		(hfsmagic(sb.hs) == swapped(HFSPLUS_SUPER_MAGIC) &&
+		 hfsversion(sb.hs) == swapped(HFSPLUS_SUPER_VERSION)))
+		type = "hfs";
     }
 
     if (!type) {

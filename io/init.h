@@ -30,10 +30,12 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-extern int	fdesc;
-extern char	*fname;
 extern int	exitcode;
 extern char	*progname;
+
+extern int	fdesc;
+extern char	*fname;
+extern struct xfs_fsop_geom	fgeom;
 
 extern int	readonly;
 extern int	directio;

@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "input.h"
 #include "init.h"
 
 static cmdinfo_t resblks_cmd;
@@ -43,14 +44,15 @@ resblks_f(
 	char			**argv)
 {
 	xfs_fsop_resblks_t	res;
-	char			*sp;
+	long long		blks;
 
 	if (argc == 2) {
-		res.resblks = strtoull(argv[1], &sp, 10);
-		if (!sp || sp == argv[1]) {
+		blks = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[1]);
+		if (blks < 0) {
 			printf(_("non-numeric argument -- %s\n"), argv[1]);
 			return 0;
 		}
+		res.resblks = blks;
 		if (xfsctl(fname, fdesc, XFS_IOC_SET_RESBLKS, &res) < 0) {
 			perror("xfsctl(XFS_IOC_SET_RESBLKS)");
 			return 0;

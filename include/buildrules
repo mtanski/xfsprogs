@@ -59,10 +59,13 @@ ifdef LINGUAS
 %.pot: $(XGETTEXTFILES)
 	xgettext --omit-header --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
 
-%.tmpo: %.po
-	$(MSGMERGE) -o $@ $< $(PKG_NAME).pot
+%.po: $(PKG_NAME).pot
+	$(MSGMERGE) -o $@.tmpo $@ $<
+	@if ! diff $@.tmpo $@ >/dev/null; then \
+		echo "$@ is out of date, see $@.tmpo"; \
+	fi
 
-%.mo: %.tmpo
+%.mo: %.po
 	$(MSGFMT) -o $@ $<
 endif
 

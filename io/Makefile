@@ -33,6 +33,8 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
+# TODO: mmap, file locking, fadvise
+
 LTCOMMAND = xfs_io
 HFILES = command.h input.h init.h
 CFILES = command.c input.c init.c \

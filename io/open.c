@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "input.h"
 #include "init.h"
 
 static cmdinfo_t open_cmd;
@@ -44,6 +45,7 @@ static int stat_f(int, char **);
 int
 openfile(
 	char		*path,
+	xfs_fsop_geom_t	*geom,
 	int		aflag,
 	int		cflag,
 	int		dflag,
@@ -76,6 +78,12 @@ openfile(
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
 			progname, fname);
+		close(fd);
+		return -1;
+	}
+
+	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+		perror("XFS_IOC_FSGEOMETRY");
 		close(fd);
 		return -1;
 	}
@@ -145,6 +153,7 @@ open_f(
 	int		tflag = 0;
 	int		xflag = 0;
 	char		*filename;
+	xfs_fsop_geom_t	geometry;
 	int		fd;
 	int		c;
 
@@ -182,7 +191,7 @@ open_f(
 	if (optind != argc - 1)
 		return usage();
 
-	fd = openfile(argv[optind],
+	fd = openfile(argv[optind], &geometry,
 		      aflag, cflag, dflag, rflag, sflag, tflag, xflag);
 	if (fd < 0)
 		return 0;
@@ -207,6 +216,7 @@ open_f(
 		close(fdesc);
 		free(fname);
 	}
+	fgeom = geometry;
 	fname = filename;
 	fdesc = fd;
 	return 0;
@@ -331,11 +341,10 @@ extsize_f(
 	char			**argv)
 {
 	struct fsxattr		fsx;
-	unsigned int		extsize;
-	char                    *sp;
+	long			extsize;
 
-	extsize = strtoul(argv[1], &sp, 0);
-	if (!sp || sp == argv[1]) {
+	extsize = (long)cvtnum(fgeom.blocksize, fgeom.sectsize, argv[1]);
+	if (extsize < 0) {
 		printf(_("non-numeric extsize argument -- %s\n"), argv[1]);
 		return 0;
 	}
