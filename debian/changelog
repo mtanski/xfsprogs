@@ -1,8 +1,8 @@
 xfsprogs (1.3.7-0) unstable; urgency=low
 
   * New upstream release
-  * Make libuuid link strategy a build time option (closes: #111426)
   * Change to libhandle licensing (was GPL, now LGPL-2.1)
+  * Create a boot-floppies package with smaller mkfs.xfs (closes: #111426)
 
  -- Nathan Scott <nathans@debian.org>  Mon, 10 Sep 2001 10:52:04 +1000
 
