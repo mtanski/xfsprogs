@@ -2293,8 +2293,8 @@ xfs_alloc_vextent(
 		 * Loop over allocation groups twice; first time with
 		 * trylock set, second time without.
 		 */
+		mrlock(&mp->m_peraglock, MR_ACCESS, PINOD);
 		for (;;) {
-			mrlock(&mp->m_peraglock, MR_ACCESS, PINOD);
 			args->pag = &mp->m_perag[args->agno];
 			if ((error = xfs_alloc_fix_freelist(args, flags))) {
 				TRACE_ALLOC("nofix", args);
@@ -2306,10 +2306,8 @@ xfs_alloc_vextent(
 			if (args->agbp) {
 				if ((error = xfs_alloc_ag_vextent(args)))
 					goto error0;
-				mrunlock(&mp->m_peraglock);
 				break;
 			}
-			mrunlock(&mp->m_peraglock);
 			TRACE_ALLOC("loopfailed", args);
 			/*
 			 * Didn't work, figure out the next iteration.
@@ -2337,6 +2335,7 @@ xfs_alloc_vextent(
 				}
 			}
 		}
+		mrunlock(&mp->m_peraglock);
 		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG))
 			mp->m_agfrotor = (args->agno + 1) % mp->m_sb.sb_agcount;
 		break;

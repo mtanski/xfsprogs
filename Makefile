@@ -41,7 +41,7 @@ CONFIGURE = configure include/builddefs include/platform_defs.h
 LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
 
 LDIRT = config.log config.status config.cache confdefs.h conftest* \
-	Logs/* install.* install-dev.* *.gz
+	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
 	bmap db freeze fsck growfs imap logprint mkfile mkfs repair rtcp \

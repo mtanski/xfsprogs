@@ -385,13 +385,12 @@ xfs_ialloc_ag_select(
 	 */
 	agno = pagno;
 	flags = XFS_ALLOC_FLAG_TRYLOCK;
+	mraccess(&mp->m_peraglock);
 	for (;;) {
-		mraccess(&mp->m_peraglock);
 		pag = &mp->m_perag[agno];
 		if (!pag->pagi_init) {
 			if (xfs_ialloc_read_agi(mp, tp, agno, &agbp)) {
 				agbp = NULL;
-				mraccunlock(&mp->m_peraglock);
 				goto nextag;
 			}
 		} else
@@ -411,7 +410,6 @@ xfs_ialloc_ag_select(
 			if (agbp == NULL &&
 			    xfs_ialloc_read_agi(mp, tp, agno, &agbp)) {
 				agbp = NULL;
-				mraccunlock(&mp->m_peraglock);
 				goto nextag;
 			}
 			(void)xfs_alloc_pagf_init(mp, tp, agno, flags);
@@ -426,7 +424,6 @@ xfs_ialloc_ag_select(
 				if (agbp == NULL &&
 				    xfs_ialloc_read_agi(mp, tp, agno, &agbp)) {
 					agbp = NULL;
-					mraccunlock(&mp->m_peraglock);
 					goto nextag;
 				}
 				mraccunlock(&mp->m_peraglock);
@@ -434,7 +431,6 @@ xfs_ialloc_ag_select(
 			}
 		}
 unlock_nextag:
-		mraccunlock(&mp->m_peraglock);
 		if (agbp)
 			xfs_trans_brelse(tp, agbp);
 nextag:		
@@ -442,14 +438,18 @@ nextag:
 		 * No point in iterating over the rest, if we're shutting
 		 * down.
 		 */
-		if (XFS_FORCED_SHUTDOWN(mp))
+		if (XFS_FORCED_SHUTDOWN(mp)) {
+			mraccunlock(&mp->m_peraglock);
 			return (xfs_buf_t *)0;
+		}
 		agno++;
 		if (agno >= agcount)
 			agno = 0;
 		if (agno == pagno) {
-			if (flags == 0)
+			if (flags == 0) {
+				mraccunlock(&mp->m_peraglock);
 				return (xfs_buf_t *)0;
+			}
 			flags = 0;
 		}
 	}
