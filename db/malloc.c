@@ -70,7 +70,7 @@ xmalloc(
 {
 	void	*ptr;
 
-	ptr = malloc(size);
+	ptr = valloc(size);
 	if (ptr)
 		return ptr;
 	badmalloc();
