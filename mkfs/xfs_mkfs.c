@@ -1793,7 +1793,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		fprintf(stderr,
 	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
 			(lsunit * blocksize));
-		lsunit = 32 * 1024;
+		lsunit = (32 * 1024) >> blocklog;
 		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
 	}
 
