@@ -1,3 +1,6 @@
+xfsprogs-1.1.9 (26 March 2001)
+	- Added automagic stripe unit/stripe width extraction for MD devices
+
 xfsprogs-1.1.8 (23 March 2001)
 	- mkfs heuristics to make a qualified guess of internal logsize
 

@@ -46,6 +46,8 @@
   int opt_d;		/* Same thing */
 #endif
 
+#include "md-int.h"
+
 /*
  * Prototypes for internal functions.
  */
@@ -261,6 +263,7 @@ static void
 get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
 {
 	struct stat64 sb;
+	struct md_array_info_s md;
 #if HAVE_LIBLVM
         lv_t *lv;
 	char *vgname;
@@ -274,40 +277,79 @@ get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
 		usage();
         }
 
-#if HAVE_LIBLVM
-	/* If this is not an LVM volume, just bail out */
-        if (sb.st_rdev >> 8 != LVM_BLK_MAJOR) 
+	/* MD volume */
+	if (sb.st_rdev >> 8 == MD_MAJOR) {
+		int fd;
+
+		/* Open device */
+		fd = open (dfile, O_RDONLY);
+		if (fd == -1)
+			return;
+		
+		/* Is this thing on... */
+		if (ioctl (fd, GET_ARRAY_INFO, &md)) {
+			fprintf (stderr, "Error getting array info from %s\n",
+				 dfile);
+			usage();
+		}
+
+		/* Check state */
+		if (md.state) {
+			fprintf (stderr, "MD array %s not in clean state\n",
+				 dfile);
+			usage();
+		}
+
+		/* Deduct a disk from stripe width on RAID5 */
+		if (md.level == 5)
+			md.nr_disks--;
+			
+		/* Update sizes */
+		*sunit = md.chunk_size >> 9;
+		*swidth = *sunit * md.nr_disks;
+
 		return;
+	}
 
-	/* Find volume group */
-        if (! (vgname = vg_name_of_lv (dfile))) {
-                fprintf (stderr, "Can't find volume group for %s\n", dfile);
-		usage();
-        }
+#if HAVE_LIBLVM
+	/* LVM volume */
+	if (sb.st_rdev >> 8 == LVM_BLK_MAJOR) {
 
-	/* Logical volume */
-        if (! lvm_tab_lv_check_exist (dfile)) {
-                fprintf (stderr, "Logical volume %s doesn't exist!\n", dfile);
-		usage();
-        }
-
-	/* Get status */
-        if (lv_status_byname (vgname, dfile, &lv) < 0 || lv == NULL) {
-                fprintf (stderr, "Could not get status info from %s\n", dfile);
-		usage();
-        }
-
-	/* Check that data is consistent */
-        if (lv_check_consistency (lv) < 0) {
-                fprintf (stderr, "Logical volume %s is inconsistent\n", dfile);
-		usage();
-        }
-        
-	/* Update sizes */
-        *sunit = lv->lv_stripesize;
-        *swidth = lv->lv_stripes * lv->lv_stripesize;
-
+		/* Find volume group */
+		if (! (vgname = vg_name_of_lv (dfile))) {
+			fprintf (stderr, "Can't find volume group for %s\n", 
+				 dfile);
+			usage();
+		}
+		
+		/* Logical volume */
+		if (! lvm_tab_lv_check_exist (dfile)) {
+			fprintf (stderr, "Logical volume %s doesn't exist!\n",
+				 dfile);
+			usage();
+		}
+		
+		/* Get status */
+		if (lv_status_byname (vgname, dfile, &lv) < 0 || lv == NULL) {
+			fprintf (stderr, "Could not get status info from %s\n",
+				 dfile);
+			usage();
+		}
+		
+		/* Check that data is consistent */
+		if (lv_check_consistency (lv) < 0) {
+			fprintf (stderr, "Logical volume %s is inconsistent\n",
+				 dfile);
+			usage();
+		}
+		
+		/* Update sizes */
+		*sunit = lv->lv_stripesize;
+		*swidth = lv->lv_stripes * lv->lv_stripesize;
+		
+		return;
 #endif /* HAVE_LIBLVM */
+	}
 }
 
 
