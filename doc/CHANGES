@@ -1,3 +1,7 @@
+[cvs]
+	- Fix a bug in xfs_logprint, when dumping a corrupt log.
+	- FreeBSD updates from Alexander Kabaev.
+
 xfsprogs-2.4.9 (03 May 2003)
 	- Allow xfs_repair to run on read-only filesystems.
 

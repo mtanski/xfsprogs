@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -861,8 +861,8 @@ xlog_print_lseek(xlog_t *log, int fd, xfs_daddr_t blkno, int whence)
 	else
 		offset = BBTOOFF64(blkno);
 	if (lseek64(fd, offset, whence) < 0) {
-		fprintf(stderr, "%s: lseek64 to %llu failed: %s\n",
-			progname, (unsigned long long)offset, strerror(errno));
+		fprintf(stderr, "%s: lseek64 to %lld failed: %s\n",
+			progname, (long long)offset, strerror(errno));
 		exit(1);
 	}
 }	/* xlog_print_lseek */
@@ -940,7 +940,6 @@ xlog_print_record(int		  fd,
     for (i = 0; ptr < buf + read_len; ptr += BBSIZE, i++) {
 	rechead = (xlog_rec_header_t *)ptr;
 	if (INT_GET(rechead->h_magicno, ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM) {
-	    xlog_print_lseek(0, fd, -read_len+i*BBSIZE, SEEK_CUR);
 	    free(buf);
 	    return -1;
 	} else {
