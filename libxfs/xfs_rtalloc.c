@@ -823,7 +823,7 @@ xfs_rtmount_init(
 			(unsigned long long) mp->m_sb.sb_rblocks);
 		return XFS_ERROR(E2BIG);
 	}
-	error = xfs_read_buf(mp, &mp->m_rtdev_targ, d - 1, 1, 0, &bp);
+	error = xfs_read_buf(mp, m_rtdev_targp(mp), d - 1, 1, 0, &bp);
 	if (error) {
 		printk(KERN_WARNING
 			"XFS: RT mount - xfs_read_buf returned %d\n", error);

@@ -379,7 +379,6 @@ main(int argc, char **argv)
 	int			imaxpct;
 	int			imflag;
 	int			inodelog;
-	int			inodebits;
 	int			inopblock;
 	int			ipflag;
 	int			isflag;
@@ -1516,67 +1515,6 @@ main(int argc, char **argv)
 		}
 	}
 
-#if 0
-	/*
-	 * Check to see if inode number will be > 32 significant bits
-	 * Note that libxfs_highbitXX returns 0 -> XX-1,
-	 * so to get the bit count, add one to what we get.
-	 */
-
-	inodebits = (libxfs_highbit32(blocksize/isize - 1) + 1)
-		  + (libxfs_highbit64(agsize - 1) + 1)
-		  + (libxfs_highbit64(agcount - 1) + 1);
-
-	if (inodebits > XFS_MAX_INODE_SIG_BITS) {
-
-		int new_isize;
-		int new_isize_ok;
-
-		new_isize = isize << (inodebits - XFS_MAX_INODE_SIG_BITS);
-
-		new_isize_ok = (new_isize <= blocksize / XFS_MIN_INODE_PERBLOCK
-				&& new_isize <= XFS_DINODE_MAX_SIZE);
-		
-		if (ilflag + ipflag + isflag == 0) {
-			/*
-			 * If we didn't specify inode size, just bump it up
-			 * unless we can't go far enough.
-			 */
-
-			if (new_isize_ok) {
-				isize = new_isize;
-				/* re-calc inodebits */
-				inodebits = (libxfs_highbit32(blocksize/isize - 1) + 1)
-					  + (libxfs_highbit64(agsize - 1) + 1)
-					  + (libxfs_highbit64(agcount - 1) + 1);
-				inodelog = libxfs_highbit32(isize);
-				/* Let's not get too chatty, no fprintf here */
-			} else {
-				/*
-				 * Can't do nothin' for ya, man!
-				 * Don't bother changing isize at all,
-				 * one bit over is as bad as 20.
-				 */
-				fprintf(stderr,
-					"warning: inode numbers exceed %d "
-					" significant bits (%d)\n",
-					XFS_MAX_INODE_SIG_BITS, inodebits);
-			}
-		} else {
-			/* if isize specified, just warn the user */
-			fprintf(stderr, 
-				"warning: inode numbers exceed %d "
-				"significant bits (%d)\n",
-				XFS_MAX_INODE_SIG_BITS, inodebits);
-			if (new_isize_ok) {
-				fprintf(stderr,
-					"         increase inode size to %d to "
-					"avoid this\n", new_isize);
-			}
-		}
-	}
-#endif
-
 	protostring = setup_proto(protofile);
 	bsize = 1 << (blocklog - BBSHIFT);
 	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, 1);
@@ -1703,14 +1641,12 @@ main(int argc, char **argv)
 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
 		   "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
 		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
-		   "         =%-22s imaxbits=%-6d\n"
 		   "naming   =version %-14d bsize=%-6d\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
 			"", dsunit, dswidth, extent_flagging,
-			"", inodebits,
 			dirversion, dirversion == 1 ? blocksize : dirblocksize,
 			logfile, 1 << blocklog, (long long)logblocks,
 			rtfile, rtextblocks << blocklog,

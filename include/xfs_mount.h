@@ -219,6 +219,7 @@ typedef struct xfs_mount {
 	int			m_bsize;	/* fs logical block size */
 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
 	int			m_ihsize;	/* size of next field */
 	struct xfs_ihash	*m_ihash;	/* fs private inode hash table*/
 	struct xfs_inode	*m_inodes;	/* active inode list */
@@ -241,6 +242,7 @@ typedef struct xfs_mount {
 	buftarg_t		m_logdev_targ;	/* ptr to log device */
 	buftarg_t		m_rtdev_targ;	/* ptr to rt device */
 	buftarg_t		*m_ddev_targp;	/* saves taking the address */
+#define m_rtdev_targp(m)(&(m)->m_rtdev_targ)
 #define m_dev		m_ddev_targ.dev
 #define m_logdev	m_logdev_targ.dev
 #define m_rtdev		m_rtdev_targ.dev
@@ -343,6 +345,8 @@ typedef struct xfs_mount {
 #define XFS_MOUNT_DFLT_IOSIZE  	0x00001000      /* set default i/o size */
 #define XFS_MOUNT_OSYNCISDSYNC 	0x00002000      /* treat o_sync like o_dsync */
 #define XFS_MOUNT_NOUUID	0x00004000	/* ignore uuid during mount */
+#define XFS_MOUNT_32BITINODES	0x00008000	/* do not create inodes above
+						 * 32 bits in size */
 
 /*
  * Flags for m_cxfstype
@@ -487,6 +491,7 @@ struct xfs_buf	*xfs_getsb(xfs_mount_t *, int);
 void            xfs_freesb(xfs_mount_t *);
 void		_xfs_force_shutdown(struct xfs_mount *, int, char *, int);
 int		xfs_syncsub(xfs_mount_t *, int, int, int *);
+void		xfs_initialize_perag(xfs_mount_t *, int);
 void		xfs_xlatesb(void *, struct xfs_sb *, int, xfs_arch_t, __int64_t);
 
 /*

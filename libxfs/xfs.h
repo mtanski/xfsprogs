@@ -169,8 +169,8 @@
 #define xfs_buf_item_log_debug(bip,a,b)	((void) 0)	/* debug only */
 #define xfs_validate_extents(e,n,f)	((void) 0)	/* debug only */
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
-#define xfs_read_buf(mp,x,blkno,len,f,bpp)	\
-	( *(bpp) = libxfs_readbuf( (mp)->m_dev, (blkno), (len), 1), 0 )
+#define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
+	( *(bpp) = libxfs_readbuf( *(dev_t*)devp, (blkno), (len), 1), 0 )
 
 
 /* transaction management */
@@ -238,6 +238,7 @@ typedef struct { dev_t dev; } buftarg_t;
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
+#define m_rtdev_targp(m)(&(m)->m_rtdev)
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
