@@ -1,3 +1,10 @@
+xfsprogs (1.1.3) unstable; urgency=low
+
+  * Minor changes to xfs_logprint tail verification
+  * Update build Makefile to pick up extra dirt before packaging
+
+ -- Nathan Scott <nathans@debian.org>  Thu,  1 Mar 2001 12:24:28 +1100
+
 xfsprogs (1.1.2) unstable; urgency=low
 
   * Fix stdarg.h issue causing build failure with glibc 2.2.2

@@ -36,7 +36,7 @@ include $(TOPDIR)/include/builddefs
 MANIFEST=src-manifest
 SRCTAR=$(PKG_NAME)-$(PKG_VERSION).src.tar.gz
 
-LDIRT = $(MANIFEST) $(SRCTAR) bin-manifest $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)
+LDIRT = *-manifest *.gz $(TOPDIR)/$(PKG_NAME)-*
 
 # for clean and clobber
 SUBDIRS = tar rpm
