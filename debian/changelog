@@ -1,3 +1,9 @@
+xfsprogs (2.0.6-2) unstable; urgency=low
+
+  * Fix a problem in xfs_repair's handling of ACLs
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 30 May 2002 17:22:05 +1000
+
 xfsprogs (2.0.6-1) unstable; urgency=low
 
   * New upstream release
