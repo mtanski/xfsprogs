@@ -49,7 +49,7 @@ dist : default $(SPECF) rpm-$(RPM_VERSION).rc
 
 # Because rpm prior to v.2.90 does not support macros and old style config
 # is not supported by rpm v.3, we have to resort to such ugly hacks
-ifneq ($RPM_VERSION,2)
+ifneq ($(RPM_VERSION),2)
 rpm-$(RPM_VERSION).rc : rpmmacros
 	sed -e '/^macrofiles:/s|~/.rpmmacros|rpmmacros|' </usr/lib/rpm/rpmrc >$@
 

@@ -60,6 +60,7 @@ $(MANIFEST) : $(_FORCE)
 	else \
 	    unset TAPE; \
 	    $(TAR) -T $$CDIR/$@ -cf - | $(ZIP) --best > $$CDIR/$(SRCTAR); \
+	    echo Wrote: $$CDIR/$(SRCTAR); \
 	fi
 
 dist : default $(MANIFEST)
