@@ -38,16 +38,14 @@
  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
  */
 
-#ifndef XQM_CMD	/* may have been defined in <linux/quota.h> already */
-#define XQM_CMD(x)     ( ('X'<<8)+(x) )	/* note: forms first QCMD argument */
-#define IS_XQM_CMD(x)  ( ((int)(x)>>8) == 'X' )
-#define Q_XQUOTAON     XQM_CMD(0x1)	/* enable accounting/enforcement */
-#define Q_XQUOTAOFF    XQM_CMD(0x2)	/* disable accounting/enforcement */
-#define Q_XGETQUOTA    XQM_CMD(0x3)	/* get disk limits and usage */
-#define Q_XSETQLIM     XQM_CMD(0x4)	/* set disk limits */
-#define Q_XGETQSTAT    XQM_CMD(0x5)	/* get quota subsystem status */
-#define Q_XQUOTARM     XQM_CMD(0x6)	/* free disk space used by dquots */
-#endif /* XQM_CMD */
+#define XQM_CMD(x)	(('X'<<8)+(x))	/* note: forms first QCMD argument */
+#define Q_XQUOTAON	XQM_CMD(0x1)	/* enable accounting/enforcement */
+#define Q_XQUOTAOFF	XQM_CMD(0x2)	/* disable accounting/enforcement */
+#define Q_XGETQUOTA	XQM_CMD(0x3)	/* get disk limits and usage */
+#define Q_XSETQLIM	XQM_CMD(0x4)	/* set disk limits */
+#define Q_XGETQSTAT	XQM_CMD(0x5)	/* get quota subsystem status */
+#define Q_XQUOTARM	XQM_CMD(0x6)	/* free disk space used by dquots */
+#define Q_XDEBUG	XQM_CMD(0x7)	/* do internal consistency checks */
 
 /*
  * fs_disk_quota structure:
