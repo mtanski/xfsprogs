@@ -137,6 +137,11 @@ typedef	struct xfs_dio {
 	size_t		xd_length;
 } xfs_dio_t;
 
+typedef struct dm_attrs_s {
+	__uint32_t	da_dmevmask;	/* DMIG event mask */
+	__uint16_t	da_dmstate;	/* DMIG state info */
+	__uint16_t	da_pad;		/* DMIG extra padding */
+} dm_attrs_t;
 
 typedef struct xfs_iocore {
 	void			*io_obj;	/* pointer to container
@@ -159,9 +164,12 @@ typedef struct xfs_iocore {
 	unsigned int		io_flags;	/* IO related flags */
 
 	/* DMAPI state */
-	__uint32_t	io_dmevmask;	/* DMIG event mask */
-	__uint16_t	io_dmstate;	/* DMIG state info */
+	dm_attrs_t		io_dmattrs;
+
 } xfs_iocore_t;
+
+#define        io_dmevmask     io_dmattrs.da_dmevmask
+#define        io_dmstate      io_dmattrs.da_dmstate
 
 #define XFS_IO_INODE(io)	((xfs_inode_t *) ((io)->io_obj))
 #define XFS_IO_DCXVN(io)	((dcxvn_t *) ((io)->io_obj))

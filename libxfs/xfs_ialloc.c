@@ -937,8 +937,30 @@ xfs_dilocate(
 	agino = XFS_INO_TO_AGINO(mp, ino);
 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
 	if (agno >= mp->m_sb.sb_agcount || agbno >= mp->m_sb.sb_agblocks ||
-	    ino != XFS_AGINO_TO_INO(mp, agno, agino))
+	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+#ifdef DEBUG
+	    	if (agno >= mp->m_sb.sb_agcount) {
+			xfs_fs_cmn_err(CE_ALERT, mp,
+					"xfs_dilocate: agno (%d) >= "
+					"mp->m_sb.sb_agcount (%d)",
+					agno,  mp->m_sb.sb_agcount);
+		}
+		if (agbno >= mp->m_sb.sb_agblocks) {
+			xfs_fs_cmn_err(CE_ALERT, mp,
+					"xfs_dilocate: agbno (0x%llx) >= "
+					"mp->m_sb.sb_agblocks (0x%llx)",
+					agbno, mp->m_sb.sb_agblocks);
+		}
+		if (ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+			xfs_fs_cmn_err(CE_ALERT, mp,
+					"xfs_dilocate: ino (0x%llx) != "
+					"XFS_AGINO_TO_INO(mp, agno, agino) "
+					"(0x%llx)",
+					ino, XFS_AGINO_TO_INO(mp, agno, agino));
+		}
+#endif /* DEBUG */
 		return XFS_ERROR(EINVAL);
+	}
 	if ((mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) ||
 	    !(flags & XFS_IMAP_LOOKUP)) {
 		offset = XFS_INO_TO_OFFSET(mp, ino);
@@ -965,17 +987,39 @@ xfs_dilocate(
 		mraccess(&mp->m_peraglock);
 		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
 		mraccunlock(&mp->m_peraglock);
-		if (error)
+		if (error) {
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
+					"xfs_ialloc_read_agi() returned "
+					"error %d, agno %d",
+					error, agno);
+#endif /* DEBUG */
 			return error;
+		}
 		cur = xfs_btree_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO,
 			(xfs_inode_t *)0, 0);
-		if ((error = xfs_inobt_lookup_le(cur, agino, 0, 0, &i)))
+		if ((error = xfs_inobt_lookup_le(cur, agino, 0, 0, &i))) {
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
+					"xfs_inobt_lookup_le() failed");
+#endif /* DEBUG */
 			goto error0;
+		}
 		if ((error = xfs_inobt_get_rec(cur, &chunk_agino, &chunk_cnt,
-				&chunk_free, &i, ARCH_NOCONVERT)))
+				&chunk_free, &i, ARCH_NOCONVERT))) {
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
+					"xfs_inobt_get_rec() failed");
+#endif /* DEBUG */
 			goto error0;
-		if (i == 0)
+		}
+		if (i == 0) {
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
+					"xfs_inobt_get_rec() failed");
+#endif /* DEBUG */
 			error = XFS_ERROR(EINVAL);
+		}
 		xfs_trans_brelse(tp, agbp);
 		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);		
 		if (error)

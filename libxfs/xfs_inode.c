@@ -117,6 +117,15 @@ xfs_itobp(
 		 */
 		if ((imap.im_blkno + imap.im_len) >
 		    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) {
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_itobp: "
+					"(imap.im_blkno (0x%llx) "
+					"+ imap.im_len (0x%llx)) > "
+					" XFS_FSB_TO_BB(mp, "
+					"mp->m_sb.sb_dblocks) (0x%llx)",
+					imap.im_blkno, imap.im_len,
+					XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
+#endif /* DEBUG */
 			return XFS_ERROR(EINVAL);
 		}
 
@@ -146,6 +155,12 @@ xfs_itobp(
 				   (int)imap.im_len, XFS_BUF_LOCK, &bp);
 
 	if (error) {
+#ifdef DEBUG
+		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_itobp: "
+				"xfs_trans_read_buf() returned error %d, "
+				"imap.im_blkno 0x%llx, imap.im_len 0x%llx",
+				error, imap.im_blkno, imap.im_len);
+#endif /* DEBUG */
 		return error;
 	}
 #ifdef __KERNEL__
@@ -603,7 +618,7 @@ xfs_iread(
 	xfs_trans_t	*tp,
 	xfs_ino_t	ino,
 	xfs_inode_t	**ipp,
-	xfs_daddr_t		bno)
+	xfs_daddr_t	bno)
 {
 	xfs_buf_t	*bp;
 	xfs_dinode_t	*dip;
@@ -662,6 +677,13 @@ xfs_iread(
         if (INT_GET(dip->di_core.di_magic, ARCH_CONVERT) != XFS_DINODE_MAGIC) {
 		kmem_zone_free(xfs_inode_zone, ip);
 		xfs_trans_brelse(tp, bp);
+#ifdef DEBUG
+		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
+				"dip->di_core.di_magic (0x%llx) != "
+				"XFS_DINODE_MAGIC (0x%llx)",
+				INT_GET(dip->di_core.di_magic, ARCH_CONVERT),
+				XFS_DINODE_MAGIC);
+#endif /* DEBUG */
 		return XFS_ERROR(EINVAL);
 	}
 
@@ -679,6 +701,11 @@ xfs_iread(
 		if (error)  {
 			kmem_zone_free(xfs_inode_zone, ip);
 			xfs_trans_brelse(tp, bp);
+#ifdef DEBUG
+			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
+					"xfs_iformat() returned error %d",
+					error);
+#endif /* DEBUG */
 			return error;
 		}
 	} else {
