@@ -46,6 +46,8 @@ extern void free_handle (void *__hanp, size_t __hlen);
 extern int  open_by_handle (void *__hanp, size_t __hlen, int __rw);
 extern int  readlink_by_handle (void *__hanp, size_t __hlen, void *__buf,
 				size_t __bs);
+extern int  fssetdm_by_handle (void *__hanp, size_t __hlen,
+			       struct fsdmidata *__fsdmi);
 
 #ifdef __cplusplus
 }

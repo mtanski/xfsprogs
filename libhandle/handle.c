@@ -302,6 +302,34 @@ readlink_by_handle (
 	return (int) ioctl(fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
 }
 
+int
+fssetdm_by_handle (
+	void		*hanp,
+	size_t		hlen,
+	struct fsdmidata *fsdmidata)
+{
+	int		fd;
+	xfs_fsop_setdm_handlereq_t dmhreq;
+
+
+	if ((fd = handle_to_fsfd(hanp)) < 0) {
+		errno = EBADF;
+		return -1;
+	}
+
+	dmhreq.hreq.fd       = 0;
+	dmhreq.hreq.path     = NULL;
+	dmhreq.hreq.oflags   = 0;
+	dmhreq.hreq.ihandle  = hanp;
+	dmhreq.hreq.ihandlen = hlen;
+	dmhreq.hreq.ohandle  = NULL;
+	dmhreq.hreq.ohandlen = NULL;
+
+	dmhreq.data = fsdmidata;
+
+	return (int) ioctl(fd, XFS_IOC_FSSETDM_BY_HANDLE, &dmhreq);
+}
+
 /*ARGSUSED*/
 void
 free_handle (

@@ -148,7 +148,7 @@ struct getbmapx {
 #endif	/* __KERNEL__ */
 
 /*
- * Structure for F_FSSETDM.
+ * Structure for XFS_IOC_FSSETDM.
  * For use by backup and restore programs to set the XFS on-disk inode
  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
  * only values previously obtained via xfs_bulkstat!  (Specifically the
@@ -359,7 +359,7 @@ typedef struct xfs_fsop_attr_handlereq {
 typedef struct xfs_fsop_setdm_handlereq {
 	struct xfs_fsop_handlereq hreq; /* handle request interface     */
 					/* structure                    */
-	struct fsdmidata data;	        /* DMI data to set              */
+	struct fsdmidata *data;	        /* DMAPI data to set            */
 } xfs_fsop_setdm_handlereq_t;
 
 /*
