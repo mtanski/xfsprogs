@@ -259,7 +259,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
      * bcopy to ensure 8-byte alignment for the long longs in
      * buf_log_format_t structure
      */
-    bcopy(*ptr, &lbuf, sizeof(xfs_buf_log_format_t));
+    bcopy(*ptr, &lbuf, MIN(sizeof(xfs_buf_log_format_t), len));
     f = &lbuf;
     *ptr += len;
 
@@ -286,9 +286,6 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	break;
     case XFS_LI_5_3_BUF:
 	printf("5.3 BUF:  ");
-	break;
-    case XFS_LI_DQUOT:
-	printf("DQUOT BUF:  ");
 	break;
     default:
 	printf("UNKNOWN BUF:  ");
@@ -364,6 +361,11 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 			} else if (INT_GET(head->oh_len, ARCH_CONVERT) == 256) {
 				buckets = 32 + 17;
 			} else {
+				if (head->oh_flags & XLOG_CONTINUE_TRANS) {
+					printf("AGI unlinked data skipped ");
+					printf("(CONTINUE set, no space)\n");
+					continue;
+				}
 				buckets = XFS_AGI_UNLINKED_BUCKETS;
 			}
 			for (bucket = 0; bucket < buckets;) {
@@ -535,7 +537,25 @@ xlog_print_trans_efi(xfs_caddr_t *ptr, uint len)
 }	/* xlog_print_trans_efi */
 
 
-/* ARGSUSED */
+int
+xlog_print_trans_qoff(xfs_caddr_t *ptr, uint len)
+{
+    xfs_qoff_logformat_t *f;
+    xfs_qoff_logformat_t lbuf;
+
+    bcopy(*ptr, &lbuf, sizeof(xfs_qoff_logformat_t));
+    f = &lbuf;
+    *ptr += len;
+    if (len >= sizeof(xfs_qoff_logformat_t)) {
+	printf("QOFF:  #regs: %d    flags: 0x%x\n", f->qf_size, f->qf_flags);
+	return 0;
+    } else {
+	printf("QOFF: Not enough data to decode further\n");
+	return 1;
+    }
+}	/* xlog_print_trans_qoff */
+
+
 void
 xlog_print_trans_inode_core(xfs_dinode_core_t *ip)
 {
@@ -728,6 +748,61 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 }	/* xlog_print_trans_inode */
 
 
+int
+xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+{
+    xfs_dq_logformat_t	*f;
+    xfs_dq_logformat_t	lbuf = {0};
+    xfs_disk_dquot_t	ddq;
+    xlog_op_header_t	*head;
+    int			num, skip;
+
+    /*
+     * print dquot header region
+     *
+     * bcopy to ensure 8-byte alignment for the long longs in
+     * xfs_dq_logformat_t structure
+     */
+    bcopy(*ptr, &lbuf, MIN(sizeof(xfs_dq_logformat_t), len));
+    f = &lbuf;
+    (*i)++;					/* bump index */
+    *ptr += len;
+    
+    if (len == sizeof(xfs_dq_logformat_t)) {
+	printf("#regs: %d   id: 0x%x", f->qlf_size, f->qlf_id);
+	printf("  blkno: %lld  len: %d  boff: %d\n",
+		(long long)f->qlf_blkno, f->qlf_len, f->qlf_boffset);
+    } else {
+	ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
+	printf("DQUOT: #regs: %d   Not printing rest of data\n",
+		f->qlf_size);
+	return f->qlf_size;
+    }
+    num = f->qlf_size-1;
+
+    /* Check if all regions in this log item were in the given LR ptr */
+    if (*i+num > num_ops-1) {
+	skip = num - (num_ops-1-*i);
+	num = num_ops-1-*i;
+    } else {
+	skip = 0;
+    }
+
+    while (num-- > 0) {
+	head = (xlog_op_header_t *)*ptr;
+	xlog_print_op_header(head, *i, ptr);
+	ASSERT(INT_GET(head->oh_len, ARCH_CONVERT) == sizeof(xfs_disk_dquot_t));
+	bcopy(*ptr, &ddq, sizeof(xfs_disk_dquot_t));
+	printf("DQUOT: magic 0x%hx flags 0%ho\n",
+	       INT_GET(ddq.d_magic, ARCH_CONVERT),
+	       INT_GET(ddq.d_flags, ARCH_CONVERT));
+	*ptr += INT_GET(head->oh_len, ARCH_CONVERT);
+    }
+    if (head && head->oh_flags & XLOG_CONTINUE_TRANS)
+	skip++;
+    return skip;
+}	/* xlog_print_trans_dquot */
+
 
 /******************************************************************************
  *
@@ -874,7 +949,6 @@ xlog_print_record(int		  fd,
 		switch (*(unsigned short *)ptr) {
 		    case XFS_LI_5_3_BUF:
 		    case XFS_LI_6_1_BUF:
-		    case XFS_LI_DQUOT:
 		    case XFS_LI_BUF: {
 			skip = xlog_print_trans_buffer(&ptr,
 					INT_GET(op_head->oh_len, ARCH_CONVERT),
@@ -889,6 +963,12 @@ xlog_print_record(int		  fd,
 					&i, num_ops);
 			break;
 		    }
+		    case XFS_LI_DQUOT: {
+			skip = xlog_print_trans_dquot(&ptr,
+					INT_GET(op_head->oh_len, ARCH_CONVERT),
+					&i, num_ops);
+			break;
+		    }
 		    case XFS_LI_EFI: {
 			skip = xlog_print_trans_efi(&ptr,
 					INT_GET(op_head->oh_len, ARCH_CONVERT));
@@ -896,6 +976,11 @@ xlog_print_record(int		  fd,
 		    }
 		    case XFS_LI_EFD: {
 			skip = xlog_print_trans_efd(&ptr,
+					INT_GET(op_head->oh_len, ARCH_CONVERT));
+			break;
+		    }
+		    case XFS_LI_QUOTAOFF: {
+			skip = xlog_print_trans_qoff(&ptr,
 					INT_GET(op_head->oh_len, ARCH_CONVERT));
 			break;
 		    }
