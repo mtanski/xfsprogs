@@ -1,3 +1,6 @@
+xfsprogs-2.4.9 (03 May 2003)
+	- Allow xfs_repair to run on read-only filesystems.
+
 xfsprogs-2.4.8 (26 April 2003)
 	- Rework configure.in to make use of shared macros.
 	- Fix up #include lines to allow compilation of sources
