@@ -424,36 +424,38 @@ typedef struct xlog_iclog_fields {
 	ushort_t		ic_state;
 } xlog_iclog_fields_t;
 
-typedef struct xlog_in_core {
-	union {
-		xlog_iclog_fields_t	hic_fields;
-		char			hic_pad[BBSIZE];
-	} ic_h1;
+typedef struct xlog_in_core2 {
 	union {
 		xlog_rec_header_t hic_header;
 		char		  hic_sector[XLOG_HEADER_SIZE];
-	} ic_h2;
-	__uint8_t		  ic_data[1];
+	} ic_h;
+	__uint8_t		  hic_data[1];
+} xlog_in_core_2_t;
+
+typedef struct xlog_in_core {
+	xlog_iclog_fields_t	hic_fields;
+	xlog_in_core_2_t	*hic_data;
 } xlog_in_core_t;
 
 /*
  * Defines to save our code from this glop.
  */
-#define	ic_forcesema	ic_h1.hic_fields.ic_forcesema
-#define	ic_next		ic_h1.hic_fields.ic_next
-#define	ic_prev		ic_h1.hic_fields.ic_prev
-#define	ic_bp		ic_h1.hic_fields.ic_bp
-#define	ic_log		ic_h1.hic_fields.ic_log
-#define	ic_callback	ic_h1.hic_fields.ic_callback
-#define	ic_callback_tail ic_h1.hic_fields.ic_callback_tail
-#define	ic_trace	ic_h1.hic_fields.ic_trace
-#define	ic_size		ic_h1.hic_fields.ic_size
-#define	ic_offset	ic_h1.hic_fields.ic_offset
-#define	ic_refcnt	ic_h1.hic_fields.ic_refcnt
-#define	ic_roundoff	ic_h1.hic_fields.ic_roundoff
-#define	ic_bwritecnt	ic_h1.hic_fields.ic_bwritecnt
-#define	ic_state	ic_h1.hic_fields.ic_state
-#define ic_header	ic_h2.hic_header
+#define	ic_forcesema	hic_fields.ic_forcesema
+#define	ic_next		hic_fields.ic_next
+#define	ic_prev		hic_fields.ic_prev
+#define	ic_bp		hic_fields.ic_bp
+#define	ic_log		hic_fields.ic_log
+#define	ic_callback	hic_fields.ic_callback
+#define	ic_callback_tail hic_fields.ic_callback_tail
+#define	ic_trace	hic_fields.ic_trace
+#define	ic_size		hic_fields.ic_size
+#define	ic_offset	hic_fields.ic_offset
+#define	ic_refcnt	hic_fields.ic_refcnt
+#define	ic_roundoff	hic_fields.ic_roundoff
+#define	ic_bwritecnt	hic_fields.ic_bwritecnt
+#define	ic_state	hic_fields.ic_state
+#define ic_header	hic_data->ic_h.hic_header
+#define ic_data		hic_data->hic_data
 
 /*
  * The reservation head lsn is not made up of a cycle number and block number.
