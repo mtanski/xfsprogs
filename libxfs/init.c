@@ -705,5 +705,12 @@ void
 libxfs_umount(xfs_mount_t *mp)
 {
 	manage_zones(1);
-	free(mp->m_perag);
+	if (mp->m_perag) {
+		int     agno;
+		for (agno = 0; agno < mp->m_maxagi; agno++) {
+			if (mp->m_perag[agno].pagb_list)
+				free(mp->m_perag[agno].pagb_list);
+		}
+		free(mp->m_perag);
+	}
 }

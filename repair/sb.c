@@ -524,31 +524,6 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 	return (verify_sb(sbp, 0));
 }
 
-#if 0
-int
-check_growfs(xfs_off_t off, int bufnum, xfs_agnumber_t agnum)
-{
-	int rval;
-
-	ASSERT(bufnum < NUM_SBS);
-
-	/* try and read it first */
-
-	if (lseek64(fs_fd, off, SEEK_SET) != off)
-		return(XR_EOF);
-
-	if ((rval = read(fs_fd, sb_bufs[bufnum], sbbuf_size)) != sbbuf_size)  {
-		/*
-		 * we didn't get a full block so the filesystem
-		 * could not have been grown.  return a non-XR_OK
-		 * result code.
-		 */
-		return(XR_EOF);
-	}
-
-	return(get_sb(off, bufnum, agnum));
-}
-#endif
 /* returns element on list with highest reference count */
 
 fs_geo_list_t *

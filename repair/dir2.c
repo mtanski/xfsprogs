@@ -142,6 +142,7 @@ da_read_buf(
 				XFS_BUF_COUNT(bp));
 		}
 	}
+	free(bplist);
 	return dabuf;
 failed:
 	for (i = 0; i < nex; i++)

@@ -1,3 +1,6 @@
+cvs
+	- Fix a few more libxfs/repair leaks
+
 xfsprogs-2.6.3 (19 January 2003)
 	- Merge Steve Langasek's work on the Debian installer
 	  support for xfsprogs.

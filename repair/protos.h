@@ -47,8 +47,6 @@ void	write_primary_sb(xfs_sb_t	*sbp,
 
 int	find_secondary_sb(xfs_sb_t	*sb);
 
-int	check_growfs(xfs_off_t off, int bufnum, xfs_agnumber_t agnum);
-
 void	get_sb_geometry(fs_geometry_t	*geo,
 			xfs_sb_t	*sbp);
 

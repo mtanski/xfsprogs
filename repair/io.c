@@ -39,36 +39,11 @@
 void
 io_init(void)
 {
-	int i;
-
 	/* open up filesystem device */
 
 	ASSERT(fs_name != NULL && *fs_name != '\0');
 
 	if ((fs_fd = open (fs_name, (no_modify? O_RDONLY : O_RDWR))) < 0)  {
 		do_error(_("couldn't open filesystem \"%s\"\n"), fs_name);
-	}
-
-	/* initialize i/o buffers */
-
-	iobuf_size = 1000 * 1024;
-	smallbuf_size = 4 * 4096;	/* enough for an ag */
-
-	/*
-	 * sbbuf_size must be < XFS_MIN_AG_BLOCKS (64) * smallest block size,
-	 * otherwise you might get an EOF when reading in the sb/agf from
-	 * the last ag if that ag is small
-	 */
-	sbbuf_size = 2 * 4096;		/* 2 * max sector size */
-
-	if ((iobuf = malloc(iobuf_size)) == NULL)
-		do_error(_("couldn't malloc io buffer\n"));
-
-	if ((smallbuf = malloc(smallbuf_size)) == NULL)
-		do_error(_("couldn't malloc secondary io buffer\n"));
-
-	for (i = 0; i < NUM_SBS; i++)  {
-		if ((sb_bufs[i] = malloc(sbbuf_size)) == NULL)
-			do_error(_("couldn't malloc sb io buffers\n"));
 	}
 }
