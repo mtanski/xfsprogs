@@ -188,6 +188,7 @@ da_bwrite(
 	int		error;
 	int		i;
 	int		nbuf;
+	int		off;
 
 	if ((nbuf = dabuf->nbuf) == 1) {
 		bplist = &bp;
@@ -199,6 +200,11 @@ da_bwrite(
 			exit(1);
 		}
 		bcopy(dabuf->bps, bplist, nbuf * sizeof(*bplist));
+		for (i = off = 0; i < nbuf; i++, off += XFS_BUF_COUNT(bp)) {
+			bp = bplist[i];
+			bcopy((char *)dabuf->data + off, XFS_BUF_PTR(bp),
+				XFS_BUF_COUNT(bp));
+		}
 	}
 	da_buf_done(dabuf);
 	for (i = error = 0; i < nbuf; i++) {

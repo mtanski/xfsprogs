@@ -1,6 +1,11 @@
+[cvs]
 	- Fix error returns from log recovery.
 	- Fix the way mkfs round downs the device when the last 
 	  AG is maller than the minimum AG size.
+	- Fix bug in xfs_repair da_write() routine, which affects
+	  filesystems where the data blocksize != naming blocksize
+	  (see xfs_info output).
+
 xfsprogs-2.0.5 (02 May 2002)
 	- size AGs so that they do not always start on the same 
 	  part of a striped disk
