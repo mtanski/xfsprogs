@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -58,7 +58,9 @@ LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 # -DLI_DEBUG		log item (ino/buf) manipulation
 # -DXACT_DEBUG		transaction state changes
 #
-LCFLAGS += -I.
+#LCFLAGS += 
+
+FCFLAGS = -I.
 
 # don't try linking xfs_repair with a debug libxfs.
 DEBUG = -DNDEBUG

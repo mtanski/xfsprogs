@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -44,7 +44,7 @@ HFILES = handle.h jdm.h libxfs.h libxlog.h swab.h xqm.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
-HFILES += $(PKG_PLATFORM).h
+HFILES += $(PKG_PLATFORM).h xfs.h
 PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")

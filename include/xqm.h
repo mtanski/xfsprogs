@@ -33,7 +33,7 @@
 #ifndef __XQM_H__
 #define __XQM_H__
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 
 /*
  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
@@ -124,8 +124,8 @@ typedef struct fs_disk_quota {
 #define XFS_QUOTA_UDQ_ENFD	(1<<1)  /* user quota limits enforcement */
 #define XFS_QUOTA_GDQ_ACCT	(1<<2)  /* group quota accounting */
 #define XFS_QUOTA_GDQ_ENFD	(1<<3)  /* group quota limits enforcement */
-#define XFS_QUOTA_PDQ_ACCT	(1<<2)  /* project quota accounting */
-#define XFS_QUOTA_PDQ_ENFD	(1<<3)  /* project quota limits enforcement */
+#define XFS_QUOTA_PDQ_ACCT	(1<<4)  /* project quota accounting */
+#define XFS_QUOTA_PDQ_ENFD	(1<<5)  /* project quota limits enforcement */
 
 #define XFS_USER_QUOTA		(1<<0)	/* user quota type */
 #define XFS_PROJ_QUOTA		(1<<1)	/* project quota type */
