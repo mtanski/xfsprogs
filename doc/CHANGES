@@ -1,3 +1,6 @@
+xfsprogs-2.6.25 (08 October 2004)
+	- Fix build with really old glibc versions.
+
 xfsprogs-2.6.24 (29 September 2004)
 	- Allow 'e' suffix in size arguments to mkfs.
 	- Update mkfs man page description of maximum allocation
