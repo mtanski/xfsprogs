@@ -1,3 +1,10 @@
+xfsprogs (1.2.2) unstable; urgency=low
+
+  * Fix problem in xfs_db (check) group quota logic
+  * Fixes to warnings from recent gcc and/or 64-bit builds
+
+ -- Nathan Scott <nathans@debian.org>  Fri, 13 Apr 2001 09:50:37 +1000
+
 xfsprogs (1.2.1) unstable; urgency=low
 
   * Support for group quota added
