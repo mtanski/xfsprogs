@@ -1,3 +1,9 @@
+xfsprogs (2.5.4-1) unstable; urgency=low
+
+  * New upstream release, with new xfs_copy command
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 23 Jul 2003 10:36:28 +1000
+
 xfsprogs (2.5.3-1) unstable; urgency=low
 
   * New upstream release
