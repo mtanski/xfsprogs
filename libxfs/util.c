@@ -232,15 +232,14 @@ libxfs_ialloc(
 }
 
 void
-libxfs_iprint(xfs_inode_t *ip)
+libxfs_iprint(xfs_inode_t	*ip)
 {
 	xfs_dinode_core_t	*dip;
-	xfs_bmbt_rec_t	*ep;
-	xfs_extnum_t	i;
-	xfs_extnum_t	nextents;
+	xfs_bmbt_rec_t		*ep;
+	xfs_extnum_t		i;
+	xfs_extnum_t		nextents;
 
 	printf("Inode %lx\n", (unsigned long)ip);
-	printf("    i_dev %llx\n", (unsigned long long)ip->i_dev);
 	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
 
 	if (ip->i_df.if_flags & XFS_IFEXTENTS)

@@ -146,13 +146,13 @@ typedef struct xfs_iocore {
 	void			*io_obj;	/* pointer to container
 						 * inode or dcxvn structure */
 	struct xfs_mount	*io_mount;	/* fs mount struct ptr */
-	mrlock_t		*io_lock;	/* inode lock */
+#ifdef DEBUG
+	mrlock_t		*io_lock;	/* inode IO lock */
 	mrlock_t		*io_iolock;	/* inode IO lock */
-	sema_t			*io_flock;	/* inode flush lock */
+#endif
 
 	/* I/O state */
 	xfs_fsize_t		io_new_size;	/* sz when write completes */
-	int			io_queued_bufs;	/* count of xfsd queued bufs*/
 
 	/* Miscellaneous state. */
 	unsigned int		io_flags;	/* IO related flags */
@@ -275,7 +275,6 @@ typedef struct xfs_inode {
 	/* Inode location stuff */
 	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/
 	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
-	dev_t			i_dev;		/* dev for this inode */
 	ushort			i_len;		/* len of inode buffer */
 	ushort			i_boffset;	/* off of inode in buffer */
 
@@ -289,9 +288,8 @@ typedef struct xfs_inode {
 	mrlock_t		i_lock;		/* inode lock */
 	mrlock_t		i_iolock;	/* inode IO lock */
 	sema_t			i_flock;	/* inode flush lock */
-	unsigned int		i_pincount;	/* inode pin count */
-	sv_t			i_pinsema;	/* inode pin sema */
-	lock_t			i_ipinlock;	/* inode pinning mutex */
+	atomic_t		i_pincount;	/* inode pin count */
+	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
 	struct xfs_inode	**i_refcache;	/* ptr to entry in ref cache */
 	struct xfs_inode	*i_release;	/* inode to unref */
 
@@ -550,7 +548,6 @@ void		xfs_iext_realloc(xfs_inode_t *, int, int);
 void		xfs_iroot_realloc(xfs_inode_t *, int, int);
 void		xfs_ipin(xfs_inode_t *);
 void		xfs_iunpin(xfs_inode_t *);
-unsigned int	xfs_ipincount(xfs_inode_t *);
 int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_32_t *, int);
 int		xfs_iflush(xfs_inode_t *, uint);
 int		xfs_iflush_all(struct xfs_mount *, int);
@@ -561,6 +558,9 @@ void		xfs_ichgtime(xfs_inode_t *, int);
 xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
 xfs_inode_t	*xfs_get_inode(dev_t, xfs_ino_t);
 void		xfs_lock_inodes(xfs_inode_t **, int, int, uint);
+
+#define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+
 
 
 #ifdef DEBUG

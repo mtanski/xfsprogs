@@ -619,7 +619,6 @@ xfs_iread(
 
 	ip = kmem_zone_zalloc(xfs_inode_zone, KM_SLEEP);
 	ip->i_ino = ino;
-	ip->i_dev = mp->m_dev;
 	ip->i_mount = mp;
 
 	/*
