@@ -6,7 +6,8 @@ xfsprogs-1.3.1 (15 Jul 2001)
 	- fix an endian bug in xfs_db "write" command
 	- fix a build problem with liblvm.a installed
 	- fix bug in xfs_growfs mount option parsing with external log
-	- make use of BLKSZSET ioctl conditional via the Makefile
+	- BLKSZSET ioctl now conditional via the Makefile (off by default)
+	- rework some of the Debian packaging rules
 
 xfsprogs-1.3.0 (11 Jul 2001)
 	- reworked Makefiles to use libtool
