@@ -2,6 +2,7 @@ xfsprogs (2.6.20-1) unstable; urgency=low
 
   * New upstream release.
   * Fix xfs_io segfault on non-XFS files.  (closes: #260470)
+  * Fix packaging botch, deleted files included.  (closes: #260491)
 
  -- Nathan Scott <nathans@debian.org>  Wed, 28 Jul 2004 21:11:38 +1000
 
