@@ -39,6 +39,7 @@
  *      - util-linux-2.10r ... 06 Dec 00
  *      - util-linux-2.11g ... 02 Jul 01
  *      - util-linux-2.11u ... 24 Aug 02
+ *	- util-linux-2.11z ... 13 May 03
  */
 
 /* Including <linux/fs.h> became more and more painful.
@@ -85,14 +86,14 @@ struct ext_super_block {
 #define EXT2_SUPER_MAGIC    0xEF53
 #define EXT3_FEATURE_COMPAT_HAS_JOURNAL 0x0004
 struct ext2_super_block {
-	u_char	s_dummy1[56];
-	u_char	s_magic[2];
+	u_char 	s_dummy1[56];
+	u_char 	s_magic[2];
 	u_char	s_dummy2[34];
 	u_char	s_feature_compat[4];
 	u_char	s_feature_incompat[4];
 	u_char	s_feature_ro_compat[4];
 	u_char	s_uuid[16];
-	u_char	s_volume_name[16];
+	u_char 	s_volume_name[16];
 	u_char	s_dummy3[88];
 	u_char	s_journal_inum[4];	/* ext3 only */
 };
@@ -158,7 +159,7 @@ struct fat_super_block {
     u_char    s_dummy2[32];
     u_char    s_label[11];	/* for DOS? */
     u_char    s_fs[8];		/* "FAT12   " or "FAT16   " or all zero   */
-				/* OS/2 BM has "FAT     " here. */
+                                /* OS/2 BM has "FAT     " here. */
     u_char    s_dummy3[9];
     u_char    s_label2[11];	/* for Windows? */
     u_char    s_fs2[8];	        /* garbage or "FAT32   " */
@@ -174,6 +175,7 @@ struct xfs_super_block {
 };
 
 #define CRAMFS_SUPER_MAGIC 0x28cd3d45
+#define CRAMFS_SUPER_MAGIC_BE 0x453dcd28
 struct cramfs_super_block {
 	u_char    s_magic[4];
 	u_char    s_dummy[12];
@@ -237,6 +239,21 @@ struct mdp_super_block {
 };
 #define MD_SB_MAGIC	0xa92b4efc
 #define mdsbmagic(s)	assemble4le(s.md_magic)
+
+struct ocfs_volume_header {
+	u_char  minor_version[4];
+	u_char  major_version[4];
+	u_char  signature[128];
+};
+
+struct ocfs_volume_label {
+	u_char  disk_lock[48];
+	u_char  label[64];
+	u_char  label_len[2];
+};
+
+#define ocfslabellen(o)	assemble2le(o.label_len)
+#define OCFS_MAGIC	"OracleCFS"
 
 static inline int
 assemble2le(unsigned char *p) {

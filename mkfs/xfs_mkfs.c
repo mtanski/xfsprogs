@@ -79,6 +79,10 @@ char	*dopts[] = {
 	"su",
 #define D_SW		9
 	"sw",
+#define D_SECTLOG	10
+	"sectlog",
+#define D_SECTSIZE	11
+	"sectsize",
 	NULL
 };
 
@@ -256,14 +260,6 @@ calc_stripe_factors(
 				"conjunction with log su\n"));
 			usage();
 		}
-
-		if (lsu % lsectsz) {
-			fprintf(stderr,
-				_("log su must be a multiple of the "
-				"sector size (%d)\n"), lsectsz);
-			usage();
-		}
-
 		*lsunit = (int)BTOBBT(lsu);
 	}
 }
@@ -399,6 +395,8 @@ main(
 	int			lsflag;
 	int			lsectorlog;
 	int			lsectorsize;
+	int			lslflag;
+	int			lssflag;
 	int			lsu;
 	int			lsunit;
 	int			min_logblocks;
@@ -439,12 +437,10 @@ main(
 	textdomain(PACKAGE);
 
 	agcount = 8;
-	blflag = bsflag = slflag = ssflag = 0;
+	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
-	sectorlog = XFS_MIN_SECTORSIZE_LOG;
-	sectorsize = XFS_MIN_SECTORSIZE;
-	lsectorlog = 0;
-	lsectorsize = 0;
+	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
+	sectorsize = lsectorsize = XFS_MIN_SECTORSIZE;
 	agsize = daflag = dasize = dblocks = 0;
 	ilflag = imflag = ipflag = isflag = 0;
 	liflag = laflag = lsflag = ldflag = lvflag = 0;
@@ -612,11 +608,42 @@ main(
 					break;
 				case D_UNWRITTEN:
 					if (!value)
-					    reqval('d', dopts, D_UNWRITTEN);
+						reqval('d', dopts, D_UNWRITTEN);
 					i = atoi(value);
 					if (i < 0 || i > 1)
-					    illegal(value, "d unwritten");
+						illegal(value, "d unwritten");
 					extent_flagging = i;
+					break;
+				case D_SECTLOG:
+					if (!value)
+						reqval('d', dopts, D_SECTLOG);
+					if (slflag)
+						respec('d', dopts, D_SECTLOG);
+					if (ssflag)
+						conflict('d', dopts, D_SECTSIZE,
+							 D_SECTLOG);
+					sectorlog = atoi(value);
+					if (sectorlog <= 0)
+						illegal(value, "d sectlog");
+					sectorsize = 1 << sectorlog;
+					slflag = 1;
+					break;
+				case D_SECTSIZE:
+					if (!value)
+						reqval('d', dopts, D_SECTSIZE);
+					if (ssflag)
+						respec('d', dopts, D_SECTSIZE);
+					if (slflag)
+						conflict('d', dopts, D_SECTLOG,
+							 D_SECTSIZE);
+					sectorsize = cvtnum(
+						blocksize, sectorsize, value);
+					if (sectorsize <= 0 ||
+					    !ispow2(sectorsize))
+						illegal(value, "d sectsize");
+					sectorlog =
+						libxfs_highbit32(sectorsize);
+					ssflag = 1;
 					break;
 				default:
 					unknown('d', value);
@@ -806,9 +833,9 @@ main(
 #endif
 				case L_VERSION:
 					if (!value)
-						reqval('n', nopts, L_VERSION);
+						reqval('l', lopts, L_VERSION);
 					if (lvflag)
-						respec('n', nopts, L_VERSION);
+						respec('l', lopts, L_VERSION);
 					logversion = atoi(value);
 					if (logversion < 1 || logversion > 2)
 						illegal(value, "l version");
@@ -824,19 +851,26 @@ main(
 					break;
 				case L_SECTLOG:
 					if (!value)
-						reqval('s', sopts, L_SECTLOG);
-					if (lsectorlog)
-						respec('s', sopts, L_SECTLOG);
+						reqval('l', lopts, L_SECTLOG);
+					if (lslflag)
+						respec('l', lopts, L_SECTLOG);
+					if (lssflag)
+						conflict('l', lopts, L_SECTSIZE,
+							 L_SECTLOG);
 					lsectorlog = atoi(value);
 					if (lsectorlog <= 0)
 						illegal(value, "l sectlog");
 					lsectorsize = 1 << lsectorlog;
+					lslflag = 1;
 					break;
 				case L_SECTSIZE:
 					if (!value)
 						reqval('l', lopts, L_SECTSIZE);
-					if (lsectorsize)
+					if (lssflag)
 						respec('l', lopts, L_SECTSIZE);
+					if (lslflag)
+						conflict('l', lopts, L_SECTLOG,
+							 L_SECTSIZE);
 					lsectorsize = cvtnum(
 						blocksize, sectorsize, value);
 					if (lsectorsize <= 0 ||
@@ -844,6 +878,7 @@ main(
 						illegal(value, "l sectsize");
 					lsectorlog =
 						libxfs_highbit32(lsectorsize);
+					lssflag = 1;
 					break;
 				default:
 					unknown('l', value);
@@ -976,35 +1011,39 @@ main(
 				case S_LOG:
 				case S_SECTLOG:
 					if (!value)
-						reqval('s', sopts, S_LOG);
-					if (slflag)
-						respec('s', sopts, S_LOG);
-					if (ssflag)
-						conflict('s', sopts, S_SIZE,
-							 S_LOG);
+						reqval('s', sopts, S_SECTLOG);
+					if (slflag || lslflag)
+						respec('s', sopts, S_SECTLOG);
+					if (ssflag || lssflag)
+						conflict('s', sopts, S_SECTSIZE,
+							 S_SECTLOG);
 					sectorlog = atoi(value);
 					if (sectorlog <= 0)
-						illegal(value, "s log");
+						illegal(value, "s sectlog");
+					lsectorlog = sectorlog;
 					sectorsize = 1 << sectorlog;
-					slflag = 1;
+					lsectorsize = sectorsize;
+					lslflag = slflag = 1;
 					break;
 				case S_SIZE:
 				case S_SECTSIZE:
 					if (!value)
-						reqval('s', sopts, S_SIZE);
-					if (ssflag)
-						respec('s', sopts, S_SIZE);
-					if (slflag)
-						conflict('s', sopts, S_LOG,
-							 S_SIZE);
+						reqval('s', sopts, S_SECTSIZE);
+					if (ssflag || lssflag)
+						respec('s', sopts, S_SECTSIZE);
+					if (slflag || lslflag)
+						conflict('s', sopts, S_SECTLOG,
+							 S_SECTSIZE);
 					sectorsize = cvtnum(
 						blocksize, sectorsize, value);
 					if (sectorsize <= 0 ||
 					    !ispow2(sectorsize))
-						illegal(value, "s size");
+						illegal(value, "s sectsize");
+					lsectorsize = sectorsize;
 					sectorlog =
 						libxfs_highbit32(sectorsize);
-					ssflag = 1;
+					lsectorlog = sectorlog;
+					lssflag = ssflag = 1;
 					break;
 				default:
 					unknown('s', value);
@@ -1048,33 +1087,28 @@ main(
 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
 		usage();
 	}
+	if (lsectorsize < XFS_MIN_SECTORSIZE ||
+	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
+		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
+		usage();
+	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
+		lsu = blocksize;
+		logversion = 2;
+	}
 
 	/*
 	 * Support for non-512 byte sector sizes is a work-in-progress...
 	 */
 
-#ifdef EXPERIMENTAL_LARGE_SECTORS
-	if (!lsectorsize) {
-		lsectorlog = XFS_MIN_SECTORSIZE_LOG;
-		lsectorsize = XFS_MIN_SECTORSIZE;
-	}
-	if (lsectorsize < XFS_MIN_SECTORSIZE ||
-	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > sectorsize) {
-		fprintf(stderr, _("illegal log sector size %d\n"), sectorsize);
+#ifndef EXPERIMENTAL_LARGE_SECTORS
+	if (sectorsize != XFS_MIN_SECTORSIZE) {
+		fprintf(stderr, _("unsupported sector size %d\n"), sectorsize);
 		usage();
 	}
-#else
-	if (sectorsize != XFS_MIN_SECTORSIZE ||
-	    sectorlog != XFS_MIN_SECTORSIZE_LOG) {
-		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+	if (lsectorsize != XFS_MIN_SECTORSIZE) {
+		fprintf(stderr, _("unsupported log sector size %d\n"), lsectorsize);
 		usage();
 	}
-	if (lsectorsize != XFS_MIN_SECTORSIZE && lsectorsize) {
-		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
-		usage();
-	}
-	lsectorlog = XFS_MIN_SECTORSIZE_LOG;
-	lsectorsize = XFS_MIN_SECTORSIZE;
 #endif
 
 	if (!nvflag)
@@ -1228,18 +1262,18 @@ main(
 		__uint64_t	rtextbytes;
 
 		dummy1 = rswidth = 0;
-                
-                if (!xi.disfile)
-		        get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1, 
-						    &rswidth);
+
+		if (!xi.disfile)
+			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1, 
+						  &rswidth);
 
 		/* check that rswidth is a multiple of fs blocksize */
 		if (rswidth && !(BBTOB(rswidth) % blocksize)) {
 			rswidth = DTOBT(rswidth);
 			rtextbytes = rswidth << blocklog;
 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
-                                (rtextbytes <= XFS_MAX_RTEXTSIZE))  {
-       		                 rtextblocks = rswidth;
+			    (rtextbytes <= XFS_MAX_RTEXTSIZE)) {
+				rtextblocks = rswidth;
 			} else {
 				rtextblocks = XFS_DFL_RTEXTSIZE >> blocklog;
 			}
@@ -1395,13 +1429,13 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		logblocks = (dblocks << blocklog) / 8192;
 		logblocks = logblocks >> blocklog;
 		logblocks = MAX(min_logblocks, logblocks);
-                logblocks = MAX(logblocks,
+		logblocks = MAX(logblocks,
 				MAX(XFS_DFL_LOG_SIZE, i * XFS_DFL_LOG_FACTOR));
-                logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
+		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
 		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
 		}
-        } 
+	} 
 	if (logblocks < min_logblocks) {
 		fprintf(stderr,
 	_("log size %lld blocks too small, minimum size is %d blocks\n"),
@@ -1588,9 +1622,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	}
 
 	xlv_dsunit = xlv_dswidth = 0;
-        if (!xi.disfile)
-	        get_subvol_stripe_wrapper(dfile, SVTYPE_DATA, &xlv_dsunit, 
-				&xlv_dswidth);
+	if (!xi.disfile)
+		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
+						&xlv_dsunit, &xlv_dswidth);
 	if (dsunit) {
 
 		if (xlv_dsunit && xlv_dsunit != dsunit) {
@@ -1626,12 +1660,12 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		 * agsize is not a multiple of dsunit
 		 */
 		if ((agsize % dsunit) != 0) {
-                	/*
-                 	 * Round up to stripe unit boundary. Also make sure 
+			/*
+			 * Round up to stripe unit boundary. Also make sure 
 			 * that agsize is still larger than 
 			 * XFS_AG_MIN_BLOCKS(blocklog)
 		 	 */
-                	tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
+			tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
 			/*
 			 * Round down to stripe unit boundary if rounding up
 			 * created an AG size that is larger than the AG max.
@@ -1648,7 +1682,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 					fprintf(stderr,
 				_("agsize rounded to %lld, swidth = %d\n"),
 						(long long)agsize, dswidth);
-                	} else {
+			} else {
 				if (nodsflag) {
 					dsunit = dswidth = 0;
 				} else { 
@@ -1657,7 +1691,7 @@ _("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
 						(long long)agsize, dsunit);
 					exit(1);
 				}
-        		}
+			}
 		}
 		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
 			/* This is a non-optimal configuration because all AGs
@@ -1943,7 +1977,7 @@ _("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
 				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1));
 		bzero(XFS_BUF_PTR(buf), sectorsize);
-                libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
+		libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
 				XFS_SB_ALL_BITS);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
@@ -2337,10 +2371,10 @@ usage( void )
 /* blocksize */		[-b log=n|size=num]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
 			    (sunit=value,swidth=value|su=num,sw=num),\n\
-			    unwritten=0|1]\n\
+			    sectlog=n|sectsize=num,unwritten=0|1]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
-/* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx\n\
-			    version=n,sunit=value|su=num]\n\
+/* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+			    sunit=value|su=num,sectlog=n|sectsize=num]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
 /* naming */		[-n log=n|size=num,version=n]\n\
 /* prototype file */	[-p fname]\n\

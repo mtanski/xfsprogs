@@ -45,6 +45,7 @@
  *	- util-linux-2.10r ... 06 Dec 00
  *	- util-linux-2.11g ... 02 Jul 01
  *	- util-linux-2.11u ... 24 Aug 02
+ *	- util-linux-2.11z ... 13 May 03
  */
 
 #define SIZE(a) (sizeof(a)/sizeof(a[0]))
@@ -168,9 +169,9 @@ may_be_adfs(const u_char *s) {
 
 static int is_reiserfs_magic_string (struct reiserfs_super_block * rs)
 {
-    return (!strncmp (rs->s_magic, REISERFS_SUPER_MAGIC_STRING,
+    return (!strncmp (rs->s_magic, REISERFS_SUPER_MAGIC_STRING, 
 		      strlen ( REISERFS_SUPER_MAGIC_STRING)) ||
-	    !strncmp (rs->s_magic, REISER2FS_SUPER_MAGIC_STRING,
+	    !strncmp (rs->s_magic, REISER2FS_SUPER_MAGIC_STRING, 
 		      strlen ( REISER2FS_SUPER_MAGIC_STRING)));
 }
 
@@ -225,7 +226,8 @@ fstype(const char *device) {
 	 /* block 0 */
 	 if (lseek(fd, 0, SEEK_SET) != 0
 	     || read(fd, (char *) &xsb, sizeof(xsb)) != sizeof(xsb))
-	      goto io_error;
+	      goto try_iso9660;
+	 /* Gyorgy Kovesdi: none of my photocds has a readable block 0 */
 
 	 if (xiafsmagic(xsb.xiasb) == _XIAFS_SUPER_MAGIC)
 	      type = "xiafs";
@@ -240,7 +242,8 @@ fstype(const char *device) {
 	 else if(!strncmp(xsb.ntfssb.s_magic, NTFS_SUPER_MAGIC,
 			  sizeof(xsb.ntfssb.s_magic)))
 	      type = "ntfs";
-	 else if(cramfsmagic(xsb.cramfssb) == CRAMFS_SUPER_MAGIC)
+	 else if(cramfsmagic(xsb.cramfssb) == CRAMFS_SUPER_MAGIC ||
+		 cramfsmagic(xsb.cramfssb) == CRAMFS_SUPER_MAGIC_BE)
 	      type = "cramfs";
 	 else if ((!strncmp(xsb.fatsb.s_os, "MSDOS", 5) ||
 		   !strncmp(xsb.fatsb.s_os, "MSWIN", 5) ||
@@ -302,32 +305,32 @@ fstype(const char *device) {
 
     if (!type) {
 	/* block 1 */
-	if (lseek(fd, 0x400, SEEK_SET) != 0x400
-	    || read(fd, (char *) &hfssb, sizeof(hfssb)) != sizeof(hfssb))
-	     goto io_error;
+        if (lseek(fd, 0x400, SEEK_SET) != 0x400
+            || read(fd, (char *) &hfssb, sizeof(hfssb)) != sizeof(hfssb))
+             goto io_error;
 
-	/* also check if block size is equal to 512 bytes,
-	   since the hfs driver currently only has support
-	   for block sizes of 512 bytes long, and to be
-	   more accurate (sb magic is only a short int) */
-	if ((hfsmagic(hfssb) == HFS_SUPER_MAGIC &&
+        /* also check if block size is equal to 512 bytes,
+           since the hfs driver currently only has support
+           for block sizes of 512 bytes long, and to be
+           more accurate (sb magic is only a short int) */
+        if ((hfsmagic(hfssb) == HFS_SUPER_MAGIC &&
 	     hfsblksize(hfssb) == 0x20000) ||
-	    (swapped(hfsmagic(hfssb)) == HFS_SUPER_MAGIC &&
-	     hfsblksize(hfssb) == 0x200))
-	     type = "hfs";
+            (swapped(hfsmagic(hfssb)) == HFS_SUPER_MAGIC &&
+             hfsblksize(hfssb) == 0x200))
+             type = "hfs";
     }
 
     if (!type) {
 	/* block 3 */
-	if (lseek(fd, 0xc00, SEEK_SET) != 0xc00
-	    || read(fd, (char *) &adfssb, sizeof(adfssb)) != sizeof(adfssb))
-	     goto io_error;
+        if (lseek(fd, 0xc00, SEEK_SET) != 0xc00
+            || read(fd, (char *) &adfssb, sizeof(adfssb)) != sizeof(adfssb))
+             goto io_error;
 
 	/* only a weak test */
-	if (may_be_adfs((u_char *) &adfssb)
-	    && (adfsblksize(adfssb) >= 8 &&
-		adfsblksize(adfssb) <= 10))
-	     type = "adfs";
+        if (may_be_adfs((u_char *) &adfssb)
+            && (adfsblksize(adfssb) >= 8 &&
+                adfsblksize(adfssb) <= 10))
+             type = "adfs";
     }
 
     if (!type) {
@@ -356,12 +359,12 @@ fstype(const char *device) {
 
     if (!type) {
 	/* block 8 */
-	if (lseek(fd, 0x2000, SEEK_SET) != 0x2000
-	    || read(fd, (char *) &hpfssb, sizeof(hpfssb)) != sizeof(hpfssb))
-	     goto io_error;
+        if (lseek(fd, 0x2000, SEEK_SET) != 0x2000
+            || read(fd, (char *) &hpfssb, sizeof(hpfssb)) != sizeof(hpfssb))
+             goto io_error;
 
-	if (hpfsmagic(hpfssb) == HPFS_SUPER_MAGIC)
-	     type = "hpfs";
+        if (hpfsmagic(hpfssb) == HPFS_SUPER_MAGIC)
+             type = "hpfs";
     }
 
     if (!type) {
@@ -375,6 +378,7 @@ fstype(const char *device) {
 
     if (!type) {
 	 /* block 32 */
+    try_iso9660:
 	 if (lseek(fd, 0x8000, SEEK_SET) != 0x8000
 	     || read(fd, (char *) &isosb, sizeof(isosb)) != sizeof(isosb))
 	      goto io_error;
