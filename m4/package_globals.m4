@@ -2,6 +2,7 @@
 # Generic macro, sets up all of the global packaging variables.
 # The following environment variables may be set to override defaults:
 #   DEBUG OPTIMIZER MALLOCLIB PLATFORM DISTRIBUTION INSTALL_USER INSTALL_GROUP
+#   BUILD_VERSION
 #
 AC_DEFUN([AC_PACKAGE_GLOBALS],
   [ pkg_name="$1"
@@ -11,6 +12,7 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
     pkg_version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
     AC_SUBST(pkg_version)
     pkg_release=$PKG_BUILD
+    test -z "$BUILD_VERSION" || pkg_release="$BUILD_VERSION"
     AC_SUBST(pkg_release)
 
     DEBUG=${DEBUG:-'-DDEBUG'}		dnl  -DNDEBUG

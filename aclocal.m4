@@ -1,19 +1,21 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4
+# aclocal.m4 generated automatically by aclocal 1.6.3 -*- Autoconf -*-
 
-dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
-dnl This file is free software; the Free Software Foundation
-dnl gives unlimited permission to copy and/or distribute it,
-dnl with or without modifications, as long as this notice is preserved.
+# Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2002
+# Free Software Foundation, Inc.
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-dnl PARTICULAR PURPOSE.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
 
 # 
 # Generic macro, sets up all of the global packaging variables.
 # The following environment variables may be set to override defaults:
 #   DEBUG OPTIMIZER MALLOCLIB PLATFORM DISTRIBUTION INSTALL_USER INSTALL_GROUP
+#   BUILD_VERSION
 #
 AC_DEFUN([AC_PACKAGE_GLOBALS],
   [ pkg_name="$1"
@@ -23,6 +25,7 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
     pkg_version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
     AC_SUBST(pkg_version)
     pkg_release=$PKG_BUILD
+    test -z "$BUILD_VERSION" || pkg_release="$BUILD_VERSION"
     AC_SUBST(pkg_release)
 
     DEBUG=${DEBUG:-'-DDEBUG'}		dnl  -DNDEBUG
@@ -88,7 +91,7 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
 
     if test -z "$LIBTOOL"; then
-        AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+	AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin:/usr/local/bin)
     fi
     libtool=$LIBTOOL
     AC_SUBST(libtool)
@@ -171,21 +174,22 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
   ])
 
 AC_DEFUN([AC_PACKAGE_NEED_UUID_UUID_H],
-  [ AC_CHECK_HEADERS([uuid/uuid.h])
-    if test "$ac_cv_header_uuid_uuid_h" != yes; then
+  [ AC_CHECK_HEADERS(uuid/uuid.h,, [
+	AC_CHECK_HEADER(uuid.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID header.'
 	echo 'Install the Universally Unique Identifiers development package.'
-	exit 1
+	exit 1])
     fi
   ])
 
-AC_DEFUN([AC_PACKAGE_NEED_UUIDPARSE_LIBUUID],
-  [ AC_CHECK_LIB(uuid, uuid_parse,, [
+AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE_LIBUUID],
+  [ AC_CHECK_LIB(uuid, uuid_compare,, [
+	AC_CHECK_FUNCS(uuid_compare,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID library.'
 	echo 'Install the Universally Unique Identifiers library package.'
-	exit 1
+	exit 1])
     ])
     libuuid="/usr/lib/libuuid.a"
     AC_SUBST(libuuid)
