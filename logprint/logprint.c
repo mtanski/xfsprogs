@@ -188,7 +188,7 @@ main(int argc, char **argv)
 			}
 			case 'V': {
 				printf("%s version %s\n", progname, VERSION);
-				break;
+				exit(0);
                         }
                         case 'v': {
                                 print_overwrite++;

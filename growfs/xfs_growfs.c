@@ -242,7 +242,7 @@ main(int argc, char **argv)
 			break;
 		case 'V':
 			printf("%s version %s\n", progname, VERSION);
-			break;
+			exit(0);
 		case '?':
 		default:
 			usage();
