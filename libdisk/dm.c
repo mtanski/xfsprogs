@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,66 +32,67 @@
 
 #include "drivers.h"
 
-#ifndef LVM_BLK_MAJOR
-#define LVM_BLK_MAJOR	58
-#endif
-
 int
-mnt_is_lvm_subvol(
+mnt_is_dm_subvol(
 	dev_t		dev)
 {
-	if (major(dev) == LVM_BLK_MAJOR)
-		return 1;
-	return get_driver_block_major("lvm", major(dev));
+	return get_driver_block_major("device-mapper", major(dev));
 }
 
 int
-lvm_get_subvol_stripe(
+dm_get_subvol_stripe(
 	char		*dfile,
 	sv_type_t	type,
 	int		*sunit,
 	int		*swidth,
 	struct stat64	*sb)
 {
-	int		lvpipe[2], stripes = 0, stripesize = 0;
-	char		*largv[3], buf[1024];
+	int		count, stripes = 0, stripesize = 0;
+	int		dmpipe[2];
+	char		*dpath, *largv[4], tmppath[PATH_MAX];
 	FILE		*stream;
-	char		tmppath[MAXPATHLEN];
+	long long	offset, size;
+	static char	*command = "table";	/* dmsetup table /dev/xxx */
 
-	if (!mnt_is_lvm_subvol(sb->st_rdev))
+	if (!mnt_is_dm_subvol(sb->st_rdev))
 		return 0;
 
-	/* Quest for lvdisplay */
-	if (!access("/usr/local/sbin/lvdisplay", R_OK|X_OK))
-		largv[0] = "/usr/local/sbin/lvdisplay";
-	else if (!access("/usr/sbin/lvdisplay", R_OK|X_OK))
-		largv[0] = "/usr/sbin/lvdisplay";
-	else if (!access("/sbin/lvdisplay", R_OK|X_OK))
-		largv[0] = "/sbin/lvdisplay";
+	/* Quest for dmsetup */
+	if (!access("/usr/local/sbin/dmsetup", R_OK|X_OK))
+		largv[0] = "/usr/local/sbin/dmsetup";
+	else if (!access("/sbin/dmsetup", R_OK|X_OK))
+		largv[0] = "/sbin/dmsetup";
 	else {
 		fprintf(stderr,
-			_("Warning - LVM device, but no lvdisplay(8) found\n"));
+	_("Warning - device mapper device, but no dmsetup(8) found\n"));
 		return 0;
 	}
 
-	/* realpath gives an absolute pathname */
-	largv[1] = realpath(dfile, tmppath);
-	largv[2] = NULL;
+	if (!(dpath = realpath(dfile, tmppath))) {
+		fprintf(stderr,
+	_("Warning - device mapper device, but cannot resolve path %s: %s\n"),
+			dfile, strerror(errno));
+		return 0;
+	}
+
+	largv[1] = command;
+	largv[2] = dpath;
+	largv[3] = NULL;
 
 	/* Open pipe */
-	if (pipe(lvpipe) < 0) {
+	if (pipe(dmpipe) < 0) {
 		fprintf(stderr, _("Could not open pipe\n"));
 		exit(1);
 	}
 
-	/* Spawn lvdisplay */
+	/* Spawn dmsetup */
 	switch (fork()) {
 	case 0:
 		/* Plumbing */
-		close(lvpipe[0]);
+		close(dmpipe[0]);
 
-		if (lvpipe[1] != STDOUT_FILENO)
-			dup2(lvpipe[1], STDOUT_FILENO);
+		if (dmpipe[1] != STDOUT_FILENO)
+			dup2(dmpipe[1], STDOUT_FILENO);
 
 		execv(largv[0], largv);
 
@@ -99,31 +100,23 @@ lvm_get_subvol_stripe(
 		exit(1);
 
 	case -1:
-		fprintf(stderr, _("Failed forking lvdisplay process\n"));
+		fprintf(stderr, _("Failed forking dmsetup process\n"));
 		exit(1);
 
 	default:
 		break;
 	}
 
-	close(lvpipe[1]);
-	stream = fdopen(lvpipe[0], "r");
-
-	/* Scan stream for keywords */
-	while (fgets(buf, 1023, stream) != NULL) {
-
-		if (!strncmp(buf, "Stripes", 7))
-			sscanf(buf, "Stripes %d", &stripes);
-
-		if (!strncmp(buf, "Stripe size", 11))
-			sscanf(buf, "Stripe size (KByte) %d", &stripesize);
-	}
+	close(dmpipe[1]);
+	stream = fdopen(dmpipe[0], "r");
+	count = fscanf(stream, "%lld %lld striped %d %d ",
+			&offset, &size, &stripes, &stripesize);
+	fclose(stream);
+	if (count != 4)
+		return 0;
 
 	/* Update sizes */
-	*sunit = stripesize << 1;
-	*swidth = (stripes * stripesize) << 1;
-
-	fclose(stream);
-
+	*sunit = stripesize;
+	*swidth = (stripes * stripesize);
 	return 1;
 }

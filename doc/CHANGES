@@ -1,3 +1,11 @@
+xfsprogs-2.6.12 (30 April 2004)
+	- Extract stripe unit/width from device mapper devices
+	  (added libdisk infrastructure, used by mkfs.xfs).
+	- Fix rounding in xfs_io(8) bytes read/written output.
+	- Sync up user/kernel source in libxfs and headers.
+	- Fix compiler warnings on 64 bit platforms.
+	- Update i18n message catalog.
+
 xfsprogs-2.6.11 (15 April 2004)
 	- Fix file descriptor leak in path_to_fshandle. A file
 	  was being opened but never closed, regardless of

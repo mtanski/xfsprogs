@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -39,12 +39,14 @@ LT_REVISION = 0
 LT_AGE = 0
 
 CFILES = drivers.c fstype.c pttype.c
-ifeq ($(PKG_PLATFORM),linux)
-CFILES += md.c xvm.c evms.c lvm.c
-else
-LSRCFILES = md.c xvm.c evms.c lvm.c
-endif
 HFILES = drivers.h fstype.h pttype.h md.h xvm.h evms.h
+LINUX_DRIVERS = dm.c md.c xvm.c evms.c lvm.c
+
+ifeq ($(PKG_PLATFORM),linux)
+CFILES += $(LINUX_DRIVERS)
+else
+LSRCFILES = $(LINUX_DRIVERS)
+endif
 
 default: $(LTLIBRARY)
 
