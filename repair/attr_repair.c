@@ -884,6 +884,23 @@ process_longform_attr(
 }
 
 
+static void
+xfs_acl_get_endian(struct acl *aclp)
+{
+    struct acl_entry *ace, *end;
+
+    /* do the endian conversion */
+    INT_SET(aclp->acl_cnt, ARCH_CONVERT, aclp->acl_cnt);
+
+    /* loop thru ACEs of ACL */
+    end = &aclp->acl_entry[0]+aclp->acl_cnt;
+    for (ace=&aclp->acl_entry[0]; ace < end; ace++) {
+        INT_SET(ace->ae_tag, ARCH_CONVERT, ace->ae_tag);
+        INT_SET(ace->ae_id, ARCH_CONVERT, ace->ae_id);
+        INT_SET(ace->ae_perm, ARCH_CONVERT, ace->ae_perm);
+    }
+}
+
 /*
  * returns 1 if attributes got cleared
  * and 0 if things are ok. 
@@ -933,6 +950,8 @@ acl_valid (struct acl *aclp)
 
 	if (aclp == NULL)
 		goto acl_invalid;
+
+	xfs_acl_get_endian(aclp);
 
 	if (aclp->acl_cnt > ACL_MAX_ENTRIES)
 		goto acl_invalid;
