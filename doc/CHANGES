@@ -1,3 +1,6 @@
+xfsprogs-2.3.1 (03 September 2002)
+	- Allow xfs_db to accept negative numbers when writing values.
+
 xfsprogs-2.3.0 (03 September 2002)
 	- Several changes to geometry ioctl callers which will make
 	  the tools useable on older kernel versions too.

@@ -501,12 +501,14 @@ convert_arg(
 		}
 
 		return buf;
-        } else if (arg[0] == '#' || strchr(arg,'-')) {
+        } else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
                 /*
                  * handle hex blocks ie
                  *    #00112233445566778899aabbccddeeff
                  * and uuids ie 
                  *    1122334455667788-99aa-bbcc-ddee-ff00112233445566778899
+		 *
+		 * (but if it starts with "-" assume it's just an integer)
                  */
                 int bytes=bit_length/8;
                 
