@@ -1,3 +1,9 @@
+xfsprogs-current
+	- fix logprint bug in reporting extended attributes
+	  (thanks to Tang Lingbo <tanglb@sina.com> for fixing this)
+	- fix mkfs.xfs core dump when attemping to run on devices
+	  which are too small to hold a valid XFS filesystem
+
 xfsprogs-1.3.5 (13 August 2001)
 	- fix bug in xfs_db bit handling on big endian platforms
 	- fix mkfs bug related to too-small final allocation group

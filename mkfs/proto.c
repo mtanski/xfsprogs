@@ -113,9 +113,15 @@ fail(
 	char	*msg,
 	int	i)
 {
-	fprintf(stderr, "%s: %s %d\n", progname, msg, i);
-	ASSERT(0);
+	fprintf(stderr, "%s: %s [%d - %s]\n", progname, msg, i, strerror(i));
 	exit(1);
+}
+
+void
+res_failed(
+	int	i)
+{
+	fail("cannot reserve space", i);
 }
 
 static void
@@ -744,15 +750,6 @@ rtinit(
 		}
 		libxfs_trans_commit(tp, 0, NULL);
 	}
-}
-
-void
-res_failed(
-	int	err)
-{
-	fprintf(stderr, "%s: ran out of disk space!\n", progname);
-	ASSERT(0);
-	exit(1);
 }
 
 static long

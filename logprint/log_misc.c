@@ -687,7 +687,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     *ptr += sizeof(xfs_dinode_core_t);
 
     if (*i == num_ops-1 && f->ilf_size == 3)  {
-	    return 1;
+	return 1;
     }
 
     /* does anything come next */
@@ -724,8 +724,45 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
 	    }
 	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
 		return 1;
+	    }
+	    break;
+	}
+	case XFS_ILOG_AEXT: {
+	    ASSERT(f->ilf_size == 3);
+	    (*i)++;
+	    xlog_print_op_header(op_head, *i, ptr);
+	    printf("EXTENTS inode attr\n");
+	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+		return 1;
+	    }
+	    break;
+	}
+	case XFS_ILOG_ABROOT: {
+	    ASSERT(f->ilf_size == 3);
+	    (*i)++;
+	    xlog_print_op_header(op_head, *i, ptr);
+	    printf("BTREE inode attr\n");
+	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+		return 1;
+	    }
+	    break;
+	}
+	case XFS_ILOG_ADATA: {
+	    ASSERT(f->ilf_size == 3);
+	    (*i)++;
+	    xlog_print_op_header(op_head, *i, ptr);
+	    printf("LOCAL inode attr\n");
+	    if (mode == IFDIR) {
+		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+	    }
+	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
+		return 1;
+	    }
 	    break;
 	}
 	case XFS_ILOG_DEV: {

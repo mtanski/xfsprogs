@@ -61,9 +61,9 @@ libxfs_inode_alloc(
 	ialloc_context = (xfs_buf_t *)0;
 	error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr, (xfs_prid_t) 0,
 			   1, &ialloc_context, &call_again, &ip);
-	if (error) {
+	if (error)
 		return error;
-	}
+
 	if (call_again) {
 		xfs_trans_bhold(*tp, ialloc_context);
 		ntp = xfs_trans_dup(*tp);
@@ -78,12 +78,15 @@ libxfs_inode_alloc(
 		error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr,
 				   (xfs_prid_t) 0, 1, &ialloc_context,
 				   &call_again, &ip);
-		if (error) {
+		if (!ip)
+			error = ENOSPC;
+		if (error)
 			return error;
-		}
 	}
+	if (!ip)
+		error = ENOSPC;
+
 	*ipp = ip;
-	ASSERT(ip);
 	return error;
 }
 
@@ -696,7 +699,7 @@ libxfs_da_read_bufr(
 	xfs_trans_t	*trans,
 	xfs_inode_t	*dp,
 	xfs_dablk_t	bno,
-	xfs_daddr_t		mappedbno,
+	xfs_daddr_t	mappedbno,
 	xfs_dabuf_t	**bpp,
 	int		whichfork)
 {
