@@ -207,6 +207,11 @@ obj_to_handle(
 	hreq.ohandle  = hbuf;
 	hreq.ohandlen = (__u32 *)hlen;
 
+	/* the xfsctl call will only modify the low 32 bits of *hlen,
+	 * but *hlen (size_t) could be a 64 bit value on some systems.
+	 * zero it out beforehand in case any upper bits are set. */
+	*hlen = 0;
+
 	ret = xfsctl(fspath, fsfd, opcode, &hreq);
 	if (ret)
 		return ret;

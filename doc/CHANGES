@@ -1,3 +1,7 @@
+xfsprogs-2.6.18 (23 June 2004)
+	- Fix libhandle from possibly returning an invalid
+	  handle length on systems where size_t is 64 bits.
+
 xfsprogs-2.6.17 (23 June 2004)
 	- Fix use of isset macro, getting realtime devices to
 	  function correctly in xfs_db and xfs_repair.
