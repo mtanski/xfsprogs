@@ -156,11 +156,19 @@ findsize(char *path)
 		exit(1);
 	}
 	error = ioctl(fd, BLKGETSIZE64, &size);
-	/* BLKGETSIZE64 returns size in bytes */
-	size = size >> 9;
-	if (error < 0) {
-		fprintf(stderr, "%s: can't determine device size\n", progname);
-		exit(1);
+	if (error >= 0) {
+		/* BLKGETSIZE64 returns size in bytes not 512-byte blocks */
+		size = size >> 9;
+	} else {
+		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
+		unsigned long tmpsize;
+		error = ioctl(fd, BLKGETSIZE, &tmpsize);
+		if (error < 0) {
+			fprintf(stderr, "%s: can't determine device size\n",
+				progname);
+			exit(1);
+		}
+		size = (__uint64_t)tmpsize;
 	}
 
 	close(fd);
