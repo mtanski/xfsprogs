@@ -45,7 +45,7 @@ HFILES = arch.h handle.h jdm.h libxfs.h libxlog.h xqm.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
 DK_HFILES = mountinfo.h volume.h fstyp.h dvh.h
-LSRCFILES = platform_defs.h.in builddefs.in buildrules $(DK_HFILES)
+LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules $(DK_HFILES)
 
 default install :
 

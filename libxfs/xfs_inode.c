@@ -123,7 +123,8 @@ xfs_itobp(
 					"+ imap.im_len (0x%llx)) > "
 					" XFS_FSB_TO_BB(mp, "
 					"mp->m_sb.sb_dblocks) (0x%llx)",
-					imap.im_blkno, imap.im_len,
+					(unsigned long long) imap.im_blkno,
+					(unsigned long long) imap.im_len,
 					XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
 #endif /* DEBUG */
 			return XFS_ERROR(EINVAL);
@@ -159,7 +160,8 @@ xfs_itobp(
 		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_itobp: "
 				"xfs_trans_read_buf() returned error %d, "
 				"imap.im_blkno 0x%llx, imap.im_len 0x%llx",
-				error, imap.im_blkno, imap.im_len);
+				error, (unsigned long long) imap.im_blkno,
+				(unsigned long long) imap.im_len);
 #endif /* DEBUG */
 		return error;
 	}
@@ -667,8 +669,8 @@ xfs_iread(
 		xfs_trans_brelse(tp, bp);
 #ifdef DEBUG
 		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
-				"dip->di_core.di_magic (0x%llx) != "
-				"XFS_DINODE_MAGIC (0x%llx)",
+				"dip->di_core.di_magic (0x%x) != "
+				"XFS_DINODE_MAGIC (0x%x)",
 				INT_GET(dip->di_core.di_magic, ARCH_CONVERT),
 				XFS_DINODE_MAGIC);
 #endif /* DEBUG */
@@ -1236,9 +1238,6 @@ xfs_iextents_copy(
 	int			copied;
 	xfs_bmbt_rec_32_t	*dest_ep;
 	xfs_bmbt_rec_t		*ep;
-#ifdef DEBUG
-	xfs_exntfmt_t		fmt = XFS_EXTFMT_INODE(ip);
-#endif
 #ifdef XFS_BMAP_TRACE
 	static char		fname[] = "xfs_iextents_copy";
 #endif
@@ -1264,7 +1263,7 @@ xfs_iextents_copy(
 		       (XFS_IFORK_NEXTENTS(ip, whichfork) *
 		        (uint)sizeof(xfs_bmbt_rec_t)));
 		bcopy(ifp->if_u1.if_extents, buffer, ifp->if_bytes);
-		xfs_validate_extents(buffer, nrecs, fmt);
+		xfs_validate_extents(buffer, nrecs, XFS_EXTFMT_INODE(ip));
 		return ifp->if_bytes;
 	}
 
@@ -1297,10 +1296,10 @@ xfs_iextents_copy(
 	ASSERT(copied != 0);
 	ASSERT(copied == ip->i_d.di_nextents);
 	ASSERT((copied * (uint)sizeof(xfs_bmbt_rec_t)) <= XFS_IFORK_DSIZE(ip));
-	xfs_validate_extents(buffer, copied, fmt);
+	xfs_validate_extents(buffer, copied, XFS_EXTFMT_INODE(ip));
 
 	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
-}		  
+}
 
 /*
  * Each of the following cases stores data into the same region

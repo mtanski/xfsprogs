@@ -948,8 +948,9 @@ xfs_dilocate(
 		if (agbno >= mp->m_sb.sb_agblocks) {
 			xfs_fs_cmn_err(CE_ALERT, mp,
 					"xfs_dilocate: agbno (0x%llx) >= "
-					"mp->m_sb.sb_agblocks (0x%llx)",
-					agbno, mp->m_sb.sb_agblocks);
+					"mp->m_sb.sb_agblocks (0x%lx)",
+					(unsigned long long) agbno,
+					(unsigned long) mp->m_sb.sb_agblocks);
 		}
 		if (ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
 			xfs_fs_cmn_err(CE_ALERT, mp,
