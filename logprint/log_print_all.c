@@ -211,14 +211,16 @@ xlog_recover_print_quotaoff(
 	xlog_recover_item_t	*item)
 {
 	xfs_qoff_logformat_t	*qoff_f;
-	char			str[20];
+	char			str[32] = { 0 };
 
 	qoff_f = (xfs_qoff_logformat_t *)item->ri_buf[0].i_addr;
 	ASSERT(qoff_f);
 	if (qoff_f->qf_flags & XFS_UQUOTA_ACCT)
-		strcpy(str, "USER QUOTA");
+		strcat(str, "USER QUOTA");
 	if (qoff_f->qf_flags & XFS_GQUOTA_ACCT)
 		strcat(str, "GROUP QUOTA");
+	if (qoff_f->qf_flags & XFS_PQUOTA_ACCT)
+		strcat(str, "PROJECT QUOTA");
 	printf("\tQUOTAOFF: #regs:%d   type:%s\n",
 	       qoff_f->qf_size, str);
 }
