@@ -1,6 +1,7 @@
 [current cvs]
 	- Update xfs_growfs man page
 	- Don't build libxlog.a with DEBUG enabled
+	- xfs_db fixes from ASANO Masahiro at NEC
 
 xfsprogs-2.0.4 (17 April 2002)
 	- Minor update sync'ing with kernel changes (less endian

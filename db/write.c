@@ -277,7 +277,7 @@ bwrite_rrot(
 
 	hold_region = xmalloc(shift);
 	memcpy(hold_region, base+(len-shift), shift);
-	memcpy(base+shift, base, len-shift);
+	memmove(base+shift, base, len-shift);
 	memcpy(base, hold_region, shift);
 }
 
@@ -295,7 +295,7 @@ bwrite_seq(
 	int base;
 	int range;
 	int top;
-	char *buf = (char *)iocur_top->data;
+	char *buf;
 
 	if (start == -1)
 		start = 0;
@@ -325,6 +325,7 @@ bwrite_seq(
 	}
 
 	range = top - base;
+	buf = (char *)iocur_top->data + start;
 
 	tmp = 0;
 	for (i = start; i < start+len; i++) {
@@ -343,7 +344,7 @@ bwrite_random(
 	int   to)
 {
 	int i;
-	char *buf = (char *)iocur_top->data;
+	char *buf;
 
 	if (start == -1)
 		start = 0;
@@ -355,6 +356,8 @@ bwrite_random(
 		dbprintf("length (%d) too large for data block size (%d)",
 			 len, iocur_top->len);
 	}
+
+	buf = (char *)iocur_top->data + start;
 
 	for (i = start; i < start+len; i++)
 		*buf++ = (char)lrand48();
