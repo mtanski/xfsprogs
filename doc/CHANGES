@@ -1,3 +1,9 @@
+xfsprogs-current
+	- several man pages updated to document external log usage
+	- install yet another shared library symlink for ld to find
+	- switched on -fno-strict-aliasing for library object builds
+	- fix several minor compiler warnings when building on IA64
+
 xfsprogs-1.3.3 (27 July 2001)
 	- fixes for (hopefully) the last few nits in libtool usage
 

@@ -317,7 +317,7 @@ rtcp( char *source, char *target, int fextsize)
 			source, dioattr.d_miniosz);
 		if ( pflag ) {
 			printf("%s will be padded to %lld bytes.\n",
-				tbuf,
+				tbuf, (long long)
 				(((s1.st_size / dioattr.d_miniosz) + 1)  *
 					dioattr.d_miniosz) );
 				

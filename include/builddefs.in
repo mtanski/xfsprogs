@@ -99,7 +99,8 @@ LDLIBS = $(LLDLIBS) $(MALLOCLIB)
 
 MAKEOPTS = --no-print-directory
 SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
-DIRT = $(LDIRT) dep dep.bak $(OBJECTS) $(LTCOMMAND) $(LTLIBRARY) *.[1-9].gz
+DIRT = $(LDIRT) dep dep.bak $(OBJECTS) $(LTOBJECTS) *.[1-9].gz \
+	$(LTCOMMAND) $(LTLIBRARY)
 
 OBJECTS = $(ASFILES:.s=.o) \
           $(CFILES:.c=.o) \
@@ -118,18 +119,19 @@ CXXF	= $(CXX) $(CXXFLAGS)
 LDF	= $(LD) $(LDFLAGS)
 
 # For libtool.
-DIRT += $(LTOBJECTS) $(LTLIBRARY)
+LIBNAME = $(basename $(LTLIBRARY))
+LTOBJECTS = $(OBJECTS:.o=.lo)
+LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+
 LTLINK = $(LIBTOOL) --mode=link $(CC)
 LTEXEC = $(LIBTOOL) --mode=execute
 LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT
-LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
-LTOBJECTS = $(OBJECTS:.o=.lo)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT -fno-strict-aliasing
+
 ifeq ($(ENABLE_SHARED),yes)
 LTLDFLAGS += -rpath $(PKG_SLIB_DIR) 
 LTLDFLAGS += -version-info $(LTVERSION)
 endif
-LIBNAME = $(basename $(LTLIBRARY))
 
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB = \
