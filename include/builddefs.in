@@ -143,9 +143,10 @@ endif
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
 	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
-	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_SLIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_SLIB_DIR)/$(LIBNAME).la ; \
 	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_SLIB_DIR)
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
@@ -153,8 +154,8 @@ endif
 
 INSTALL_LTLIB_STATIC = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
-	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_SLIB_DIR)
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR)
 
 INSTALL_MAN = \
     @for d in $(MAN_PAGES); do \
