@@ -59,7 +59,7 @@ static struct dev_to_fd {
 } dev_map[MAX_DEVS]={{0}};
 
 static int
-check_ismounted(char *name, char *block, int verbose)
+check_ismounted(char *name, char *block)
 {
 	struct ustat	ust;
 	struct stat64	st;
@@ -69,10 +69,8 @@ check_ismounted(char *name, char *block, int verbose)
 	if ((st.st_mode & S_IFMT) != S_IFBLK)
 		return 0;
 	if (ustat(st.st_rdev, &ust) >= 0) {
-		if (verbose)
-			fprintf(stderr,
-				"%s: %s contains a mounted filesystem\n",
-				progname, name);
+		fprintf(stderr, "%s: %s contains a mounted filesystem\n",
+			progname, name);
 		return 1;
 	}
 	return 0;
@@ -89,29 +87,43 @@ check_ismounted(char *name, char *block, int verbose)
 static int
 check_isactive(char *name, char *block, int fatal)
 {
+#define PROC_MOUNTED	"/proc/mounts"
 	int		sts = 0;
 	FILE		*f;
 	struct mntent	*mnt;
+	struct stat64	st, mst;
+	struct ustat	ust;
+	char		mounts[MAXPATHLEN];
 
-	if (check_ismounted(name, block, 0)) {
-		if ((f = setmntent(MOUNTED, "r")) == NULL) {
-			fprintf(stderr,
-				"%s: %s contains a possibly writable, mounted "
+	if (stat64(block, &st) < 0)
+		return sts;
+	if ((st.st_mode & S_IFMT) != S_IFBLK)
+		return sts;
+	if (ustat(st.st_rdev, &ust) < 0)
+		return sts;
+
+	strcpy(mounts, access(PROC_MOUNTED, R_OK)? PROC_MOUNTED : MOUNTED);
+	if ((f = setmntent(mounts, "r")) == NULL) {
+		fprintf(stderr, "%s: %s contains a possibly writable, mounted "
 				"filesystem\n", progname, name);
 			return fatal;
-		}
-		while ((mnt = getmntent(f)) != NULL) {
-			if (hasmntopt(mnt, MNTOPT_RO) != NULL)
-				break;
-		}
-		if (mnt == NULL) {
-			fprintf(stderr,
-				"%s: %s contains a writable mounted "
-				"filesystem\n", progname, name);
-			sts = fatal;
-		}
-		endmntent(f);
 	}
+	while ((mnt = getmntent(f)) != NULL) {
+		if (stat64(mnt->mnt_fsname, &mst) < 0)
+			continue;
+		if ((mst.st_mode & S_IFMT) != S_IFBLK)
+			continue;
+		if (mst.st_rdev == st.st_rdev
+		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
+			break;
+	}
+	if (mnt == NULL) {
+		fprintf(stderr, "%s: %s contains a writable, mounted "
+				"filesystem\n", progname, name);
+		sts = fatal;
+	}
+	endmntent(f);
+
 	return sts;
 }
 
@@ -313,7 +325,7 @@ libxfs_init(libxfs_init_t *a)
 			goto done;
 		}
 		if (!readonly && !inactive && check_ismounted(
-					a->volname, blockfile, 1))
+					a->volname, blockfile))
 			goto done;
 		if (inactive && check_isactive(
 					a->volname, blockfile, readonly))
@@ -418,7 +430,7 @@ voldone:
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						dname, blockfile, 1))
+						dname, blockfile))
 				goto done;
 			if (inactive && check_isactive(
 						dname, blockfile, readonly))
@@ -455,7 +467,7 @@ voldone:
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						logname, blockfile, 1))
+						logname, blockfile))
 				goto done;
 			else if (inactive && check_isactive(
 						logname, blockfile, readonly))
@@ -492,7 +504,7 @@ voldone:
 				goto done;
 			}
 			if (!readonly && !inactive && check_ismounted(
-						rtname, blockfile, 1))
+						rtname, blockfile))
 				goto done;
 			if (inactive && check_isactive(
 						rtname, blockfile, readonly))

@@ -23,7 +23,7 @@ S: Danny Cox; Connex; 2970 Brandywine Ln; Suite 120; Atlanta GA 30341-5527
 
 N: Thomas Graichen
 E: tgr@spoiled.org
-D: XFS FAQ ( http://oss.sgi.com/projects/xfs/faq.html ) maintainer
+D: Original XFS FAQ maintainer
 D: PowerPC and Alpha porting
 S: Berlin, Germany
 
@@ -47,6 +47,10 @@ S: Krosenska' 543
 S: 181 00 Praha 8
 S: Czech Republic
 
+N: Seth Mos
+E: knuffie@xs4all.nl
+D: XFS FAQ ( http://oss.sgi.com/projects/xfs/faq.html ) maintainer
+
 N: Robert Stickel
 E: rstickel@connex.com
 D: libacl port to Linux
@@ -54,5 +58,5 @@ S: 2970 Brandywine Rd, Suite 120, Atlanta, GA 30431, USA
 
 N: John Trostel
 E: jtrostel@connex.com
-D: libacl extentions for Linux
+D: libacl extensions for Linux
 S: 2970 Brandywine Rd, Suite 120, Atlanta, GA 30431, USA

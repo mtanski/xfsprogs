@@ -1,3 +1,12 @@
+xfsprogs (1.2.8) unstable; urgency=low
+
+  * Fixed a bug in libxfs /etc/mtab read-only mount detection
+  * First try procfs, fall back to /etc/mtab, for read-only mounts
+  * Sync with recent mount code changes for reiserfs and ext3 probes
+  * Fix logprint build problem under gcc 3.0
+
+ -- Nathan Scott <nathans@debian.org>  Mon,  2 Jul 2001 13:59:08 +1000
+
 xfsprogs (1.2.7) unstable; urgency=low
 
   * New xfs_freeze(8) command - volume manager snapshot helper

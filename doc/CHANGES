@@ -1,3 +1,8 @@
+xfsprogs-1.2.8 (02 Jul 2001)
+	- fixed a bug in libxfs /etc/mtab read-only mount detection
+	- first try procfs, fall back to /etc/mtab, for read-only mounts
+	- sync with recent mount code changes for reiserfs and ext3 probes
+	- fix logprint build problem under gcc 3.0
 
 xfsprogs-1.2.7 (22 May 2001)
 	- new xfs_freeze(8) command - volume manager snapshot helper

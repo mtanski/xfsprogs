@@ -341,6 +341,7 @@ typedef struct xfs_mount {
 #define XFS_MOUNT_SHARED    	0x00000800      /* shared mount */
 #define XFS_MOUNT_DFLT_IOSIZE  	0x00001000      /* set default i/o size */
 #define XFS_MOUNT_OSYNCISDSYNC 	0x00002000      /* treat o_sync like o_dsync */
+#define XFS_MOUNT_NOUUID	0x00004000	/* ignore uuid during mount */
 
 /*
  * Flags for m_cxfstype
