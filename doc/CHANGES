@@ -1,4 +1,8 @@
 
+xfsprogs-1.2.5 (07 May 2001)
+	- fix missing Makefile include entries for LVM headers
+	- configure script default man path now /usr/share/man
+
 xfsprogs-1.2.4 (01 May 2001)
 	- added -L option to mkfs.xfs (filesystem label)
 

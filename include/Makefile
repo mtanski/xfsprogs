@@ -45,7 +45,7 @@ HFILES = arch.h handle.h jdm.h libxfs.h xqm.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
 LSRCFILES = platform_defs.h.in builddefs.in buildrules \
-	lvm.h lvm_user.h liblvm.h \
+	lvm.h lvm_config.h lvm_log.h lvm_user.h liblvm.h \
 	md-int.h
 
 default install :
