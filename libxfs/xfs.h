@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -241,7 +241,6 @@ typedef struct { dev_t dev; } buftarg_t;
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define m_rtdev_targp(m)(&(m)->m_rtdev)
-#define kdev_none(x)	(!(x))
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )

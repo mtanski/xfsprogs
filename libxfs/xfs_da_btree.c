@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -2301,7 +2301,7 @@ lock_t		xfs_dabuf_global_lock;
 STATIC xfs_dabuf_t *
 xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
 {
-	xfs_buf_t	*bp;
+	xfs_buf_t		*bp;
 	xfs_dabuf_t	*dabuf;
 	int		i;
 	int		off;
@@ -2313,7 +2313,7 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
 	dabuf->dirty = 0;
 #ifdef XFS_DABUF_DEBUG
 	dabuf->ra = ra;
-	dabuf->dev = XFS_BUF_TARGET_DEV(bps[0]);
+	dabuf->dev = XFS_BUF_TARGET(bps[0]);
 	dabuf->blkno = XFS_BUF_ADDR(bps[0]);
 #endif
 	if (nbuf == 1) {
@@ -2363,8 +2363,8 @@ STATIC void
 xfs_da_buf_clean(xfs_dabuf_t *dabuf)
 {
 	xfs_buf_t	*bp;
-	int		i;
-	int		off;
+	int	i;
+	int	off;
 
 	if (dabuf->dirty) {
 		ASSERT(dabuf->nbuf > 1);
@@ -2418,10 +2418,10 @@ void
 xfs_da_log_buf(xfs_trans_t *tp, xfs_dabuf_t *dabuf, uint first, uint last)
 {
 	xfs_buf_t	*bp;
-	uint		f;
-	int		i;
-	uint		l;
-	int		off;
+	uint	f;
+	int	i;
+	uint	l;
+	int	off;
 
 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
 	if (dabuf->nbuf == 1) {
@@ -2464,8 +2464,8 @@ xfs_da_brelse(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
 {
 	xfs_buf_t	*bp;
 	xfs_buf_t	**bplist;
-	int		i;
-	int		nbuf;
+	int	i;
+	int	nbuf;
 
 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
 	if ((nbuf = dabuf->nbuf) == 1) {
@@ -2490,8 +2490,8 @@ xfs_da_binval(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
 {
 	xfs_buf_t	*bp;
 	xfs_buf_t	**bplist;
-	int		i;
-	int		nbuf;
+	int	i;
+	int	nbuf;
 
 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
 	if ((nbuf = dabuf->nbuf) == 1) {

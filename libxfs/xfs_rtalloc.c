@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -802,7 +802,7 @@ xfs_rtmount_init(
 	sbp = &mp->m_sb;
 	if (sbp->sb_rblocks == 0)
 		return 0;
-	if (kdev_none(mp->m_rtdev)) {
+	if (!mp->m_rtdev) {
 		printk(KERN_WARNING
 		"XFS: This FS has an RT subvol - specify -o rtdev on mount\n");
 		return XFS_ERROR(ENODEV);

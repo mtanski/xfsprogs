@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -221,8 +221,8 @@ typedef struct xfs_dabuf {
 	inst_t		*ra;		/* return address of caller to make */
 	struct xfs_dabuf *next;		/* next in global chain */
 	struct xfs_dabuf *prev;		/* previous in global chain */
-	kdev_t		dev;		/* device for buffer */
-	xfs_daddr_t	blkno;		/* daddr first in bps[0] */
+	dev_t		dev;		/* device for buffer */
+	xfs_daddr_t		blkno;		/* daddr first in bps[0] */
 #endif
 	struct xfs_buf	*bps[1];	/* actually nbuf of these */
 } xfs_dabuf_t;
