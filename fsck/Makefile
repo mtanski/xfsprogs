@@ -44,5 +44,5 @@ include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:

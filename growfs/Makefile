@@ -46,6 +46,6 @@ include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 	$(INSTALL) -m 755 xfs_info.sh $(PKG_BIN_DIR)/xfs_info
 install-dev:

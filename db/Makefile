@@ -53,7 +53,7 @@ include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 	$(INSTALL) -m 755 xfs_admin.sh $(PKG_BIN_DIR)/xfs_admin
 	$(INSTALL) -m 755 xfs_check.sh $(PKG_BIN_DIR)/xfs_check
 	$(INSTALL) -m 755 xfs_ncheck.sh $(PKG_BIN_DIR)/xfs_ncheck

@@ -122,6 +122,7 @@ top_builddir = $(TOPDIR)
 DIRT += $(LTOBJECTS) $(LTLIBRARY)
 LTLINK = $(LIBTOOL) --mode=link $(CC)
 LTEXEC = $(LIBTOOL) --mode=execute
+LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT
 LTVERSION = $(LT_CURRENT).$(LT_REVISION).$(LT_AGE)
 LTOBJECTS = $(OBJECTS:.o=.lo)
@@ -144,7 +145,7 @@ ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
 	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).a $(LIBNAME).la $(PKG_LIB_DIR); \
 	../$(INSTALL) -S $(LIBNAME).so.$(LT_CURRENT) $(PKG_LIB_DIR)/$(LIBNAME).so
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
