@@ -180,7 +180,7 @@ xlog_find_verify_log_record(
 
 	for (i = (*last_blk) - 1; i >= 0; i--) {
 		if (i < start_blk) {
-			/* legal log record not found */
+			/* valid log record not found */
 			xlog_warn(
 		"XFS: Log inconsistent (didn't find previous header)");
 			ASSERT(0);
@@ -313,7 +313,7 @@ xlog_find_head(
 	 * then the entire log is stamped with the same cycle number.  In this
 	 * case, head_blk can't be set to zero (which makes sense).  The below
 	 * math doesn't work out properly with head_blk equal to zero.  Instead,
-	 * we set it to log_bbnum which is an illegal block number, but this
+	 * we set it to log_bbnum which is an invalid block number, but this
 	 * value makes the math correct.  If head_blk doesn't changed through
 	 * all the tests below, *head_blk is set to zero at the very end rather
 	 * than log_bbnum.  In a sense, log_bbnum and zero are the same block

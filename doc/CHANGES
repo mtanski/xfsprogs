@@ -1,3 +1,7 @@
+[cvs]
+	- Update xfs_io command to allow reading from non-XFS files.
+	- Sync up user/kernel source in libxfs, libxlog and headers.
+
 xfsprogs-2.5.4 (23 July 2003)
 	- Update xfs_io bmap command to report unwritten extent flag
 	  if it is set on an extent (in verbose mode only).
