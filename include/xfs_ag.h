@@ -257,8 +257,8 @@ int xfs_min_freelist_pag(xfs_perag_t *pag, struct xfs_mount *mp);
 #define	XFS_MIN_FREELIST_PAG(pag,mp)	xfs_min_freelist_pag(pag,mp)
 #else
 #define	XFS_MIN_FREELIST_PAG(pag,mp)	\
-	XFS_MIN_FREELIST_RAW((pag)->pagf_levels[XFS_BTNUM_BNOi], \
-			     (pag)->pagf_levels[XFS_BTNUM_CNTi], mp)
+	XFS_MIN_FREELIST_RAW((uint_t)(pag)->pagf_levels[XFS_BTNUM_BNOi], \
+			     (uint_t)(pag)->pagf_levels[XFS_BTNUM_CNTi], mp)
 #endif
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_MIN_FREELIST_RAW)
 int xfs_min_freelist_raw(int bl, int cl, struct xfs_mount *mp);
