@@ -220,13 +220,15 @@ xlog_print_trans_header(xfs_caddr_t *ptr, int len)
     
     magic=*(__uint32_t*)cptr; /* XXX INT_GET soon */
     
-    if (len >= 4)
-	printf("%c%c%c%c:", 
+    if (len >= 4) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
+	printf("%c%c%c%c:", 
                 magic_c[3], magic_c[2], magic_c[1], magic_c[0]);
 #else
+	printf("%c%c%c%c:", 
 	        magic_c[0], magic_c[1], magic_c[2], magic_c[3]);
 #endif
+    }
     if (len != sizeof(xfs_trans_header_t)) {
 	printf("   Not enough data to decode further\n");
 	return 1;
