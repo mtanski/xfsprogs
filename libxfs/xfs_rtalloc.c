@@ -819,7 +819,8 @@ xfs_rtmount_init(
 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
 		printk(KERN_WARNING "XFS: RT mount - %llu != %llu\n",
-			XFS_BB_TO_FSB(mp, d), mp->m_sb.sb_rblocks);
+			(unsigned long long) XFS_BB_TO_FSB(mp, d),
+			(unsigned long long) mp->m_sb.sb_rblocks);
 		return XFS_ERROR(E2BIG);
 	}
 	error = xfs_read_buf(mp, &mp->m_rtdev_targ, d - 1, 1, 0, &bp);

@@ -1,3 +1,9 @@
+xfsprogs-1.3.11 (17 October 2001)
+	- tidy up some (benign) compiler warnings from libxfs
+	- fixed 64-bit pointer alignment issues in xfs_check
+	- fixed 64-bit pointer alignment issues in xfs_repair
+	- verified these on IA64, also reported to fix sparc issues
+
 xfsprogs-1.3.10 (12 October 2001)
 	- sync with XFS kernel header changes for EAs by-handle
 	- ported xfs_imap command for dumping the inode map
