@@ -42,7 +42,7 @@ LDIRT = *-manifest *.gz $(TOPDIR)/$(PKG_NAME)-*
 SUBDIRS = tar rpm
 
 # nothing to build here (it's all packaging)
-default install install-dev :
+default install install-dev install-lib:
 
 include $(BUILDRULES)
 

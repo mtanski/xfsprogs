@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -36,7 +36,7 @@ include $(TOPDIR)/include/builddefs
 BINTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 LDIRT = *.gz
 
-default install install-dev :
+default install install-dev install-lib:
 
 include $(BUILDRULES)
 
