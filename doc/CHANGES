@@ -1,4 +1,6 @@
 [current]
+	- mkfs.xfs now overwrites old ext[2,3], reiserfs, jfs,
+	  and swap signatures.
 	- xfs_repair fix to prevent double insertion into the
 	  uncertain_inode AVL trees
 	- use snprintf instead of sprintf

@@ -1528,7 +1528,6 @@ main(int argc, char **argv)
 
 	protostring = setup_proto(protofile);
 	bsize = 1 << (blocklog - BBSHIFT);
-	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, 1);
 	mp = &mbuf;
 	sbp = &mp->m_sb;
 	bzero(mp, sizeof(xfs_mount_t));
@@ -1642,6 +1641,19 @@ main(int argc, char **argv)
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2);
 
+	/*
+	 * Zero out the first 68k in on the device, to obliterate any old 
+	 * filesystem signatures out there.  This should take care of 
+	 * swap (somewhere around the page size), jfs (32k), 
+	 * ext[2,3] and reiser (64k) - and hopefully all else.
+	 */
+	 
+	buf = libxfs_getbuf(xi.ddev, 0, 136);
+	bzero(XFS_BUF_PTR(buf), 136*BBSIZE);
+	libxfs_writebuf(buf, 1);
+
+	/* OK, now write the superblock */
+	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, 1);
 	bzero(XFS_BUF_PTR(buf), BBSIZE);
 	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
 			XFS_SB_ALL_BITS);
@@ -1672,6 +1684,17 @@ main(int argc, char **argv)
 			progname);
 		exit(1);
 	}
+
+	/*
+	 * Zero out the last 64k on the device, to obliterate any
+	 * old MD RAID (or other) metadata at the end of the device
+	 */
+	
+	buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(65536)), 
+			    BTOBB(65536));
+	bzero(XFS_BUF_PTR(buf), 65536);
+	libxfs_writebuf(buf, 1);
+
 	/*
 	 * Zero the log if there is one.
 	 */
