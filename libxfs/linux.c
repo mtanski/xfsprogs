@@ -51,6 +51,10 @@ extern char *progname;
 # define BLKSSZGET	_IO(0x12,104)
 #endif
 
+#ifndef RAMDISK_MAJOR
+#define RAMDISK_MAJOR	1	/* ramdisk major number */
+#endif
+
 #define PROC_MOUNTED	"/proc/mounts"
 
 int
@@ -121,9 +125,10 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 }
 
 void
-platform_flush_device(int fd)
+platform_flush_device(int fd, dev_t device)
 {
-	ioctl(fd, BLKFLSBUF, 0);
+	if (major(device) != RAMDISK_MAJOR)
+		ioctl(fd, BLKFLSBUF, 0);
 }
 
 void

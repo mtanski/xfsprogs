@@ -162,7 +162,7 @@ libxfs_device_close(dev_t dev)
 			dev_map[d].dev = dev_map[d].fd = 0;
 
 			fsync(fd);
-			platform_flush_device(fd);
+			platform_flush_device(fd, dev);
 			close(fd);
 
 			return;

@@ -71,7 +71,7 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 }
 
 void
-platform_flush_device(int fd)
+platform_flush_device(int fd, dev_t device)
 {
 	ioctl(fd, DKIOCSYNCHRONIZECACHE, NULL);
 }

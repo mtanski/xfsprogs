@@ -60,7 +60,7 @@ platform_get_blocksize(int fd, char *path)
 }
 
 void
-platform_flush_device(int fd)
+platform_flush_device(int fd, dev_t device)
 {
 	return;
 }

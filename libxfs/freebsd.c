@@ -109,11 +109,13 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 void
 platform_set_blocksize(int fd, char *path, int blocksize)
 {
+	return;
 }
 
 void
-platform_flush_device(int fd)
+platform_flush_device(int fd, dev_t device)
 {
+	return;
 }
 
 void
