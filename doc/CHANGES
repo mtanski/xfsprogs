@@ -1,3 +1,7 @@
+xfsprogs-1.1.6 (20 March 2001)
+	- Fix sparc build failure - fcntl.h missing O_DIRECT
+	- Added README.quota describing use of quota with XFS
+
 xfsprogs-1.1.5 (12 March 2001)
 	- Upgraded LVM support to 0.9beta2 (IOP 10)
 

@@ -1,3 +1,10 @@
+xfsprogs (1.1.6) unstable; urgency=low
+
+  * Fix sparc build failure - fcntl.h missing O_DIRECT (closes: #90211)
+  * Added README.quota describing the use of quota with XFS
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 20 Mar 2001 11:25:03 +1100
+
 xfsprogs (1.1.5) unstable; urgency=low
 
   * Upgraded LVM stripe unit/width support to 0.9beta2 (IOP 10)
