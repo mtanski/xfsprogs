@@ -531,8 +531,8 @@ xfs_alloc_ag_vextent(
 			xfs_trans_mod_sb(args->tp,
 				args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS :
 					XFS_TRANS_SB_FDBLOCKS, -slen);
-		XFS_STATS_INC(xs_allocx);
-		XFS_STATS_ADD(xs_allocb, args->len);
+		XFS_STATS_INC(xfsstats.xs_allocx);
+		XFS_STATS_ADD(xfsstats.xs_allocb, args->len);
 	}
 	return 0;
 }
@@ -1687,8 +1687,8 @@ xfs_free_ag_extent(
 		xfs_alloc_log_agf(tp, agbp, XFS_AGF_FREEBLKS);
 		if (!isfl)
 			xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (long)len);
-		XFS_STATS_INC(xs_freex);
-		XFS_STATS_ADD(xs_freeb, len);
+		XFS_STATS_INC(xfsstats.xs_freex);
+		XFS_STATS_ADD(xfsstats.xs_freeb, len);
 	}
 	TRACE_FREE(haveleft ?
 			(haveright ? "both" : "left") :
@@ -1995,7 +1995,7 @@ xfs_alloc_pagf_init(
 	xfs_agnumber_t		agno,	/* allocation group number */
 	int			flags)	/* XFS_ALLOC_FLAGS_... */
 {
-	xfs_buf_t			*bp;
+	xfs_buf_t		*bp;
 	int			error;
 
 	if ((error = xfs_alloc_read_agf(mp, tp, agno, flags, &bp)))

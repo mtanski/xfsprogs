@@ -103,7 +103,7 @@ xfs_dir2_createname(
 	if ((rval = xfs_dir_ino_validate(tp->t_mountp, inum))) {
 		return rval;
 	}
-	XFS_STATS_INC(xs_dir_create);
+	XFS_STATS_INC(xfsstats.xs_dir_create);
 	/*
 	 * Fill in the arg structure for this request.
 	 */
@@ -156,7 +156,7 @@ xfs_dir2_lookup(
 	if (namelen >= MAXNAMELEN) {
 		return XFS_ERROR(EINVAL);
 	}
-	XFS_STATS_INC(xs_dir_lookup);
+	XFS_STATS_INC(xfsstats.xs_dir_lookup);
 	/*
 	 * Fill in the arg structure for this request.
 	 */
@@ -213,7 +213,7 @@ xfs_dir2_removename(
 	int		v;		/* type-checking value */
 
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
-	XFS_STATS_INC(xs_dir_remove);
+	XFS_STATS_INC(xfsstats.xs_dir_remove);
 	/*
 	 * Fill in the arg structure for this request.
 	 */

@@ -238,24 +238,19 @@ struct xfsstats {
 	__uint32_t		vn_reclaim;	/* # times vn_reclaim called */
 	__uint32_t		vn_remove;	/* # times vn_remove called */
 	__uint32_t		vn_free;	/* # times vn_free called */
-	struct xfsstats_xpc {
-		__uint64_t	xs_xstrat_bytes;
-		__uint64_t	xs_write_bytes;
-		__uint64_t	xs_read_bytes;
-	} xpc;
+/* Extra precision counters */
+	__uint64_t		xs_xstrat_bytes;
+	__uint64_t		xs_write_bytes;
+	__uint64_t		xs_read_bytes;
 } xfsstats;
 
-# define XFS_STATS_INC(count)		( xfsstats.##count ++ )
-# define XFS_STATS_DEC(count)		( xfsstats.##count -- )
-# define XFS_STATS_ADD(count, inc)	( xfsstats.##count += (inc) )
-# define XFS_STATS64_INC(count)		( xfsstats.xpc.##count ++ )
-# define XFS_STATS64_ADD(count, inc)	( xfsstats.xpc.##count += (inc) )
+# define XFS_STATS_INC(count)		( (count)++ )
+# define XFS_STATS_DEC(count)		( (count)-- )
+# define XFS_STATS_ADD(count, inc)	( (count) += (inc) )
 #else	/* !CONFIG_PROC_FS */
 # define XFS_STATS_INC(count)
 # define XFS_STATS_DEC(count)
 # define XFS_STATS_ADD(count, inc)
-# define XFS_STATS64_INC(count)
-# define XFS_STATS64_ADD(count, inc)
 #endif	/* !CONFIG_PROC_FS */
 
 
