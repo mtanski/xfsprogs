@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -440,7 +440,7 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	if ((ext = (extent_tree_node_t *) avl_find(extent_bcnt_ptrs[agno],
 							blockcount)) == NULL)
 		return(NULL);
-	
+
 	top = ext;
 
 	if (ext->next != NULL)  {
@@ -463,7 +463,7 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 			 * is the head of the list so pulling
 			 * the item out of the list and hence
 			 * the avl tree would be a bad idea.
-			 * 
+			 *
 			 * (cheaper than the alternative, a tree
 			 * delete of this node followed by a tree
 			 * insert of the next node on the list).
@@ -555,7 +555,7 @@ add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 		/*
 		 * just bail if the new extent is contained within an old one
 		 */
-		if (ext->ex_startblock <= startblock && 
+		if (ext->ex_startblock <= startblock &&
 				ext->ex_blockcount >= blockcount)
 			return;
 		/*
@@ -806,7 +806,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 		/*
 		 * just bail if the new extent is contained within an old one
 		 */
-		if (ext->rt_startblock <= startblock && 
+		if (ext->rt_startblock <= startblock &&
 				ext->rt_blockcount >= blockcount)
 			return;
 		/*

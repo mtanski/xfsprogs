@@ -52,20 +52,20 @@ usage(void)
 	fprintf(stderr, _(
 "Usage: %s [options] mountpoint\n\n\
 Options:\n\
-        -d          grow data/metadata section\n\
-        -l          grow log section\n\
-        -r          grow realtime section\n\
-        -n          don't change anything, just show geometry\n\
-        -I          allow inode numbers to exceed %d significant bits\n\
-        -i          convert log from external to internal format\n\
-        -t          alternate location for mount table (/etc/mtab)\n\
-        -x          convert log from internal to external format\n\
-        -D size     grow data/metadata section to size blks\n\
-        -L size     grow/shrink log section to size blks\n\
-        -R size     grow realtime section to size blks\n\
-        -e size     set realtime extent size to size blks\n\
-        -m imaxpct  set inode max percent to imaxpct\n\
-        -V          print version information\n"),
+	-d          grow data/metadata section\n\
+	-l          grow log section\n\
+	-r          grow realtime section\n\
+	-n          don't change anything, just show geometry\n\
+	-I          allow inode numbers to exceed %d significant bits\n\
+	-i          convert log from external to internal format\n\
+	-t          alternate location for mount table (/etc/mtab)\n\
+	-x          convert log from internal to external format\n\
+	-D size     grow data/metadata section to size blks\n\
+	-L size     grow/shrink log section to size blks\n\
+	-R size     grow realtime section to size blks\n\
+	-e size     set realtime extent size to size blks\n\
+	-m imaxpct  set inode max percent to imaxpct\n\
+	-V          print version information\n"),
 		progname, XFS_MAX_INODE_SIG_BITS);
 	exit(2);
 }
@@ -240,7 +240,7 @@ main(int argc, char **argv)
 	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
 
 	if (nflag) {
-		report_info(geo, fname, unwritten, dirversion, logversion, 
+		report_info(geo, fname, unwritten, dirversion, logversion,
 				isint);
 		exit(0);
 	}
@@ -290,7 +290,7 @@ main(int argc, char **argv)
 	 * so if we have (size % 2), on any partition, we can't get
 	 * to the last 512 bytes.  Just chop it down by a block.
 	 */
-	
+
 	ddsize -= (ddsize % 2);
 	dlsize -= (dlsize % 2);
 	drsize -= (drsize % 2);
@@ -312,7 +312,7 @@ main(int argc, char **argv)
 			error = 1;
 		}
 
-		new_agcount = dsize / geo.agblocks 
+		new_agcount = dsize / geo.agblocks
 			   + (dsize % geo.agblocks != 0);
 
 		if (!error && dsize < geo.datablocks) {
@@ -397,7 +397,7 @@ main(int argc, char **argv)
 			in.isint = 1;
 		else if (xflag)
 			in.isint = 0;
-		else 
+		else
 			in.isint = xi.logBBsize == 0;
 		if (lsize == geo.logblocks && (in.isint == isint)) {
 			if (lflag)

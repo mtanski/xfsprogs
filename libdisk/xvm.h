@@ -41,11 +41,11 @@
  */
 #define XVM_GETDEV_VERS 1
 typedef struct {
-        __uint32_t              version;
-        dev_t                   data_subvol_dev;
+	__uint32_t              version;
+	dev_t                   data_subvol_dev;
 
-        dev_t                   log_subvol_dev;
-        dev_t                   rt_subvol_dev;
+	dev_t                   log_subvol_dev;
+	dev_t                   rt_subvol_dev;
 
 	dev_t			sp_subvol_dev;
 } xvm_getdev_t;
@@ -56,10 +56,9 @@ typedef struct {
  */
 #define XVM_SUBVOL_GEOMETRY_VERS  1
 typedef struct xvm_subvol_stripe_s {
-        __uint32_t              version;
-        __uint32_t              unit_size;      /* in blocks */
-        __uint32_t              width_size;     /* in blocks */
+	__uint32_t              version;
+	__uint32_t              unit_size;      /* in blocks */
+	__uint32_t              width_size;     /* in blocks */
 	__uint32_t		pad1;		/* padding */
 	dev_t			dev;
 } xvm_subvol_stripe_t;
-

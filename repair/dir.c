@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -597,7 +597,7 @@ verify_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes,
 	for (i = 0; i < XFS_DIR_LEAF_MAPSIZE; i++)  {
 		if (holes->hentries[i].size == 0)
 			continue;
-		
+
 		start = holes->hentries[i].base;
 		len = holes->hentries[i].size;
 
@@ -743,7 +743,7 @@ compare_da_freemaps(xfs_mount_t *mp, da_hole_map_t *holemap,
 			if (holemap->hentries[i].base ==
 					block_hmap->hentries[k].base
 					&& holemap->hentries[i].size ==
-					block_hmap->hentries[k].size)  
+					block_hmap->hentries[k].size)
 				found = 1;
 		}
 		if (!found)  {
@@ -794,7 +794,7 @@ int
 traverse_int_dablock(xfs_mount_t	*mp,
 		da_bt_cursor_t		*da_cursor,
 		xfs_dablk_t		*rbno,
-		int 			whichfork)
+		int			whichfork)
 {
 	xfs_dablk_t		bno;
 	int			i;
@@ -864,7 +864,7 @@ traverse_int_dablock(xfs_mount_t	*mp,
 			if (INT_GET(node->hdr.level, ARCH_CONVERT) == i - 1)  {
 				i--;
 			} else  {
-				if (whichfork == XFS_DATA_FORK) 
+				if (whichfork == XFS_DATA_FORK)
 					do_warn(_("bad directory btree for "
 						  "directory inode %llu\n"),
 						da_cursor->ino);
@@ -997,7 +997,7 @@ get_first_dblock_fsbno(xfs_mount_t	*mp,
 		 * walk down left side of btree, release buffers as you
 		 * go.  if the root block is a leaf (single-level btree),
 		 * just return it.
-		 * 
+		 *
 		 */
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
@@ -1250,7 +1250,7 @@ verify_da_path(xfs_mount_t	*mp,
 		 * validating it.  bno value should be ok since
 		 * it was set when the block was first read in.
 		 */
-		cursor->level[this_level].hashval = 
+		cursor->level[this_level].hashval =
 				INT_GET(node->btree[entry - 1].hashval, ARCH_CONVERT);
 
 		/*
@@ -1723,7 +1723,7 @@ process_leaf_dir_block(
 	xfs_mount_t		*mp,
 	xfs_dir_leafblock_t	*leaf,
 	xfs_dablk_t		da_bno,
-	xfs_ino_t		ino, 
+	xfs_ino_t		ino,
 	xfs_dahash_t		last_hashval,	/* last hashval encountered */
 	int			ino_discovery,
 	blkmap_t		*blkmap,
@@ -2208,7 +2208,7 @@ _("illegal name \"%s\" in directory inode %llu, entry would be cleared\n"),
 					ino);
 			}
 		}
-		
+
 		/*
 		 * now we can mark entries with NULLFSINO's bad
 		 */
@@ -2532,7 +2532,7 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 			for (i = 0; i < XFS_DIR_LEAF_MAPSIZE; i++)  {
 				do_warn(
 				"- (%d, %d) ", bholemap.hentries[i].base,
-					bholemap.hentries[i].size);  
+					bholemap.hentries[i].size);
 			}
 			do_warn(_("- holes flag = %d\n"), bholemap.lost_holes);
 		}
@@ -2915,7 +2915,7 @@ process_node_dir(
 	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <
 			(da_cursor.greatest_bno + 1) * mp->m_sb.sb_blocksize)  {
 		if ((xfs_fsize_t) (da_cursor.greatest_bno
-				* mp->m_sb.sb_blocksize) > UINT_MAX)  { 
+				* mp->m_sb.sb_blocksize) > UINT_MAX)  {
 			do_warn(
 	_("out of range internal directory block numbers (inode %llu)\n"),
 				ino);
@@ -3113,7 +3113,7 @@ process_dir(
 		do_warn(_("no .. entry for root directory %llu\n"), ino);
 		need_root_dotdot = 1;
 	}
-	
+
 #ifdef XR_DIR_TRACE
 	fprintf(stderr, "(process_dir), parent of %llu is %llu\n", ino, parent);
 #endif

@@ -1,4 +1,3 @@
-
 typedef struct {
 	unsigned char info[128];   /* Informative text string */
 	unsigned char spare0[14];
@@ -30,7 +29,7 @@ typedef struct {
 #define SUN_LABEL_MAGIC          0xDABE
 #define SUN_LABEL_MAGIC_SWAPPED  0xBEDA
 #define sunlabel(x) ((sun_partition *)x)
-				 
+
 typedef struct {
 	unsigned int   magic;        /* expect AIX_LABEL_MAGIC */
 	/* ... */

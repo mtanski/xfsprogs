@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -47,7 +47,7 @@ xlog_print_find_oldest(
 	xfs_daddr_t	first_blk;
 	uint	first_half_cycle, last_half_cycle;
 	int	error;
-	
+
 	if (xlog_find_zeroed(log, &first_blk))
 		return 0;
 
@@ -76,8 +76,8 @@ xlog_print_find_oldest(
 
 void
 xlog_recover_print_data(
-	xfs_caddr_t 	p, 
-	int 		len)
+	xfs_caddr_t	p,
+	int		len)
 {
 	if (print_data) {
 		uint *dp  = (uint *)p;
@@ -128,7 +128,7 @@ xlog_recover_print_buffer(
 		printf("5.3 BUF:  ");
 		break;
 	    }
-	} 
+	}
 	if (f->blf_type == XFS_LI_BUF) {
 		printf("#regs:%d   start blkno:0x%llx   len:%d   bmap size:%d\n",
 		       f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size);
@@ -149,12 +149,12 @@ xlog_recover_print_buffer(
 			printf("	SUPER Block Buffer:\n");
 			if (!print_buffer) continue;
 			printf("		icount:%Ld  ifree:%Ld  ",
-			       INT_GET(*(long long *)(p), ARCH_CONVERT), 
-                               INT_GET(*(long long *)(p+8), ARCH_CONVERT));
+			       INT_GET(*(long long *)(p), ARCH_CONVERT),
+			       INT_GET(*(long long *)(p+8), ARCH_CONVERT));
 			printf("fdblks:%Ld  frext:%Ld\n",
 			       INT_GET(*(long long *)(p+16), ARCH_CONVERT),
 			       INT_GET(*(long long *)(p+24), ARCH_CONVERT));
-			printf("		sunit:%u  swidth:%u\n", 
+			printf("		sunit:%u  swidth:%u\n",
 			       INT_GET(*(uint *)(p+56), ARCH_CONVERT),
 			       INT_GET(*(uint *)(p+60), ARCH_CONVERT));
 		} else if (INT_GET(*(uint *)p, ARCH_CONVERT) == XFS_AGI_MAGIC) {
@@ -201,7 +201,7 @@ xlog_recover_print_buffer(
 			ddq = (xfs_disk_dquot_t *)p;
 			printf("	DQUOT Buffer:\n");
 			if (!print_buffer) continue;
-			printf("		UIDs 0x%lx-0x%lx\n", 
+			printf("		UIDs 0x%lx-0x%lx\n",
 			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT),
 			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT) +
 			       (BBTOB(f->blf_len) / sizeof(xfs_dqblk_t)) - 1);
@@ -222,7 +222,7 @@ xlog_recover_print_quotaoff(
 
 	qoff_f = (xfs_qoff_logformat_t *)item->ri_buf[0].i_addr;
 	ASSERT(qoff_f);
-	if (qoff_f->qf_flags & XFS_UQUOTA_ACCT) 
+	if (qoff_f->qf_flags & XFS_UQUOTA_ACCT)
 		strcpy(str, "USER QUOTA");
 	if (qoff_f->qf_flags & XFS_GQUOTA_ACCT)
 		strcat(str, "GROUP QUOTA");
@@ -235,7 +235,7 @@ STATIC void
 xlog_recover_print_dquot(
 	xlog_recover_item_t *item)
 {
-	xfs_dq_logformat_t 	*f;
+	xfs_dq_logformat_t	*f;
 	xfs_disk_dquot_t	*d;
 
 	f = (xfs_dq_logformat_t *)item->ri_buf[0].i_addr;
@@ -276,7 +276,7 @@ xlog_recover_print_inode_core(
 		return;
 	printf("		magic:%c%c  mode:0x%x  ver:%d  format:%d  "
 	     "onlink:%d\n",
-               (di->di_magic>>8) & 0xff, di->di_magic & 0xff, 
+	       (di->di_magic>>8) & 0xff, di->di_magic & 0xff,
 	       di->di_mode, di->di_version, di->di_format, di->di_onlink);
 	printf("		uid:%d  gid:%d  nlink:%d projid:%d\n",
 	       di->di_uid, di->di_gid, di->di_nlink, (uint)di->di_projid);
@@ -404,7 +404,7 @@ xlog_recover_print_inode(
 		      }
 		}
 	}
-    
+
 } /* xlog_recover_print_inode */
 
 
@@ -421,7 +421,7 @@ xlog_recover_print_efd(
 	 * An xfs_efd_log_format structure contains a variable length array
 	 * as the last field.  Each element is of size xfs_extent_t.
 	 */
-	ASSERT(item->ri_buf[0].i_len == 
+	ASSERT(item->ri_buf[0].i_len ==
 	       sizeof(xfs_efd_log_format_t) + sizeof(xfs_extent_t) *
 	       (f->efd_nextents-1));
 	printf("	EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
@@ -447,16 +447,16 @@ xlog_recover_print_efi(
 	xfs_efi_log_format_t *f;
 	xfs_extent_t	 *ex;
 	int			 i;
-    
+
 	f = (xfs_efi_log_format_t *)item->ri_buf[0].i_addr;
 	/*
 	 * An xfs_efi_log_format structure contains a variable length array
 	 * as the last field.  Each element is of size xfs_extent_t.
 	 */
-	ASSERT(item->ri_buf[0].i_len == 
+	ASSERT(item->ri_buf[0].i_len ==
 	       sizeof(xfs_efi_log_format_t) + sizeof(xfs_extent_t) *
 	       (f->efi_nextents-1));
-	
+
 	printf("	EFI:  #regs:%d    num_extents:%d  id:0x%llx\n",
 	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
 	ex = f->efi_extents;
@@ -556,7 +556,7 @@ xlog_recover_print_item(xlog_recover_item_t *item)
 	    case XFS_LI_QUOTAOFF: {
 		printf("QOFF");
 		break;
-	    } 
+	    }
 	    default: {
 		cmn_err(CE_PANIC, "xlog_recover_print_item: illegal type");
 		break;
@@ -586,7 +586,7 @@ xlog_recover_print_trans(xlog_recover_t	     *trans,
 	if (print < 3)
 		return;
 
-        print_xlog_record_line();
+	print_xlog_record_line();
 	xlog_recover_print_trans_head(trans);
 	item = first_item = itemq;
 	do {

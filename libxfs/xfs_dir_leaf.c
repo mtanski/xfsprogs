@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -31,6 +31,7 @@
  */
 
 #include <xfs.h>
+
 
 /*
  * xfs_dir_leaf.c
@@ -688,7 +689,7 @@ xfs_dir_leaf_add(xfs_dabuf_t *bp, xfs_da_args_t *args, int index)
 		return(error);
 	/*
 	 * After compaction, the block is guaranteed to have only one
-	 * free region, in freemap[0].	If it is not big enough, give up.
+	 * free region, in freemap[0].  If it is not big enough, give up.
 	 */
 	if (INT_GET(hdr->freemap[0].size, ARCH_CONVERT) <
 	    (entsize + (uint)sizeof(xfs_dir_leaf_entry_t)))
@@ -1413,7 +1414,7 @@ xfs_dir_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 		memset(tmpbuffer, 0, state->blocksize);
 		tmp_leaf = (xfs_dir_leafblock_t *)tmpbuffer;
 		tmp_hdr = &tmp_leaf->hdr;
-		tmp_hdr->info = save_hdr->info; /* struct copy */
+		tmp_hdr->info = save_hdr->info;	/* struct copy */
 		INT_ZERO(tmp_hdr->count, ARCH_CONVERT);
 		INT_SET(tmp_hdr->firstused, ARCH_CONVERT, state->blocksize);
 		if (INT_ISZERO(tmp_hdr->firstused, ARCH_CONVERT))
@@ -1444,7 +1445,6 @@ xfs_dir_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 	 */
 	save_blk->hashval = INT_GET(save_leaf->entries[ INT_GET(save_leaf->hdr.count, ARCH_CONVERT)-1 ].hashval, ARCH_CONVERT);
 }
-
 
 /*========================================================================
  * Routines used for finding things in the Btree.

@@ -39,7 +39,7 @@
  * media (sector 0).  It contains information pertaining to physical
  * device parameters and logical partition information.
  *
- * The volume header is manipulated by disk formatters/verifiers, 
+ * The volume header is manipulated by disk formatters/verifiers,
  * partition builders (e.g. fx, dvhtool, and mkfs), and disk drivers.
  *
  * Previous versions of IRIX wrote a copy of the volume header is
@@ -166,10 +166,10 @@ struct partition_table {		/* one per logical partition */
 #define BFNAMESIZE	16		/* max 16 chars in boot file name */
 
 /* Partition types for ARCS */
-#define NOT_USED        0       /* Not used 				*/
-#define FAT_SHORT       1       /* FAT filesystem, 12-bit FAT entries 	*/
-#define FAT_LONG        4       /* FAT filesystem, 16-bit FAT entries 	*/
-#define EXTENDED        5       /* extended partition 			*/
+#define NOT_USED        0       /* Not used				*/
+#define FAT_SHORT       1       /* FAT filesystem, 12-bit FAT entries	*/
+#define FAT_LONG        4       /* FAT filesystem, 16-bit FAT entries	*/
+#define EXTENDED        5       /* extended partition			*/
 #define HUGE            6       /* huge partition- MS/DOS 4.0 and later */
 
 /* Active flags for ARCS */

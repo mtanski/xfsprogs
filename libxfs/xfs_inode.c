@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -52,7 +52,7 @@ xfs_inobp_check(
 					i * mp->m_sb.sb_inodesize);
 		if (INT_ISZERO(dip->di_next_unlinked, ARCH_CONVERT))  {
 			xfs_fs_cmn_err(CE_ALERT, mp,
-				"Detected a bogus zero next_unlinked field in incore inode buffer 0x%p.	 About to pop an ASSERT.",
+				"Detected a bogus zero next_unlinked field in incore inode buffer 0x%p.  About to pop an ASSERT.",
 				bp);
 			ASSERT(!INT_ISZERO(dip->di_next_unlinked, ARCH_CONVERT));
 		}
@@ -75,10 +75,10 @@ xfs_inobp_check(
  * to determine the size and location of the buffer to read from disk.
  * If the inode has already been mapped to its buffer and read in once,
  * then use the mapping information stored in the inode rather than
- * calling xfs_imap().	This allows us to avoid the overhead of looking
+ * calling xfs_imap().  This allows us to avoid the overhead of looking
  * at the inode btree for small block file systems (see xfs_dilocate()).
  * We can tell whether the inode has been mapped in before by comparing
- * its disk block address to 0.	 Only uninitialized inodes will have
+ * its disk block address to 0.  Only uninitialized inodes will have
  * 0 for the disk block address.
  */
 int
@@ -149,7 +149,7 @@ xfs_itobp(
 	ASSERT(bno == 0 || bno == imap.im_blkno);
 
 	/*
-	 * Read in the buffer.	If tp is NULL, xfs_trans_read_buf() will
+	 * Read in the buffer.  If tp is NULL, xfs_trans_read_buf() will
 	 * default to just a read_buf() call.
 	 */
 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap.im_blkno,
@@ -215,8 +215,8 @@ xfs_itobp(
 
 /*
  * Move inode type and inode format specific information from the
- * on-disk inode to the in-core inode.	For fifos, devs, and sockets
- * this means set if_rdev to the proper value.	For files, directories,
+ * on-disk inode to the in-core inode.  For fifos, devs, and sockets
+ * this means set if_rdev to the proper value.  For files, directories,
  * and symlinks this means to bring in the in-line data or extent
  * pointers.  For a file in B-tree format, only the root is immediately
  * brought in-core.  The rest will be in-lined in if_extents when it
@@ -230,7 +230,7 @@ xfs_iformat(
 	xfs_attr_shortform_t	*atp;
 	int			size;
 	int			error;
-	xfs_fsize_t		di_size;
+	xfs_fsize_t             di_size;
 	ip->i_df.if_ext_max =
 		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
 	error = 0;
@@ -559,10 +559,10 @@ xfs_iformat_btree(
  * xfs_xlate_dinode_core - translate an xfs_inode_core_t between ondisk
  * and native format
  *
- * buf	= on-disk representation
- * dip	= native representation
- * dir	= direction - +ve -> disk to native
- *		      -ve -> native to disk
+ * buf  = on-disk representation
+ * dip  = native representation
+ * dir  = direction - +ve -> disk to native
+ *                    -ve -> native to disk
  * arch = on-disk architecture
  */
 
@@ -570,8 +570,8 @@ void
 xfs_xlate_dinode_core(xfs_caddr_t buf, xfs_dinode_core_t *dip,
     int dir, xfs_arch_t arch)
 {
-    xfs_dinode_core_t	*buf_core;
-    xfs_dinode_core_t	*mem_core;
+    xfs_dinode_core_t   *buf_core;
+    xfs_dinode_core_t   *mem_core;
 
     ASSERT(dir);
 
@@ -587,15 +587,15 @@ xfs_xlate_dinode_core(xfs_caddr_t buf, xfs_dinode_core_t *dip,
 	return;
     }
 
-    INT_XLATE(buf_core->di_magic,	mem_core->di_magic,	   dir, arch);
-    INT_XLATE(buf_core->di_mode,	mem_core->di_mode,	   dir, arch);
-    INT_XLATE(buf_core->di_version,	mem_core->di_version,	   dir, arch);
-    INT_XLATE(buf_core->di_format,	mem_core->di_format,	   dir, arch);
-    INT_XLATE(buf_core->di_onlink,	mem_core->di_onlink,	   dir, arch);
-    INT_XLATE(buf_core->di_uid,		mem_core->di_uid,	   dir, arch);
-    INT_XLATE(buf_core->di_gid,		mem_core->di_gid,	   dir, arch);
-    INT_XLATE(buf_core->di_nlink,	mem_core->di_nlink,	   dir, arch);
-    INT_XLATE(buf_core->di_projid,	mem_core->di_projid,	   dir, arch);
+    INT_XLATE(buf_core->di_magic,       mem_core->di_magic,        dir, arch);
+    INT_XLATE(buf_core->di_mode,        mem_core->di_mode,         dir, arch);
+    INT_XLATE(buf_core->di_version,     mem_core->di_version,      dir, arch);
+    INT_XLATE(buf_core->di_format,      mem_core->di_format,       dir, arch);
+    INT_XLATE(buf_core->di_onlink,      mem_core->di_onlink,       dir, arch);
+    INT_XLATE(buf_core->di_uid,         mem_core->di_uid,          dir, arch);
+    INT_XLATE(buf_core->di_gid,         mem_core->di_gid,          dir, arch);
+    INT_XLATE(buf_core->di_nlink,       mem_core->di_nlink,        dir, arch);
+    INT_XLATE(buf_core->di_projid,      mem_core->di_projid,       dir, arch);
 
     if (dir>0) {
 	memcpy(mem_core->di_pad, buf_core->di_pad, sizeof(buf_core->di_pad));
@@ -612,18 +612,18 @@ xfs_xlate_dinode_core(xfs_caddr_t buf, xfs_dinode_core_t *dip,
     INT_XLATE(buf_core->di_ctime.t_sec, mem_core->di_ctime.t_sec,  dir, arch);
     INT_XLATE(buf_core->di_ctime.t_nsec,mem_core->di_ctime.t_nsec, dir, arch);
 
-    INT_XLATE(buf_core->di_size,	mem_core->di_size,	   dir, arch);
-    INT_XLATE(buf_core->di_nblocks,	mem_core->di_nblocks,	   dir, arch);
-    INT_XLATE(buf_core->di_extsize,	mem_core->di_extsize,	   dir, arch);
+    INT_XLATE(buf_core->di_size,        mem_core->di_size,         dir, arch);
+    INT_XLATE(buf_core->di_nblocks,     mem_core->di_nblocks,      dir, arch);
+    INT_XLATE(buf_core->di_extsize,     mem_core->di_extsize,      dir, arch);
 
-    INT_XLATE(buf_core->di_nextents,	mem_core->di_nextents,	   dir, arch);
-    INT_XLATE(buf_core->di_anextents,	mem_core->di_anextents,	   dir, arch);
-    INT_XLATE(buf_core->di_forkoff,	mem_core->di_forkoff,	   dir, arch);
-    INT_XLATE(buf_core->di_aformat,	mem_core->di_aformat,	   dir, arch);
-    INT_XLATE(buf_core->di_dmevmask,	mem_core->di_dmevmask,	   dir, arch);
-    INT_XLATE(buf_core->di_dmstate,	mem_core->di_dmstate,	   dir, arch);
-    INT_XLATE(buf_core->di_flags,	mem_core->di_flags,	   dir, arch);
-    INT_XLATE(buf_core->di_gen,		mem_core->di_gen,	   dir, arch);
+    INT_XLATE(buf_core->di_nextents,    mem_core->di_nextents,     dir, arch);
+    INT_XLATE(buf_core->di_anextents,   mem_core->di_anextents,    dir, arch);
+    INT_XLATE(buf_core->di_forkoff,     mem_core->di_forkoff,      dir, arch);
+    INT_XLATE(buf_core->di_aformat,     mem_core->di_aformat,      dir, arch);
+    INT_XLATE(buf_core->di_dmevmask,    mem_core->di_dmevmask,     dir, arch);
+    INT_XLATE(buf_core->di_dmstate,     mem_core->di_dmstate,      dir, arch);
+    INT_XLATE(buf_core->di_flags,       mem_core->di_flags,        dir, arch);
+    INT_XLATE(buf_core->di_gen,         mem_core->di_gen,          dir, arch);
 
 }
 
@@ -658,7 +658,7 @@ xfs_iread(
 	 * Get pointer's to the on-disk inode and the buffer containing it.
 	 * If the inode number refers to a block outside the file system
 	 * then xfs_itobp() will return NULL.  In this case we should
-	 * return NULL as well.	 Set i_blkno to 0 so that xfs_itobp() will
+	 * return NULL as well.  Set i_blkno to 0 so that xfs_itobp() will
 	 * know that this is a new incore inode.
 	 */
 	error = xfs_itobp(mp, tp, ip, &dip, &bp, bno);
@@ -743,7 +743,7 @@ xfs_iread(
 		ip->i_d.di_mode = 0;
 		/*
 		 * Initialize the per-fork minima and maxima for a new
-		 * inode here.	xfs_iformat will do it for old inodes.
+		 * inode here.  xfs_iformat will do it for old inodes.
 		 */
 		ip->i_df.if_ext_max =
 			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
@@ -752,10 +752,10 @@ xfs_iread(
 	/*
 	 * The inode format changed when we moved the link count and
 	 * made it 32 bits long.  If this is an old format inode,
-	 * convert it in memory to look like a new one.	 If it gets
+	 * convert it in memory to look like a new one.  If it gets
 	 * flushed to disk we will convert back before flushing or
-	 * logging it.	We zero out the new projid field and the old link
-	 * count field.	 We'll handle clearing the pad field (the remains
+	 * logging it.  We zero out the new projid field and the old link
+	 * count field.  We'll handle clearing the pad field (the remains
 	 * of the old uuid field) when we actually convert the inode to
 	 * the new format. We don't change the version number so that we
 	 * can distinguish this from a real new format inode.
@@ -770,7 +770,7 @@ xfs_iread(
 
 	/*
 	 * Mark the buffer containing the inode as something to keep
-	 * around for a while.	This helps to keep recently accessed
+	 * around for a while.  This helps to keep recently accessed
 	 * meta-data in-core longer.
 	 */
 	 XFS_BUF_SET_REF(bp, XFS_INO_REF);
@@ -781,7 +781,7 @@ xfs_iread(
 	 * in xfs_itobp() above.  If tp is NULL, this is just a normal
 	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
 	 * will only release the buffer if it is not dirty within the
-	 * transaction.	 It will be OK to release the buffer in this case,
+	 * transaction.  It will be OK to release the buffer in this case,
 	 * because inodes on disk are never destroyed and we will be
 	 * locking the new in-core inode before putting it in the hash
 	 * table where other processes can find it.  Thus we don't have

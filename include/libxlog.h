@@ -69,7 +69,7 @@ typedef struct log {
  * macros mapping kernel code to user code
  */
 #ifndef EFSCORRUPTED
-#define EFSCORRUPTED           		 990
+#define EFSCORRUPTED			 990
 #endif
 #define STATIC				static
 #define XFS_ERROR(e)			(e)
@@ -103,7 +103,7 @@ typedef struct log {
 #define xlog_bread(log,blkno,nbblks,bp)	\
 	(libxfs_readbufr(x.logdev,	\
 			(log)->l_logBBstart+(blkno), bp, (nbblks), 1), 0)
-                         
+
 #define kmem_zalloc(size, foo)			calloc(size,1)
 #define kmem_free(ptr, foo)			free(ptr)
 #define kmem_realloc(ptr, len, old, foo)	realloc(ptr, len)
@@ -119,7 +119,7 @@ extern void xfs_log_print_trans(xlog_t          *log,
 				int		print_block_start);
 
 extern void xfs_log_print(      xlog_t          *log,
-                                int             fd,
+				int             fd,
 				int		print_block_start);
 
 extern int  xlog_find_zeroed(xlog_t *log, xfs_daddr_t *blk_no);
@@ -153,9 +153,9 @@ extern int  xlog_do_recovery_pass(	xlog_t		*log,
 extern int  xlog_recover_do_trans(	xlog_t		*log,
 					xlog_recover_t	*trans,
 					int		pass);
-extern int  xlog_header_check_recover(  xfs_mount_t         *mp, 
-                                        xlog_rec_header_t   *head);
-extern int  xlog_header_check_mount(    xfs_mount_t         *mp, 
-                                        xlog_rec_header_t   *head);
+extern int  xlog_header_check_recover(  xfs_mount_t         *mp,
+					xlog_rec_header_t   *head);
+extern int  xlog_header_check_mount(    xfs_mount_t         *mp,
+					xlog_rec_header_t   *head);
 
 #endif	/* LIBXLOG_H */

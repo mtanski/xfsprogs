@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -472,16 +472,16 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	ASSERT(full_backptrs == 0);
 
 	if (irec->ino_un.plist == NULL)  {
-                irec->ino_un.plist = 
-                        (parent_list_t*)malloc(sizeof(parent_list_t));
-                if (!irec->ino_un.plist)
+		irec->ino_un.plist =
+			(parent_list_t*)malloc(sizeof(parent_list_t));
+		if (!irec->ino_un.plist)
 			do_error(_("couldn't malloc parent list table\n"));
-                
+
 		irec->ino_un.plist->pmask = 1LL << offset;
-		irec->ino_un.plist->pentries = 
-                        (xfs_ino_t*)memalign(sizeof(xfs_ino_t), sizeof(xfs_ino_t));
-                if (!irec->ino_un.plist->pentries)
-                        do_error(_("couldn't memalign pentries table\n"));
+		irec->ino_un.plist->pentries =
+			(xfs_ino_t*)memalign(sizeof(xfs_ino_t), sizeof(xfs_ino_t));
+		if (!irec->ino_un.plist->pentries)
+			do_error(_("couldn't memalign pentries table\n"));
 #ifdef DEBUG
 		irec->ino_un.plist->cnt = 1;
 #endif
@@ -526,8 +526,8 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	ASSERT(cnt >= target);
 
 	tmp = (xfs_ino_t*)memalign(sizeof(xfs_ino_t), (cnt + 1) * sizeof(xfs_ino_t));
-        if (!tmp)
-                do_error(_("couldn't memalign pentries table\n"));
+	if (!tmp)
+		do_error(_("couldn't memalign pentries table\n"));
 
 	(void) bcopy(irec->ino_un.plist->pentries, tmp,
 			target * sizeof(parent_entry_t));
@@ -701,7 +701,7 @@ get_backptr(void)
 
 	if ((ptr = malloc(sizeof(backptrs_t))) == NULL)
 		do_error(_("could not malloc back pointer table\n"));
-	
+
 	bzero(ptr, sizeof(backptrs_t));
 
 	return(ptr);
@@ -723,7 +723,7 @@ add_ino_backptrs(xfs_mount_t *mp)
 
 		while (ino_rec != NULL)  {
 			tmp = ino_rec->ino_un.plist;
-			ino_rec->ino_un.backptrs = get_backptr(); 
+			ino_rec->ino_un.backptrs = get_backptr();
 			ino_rec->ino_un.backptrs->parents = tmp;
 
 #ifdef XR_BCKPTR_DBG

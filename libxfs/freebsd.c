@@ -84,11 +84,11 @@ platform_flush_device(int fd)
 static __int64_t
 getdisksize(int fd, const char *fname)
 {
-	//struct 	diskslices ds;
-	struct 	disklabel dl, *lp;
-	const 	char *s1, *s2;
-	char 	*s;
-	int 	slice, part, fd1, i, e;
+	//struct	diskslices ds;
+	struct	disklabel dl, *lp;
+	const	char *s1, *s2;
+	char	*s;
+	int	slice, part, fd1, i, e;
 	__int64_t size = 0LL;
 
 	slice = part = -1;
@@ -127,7 +127,7 @@ getdisksize(int fd, const char *fname)
 		if (i == -1 && slice != -1 && part == -1) {
 			e = errno;
 			if (!(s = strdup(fname))) {
-				fprintf(stderr, "%s: %s\n", 
+				fprintf(stderr, "%s: %s\n",
 				    progname, strerror(errno));
 				exit(1);
 			}
@@ -155,7 +155,7 @@ getdisksize(int fd, const char *fname)
 				exit(1);
 			}
 			size = lp->d_partitions[part].p_size;
-		}	
+		}
 	}
 	return size;
 }
@@ -166,7 +166,7 @@ platform_findsize(char *path)
 	int	fd;
 	struct stat   st;
 	__int64_t size;
-	
+
 	/* Test to see if we are dealing with a regular file rather than a
 	 * block device, if we are just use the size returned by stat64
 	 */
@@ -188,7 +188,7 @@ platform_findsize(char *path)
 	}
 
 	size = getdisksize(fd, path);
-	
+
 	close(fd);
 
 	return size;

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -464,7 +464,7 @@ fill_rbmino(xfs_mount_t *mp)
 
 		error = libxfs_trans_read_buf(
 				mp, tp, mp->m_dev,
-				XFS_FSB_TO_DADDR(mp, map.br_startblock), 
+				XFS_FSB_TO_DADDR(mp, map.br_startblock),
 				XFS_FSB_TO_BB(mp, 1), 1, &bp);
 
 		if (error) {
@@ -534,7 +534,7 @@ fill_rsumino(xfs_mount_t *mp)
 
 		error = libxfs_trans_read_buf(
 				mp, tp, mp->m_dev,
-				XFS_FSB_TO_DADDR(mp, map.br_startblock), 
+				XFS_FSB_TO_DADDR(mp, map.br_startblock),
 				XFS_FSB_TO_BB(mp, 1), 1, &bp);
 
 		if (error) {
@@ -782,7 +782,7 @@ mk_orphanage(xfs_mount_t *mp)
 	} else
 		orphanage_entered = 1;
 
-	/* 
+	/*
 	 * bump up the link count in the root directory to account
 	 * for .. in the new directory
 	 */
@@ -1041,7 +1041,7 @@ _("can't map block %d in %s inode %llu, xfs_bmapi returns %d, nmap = %d\n"),
 		 * walk down left side of btree, release buffers as you
 		 * go.  if the root block is a leaf (single-level btree),
 		 * just return it.
-		 * 
+		 *
 		 */
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
@@ -1409,7 +1409,7 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		 */
 		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
-		
+
 		if (irec == NULL)  {
 			nbad++;
 			do_warn(
@@ -1790,7 +1790,7 @@ longform_dir2_entry_check_data(
 
 			/* check for invalid tag */
 			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(
-				    dup, ARCH_CONVERT), ARCH_CONVERT) != 
+				    dup, ARCH_CONVERT), ARCH_CONVERT) !=
 			    (char *)dup - (char *)d)
 				break;
 
@@ -2557,7 +2557,7 @@ longform_dir2_rebuild_data(
 
 /*
  * Finish the rebuild of a directory.
- * Stuff / in and then remove it, this forces the directory to end 
+ * Stuff / in and then remove it, this forces the directory to end
  * up in the right format.
  */
 void
@@ -2806,7 +2806,7 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 	 * no need to worry about '.' since it doesn't exist.
 	 */
 	sf_entry = next_sfe = &sf->list[0];
-	if (sf == NULL) { 
+	if (sf == NULL) {
 		junkit = 1;
 		do_warn(_("shortform dir inode %llu has null data entries \n"),
 			ino);
@@ -3851,7 +3851,7 @@ mark_standalone_inodes(xfs_mount_t *mp)
 	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
 
-	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) - 
+	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
 			irec->ino_startnum;
 
 	ASSERT(irec != NULL);

@@ -40,8 +40,8 @@ usage(void)
 	fprintf(stderr, _(
 "Usage: %s [options] mountpoint\n\n\
 Options:\n\
-        -f          freeze filesystem access\n\
-        -u          unfreeze filesystem access\n"),
+	-f          freeze filesystem access\n\
+	-u          unfreeze filesystem access\n"),
 		progname);
 	exit(2);
 }
@@ -85,7 +85,7 @@ main(int argc, char **argv)
 		perror(fname);
 		return 1;
 	}
-	
+
 	if (!platform_test_xfs_fd(ffd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),

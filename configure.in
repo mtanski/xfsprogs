@@ -237,9 +237,9 @@ AC_SUBST(libuuid)
 dnl Check if we have a type for the pointer's size integer (__psint_t)
 AC_MSG_CHECKING([for __psint_t ])
 AC_TRY_COMPILE(
-[  
+[
     #include <sys/types.h>
-    #include <stdlib.h> 
+    #include <stdlib.h>
     #include <stddef.h>
 ],
 [
@@ -249,9 +249,9 @@ AC_TRY_COMPILE(
 dnl Check if we have a type for the pointer's size unsigned (__psunsigned_t)
 AC_MSG_CHECKING([for __psunsigned_t ])
 AC_TRY_COMPILE(
-[  
+[
     #include <sys/types.h>
-    #include <stdlib.h> 
+    #include <stdlib.h>
     #include <stddef.h>
 ],
 [

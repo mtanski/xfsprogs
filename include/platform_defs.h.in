@@ -229,7 +229,7 @@ typedef unsigned char	uchar_t;
 #include "swab.h"
 
 #define O_LARGEFILE     0
-#ifndef O_DIRECT        
+#ifndef O_DIRECT
 #define O_DIRECT        0
 #endif
 #ifndef O_SYNC
@@ -293,7 +293,7 @@ typedef char*		xfs_caddr_t;
 
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 {
-	fprintf(stderr, "%s: line %d syssgi/fcntl mapping not implemented\n", 
+	fprintf(stderr, "%s: line %d syssgi/fcntl mapping not implemented\n",
 			__FILE__, __LINE__);
 	errno = ENOSYS;
 	return -1;
@@ -314,15 +314,15 @@ static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
 
 static __inline__ char * strsep(char **s, const char *ct)
 {
-        char *sbegin = *s, *end;
+	char *sbegin = *s, *end;
 
-        if (!sbegin)
-                return NULL;
-        end = strpbrk(sbegin, ct);
-        if (end)
-                *end++ = '\0';
-        *s = end;
-        return sbegin;
+	if (!sbegin)
+		return NULL;
+	end = strpbrk(sbegin, ct);
+	if (end)
+		*end++ = '\0';
+	*s = end;
+	return sbegin;
 }
 
 #define HAVE_DIOATTR	1

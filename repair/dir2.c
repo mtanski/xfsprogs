@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -42,7 +42,7 @@
 
 /*
  * Tag bad directory entries with this.
- * We can't tag them with -1 since that will look like a 
+ * We can't tag them with -1 since that will look like a
  * data_unused_t instead of a data_entry_t.
  */
 #define	BADFSINO	((xfs_ino_t)0xfeffffffffffffffULL)
@@ -610,7 +610,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 		 * validating it.  bno value should be ok since
 		 * it was set when the block was first read in.
 		 */
-		cursor->level[this_level].hashval = 
+		cursor->level[this_level].hashval =
 			INT_GET(node->btree[entry - 1].hashval, ARCH_CONVERT);
 
 		/*
@@ -872,7 +872,7 @@ process_sf_dir2(
 	i8 = (XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, &sfp->hdr.parent, ARCH_CONVERT)
 		> XFS_DIR2_MAX_SHORT_INUM);
 
-	/* 
+	/*
 	 * check for bad entry count
 	 */
 	if (num_entries * XFS_DIR2_SF_ENTSIZE_BYNAME(sfp, 1) +
@@ -1796,7 +1796,7 @@ process_leaf_level_dir2(
 	xfs_mount_t		*mp,
 	dir2_bt_cursor_t	*da_cursor,
 	int			*repair)
-{ 
+{
 	bmap_ext_t		*bmp;
 	xfs_dabuf_t		*bp;
 	int			buf_dirty;
@@ -1962,7 +1962,7 @@ process_node_dir2(
 	} else {
 		/*
 		 * Now pass cursor and bno into leaf-block processing routine.
-		 * The leaf dir level routine checks the interior paths up to 
+		 * The leaf dir level routine checks the interior paths up to
 		 * the root including the final right-most path.
 		 */
 		return process_leaf_level_dir2(mp, &da_cursor, repair);
@@ -2123,7 +2123,7 @@ process_dir2(
 		do_warn(_("no .. entry for root directory %llu\n"), ino);
 		need_root_dotdot = 1;
 	}
-	
+
 	ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
 		(ino == mp->m_sb.sb_rootino &&
 			(ino == *parent || need_root_dotdot == 1)));

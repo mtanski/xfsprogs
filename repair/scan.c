@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -174,7 +174,7 @@ scanfunc_bmap(
 		forkname = _("attr");
 
 	/*
-	 * unlike the ag freeblock btrees, if anything looks wrong 
+	 * unlike the ag freeblock btrees, if anything looks wrong
 	 * in an inode bmap tree, just bail.  it's possible that
 	 * we'll miss a case where the to-be-toasted inode and
 	 * another inode are claiming the same block but that's
@@ -451,7 +451,7 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	 * Check that the last child block's forward sibling pointer
 	 * is NULL.
 	 */
-	if (check_dups == 0 && 
+	if (check_dups == 0 &&
 		bm_cursor->level[level - 1].right_fsbno != NULLDFSBNO)  {
 		do_warn(
 	_("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
@@ -620,7 +620,7 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 		 * If either of the entries references a different block,
 		 * check the sibling pointer.  If there's a sibling
 		 * pointer mismatch, try and extract as much data
-		 * as possible.  
+		 * as possible.
 		 */
 		if (INT_GET(pp[i], ARCH_CONVERT) != 0 &&
 		    verify_agbno(mp, agno, INT_GET(pp[i], ARCH_CONVERT)))
@@ -1195,7 +1195,7 @@ scan_ag(
 		do_error(_("can't allocate memory for superblock\n"));
 		libxfs_putbuf(sbbuf);
 		return;
-        }
+	}
 	libxfs_xlate_sb(XFS_BUF_TO_SBP(sbbuf), sb, 1, ARCH_CONVERT,
 			XFS_SB_ALL_BITS);
 
@@ -1205,7 +1205,7 @@ scan_ag(
 	if (!agfbuf)  {
 		do_error(_("can't read agf block for ag %d\n"), agno);
 		libxfs_putbuf(sbbuf);
-                free(sb);
+		free(sb);
 		return;
 	}
 	agf = XFS_BUF_TO_AGF(agfbuf);
@@ -1217,7 +1217,7 @@ scan_ag(
 		do_error(_("can't read agi block for ag %d\n"), agno);
 		libxfs_putbuf(agfbuf);
 		libxfs_putbuf(sbbuf);
-                free(sb);
+		free(sb);
 		return;
 	}
 	agi = XFS_BUF_TO_AGI(agibuf);
@@ -1265,7 +1265,7 @@ scan_ag(
 		libxfs_putbuf(agibuf);
 		libxfs_putbuf(agfbuf);
 		libxfs_putbuf(sbbuf);
-                free(sb);
+		free(sb);
 
 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
 			agno);
@@ -1329,7 +1329,7 @@ scan_ag(
 		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, ARCH_CONVERT,
 				XFS_SB_ALL_BITS);
 		libxfs_writebuf(sbbuf, 0);
-        } else
+	} else
 		libxfs_putbuf(sbbuf);
-        free(sb);
+	free(sb);
 }

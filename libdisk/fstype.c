@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -168,9 +168,9 @@ may_be_adfs(const u_char *s) {
 
 static int is_reiserfs_magic_string (struct reiserfs_super_block * rs)
 {
-    return (!strncmp (rs->s_magic, REISERFS_SUPER_MAGIC_STRING, 
+    return (!strncmp (rs->s_magic, REISERFS_SUPER_MAGIC_STRING,
 		      strlen ( REISERFS_SUPER_MAGIC_STRING)) ||
-	    !strncmp (rs->s_magic, REISER2FS_SUPER_MAGIC_STRING, 
+	    !strncmp (rs->s_magic, REISER2FS_SUPER_MAGIC_STRING,
 		      strlen ( REISER2FS_SUPER_MAGIC_STRING)));
 }
 
@@ -302,32 +302,32 @@ fstype(const char *device) {
 
     if (!type) {
 	/* block 1 */
-        if (lseek(fd, 0x400, SEEK_SET) != 0x400
-            || read(fd, (char *) &hfssb, sizeof(hfssb)) != sizeof(hfssb))
-             goto io_error;
+	if (lseek(fd, 0x400, SEEK_SET) != 0x400
+	    || read(fd, (char *) &hfssb, sizeof(hfssb)) != sizeof(hfssb))
+	     goto io_error;
 
-        /* also check if block size is equal to 512 bytes,
-           since the hfs driver currently only has support
-           for block sizes of 512 bytes long, and to be
-           more accurate (sb magic is only a short int) */
-        if ((hfsmagic(hfssb) == HFS_SUPER_MAGIC &&
+	/* also check if block size is equal to 512 bytes,
+	   since the hfs driver currently only has support
+	   for block sizes of 512 bytes long, and to be
+	   more accurate (sb magic is only a short int) */
+	if ((hfsmagic(hfssb) == HFS_SUPER_MAGIC &&
 	     hfsblksize(hfssb) == 0x20000) ||
-            (swapped(hfsmagic(hfssb)) == HFS_SUPER_MAGIC &&
-             hfsblksize(hfssb) == 0x200))
-             type = "hfs";
+	    (swapped(hfsmagic(hfssb)) == HFS_SUPER_MAGIC &&
+	     hfsblksize(hfssb) == 0x200))
+	     type = "hfs";
     }
 
     if (!type) {
 	/* block 3 */
-        if (lseek(fd, 0xc00, SEEK_SET) != 0xc00
-            || read(fd, (char *) &adfssb, sizeof(adfssb)) != sizeof(adfssb))
-             goto io_error;
+	if (lseek(fd, 0xc00, SEEK_SET) != 0xc00
+	    || read(fd, (char *) &adfssb, sizeof(adfssb)) != sizeof(adfssb))
+	     goto io_error;
 
 	/* only a weak test */
-        if (may_be_adfs((u_char *) &adfssb)
-            && (adfsblksize(adfssb) >= 8 &&
-                adfsblksize(adfssb) <= 10))
-             type = "adfs";
+	if (may_be_adfs((u_char *) &adfssb)
+	    && (adfsblksize(adfssb) >= 8 &&
+		adfsblksize(adfssb) <= 10))
+	     type = "adfs";
     }
 
     if (!type) {
@@ -356,12 +356,12 @@ fstype(const char *device) {
 
     if (!type) {
 	/* block 8 */
-        if (lseek(fd, 0x2000, SEEK_SET) != 0x2000
-            || read(fd, (char *) &hpfssb, sizeof(hpfssb)) != sizeof(hpfssb))
-             goto io_error;
+	if (lseek(fd, 0x2000, SEEK_SET) != 0x2000
+	    || read(fd, (char *) &hpfssb, sizeof(hpfssb)) != sizeof(hpfssb))
+	     goto io_error;
 
-        if (hpfsmagic(hpfssb) == HPFS_SUPER_MAGIC)
-             type = "hpfs";
+	if (hpfsmagic(hpfssb) == HPFS_SUPER_MAGIC)
+	     type = "hpfs";
     }
 
     if (!type) {

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -126,7 +126,7 @@ bmap_f(
 			return usage();
 		}
 	}
-	if (aflag) 
+	if (aflag)
 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
 
 	if (vflag) {
@@ -146,11 +146,11 @@ bmap_f(
 		}
 
 		if (fsx.fsx_xflags == XFS_XFLAG_REALTIME) {
-			/* 
+			/*
 			 * ag info not applicable to rt, continue
 			 * without ag output.
 			 */
-			vflag = 0;  
+			vflag = 0;
 		}
 	}
 
@@ -162,13 +162,13 @@ bmap_f(
 		exitcode = 1;
 		return 0;
 	}
-		
+
 
 /*	Try the xfsctl(XFS_IOC_GETBMAPX) for the number of extents specified
  *	by nflag, or the initial guess number of extents (256).
  *
  *	If there are more extents than we guessed, use xfsctl
- *	(XFS_IOC_FSGETXATTR[A]) to get the extent count, realloc some more 
+ *	(XFS_IOC_FSGETXATTR[A]) to get the extent count, realloc some more
  *	space based on this count, and try again.
  *
  *	If the initial FGETBMAPX attempt returns EINVAL, this may mean
@@ -180,12 +180,12 @@ bmap_f(
  *	(1)	The extent count may be wrong for a file with delayed
  *		allocation blocks.  The XFS_IOC_GETBMAPX forces the real
  *		allocation and fixes up the extent count.
- *	(2)	For XFS_IOC_GETBMAP[X] on a DMAPI file that has been moved 
- *		offline by a DMAPI application (e.g., DMF) the 
+ *	(2)	For XFS_IOC_GETBMAP[X] on a DMAPI file that has been moved
+ *		offline by a DMAPI application (e.g., DMF) the
  *		XFS_IOC_FSGETXATTR only reflects the extents actually online.
  *		Doing XFS_IOC_GETBMAPX call first forces that data blocks online
  *		and then everything proceeds normally (see PV #545725).
- *		
+ *
  *		If you don't want this behavior on a DMAPI offline file,
  *		try the "-d" option which sets the BMV_IF_NO_DMAPI_READ
  *		iflag for XFS_IOC_GETBMAPX.
@@ -255,7 +255,7 @@ bmap_f(
 		for (i = 0; i < map->bmv_entries; i++) {
 			printf("\t%d: [%lld..%lld]: ", i,
 				(long long) map[i + 1].bmv_offset,
-				(long long)(map[i + 1].bmv_offset + 
+				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1)
 				printf(_("hole"));
@@ -274,9 +274,9 @@ bmap_f(
 		}
 	} else {
 		/*
-		 * Verbose mode displays: 
+		 * Verbose mode displays:
 		 *   extent: [startoffset..endoffset]: startblock..endblock \
-		 *   	ag# (agoffset..agendoffset) totalbbs
+		 *	ag# (agoffset..agendoffset) totalbbs
 		 */
 #define MINRANGE_WIDTH	16
 #define MINAG_WIDTH	2
@@ -289,49 +289,49 @@ bmap_f(
 #define	FLG_ESW		00001	/* Not on end   of stripe width */
 		int	agno;
 		off64_t agoff, bbperag;
-		int 	foff_w, boff_w, aoff_w, tot_w, agno_w;
-		char 	rbuf[32], bbuf[32], abuf[32];
+		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
+		char	rbuf[32], bbuf[32], abuf[32];
 		int	sunit, swidth;
 
 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
 		tot_w = MINTOT_WIDTH;
-		bbperag = (off64_t)fsgeo.agblocks * 
+		bbperag = (off64_t)fsgeo.agblocks *
 			  (off64_t)fsgeo.blocksize / BBSIZE;
 		sunit = fsgeo.sunit;
 		swidth = fsgeo.swidth;
 
-		/* 
+		/*
 		 * Go through the extents and figure out the width
 		 * needed for all columns.
 		 */
 		for (i = 0; i < map->bmv_entries; i++) {
-			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
+			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:",
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1) {
-				foff_w = max(foff_w, strlen(rbuf)); 
-				tot_w = max(tot_w, 
+				foff_w = max(foff_w, strlen(rbuf));
+				tot_w = max(tot_w,
 					numlen(map[i+1].bmv_length));
 			} else {
-				snprintf(bbuf, sizeof(bbuf), "%lld..%lld", 
+				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				snprintf(abuf, sizeof(abuf), "(%lld..%lld)", 
+				snprintf(abuf, sizeof(abuf), "(%lld..%lld)",
 					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
-				foff_w = max(foff_w, strlen(rbuf)); 
-				boff_w = max(boff_w, strlen(bbuf)); 
-				aoff_w = max(aoff_w, strlen(abuf)); 
-				tot_w = max(tot_w, 
+				foff_w = max(foff_w, strlen(rbuf));
+				boff_w = max(boff_w, strlen(bbuf));
+				aoff_w = max(aoff_w, strlen(abuf));
+				tot_w = max(tot_w,
 					numlen(map[i+1].bmv_length));
 			}
 		}
 		agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount));
-		printf("%4s: %-*s %-*s %*s %-*s %*s\n", 
+		printf("%4s: %-*s %-*s %*s %-*s %*s\n",
 			_("EXT"),
 			foff_w, _("FILE-OFFSET"),
 			boff_w, _("BLOCK-RANGE"),
@@ -344,46 +344,46 @@ bmap_f(
 				if (map[i + 1].bmv_block  % sunit != 0) {
 					flg |= FLG_BSU;
 				}
-				if (((map[i + 1].bmv_block + 
+				if (((map[i + 1].bmv_block +
 				      map[i + 1].bmv_length ) % sunit ) != 0) {
 					flg |= FLG_ESU;
 				}
 				if (map[i + 1].bmv_block % swidth != 0) {
 					flg |= FLG_BSW;
 				}
-				if (((map[i + 1].bmv_block + 
+				if (((map[i + 1].bmv_block +
 				      map[i + 1].bmv_length ) % swidth ) != 0) {
 					flg |= FLG_ESW;
 				}
 			}
-			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
+			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:",
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
 			if (map[i + 1].bmv_block == -1) {
-				printf("%4d: %-*s %-*s %*s %-*s %*lld\n", 
-					i, 
-					foff_w, rbuf, 
+				printf("%4d: %-*s %-*s %*s %-*s %*lld\n",
+					i,
+					foff_w, rbuf,
 					boff_w, _("hole"),
 					agno_w, "",
-					aoff_w, "", 
+					aoff_w, "",
 					tot_w, (long long)map[i+1].bmv_length);
 			} else {
-				snprintf(bbuf, sizeof(bbuf), "%lld..%lld", 
+				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
 				agno = map[i + 1].bmv_block / bbperag;
 				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				snprintf(abuf, sizeof(abuf), "(%lld..%lld)", 
+				snprintf(abuf, sizeof(abuf), "(%lld..%lld)",
 					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
 				printf("%4d: %-*s %-*s %*d %-*s %*lld",
-					i, 
-					foff_w, rbuf, 
-					boff_w, bbuf, 
-					agno_w, agno, 
-					aoff_w, abuf, 
+					i,
+					foff_w, rbuf,
+					boff_w, bbuf,
+					agno_w, agno,
+					aoff_w, abuf,
 					tot_w, (long long)map[i+1].bmv_length);
 				if (flg == FLG_NULL) {
 					printf("\n");

@@ -75,7 +75,7 @@ jdm_getfshandle( char *mntpnt )
 {
 	fshandle_t *fshandlep;
 	size_t fshandlesz;
-        char resolved[MAXPATHLEN];
+	char resolved[MAXPATHLEN];
 
 	/* sanity checks */
 	ASSERT( sizeof( fshandle_t ) == FSHANDLE_SZ );
@@ -90,15 +90,15 @@ jdm_getfshandle( char *mntpnt )
 
 	fshandlep = 0; /* for lint */
 	fshandlesz = sizeof( *fshandlep );
-        
-        if (!realpath( mntpnt, resolved ))
-                return NULL;
-        
+
+	if (!realpath( mntpnt, resolved ))
+		return NULL;
+
 	if (path_to_fshandle( resolved, ( void ** )&fshandlep, &fshandlesz ))
 		return NULL;
-        
+
 	assert( fshandlesz == sizeof( *fshandlep ));
-        
+
 	return ( jdm_fshandle_t * )fshandlep;
 }
 

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -124,7 +124,7 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	 * (vs EXTENTS).  Over various fixes, the aformat and forkoff have
 	 * been updated to not show an attribute fork at all, however.
 	 * It could be possible that resetting totsize/count are not needed,
-	 * but just to be safe, leave it in for now. 
+	 * but just to be safe, leave it in for now.
 	 */
 
 	if (!no_modify) {
@@ -697,7 +697,7 @@ process_bmbt_reclist_int(
 			continue;
 		}
 
-	
+
 		/*
 		 * regular file data fork or attribute fork
 		 */
@@ -723,15 +723,15 @@ process_bmbt_reclist_int(
 				continue;
 			}
 
-			/* FIX FOR BUG 653709 -- EKN 
+			/* FIX FOR BUG 653709 -- EKN
 			 * realtime attribute fork, should be valid block number
-	 		 * in regular data space, not realtime partion.
+			 * in regular data space, not realtime partion.
 			 */
-		        if (type == XR_INO_RTDATA && whichfork == XFS_ATTR_FORK) {
+			if (type == XR_INO_RTDATA && whichfork == XFS_ATTR_FORK) {
 			  if (mp->m_sb.sb_agcount < XFS_FSB_TO_AGNO(mp, b))
 				return(1);
-			}	
-		
+			}
+
 			state = get_fsbno_state(mp, b);
 			switch (state)  {
 			case XR_E_FREE:
@@ -836,7 +836,7 @@ get_agino_buf(xfs_mount_t	 *mp,
 
 	if ((irec = find_inode_rec(agno, agino)) == NULL)
 		return(NULL);
-	
+
 	size = XFS_FSB_TO_BB(mp, MAX(1, XFS_INODES_PER_CHUNK/inodes_per_block));
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno,
 		XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)), size, 0);
@@ -1085,7 +1085,7 @@ get_bmapi(xfs_mount_t *mp, xfs_dinode_t *dino_p,
 		fsbno = getfunc_extlist(mp, ino_num, dino_p, bno, whichfork);
 		break;
 	case XFS_DINODE_FMT_BTREE:
-		fsbno = getfunc_btree(mp, ino_num, dino_p, bno, whichfork); 
+		fsbno = getfunc_btree(mp, ino_num, dino_p, bno, whichfork);
 		break;
 	case XFS_DINODE_FMT_LOCAL:
 		do_error(_("get_bmapi() called for local inode %llu\n"),
@@ -1284,7 +1284,7 @@ process_btinode(
 			cursor.level[0].fsbno);
 		return(1);
 	}
-	
+
 	return(0);
 }
 
@@ -1428,7 +1428,7 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 
 	/*
 	 * the max # of extents in a symlink inode is equal to the
-	 * number of max # of blocks required to store the symlink 
+	 * number of max # of blocks required to store the symlink
 	 */
 	if (numrecs > max_symlink_blocks)  {
 		do_warn(
@@ -1658,7 +1658,7 @@ process_misc_ino_types_blocks(xfs_drfsbno_t totblocks, xfs_ino_t lino, int type)
 	 * you can not enforce all misc types have zero data fork blocks
 	 * by checking dino->di_core.di_nblocks because atotblocks (attribute
 	 * blocks) are part of nblocks. We must check this later when atotblocks
-	 * has been calculated or by doing a simple check that anExtents == 0. 
+	 * has been calculated or by doing a simple check that anExtents == 0.
 	 * We must also guarantee that totblocks is 0. Thus nblocks checking
 	 * will be done later in process_dinode_int for misc types.
 	 */
@@ -1898,7 +1898,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 * because of the lack of any write ordering guarantee, it's
 	 * possible that the core got updated but the forks didn't.
 	 * so rather than be ambitious (and probably incorrect),
-	 * if there's an inconsistency, we get conservative and 
+	 * if there's an inconsistency, we get conservative and
 	 * just pitch the file.  blow off checking formats of
 	 * free inodes since technically any format is legal
 	 * as we reset the inode when we re-use it.
@@ -2515,7 +2515,7 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 				blkmap_free(ablkmap);
 			}
 			return(1);
-			
+
 		} else if (check_dups)  {
 			switch (dinoc->di_aformat) {
 			case XFS_DINODE_FMT_LOCAL:
@@ -2574,7 +2574,7 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 					_("would clear attr fork\n"));
 				    }
 				    atotblocks = 0;
-				    anextents = 0; 
+				    anextents = 0;
 			    }
 			    else {
 				    *dirty = 1; /* it's been repaired */
@@ -2586,8 +2586,8 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 	} else
 		anextents = 0;
 
-	/* 
-	* enforce totblocks is 0 for misc types 
+	/*
+	* enforce totblocks is 0 for misc types
 	*/
 	if (process_misc_ino_types_blocks(totblocks, lino, type)) {
 		if (!no_modify)  {

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -65,7 +65,7 @@ write_init(void)
 	srand48(clock());
 }
 
-static void 
+static void
 write_help(void)
 {
 	dbprintf(
@@ -84,7 +84,7 @@ write_help(void)
 "               'write fname \"hello\\000\"'    - write superblock fname.\n"
 "               (note: in struct mode strings are not null terminated)\n"
 "               'write fname #6669736800'    - write superblock fname with hex.\n"
-"               'write uuid 00112233-4455-6677-8899-aabbccddeeff'\n" 
+"               'write uuid 00112233-4455-6677-8899-aabbccddeeff'\n"
 "                                            - write superblock uuid.\n"
 "  Data mode:   'write fill 0xff' - fill the entire block with 0xff's\n"
 "               'write lshift 3' - shift the block 3 bytes to the left\n"
@@ -477,7 +477,7 @@ convert_arg(
 	rbuf = buf;
 
 	if (*arg == '\"') {
-                /* handle strings */
+		/* handle strings */
 
 		/* zap closing quote if there is one */
 		if ((ostr = strrchr(arg+1, '\"')) != NULL)
@@ -501,45 +501,45 @@ convert_arg(
 		}
 
 		return buf;
-        } else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
-                /*
-                 * handle hex blocks ie
-                 *    #00112233445566778899aabbccddeeff
-                 * and uuids ie 
-                 *    1122334455667788-99aa-bbcc-ddee-ff00112233445566778899
+	} else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
+		/*
+		 * handle hex blocks ie
+		 *    #00112233445566778899aabbccddeeff
+		 * and uuids ie
+		 *    1122334455667788-99aa-bbcc-ddee-ff00112233445566778899
 		 *
 		 * (but if it starts with "-" assume it's just an integer)
-                 */
-                int bytes=bit_length/8;
-                
-                /* skip leading hash */
-                if (*arg=='#') arg++;
-                    
-                while (*arg && bytes--) {
-                    /* skip hypens */
-                    while (*arg=='-') arg++;
-                    
-                    /* get first nybble */
-                    if (!isxdigit((int)*arg)) return NULL;
-                    *rbuf=NYBBLE((int)*arg)<<4;
-                    arg++;
-                    
-                    /* skip more hyphens */
-                    while (*arg=='-') arg++;
-                    
-                    /* get second nybble */
-                    if (!isxdigit((int)*arg)) return NULL;
-                    *rbuf++|=NYBBLE((int)*arg);
-                    arg++;
-                }
-                if (bytes<0&&*arg) return NULL;
-                return buf;
+		 */
+		int bytes=bit_length/8;
+
+		/* skip leading hash */
+		if (*arg=='#') arg++;
+
+		while (*arg && bytes--) {
+		    /* skip hypens */
+		    while (*arg=='-') arg++;
+
+		    /* get first nybble */
+		    if (!isxdigit((int)*arg)) return NULL;
+		    *rbuf=NYBBLE((int)*arg)<<4;
+		    arg++;
+
+		    /* skip more hyphens */
+		    while (*arg=='-') arg++;
+
+		    /* get second nybble */
+		    if (!isxdigit((int)*arg)) return NULL;
+		    *rbuf++|=NYBBLE((int)*arg);
+		    arg++;
+		}
+		if (bytes<0&&*arg) return NULL;
+		return buf;
 	} else {
-                /*
-                 * handle integers
-                 */
+		/*
+		 * handle integers
+		 */
 		*value = strtoll(arg, NULL, 0);
-                
+
 #if __BYTE_ORDER == BIG_ENDIAN
 		/* hackery for big endian */
 		if (bit_length <= 8) {
@@ -606,18 +606,18 @@ write_struct(
 
 	/* convert this to a generic conversion routine */
 	/* should be able to handle str, num, or even labels */
-	
+
 	buf = convert_arg(argv[1], bit_length);
 	if (!buf) {
 		dbprintf("unable to convert value '%s'.\n", argv[1]);
 		return;
 	}
 
-        setbitval(iocur_top->data, sfl->offset, bit_length, buf);
+	setbitval(iocur_top->data, sfl->offset, bit_length, buf);
 	write_cur();
 
 	flist_print(fl);
-	print_flist(fl); 
+	print_flist(fl);
 	flist_free(fl);
 }
 
@@ -655,7 +655,7 @@ write_block(
 	char		**argv)
 {
 	int i;
-	int shiftcount = -1; 
+	int shiftcount = -1;
 	int start = -1;
 	int len = -1;
 	int from = -1;
@@ -683,7 +683,7 @@ write_block(
 			 cmd->cmdstr);
 		goto block_usage;
 	}
-	
+
 	if (cmd->shiftcount_arg && (cmd->shiftcount_arg < argc))
 		shiftcount = (int)strtoul(argv[cmd->shiftcount_arg], NULL, 0);
 	if (cmd->start_arg && (cmd->start_arg < argc))

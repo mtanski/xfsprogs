@@ -199,7 +199,7 @@ xfs_attr_leaf_add(xfs_dabuf_t *bp, xfs_da_args_t *args)
 
 	/*
 	 * After compaction, the block is guaranteed to have only one
-	 * free region, in freemap[0].	If it is not big enough, give up.
+	 * free region, in freemap[0].  If it is not big enough, give up.
 	 */
 	if (INT_GET(hdr->freemap[0].size, ARCH_CONVERT)
 				< (entsize + sizeof(xfs_attr_leaf_entry_t)))
@@ -402,7 +402,7 @@ xfs_attr_leaf_compact(xfs_trans_t *trans, xfs_dabuf_t *bp)
  *
  * This code adjusts the args->index/blkno and args->index2/blkno2 fields
  * to match what it is doing in splitting the attribute leaf block.  Those
- * values are used in "atomic rename" operations on attributes.	 Note that
+ * values are used in "atomic rename" operations on attributes.  Note that
  * the "new" and "old" values can end up in different blocks.
  */
 STATIC void
@@ -619,7 +619,7 @@ xfs_attr_leaf_figure_balance(xfs_da_state_t *state,
 	entry = &leaf1->entries[0];
 	for (count = index = 0; count < max; entry++, index++, count++) {
 
-#define XFS_ATTR_ABS(A) (((A) < 0) ? -(A) : (A))
+#define XFS_ATTR_ABS(A)	(((A) < 0) ? -(A) : (A))
 		/*
 		 * The new entry is in the first block, account for it.
 		 */
@@ -870,7 +870,7 @@ xfs_attr_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 		memset(tmpbuffer, 0, state->blocksize);
 		tmp_leaf = (xfs_attr_leafblock_t *)tmpbuffer;
 		tmp_hdr = &tmp_leaf->hdr;
-		tmp_hdr->info = save_hdr->info; /* struct copy */
+		tmp_hdr->info = save_hdr->info;	/* struct copy */
 		INT_ZERO(tmp_hdr->count, ARCH_CONVERT);
 		INT_SET(tmp_hdr->firstused, ARCH_CONVERT, state->blocksize);
 		if (INT_ISZERO(tmp_hdr->firstused, ARCH_CONVERT)) {
@@ -985,7 +985,7 @@ xfs_attr_leaf_moveents(xfs_attr_leafblock_t *leaf_s, int start_s,
 #ifdef GROT
 		/*
 		 * Code to drop INCOMPLETE entries.  Difficult to use as we
-		 * may also need to change the insertion index.	 Code turned
+		 * may also need to change the insertion index.  Code turned
 		 * off for 6.2, should be revisited later.
 		 */
 		if (entry_s->flags & XFS_ATTR_INCOMPLETE) { /* skip partials? */

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -280,7 +280,7 @@ static xfs_ino_t	process_data_dir_v2(int *dot, int *dotdot,
 					    freetab_t **freetabp);
 static xfs_dir2_data_free_t
 			*process_data_dir_v2_freefind(xfs_dir2_data_t *data,
-					           xfs_dir2_data_unused_t *dup);
+						   xfs_dir2_data_unused_t *dup);
 static void		process_dir(xfs_dinode_t *dip, blkmap_t *blkmap,
 				    inodata_t *id);
 static int		process_dir_v1(xfs_dinode_t *dip, blkmap_t *blkmap,
@@ -368,24 +368,24 @@ static void		set_rinomap(xfs_drfsbno_t bno, xfs_extlen_t len,
 static void		setlink_inode(inodata_t *id, nlink_t nlink, int isdir,
 				       int security);
 
-static const cmdinfo_t	blockfree_cmd = 
+static const cmdinfo_t	blockfree_cmd =
 	{ "blockfree", NULL, blockfree_f, 0, 0, 0,
 	  NULL, "free block usage information", NULL };
-static const cmdinfo_t	blockget_cmd = 
+static const cmdinfo_t	blockget_cmd =
 	{ "blockget", "check", blockget_f, 0, -1, 0,
 	  "[-s|-v] [-n] [-b bno]... [-i ino] ...",
 	  "get block usage and check consistency", NULL };
 #ifdef DEBUG
-static const cmdinfo_t	blocktrash_cmd = 
+static const cmdinfo_t	blocktrash_cmd =
 	{ "blocktrash", NULL, blocktrash_f, 0, -1, 0,
 	  "[-n count] [-x minlen] [-y maxlen] [-s seed] [-0123] [-t type] ...",
 	  "trash randomly selected block(s)", NULL };
 #endif
-static const cmdinfo_t	blockuse_cmd = 
+static const cmdinfo_t	blockuse_cmd =
 	{ "blockuse", NULL, blockuse_f, 0, 3, 0,
 	  "[-n] [-c blockcount]",
 	  "print usage for current block(s)", NULL };
-static const cmdinfo_t	ncheck_cmd = 
+static const cmdinfo_t	ncheck_cmd =
 	{ "ncheck", NULL, ncheck_f, 0, -1, 0,
 	  "[-s] [-i ino] ...",
 	  "print inode-name pairs", NULL };
@@ -437,7 +437,7 @@ addname_inode(
 	id->name[namelen] = '\0';
 }
 
-static void 
+static void
 addparent_inode(
 	inodata_t	*id,
 	xfs_ino_t	parent)
@@ -827,7 +827,7 @@ blockget_f(
 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
 		/*
 		 * Check that there are no blocks either
-		 * a) unaccounted for or 
+		 * a) unaccounted for or
 		 * b) bno-free but not cnt-free
 		 */
 		checknot_dbmap(agno, 0, mp->m_sb.sb_agblocks,
@@ -1335,7 +1335,7 @@ check_linkcounts(
 			ep = ep->next;
 		}
 	}
-		
+
 }
 
 static int
@@ -2083,7 +2083,7 @@ process_btinode(
 		if (!sflag || id->ilist)
 			dbprintf("numrecs for ino %lld %s fork bmap root too "
 				 "large (%u)\n",
-				id->ino, 
+				id->ino,
 				whichfork == XFS_DATA_FORK ? "data" : "attr",
 				INT_GET(dib->bb_numrecs, ARCH_CONVERT));
 		error++;
@@ -2593,7 +2593,7 @@ process_inode(
 		"dev", "local", "extents", "btree", "uuid"
 	};
 
-        /* convert the core, then copy it back into the inode */
+	/* convert the core, then copy it back into the inode */
 	libxfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core, &tdic, 1,
 				 ARCH_CONVERT);
 	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
@@ -2929,7 +2929,7 @@ process_leaf_dir_v1_int(
 	entry = &leaf->entries[0];
 	for (i = 0; i < INT_GET(leaf->hdr.count, ARCH_CONVERT); entry++, i++) {
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
-                lino=DIRINO_GET_ARCH(&namest->inumber, ARCH_CONVERT);
+		lino=DIRINO_GET_ARCH(&namest->inumber, ARCH_CONVERT);
 		cid = find_inode(lino, 1);
 		if (v)
 			dbprintf("dir %lld entry %*.*s %lld\n", id->ino,
@@ -3199,7 +3199,7 @@ process_leaf_node_dir_v2_int(
 		}
 		break;
 	case XFS_DIR2_LEAFN_MAGIC:
-		/* if it's at the root location then we can check the 
+		/* if it's at the root location then we can check the
 		 * pointers are null XXX */
 		break;
 	case XFS_DA_NODE_MAGIC:
@@ -3349,7 +3349,7 @@ process_quota(
 		if ((dqb = iocur_top->data) == NULL) {
 			pop_cur();
 			if (scicb)
-				dbprintf("can't read block %lld for %s quota "	
+				dbprintf("can't read block %lld for %s quota "
 					 "inode (fsblock %lld)\n",
 					(xfs_dfiloff_t)qbno, s,
 					(xfs_dfsbno_t)bno);
@@ -3366,7 +3366,7 @@ process_quota(
 					INT_GET(dqb->dd_diskdq.d_rtbcount, ARCH_CONVERT));
 			if (INT_GET(dqb->dd_diskdq.d_magic, ARCH_CONVERT) != XFS_DQUOT_MAGIC) {
 				if (scicb)
-					dbprintf("bad magic number %#x for %s "	
+					dbprintf("bad magic number %#x for %s "
 						 "dqblk %lld entry %d id %d\n",
 						INT_GET(dqb->dd_diskdq.d_magic, ARCH_CONVERT), s,
 						(xfs_dfiloff_t)qbno, i, dqid);
@@ -3656,7 +3656,7 @@ process_shortform_dir_v1(
 	(*dot)++;
 	sfe = &sf->list[0];
 	for (i = INT_GET(sf->hdr.count, ARCH_CONVERT) - 1; i >= 0; i--) {
-                lino = DIRINO_GET_ARCH(&sfe->inumber, ARCH_CONVERT);
+		lino = DIRINO_GET_ARCH(&sfe->inumber, ARCH_CONVERT);
 		cid = find_inode(lino, 1);
 		if (cid == NULL) {
 			if (!sflag)
@@ -3680,7 +3680,7 @@ process_shortform_dir_v1(
 		dbprintf("dir %llu size is %lld, should be %d\n",
 			id->ino, dip->di_core.di_size,
 			(int)((char *)sfe - (char *)sf));
-        lino=DIRINO_GET_ARCH(&sf->hdr.parent, ARCH_CONVERT);
+	lino=DIRINO_GET_ARCH(&sf->hdr.parent, ARCH_CONVERT);
 	cid = find_inode(lino, 1);
 	if (cid)
 		addlink_inode(cid);
@@ -3823,16 +3823,16 @@ scan_ag(
 	set_cur(&typtab[TYP_SB],
 		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-        
+
 	if (!iocur_top->data) {
 		dbprintf("can't read superblock for ag %u\n", agno);
 		pop_cur();
 		serious_error++;
 		return;
 	}
- 
+
 	libxfs_xlate_sb(iocur_top->data, sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
- 
+
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
 		if (!sflag)
 			dbprintf("bad sb magic # %#x in ag %u\n",
@@ -3959,11 +3959,11 @@ scan_ag(
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
 		if (INT_GET(agi->agi_unlinked[i], ARCH_CONVERT) != NULLAGINO) {
 			if (!sflag) {
-                                xfs_agino_t agino=INT_GET(agi->agi_unlinked[i], ARCH_CONVERT);
+				xfs_agino_t agino=INT_GET(agi->agi_unlinked[i], ARCH_CONVERT);
 				dbprintf("agi unlinked bucket %d is %u in ag "
 					 "%u (inode=%lld)\n", i, agino, agno,
-                                        XFS_AGINO_TO_INO(mp, agno, agino));
-                        }
+					XFS_AGINO_TO_INO(mp, agno, agino));
+			}
 			error++;
 		}
 	}

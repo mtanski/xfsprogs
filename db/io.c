@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -64,13 +64,13 @@ static const cmdinfo_t	push_cmd =
 static const cmdinfo_t	stack_cmd =
 	{ "stack", NULL, stack_f, 0, 0, 0, NULL,
 	  "view the location stack", stack_help };
-static const cmdinfo_t  forward_cmd = 
+static const cmdinfo_t  forward_cmd =
 	{ "forward", "f", forward_f, 0, 0, 0, NULL,
 	  "move forward to next entry in the position ring", forward_help };
-static const cmdinfo_t  back_cmd = 
+static const cmdinfo_t  back_cmd =
 	{ "back", "b", back_f, 0, 0, 0, NULL,
 	  "move to the previous location in the position ring", back_help };
-static const cmdinfo_t  ring_cmd = 
+static const cmdinfo_t  ring_cmd =
 	{ "ring", NULL, ring_f, 0, 1, 0, NULL,
 	  "show position ring or move to a specific entry", ring_help };
 
@@ -233,30 +233,30 @@ push_f(
 	const cmdinfo_t	*ct;
 
 	if (argc > 1) {
-                /* check we can execute command */
-	        ct = find_command(argv[1]);
-	        if (ct == NULL) {
-		        dbprintf("no such command %s\n", argv[1]);
-		        return 0;
-	        }
-	        if (!ct->canpush) {
-		        dbprintf("no push form allowed for %s\n", argv[1]);
-		        return 0;
-	        }
-        }
-        
-        /* save current state */
-        push_cur();
+		/* check we can execute command */
+		ct = find_command(argv[1]);
+		if (ct == NULL) {
+			dbprintf("no such command %s\n", argv[1]);
+			return 0;
+		}
+		if (!ct->canpush) {
+			dbprintf("no push form allowed for %s\n", argv[1]);
+			return 0;
+		}
+	}
+
+	/* save current state */
+	push_cur();
 	if (iocur_top[-1].typ && iocur_top[-1].typ->typnm == TYP_INODE)
 		set_cur_inode(iocur_top[-1].ino);
 	else
 		set_cur(iocur_top[-1].typ, iocur_top[-1].bb,
-			iocur_top[-1].blen, DB_RING_IGN, 
+			iocur_top[-1].blen, DB_RING_IGN,
 			iocur_top[-1].use_bbmap ? &iocur_top[-1].bbmap : NULL);
 
-        /* run requested command */        
-        if (argc>1)
-        	(void)command(argc-1, argv+1);
+	/* run requested command */
+	if (argc>1)
+		(void)command(argc-1, argv+1);
 	return 0;
 }
 
@@ -458,7 +458,7 @@ write_bbs(
 			rval = errno;
 		} else if (i < c) {
 			rval = -1;
-		} else	
+		} else
 			rval = 0;
 		if (rval)
 			break;
@@ -478,7 +478,7 @@ read_bbs(
 	int		i;
 	int		j;
 	int		rval = EINVAL;
-        
+
 	if (count <= 0)
 		count = 1;
 
@@ -509,7 +509,7 @@ read_bbs(
 				if (*bufp == NULL)
 					xfree(buf);
 				buf = NULL;
-			} else	
+			} else
 				rval = 0;
 		}
 		if (buf == NULL)
@@ -532,7 +532,7 @@ write_cur(void)
 	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
 	if (ret == -1)
-		dbprintf("incomplete write, block: %lld\n", 
+		dbprintf("incomplete write, block: %lld\n",
 			 (iocur_base + iocur_sp)->bb);
 	else if (ret != 0)
 		dbprintf("write error: %s\n", strerror(ret));
@@ -549,7 +549,7 @@ write_cur(void)
 void
 set_cur(
 	const typ_t	*t,
-	__int64_t	d, 
+	__int64_t	d,
 	int		c,
 	int             ring_flag,
 	bbmap_t		*bbmap)

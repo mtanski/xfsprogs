@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -181,7 +181,7 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 					if (ino_dirty)
 						*rbuf_dirty = 1;
 				}
-				
+
 				if (inode_isadir(irec, ino_offset))
 					clear_inode_isadir(irec, ino_offset);
 
@@ -648,7 +648,7 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 					if (ino_dirty)
 						*rbuf_dirty = 1;
 				}
-				
+
 				if (inode_isadir(irec, ino_offset))
 					clear_inode_isadir(irec, ino_offset);
 
@@ -916,7 +916,7 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 					else
 						libxfs_putbuf(bp);
 				}
-				
+
 
 				if (inode_isadir(irec, ino_offset))
 					clear_inode_isadir(irec, ino_offset);
@@ -1147,7 +1147,7 @@ phase4(xfs_mount_t *mp)
 	int			bstate;
 	int			count_bcnt_extents(xfs_agnumber_t agno);
 	int			count_bno_extents(xfs_agnumber_t agno);
-	
+
 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
 
 	do_log(_("Phase 4 - check for duplicate blocks...\n"));
@@ -1321,7 +1321,7 @@ phase4(xfs_mount_t *mp)
 		 * duplicate extent.  if so, the inode is cleared and second
 		 * pass is skipped.  second pass sets the block bitmap
 		 * for all blocks claimed by the inode.  directory
-		 * and attribute processing is turned OFF since we did that 
+		 * and attribute processing is turned OFF since we did that
 		 * already in phase 3.
 		 */
 		do_log(_("        - agno = %d\n"), i);

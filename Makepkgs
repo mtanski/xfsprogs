@@ -1,5 +1,5 @@
 #! /bin/sh
-# 
+#
 #	Make whichever packages have been requested.
 #	Defaults to RPMs.
 #

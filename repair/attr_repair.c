@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -46,12 +46,12 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
 
 
 /*
- * For attribute repair, there are 3 formats to worry about. First, is 
+ * For attribute repair, there are 3 formats to worry about. First, is
  * shortform attributes which reside in the inode. Second is the leaf
  * form, and lastly the btree. Much of this models after the directory
- * structure so code resembles the directory repair cases. 
+ * structure so code resembles the directory repair cases.
  * For shortform case, if an attribute looks corrupt, it is removed.
- * If that leaves the shortform down to 0 attributes, it's okay and 
+ * If that leaves the shortform down to 0 attributes, it's okay and
  * will appear to just have a null attribute fork. Some checks are done
  * for validity of the value field based on what the security needs are.
  * Calls will be made to xfs_mac_valid or xfs_acl_valid routines if the
@@ -60,7 +60,7 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
  * requirements, but may in the future.
  *
  * For leaf block attributes, it requires more processing. One sticky
- * point is that the attributes can be local (within the leaf) or 
+ * point is that the attributes can be local (within the leaf) or
  * remote (outside the leaf in other blocks). Thinking of local only
  * if you get a bad attribute, and want to delete just one, its a-okay
  * if it remains large enough to still be a leaf block attribute. Otherwise,
@@ -75,7 +75,7 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
  * attribute in the leaf block will make the entire attribute fork be
  * cleared. The simplest way to do that is to ignore the leaf format, and
  * call clear_dinode_attr to just make a shortform attribute fork with
- * zero entries. 
+ * zero entries.
  *
  * Another issue with handling repair on leaf attributes is the remote
  * blocks. To make sure that they look good and are not used multiple times
@@ -106,10 +106,10 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 	void *valuep;
 	int clearit = 0;
 
-	if ((strncmp(namevalue, SGI_ACL_FILE, SGI_ACL_FILE_SIZE) == 0) || 
-			(strncmp(namevalue, SGI_ACL_DEFAULT, 
+	if ((strncmp(namevalue, SGI_ACL_FILE, SGI_ACL_FILE_SIZE) == 0) ||
+			(strncmp(namevalue, SGI_ACL_DEFAULT,
 				SGI_ACL_DEFAULT_SIZE) == 0)) {
-		if (value == NULL) {	
+		if (value == NULL) {
 			bzero(&thisacl, sizeof(xfs_acl_t));
 			bcopy(namevalue+namelen, &thisacl, valuelen);
 			valuep = &thisacl;
@@ -127,12 +127,12 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			bzero(&macl, sizeof(xfs_mac_label_t));
 			bcopy(namevalue+namelen, &macl, valuelen);
 			valuep = &macl;
-		} else 
+		} else
 			valuep = value;
 
 		if (xfs_mac_valid((xfs_mac_label_t *)valuep) != 1) { /* 1 is valid */
 			 /*
-			 * if sysconf says MAC enabled, 
+			 * if sysconf says MAC enabled,
 			 *	temp = mac_from_text("msenhigh/mintlow", NULL)
 			 *	copy it to value, update valuelen, totsize
 			 *	This causes pushing up or down of all following
@@ -166,21 +166,21 @@ int
 process_shortform_attr(
 	xfs_ino_t	ino,
 	xfs_dinode_t	*dip,
-	int 		*repair)	
+	int		*repair)
 {
 	xfs_attr_shortform_t	*asf;
 	xfs_attr_sf_entry_t	*currententry, *nextentry, *tempentry;
 	int			i, junkit;
 	int			currentsize, remainingspace;
-	
+
 	*repair = 0;
 
 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
 
 	/* Assumption: hdr.totsize is less than a leaf block and was checked
-	 * by lclinode for valid sizes. Check the count though.	
+	 * by lclinode for valid sizes. Check the count though.
 	*/
-	if (INT_GET(asf->hdr.count, ARCH_CONVERT) == 0) 
+	if (INT_GET(asf->hdr.count, ARCH_CONVERT) == 0)
 		/* then the total size should just be the header length */
 		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) != sizeof(xfs_attr_sf_hdr_t)) {
 			/* whoops there's a discrepancy. Clear the hdr */
@@ -191,16 +191,16 @@ process_shortform_attr(
 				INT_SET(asf->hdr.totsize, ARCH_CONVERT,
 						sizeof(xfs_attr_sf_hdr_t));
 				*repair = 1;
-				return(1); 	
+				return(1);
 			} else {
 				do_warn(
 	_("would junk the attribute fork since count is 0 for inode %llu\n"),
 					ino);
 				return(1);
 			}
-                }
-		
-	currentsize = sizeof(xfs_attr_sf_hdr_t); 
+		}
+
+	currentsize = sizeof(xfs_attr_sf_hdr_t);
 	remainingspace = INT_GET(asf->hdr.totsize, ARCH_CONVERT) - currentsize;
 	nextentry = &asf->list[0];
 	for (i = 0; i < INT_GET(asf->hdr.count, ARCH_CONVERT); i++)  {
@@ -208,7 +208,7 @@ process_shortform_attr(
 		junkit = 0;
 
 		/* don't go off the end if the hdr.count was off */
-		if ((currentsize + (sizeof(xfs_attr_sf_entry_t) - 1)) > 
+		if ((currentsize + (sizeof(xfs_attr_sf_entry_t) - 1)) >
 				INT_GET(asf->hdr.totsize, ARCH_CONVERT))
 			break; /* get out and reset count and totSize */
 
@@ -219,7 +219,7 @@ process_shortform_attr(
 				do_warn(
 		_(" truncating attributes for inode %llu to %d\n"), ino, i);
 				*repair = 1;
-				break; 	/* and then update hdr fields */
+				break;	/* and then update hdr fields */
 			} else {
 				do_warn(
 		_(" would truncate attributes for inode %llu to %d\n"), ino, i);
@@ -241,21 +241,21 @@ process_shortform_attr(
 					do_warn(
 			_(" truncating attributes for inode %llu to %d\n"),
 						ino, i);
-					*repair = 1; 
+					*repair = 1;
 					break; /* and then update hdr fields */
 				} else {
 					do_warn(
 			_(" would truncate attributes for inode %llu to %d\n"),
-						ino, i);	
+						ino, i);
 					break;
-				}	
+				}
 			}
 		}
-	
-		/* namecheck checks for / and null terminated for file names. 
+
+		/* namecheck checks for / and null terminated for file names.
 		 * attributes names currently follow the same rules.
 		*/
-		if (namecheck((char *)&currententry->nameval[0], 
+		if (namecheck((char *)&currententry->nameval[0],
 				INT_GET(currententry->namelen, ARCH_CONVERT)))  {
 			do_warn(
 	_("entry contains illegal character in shortform attribute name\n"));
@@ -269,13 +269,13 @@ process_shortform_attr(
 		}
 
 		/* Only check values for root security attributes */
-		if (INT_GET(currententry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT) 
+		if (INT_GET(currententry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT)
 		       junkit = valuecheck((char *)&currententry->nameval[0],
-				NULL, 
+				NULL,
 				INT_GET(currententry->namelen, ARCH_CONVERT),
 				INT_GET(currententry->valuelen, ARCH_CONVERT));
 
-		remainingspace = remainingspace - 
+		remainingspace = remainingspace -
 				XFS_ATTR_SF_ENTSIZE(currententry);
 
 		if (junkit) {
@@ -292,19 +292,19 @@ process_shortform_attr(
 				i--; /* no worries, it will wrap back to 0 */
 				*repair = 1;
 				continue; /* go back up now */
-			} else { 
+			} else {
 				do_warn(
 			_("would remove attribute entry %d for inode %llu\n"),
 					i, ino);
-                        }
-                }
+			}
+		}
 
 		/* Let's get ready for the next entry... */
 		nextentry = (xfs_attr_sf_entry_t *)
 			 ((__psint_t) nextentry +
 			 XFS_ATTR_SF_ENTSIZE(currententry));
 		currentsize = currentsize + XFS_ATTR_SF_ENTSIZE(currententry);
-	
+
 	} /* end the loop */
 
 	if (INT_GET(asf->hdr.count, ARCH_CONVERT) != i)  {
@@ -320,7 +320,7 @@ process_shortform_attr(
 			*repair = 1;
 		}
 	}
-	
+
 	/* ASSUMPTION: currentsize <= totsize */
 	if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) != currentsize)  {
 		if (no_modify)  {
@@ -353,9 +353,9 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 	xfs_dfsbno_t	bno;
 	xfs_buf_t	*bp;
 	int		clearit = 0, i = 0, length = 0, amountdone = 0;
-	
+
 	/* ASSUMPTION: valuelen is a valid number, so use it for looping */
-	/* Note that valuelen is not a multiple of blocksize */  
+	/* Note that valuelen is not a multiple of blocksize */
 	while (amountdone < valuelen) {
 		bno = blkmap_get(blkmap, blocknum + i);
 		if (bno == NULLDFSBNO) {
@@ -374,7 +374,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 		}
 		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
 		length = MIN(XFS_BUF_COUNT(bp), valuelen - amountdone);
-		bcopy(XFS_BUF_PTR(bp), value, length); 
+		bcopy(XFS_BUF_PTR(bp), value, length);
 		amountdone += length;
 		value += length;
 		i++;
@@ -394,7 +394,7 @@ static da_freemap_t attr_freemap[DA_BMAP_SIZE];
  * If any problems occur the routine returns with non-zero. In
  * this case the next step is to clear the attribute fork, by
  * changing it to shortform and zeroing it out. Forkoff need not
- * be changed. 
+ * be changed.
  */
 
 int
@@ -406,7 +406,7 @@ process_leaf_attr_block(
 	blkmap_t	*blkmap,
 	xfs_dahash_t	last_hashval,
 	xfs_dahash_t	*current_hashval,
-	int 		*repair)	
+	int		*repair)
 {
 	xfs_attr_leaf_entry_t *entry;
 	xfs_attr_leaf_name_local_t *local;
@@ -415,7 +415,7 @@ process_leaf_attr_block(
 
 	clearit = usedbs = 0;
 	*repair = 0;
-	firstb = mp->m_sb.sb_blocksize; 
+	firstb = mp->m_sb.sb_blocksize;
 	stop = sizeof(xfs_attr_leaf_hdr_t);
 
 	/* does the count look sorta valid? */
@@ -429,15 +429,15 @@ process_leaf_attr_block(
 						da_bno, ino);
 		return (1);
 	}
- 
+
 	init_da_freemap(attr_freemap);
 	(void) set_da_freemap(mp, attr_freemap, 0, stop);
-	
+
 	/* go thru each entry checking for problems */
-	for (i = 0, entry = &leaf->entries[0]; 
+	for (i = 0, entry = &leaf->entries[0];
 			i < INT_GET(leaf->hdr.count, ARCH_CONVERT);
 						i++, entry++) {
-	
+
 		/* check if index is within some boundary. */
 		if (INT_GET(entry->nameidx, ARCH_CONVERT) > XFS_LBSIZE(mp)) {
 			do_warn(
@@ -471,9 +471,9 @@ process_leaf_attr_block(
 
 		if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_LOCAL) {
 
-			local = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);	
-			if ((INT_GET(local->namelen, ARCH_CONVERT) == 0) || 
-				(namecheck((char *)&local->nameval[0], 
+			local = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);
+			if ((INT_GET(local->namelen, ARCH_CONVERT) == 0) ||
+				(namecheck((char *)&local->nameval[0],
 				    INT_GET(local->namelen, ARCH_CONVERT))))  {
 				do_warn(
 			_("attribute entry %d in attr block %u, inode %llu "
@@ -486,13 +486,13 @@ process_leaf_attr_block(
 
 			/* Check on the hash value. Checking order of values
 			 * is not necessary, since one wrong clears the whole
-			 * fork. If the ordering's wrong, it's caught here or 
- 			 * the kernel code has a bug with transaction logging
+			 * fork. If the ordering's wrong, it's caught here or
+			 * the kernel code has a bug with transaction logging
 			 * or attributes itself. Being paranoid, let's check
-			 * ordering anyway in case both the name value and the 
-		  	 * hashvalue were wrong but matched. Unlikely, however.
+			 * ordering anyway in case both the name value and the
+			 * hashvalue were wrong but matched. Unlikely, however.
 			*/
-			if (INT_GET(entry->hashval, ARCH_CONVERT) != 
+			if (INT_GET(entry->hashval, ARCH_CONVERT) !=
 				libxfs_da_hashname((char *)&local->nameval[0],
 					INT_GET(local->namelen,
 						ARCH_CONVERT)) ||
@@ -507,7 +507,7 @@ process_leaf_attr_block(
 			}
 
 			/* Only check values for root security attributes */
-			if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT) 
+			if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT)
 				if (valuecheck((char *)&local->nameval[0], NULL,
 				    INT_GET(local->namelen, ARCH_CONVERT),
 				    INT_GET(local->valuelen, ARCH_CONVERT)))  {
@@ -527,9 +527,9 @@ process_leaf_attr_block(
 			/* do the remote case */
 			remotep = XFS_ATTR_LEAF_NAME_REMOTE(leaf, i);
 			thissize = XFS_ATTR_LEAF_ENTSIZE_REMOTE(
-					INT_GET(remotep->namelen, ARCH_CONVERT)); 
+					INT_GET(remotep->namelen, ARCH_CONVERT));
 
-			if ((INT_GET(remotep->namelen, ARCH_CONVERT) == 0) || 
+			if ((INT_GET(remotep->namelen, ARCH_CONVERT) == 0) ||
 				   (namecheck((char *)&remotep->name[0],
 					INT_GET(remotep->namelen, ARCH_CONVERT))) ||
 				   (INT_GET(entry->hashval, ARCH_CONVERT)
@@ -586,7 +586,7 @@ process_leaf_attr_block(
 			}
 		}
 
-		*current_hashval = last_hashval 
+		*current_hashval = last_hashval
 				 = INT_GET(entry->hashval, ARCH_CONVERT);
 
 		if (set_da_freemap(mp, attr_freemap,
@@ -598,9 +598,9 @@ process_leaf_attr_block(
 				i, da_bno, ino);
 			clearit = 1;
 			break;	/* got an overlap */
-		}			
+		}
 		usedbs += thissize;
-		if (INT_GET(entry->nameidx, ARCH_CONVERT) < firstb) 
+		if (INT_GET(entry->nameidx, ARCH_CONVERT) < firstb)
 			firstb = INT_GET(entry->nameidx, ARCH_CONVERT);
 
 	} /* end the loop */
@@ -610,7 +610,7 @@ process_leaf_attr_block(
 
 		/* if the holes flag is set, don't reset first_used unless it's
 		 * pointing to used bytes.  we're being conservative here
-		 * since the block will get compacted anyhow by the kernel. 
+		 * since the block will get compacted anyhow by the kernel.
 		 */
 
 		if (  (INT_GET(leaf->hdr.holes, ARCH_CONVERT) == 0
@@ -659,7 +659,7 @@ process_leaf_attr_block(
 		* checking for holes and compacting if appropiate. I don't think
 		* attributes need all that, so let's just leave the holes. If
 		* we discover later that this is a good place to do compaction
-		* we can add it then. 
+		* we can add it then.
 		*/
 	}
 	return (clearit);  /* and repair */
@@ -699,7 +699,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		if (dev_bno == NULLDFSBNO) {
 			do_warn(_("can't map block %u for attribute fork "
 				  "for inode %llu\n"), da_bno, ino);
-			goto error_out; 
+			goto error_out;
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
@@ -745,7 +745,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		da_cursor->level[0].bno = da_bno;
 		da_cursor->level[0].index
 				= INT_GET(leaf->hdr.count, ARCH_CONVERT);
-		da_cursor->level[0].dirty = repair; 
+		da_cursor->level[0].dirty = repair;
 
 		if (INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != prev_bno)  {
 			do_warn(_("bad sibling back pointer for block %u in "
@@ -799,9 +799,9 @@ error_out:
  * has more than just a block) btree.
  *
  * Note that if we run into any problems, we will trash the attribute fork.
- * 
+ *
  * returns 0 if things are ok, 1 if bad
- * Note this code has been based off process_node_dir. 
+ * Note this code has been based off process_node_dir.
  */
 int
 process_node_attr(
@@ -832,7 +832,7 @@ process_node_attr(
 	 * now process interior node. don't have any buffers held in this path.
 	 */
 	error = traverse_int_dablock(mp, &da_cursor, &bno, XFS_ATTR_FORK);
-	if (error == 0) 
+	if (error == 0)
 		return(1);  /* 0 means unsuccessful */
 
 	/*
@@ -840,7 +840,7 @@ process_node_attr(
 	 * the leaf dir level routine checks the interior paths
 	 * up to the root including the final right-most path.
 	 */
-	
+
 	return (process_leaf_attr_level(mp, &da_cursor));
 }
 
@@ -929,9 +929,9 @@ process_longform_attr(
 				0, &next_hashval, repair)) {
 			/* the block is bad.  lose the attribute fork. */
 			libxfs_putbuf(bp);
-			return(1); 
+			return(1);
 		}
-		*repair = *repair || repairlinks; 
+		*repair = *repair || repairlinks;
 		break;
 
 	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
@@ -939,8 +939,8 @@ process_longform_attr(
 		if (repairlinks) {
 			*repair = 1;
 			libxfs_writebuf(bp, 0);
-		} else 
-			libxfs_putbuf(bp);	
+		} else
+			libxfs_putbuf(bp);
 		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
 	default:
 		do_warn(_("bad attribute leaf magic # %#x for dir ino %llu\n"),
@@ -949,7 +949,7 @@ process_longform_attr(
 		return(1);
 	}
 
-	if (*repair && !no_modify) 
+	if (*repair && !no_modify)
 		libxfs_writebuf(bp, 0);
 	else
 		libxfs_putbuf(bp);
@@ -974,7 +974,7 @@ xfs_acl_get_endian(xfs_acl_t *aclp)
 
 /*
  * returns 1 if attributes got cleared
- * and 0 if things are ok. 
+ * and 0 if things are ok.
  */
 int
 process_attributes(
@@ -1005,12 +1005,12 @@ process_attributes(
 	} else  {
 		do_warn(_("illegal attribute format %d, ino %llu\n"),
 			dinoc->di_aformat, ino);
-		err = 1; 
+		err = 1;
 	}
 	return (err);  /* and repair */
 }
 
-/* 
+/*
  * Validate an ACL
  */
 static int
@@ -1106,8 +1106,8 @@ xfs_mac_valid(xfs_mac_label_t *lp)
 
 	/*
 	 * check whether the msentype value is valid, and do they have
-  	 * appropriate level, category association.
-         */
+	 * appropriate level, category association.
+	 */
 	switch (lp->ml_msen_type) {
 		case XFS_MSEN_ADMIN_LABEL:
 		case XFS_MSEN_EQUAL_LABEL:

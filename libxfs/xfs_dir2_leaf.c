@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -528,7 +528,6 @@ xfs_dir2_leaf_addname(
 	return 0;
 }
 
-
 #ifdef DEBUG
 /*
  * Check the internal consistency of a leaf1 block.
@@ -584,7 +583,7 @@ xfs_dir2_leaf_compact(
 	xfs_dabuf_t	*bp)		/* leaf buffer */
 {
 	int		from;		/* source leaf index */
-	xfs_dir2_leaf_t *leaf;		/* leaf structure */
+	xfs_dir2_leaf_t	*leaf;		/* leaf structure */
 	int		loglow;		/* first leaf entry to log */
 	int		to;		/* target leaf index */
 
@@ -640,7 +639,7 @@ xfs_dir2_leaf_compact_x1(
 	int		highstale;	/* stale entry at/after index */
 	int		index;		/* insertion index */
 	int		keepstale;	/* source index of kept stale */
-	xfs_dir2_leaf_t *leaf;		/* leaf structure */
+	xfs_dir2_leaf_t	*leaf;		/* leaf structure */
 	int		lowstale;	/* stale entry before index */
 	int		newindex=0;	/* new insertion index */
 	int		to;		/* destination copy index */

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -60,12 +60,12 @@ Options:\n\
     -s <start blk>  block # to start printing\n\
     -v              print \"overwrite\" data\n\
     -t	            print out transactional view\n\
-        -b          in transactional view, extract buffer info\n\
-        -i          in transactional view, extract inode info\n\
-        -q          in transactional view, extract quota info\n\
+	-b          in transactional view, extract buffer info\n\
+	-i          in transactional view, extract inode info\n\
+	-q          in transactional view, extract quota info\n\
     -D              print only data; no decoding\n\
-    -V              print version information\n", 
-        progname);
+    -V              print version information\n",
+	progname);
 	exit(1);
 }
 
@@ -89,12 +89,12 @@ logstat(libxfs_init_t *x)
 	if (read(fd, buf, sizeof(buf)) != sizeof(buf)) {
 		fprintf(stderr, "    read of XFS superblock failed\n");
 		exit(1);
-	} 
-        close (fd);
+	}
+	close (fd);
 
 	if (!x->disfile) {
-		/* 
-		 * Conjure up a mount structure 
+		/*
+		 * Conjure up a mount structure
 		 */
 		libxfs_xlate_sb(buf, &(mp.m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
 		sb = &(mp.m_sb);
@@ -106,7 +106,7 @@ logstat(libxfs_init_t *x)
 			fprintf(stderr, "    external log device not specified\n\n");
 			usage();
 			/*NOTREACHED*/
-		}	    
+		}
 	} else {
 		struct stat	s;
 
@@ -122,7 +122,7 @@ logstat(libxfs_init_t *x)
 				x->logname, strerror(errno));
 			exit(1);
 		}
-                close(fd);
+		close(fd);
 	} else {                            /* Internal log */
 		x->logdev = x->ddev;
 	}
@@ -135,8 +135,8 @@ main(int argc, char **argv)
 {
 	int		print_start = -1;
 	int		c;
-        int             logfd;
-        xlog_t	        log = {0};
+	int             logfd;
+	xlog_t	        log = {0};
 
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "befl:iqnors:tDVvc")) != EOF) {
@@ -159,16 +159,16 @@ main(int argc, char **argv)
 				x.lisfile = 1;
 				break;
 			}
-			case 'c': { 
-                            /* default is to stop on error. 
-                             * -c turns this off.
-                             */
+			case 'c': {
+			    /* default is to stop on error.
+			     * -c turns this off.
+			     */
 				print_exit=0;
 				break;
 			}
-			case 'e': { 
-                            /* -e is now default
-                             */
+			case 'e': {
+			    /* -e is now default
+			     */
 				print_exit++;
 				break;
 			}
@@ -199,15 +199,15 @@ main(int argc, char **argv)
 			case 'V': {
 				printf("%s version %s\n", progname, VERSION);
 				exit(0);
-                        }
-                        case 'v': {
-                                print_overwrite++;
-                                break;
+			}
+			case 'v': {
+				print_overwrite++;
+				break;
 			}
 			case '?': {
 				usage();
 			}
-	        }
+		}
 	}
 
 	if (argc - optind != 1)
@@ -222,14 +222,14 @@ main(int argc, char **argv)
 	x.isreadonly = LIBXFS_ISINACTIVE;
 	x.notvolmsg = "You should never see this message.\n";
 
-        printf("xfs_logprint:\n");
+	printf("xfs_logprint:\n");
 	if (!libxfs_init(&x))
 		exit(1);
 
 	logstat(&x);
 
 	logfd=(x.logfd<0)?(x.dfd):(x.logfd);
- 
+
 	printf("    data device: 0x%llx\n", (unsigned long long)x.ddev);
 
 	if (x.logname) {
@@ -248,12 +248,12 @@ main(int argc, char **argv)
 	log.l_logsize     = BBTOB(x.logBBsize);
 	log.l_logBBstart  = x.logBBstart;
 	log.l_logBBsize   = x.logBBsize;
-        log.l_mp          = &mp;
- 
+	log.l_mp          = &mp;
+
 	if (print_transactions)
 		xfs_log_print_trans(&log, print_start);
 	else
 		xfs_log_print(&log, logfd, print_start);
-        
+
 	exit(0);
 }

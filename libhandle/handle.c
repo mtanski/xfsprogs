@@ -229,7 +229,7 @@ obj_to_handle (
 	if (ret)
 		return ret;
 
-	*hanp = malloc(*hlen);	
+	*hanp = malloc(*hlen);
 	if (*hanp == NULL) {
 		errno = ENOMEM;
 		return -1;

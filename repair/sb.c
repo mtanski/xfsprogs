@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -237,7 +237,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	__uint32_t	bsize;
 	xfs_extlen_t	align;
 	int		i;
-	
+
 	/* check magic number and version number */
 
 	if (sb->sb_magicnum != XFS_SB_MAGIC)
@@ -355,8 +355,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	 * verify stripe alignment fields if present
 	 */
 	if (XFS_SB_VERSION_HASDALIGN(sb)) {
-		if ((!sb->sb_unit && sb->sb_width) || 
-		    (sb->sb_unit && sb->sb_agblocks % sb->sb_unit)) 
+		if ((!sb->sb_unit && sb->sb_width) ||
+		    (sb->sb_unit && sb->sb_agblocks % sb->sb_unit))
 			return(XR_BAD_SB_UNIT);
 		if ((sb->sb_unit && !sb->sb_width) ||
 		    (sb->sb_width && sb->sb_unit && sb->sb_width % sb->sb_unit))
@@ -424,29 +424,29 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 void
 write_primary_sb(xfs_sb_t *sbp, int size)
 {
-        void *buf;
-        
+	void *buf;
+
 	if (no_modify)
 		return;
-        
-        if ((buf = calloc(size, 1)) == NULL) {
+
+	if ((buf = calloc(size, 1)) == NULL) {
 		do_error(_("failed to malloc superblock buffer\n"));
-                return;
+		return;
 	}
 
 	if (lseek64(fs_fd, 0LL, SEEK_SET) != 0LL) {
-                free(buf);
+		free(buf);
 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
-        }
-        
+	}
+
 	libxfs_xlate_sb(buf, sbp, -1, ARCH_CONVERT, XFS_SB_ALL_BITS);
 
 	if (write(fs_fd, buf, size) != size) {
-                free(buf);
+		free(buf);
 		do_error(_("primary superblock write failed!\n"));
-        }
+	}
 
-        free(buf);
+	free(buf);
 }
 
 /*
@@ -456,9 +456,9 @@ int
 get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 {
 	int error, rval;
-        void *buf;
-        
-        if ((buf = calloc(size, 1)) == NULL) {
+	void *buf;
+
+	if ((buf = calloc(size, 1)) == NULL) {
 		do_error(
 	_("error reading superblock %u -- failed to malloc buffer\n"),
 			agno, off);
@@ -539,7 +539,7 @@ fs_geo_list_t *
 add_geo(fs_geo_list_t *list, fs_geometry_t *geo_p, int index)
 {
 	fs_geo_list_t	*current = list;
-	
+
 	while (current != NULL)  {
 		if (memcmp(geo_p, &current->geo, sizeof(fs_geometry_t)) == 0)  {
 			current->refs++;
@@ -798,7 +798,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 
 	if (current->index != sb_index)  {
 		*sb_modified = 1;
-		off = current->index * current->geo.sb_agblocks 
+		off = current->index * current->geo.sb_agblocks
 			* current->geo.sb_blocksize;
 		if (get_sb(sb, off, current->geo.sb_sectsize,
 				current->index) != XR_OK)

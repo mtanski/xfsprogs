@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -96,21 +96,21 @@ void
 print_xlog_op_line(void)
 {
     printf("--------------------------------------"
-           "--------------------------------------\n");
+	   "--------------------------------------\n");
 }	/* print_xlog_op_line */
 
 void
 print_xlog_record_line(void)
 {
     printf("======================================"
-           "======================================\n");
+	   "======================================\n");
 }	/* print_xlog_record_line */
 
 void
 print_stars(void)
 {
     printf("***********************************"
-           "***********************************\n");
+	   "***********************************\n");
 }	/* print_xlog_record_line */
 
 /*
@@ -217,16 +217,16 @@ xlog_print_trans_header(xfs_caddr_t *ptr, int len)
     char                *magic_c = (char *)&magic;
 
     *ptr += len;
-    
+
     magic=*(__uint32_t*)cptr; /* XXX INT_GET soon */
-    
+
     if (len >= 4) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-	printf("%c%c%c%c:", 
-                magic_c[3], magic_c[2], magic_c[1], magic_c[0]);
+	printf("%c%c%c%c:",
+		magic_c[3], magic_c[2], magic_c[1], magic_c[0]);
 #else
-	printf("%c%c%c%c:", 
-	        magic_c[0], magic_c[1], magic_c[2], magic_c[3]);
+	printf("%c%c%c%c:",
+		magic_c[0], magic_c[1], magic_c[2], magic_c[3]);
 #endif
     }
     if (len != sizeof(xfs_trans_header_t)) {
@@ -256,7 +256,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     xfs_buf_log_format_t lbuf;
     int			 size, blen, map_size, struct_size;
     long long		 x, y;
-    
+
     /*
      * bcopy to ensure 8-byte alignment for the long longs in
      * buf_log_format_t structure
@@ -328,14 +328,14 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 			 */
 			bcopy(*ptr, &x, sizeof(long long));
 			bcopy(*ptr+8, &y, sizeof(long long));
-			printf("icount: %lld  ifree: %lld  ", 
-                                INT_GET(x, ARCH_CONVERT), 
-                                INT_GET(y, ARCH_CONVERT));
+			printf("icount: %lld  ifree: %lld  ",
+				INT_GET(x, ARCH_CONVERT),
+				INT_GET(y, ARCH_CONVERT));
 			bcopy(*ptr+16, &x, sizeof(long long));
 			bcopy(*ptr+24, &y, sizeof(long long));
-			printf("fdblks: %lld  frext: %lld\n", 
-                                INT_GET(x, ARCH_CONVERT), 
-                                INT_GET(y, ARCH_CONVERT));
+			printf("fdblks: %lld  frext: %lld\n",
+				INT_GET(x, ARCH_CONVERT),
+				INT_GET(y, ARCH_CONVERT));
 		}
 		super_block = 0;
 	} else if (INT_GET(*(uint *)(*ptr), ARCH_CONVERT) == XFS_AGI_MAGIC) {
@@ -478,7 +478,7 @@ xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
     xfs_extent_t	 *ex;
     int			 i;
     xfs_efd_log_format_t lbuf;
-    
+
     /*
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_efd_log_format_t structure
@@ -588,15 +588,15 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 	char		namebuf[257];
 	xfs_dir_sf_entry_t	*sfep;
 
-        /* XXX need to determine whether this is v1 or v2, then
-           print appropriate structure */
-        
+	/* XXX need to determine whether this is v1 or v2, then
+	   print appropriate structure */
+
 	printf("SHORTFORM DIRECTORY size %d\n",
-                size);
-        /* bail out for now */
-        
-        return;
-        
+		size);
+	/* bail out for now */
+
+	return;
+
 	printf("SHORTFORM DIRECTORY size %d count %d\n",
 	       size, sfp->hdr.count);
 	bcopy(&(sfp->hdr.parent), &ino, sizeof(ino));
@@ -675,11 +675,11 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     /* core inode comes 2nd */
     op_head = (xlog_op_header_t *)*ptr;
     xlog_print_op_header(op_head, *i, ptr);
-    
+
     if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
 	return f->ilf_size-1;
     }
-    
+
     bcopy(*ptr, &dino, sizeof(dino));
     mode = dino.di_mode & IFMT;
     size = (int)dino.di_size;
@@ -806,7 +806,7 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     f = &lbuf;
     (*i)++;					/* bump index */
     *ptr += len;
-    
+
     if (len == sizeof(xfs_dq_logformat_t)) {
 	printf("#regs: %d   id: 0x%x", f->qlf_size, f->qlf_id);
 	printf("  blkno: %lld  len: %d  boff: %d\n",
@@ -871,10 +871,10 @@ xlog_print_lseek(xlog_t *log, int fd, xfs_daddr_t blkno, int whence)
 void
 print_lsn(xfs_caddr_t	string,
 	  xfs_lsn_t	*lsn,
-          xfs_arch_t    arch)
+	  xfs_arch_t    arch)
 {
-    printf("%s: %u,%u", string, 
-            CYCLE_LSN(*lsn, arch), BLOCK_LSN(*lsn, arch));
+    printf("%s: %u,%u", string,
+	    CYCLE_LSN(*lsn, arch), BLOCK_LSN(*lsn, arch));
 }
 
 
@@ -894,10 +894,10 @@ xlog_print_record(int		  fd,
 
     if (print_no_print)
 	    return NO_ERROR;
-    
+
     if (!len) {
-        printf("\n");
-        return NO_ERROR;
+	printf("\n");
+	return NO_ERROR;
     }
 
     /* read_len must read up to some block boundary */
@@ -925,7 +925,7 @@ xlog_print_record(int		  fd,
 	*partial_buf = buf;
 	return PARTIAL_READ;
     }
-    
+
     /* Did we read everything? */
     if ((ret == 0 && read_len != 0) || ret != read_len) {
 	*read_type = ret;
@@ -934,7 +934,7 @@ xlog_print_record(int		  fd,
     }
     if (*read_type != FULL_READ)
 	read_len += *read_type;
-    
+
     /* Everything read in.  Start from beginning of buffer */
     buf = ptr;
     for (i = 0; ptr < buf + read_len; ptr += BBSIZE, i++) {
@@ -965,7 +965,7 @@ xlog_print_record(int		  fd,
 	/* print transaction data */
 	if (print_no_data ||
 	    ((XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
-	      XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) && 
+	      XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) &&
 	     INT_GET(op_head->oh_len, ARCH_CONVERT) == 0)) {
 	    for (n = 0; n < INT_GET(op_head->oh_len, ARCH_CONVERT); n++) {
 		printf("%c", *ptr);
@@ -1030,7 +1030,7 @@ xlog_print_record(int		  fd,
 		    }
 		    default: {
 			fprintf(stderr, "%s: unknown log operation type (%x)\n",
-                                progname, *(unsigned short *)ptr);
+				progname, *(unsigned short *)ptr);
 			skip = 0;
 			ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
 		    }
@@ -1052,63 +1052,63 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
     int i;
     char uub[64];
     int datalen,bbs;
-    
+
     if (print_no_print)
 	    return INT_GET(head->h_num_logops, ARCH_CONVERT);
-    
+
     if (INT_ISZERO(head->h_magicno, ARCH_CONVERT))
-        return ZEROED_LOG;
+	return ZEROED_LOG;
 
     if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
-	printf("Header 0x%x wanted 0x%x\n", 
-                INT_GET(head->h_magicno, ARCH_CONVERT), 
-                XLOG_HEADER_MAGIC_NUM);
+	printf("Header 0x%x wanted 0x%x\n",
+		INT_GET(head->h_magicno, ARCH_CONVERT),
+		XLOG_HEADER_MAGIC_NUM);
 	return BAD_HEADER;
     }
-    
+
     datalen=INT_GET(head->h_len, ARCH_CONVERT);
     bbs=(datalen/BBSIZE)+(datalen%BBSIZE)?1:0;
-            
-    printf("cycle: %d	version: %d	", 
-            INT_GET(head->h_cycle, ARCH_CONVERT), 
-            INT_GET(head->h_version, ARCH_CONVERT));
+
+    printf("cycle: %d	version: %d	",
+	    INT_GET(head->h_cycle, ARCH_CONVERT),
+	    INT_GET(head->h_version, ARCH_CONVERT));
     print_lsn("	lsn", &head->h_lsn, ARCH_CONVERT);
     print_lsn("	tail_lsn", &head->h_tail_lsn, ARCH_CONVERT);
     printf("\n");
     printf("length of Log Record: %d	prev offset: %d		num ops: %d\n",
-	   datalen, 
-            INT_GET(head->h_prev_block, ARCH_CONVERT), 
-            INT_GET(head->h_num_logops, ARCH_CONVERT));
-    
+	   datalen,
+	    INT_GET(head->h_prev_block, ARCH_CONVERT),
+	    INT_GET(head->h_num_logops, ARCH_CONVERT));
+
     if (print_overwrite) {
-        printf("cycle num overwrites: ");
-        for (i=0; i< bbs; i++)
+	printf("cycle num overwrites: ");
+	for (i=0; i< bbs; i++)
 	    printf("%d - 0x%x  ",
-                    i,
-                    INT_GET(head->h_cycle_data[i], ARCH_CONVERT));
-        printf("\n");
+		    i,
+		    INT_GET(head->h_cycle_data[i], ARCH_CONVERT));
+	printf("\n");
     }
-    
+
     uuid_unparse(head->h_fs_uuid, uub);
     printf("uuid: %s   format: ", uub);
     switch (INT_GET(head->h_fmt, ARCH_CONVERT)) {
-        case XLOG_FMT_UNKNOWN:  
-            printf("unknown\n"); 
-            break;
-        case XLOG_FMT_LINUX_LE: 
-            printf("little endian linux\n"); 
-            break;
-        case XLOG_FMT_LINUX_BE: 
-            printf("big endian linux\n"); 
-            break;
-        case XLOG_FMT_IRIX_BE: 
-            printf("big endian irix\n"); 
-            break;
-        default:                
-            printf("? (%d)\n", INT_GET(head->h_fmt, ARCH_CONVERT)); 
-            break;
+	case XLOG_FMT_UNKNOWN:
+	    printf("unknown\n");
+	    break;
+	case XLOG_FMT_LINUX_LE:
+	    printf("little endian linux\n");
+	    break;
+	case XLOG_FMT_LINUX_BE:
+	    printf("big endian linux\n");
+	    break;
+	case XLOG_FMT_IRIX_BE:
+	    printf("big endian irix\n");
+	    break;
+	default:
+	    printf("? (%d)\n", INT_GET(head->h_fmt, ARCH_CONVERT));
+	    break;
     }
-    
+
     *len = INT_GET(head->h_len, ARCH_CONVERT);
     return(INT_GET(head->h_num_logops, ARCH_CONVERT));
 }	/* xlog_print_rec_head */
@@ -1116,10 +1116,10 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 static void
 print_xlog_bad_zeroed(xfs_daddr_t blkno)
 {
-        print_stars();
+	print_stars();
 	printf("* ERROR: found data after zeroed blocks block=%-21lld  *\n",
-                (long long)blkno);
-        print_stars();
+		(long long)blkno);
+	print_stars();
 	if (print_exit)
 	    xlog_exit("Bad log - data after zeroed blocks");
 }	/* print_xlog_bad_zeroed */
@@ -1127,10 +1127,10 @@ print_xlog_bad_zeroed(xfs_daddr_t blkno)
 static void
 print_xlog_bad_header(xfs_daddr_t blkno, xfs_caddr_t buf)
 {
-        print_stars();
+	print_stars();
 	printf("* ERROR: header cycle=%-11d block=%-21lld        *\n",
 		GET_CYCLE(buf, ARCH_CONVERT), (long long)blkno);
-        print_stars();
+	print_stars();
 	if (print_exit)
 	    xlog_exit("Bad log record header");
 }	/* print_xlog_bad_header */
@@ -1138,10 +1138,10 @@ print_xlog_bad_header(xfs_daddr_t blkno, xfs_caddr_t buf)
 void
 print_xlog_bad_data(xfs_daddr_t blkno)
 {
-        print_stars();
-	printf("* ERROR: data block=%-21lld                             *\n", 
-                (long long)blkno);
-        print_stars();
+	print_stars();
+	printf("* ERROR: data block=%-21lld                             *\n",
+		(long long)blkno);
+	print_stars();
 	if (print_exit)
 	    xlog_exit("Bad data in log");
 }	/* print_xlog_bad_data */
@@ -1151,7 +1151,7 @@ print_xlog_bad_data(xfs_daddr_t blkno)
  * This code is gross and needs to be rewritten.
  */
 void xfs_log_print(xlog_t       *log,
-                   int          fd,
+		   int          fd,
 		   int		print_block_start)
 {
     char	hbuf[XLOG_HEADER_SIZE];
@@ -1162,7 +1162,7 @@ void xfs_log_print(xlog_t       *log,
     int         zeroed = 0;
 
     logBBsize = log->l_logBBsize;
-              
+
     /*
      * Normally, block_start and block_end are the same value since we
      * are printing the entire log.  However, if the start block is given,
@@ -1178,13 +1178,13 @@ void xfs_log_print(xlog_t       *log,
 	    block_start = print_block_start;
     xlog_print_lseek(log, fd, block_start, SEEK_SET);
     blkno    = block_start;
-    
+
     for (;;) {
 	if (read(fd, hbuf, 512) == 0) {
 	    printf("%s: physical end of log\n", progname);
 	    print_xlog_record_line();
 	    break;
-        }
+	}
 	if (print_only_data) {
 		printf("BLKNO: %lld\n", (long long)blkno);
 		xlog_recover_print_data(hbuf, 512);
@@ -1193,27 +1193,27 @@ void xfs_log_print(xlog_t       *log,
 	}
 	num_ops = xlog_print_rec_head((xlog_rec_header_t *)hbuf, &len);
 	blkno++;
-        
-        if (zeroed && num_ops != ZEROED_LOG) {
-            printf("%s: after %d zeroed blocks\n", progname, zeroed);
-            /* once we find zeroed blocks - that's all we expect */
-            print_xlog_bad_zeroed(blkno-1);
-            /* reset count since we're assuming previous zeroed blocks
-             * were bad
-             */
-            zeroed = 0;
-        }
-        
-        if (num_ops == ZEROED_LOG || num_ops == BAD_HEADER) {
-            if (num_ops == ZEROED_LOG) {
-                zeroed++; 
-            } else {
-	        print_xlog_bad_header(blkno-1, hbuf);
-            }
-            
+
+	if (zeroed && num_ops != ZEROED_LOG) {
+	    printf("%s: after %d zeroed blocks\n", progname, zeroed);
+	    /* once we find zeroed blocks - that's all we expect */
+	    print_xlog_bad_zeroed(blkno-1);
+	    /* reset count since we're assuming previous zeroed blocks
+	     * were bad
+	     */
+	    zeroed = 0;
+	}
+
+	if (num_ops == ZEROED_LOG || num_ops == BAD_HEADER) {
+	    if (num_ops == ZEROED_LOG) {
+		zeroed++;
+	    } else {
+		print_xlog_bad_header(blkno-1, hbuf);
+	    }
+
 	    goto loop;
 	}
-        
+
 	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf,
 				  (xlog_rec_header_t *)hbuf);
 	switch (error) {
@@ -1233,9 +1233,9 @@ void xfs_log_print(xlog_t       *log,
 		goto loop;
 	    }
 	    case PARTIAL_READ: {
-                print_xlog_record_line();
+		print_xlog_record_line();
 		printf("%s: physical end of log\n", progname);
-                print_xlog_record_line();
+		print_xlog_record_line();
 		blkno = 0;
 		xlog_print_lseek(log, fd, 0, SEEK_SET);
 		/*
@@ -1251,13 +1251,13 @@ void xfs_log_print(xlog_t       *log,
 	print_xlog_record_line();
 loop:
 	if (blkno >= logBBsize) {
-                if (zeroed) {
-                    printf("%s: skipped %d zeroed blocks\n", progname, zeroed);
-                    if (zeroed == logBBsize)
-                        printf("%s: totally zeroed log\n", progname);
-                    
-                    zeroed=0;
-                }
+		if (zeroed) {
+		    printf("%s: skipped %d zeroed blocks\n", progname, zeroed);
+		    if (zeroed == logBBsize)
+			printf("%s: totally zeroed log\n", progname);
+
+		    zeroed=0;
+		}
 		printf("%s: physical end of log\n", progname);
 		print_xlog_record_line();
 		break;
@@ -1280,14 +1280,14 @@ loop:
 	    }
 	    num_ops = xlog_print_rec_head((xlog_rec_header_t *)hbuf, &len);
 	    blkno++;
-        
+
 	    if (num_ops == ZEROED_LOG || num_ops == BAD_HEADER) {
-                /* we only expect zeroed log entries at the end
-                 * of the _physical_ log, so treat them the same
-                 * as bad blocks here
-                 */
+		/* we only expect zeroed log entries at the end
+		 * of the _physical_ log, so treat them the same
+		 * as bad blocks here
+		 */
 		print_xlog_bad_header(blkno-1, hbuf);
-                
+
 		if (blkno >= block_end)
 		    break;
 		continue;
@@ -1309,9 +1309,9 @@ partial_log_read:
 loop2:
 	    if (blkno >= block_end)
 		break;
-        }
+	}
     }
-    
+
 end:
     printf("%s: logical end of log\n", progname);
     print_xlog_record_line();

@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -190,7 +190,7 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 	set_cur(&typtab[TYP_SB],
 		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
- 
+
 	if (!iocur_top->data) {
 		dbprintf("can't read superblock for AG %u\n", agno);
 		pop_cur();
@@ -198,20 +198,20 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 	}
 
 	libxfs_xlate_sb(iocur_top->data, sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
- 
+
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
 		dbprintf("bad sb magic # %#x in AG %u\n",
 			sb->sb_magicnum, agno);
-                return 0;
+		return 0;
 	}
 	if (!XFS_SB_GOOD_VERSION(sb)) {
 		dbprintf("bad sb version # %#x in AG %u\n",
 			sb->sb_versionnum, agno);
-                return 0;
+		return 0;
 	}
 	if (agno == 0 && sb->sb_inprogress != 0) {
 		dbprintf("mkfs not completed successfully\n");
-                return 0;
+		return 0;
 	}
 	return 1;
 }
@@ -384,7 +384,7 @@ uuid_f(
 		return 0;
 
 	} else {	/* READ+CHECK UUID */
-	    
+
 		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
 			uup = do_uuid(agno, NULL);
 			if (!uup) {
@@ -446,7 +446,7 @@ do_label(xfs_agnumber_t agno, char *label)
 {
 	size_t		len;
 	xfs_sb_t	tsb;
-	static char 	lbl[sizeof(tsb.sb_fname) + 1];
+	static char	lbl[sizeof(tsb.sb_fname) + 1];
 
 	if (!get_sb(agno, &tsb))
 		return NULL;

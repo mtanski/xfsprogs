@@ -1,33 +1,33 @@
 /**************************************************************************
  *									  *
  * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  *									  *
  **************************************************************************/
@@ -193,7 +193,7 @@ retreat(
 				 * np gets pushed down to lesser child's
 				 * avl_forw branch.
 				 *
-				 *  np->    -D 		    +B
+				 *  np->    -D		    +B
 				 *	    / \		    / \
 				 * child-> B   deleted	   A  -D
 				 *	  / \		      /
@@ -243,7 +243,7 @@ retreat(
 			 * child's avl_forw node gets promoted up, along with
 			 * its avl_forw subtree
 			 *
-			 *  np->     -G 		  C
+			 *  np->     -G			  C
 			 *	     / \		 / \
 			 * child-> +B   H	       -B   G
 			 *	   / \   \	       /   / \
@@ -294,7 +294,7 @@ retreat(
 			 * np gets pushed down to greater child's
 			 * avl_back branch.
 			 *
-			 *  np->    +B 		     -D
+			 *  np->    +B		     -D
 			 *	    / \		     / \
 			 *   deleted   D <-child   +B   E
 			 *	      / \	     \
@@ -440,19 +440,19 @@ avl_delete(
 		ASSERT(nnext->avl_nextino == np);
 		nnext->avl_nextino = np->avl_nextino;
 		/*
-		 * 	Something preceeds np; np cannot be firstino.
+		 *	Something preceeds np; np cannot be firstino.
 		 */
 		ASSERT(tree->avl_firstino != np);
 	}
 	else {
 		/*
-		 * 	Nothing preceeding np; after deletion, np's nextino
-		 * 	is firstino of tree.
+		 *	Nothing preceeding np; after deletion, np's nextino
+		 *	is firstino of tree.
 		 */
 		ASSERT(tree->avl_firstino == np);
 		tree->avl_firstino = np->avl_nextino;
 	}
-	
+
 
 	/*
 	 * Degenerate cases...
@@ -506,7 +506,7 @@ attach:
 		back->avl_forw = forw = np->avl_forw;
 		forw->avl_parent = back;
 		back->avl_parent = parent;
-		
+
 		if (parent) {
 			if (parent->avl_forw == np)
 				parent->avl_forw = back;
@@ -538,7 +538,7 @@ attach:
 	 *	    / \			      / \
 	 *         G   J	     back->  G   J   (before retreat())
 	 *	  / \			    / \
-	 *       F   ?...  		   F   ?1
+	 *       F   ?...		   F   ?1
 	 *      /     \
 	 *     ?       H  <-forw
 	 *	      /
@@ -551,7 +551,7 @@ attach:
 	 * Will be adjusted by retreat() below.
 	 */
 	forw->avl_balance = np->avl_balance;
-	
+
 	/*
 	 * forw inherits np's avl_forw...
 	 */
@@ -597,20 +597,20 @@ attach:
 
 
 /*
- * 	avl_findanyrange:
- *	
+ *	avl_findanyrange:
+ *
  *	Given range r [start, end), find any range which is contained in r.
  *	if checklen is non-zero, then only ranges of non-zero length are
- * 	considered in finding a match.
+ *	considered in finding a match.
  */
 avlnode_t *
 avl_findanyrange(
 	register avltree_desc_t *tree,
 	register __psunsigned_t start,
 	register __psunsigned_t end,
-	int 	checklen)
+	int	checklen)
 {
-        register avlnode_t *np = tree->avl_root;
+	register avlnode_t *np = tree->avl_root;
 
 	/* np = avl_findadjacent(tree, start, AVL_SUCCEED); */
 	while (np) {
@@ -632,7 +632,7 @@ avl_findanyrange(
 				continue;
 			}
 			/* if we were to add node with start, would
-			 * have a growth of AVL_FORW; 
+			 * have a growth of AVL_FORW;
 			 */
 			/* we are looking for a succeeding node;
 			 * this is nextino.
@@ -655,7 +655,7 @@ avl_findanyrange(
 			return(np);
 		}
 		/*
-		 * find non-zero length region 
+		 * find non-zero length region
 		 */
 		while (np && (AVL_END(tree, np) - AVL_START(tree, np) == 0)
 			&& (AVL_START(tree, np)  < end))
@@ -817,7 +817,7 @@ avl_balance(
 					     / \	     / \
 				child->	   +B   F	   -B   E
 					   / \		   /   / \
-					  A  +C 	  A   D   F
+					  A  +C		  A   D   F
 					       \
 						D
 
@@ -932,9 +932,9 @@ static
 avlnode_t *
 avl_insert_find_growth(
 		register avltree_desc_t *tree,
-		register __psunsigned_t start, 	/* range start at start, */
-		register __psunsigned_t end, 	/* exclusive */
-		register int   *growthp) 	/* OUT */ 
+		register __psunsigned_t start,	/* range start at start, */
+		register __psunsigned_t end,	/* exclusive */
+		register int   *growthp)	/* OUT */
 {
 	avlnode_t *root = tree->avl_root;
 	register avlnode_t *np;
@@ -1090,7 +1090,7 @@ avl_insert(
 /*
  *
  * avl_insert_immediate(tree, afterp, newnode):
- * 	insert newnode immediately into tree immediately after afterp.
+ *	insert newnode immediately into tree immediately after afterp.
  *	after insertion, newnode is right child of afterp.
  */
 void
@@ -1197,8 +1197,8 @@ avl_debug_end(avlnode_t *node)
 		 (struct avl_debug_node *)node->avl_size);
 }
 
-avl_debug_node 	freenodes[100];
-avl_debug_node 	*freehead = &freenodes[0];
+avl_debug_node	freenodes[100];
+avl_debug_node	*freehead = &freenodes[0];
 
 static avlnode_t *
 alloc_avl_debug_node()
@@ -1226,15 +1226,15 @@ avl_print(avltree_desc_t *tree, avlnode_t *root, int depth)
 
 main()
 {
-	int 		i, j;
-	avlnode_t  	*np;
+	int		i, j;
+	avlnode_t	*np;
 	avltree_desc_t	tree;
 	char		linebuf[256], cmd[256];
 
 	avl_init_tree(&tree, &avl_debug_ops);
 
 	for (i = 100; i > 0; i = i - 10)
-	{	
+	{
 		np = alloc__debug_avlnode();
 		ASSERT(np);
 		np->avl_start = i;
@@ -1289,7 +1289,7 @@ main()
 			avl_insert(&tree, np);
 			break;
 		case 'r': {
-			avlnode_t 	*b, *e, *t;
+			avlnode_t	*b, *e, *t;
 			int		checklen;
 
 			printf("End of range ? ");
@@ -1321,9 +1321,9 @@ main()
 #endif
 
 /*
- * 	Given a tree, find value; will find return range enclosing value,
+ *	Given a tree, find value; will find return range enclosing value,
  *	or range immediately succeeding value,
- * 	or range immediately preceeding value.
+ *	or range immediately preceeding value.
  */
 avlnode_t *
 avl_findadjacent(
@@ -1331,7 +1331,7 @@ avl_findadjacent(
 	register __psunsigned_t value,
 	register int		dir)
 {
-        register avlnode_t *np = tree->avl_root;
+	register avlnode_t *np = tree->avl_root;
 
 	while (np) {
 		if (value < AVL_START(tree, np)) {
@@ -1368,7 +1368,7 @@ avl_findadjacent(
 				continue;
 			}
 			/* if we were to add node with value, would
-			 * have a growth of AVL_FORW; 
+			 * have a growth of AVL_FORW;
 			 */
 			if (dir == AVL_SUCCEED) {
 				/* we are looking for a succeeding node;
@@ -1379,7 +1379,7 @@ avl_findadjacent(
 			if (dir == AVL_PRECEED) {
 				/* looking for a preceeding node; this is it. */
 				return(np);
-			}	
+			}
 			ASSERT(dir == AVL_SUCCEED || dir == AVL_PRECEED);
 		}
 		/* AVL_START(tree, np) <= value < AVL_END(tree, np) */
@@ -1390,11 +1390,11 @@ avl_findadjacent(
 
 
 /*
- *  	avl_findranges:
+ *	avl_findranges:
  *
  *	Given range r [start, end), find all ranges in tree which are contained
  *	in r. At return, startp and endp point to first and last of
- * 	a chain of elements which describe the contained ranges. Elements
+ *	a chain of elements which describe the contained ranges. Elements
  *	in startp ... endp are in sort order, and can be accessed by
  *	using avl_nextino.
  */
@@ -1404,13 +1404,13 @@ avl_findranges(
 	register avltree_desc_t *tree,
 	register __psunsigned_t start,
 	register __psunsigned_t end,
-	avlnode_t 	        **startp,
+	avlnode_t	        **startp,
 	avlnode_t		**endp)
 {
-        register avlnode_t *np;
+	register avlnode_t *np;
 
 	np = avl_findadjacent(tree, start, AVL_SUCCEED);
-	if (np == NULL 				/* nothing succeding start */
+	if (np == NULL				/* nothing succeding start */
 		|| (np && (end <= AVL_START(tree, np))))
 						/* something follows start,
 						but... is entirely after end */

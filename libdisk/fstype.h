@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -85,14 +85,14 @@ struct ext_super_block {
 #define EXT2_SUPER_MAGIC    0xEF53
 #define EXT3_FEATURE_COMPAT_HAS_JOURNAL 0x0004
 struct ext2_super_block {
-	u_char 	s_dummy1[56];
-	u_char 	s_magic[2];
+	u_char	s_dummy1[56];
+	u_char	s_magic[2];
 	u_char	s_dummy2[34];
 	u_char	s_feature_compat[4];
 	u_char	s_feature_incompat[4];
 	u_char	s_feature_ro_compat[4];
 	u_char	s_uuid[16];
-	u_char 	s_volume_name[16];
+	u_char	s_volume_name[16];
 	u_char	s_dummy3[88];
 	u_char	s_journal_inum[4];	/* ext3 only */
 };
@@ -158,7 +158,7 @@ struct fat_super_block {
     u_char    s_dummy2[32];
     u_char    s_label[11];	/* for DOS? */
     u_char    s_fs[8];		/* "FAT12   " or "FAT16   " or all zero   */
-                                /* OS/2 BM has "FAT     " here. */
+				/* OS/2 BM has "FAT     " here. */
     u_char    s_dummy3[9];
     u_char    s_label2[11];	/* for Windows? */
     u_char    s_fs2[8];	        /* garbage or "FAT32   " */

@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -697,7 +697,7 @@ xfs_da_join(xfs_da_state_t *state)
 }
 
 /*
- * We have only one entry in the root.	Copy the only remaining child of
+ * We have only one entry in the root.  Copy the only remaining child of
  * the old root to block 0 as the new root node.
  */
 STATIC int
@@ -879,7 +879,6 @@ xfs_da_node_toosmall(xfs_da_state_t *state, int *action)
 	return(0);
 }
 
-
 /*
  * Walk back up the tree adjusting hash values as necessary,
  * when we stop making changes, return.
@@ -935,8 +934,6 @@ xfs_da_fixhashpath(xfs_da_state_t *state, xfs_da_state_path_t *path)
 		lasthash = INT_GET(node->btree[ INT_GET(node->hdr.count, ARCH_CONVERT)-1 ].hashval, ARCH_CONVERT);
 	}
 }
-
-
 
 /*
  * Remove an entry from an intermediate node.
@@ -1037,7 +1034,6 @@ xfs_da_node_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
 	 */
 	save_blk->hashval = INT_GET(save_node->btree[ INT_GET(save_node->hdr.count, ARCH_CONVERT)-1 ].hashval, ARCH_CONVERT);
 }
-
 
 /*========================================================================
  * Routines used for finding things in the Btree.
@@ -1208,7 +1204,6 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 	return(0);
 }
 
-
 /*========================================================================
  * Utility routines.
  *========================================================================*/
@@ -1313,7 +1308,6 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
 	return(0);
 }
 
-
 /*
  * Compare two intermediate nodes for "order".
  */
@@ -1335,7 +1329,6 @@ xfs_da_node_order(xfs_dabuf_t *node1_bp, xfs_dabuf_t *node2_bp)
 	}
 	return(0);
 }
-
 
 /*
  * Pick up the last hashvalue from an intermediate node.
@@ -1560,7 +1553,7 @@ xfs_da_hashname(uchar_t *name, int namelen)
 {
 	xfs_dahash_t hash;
 
-#define ROTL(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
+#define	ROTL(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
 #ifdef SLOWVERSION
 	/*
 	 * This is the old one-byte-at-a-time version.
@@ -1606,7 +1599,7 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 {
 	xfs_fileoff_t bno, b;
 	xfs_bmbt_irec_t map;
-	xfs_bmbt_irec_t *mapp;
+	xfs_bmbt_irec_t	*mapp;
 	xfs_inode_t *dp;
 	int nmap, error, w, count, c, got, i, mapi;
 	xfs_fsize_t size;
@@ -1654,7 +1647,7 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 	}
 	/*
 	 * If we didn't get it and the block might work if fragmented,
-	 * try without the CONTIG flag.	 Loop until we get it all.
+	 * try without the CONTIG flag.  Loop until we get it all.
 	 */
 	else if (nmap == 0 && count > 1) {
 		mapp = kmem_alloc(sizeof(*mapp) * count, KM_SLEEP);
@@ -1710,9 +1703,8 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
 	return 0;
 }
 
-
 /*
- * Ick.	 We need to always be able to remove a btree block, even
+ * Ick.  We need to always be able to remove a btree block, even
  * if there's no space reservation because the filesystem is full.
  * This is called if xfs_bunmapi on a btree block fails due to ENOSPC.
  * It swaps the target block with the last block in the file.  The
@@ -1991,7 +1983,7 @@ done:
 STATIC int
 xfs_da_map_covers_blocks(
 	int		nmap,
-	xfs_bmbt_irec_t *mapp,
+	xfs_bmbt_irec_t	*mapp,
 	xfs_dablk_t	bno,
 	int		count)
 {
@@ -2030,8 +2022,8 @@ xfs_da_do_buf(
 	xfs_buf_t	**bplist;
 	int		error=0;
 	int		i;
-	xfs_bmbt_irec_t map;
-	xfs_bmbt_irec_t *mapp;
+	xfs_bmbt_irec_t	map;
+	xfs_bmbt_irec_t	*mapp;
 	xfs_daddr_t	mappedbno;
 	xfs_mount_t	*mp;
 	int		nbplist=0;

@@ -60,7 +60,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 		if (bno + nblks > start + len)
 			nblks = (uint)(start + len - bno);
 		if (pwrite64(fd, z, BBTOB(nblks), BBTOOFF64(bno)) <
-			       	BBTOB(nblks)) {
+				BBTOB(nblks)) {
 			fprintf(stderr,
 				_("%s: %s write failed: %s\n"),
 				progname, __FUNCTION__, strerror(errno));

@@ -80,31 +80,31 @@
  * Argument structure for libxfs_init().
  */
 typedef struct {
-                                /* input parameters */
-        char            *volname;       /* pathname of volume */
-        char            *dname;         /* pathname of data "subvolume" */
-        char            *logname;       /* pathname of log "subvolume" */
-        char            *rtname;        /* pathname of realtime "subvolume" */
-        int             isreadonly;     /* filesystem is only read in applic */
-        int             disfile;        /* data "subvolume" is a regular file */        int             dcreat;         /* try to create data subvolume */
-        int             lisfile;        /* log "subvolume" is a regular file */
-        int             lcreat;         /* try to create log subvolume */
-        int             risfile;        /* realtime "subvolume" is a reg file */        int             rcreat;         /* try to create realtime subvolume */
-        char            *notvolmsg;     /* format string for not XLV message */
-        int             notvolok;       /* set if not XLV => try data */
-                                /* output results */
-        dev_t           ddev;           /* device for data subvolume */
-        dev_t           logdev;         /* device for log subvolume */
-        dev_t           rtdev;          /* device for realtime subvolume */
-        long long       dsize;          /* size of data subvolume (BBs) */
-        long long       logBBsize;      /* size of log subvolume (BBs) */
-                                        /* (blocks allocated for use as 
-                                         * log is stored in mount structure) */
-        long long       logBBstart;     /* start block of log subvolume (BBs) */        long long       rtsize;         /* size of realtime subvolume (BBs) */
-        int             dfd;            /* data subvolume file descriptor */
-        int             logfd;          /* log subvolume file descriptor */
-        int             rtfd;           /* realtime subvolume file descriptor */
-	int		setblksize; 	/* attempt to set device block size */
+				/* input parameters */
+	char            *volname;       /* pathname of volume */
+	char            *dname;         /* pathname of data "subvolume" */
+	char            *logname;       /* pathname of log "subvolume" */
+	char            *rtname;        /* pathname of realtime "subvolume" */
+	int             isreadonly;     /* filesystem is only read in applic */
+	int             disfile;        /* data "subvolume" is a regular file */        int             dcreat;         /* try to create data subvolume */
+	int             lisfile;        /* log "subvolume" is a regular file */
+	int             lcreat;         /* try to create log subvolume */
+	int             risfile;        /* realtime "subvolume" is a reg file */        int             rcreat;         /* try to create realtime subvolume */
+	char            *notvolmsg;     /* format string for not XLV message */
+	int             notvolok;       /* set if not XLV => try data */
+				/* output results */
+	dev_t           ddev;           /* device for data subvolume */
+	dev_t           logdev;         /* device for log subvolume */
+	dev_t           rtdev;          /* device for realtime subvolume */
+	long long       dsize;          /* size of data subvolume (BBs) */
+	long long       logBBsize;      /* size of log subvolume (BBs) */
+					/* (blocks allocated for use as
+					 * log is stored in mount structure) */
+	long long       logBBstart;     /* start block of log subvolume (BBs) */        long long       rtsize;         /* size of realtime subvolume (BBs) */
+	int             dfd;            /* data subvolume file descriptor */
+	int             logfd;          /* log subvolume file descriptor */
+	int             rtfd;           /* realtime subvolume file descriptor */
+	int		setblksize;	/* attempt to set device block size */
 } libxfs_init_t;
 
 #define LIBXFS_EXIT_ON_FAILURE	0x0001	/* exit the program if a call fails */
@@ -122,7 +122,7 @@ extern void	libxfs_device_close (dev_t);
 extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *,
 				int, int, int);
 
-/* 
+/*
  * Define a user-level mount structure with all we need
  * in order to make use of the numerous XFS_* macros.
  */

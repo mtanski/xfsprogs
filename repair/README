@@ -70,7 +70,7 @@ D -		if quota inodes exist, the quota bits must be
 		zeroed but they should be in a legal state
 		(see xfs_quota.h).
 
-D - 		if the quota flags are non-zero, the corresponding
+D -		if the quota flags are non-zero, the corresponding
 		quota inodes must exist.
 
 		quota inodes are never deleted, only their space
@@ -168,7 +168,7 @@ D - 0) put inode tree flashover (call to add_ino_backptrs) into phase 5.
 
 D - 0) do set/get_inode_parent functions in incore_ino.c.
 	also do is/set/ inode_processed.
-	
+
 D - 0) do a versions.c to extract feature info and set global vars
 	from the superblock version number and possibly feature bits
 
@@ -326,7 +326,7 @@ ASSUMPTION:  at end of phase 2, we've got superblocks and ag headers
 
 XXX	if in no_modify mode, check for blocks claimed by one freespace
 	btree and not the other
-	
+
 Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 		consistent.  For each ag, use either the incore inode map or
 		scan the ag for inodes.
@@ -335,7 +335,7 @@ Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 		when we traverse the directory heirarchy.  If we lose both,
 		we could scan the disk.  Ugh.  Maybe make that a command-line
 		option that we support later.
-		
+
 	ASSUMPTION: we know if the ag allocation btrees are intact (phase 2)
 
 	First - Walk and clear the ag unlinked lists.  We'll process
@@ -347,7 +347,7 @@ Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 		above and get them into the inode tree if they're good.
 		The incore inode cluster tree *always* has good
 		clusters (alignment, etc.) in it.
-		
+
 	Third, make sure that the root inode is known.  If not,
 		and we know the inode number from the superblock,
 		discover that inode and it's chunk.
@@ -398,9 +398,9 @@ Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 			current inode as allocated in the incore freespace
 			bitmap.
 
- 		- If inode is good and a directory, scan through it to
+		- If inode is good and a directory, scan through it to
 			find leaf entries and discover any unknown inodes.
-			
+
 			For shortform, we correct what we can.
 
 			If the directory is corrupt, we try and fix it in
@@ -431,7 +431,7 @@ Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 			in use, we'll mark in use then.  If not, we'll
 			clear it and mark the inode map.  then in phase
 			4, you can depend on the inode map.
-	
+
 			Entries that point to non-existent or free
 			inodes, and extra blocks in the directory
 			will get fixed in place in a later pass.
@@ -464,7 +464,7 @@ Assumption:  All known inodes are now marked as in-use or free.  Any
 
 	Directories are semi-clean.  All '.' entries are good.
 	Root '..' entry is good if root inode exists.  All entries
-	referencing non-existent inodes, free inodes, etc. 
+	referencing non-existent inodes, free inodes, etc.
 
 XXX	verify that either quota inode is 0 or NULLFSINO or
 	if sb quota flag is non zero, verify that quota inode
@@ -518,7 +518,7 @@ XXX	HEURISTIC -- if we blow an inode away that has space,
 	Clear the quota inodes if the inode btree says that
 	they're not in use.  The space freed will get picked
 	up by phase 5.
-	
+
 XXX	Clear the quota inodes if the filesystem is being downgraded.
 
 - Phase 5 - Build inode allocation trees, freespace trees and
@@ -528,12 +528,12 @@ XXX	Clear the quota inodes if the filesystem is being downgraded.
 	For each ag: (if no in no_modify mode)
 
 	scan bitmap first to figure out number of extents.
-	
+
 	calculate space required for all trees.  Start with inode trees.
 	Setup the btree cursor which includes the list of preallocated
 	blocks.  As a by-product, this will delete the extents required
 	for the inode tree from the incore extent tree.
-	
+
 	Calculate how many extents will be required to represent the
 	remaining free extent tree on disk (twice, one for bybno and
 	one for bycnt).  You have to iterate on this because consuming
@@ -549,7 +549,7 @@ XXX	if in no_modify mode, scan the on-disk inode allocation
 	there in phase2 and phase3.  But if we cleared any inodes
 	with space during phases 3 or 4, now is the time to complain.
 
-XXX - 	Free duplicate extent lists. ???
+XXX -	Free duplicate extent lists. ???
 
 Assumptions:  at this point, sim code having to do with inode
 		creation/modification/deletion and space allocation
@@ -562,7 +562,7 @@ Assumptions:  at this point, sim code having to do with inode
 
 	Free the bitmap, the freespace tree.
 
- 	Flash the incore inode tree over from parent list to having
+	Flash the incore inode tree over from parent list to having
 	full backpointers.
 
 	realtime processing, if any --
@@ -572,7 +572,7 @@ Assumptions:  at this point, sim code having to do with inode
 		Generate the realtime bitmap from the incore realtime
 		extent map and slam the info into the realtime bitmap
 		inode.  Generate summary info from the realtime extent map.
-		
+
 XXX		if in no_modify mode, compare contents of realtime bitmap
 		inode to the incore realtime extent map.  generate the
 		summary info from the incore realtime extent map.
@@ -614,7 +614,7 @@ XXX		if in no_modify mode, compare contents of realtime bitmap
 	If no realtime inodes, make them and if necessary, slam the
 		summary info into the realtime summary
 		inode.  Ditto with the realtime bitmap inode.
-	
+
 	Make orphanage (lost+found ???).
 
 	Traverse each directory from '/' (unless it was created).
@@ -715,4 +715,3 @@ in parallel to process the AG set.
 I don't see how phase 6 can be run in parallel though.
 
 And running Phase 8 in parallel is just silly.
-

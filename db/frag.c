@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -101,7 +101,7 @@ static void		scanfunc_bmap(xfs_btree_lblock_t *ablock, int level,
 static void		scanfunc_ino(xfs_btree_sblock_t *ablock, int level,
 				     xfs_agf_t *agf);
 
-static const cmdinfo_t	frag_cmd = 
+static const cmdinfo_t	frag_cmd =
 	{ "frag", NULL, frag_f, 0, -1, 0,
 	  "[-a] [-d] [-f] [-l] [-r]",
 	  "get file fragmentation data", NULL };
@@ -508,16 +508,16 @@ scanfunc_ino(
 				continue;
 			}
 			for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-                                xfs_dinode_t            *dip;
-                                xfs_dinode_core_t       tdic;
-                                
-                                dip=(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog));
-                            
-                                /* convert the core, then copy it back into the inode */
-	                        libxfs_xlate_dinode_core( (xfs_caddr_t)
+				xfs_dinode_t            *dip;
+				xfs_dinode_core_t       tdic;
+
+				dip=(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog));
+
+				/* convert the core, then copy it back into the inode */
+				libxfs_xlate_dinode_core( (xfs_caddr_t)
 					&dip->di_core, &tdic, 1, ARCH_CONVERT );
-	                        memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
-        
+				memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
+
 				if (XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT))
 					continue;
 				process_inode(agf, agino + j,

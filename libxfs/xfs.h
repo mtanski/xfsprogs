@@ -40,7 +40,7 @@
  *
  * It should only ever be #include'd by XFS "kernel" code being
  * compiled in user space.
- * 
+ *
  * Our goals here are to...
  *      o  "share" large amounts of complex code between user and
  *         kernel space;
@@ -138,7 +138,7 @@
 #define xfs_da_shrink_inode		libxfs_da_shrink_inode
 #define xfs_da_grow_inode		libxfs_da_grow_inode
 #define xfs_da_brelse			libxfs_da_brelse
-#define xfs_da_read_buf			libxfs_da_read_buf		
+#define xfs_da_read_buf			libxfs_da_read_buf
 #define xfs_da_get_buf			libxfs_da_get_buf
 #define xfs_da_log_buf			libxfs_da_log_buf
 #define xfs_da_do_buf			libxfs_da_do_buf
@@ -191,7 +191,7 @@
 /* memory management */
 #define KM_SLEEP	1
 #define KM_SLEEP_IO	2
-#define kmem_zone		xfs_zone	
+#define kmem_zone		xfs_zone
 #define kmem_zone_t		xfs_zone_t
 #define kmem_zone_init(a, b)	libxfs_zone_init(a, b)
 #define kmem_zone_alloc(z, f)	libxfs_zone_zalloc(z)
@@ -465,13 +465,13 @@ void xfs_bmbt_set_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
 void xfs_bmbt_set_allf (xfs_bmbt_rec_t *, xfs_fileoff_t, xfs_fsblock_t,
 			xfs_filblks_t, xfs_exntst_t);
 void xfs_bmbt_set_blockcount (xfs_bmbt_rec_t *, xfs_filblks_t);
-void xfs_bmbt_set_startblock (xfs_bmbt_rec_t *, xfs_fsblock_t);    
+void xfs_bmbt_set_startblock (xfs_bmbt_rec_t *, xfs_fsblock_t);
 void xfs_bmbt_set_startoff (xfs_bmbt_rec_t *, xfs_fileoff_t);
 void xfs_bmbt_set_state (xfs_bmbt_rec_t *, xfs_exntst_t);
 void xfs_bmbt_log_block (struct xfs_btree_cur *, struct xfs_buf *, int);
 void xfs_bmbt_log_recs (struct xfs_btree_cur *, struct xfs_buf *, int, int);
 int  xfs_bmbt_lookup_eq (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
-		        xfs_filblks_t, int *);
+			xfs_filblks_t, int *);
 xfs_fsblock_t xfs_bmbt_get_startblock (xfs_bmbt_rec_t *);
 xfs_filblks_t xfs_bmbt_get_blockcount (xfs_bmbt_rec_t *);
 xfs_fileoff_t xfs_bmbt_get_startoff (xfs_bmbt_rec_t *);
@@ -483,7 +483,7 @@ int  xfs_bmbt_insert (struct xfs_btree_cur *, int *);
 int  xfs_bmbt_decrement (struct xfs_btree_cur *, int, int *);
 int  xfs_bmbt_delete (struct xfs_btree_cur *, int *);
 int  xfs_bmbt_update (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
-			xfs_filblks_t, xfs_exntst_t);      
+			xfs_filblks_t, xfs_exntst_t);
 void xfs_bmbt_to_bmdr (xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
 void xfs_bmdr_to_bmbt (xfs_bmdr_block_t *, int, xfs_bmbt_block_t *, int);
 #if ARCH_CONVERT != ARCH_NOCONVERT
