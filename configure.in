@@ -43,23 +43,6 @@ pkg_builder=`id -u -n`@`hostname`
 test -z "$PACKAGE_BUILDER" || pkg_builder="$PACKAGE_BUILDER"
 AC_SUBST(pkg_builder)
 
-dnl standard or user-specified install paths
-pkg_bin_dir=${bindir}
-pkg_lib_dir=${libdir}
-pkg_inc_dir=${includedir}/xfs
-pkg_man_dir=${mandir}
-pkg_doc_dir=${datadir}/doc/${pkg_name}
-pkg_sbin_dir=${sbindir}
-pkg_devlib_dir=${libexecdir}
-AC_SUBST(pkg_bin_dir)
-AC_SUBST(pkg_lib_dir)
-AC_SUBST(pkg_inc_dir)
-AC_SUBST(pkg_man_dir)
-AC_SUBST(pkg_doc_dir)
-AC_SUBST(pkg_sbin_dir)
-AC_SUBST(pkg_devlib_dir)
-
-
 dnl output header with cpp defs HAVE_*, etc
 AC_CONFIG_HEADER(include/platform_defs.h)
 
