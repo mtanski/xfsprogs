@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 1995-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2.1 of the GNU Lesser General Public License
@@ -444,6 +444,7 @@ typedef struct xfs_handle {
 #define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
 #define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
 
+#ifndef HAVE_IOCMACROS
 /*
  * ioctl commands that replace IRIX fcntl()'s
  * For 'documentation' purposed more than anything else,
@@ -498,7 +499,7 @@ typedef struct xfs_handle {
 #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
 #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
 /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
-
+#endif
 
 #ifndef HAVE_BBMACROS
 /*

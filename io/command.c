@@ -106,7 +106,7 @@ command(
 			argc-1, cmd, ct->argmin, ct->argmax);
 		return 0;
 	}
-	optind = 0;
+	platform_getoptreset();
 	return ct->cfunc(argc, argv);
 }
 
@@ -141,6 +141,7 @@ init_commands(void)
 	pwrite_init();
 	quit_init();
 	resblks_init();
+	sendfile_init();
 	shutdown_init();
 	truncate_init();
 }

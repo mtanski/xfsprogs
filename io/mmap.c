@@ -679,6 +679,10 @@ madvise_f(
 	return 0;
 }
 
+#if defined(__sgi__)
+int mincore(caddr_t p, size_t s, char *v) { errno = ENOSYS; return -1; }
+#endif
+
 int
 mincore_f(
 	int		argc,

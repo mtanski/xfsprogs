@@ -81,7 +81,7 @@ bmap_f(
 {
 	struct fsxattr		fsx;
 	struct getbmapx		*map;
-	struct xfs_fsop_geom_v1	fsgeo;
+	struct xfs_fsop_geom	fsgeo;
 	int			map_size;
 	int			loop = 0;
 	int			flg = 0;

@@ -44,8 +44,11 @@ HFILES = handle.h jdm.h libxfs.h libxlog.h swab.h xqm.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
+HFILES += $(PKG_PLATFORM).c
+PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
-LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
+LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
+LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
 LDIRT = xfs disk
 
 default install :

@@ -23,7 +23,7 @@ Set the program name for prompts and some error messages,
 the default value is \f2xfs_io\f1.
 .TP
 \f3\-F\f1
-Allow \f2file\f1 to be ``foreign'', i.e. not in an XFS filesystem.
+Allow \f2file\f1 to reside in non-XFS (foreign) filesystems.
 This mode has a restricted set of commands.
 .TP
 \f3\-f\f1
@@ -58,6 +58,10 @@ where they reside.
 Many commands have extensive online help.
 Use the \f3help\f1 command for more details on any command.
 .SH FILE I/O COMMANDS
+.TP
+\f3file\f1 [ \f2N\f1 ]
+Display a list of all open files and (optionally) switch to an alternate
+current open file.
 .TP 10
 \f3open\f1 [ \f2\-FacdfrstR\f1 ] [ \f2path\f1 ]
 Closes the current file, and opens the file specified by \f2path\f1 instead.
@@ -166,10 +170,16 @@ system call described in \f2xfs\f1(5).
 .TP
 \f3truncate\f1 \f2offset\f1
 Truncates the current file at the given offset using \f2ftruncate\f1(2).
+.TP
+\f3sendfile\f1 \f2\-i infile\f1 | \f2\-f N\f1 [ \f2offset\f1 \f2length\f1 ]
+On platforms which support it, allows a direct in-kernel copy between
+two file descriptors.
+The current open file is the target, the source must be specified as
+another open file (\f2-f\f1) or by path (\f2-i\f2).
 
 .SH MEMORY MAPPED I/O COMMANDS
 .TP
-\f3mmap\f1 [ \f2-rwx\f1 ] [ \f2offset\f1 \f2length\f1 ]
+\f3mmap\f1 [ \f2-rwx\f1 ] [[ N ] | [ \f2offset\f1 \f2length\f1 ]]
 With no arguments, \f3mmap\f1 shows the current mappings.
 Specifying a single numeric argument sets the current mapping.
 If two arguments are specified (a range), a new mapping is created

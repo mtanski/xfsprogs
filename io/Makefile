@@ -37,15 +37,22 @@ LTCOMMAND = xfs_io
 LSRCFILES = xfs_bmap.sh xfs_freeze.sh
 HFILES = command.h input.h init.h io.h
 CFILES = command.c input.c init.c \
-	bmap.c file.c freeze.c fsync.c help.c inject.c \
+	bmap.c file.c freeze.c fsync.c help.c \
 	mmap.c open.c pread.c prealloc.c pwrite.c quit.c \
-	resblks.c shutdown.c truncate.c
+	truncate.c
 
 ifeq ($(PKG_PLATFORM),linux)
-CFILES += fadvise.c
-LCFLAGS += -DHAVE_FADVISE
+CFILES += fadvise.c sendfile.c
+LCFLAGS += -DHAVE_FADVISE -DHAVE_SENDFILE
 else
-LSRCFILES += fadvise.c
+LSRCFILES += fadvise.c sendfile.c
+endif
+
+ifneq ($(PKG_PLATFORM),irix)
+CFILES += inject.c resblks.c shutdown.c
+LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS -DHAVE_SHUTDOWN
+else
+LSRCFILES += inject.c resblks.c shutdown.c
 endif
 
 ifeq ($(ENABLE_READLINE),yes)

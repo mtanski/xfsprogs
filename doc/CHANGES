@@ -1,3 +1,14 @@
+xfsprogs-2.6.16 (17 June 2004)
+	- Add sendfile command into xfs_io(8) to exercise that
+	  functionality.
+	- Remove maxtrres program that was used in the build
+	  to generate a header for mkfs' consumption.
+	- This allows cross-compiles to be greatly simplified.
+	- Portability tweaks for building on other platforms.
+	- Fix obscure bug in log size lower boundary checks for
+	  auto-sized logs when stripe alignment is in effect;
+	  the enforced lower bound could have been set too low.
+
 xfsprogs-2.6.15 (09 June 2004)
 	- Make xfs_check test for a dirty log before proceeding to
 	  check the filesystem.

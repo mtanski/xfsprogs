@@ -62,11 +62,6 @@ extern const cmdinfo_t	*find_command(const char *cmd);
 extern void		init_commands(void);
 
 extern void		bmap_init(void);
-#ifdef HAVE_FADVISE
-extern void		fadvise_init(void);
-#else
-# define fadvise_init()	do { } while (0)
-#endif
 extern void		file_init(void);
 extern void		freeze_init(void);
 extern void		fsync_init(void);
@@ -78,7 +73,34 @@ extern void		pread_init(void);
 extern void		prealloc_init(void);
 extern void		pwrite_init(void);
 extern void		quit_init(void);
-extern void		resblks_init(void);
-extern void		shutdown_init(void);
 extern void		truncate_init(void);
 
+#ifdef HAVE_FADVISE
+extern void		fadvise_init(void);
+#else
+#define fadvise_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_INJECT
+extern void		inject_init(void);
+#else
+#define inject_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_RESBLKS
+extern void		resblks_init(void);
+#else
+#define resblks_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_SENDFILE
+extern void		sendfile_init(void);
+#else
+#define sendfile_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_SHUTDOWN
+extern void		shutdown_init(void);
+#else
+#define shutdown_init()	do { } while (0)
+#endif
