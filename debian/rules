@@ -5,8 +5,6 @@ develop = xfslibs-dev
 
 dirtmp = debian/tmp
 dirdev = debian/$(develop)
-doctmp = /usr/share/doc/$(package)
-docdev = /usr/share/doc/$(develop)
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
 stdenv = GZIP=-q; export GZIP;
