@@ -198,6 +198,15 @@ Realtime inheritance bit - new files created in the directory
 will be automatically realtime, and new directories created in
 the directory will inherit the inheritance bit.
 .TP
+.SM "Bit 9 (0x200) \- XFS_XFLAG_PROJINHERIT"
+Project inheritance bit - new files and directories created in
+the directory will inherit the parents project ID.  New
+directories also inherit the project inheritance bit.
+.TP
+.SM "Bit 10 (0x400) \- XFS_XFLAG_NOSYMLINKS"
+Can only be set on a directory and disallows creation of 
+symbolic links in that directory.
+.TP
 .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
 The file has extended attributes associated with it.
 .RE

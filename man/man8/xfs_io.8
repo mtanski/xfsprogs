@@ -262,11 +262,19 @@ Exit \f2xfs_io\f1.
 \f3q\f1
 See the \f3quit\f1 command.
 .TP
-\f3lsattr\f1
+\f3lsattr\f1 [ \f2\-R\f1 | \f2\-D\f1 | \f2\-a\f1 | \f2\-v\f1 ]
 List extended inode flags on the currently open file.
+If the \f2-R\f1 option is specified, a recursive descent is performed
+for all directory entries below the currently open file (\f2-D\f1 can
+be used to restrict the output to directories only).
+This is a depth first descent, it does not follow symlinks and
+it also does not cross mount points.
 .TP
-\f3chattr\f1 [ \f2+/\-riasAd\f1 ]
+\f3chattr\f1 [ \f2\-R\f1 | \f2\-D\f1 ] [ \f2+/\-riasAdtPn\f1 ]
 Change extended inode flags on the currently open file.
+The \f2-R\f1 and \f2-D\f1 options have the same meaning as above.
+The mapping between each letter and the inode flags (refer to
+\f2xfsctl\f1(3) for the full list) is available via the \f3help\f1 command.
 .TP
 \f3freeze\f1
 Suspend all write I/O requests to the filesystem of the current file.
