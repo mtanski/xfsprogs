@@ -287,17 +287,6 @@ typedef __uint64_t __psunsigned_t;
 #error BITS_PER_LONG must be 32 or 64
 #endif
 
-
-/*
- * struct for passing owner/requestor id
- */
-typedef struct flid {
-#ifdef CELL_CAPABLE
-        pid_t   fl_pid;
-        sysid_t fl_sysid;
-#endif
-} flid_t;
-
 #endif	/* __KERNEL__ */
 
 #endif	/* !__XFS_TYPES_H */
