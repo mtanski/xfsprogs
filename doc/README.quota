@@ -293,7 +293,7 @@ some operation would still have left the user under quota had the operation
 been allowed to run its course.  This is an unavoidable side of affect of
 the way XFS operates, so should be kept in mind when assigning users block
 limits.  This additional overhead is typically in the range of tens of
-filesystem-sized blocks.
+blocks - xfs_info(8) can be used to report the filesystem block size.
 
 On IRIX, XFS supports project quota.  This is not (ever) likely to be
 supported on Linux/XFS, as the concept of a project is specific to IRIX.
