@@ -1,3 +1,13 @@
+xfsprogs (1.1.5) unstable; urgency=low
+
+  * Upgraded LVM stripe unit/width support to 0.9beta2 (IOP 10)
+  * Kernel now supports O_DIRECT - re-enable its use in xfs_mkfile
+  * BLKSETSIZE ioctl replaced by BLKBSZSET ioctl in libxfs
+  * libxfs_init extended so only mkfs and xfs_repair use BLKBSZSET
+  * NOTE: this requires an XFS kernel from 9 March '01 or later
+
+ -- Nathan Scott <nathans@debian.org>  Sun, 18 Mar 2001 14:31:17 +1100
+
 xfsprogs (1.1.3) unstable; urgency=low
 
   * Minor changes to xfs_logprint tail verification

@@ -85,7 +85,6 @@ typedef struct xfs_dir2_put_args {
 	int		done;		/* output: set if value was stored */
 	xfs_dir2_put_t	put;		/* put function ptr (i/o) */
 	struct uio	*uio;		/* uio control structure */
-	unsigned char	type;		/* file type (see include/linux/fs.h) */
 } xfs_dir2_put_args_t;
 
 #define	XFS_DIR_IS_V2(mp)	((mp)->m_dirversion == 2)

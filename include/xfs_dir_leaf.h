@@ -156,7 +156,6 @@ typedef struct xfs_dir_put_args
 	int		done;		/* output: set if value was stored */
 	xfs_dir_put_t	put;		/* put function ptr (i/o) */
 	struct uio	*uio;		/* uio control structure */
-	unsigned char	type;		/* file type (see include/linux/fs.h) */
 } xfs_dir_put_args_t;
 
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_DIR_LEAF_ENTSIZE_BYNAME)
