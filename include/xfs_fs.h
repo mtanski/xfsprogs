@@ -155,7 +155,7 @@ struct getbmapx {
  * xfs_bstat_t fields bs_dmevmask and bs_dmstate.)
  */
 struct fsdmidata {
-	__s32		fsd_dmevmask;	/* corresponds to di_dmevmask */
+	__u32		fsd_dmevmask;	/* corresponds to di_dmevmask */
 	__u16		fsd_padding;
 	__u16		fsd_dmstate;	/* corresponds to di_dmstate  */
 };
