@@ -40,13 +40,13 @@
 
 #define blksize 512
 
-static __uint32_t
-twos_complement_32bit_sum(__uint32_t *base, int size)
+static u_int32_t
+twos_complement_32bit_sum(u_int32_t *base, int size)
 {
 	int i;
-	__uint32_t sum = 0;
+	u_int32_t sum = 0;
 
-	size = size / sizeof(__uint32_t);
+	size = size / sizeof(u_int32_t);
 	for (i = 0; i < size; i++)
 		sum = sum - ntohl(base[i]);
 	return sum;
@@ -55,12 +55,12 @@ twos_complement_32bit_sum(__uint32_t *base, int size)
 static int
 sgi_parttable(char *base)
 {
-	__uint32_t csum;
+	u_int32_t csum;
 	struct volume_header *vh = (struct volume_header *)base;
 
 	if (ntohl(vh->vh_magic) != VHMAGIC)
 		return 0;
-	csum = twos_complement_32bit_sum((__uint32_t *)vh,
+	csum = twos_complement_32bit_sum((u_int32_t *)vh,
 					 sizeof(struct volume_header));
 	return !csum;
 }

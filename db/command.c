@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <getopt.h>
 #include "addr.h"
 #include "agf.h"
 #include "agfl.h"

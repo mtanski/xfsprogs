@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <getopt.h>
 #include "bit.h"
 #include "bmap.h"
 #include "command.h"

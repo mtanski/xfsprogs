@@ -31,6 +31,7 @@
  */
 
 #include <libxfs.h>
+#include <sys/stat.h>
 #include "proto.h"
 
 /*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -30,44 +30,26 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <fstyp.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <volume.h>
 
 /*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
+ * This stuff is all very platform specific.
  */
 
-int
-main(int argc, char *argv[])
-{
-	char	*type;
-
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
-
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
-}
+#ifdef __linux__
+extern int   md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int  lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int  xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int evms_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+#else
+#define stat64 stat
+#define   md_get_subvol_stripe(dev, type, a, b, stat)  (-1)
+#define  lvm_get_subvol_stripe(dev, type, a, b, stat)  (-1)
+#define  xvm_get_subvol_stripe(dev, type, a, b, stat)  (-1)
+#define evms_get_subvol_stripe(dev, type, a, b, stat)  (-1)
+#endif

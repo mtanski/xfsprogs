@@ -30,17 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <volume.h>
-
-extern int   md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int  lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int  xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int evms_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+#include "drivers.h"
 
 void
 get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
@@ -79,8 +69,7 @@ get_driver_block_major(const char *driver)
 	char	buf[64], puf[64];
 	int	major = -1;
 
-#define PROC_DEVICES	"/proc/devices"
-	if ((f = fopen(PROC_DEVICES, "r")) == NULL)
+	if ((f = fopen("/proc/devices", "r")) == NULL)
 		return major;
 	while (fgets(buf, sizeof(buf), f))	/* skip to block dev section */
 		if (strncmp("Block devices:\n", buf, sizeof(buf)) == 0)

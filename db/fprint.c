@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <getopt.h>
 #include <ctype.h>
 #include <time.h>
 #include "type.h"

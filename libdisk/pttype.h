@@ -20,8 +20,8 @@ typedef struct {
 	unsigned short nsect;      /* Sectors per track */
 	unsigned char spare3[4];   /* Even more magic... */
 	struct sun_partition {
-		__uint32_t start_cylinder;
-		__uint32_t num_sectors;
+		u_int32_t start_cylinder;
+		u_int32_t num_sectors;
 	} partitions[8];
 	unsigned short magic;      /* Magic number */
 	unsigned short csum;       /* Label xor'd checksum */

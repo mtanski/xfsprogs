@@ -6,7 +6,7 @@ mkfs.xfs \- construct an XFS filesystem
 \f3mkfs.xfs\f1 [ \f3\-b\f1 subopt=value ] [ \f3\-d\f1 subopt[=value] ]
 	[ \f3\-i\f1 subopt=value ] [ \f3\-l\f1 subopt[=value] ]
 	[ \f3\-n\f1 subopt[=value] ] [ \f3\-p\f1 protofile ] [ \f3\-q\f1 ]
-	[ \f3\-r\f1 subopt[=value] ] [ \f3\-C\f1 ] [ \f3\-L\f1 label ] device
+	[ \f3\-r\f1 subopt[=value] ] [ \f3\-N\f1 ] [ \f3\-L\f1 label ] device
 .fi
 .SH DESCRIPTION
 .I mkfs.xfs
@@ -73,8 +73,8 @@ The block size is specified either as a base two logarithm value with
 .BR log= ,
 or in bytes with
 .BR size= .
-The default value is 4096 bytes (4 KB) on systems with a 4KB pagesize.
-The minimum value for block size is 512; the maximum is 65536 (64 KB).
+The default value is 4096 bytes (4 KB), the minimum is 512, and the
+maximum is 65536 (64 KB).
 XFS on Linux currently only supports pagesize or smaller blocks.
 .TP
 .B \-d
@@ -586,19 +586,6 @@ This suboption is only needed if the real-time section of the
 filesystem should occupy
 less space than the size of the partition or logical volume containing the section.
 .TP
-.B \-C
-Disable overlapping partition/volume checks.
-.IP
-By default \f2mkfs.xfs\f1 checks to see if the destination partition or logical
-volume overlaps any mounted or reserved partitions in the system.  If an
-overlap or mount conflict is found, the user will be notified and prevented
-from potentially corrupting the existing data.  For systems with
-a large number of disks, this additional checking may add noticable overhead
-to the command's execution time.  For situations where command performance is
-necessary, this switch may be used to disable the safeguards.  Due to the
-potential for user-error causing corrupted filesystems or other on-disk
-data corruption, we strongly discourage use of this switch in normal operation.
-.TP
 \f3\-L\f1 \f2label\f1
 Set the filesystem label.
 XFS filesystem labels can be at most 12 characters long; if
@@ -610,6 +597,10 @@ will not proceed with creating the filesystem.  Refer to the
 and
 .IR xfs_admin (8)
 manual entries for additional information.
+.TP
+.B \-N
+Causes the file system parameters to be printed out without really
+creating the file system.
 .SH SEE ALSO
 mkfs(8),
 mount(8),

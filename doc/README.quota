@@ -145,11 +145,15 @@ system is administered.
          user accounting with limit enforcement disabled.  quotaon(8)
          contains some examples of frequently used procedures.
 
-     o   Turning on quotas on the root filesystem is slightly different from
-         the above.  quotaon(8) must be used on the root XFS filesystem
-         first; quotas will be turned on the next time the system is
-         rebooted.  It is useful to use repquota(8) with the -v option to
-         monitor the effect of quotaon/off at various stages.
+     o   Turning on quotas on the root filesystem is slightly different
+         from the above.  In more recent versions of XFS, the quota mount
+         flags must be passed in with the "rootflags=" boot parameter.
+         In older versions of XFS and (quota-tools) quotaon(8) must be
+         used on the root XFS filesystem first; and quotas will be turned
+         on the next time the system is rebooted.
+
+     o   It is useful to use repquota(8) with the -v option to monitor
+         the XFS quota state at various stages.
 
      o   quotacheck(8) has no effect on XFS filesystems.  The first time
          quota accounting is turned on, XFS does an automatic quotacheck
@@ -223,7 +227,7 @@ GETTING STARTED
 
 EXAMPLES
 
->>> Enabling quota enforcement on a non-root XFS filesystem
+>>> Enabling quota enforcement on an XFS filesystem
 
 [root@troppo]# echo /dev/hdb10 /mnt/xqm xfs rw,usrquota 0 0 >>/etc/fstab
 [root@troppo]# mount /mnt/xqm
@@ -296,9 +300,8 @@ supported on Linux/XFS, as the concept of a project is specific to IRIX.
 A filesystem that has used user quota on IRIX, however, can be migrated
 to Linux, and vice-versa, as the ondisk format is shared between both
 versions of XFS (and Linux/XFS is "endian clean").  Group quota support
-is planned for a future release of IRIX, and the same level of ondisk
-compatibility will be available as for user quota, once this work has
-been completed.
+has been implemented only in more recent versions of IRIX 6.5f, and the
+same level of ondisk compatibility is now available as for user quota.
 
 Have fun,
 

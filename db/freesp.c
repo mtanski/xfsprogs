@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <getopt.h>
 #include "command.h"
 #include "data.h"
 #include "freesp.h"

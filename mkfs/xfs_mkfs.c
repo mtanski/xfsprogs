@@ -33,7 +33,6 @@
 #include <fstyp.h>
 #include <stdio.h>
 #include <volume.h>
-#include <mountinfo.h>
 #include <libxfs.h>
 #include <ctype.h>
 
@@ -433,7 +432,6 @@ main(int argc, char **argv)
 	int			dirblocklog;
 	int			dirblocksize;
 	int			dirversion;
-	int                     do_overlap_checks;
 	char			*dsize;
 	int			dsu;
 	int			dsw;
@@ -468,8 +466,6 @@ main(int argc, char **argv)
 	int			lsu;
 	int			lsunit;
 	int			min_logblocks;
-	mnt_check_state_t       *mnt_check_state;
-	int                     mnt_partition_count;
 	xfs_mount_t		*mp;
 	xfs_mount_t		mbuf;
 	xfs_extlen_t		nbmblocks;
@@ -478,6 +474,7 @@ main(int argc, char **argv)
 	xfs_alloc_rec_t		*nrec;
 	int			nsflag;
 	int			nvflag;
+	int			Nflag;
 	char			*p;
 	char			*protofile;
 	char			*protostring;
@@ -508,7 +505,7 @@ main(int argc, char **argv)
 	loginternal = 1;
 	logversion = 1;
 	logagno = logblocks = rtblocks = 0;
-	nlflag = nsflag = nvflag = 0;
+	Nflag = nlflag = nsflag = nvflag = 0;
 	dirblocklog = dirblocksize = dirversion = 0;
 	qflag = 0;
 	imaxpct = inodelog = inopblock = isize = 0;
@@ -520,16 +517,13 @@ main(int argc, char **argv)
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	opterr = 0;
 	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsu = lsunit = 0;
-	do_overlap_checks = 1;
 	extent_flagging = 0;
 	force_overwrite = 0;
 	worst_freelist = 0;
 
-	while ((c = getopt(argc, argv, "b:d:i:l:L:n:p:qr:CfV")) != EOF) {
+	while ((c = getopt(argc, argv, "b:d:i:l:L:n:Np:qr:CfV")) != EOF) {
 		switch (c) {
 		case 'C':
-			do_overlap_checks = 0;
-			break;
 		case 'f':
 			force_overwrite = 1;
 			break;
@@ -584,7 +578,8 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_AGCOUNT);
 					if (daflag)
 						respec('d', dopts, D_AGCOUNT);
-					agcount = (__uint64_t)atoll(value);
+					agcount = (__uint64_t)
+						strtoul(value, NULL, 10);
 					if ((__int64_t)agcount <= 0)
 						illegal(value, "d agcount");
 					daflag = 1;
@@ -937,6 +932,9 @@ main(int argc, char **argv)
 				}
 			}
 			break;
+		case 'N':
+			Nflag = 1;
+			break;
 		case 'p':
 			if (protofile)
 				respec('p', 0, 0);
@@ -1257,50 +1255,6 @@ main(int argc, char **argv)
 				"Use the -f option to force overwrite.\n",
 				progname);
 			exit(1);
-		}
-	}
-
-	if (!xi.disfile && do_overlap_checks) {
-	        /*
-		 * do partition overlap check
-		 * If this is a straight file we assume that it's been created
-		 * before the call to mnt_check_init()
-		 */
-
-                if (mnt_check_init(&mnt_check_state) == -1) {
-                        fprintf(stderr,
-				"unable to initialize mount checking "
-				"routines, bypassing protection checks.\n");
-		} else {
-		        mnt_partition_count = mnt_find_mount_conflicts(
-				mnt_check_state, dfile);
-
-			/* 
-			 * ignore -1 return codes, since 3rd party devices
-			 * may not be part of hinv.
-			 */
-			if (mnt_partition_count > 0) {
-			        if (mnt_causes_test(mnt_check_state, MNT_CAUSE_MOUNTED)) {
-				        fprintf(stderr, "%s: "
-						"%s is already in use.\n",
-						progname, dfile);
-				} else if (mnt_causes_test(mnt_check_state, MNT_CAUSE_OVERLAP)) {
-				        fprintf(stderr, "%s: "
-						"%s overlaps partition(s) "
-						"already in use.\n",
-						progname, dfile);
-				} else {
-				        mnt_causes_show(mnt_check_state, stderr, progname);
-				}
-				fprintf(stderr, "\n");
-				fflush(stderr);
-				mnt_plist_show(mnt_check_state, stderr, progname);
-				fprintf(stderr, "\n");
-			}
-			mnt_check_end(mnt_check_state);
-			if (mnt_partition_count > 0) {
-			        usage();
-			}
 		}
 	}
 
@@ -1813,6 +1767,27 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2, logversion == 2);
 
+	if (!qflag || Nflag) {
+		printf(
+		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+		   "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
+		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
+		   "naming   =version %-14d bsize=%-6d\n"
+		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+		   "         =%-22s sunit=%d blks\n"
+		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
+			dfile, isize, (long long)agcount, (long long)agsize,
+			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
+			"", dsunit, dswidth, extent_flagging,
+			dirversion, dirversion == 1 ? blocksize : dirblocksize,
+			logfile, 1 << blocklog, (long long)logblocks,
+			logversion, "", lsunit,
+			rtfile, rtextblocks << blocklog,
+			(long long)rtblocks, (long long)rtextents);
+		if (Nflag)
+			exit(0);
+	}
+
 	/*
 	 * Zero out the first 68k in on the device, to obliterate any old 
 	 * filesystem signatures out there.  This should take care of 
@@ -1831,23 +1806,6 @@ an AG size that is one stripe unit smaller, for example %llu\n",
 			XFS_SB_ALL_BITS);
 	libxfs_writebuf(buf, 1);
 
-	if (!qflag)
-		printf(
-		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-		   "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
-		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
-		   "naming   =version %-14d bsize=%-6d\n"
-		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-		   "         =%-22s sunit=%d blks\n"
-		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
-			dfile, isize, (long long)agcount, (long long)agsize,
-			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
-			"", dsunit, dswidth, extent_flagging,
-			dirversion, dirversion == 1 ? blocksize : dirblocksize,
-			logfile, 1 << blocklog, (long long)logblocks,
-			logversion, "", lsunit,
-			rtfile, rtextblocks << blocklog,
-			(long long)rtblocks, (long long)rtextents);
 	/*
 	 * If the data area is a file, then grow it out to its final size
 	 * so that the reads for the end of the device in the mount code

@@ -45,7 +45,7 @@ HFILES = handle.h jdm.h libxfs.h libxlog.h xqm.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
 LHFILES = xfs_acl.h xfs_cap.h xfs_mac.h
-DKHFILES = mountinfo.h volume.h fstyp.h dvh.h
+DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules \
 	$(LHFILES) $(DKHFILES)
 LDIRT = xfs

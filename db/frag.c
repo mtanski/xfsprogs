@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <getopt.h>
 #include <sys/time.h>
 #include "bmap.h"
 #include "command.h"
