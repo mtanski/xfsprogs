@@ -40,6 +40,9 @@ LT_AGE = 0
 
 CFILES = xfs_log_recover.c util.c
 
+# don't want to link xfs_repair with a debug libxlog.
+DEBUG = -DNDEBUG
+
 default:  $(LTLIBRARY)
 
 include $(BUILDRULES)

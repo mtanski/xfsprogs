@@ -1,3 +1,7 @@
+[current cvs]
+	- Update xfs_growfs man page
+	- Don't build libxlog.a with DEBUG enabled
+
 xfsprogs-2.0.4 (17 April 2002)
 	- Minor update sync'ing with kernel changes (less endian
 	  swabbing in libxfs code)
