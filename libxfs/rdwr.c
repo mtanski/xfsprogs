@@ -366,13 +366,13 @@ libxfs_malloc(size_t size)
 {
 	void	*ptr;
 
-	if ((ptr = malloc(size)) == NULL) {
-		fprintf(stderr, "%s: malloc failed (%d bytes): %s\n",
+	if ((ptr = calloc(1, size)) == NULL) {
+		fprintf(stderr, "%s: calloc failed (%d bytes): %s\n",
 			progname, (int)size, strerror(errno));
 		exit(1);
 	}
 #ifdef MEM_DEBUG
-	fprintf(stderr, "## malloc'd item %p size %d bytes\n", 
+	fprintf(stderr, "## calloc'd item %p size %d bytes\n", 
                 ptr, size);
 #endif
 	return ptr;

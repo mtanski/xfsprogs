@@ -225,9 +225,9 @@ typedef struct xfs_perag
 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
 #ifdef __KERNEL__
 	lock_t		pagb_lock;	/* lock for pagb_list */
+#endif
 	int		pagb_count;	/* pagb slots in use */
 	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
-#endif
 } xfs_perag_t;
 
 #define	XFS_AG_MIN_BYTES	(1LL << 24)	/* 16 MB */

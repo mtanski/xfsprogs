@@ -1,5 +1,6 @@
-cvs
+xfsprogs-2.0.1 (12 March 2002)
 	- Fall back to BLKGETSIZE if BLKGETSIZE64 fails
+	- Sync user/kernel headers and shared code
 
 xfsprogs-2.0.0 (26 February 2002)
 	- Major release to coincide with switch to new extended

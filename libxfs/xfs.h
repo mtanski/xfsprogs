@@ -192,6 +192,7 @@
 #define kmem_zone_zalloc(z, f)	libxfs_zone_zalloc(z)
 #define kmem_zone_free(z, p)	libxfs_zone_free(z, p)
 #define kmem_realloc(p,sz,u,f)	libxfs_realloc(p,sz)
+#define kmem_zalloc(size, f)	libxfs_malloc(size)
 #define kmem_alloc(size, f)	libxfs_malloc(size)
 #define kmem_free(p, size)	libxfs_free(p)
 
@@ -280,7 +281,7 @@ typedef struct { dev_t dev; } buftarg_t;
 	__res; })
 
 #include <asm/page.h>
-#define NBPP	PAGE_SIZE
+#define NBPP		PAGE_SIZE
 
 static inline int atomicIncWithWrap(int *a, int b)
 {

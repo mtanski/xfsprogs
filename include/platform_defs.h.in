@@ -77,10 +77,18 @@ typedef char*		xfs_caddr_t;
 typedef unsigned char	uchar_t;
 
 /* long and pointer must be either 32 bit or 64 bit */
-#undef HAVE_64BIT_LONG
 #undef HAVE_32BIT_LONG
+#undef HAVE_64BIT_LONG
 #undef HAVE_32BIT_PTR
 #undef HAVE_64BIT_PTR
+
+#if defined(HAVE_32BIT_LONG)
+# define BITS_PER_LONG	32
+#elif defined(HAVE_64BIT_LONG)
+# define BITS_PER_LONG	64
+#else
+# error Unknown long size
+#endif
 
 /* Check if __psint_t is set to something meaningful */
 #undef HAVE___PSINT_T
