@@ -241,8 +241,6 @@ void	xfs_dir_leaf_unbalance(struct xfs_da_state *state,
 uint	xfs_dir_leaf_lasthash(struct xfs_dabuf *bp, int *count);
 int	xfs_dir_leaf_order(struct xfs_dabuf *leaf1_bp,
 				  struct xfs_dabuf *leaf2_bp);
-int	xfs_dir_put_dirent32_direct(xfs_dir_put_args_t *pa);
-int	xfs_dir_put_dirent32_uio(xfs_dir_put_args_t *pa);
 int	xfs_dir_put_dirent64_direct(xfs_dir_put_args_t *pa);
 int	xfs_dir_put_dirent64_uio(xfs_dir_put_args_t *pa);
 int	xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
