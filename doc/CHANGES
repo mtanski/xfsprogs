@@ -3,6 +3,8 @@ xfsprogs-2.6.11 (15 April 2004)
 	  was being opened but never closed, regardless of
 	  whether that descriptor was being cached. Now close
 	  the file on error or if it is not being cached.
+	- Fix xfs_repair handling of a corrupt v2 directory with
+	  multiple entries having the same name.
 
 xfsprogs-2.6.10 (05 April 2004)
 	- Fix botch in recent addition of new superblock field
