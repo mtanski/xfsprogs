@@ -2383,8 +2383,8 @@ xfs_bmap_del_extent(
 			ASSERT(do_mod(del->br_startblock,
 				      mp->m_sb.sb_rextsize) == 0);
 			bno = del->br_startblock;
-			do_div(bno, mp->m_sb.sb_rextsize);
 			len = del->br_blockcount;
+			do_div(bno, mp->m_sb.sb_rextsize);
 			do_div(len, mp->m_sb.sb_rextsize);
 			if ((error = xfs_rtfree_extent(ip->i_transp, bno,
 					(xfs_extlen_t)len)))
