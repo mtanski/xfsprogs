@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -40,6 +40,7 @@ extern struct xfs_fsop_geom	fgeom;
 extern int	readonly;
 extern int	directio;
 extern int	realtime;
+extern int	foreign;
 extern int	append;
 extern int	osync;
 extern int	trunc;

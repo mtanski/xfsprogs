@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -44,6 +44,7 @@ xfs_fsop_geom_t	fgeom;
 int	readonly;
 int	directio;
 int	realtime;
+int	foreign;
 int	append;
 int	osync;
 int	trunc;
@@ -55,7 +56,8 @@ void
 usage(void)
 {
 	fprintf(stderr,
-		_("Usage: %s [-r] [-p prog] [-c cmd]... file\n"), progname);
+		_("Usage: %s [-adFfrstx] [-p prog] [-c cmd]... file\n"),
+		progname);
 	exit(1);
 }
 
@@ -72,7 +74,7 @@ init(
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	while ((c = getopt(argc, argv, "ac:dfp:rstVx")) != EOF) {
+	while ((c = getopt(argc, argv, "ac:dFfp:rstVx")) != EOF) {
 		switch (c) {
 		case 'a':	/* append */
 			append = 1;
@@ -88,6 +90,9 @@ init(
 			break;
 		case 'd':	/* directIO */
 			directio = 1;
+			break;
+		case 'F':	/* foreign */
+			foreign = 1;
 			break;
 		case 'f':	/* create */
 			fflag = 1;
@@ -119,7 +124,8 @@ init(
 		usage();
 
 	fname = strdup(argv[optind]);
-	if ((fdesc = openfile(fname, &fgeom, append, fflag, directio,
+	if ((fdesc = openfile(fname, foreign ? NULL : &fgeom,
+				append, fflag, directio,
 				readonly, osync, trunc, realtime)) < 0)
 		exit(1);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -67,12 +67,14 @@ fsync_init(void)
 	fsync_cmd.name = _("fsync");
 	fsync_cmd.altname = _("s");
 	fsync_cmd.cfunc = fsync_f;
+	fsync_cmd.foreign = 1;
 	fsync_cmd.oneline =
 		_("calls fsync(2) to flush all in-core file state to disk");
 
 	fdatasync_cmd.name = _("fdatasync");
 	fdatasync_cmd.altname = _("ds");
 	fdatasync_cmd.cfunc = fdatasync_f;
+	fdatasync_cmd.foreign = 1;
 	fdatasync_cmd.oneline =
 		_("calls fdatasync(2) to flush the files in-core data to disk");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -132,6 +132,7 @@ open_help(void)
 "\n"
 " Opens a file for subsequent use by all of the other xfs_io commands.\n"
 " With no arguments, open uses the stat command to show the current file.\n"
+" -F -- foreign filesystem file, disallow XFS-specific commands\n"
 " -a -- open with the O_APPEND flag (append-only mode)\n"
 " -c -- open with O_CREAT (create the file if it doesn't exist)\n"
 " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
@@ -151,6 +152,7 @@ open_f(
 	int		argc,
 	char		**argv)
 {
+	int		Fflag = 0;
 	int		aflag = 0;
 	int		cflag = 0;
 	int		dflag = 0;
@@ -159,15 +161,18 @@ open_f(
 	int		tflag = 0;
 	int		xflag = 0;
 	char		*filename;
-	xfs_fsop_geom_t	geometry;
+	xfs_fsop_geom_t	geometry = { 0 };
 	int		fd;
 	int		c;
 
 	if (argc == 1)
 		return stat_f(argc, argv);
 
-	while ((c = getopt(argc, argv, "acdrstx")) != EOF) {
+	while ((c = getopt(argc, argv, "Facdrstx")) != EOF) {
 		switch (c) {
+		case 'F':
+			Fflag = 1;
+			break;
 		case 'a':
 			aflag = 1;
 			break;
@@ -197,7 +202,7 @@ open_f(
 	if (optind != argc - 1)
 		return usage();
 
-	fd = openfile(argv[optind], &geometry,
+	fd = openfile(argv[optind], Fflag ? NULL : &geometry,
 		      aflag, cflag, dflag, rflag, sflag, tflag, xflag);
 	if (fd < 0)
 		return 0;
@@ -215,6 +220,7 @@ open_f(
 	osync = sflag;
 	trunc = tflag;
 	append = aflag;
+	foreign = Fflag;
 	directio = dflag;
 	readonly = rflag;
 	realtime = xflag;
@@ -485,6 +491,8 @@ stat_f(
 			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
 		}
 	}
+	if (foreign)
+		return 0;
 	if ((xfsctl(fname, fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
 		perror("xfsctl(XFS_IOC_FSGETXATTR)");
 	} else {
@@ -585,6 +593,8 @@ else
 		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
 		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
 	}
+	if (foreign)
+		return 0;
 	if ((xfsctl(fname, fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
 		perror("xfsctl(XFS_IOC_FSGEOMETRY_V1)");
 	} else {
@@ -612,6 +622,7 @@ open_init(void)
 	open_cmd.cfunc = open_f;
 	open_cmd.argmin = 0;
 	open_cmd.argmax = -1;
+	open_cmd.foreign = 1;
 	open_cmd.args = _("[-acdrstx] [path]");
 	open_cmd.oneline =
 		_("close the current file, open file specified by path");
@@ -621,6 +632,7 @@ open_init(void)
 	stat_cmd.cfunc = stat_f;
 	stat_cmd.argmin = 0;
 	stat_cmd.argmax = 1;
+	stat_cmd.foreign = 1;
 	stat_cmd.args = _("[-v]");
 	stat_cmd.oneline =
 		_("statistics on the currently open file");
@@ -633,6 +645,7 @@ open_init(void)
 
 	statfs_cmd.name = _("statfs");
 	statfs_cmd.cfunc = statfs_f;
+	statfs_cmd.foreign = 1;
 	statfs_cmd.oneline =
 		_("statistics on the filesystem of the currently open file");
 

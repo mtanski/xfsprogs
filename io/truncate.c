@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -43,8 +43,16 @@ truncate_f(
 	char			**argv)
 {
 	off64_t			offset;
+	unsigned int		blocksize, sectsize;
 
-	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[1]);
+	if (foreign) {
+		blocksize = 4096;
+		sectsize = 512;
+	} else {
+		blocksize = fgeom.blocksize;
+		sectsize = fgeom.sectsize;
+	}
+	offset = cvtnum(blocksize, sectsize, argv[1]);
 	if (offset < 0) {
 		printf(_("non-numeric truncate argument -- %s\n"), argv[1]);
 		return 0;
@@ -64,6 +72,7 @@ truncate_init(void)
 	truncate_cmd.cfunc = truncate_f;
 	truncate_cmd.argmin = 1;
 	truncate_cmd.argmax = 1;
+	truncate_cmd.foreign = 1;
 	truncate_cmd.args = _("off");
 	truncate_cmd.oneline =
 		_("truncates the current file at the given offset");

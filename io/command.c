@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "command.h"
+#include "init.h"
 
 cmdinfo_t	*cmdtab;
 int		ncmds;
@@ -65,6 +66,11 @@ command(
 	if (!ct) {
 		fprintf(stderr, _("command \"%s\" not found\n"), cmd);
 		return 0;
+	}
+	if (foreign && !ct->foreign) {
+		fprintf(stderr,
+	_("foreign file is open, %s command is for XFS filesystems only\n"),
+			cmd);
 	}
 	if (argc-1 < ct->argmin || (ct->argmax != -1 && argc-1 > ct->argmax)) {
 		if (ct->argmax == -1)

@@ -103,17 +103,24 @@ pwrite_f(
 	off64_t		offset, skip = 0;
 	long long	count, total;
 	unsigned int	seed = 0xcdcdcdcd;
-	unsigned int	bsize = 4096;
+	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
 	int		c, fd = -1, dflag = 0;
 
+	if (foreign) {
+		blocksize = 4096;
+		sectsize = 512;
+	} else {
+		blocksize = fgeom.blocksize;
+		sectsize = fgeom.sectsize;
+	}
 	while ((c = getopt(argc, argv, "b:df:i:s:S:")) != EOF) {
 		switch (c) {
 		case 'b':
-			bsize = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
-			if (bsize < 0) {
+			blocksize = cvtnum(blocksize, sectsize, optarg);
+			if (blocksize < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
@@ -126,7 +133,7 @@ pwrite_f(
 			infile = optarg;
 			break;
 		case 's':
-			skip = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
+			skip = cvtnum(blocksize, sectsize, optarg);
 			if (skip < 0) {
 				printf(_("non-numeric skip -- %s\n"), optarg);
 				return 0;
@@ -148,19 +155,19 @@ pwrite_f(
 		printf("%s %s\n", pwrite_cmd.name, pwrite_cmd.oneline);
 		return 0;
 	}
-	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	offset = cvtnum(blocksize, sectsize, argv[optind]);
 	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 	optind++;
-	count = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	count = cvtnum(blocksize, sectsize, argv[optind]);
 	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 
-	if (!alloc_buffer(bsize, seed))
+	if (!alloc_buffer(blocksize, seed))
 		return 0;
 
 	if (infile &&
@@ -168,7 +175,8 @@ pwrite_f(
 		return 0;
 
 	gettimeofday(&t1, NULL);
-	if ((c = write_buffer(offset, count, bsize, fd, skip, &total)) < 0) {
+	c = write_buffer(offset, count, blocksize, fd, skip, &total);
+	if (c < 0) {
 		close(fd);
 		return 0;
 	}
@@ -194,6 +202,7 @@ pwrite_init(void)
 	pwrite_cmd.cfunc = pwrite_f;
 	pwrite_cmd.argmin = 2;
 	pwrite_cmd.argmax = -1;
+	pwrite_cmd.foreign = 1;
 	pwrite_cmd.args =
 		_("[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len");
 	pwrite_cmd.oneline =

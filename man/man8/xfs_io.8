@@ -3,7 +3,7 @@
 xfs_io \- debug the IO path of an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_io\f1 [ \f3\-c\f1 cmd ] ... [ \f3\-p\f1 prog ] [ \f3\-r\f1 ] file
+\f3xfs_io\f1 [ \f3\-c\f1 cmd ] ... [ \f3\-p\f1 prog ] [ \f3\-Ffr\f1 ] file
 .fi
 .SH DESCRIPTION
 \f2xfs_io\f1 is a debugging tool like \f2xfs_db\f1(8), but is aimed
@@ -22,6 +22,13 @@ This is the mechanism used to implement \f2xfs_bmap\f1(8).
 \f3\-p\f1 \f2prog\f1
 Set the program name for prompts and some error messages,
 the default value is \f2xfs_io\f1.
+.TP
+\f3\-F\f1
+Allow \f2file\f1 to be ``foreign'', i.e. not in an XFS filesystem.
+This mode has a restricted set of commands.
+.TP
+\f3\-f\f1
+Create \f2file\f1 if it does not already exist.
 .TP
 \f3\-r\f1
 Open \f2file\f1 read-only, initially.
@@ -61,10 +68,13 @@ Calls \f2fsync\f1(2) to flush all in-core file state to disk.
 \f3o\f1
 See the \f3open\f1 command.
 .TP
-\f3open\f1 [ \f2-acdrstx\f1 ] [ \f2path\f1 ]
+\f3open\f1 [ \f2-Facdrstx\f1 ] [ \f2path\f1 ]
 Closes the current file, and opens the file specified by \f2path\f1 instead.
 Without any arguments, displays statistics about the currently open file \-
 see the \f3stat\f1 command.
+.br
+The \f3\-F\f1 option allows non-XFS (foreign) files to be opened and
+operated on with a restricted command set.
 .br
 The \f3\-a\f1 option opens append-only (O_APPEND).
 .br

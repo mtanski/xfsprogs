@@ -143,17 +143,24 @@ pread_f(
 {
 	off64_t		offset;
 	long long	count, total;
-	unsigned int	bsize = 4096;
+	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	int		vflag = 0;
 	int		c;
 
+	if (foreign) {
+		blocksize = 4096;
+		sectsize = 512;
+	} else {
+		blocksize = fgeom.blocksize;
+		sectsize = fgeom.sectsize;
+	}
 	while ((c = getopt(argc, argv, "b:v")) != EOF) {
 		switch (c) {
 		case 'b':
-			bsize = cvtnum(fgeom.blocksize, fgeom.sectsize, optarg);
-			if (bsize < 0) {
+			blocksize = cvtnum(blocksize, sectsize, optarg);
+			if (blocksize < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
@@ -170,19 +177,19 @@ pread_f(
 		printf("%s %s\n", pread_cmd.name, pread_cmd.oneline);
 		return 0;
 	}
-	offset = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	offset = cvtnum(blocksize, sectsize, argv[optind]);
 	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 	optind++;
-	count = cvtnum(fgeom.blocksize, fgeom.sectsize, argv[optind]);
+	count = cvtnum(blocksize, sectsize, argv[optind]);
 	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 
-	if (!alloc_buffer(bsize, 0xabababab))
+	if (!alloc_buffer(blocksize, 0xabababab))
 		return 0;
 
 	gettimeofday(&t1, NULL);
@@ -209,6 +216,7 @@ pread_init(void)
 	pread_cmd.cfunc = pread_f;
 	pread_cmd.argmin = 2;
 	pread_cmd.argmax = -1;
+	pread_cmd.foreign = 1;
 	pread_cmd.args = _("[-b bs] [-v] off len");
 	pread_cmd.oneline = _("reads a number of bytes at a specified offset");
 	pread_cmd.help = pread_help;
