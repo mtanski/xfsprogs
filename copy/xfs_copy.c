@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -961,7 +961,7 @@ main(int argc, char **argv)
 			ptr = XFS_BTREE_PTR_ADDR(sourceb_blocksize, xfs_alloc,
 				block, 1, mp->m_alloc_mxr[1]),
 
-			bno = *ptr;
+			bno = INT_GET(ptr[0], ARCH_CONVERT);
 		}
 
 		/* align first data copy but don't overwrite ag header */
