@@ -3,10 +3,10 @@
 xfs_repair \- repair an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_repair\f1 [ \f3\-nLvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+\f3xfs_repair\f1 [ \f3\-nLvVd\f1 ] [ \f3\-o\f1 subopt[=value] ]
 	[\f3-l\f1 logdev] [\f3-r\f1 rtdev] xfs_special
 .sp .8v
-\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nLvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nLvVd\f1 ] [ \f3\-o\f1 subopt[=value] ]
 	[\f3-l\f1 logfile] [\f3-r\f1 rtfile] file
 .fi
 .SH DESCRIPTION
@@ -94,6 +94,11 @@ will ignore an EFS superblock if one is found.
 .TP
 .B \-v
 Verbose output.
+.TP
+.B \-d
+Repair dangerously. Allow xfs_repair to repair an XFS filesystem 
+mounted read only. This is typically done on a root fileystem from 
+single user mode, immediately followed by a reboot.
 .SS Checks Performed
 Inconsistencies corrected include the following:
 .TP

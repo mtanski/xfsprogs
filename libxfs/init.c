@@ -170,6 +170,40 @@ libxfs_device_close(dev_t dev)
 	exit(1);
 }
 
+int
+check_open(char *path, int flags,char **rawfile,char **blockfile){
+
+	int readonly = (flags & LIBXFS_ISREADONLY);
+	int inactive = (flags & LIBXFS_ISINACTIVE);
+	int dangerously = (flags & LIBXFS_DANGEROUSLY);
+	struct stat64	stbuf;
+
+	if (stat64(path, &stbuf) < 0) {
+		perror(path);
+		return 0;
+	}
+	if (!(*rawfile = findrawpath(path))) {
+		fprintf(stderr, _("%s: "
+				  "can't find a character device matching %s\n"),
+			progname, path);
+		return 0;
+	}
+	if (!(*blockfile = findblockpath(path))) {
+		fprintf(stderr, _("%s: "
+				  "can't find a block device matching %s\n"),
+			progname, path);
+		return 0;
+	}
+	if (!readonly && !inactive && platform_check_ismounted(path, *blockfile, NULL, 1))
+		return 0;
+	
+	if (inactive && check_isactive(path, *blockfile, ((readonly|dangerously)?1:0)))
+		return 0;
+
+	return 1;
+}
+
+
 
 /*
  * libxfs initialization.
@@ -192,7 +226,7 @@ libxfs_init(libxfs_init_t *a)
 	int		rval = 0;
 	int		readonly;
 	int		inactive;
-	struct stat64	stbuf;
+	int		flags;
 
 	dpath[0] = logpath[0] = rtpath[0] = '\0';
 	dname = a->dname;
@@ -207,28 +241,11 @@ libxfs_init(libxfs_init_t *a)
 	fd = -1;
 	readonly = (a->isreadonly & LIBXFS_ISREADONLY);
 	inactive = (a->isreadonly & LIBXFS_ISINACTIVE);
+	flags = a->isreadonly;
+
 	if (a->volname) {
-		if (stat64(a->volname, &stbuf) < 0) {
-			perror(a->volname);
-			goto done;
-		}
-		if (!(rawfile = findrawpath(a->volname))) {
-			fprintf(stderr, _("%s: "
-				"can't find a character device matching %s\n"),
-				progname, a->volname);
-			goto done;
-		}
-		if (!(blockfile = findblockpath(a->volname))) {
-			fprintf(stderr, _("%s: "
-				"can't find a block device matching %s\n"),
-				progname, a->volname);
-			goto done;
-		}
-		if (!readonly && !inactive &&
-		    platform_check_ismounted(a->volname, blockfile, NULL, 1))
-			goto done;
-		if (inactive && check_isactive(
-					a->volname, blockfile, readonly))
+		
+		if(!check_open(a->volname,flags,&rawfile,&blockfile))
 			goto done;
 		needcd = 1;
 		fd = open(rawfile, O_RDONLY);
@@ -314,29 +331,7 @@ voldone:
 						    a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {
-			if (stat64(dname, &stbuf) < 0) {
-				fprintf(stderr,
-					_("%s: stat64 failed on %s: %s\n"),
-					progname, dname, strerror(errno));
-				goto done;
-			}
-			if (!(rawfile = findrawpath(dname))) {
-				fprintf(stderr,
-					_("%s: can't find a char device "
-					"matching %s\n"), progname, dname);
-				goto done;
-			}
-			if (!(blockfile = findblockpath(dname))) {
-				fprintf(stderr,
-					_("%s: can't find a block device "
-					"matching %s\n"), progname, dname);
-				goto done;
-			}
-			if (!readonly && !inactive &&
-			    platform_check_ismounted(dname, blockfile, NULL, 1))
-				goto done;
-			if (inactive && check_isactive(
-						dname, blockfile, readonly))
+			if(!check_open(dname,flags,&rawfile,&blockfile))
 				goto done;
 			a->ddev = libxfs_device_open(rawfile,
 					a->dcreat, readonly, a->setblksize);
@@ -354,29 +349,7 @@ voldone:
 					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 		} else {
-			if (stat64(logname, &stbuf) < 0) {
-				fprintf(stderr,
-					_("%s: stat64 failed on %s: %s\n"),
-					progname, logname, strerror(errno));
-				goto done;
-			}
-			if (!(rawfile = findrawpath(logname))) {
-				fprintf(stderr,
-					_("%s: can't find a char device "
-					"matching %s\n"), progname, logname);
-				goto done;
-			}
-			if (!(blockfile = findblockpath(logname))) {
-				fprintf(stderr,
-					_("%s: can't find a block device "
-					"matching %s\n"), progname, logname);
-				goto done;
-			}
-			if (!readonly && !inactive &&
-			    platform_check_ismounted(logname, blockfile, NULL, 1))
-				goto done;
-			else if (inactive && check_isactive(
-						logname, blockfile, readonly))
+			if(!check_open(logname,flags,&rawfile,&blockfile))
 				goto done;
 			a->logdev = libxfs_device_open(rawfile,
 					a->lcreat, readonly, a->setblksize);
@@ -394,29 +367,7 @@ voldone:
 					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 		} else {
-			if (stat64(rtname, &stbuf) < 0) {
-				fprintf(stderr,
-					_("%s: stat64 failed on %s: %s\n"),
-					progname, rtname, strerror(errno));
-				goto done;
-			}
-			if (!(rawfile = findrawpath(rtname))) {
-				fprintf(stderr,
-					_("%s: can't find a char device "
-					"matching %s\n"), progname, rtname);
-				goto done;
-			}
-			if (!(blockfile = findblockpath(rtname))) {
-				fprintf(stderr,
-					_("%s: can't find a block device "
-					"matching %s\n"), progname, rtname);
-				goto done;
-			}
-			if (!readonly && !inactive &&
-			    platform_check_ismounted(rtname, blockfile, NULL, 1))
-				goto done;
-			if (inactive && check_isactive(
-						rtname, blockfile, readonly))
+			if(!check_open(rtname,flags,&rawfile,&blockfile))
 				goto done;
 			a->rtdev = libxfs_device_open(rawfile,
 					a->rcreat, readonly, a->setblksize);

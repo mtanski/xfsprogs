@@ -164,6 +164,7 @@ process_args(int argc, char **argv)
 	fs_is_dirty = 0;
 	verbose = 0;
 	no_modify = 0;
+	dangerously = 0;
 	isa_file = 0;
 	zap_log = 0;
 	dumpcore = 0;
@@ -188,7 +189,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvV")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDvVd")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -243,6 +244,9 @@ process_args(int argc, char **argv)
 		case 'V':
 			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
+		case 'd': /* dangerously */
+			dangerously = 1;
+			break;
 		case '?':
 			usage();
 		}

@@ -110,6 +110,7 @@ typedef struct {
 #define LIBXFS_EXIT_ON_FAILURE	0x0001	/* exit the program if a call fails */
 #define LIBXFS_ISREADONLY	0x0002	/* disallow all mounted filesystems */
 #define LIBXFS_ISINACTIVE	0x0004	/* allow mounted only if mounted ro */
+#define LIBXFS_DANGEROUSLY	0x0008	/* repair is mounted ro */
 
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
