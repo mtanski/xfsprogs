@@ -47,63 +47,73 @@ typedef struct xfs_cap_set {
 #define SGI_CAP_FILE	"SGI_CAP_FILE"
 #define SGI_CAP_FILE_SIZE	(sizeof(SGI_CAP_FILE)-1)
 
-/* On-disk bitfield values, as defined for us by IRIX */
-#define	XFS_CAP_CHOWN			(0x01LL << 1)
-#define	XFS_CAP_DAC_WRITE		(0x01LL << 2)
-#define	XFS_CAP_DAC_READ_SEARCH		(0x01LL << 3)
-#define	XFS_CAP_FOWNER			(0x01LL << 4)
-#define	XFS_CAP_DAC_OVERRIDE		\
-	(XFS_CAP_DAC_WRITE|XFS_CAP_DAC_READ_SEARCH|XFS_CAP_FOWNER)
-#define	XFS_CAP_FSETID			(0x01LL << 5)
-#define	XFS_CAP_KILL			(0x01LL << 6)
-#define	XFS_CAP_LINK_DIR		(0x01LL << 7)
-#define	XFS_CAP_SETFPRIV		(0x01LL << 8)
-#define XFS_CAP_SETFCAP			XFS_CAP_SETFPRIV
-#define	XFS_CAP_SETPPRIV		(0x01LL << 9)
-#define XFS_CAP_SETPCAP			XFS_CAP_SETPPRIV
-#define	XFS_CAP_SETGID			(0x01LL << 10)
-#define	XFS_CAP_SETUID			(0x01LL << 11)
-#define	XFS_CAP_MAC_DOWNGRADE		(0x01LL << 12)
-#define	XFS_CAP_MAC_READ		(0x01LL << 13)
-#define	XFS_CAP_MAC_RELABEL_SUBJ	(0x01LL << 14)
-#define	XFS_CAP_MAC_WRITE		(0x01LL << 15)
-#define	XFS_CAP_MAC_UPGRADE		(0x01LL << 16)
-#define	XFS_CAP_INF_NOFLOAT_OBJ		(0x01LL << 17)	/* Currently unused */
-#define	XFS_CAP_INF_NOFLOAT_SUBJ	(0x01LL << 18)	/* Currently unused */
-#define	XFS_CAP_INF_DOWNGRADE		(0x01LL << 19)	/* Currently unused */
-#define	XFS_CAP_INF_UPGRADE		(0x01LL << 20)	/* Currently unused */
-#define	XFS_CAP_INF_RELABEL_SUBJ	(0x01LL << 21)	/* Currently unused */
-#define	XFS_CAP_AUDIT_CONTROL		(0x01LL << 22)
-#define	XFS_CAP_AUDIT_WRITE		(0x01LL << 23)
-#define	XFS_CAP_MAC_MLD			(0x01LL << 24)
-#define	XFS_CAP_MEMORY_MGT		(0x01LL << 25)
-#define	XFS_CAP_SWAP_MGT		(0x01LL << 26)
-#define	XFS_CAP_TIME_MGT		(0x01LL << 27)
-#define	XFS_CAP_SYSINFO_MGT		(0x01LL << 28)
-#define	XFS_CAP_NVRAM_MGT		XFS_CAP_SYSINFO_MGT
-#define	XFS_CAP_MOUNT_MGT		(0x01LL << 29)
-#define	XFS_CAP_QUOTA_MGT		(0x01LL << 30)
-#define	XFS_CAP_PRIV_PORT		(0x01LL << 31)
-#define	XFS_CAP_STREAMS_MGT		(0x01LL << 32)
-#define	XFS_CAP_SCHED_MGT		(0x01LL << 33)
-#define	XFS_CAP_PROC_MGT		(0x01LL << 34)
-#define	XFS_CAP_SVIPC_MGT		(0x01LL << 35)
-#define	XFS_CAP_NETWORK_MGT		(0x01LL << 36)
-#define	XFS_CAP_DEVICE_MGT		(0x01LL << 37)
-#define	XFS_CAP_MKNOD			XFS_CAP_DEVICE_MGT
-#define	XFS_CAP_ACCT_MGT		(0x01LL << 38)
-#define	XFS_CAP_SHUTDOWN		(0x01LL << 39)
-#define	XFS_CAP_CHROOT			(0x01LL << 40)
-#define	XFS_CAP_DAC_EXECUTE		(0x01LL << 41)
-#define	XFS_CAP_MAC_RELABEL_OPEN	(0x01LL << 42)
-#define	XFS_CAP_SIGMASK			(0x01LL << 43)	/* Not implemented */
-#define	XFS_CAP_XTCB			(0x01LL << 44)	/* X11 Trusted Client */
+/* On-disk bitfield positions, as defined for us by IRIX */
+#define	XFS_CAP_CHOWN			1
+#define	XFS_CAP_DAC_WRITE		2
+#define	XFS_CAP_DAC_READ_SEARCH		3
+#define	XFS_CAP_FOWNER			4
+#define	XFS_CAP_FSETID			5
+#define	XFS_CAP_KILL			6
+#define	XFS_CAP_LINK_DIR		7
+#define	XFS_CAP_SETFPRIV		8
+#define	XFS_CAP_SETPPRIV		9
+#define	XFS_CAP_SETGID			10
+#define	XFS_CAP_SETUID			11
+#define	XFS_CAP_MAC_DOWNGRADE		12
+#define	XFS_CAP_MAC_READ		13
+#define	XFS_CAP_MAC_RELABEL_SUBJ	14
+#define	XFS_CAP_MAC_WRITE		15
+#define	XFS_CAP_MAC_UPGRADE		16
+#define	XFS_CAP_INF_NOFLOAT_OBJ		17	/* Currently unused */
+#define	XFS_CAP_INF_NOFLOAT_SUBJ	18	/* Currently unused */
+#define	XFS_CAP_INF_DOWNGRADE		19	/* Currently unused */
+#define	XFS_CAP_INF_UPGRADE		20	/* Currently unused */
+#define	XFS_CAP_INF_RELABEL_SUBJ	21	/* Currently unused */
+#define	XFS_CAP_AUDIT_CONTROL		22
+#define	XFS_CAP_AUDIT_WRITE		23
+#define	XFS_CAP_MAC_MLD			24
+#define	XFS_CAP_MEMORY_MGT		25
+#define	XFS_CAP_SWAP_MGT		26
+#define	XFS_CAP_TIME_MGT		27
+#define	XFS_CAP_SYSINFO_MGT		28
+#define	XFS_CAP_MOUNT_MGT		29
+#define	XFS_CAP_QUOTA_MGT		30
+#define	XFS_CAP_PRIV_PORT		31
+#define	XFS_CAP_STREAMS_MGT		32
+#define	XFS_CAP_SCHED_MGT		33
+#define	XFS_CAP_PROC_MGT		34
+#define	XFS_CAP_SVIPC_MGT		35
+#define	XFS_CAP_NETWORK_MGT		36
+#define	XFS_CAP_DEVICE_MGT		37
+#define	XFS_CAP_ACCT_MGT		38
+#define	XFS_CAP_SHUTDOWN		39
+#define	XFS_CAP_CHROOT			40
+#define	XFS_CAP_DAC_EXECUTE		41
+#define	XFS_CAP_MAC_RELABEL_OPEN	42
+#define	XFS_CAP_SIGMASK			43	/* Not implemented */
+#define	XFS_CAP_XTCB			44	/* X11 Trusted Client */
 
 
 #ifdef __KERNEL__
 
-#ifdef CONFIG_POSIX_CAP
-/* NOT YET IMPLEMENTED */
+#ifdef CONFIG_FS_POSIX_CAP
+
+#include <linux/posix_cap_xattr.h>
+
+struct vnode;
+
+extern int xfs_cap_vhascap(struct vnode *);
+extern int xfs_cap_vset(struct vnode *, void *, size_t);
+extern int xfs_cap_vget(struct vnode *, void *, size_t);
+extern int xfs_cap_vremove(struct vnode *vp);
+
+#define _CAP_EXISTS		xfs_cap_vhascap
+
+#else
+#define xfs_cap_vset(v,p,sz)	(-ENOTSUP)
+#define xfs_cap_vget(v,p,sz)	(-ENOTSUP)
+#define xfs_cap_vremove(v)	(-ENOTSUP)
+#define _CAP_EXISTS		(NULL)
 #endif
 
 #endif	/* __KERNEL__ */

@@ -62,8 +62,8 @@
 typedef struct xfs_mac_label {
 	__uint8_t	ml_msen_type;	/* MSEN label type */
 	__uint8_t	ml_mint_type;	/* MINT label type */
-	__uint8_t	ml_level;	/* Hierarchical level  */
-	__uint8_t	ml_grade;	/* Hierarchical grade  */
+	__uint8_t	ml_level;	/* Hierarchical level */
+	__uint8_t	ml_grade;	/* Hierarchical grade */
 	__uint16_t	ml_catcount;	/* Category count */
 	__uint16_t	ml_divcount;	/* Division count */
 					/* Category set, then Division set */
@@ -103,10 +103,12 @@ extern int  xfs_mac_iaccess(struct xfs_inode *, mode_t, cred_t *);
 
 #define _MAC_XFS_IACCESS(i,m,c) (xfs_mac_iaccess(i,m,c))
 #define _MAC_VACCESS(v,c,m)	(xfs_mac_vaccess(v,c,m))
+#define _MAC_EXISTS		xfs_mac_vhaslabel
 
 #else
 #define _MAC_XFS_IACCESS(i,m,c)	(0)
 #define _MAC_VACCESS(v,c,m)	(0)
+#define _MAC_EXISTS		(NULL)
 #endif
 
 #endif	/* __KERNEL__ */
