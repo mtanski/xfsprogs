@@ -316,6 +316,7 @@ These options specify the location, size, and other parameters of the
 log section of the filesystem.
 The valid suboptions are:
 .BI internal[= value ],
+\f3logdev=\f1\f2device\f1,
 \f3size=\f1\f2value\f1,
 \f3version=\f1\f2[1|2]\f1,
 \f3sunit=\f1\f2value\f1, and
@@ -328,6 +329,16 @@ the data section instead of being another device or logical volume.
 The suboption value is either 0 or 1,
 with 1 signifying that the log is internal.
 If the value is omitted, 1 is assumed.
+.IP
+The
+.B logdev
+suboption is used to specify that the log section should reside on a
+device separate from the data section.  The suboption value is the
+name of a block device.  The
+.B internal=1
+and
+.B logdev
+options are mutually exclusive.
 .IP
 The
 .B size
@@ -569,9 +580,16 @@ Real-time section options.
 These options specify the location, size, and other parameters of the
 real-time section of the filesystem.
 The valid suboptions are:
-.BI extsize= value
+\f3rtdev=\f1\f2device\f1,
+\f3extsize=\f1\f2value\f1,
 and
 \f3size=\f1\f2value\f1.
+.IP
+The
+.B rtdev
+suboption is used to specify the device which should contain
+the real-time section of the filesystem.
+The suboption value is the name of a block device.
 .IP
 The
 .B extsize
