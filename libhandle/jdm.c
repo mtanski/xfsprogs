@@ -45,7 +45,7 @@ typedef struct fshandle {
 	char fsh_space[FSHANDLE_SZ];
 } fshandle_t;
 
-/* private file handle - for use by open_by_handle */
+/* private file handle - for use by open_by_fshandle */
 #define FILEHANDLE_SZ		24
 #define FILEHANDLE_SZ_FOLLOWING	14
 #define FILEHANDLE_SZ_PAD	2
@@ -134,7 +134,7 @@ jdm_open( jdm_fshandle_t *fshp, xfs_bstat_t *statp, intgen_t oflags )
 	intgen_t fd;
 
 	jdm_fill_filehandle( &filehandle, fshandlep, statp );
-	fd = open_by_handle( ( void * )&filehandle,
+	fd = open_by_fshandle( ( void * )&filehandle,
 			     sizeof( filehandle ),
 			     oflags );
 	return fd;

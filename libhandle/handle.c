@@ -80,13 +80,14 @@ static struct fdhash *fdhash_head;
 int
 path_to_fshandle(
 	char		*path,		/* input,  path to convert */
-	void		**hanp,		/* output, pointer to data */
-	size_t		*hlen)		/* output, size of returned data */
+	void		**fshanp,	/* output, pointer to data */
+	size_t		*fshlen)	/* output, size of returned data */
 {
 	int		result;
 	int		fd;
 	comarg_t	obj;
 	struct fdhash	*fdhp;
+	struct fdhash	*tmphp=NULL;
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
@@ -94,7 +95,7 @@ path_to_fshandle(
 
 	obj.path = path;
 	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
-				obj, hanp, hlen);
+				obj, fshanp, fshlen);
 	if (result >= 0) {
 		fdhp = malloc(sizeof(struct fdhash));
 		if (fdhp == NULL) {
@@ -105,12 +106,22 @@ path_to_fshandle(
 		fdhp->fsfd = fd;
 		fdhp->fnxt = NULL;
 		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
-		memcpy(fdhp->fsh, *hanp, FSIDSIZE);
+		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
 
-		if (fdhash_head)
-			fdhash_head->fnxt = fdhp;
-		else
-			fdhash_head       = fdhp;
+		if (fdhash_head) {
+			for( tmphp=fdhash_head; tmphp; tmphp=tmphp->fnxt ) {
+				if ( fdhp->fsfd == tmphp->fsfd ) {
+					free (fdhp);	 /* already in hash */
+					break;
+				}
+			}
+			if (tmphp == NULL) {     /* not in hash, add it now */
+				fdhp->fnxt = fdhash_head;
+				fdhash_head = fdhp;
+			}
+		} else {
+			fdhash_head = fdhp;
+		}
 	}
 
 	return result;
@@ -211,16 +222,45 @@ obj_to_handle(
 }
 
 int
+open_by_fshandle(
+	void		*fshanp,
+	size_t		fshlen,
+	int		rw)
+{
+	int		fsfd;
+	char		*path;
+	xfs_fsop_handlereq_t hreq;
+
+	if ((fsfd = handle_to_fsfd(fshanp, &path)) < 0)
+		return -1;
+
+	hreq.fd       = 0;
+	hreq.path     = NULL;
+	hreq.oflags   = rw | O_LARGEFILE;
+	hreq.ihandle  = fshanp;
+	hreq.ihandlen = fshlen;
+	hreq.ohandle  = NULL;
+	hreq.ohandlen = NULL;
+
+	return xfsctl(path, fsfd, XFS_IOC_OPEN_BY_HANDLE, &hreq);
+}
+
+int
 open_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	int		rw)
 {
-	int		fd;
+	int		fsfd;
 	char		*path;
+	void		*fshanp;
+	size_t		fshlen;
 	xfs_fsop_handlereq_t hreq;
 
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
+	if (handle_to_fshandle(hanp, hlen, &fshanp, &fshlen) != 0)
+		return -1;
+
+	if ((fsfd = handle_to_fsfd(fshanp, &path)) < 0)
 		return -1;
 
 	hreq.fd       = 0;
@@ -231,7 +271,7 @@ open_by_handle(
 	hreq.ohandle  = NULL;
 	hreq.ohandlen = NULL;
 
-	return xfsctl(path, fd, XFS_IOC_OPEN_BY_HANDLE, &hreq);
+	return xfsctl(path, fsfd, XFS_IOC_OPEN_BY_HANDLE, &hreq);
 }
 
 int

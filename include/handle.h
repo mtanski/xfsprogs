@@ -41,10 +41,11 @@ struct fsdmidata;
 struct attrlist_cursor;
 
 extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
-extern int  path_to_fshandle (char *__path, void **__hanp, size_t *__hlen);
+extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
 extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
 				size_t *__fshlen);
 extern void free_handle (void *__hanp, size_t __hlen);
+extern int  open_by_fshandle (void *__fshanp, size_t __fshlen, int __rw);
 extern int  open_by_handle (void *__hanp, size_t __hlen, int __rw);
 extern int  readlink_by_handle (void *__hanp, size_t __hlen, void *__buf,
 				size_t __bs);
