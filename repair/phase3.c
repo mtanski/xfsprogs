@@ -53,7 +53,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 	int state;
 
 	while (current_ino != NULLAGINO)  {
-		if (!verify_aginum(mp, agno, current_ino))
+		if (verify_aginum(mp, agno, current_ino))
 			return(1);
 		if ((bp = get_agino_buf(mp, agno, current_ino, &dip)) == NULL)
 			return(1);
