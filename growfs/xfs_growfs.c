@@ -34,6 +34,14 @@
 #include <mntent.h>
 #include <sys/ioctl.h>
 
+/*
+ * When growing a filesystem, this is the most significant
+ * bits we'll accept in the resulting inode numbers
+ * without warning the user.
+ */
+
+#define XFS_MAX_INODE_SIG_BITS 32
+
 static char	*fname;		/* mount point name */
 static char	*datadev;	/* data device name */
 static char	*logdev;	/*  log device name */
@@ -49,6 +57,7 @@ Options:\n\
         -l          grow log section\n\
         -r          grow realtime section\n\
         -n          don't change anything, just show geometry\n\
+        -I          allow inode numbers to exceed %d significant bits\n\
         -i          convert log from external to internal format\n\
         -t          alternate location for mount table (/etc/mtab)\n\
         -x          convert log from internal to external format\n\
@@ -58,7 +67,7 @@ Options:\n\
         -e size     set realtime extent size to size blks\n\
         -m imaxpct  set inode max percent to imaxpct\n\
         -V          print version information\n",
-		progname);
+		progname, XFS_MAX_INODE_SIG_BITS);
 	exit(2);
 }
 
@@ -70,15 +79,24 @@ report_info(
 	int		dirversion,
 	int		isint)
 {
+
+	int		inodebits;
+
+	inodebits = (libxfs_highbit32(geo.blocksize/geo.inodesize - 1) + 1)
+		  + (libxfs_highbit64(geo.agblocks - 1) + 1)
+		  + (libxfs_highbit64(geo.agcount - 1) + 1);
+
 	printf("meta-data=%-22s isize=%-6d agcount=%d, agsize=%d blks\n"
 	       "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
 	       "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
+	       "         =%-22s imaxbits=%-6d\n"
 	       "naming   =version %-14d bsize=%-6d\n"
 	       "log      =%-22s bsize=%-6d blocks=%d\n"
 	       "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 	       mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
 	       "", geo.blocksize, (long long)geo.datablocks, geo.imaxpct,
 	       "", geo.sunit, geo.swidth, unwritten,
+	       "", inodebits,
 	       dirversion, geo.dirblocksize,
 	       isint ? "internal" : "external", geo.blocksize, geo.logblocks,
 	       geo.rtblocks ? "external" : "none",
@@ -168,6 +186,7 @@ main(int argc, char **argv)
 	long			esize;	/* new rt extent size */
 	int			ffd;	/* mount point file descriptor */
 	xfs_fsop_geom_t		geo;	/* current fs geometry */
+	int			Iflag;	/* force flag for big inode numbers */
 	int			iflag;	/* -i flag */
 	int			isint;	/* log is currently internal */
 	int			lflag;	/* -l flag */
@@ -185,10 +204,10 @@ main(int argc, char **argv)
 
 	mtab = MOUNTED;
 	progname = basename(argv[0]);
-	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
+	aflag = dflag = Iflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
 	maxpct = esize = 0;
 	dsize = lsize = rsize = 0LL;
-	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
+	while ((c = getopt(argc, argv, "dD:e:IilL:m:np:rR:t:xV")) != EOF) {
 		switch (c) {
 		case 'D':
 			dsize = atoll(optarg);
@@ -199,6 +218,9 @@ main(int argc, char **argv)
 		case 'e':
 			esize = atol(optarg);
 			rflag = 1;
+			break;
+		case 'I':
+			Iflag = 1;
 			break;
 		case 'i':
 			lflag = iflag = 1;
@@ -311,7 +333,9 @@ main(int argc, char **argv)
 	error = 0;
 	if (dflag | aflag) {
 		xfs_growfs_data_t	in;
-		
+		int			inodebits;
+		__uint64_t		new_agcount;
+
 		if (!mflag)
 			maxpct = geo.imaxpct;
 		if (!dsize)
@@ -323,6 +347,14 @@ main(int argc, char **argv)
 				(long long)(ddsize/(geo.blocksize/BBSIZE)));
 			error = 1;
 		}
+
+		new_agcount = dsize / geo.agblocks 
+			   + (dsize % geo.agblocks != 0);
+
+		inodebits = (libxfs_highbit32(geo.blocksize/geo.inodesize - 1) + 1)
+			  + (libxfs_highbit64(geo.agblocks - 1) + 1)
+			  + (libxfs_highbit64(new_agcount - 1) + 1);
+
 		if (!error && dsize < geo.datablocks) {
 			fprintf(stderr, "data size %lld too small,"
 				" old size is %lld\n",
@@ -336,6 +368,14 @@ main(int argc, char **argv)
 			if (mflag)
 				fprintf(stderr,
 					"inode max pct unchanged, skipping\n");
+		} else if (!error && !Iflag 
+				&& inodebits > XFS_MAX_INODE_SIG_BITS) {
+			fprintf(stderr,
+				"warning: inode numbers would exceed %d "
+				"significant bits (%d)\n"
+				"         Use -I option to allow this\n",
+				XFS_MAX_INODE_SIG_BITS, inodebits);
+			error = 1;
 		} else if (!error && !nflag) {
 			in.newblocks = (__u64)dsize;
 			in.imaxpct = (__u32)maxpct;
@@ -349,6 +389,12 @@ main(int argc, char **argv)
 				"%s: ioctl failed - XFS_IOC_FSGROWFSDATA: %s\n",
 						progname, strerror(errno));
 				error = 1;
+			}
+			if (inodebits > XFS_MAX_INODE_SIG_BITS) {
+				fprintf(stderr,
+					"inode numbers exceed %d "
+					"significant bits (%d)\n",
+					XFS_MAX_INODE_SIG_BITS, inodebits);
 			}
 		}
 	}

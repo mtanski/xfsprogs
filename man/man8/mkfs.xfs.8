@@ -264,6 +264,21 @@ The mininum (and default) value is 256 bytes.
 The maximum value is 2048 (2 KB) subject to the restriction that
 the inode size cannot exceed one half of the filesystem block size.
 .IP
+XFS uses 64-bit inode numbers internally; however, the number of
+significant bits in an inode number
+is affected by filesystem geometry.  In
+practice, filesystem size and inode size are the predominant factors.
+The Linux kernel and most applications cannot currently handle
+inode numbers greater than 32 significant bits, so if no
+inode size is given on the command line, 
+.I mkfs.xfs
+will attempt to choose a size
+such that inode numbers will be < 32 bits.  If an inode size
+is specified, or if a filesystem is sufficently large,
+.I mkfs.xfs
+will warn if this will create inode numbers > 32 significant
+bits.
+.IP
 The option \f3maxpct=\f1\f2value\f1 specifies the maximum percentage
 of space in the filesystem that can be allocated to inodes.
 The default value is 25%.

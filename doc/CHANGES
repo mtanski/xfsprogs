@@ -1,4 +1,8 @@
-xfsprogs-current
+xfsprogs-1.3.6 (31 August 2001)
+	- make mkfs.xfs aware of geometries that might cause
+	  inode numbers to exceed 32 significant bits.
+	- make xfs_growfs warn if new filesystem will have
+	  inode numbers that exceed 32 significant bits.
 	- fix logprint bug in reporting extended attributes
 	  (thanks to Tang Lingbo <tanglb@sina.com> for fixing this)
 	- fix mkfs.xfs core dump when attemping to run on devices

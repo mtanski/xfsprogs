@@ -44,6 +44,10 @@
 #define	XFS_MIN_LOG_FACTOR	3		/* min log size factor */
 #define	XFS_DFL_LOG_FACTOR	16		/* default log size, factor */
 						/* with max trans reservation */
+#define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an 
+						 * inode number that we'll
+						 * accept w/o warnings
+						 */
 extern void  usage (void);
 extern long long  cvtnum (int blocksize, char *s);
 
