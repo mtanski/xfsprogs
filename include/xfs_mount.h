@@ -216,8 +216,7 @@ typedef struct xfs_mount {
 	uint			m_dmevmask;	/* DMI events for this FS */
 	uint			m_flags;	/* global mount flags */
 	uint			m_attroffset;	/* inode attribute offset */
-	uint			m_dir_node_ents; /* #entries in a dir danode */
-	uint			m_attr_node_ents; /* #entries in attr danode */
+	int			m_da_node_ents; /* how many entries in danode */
 	int			m_ialloc_inos;	/* inodes in inode allocation */
 	int			m_ialloc_blks;	/* blocks in inode allocation */
 	int			m_litino;	/* size of inode union area */

@@ -331,16 +331,12 @@ xfs_da_root_split(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
 	INT_SET(node->btree[1].hashval, ARCH_CONVERT, blk2->hashval);
 	INT_SET(node->btree[1].before, ARCH_CONVERT, blk2->blkno);
 	INT_SET(node->hdr.count, ARCH_CONVERT, 2);
-
-#ifdef DEBUG
-	if (INT_GET(oldroot->hdr.info.magic, ARCH_CONVERT) == XFS_DIR2_LEAFN_MAGIC) {
+	if (XFS_DIR_IS_V2(mp)) {
 		ASSERT(blk1->blkno >= mp->m_dirleafblk &&
 		       blk1->blkno < mp->m_dirfreeblk);
 		ASSERT(blk2->blkno >= mp->m_dirleafblk &&
 		       blk2->blkno < mp->m_dirfreeblk);
 	}
-#endif
-
 	/* Header is already logged by xfs_da_node_create */
 	xfs_da_log_buf(tp, bp,
 		XFS_DA_LOGRANGE(node, node->btree,
@@ -375,7 +371,7 @@ xfs_da_node_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
 	/*
 	 * Do we have to split the node?
 	 */
-	if ((INT_GET(node->hdr.count, ARCH_CONVERT) + newcount) > state->node_ents) {
+	if ((INT_GET(node->hdr.count, ARCH_CONVERT) + newcount) > XFS_DA_NODE_ENTRIES(state->mp)) {
 		/*
 		 * Allocate a new node, add to the doubly linked chain of
 		 * nodes, then move some of our excess entries into it.
@@ -779,7 +775,7 @@ xfs_da_node_toosmall(xfs_da_state_t *state, int *action)
 	ASSERT(INT_GET(info->magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC);
 	node = (xfs_da_intnode_t *)info;
 	count = INT_GET(node->hdr.count, ARCH_CONVERT);
-	if (count > (state->node_ents >> 1)) {
+	if (count > (XFS_DA_NODE_ENTRIES(state->mp) >> 1)) {
 		*action = 0;	/* blk over 50%, dont try to join */
 		return(0);	/* blk over 50%, dont try to join */
 	}
@@ -833,8 +829,8 @@ xfs_da_node_toosmall(xfs_da_state_t *state, int *action)
 		ASSERT(bp != NULL);
 
 		node = (xfs_da_intnode_t *)info;
-		count  = state->node_ents;
-		count -= state->node_ents >> 2;
+		count  = XFS_DA_NODE_ENTRIES(state->mp);
+		count -= XFS_DA_NODE_ENTRIES(state->mp) >> 2;
 		count -= INT_GET(node->hdr.count, ARCH_CONVERT);
 		node = bp->data;
 		ASSERT(INT_GET(node->hdr.info.magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC);
