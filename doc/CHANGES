@@ -1,0 +1,55 @@
+
+xfsprogs-1.1.0 (15 January 2001)
+	- rework xfs-cmds package into base, devel and dump packages
+	- completed Debian packaging
+	- late beta code
+
+xfs-cmds-1.0.7 (02 January 2001)
+	- added mkfs support for extracting LVM stripe unit/width
+	- libattr (*experimental* extended attributes interface) added
+	- removed xfs_fstab.5 man page (merged into mount.8)
+	- install xfs_repair into /sbin, not /usr/sbin
+
+xfs-cmds-1.0.6 (04 October 2000)
+	- reworked external log format to be IRIX compatible
+	- mkfs, repair, db, logprint now work with new format
+	- xfs_admin added for setting filesystem label
+
+xfs-cmds-1.0.5 (18 September 2000)
+	- minor bug fixes
+	- first beta release
+
+xfs-cmds-1.0.4 (18 August 2000)
+	- minor bug fixes
+	- xfs_growfs added
+	- xfs_info added
+	- late alpha code
+
+xfs-cmds-1.0.3 (16 August 2000)
+	- numerous bug fixes
+	- xfsdump and xfsrestore added
+	- xfsstats added
+	- fsck.xfs (symlink to /bin/true) added
+	- demise of sim library complete, mkfs and repair reworked
+	- no longer need to have an XFS kernel handy for building xfs-cmds
+	- xfs_copy compiles on Linux
+	- dump/restore README added
+	- late alpha code
+
+xfs-cmds-1.0.2 (27 July 2000)
+	- numerous bug fixes
+	- xfs_attr (extended attributes) command added
+	- fsr_xfs added (ported by jones@tacc.utexas.edu)
+	- LVM+XFS README added
+	- early alpha code
+
+xfs-cmds-1.0.1 (5 July 2000)
+	- numerous bug fixes
+	- reworked build environment
+	- begun work on user/kernel separation
+	- early alpha code
+
+xfs-cmds-1.0.0 (16 June 2000)
+	- initial release for USENIX CDs
+	- early alpha code
+

@@ -35,6 +35,39 @@
 
 struct blkmap;
 
+#define SGI_ACL_FILE	"SGI_ACL_FILE"
+#define SGI_ACL_DEFAULT	"SGI_ACL_DEFAULT"
+#define SGI_ACL_FILE_SIZE	12
+#define SGI_ACL_DEFAULT_SIZE	15
+
+#define ACL_MAX_ENTRIES	25
+#define ACL_USER_OBJ	0x01	/* owner */
+#define ACL_USER	0x02	/* additional users */
+#define ACL_GROUP_OBJ	0x04	/* group */
+#define ACL_GROUP	0x08	/* additional groups */
+#define ACL_MASK	0x10	/* mask entry */
+#define ACL_OTHER_OBJ	0x20	/* other entry */
+
+typedef ushort	acl_perm_t;
+typedef int	acl_type_t;
+typedef int	acl_tag_t;
+
+/*
+ * On-disk representation of an ACL.
+ */
+struct acl_entry {
+        acl_tag_t       ae_tag;
+        uid_t           ae_id;
+        acl_perm_t      ae_perm;
+};
+
+typedef struct acl_entry * acl_entry_t;
+
+struct acl {
+	int			acl_cnt;	/* Number of entries */
+	struct acl_entry	acl_entry[ACL_MAX_ENTRIES];
+};
+
 int
 process_attributes(
 	xfs_mount_t	*mp,
@@ -42,6 +75,5 @@ process_attributes(
 	xfs_dinode_t	*dip,
 	struct blkmap	*blkmap,
 	int		*repair);
-
 
 #endif /* _XR_ATTRREPAIR_H */

@@ -33,10 +33,10 @@
 TOPDIR = ../..
 include $(TOPDIR)/include/builddefs
 
-BINTAR=$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
+BINTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 LDIRT = $(BINTAR)
 
-default install :
+default install install-dev :
 
 include $(BUILDRULES)
 

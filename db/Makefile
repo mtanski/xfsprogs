@@ -34,7 +34,6 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 CMDTARGET = xfs_db
-CMDDEPS = $(LIBXFS)
 
 HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
 	bmapbt.h bmroot.h bnobt.h check.h cntbt.h command.h convert.h data.h \
@@ -45,14 +44,16 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
 CFILES = $(HFILES:.h=.c) main.c
 LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh
 LLDLIBS	= $(LIBXFS) $(LIBUUID)
+LLDFLAGS = -L$(TOPDIR)/libxfs
 
 default: $(CMDTARGET)
 
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 xfs_admin.sh $(XFS_CMDS_BIN_DIR)/xfs_admin
-	$(INSTALL) -m 755 xfs_check.sh $(XFS_CMDS_BIN_DIR)/xfs_check
-	$(INSTALL) -m 755 xfs_ncheck.sh $(XFS_CMDS_BIN_DIR)/xfs_ncheck
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 xfs_admin.sh $(PKG_BIN_DIR)/xfs_admin
+	$(INSTALL) -m 755 xfs_check.sh $(PKG_BIN_DIR)/xfs_check
+	$(INSTALL) -m 755 xfs_ncheck.sh $(PKG_BIN_DIR)/xfs_ncheck
+install-dev:

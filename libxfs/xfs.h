@@ -60,7 +60,6 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include <attributes.h>
 
 /*
  * Map XFS kernel routine names to libxfs.h names
@@ -231,6 +230,7 @@ typedef __uint32_t inst_t;	/* an instruction */
 typedef enum { B_FALSE, B_TRUE } boolean_t;
 typedef struct { dev_t dev; } buftarg_t;
 #define STATIC
+#define ATTR_ROOT	1	/* use attrs in root namespace */
 #define ENOATTR		1009	/* Attribute not found */
 #define EFSCORRUPTED	1010	/* Filesystem is corrupted */
 #define ktrace_t	void

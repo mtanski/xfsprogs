@@ -30,47 +30,47 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ..
+TOPDIR = .
+HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
+
+ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
+endif
 
-MANIFEST=src-manifest
-SRCTAR=$(PKG_NAME)-$(PKG_VERSION).src.tar.gz
+CONFIGURE = configure include/builddefs include/platform_defs.h
+LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
+LDIRT = config.* conftest* Logs/* built install.* install-dev.* *.gz
 
-LDIRT = $(MANIFEST) $(SRCTAR) bin-manifest $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)
+SUBDIRS = include libxfs libhandle \
+	bmap db fsck growfs logprint mkfile mkfs repair \
+	man doc debian build
 
-# for clean and clobber
-SUBDIRS = tar rpm
+default: $(CONFIGURE)
+ifeq ($(HAVE_BUILDDEFS), no)
+	$(MAKE) -C . $@
+else
+	$(SUBDIRS_MAKERULE)
+endif
 
-# nothing to build here (it's all packaging)
-default install install-dev :
-
+ifeq ($(HAVE_BUILDDEFS), yes)
 include $(BUILDRULES)
+else
+clean:	# if configure hasn't run, nothing to clean
+endif
 
-# Symlink in the TOPDIR is used to pack files relative to
-# product-version directory.
-$(MANIFEST) : $(_FORCE)
-	@if [ ! -L $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION) ] ; then \
-	    $(LN_S) . $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION) ; \
-	fi
-	@CDIR=`pwd`; cd $(TOPDIR); \
-	$(MAKE) --no-print-directory source | \
-	    sed -e 's/^\./$(PKG_NAME)-$(PKG_VERSION)/' > $$CDIR/$@ ;\
-	if [ $$? -ne 0 ] ; then  \
-	    exit 1; \
-	else \
-	    unset TAPE; \
-	    $(TAR) -T $$CDIR/$@ -cf - | $(ZIP) --best > $$CDIR/$(SRCTAR); \
-	fi
+$(CONFIGURE): configure.in include/builddefs.in VERSION
+	rm -f config.cache
+	autoconf
+	./configure
 
-dist : default $(MANIFEST)
-	@DIST_MANIFEST=`pwd`/bin-manifest; DIST_ROOT=/tmp/$$$$; \
-	export DIST_MANIFEST DIST_ROOT; \
-	rm -f $$DIST_MANIFEST; \
-	echo === install === && $(MAKE) -C $(TOPDIR) install || exit $$?; \
-	if [ -x $(TAR) ]; then \
-	    ( echo "=== tar ===" && $(MAKEF) -C tar $@ || exit $$? ); \
-	fi; \
-	if [ -x $(RPM) ]; then \
-	    ( echo "=== rpm ===" && $(MAKEF) -C rpm $@ || exit $$? ); \
-	fi; \
-	test -z "$$KEEP_DIST_ROOT" || rm -rf $$DIST_ROOT; echo Done
+install: default
+	$(SUBDIRS_MAKERULE)
+	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
+
+install-dev: default
+	$(SUBDIRS_MAKERULE)
+
+realclean distclean: clean
+	rm -f $(LDIRT) $(CONFIGURE)
+	[ ! -d Logs ] || rmdir Logs

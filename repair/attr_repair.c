@@ -32,10 +32,10 @@
 
 #include <libxfs.h>
 #include <errno.h>
-#include <acl.h>
 
 #include "globals.h"
 #include "err_protos.h"
+#include "attr_repair.h"
 #include "dir.h"
 #include "dinode.h"
 #include "bmap.h"

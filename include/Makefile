@@ -33,8 +33,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = libxfs.h acl.h arch.h attributes.h handle.h jdm.h \
-	platform_defs.h.in builddefs.in buildrules \
+HFILES = arch.h handle.h jdm.h libxfs.h xqm.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
 	xfs_buf_item.h xfs_cred.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \
@@ -44,9 +43,13 @@ LSRCFILES = libxfs.h acl.h arch.h attributes.h handle.h jdm.h \
 	xfs_ialloc_btree.h xfs_imap.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
+LSRCFILES = platform_defs.h.in builddefs.in buildrules lvm.h lvm_user.h liblvm.h
 
-default :
+default install :
 
 include $(BUILDRULES)
 
-install : default
+install-dev: default
+	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
+	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
+	$(INSTALL) -m 644 platform_defs.h $(PKG_INC_DIR)

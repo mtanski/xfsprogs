@@ -34,14 +34,12 @@ TOPDIR = ../..
 TREEROOT = $(shell cd ${TOPDIR}; pwd)
 include $(TOPDIR)/include/builddefs
 
-SPECF = xfs-cmds.spec
-
-LDIRT = $(PACKAGE_NAME)-$(PACKAGE_VERSION)-[0-9]*.*.rpm $(SPECF) \
-	rpmmacros rpm-$(RPM_VERSION).rc
+SPECF = $(PKG_NAME).spec
+LDIRT = $(PKG_NAME)*.rpm $(SPECF) rpmmacros rpm-*.rc $(TOPDIR)/files*.rpm
 
 LSRCFILES = macros.template $(SPECF).in rpm-2.rc.template
 
-default install :
+default install install-dev :
 
 include $(BUILDRULES)
 
@@ -64,15 +62,15 @@ endif
 
 .PHONY: $(SPECF)
 ${SPECF} : ${SPECF}.in
-	sed -e's|@package_name@|$(PACKAGE_NAME)|g' \
-	    -e's|@package_version@|$(PACKAGE_VERSION)|g' \
-	    -e's|@package_release@|$(PACKAGE_RELEASE)|g' \
-	    -e's|@package_distribution@|$(PACKAGE_DISTRIBUTION)|g' \
-	    -e's|@package_builder@|$(PACKAGE_BUILDER)|g' \
+	sed -e's|@pkg_name@|$(PKG_NAME)|g' \
+	    -e's|@pkg_version@|$(PKG_VERSION)|g' \
+	    -e's|@pkg_release@|$(PKG_RELEASE)|g' \
+	    -e's|@pkg_distribution@|$(PKG_DISTRIBUTION)|g' \
+	    -e's|@pkg_builder@|$(PKG_BUILDER)|g' \
 	    -e's|@build_root@|$(DIST_ROOT)|g' \
 	    -e'/^BuildRoot: *$$/d' \
-	    -e's|@xfs_cmds_var_dir@|$(XFS_CMDS_VAR_DIR)|g' \
-	    -e's|@xfs_cmds_share_dir@|$(XFS_CMDS_SHARE_DIR)|g' \
-	    -e's|@xfs_cmds_log_dir@|$(XFS_CMDS_LOG_DIR)|g' \
-	    -e's|@xfs_cmds_tmp_dir@|$(XFS_CMDS_TMP_DIR)|g' \
+	    -e's|@pkg_var_dir@|$(PKG_VAR_DIR)|g' \
+	    -e's|@pkg_share_dir@|$(PKG_SHARE_DIR)|g' \
+	    -e's|@pkg_log_dir@|$(PKG_LOG_DIR)|g' \
+	    -e's|@pkg_tmp_dir@|$(PKG_TMP_DIR)|g' \
 	    -e's|@make@|$(MAKE)|g' < $< > $@

@@ -33,13 +33,23 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-DOCFILES = README.LVM README.xfsdump Porting-Guide
-LSRCFILES = $(DOCFILES)
+# [don't install COPYING for Debian builds - use Debian preferred method]
+HAVE_DEBIAN = $(shell test -f /etc/debian_version && echo yes || echo no)
 
-default: $(CMDTARGET)
+LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS README.LVM
+LDIRT = *.gz
+
+default: $(CMDTARGET) CHANGES.gz
 
 include $(BUILDRULES)
 
+CHANGES.gz:
+	$(ZIP) --best -c < CHANGES > $@
+
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_DOC_DIR)
-	$(INSTALL) -m 644 $(DOCFILES) $(XFS_CMDS_DOC_DIR)
+	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+ifeq ($(HAVE_DEBIAN), no)
+	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
+endif
+	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS README.LVM $(PKG_DOC_DIR)
+install-dev:

@@ -42,5 +42,6 @@ default: $(CMDTARGET)
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_SBIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_SBIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_SBIN_DIR)
+install-dev:

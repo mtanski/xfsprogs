@@ -30,14 +30,15 @@ include $(TOPDIR)/include/builddefs
 # Standard targets
 #
 ifdef CMDTARGET
-$(CMDTARGET) : $(SUBDIRS) $(OBJECTS) $(CMDDEPS)
+$(CMDTARGET) : $(SUBDIRS) $(OBJECTS)
 	$(CCF) -o $(CMDTARGET) $(LDFLAGS) $(OBJECTS) $(LDLIBS) 
+$(CMDTARGET).static : $(SUBDIRS) $(OBJECTS)
+	$(CCF) -static -o $(CMDTARGET).static $(LDFLAGS) $(OBJECTS) $(LDLIBS) 
 endif
 
 ifdef LIBTARGET
 $(LIBTARGET) : $(SUBDIRS) $(OBJECTS)
-	$(CC) $(LDFLAGS) -shared -Wl,-soname,$(LIBTARGET) -o $(LIBTARGET) \
-		$(OBJECTS) $(LDLIBS) $(LIB_FOR_DLOPEN) $(LIB_FOR_BASENAME)
+	$(CC) $(LDFLAGS) -fPIC -shared -Wl,-soname,$(LIBTARGET) -o $(LIBTARGET) $(OBJECTS) $(LDLIBS)
 endif
 
 ifdef STATICLIBTARGET

@@ -39,29 +39,28 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
-LIBXFS = $(TOPDIR)/libxfs/libxfs.a
-LIBATTR = $(TOPDIR)/libattr/libattr.a
-LIBHANDLE = $(TOPDIR)/handle/libhandle.a
 LIBUUID = /usr/lib/libuuid.a
+LIBXFS = -lxfs
+LIBHANDLE = -lhandle
+
 LIBLVM = @liblvm@
+USELVM = -DHAVE_LIBLVM=@have_liblvm@
 
 BUILDRULES = $(TOPDIR)/include/buildrules
 
 # General package information
-TARGET_OS = @host_platform@
-PACKAGE_NAME = @package_name@
-PACKAGE_RELEASE = @package_release@
-PACKAGE_VERSION = @package_version@
-PACKAGE_DISTRIBUTION = @package_distribution@
-PACKAGE_BUILDER	= @package_builder@
-XFS_CMDS_SBIN_DIR = @xfs_cmds_sbin_dir@
-XFS_CMDS_BIN_DIR = @xfs_cmds_bin_dir@
-XFS_CMDS_LIB_DIR = @xfs_cmds_lib_dir@
-XFS_CMDS_SHARE_DIR = @xfs_cmds_share_dir@
-XFS_CMDS_INC_DIR = @xfs_cmds_inc_dir@
-XFS_CMDS_MAN_DIR = @xfs_cmds_man_dir@
-XFS_CMDS_TMP_DIR = @xfs_cmds_tmp_dir@
-XFS_CMDS_DOC_DIR = @xfs_cmds_doc_dir@
+PKG_NAME = @pkg_name@
+PKG_RELEASE = @pkg_release@
+PKG_VERSION = @pkg_version@
+PKG_DISTRIBUTION = @pkg_distribution@
+PKG_BUILDER = @pkg_builder@
+PKG_BIN_DIR = @pkg_bin_dir@
+PKG_LIB_DIR = @pkg_lib_dir@
+PKG_SBIN_DIR = @pkg_sbin_dir@
+PKG_SLIB_DIR = @pkg_slib_dir@
+PKG_INC_DIR = @pkg_inc_dir@
+PKG_MAN_DIR = @pkg_man_dir@
+PKG_DOC_DIR = @pkg_doc_dir@
 
 # LCFLAGS, LLDFLAGS, LLDLIBS, LSRCFILES and LDIRT may be specified in
 # user Makefiles. Note: LSRCFILES is anything other than Makefile, $(CFILES)
@@ -69,9 +68,9 @@ XFS_CMDS_DOC_DIR = @xfs_cmds_doc_dir@
 # during the "dist" phase (packaging).
 
 CFLAGS += $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -Wno-parentheses \
-	$(LCFLAGS) -I$(TOPDIR)/include '-DVERSION="$(PACKAGE_VERSION)"' \
+	$(LCFLAGS) -I$(TOPDIR)/include '-DVERSION="$(PKG_VERSION)"' \
 	-D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE \
-	-DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1 -DHAVE_LIBLVM=@have_liblvm@
+	-DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
 
 LDFLAGS = $(LLDFLAGS)
 LDLIBS = $(LLDLIBS) $(MALLOCLIB)

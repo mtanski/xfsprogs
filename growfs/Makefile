@@ -34,10 +34,10 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 CMDTARGET = xfs_growfs
-CMDDEPS = $(LIBXFS)
 
 CFILES = xfs_growfs.c
 LLDLIBS = $(LIBXFS) $(LIBUUID)
+LLDFLAGS = -L$(TOPDIR)/libxfs
 LSRCFILES = xfs_info.sh
 
 default: $(CMDTARGET)
@@ -45,6 +45,7 @@ default: $(CMDTARGET)
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 xfs_info.sh $(XFS_CMDS_BIN_DIR)/xfs_info
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 xfs_info.sh $(PKG_BIN_DIR)/xfs_info
+install-dev:

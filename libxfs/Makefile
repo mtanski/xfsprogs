@@ -33,7 +33,9 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-STATICLIBTARGET = libxfs.a
+LIB = libxfs
+STATICLIBTARGET = $(LIB).a
+
 HFILES = xfs.h
 CFILES = arch.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_bit.c xfs_rtbit.c xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
@@ -42,9 +44,6 @@ CFILES = arch.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
 	xfs_mount.c xfs_trans.c
-
-# xfs_repair is braindead, don't try linking it with a debug libxfs yet.
-DEBUG = -DNDEBUG
 
 # 
 # Tracing flags:
@@ -55,8 +54,29 @@ DEBUG = -DNDEBUG
 # 
 LCFLAGS += -Wno-unknown-pragmas -Wno-unused -Wno-uninitialized -I.
 
-default: $(STATICLIBTARGET)
+# don't try linking xfs_repair with a debug libxfs.
+DEBUG = -DNDEBUG
+
+default:  $(STATICLIBTARGET)
 
 include $(BUILDRULES)
 
 install: default
+
+install-dev: default
+	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)
+	$(INSTALL) -m 644 $(STATICLIBTARGET) $(PKG_LIB_DIR)
+
+#MODE = $(shell test -f /etc/debian_version && echo 644 || echo 755)
+#MAJOR = 1
+#MINOR = 0
+#LIBTARGET = $(LIB).so.$(MAJOR)
+#LDIRT = $(LIB).so
+#default:
+#	[ -L $(LIB).so ] || $(LN_S) $(LIBTARGET) $(LIB).so
+#install: default
+#	$(INSTALL) -m 755 -d $(PKG_SLIB_DIR)
+#	$(INSTALL) -m $(MODE) $(LIBTARGET) $(PKG_SLIB_DIR)/$(LIBTARGET).$(MINOR)
+#	#$(INSTALL) -S $(LIBTARGET).$(MINOR) $(PKG_SLIB_DIR)/$(LIBTARGET)
+#install-dev: default
+#	$(INSTALL) -S $(PKG_SLIB_DIR)/$(LIBTARGET) $(PKG_LIB_DIR)/$(LIB).so
