@@ -45,7 +45,9 @@
  * the limiting factor.
  */
 
+#ifndef XFS_BIG_FILESYSTEMS
 #define XFS_BIG_FILESYSTEMS	0
+#endif
 
 typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
 typedef __uint32_t	xfs_extlen_t;	/* extent length in blocks */
