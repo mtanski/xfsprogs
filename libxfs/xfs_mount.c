@@ -152,6 +152,7 @@ static struct {
     { offsetof(xfs_sb_t, sb_logsectlog), 0 },
     { offsetof(xfs_sb_t, sb_logsectsize),0 },
     { offsetof(xfs_sb_t, sb_logsunit),	 0 },
+    { offsetof(xfs_sb_t, sb_features2),	 0 },
     { sizeof(xfs_sb_t),			 0 }
 };
 

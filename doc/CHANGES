@@ -1,3 +1,14 @@
+xfsprogs-2.6.10 (05 April 2003)
+	- Fix botch in recent addition of new superblock field
+	  (features2) which could result in filesystems with v2
+	  logs being created with invalid superblock fields.
+	  Thanks to Chris Pascoe for this fix.
+	- Fix error when forcing a too-large v2 log stripe size
+	  back to 32K.  Thanks to Chris Pascoe for this fix too.
+	- Fix xfs_copy -d option so that it really does create a
+	  duplicate filesystem (the log is duplicated too now in
+	  that case, whereas previously a fresh log was created).
+
 xfsprogs-2.6.9 (26 March 2003)
 	- Update HFILES in xfsprogs/io/Makefile to package io/io.h
 
