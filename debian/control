@@ -11,7 +11,7 @@ Architecture: any
 Description: Utilities for managing the XFS filesystem
  A set of commands to use the XFS file system, including mkfs.xfs.
  .
- XFS is a high performance journalled filesystem which originated
+ XFS is a high performance journaling filesystem which originated
  on the SGI IRIX platform.  It is completely multi-threaded, can
  support large files and large filesystems, extended attributes,
  variable block sizes, is extent based, and makes extensive use of
