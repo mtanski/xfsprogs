@@ -13,7 +13,8 @@ pkgbfs = DIST_ROOT=`pwd`/$(dirbfs); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
-bfsopts = $(options) OPTIMIZER=-Os; export OPTIMIZER;
+bfsopts = OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS=--enable-shared-uuid=yes; \
+	  $(options) export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
 checkdir = test -f debian/rules
 
 build: built
@@ -26,16 +27,14 @@ config: .census
 .census:
 	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
-	autoconf
-	$(options) ./configure
+	$(options) $(MAKE) configure
 	touch .census
 
 bfbuild: 
 	$(checkdir)
 	@echo "== dpkg-buildpackage: bootfloppies" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
-		autoconf; \
-		$(bfsopts) ./configure --enable-shared-uuid=yes; \
+		$(bfsopts) $(MAKE) configure; \
 		for dir in libxfs libdisk mkfs; do $(MAKE) -C $$dir; done; \
 		mv mkfs/mkfs.xfs mkfs/mkfs.xfs-$(bootpkg); \
 		$(MAKE) distclean; \

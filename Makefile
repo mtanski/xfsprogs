@@ -40,7 +40,7 @@ endif
 CONFIGURE = configure include/builddefs include/platform_defs.h
 LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
 
-LDIRT = config.log config.status config.cache confdefs.h conftest* \
+LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
@@ -62,7 +62,17 @@ endif
 
 $(CONFIGURE):
 	autoconf
-	./configure
+	./configure \
+		--prefix=/ \
+		--exec-prefix=/ \
+		--sbindir=/sbin \
+		--bindir=/usr/sbin \
+		--libdir=/lib \
+		--libexecdir=/usr/lib \
+		--includedir=/usr/include \
+		--mandir=/usr/share/man \
+		--datadir=/usr/share \
+		$$LOCAL_CONFIGURE_OPTIONS
 	touch .census
 
 install: default

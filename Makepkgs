@@ -30,6 +30,7 @@ done
 # start with a clean manifest
 test -f files.rpm && rm -f files.rpm
 test -f filesdevel.rpm && rm -f filesdevel.rpm
+test -f fileslib.rpm && rm -f fileslib.rpm
 
 test ! -d $LOGDIR && mkdir $LOGDIR
 rm -rf $LOGDIR/* > /dev/null 2>&1
@@ -66,11 +67,9 @@ echo
 echo "== configure, log is $LOGDIR/configure"
 rm -f .census	# force configure to run here
 if $verbose ; then
-	autoconf 2>&1 | tee $LOGDIR/configure
-	./configure 2>&1 | tee -a $LOGDIR/configure
+	$MAKE configure 2>&1 | tee $LOGDIR/configure
 else
-	autoconf > $LOGDIR/configure 2>&1 
-	./configure >> $LOGDIR/configure 2>&1 
+	$MAKE configure > $LOGDIR/configure 2>&1 
 fi
 if [ $? -ne 0 ] ; then
 	echo \"configure\" failed, see log in $LOGDIR/configure

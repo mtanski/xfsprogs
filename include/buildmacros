@@ -72,17 +72,17 @@ LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT -fno-strict-aliasing
 
 ifeq ($(ENABLE_SHARED),yes)
-LTLDFLAGS += -rpath $(PKG_SLIB_DIR) 
+LTLDFLAGS += -rpath $(PKG_LIB_DIR) 
 LTLDFLAGS += -version-info $(LTVERSION)
 endif
 
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
-	../$(INSTALL) -m 644 -T so_dot_version $(LIBNAME).lai $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 -T so_dot_version $(LIBNAME).lai $(PKG_LIB_DIR); \
 	test "$(PKG_DISTRIBUTION)" = debian || \
-	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_SLIB_DIR)
+	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_LIB_DIR)
 endif
 
 # Libtool thinks the static and shared libs should be in the same dir, so
@@ -94,22 +94,22 @@ endif
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
+	../$(INSTALL) -m 755 -d $(PKG_DEVLIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_DEVLIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_DEVLIB_DIR)/$(LIBNAME).la ; \
 	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
-	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
-	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_SLIB_DIR); \
-	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_SLIB_DIR)/$(LIBNAME).a; \
-	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).la $(PKG_SLIB_DIR)/$(LIBNAME).la; \
-	../$(INSTALL) -S $(PKG_SLIB_DIR)/$(LIBNAME).so $(PKG_LIB_DIR)/$(LIBNAME).so
+	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_LIB_DIR); \
+	../$(INSTALL) -S $(PKG_DEVLIB_DIR)/$(LIBNAME).a $(PKG_LIB_DIR)/$(LIBNAME).a; \
+	../$(INSTALL) -S $(PKG_DEVLIB_DIR)/$(LIBNAME).la $(PKG_LIB_DIR)/$(LIBNAME).la; \
+	../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).so $(PKG_DEVLIB_DIR)/$(LIBNAME).so
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
 endif
 
 INSTALL_LTLIB_STATIC = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR)
+	../$(INSTALL) -m 755 -d $(PKG_DEVLIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_DEVLIB_DIR)
 
 INSTALL_MAN = \
 	@for d in $(MAN_PAGES); do \

@@ -1,4 +1,10 @@
-xfsprogs-2.1.0 (14 Jun 2002)
+xfsprogs-2.1.1 (04 July 2002)
+	- Build infrastructure updates so that configure options can be
+	  used to specify paths rather than semi-hard-coded path names
+	  controlled by the ROOT/ROOT_PREFIX environment variables; eg.
+	  now allows /lib64 and /lib32
+
+xfsprogs-2.1.0 (14 June 2002)
 	- support for xfs version 2 log format.
 	- Fix for xfs_repair mangling i8count for dir2_sf directories
 	- Minor mkfs.xfs man page update for blocksize limits on Linux

@@ -8,7 +8,7 @@ AC_SUBST(pkg_name)
 # defaults (to change paths and/or executables, build parameters, etc):
 #
 #   DEBUG  OPTIMIZER  MAKE  CC  LD  TAR  ZIP  RPM  AWK  SED  ECHO
-#   MALLOCLIB  DISTRIBUTION  PACKAGE_BUILDER  PREFIX  ROOT_PREFIX
+#   MALLOCLIB  DISTRIBUTION  PACKAGE_BUILDER
 #
 
 DEBUG=${DEBUG:-'-DDEBUG'}		# -DNDEBUG
@@ -77,6 +77,11 @@ test -z "$RPM" && AC_PATH_PROG(RPM, rpm, /bin/rpm)
 rpm=$RPM
 AC_SUBST(rpm)
 
+dnl check if the msgfmt program is available
+test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+msgfmt=$MSGFMT
+AC_SUBST(msgfmt)
+
 dnl .. and what version is rpm
 rpm_version=0
 test -x $RPM && \
@@ -115,8 +120,7 @@ AC_SUBST(libtool)
 
 dnl libtool to build libraries static only?
 AC_ARG_ENABLE(shared,
-	[ --enable-shared=[yes/no]	Enable use of shared libraries [default=yes].],
-	,
+	[ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
 	enable_shared=yes)
 AC_SUBST(enable_shared)
 
@@ -183,61 +187,18 @@ test $ac_cv_sizeof_long -eq 8 && AC_DEFINE(HAVE_64BIT_LONG)
 test $ac_cv_sizeof_char_p -eq 4 && AC_DEFINE(HAVE_32BIT_PTR)
 test $ac_cv_sizeof_char_p -eq 8 && AC_DEFINE(HAVE_64BIT_PTR)
 
-
-dnl alternate root and usr prefixes
-test -z "$ROOT_PREFIX" && ROOT_PREFIX=""
-root_prefix="$ROOT_PREFIX"
-test -z "$PREFIX" && PREFIX="/usr"
-prefix="$PREFIX"
-
 dnl man pages (source)
 dnl also check if man page source is gzipped
 dnl (usually on Debian, but not Redhat pre-7.0)
-pkg_man_dir=${prefix}/share/man
 have_zipped_manpages=false
 for d in ${prefix}/share/man ${prefix}/man ; do
     if test -f $d/man1/man.1.gz
     then
-	pkg_man_dir=$d
 	have_zipped_manpages=true
 	break
     fi
 done
-AC_SUBST(pkg_man_dir)
 AC_SUBST(have_zipped_manpages)
 
-dnl binaries
-pkg_bin_dir=${prefix}/sbin
-AC_SUBST(pkg_bin_dir)
-
-dnl static libraries
-pkg_lib_dir=${prefix}/lib
-AC_SUBST(pkg_lib_dir)
-
-dnl runtime shared system libraries
-pkg_slib_dir=${root_prefix}/lib
-AC_SUBST(pkg_slib_dir)
-
-dnl system binaries
-pkg_sbin_dir=${root_prefix}/sbin
-AC_SUBST(pkg_sbin_dir)
-
-dnl include files
-pkg_inc_dir=${prefix}/include/xfs
-AC_SUBST(pkg_inc_dir)
-dk_inc_dir=${prefix}/include/disk
-AC_SUBST(dk_inc_dir)
-
-dnl doc directory
-pkg_doc_dir=${prefix}/share/doc/${pkg_name}
-AC_SUBST(pkg_doc_dir)
-
-
-dnl
-dnl output files
-dnl
-
-AC_OUTPUT( \
-dnl  Build definitions for use in Makefiles
-    include/builddefs \
-)
+dnl build definitions for use in Makefiles
+AC_OUTPUT(include/builddefs)
