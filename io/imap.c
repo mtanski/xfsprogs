@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2001-2003,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -30,58 +30,43 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-/*
- * Inode map display utility for XFS.
- */
-
 #include <xfs/libxfs.h>
+#include "command.h"
+#include "input.h"
+#include "init.h"
+#include "io.h"
 
-int main(int argc, char **argv)
+#if defined(__sgi__)
+# define ino64p		ino64_t *
+#else
+# define ino64p		__u64 *
+#endif
+
+static cmdinfo_t imap_cmd;
+
+int
+imap_f(int argc, char **argv)
 {
 	int		count;
 	int		nent;
-	int		fd;
 	int		i;
-	char		*name;
-	char		*progname;
 	__s64		last = 0;
 	xfs_inogrp_t	*t;
 	xfs_fsop_bulkreq_t bulkreq;
 
-	progname = basename(argv[0]);
-	setlocale(LC_ALL, "");
-	bindtextdomain(PACKAGE, LOCALEDIR);
-	textdomain(PACKAGE);
-
-	if (argc < 2)
-		name = ".";
-	else
-		name = argv[1];
-	fd = open(name, O_RDONLY);
-	if (fd < 0) {
-		perror(name);
-		return 1;
-	}
-	if (!platform_test_xfs_fd(fd)) {
-		fprintf(stderr, _("%s: specified file "
-			"[\"%s\"] is not on an XFS filesystem\n"),
-			progname, name);
-		exit(1);
-	}
-
-	if (argc < 3)
+	if (argc != 2)
 		nent = 1;
 	else
-		nent = atoi(argv[2]);
+		nent = atoi(argv[1]);
 
 	t = malloc(nent * sizeof(*t));
 
-	bulkreq.lastip  = &last;
+	bulkreq.lastip  = (ino64p)&last;
 	bulkreq.icount  = nent;
-	bulkreq.ubuffer = t;
+	bulkreq.ubuffer = (void *)t;
 	bulkreq.ocount  = &count;
 
-	while (xfsctl(name, fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
 		if (count == 0)
 			return 0;
 		for (i = 0; i < count; i++) {
@@ -92,5 +77,21 @@ int main(int argc, char **argv)
 		}
 	}
 	perror("xfsctl(XFS_IOC_FSINUMBERS)");
-	return 1;
+	exitcode = 1;
+	return 0;
+}
+
+void
+imap_init(void)
+{
+	imap_cmd.name = _("imap");
+	imap_cmd.cfunc = imap_f;
+	imap_cmd.argmin = 0;
+	imap_cmd.argmax = 0;
+	imap_cmd.args = _("[nentries]");
+	imap_cmd.flags = CMD_NOMAP_OK;
+	imap_cmd.oneline = _("inode map for filesystem of current file");
+
+	if (expert)
+		add_command(&imap_cmd);
 }

@@ -94,6 +94,7 @@ extern void		freeze_init(void);
 extern void		fsync_init(void);
 extern void		getrusage_init(void);
 extern void		help_init(void);
+extern void		imap_init(void);
 extern void		inject_init(void);
 extern void		mmap_init(void);
 extern void		open_init(void);

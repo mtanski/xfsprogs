@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -118,8 +118,9 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
 		return syssgi(SGI_XFS_FSOPERATIONS, fd, cmd, 0, arg);
 	}
 	switch (cmd) {
+		case SGI_FS_INUMBERS:
 		case SGI_FS_BULKSTAT:
-			return syssgi(SGI_FS_BULKSTAT, fd, 
+			return syssgi(cmd, fd, 
 					((xfs_fsop_bulkreq_t*)arg)->lastip,
 					((xfs_fsop_bulkreq_t*)arg)->icount,
 					((xfs_fsop_bulkreq_t*)arg)->ubuffer,
@@ -206,7 +207,7 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_FSGEOMETRY_V1		XFS_FS_GEOMETRY
 #define XFS_IOC_FSBULKSTAT		SGI_FS_BULKSTAT     
 #define XFS_IOC_FSBULKSTAT_SINGLE	SGI_FS_BULKSTAT_SINGLE
-#define XFS_IOC_FSINUMBERS		/* TODO */
+#define XFS_IOC_FSINUMBERS		SGI_FS_INUMBERS
 #define XFS_IOC_PATH_TO_FSHANDLE	/* TODO */
 #define XFS_IOC_PATH_TO_HANDLE		/* TODO */
 #define XFS_IOC_FD_TO_HANDLE		/* TODO */

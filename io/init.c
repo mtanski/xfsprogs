@@ -64,6 +64,7 @@ init_commands(void)
 	fsync_init();
 	getrusage_init();
 	help_init();
+	imap_init();
 	inject_init();
 	mmap_init();
 	open_init();
