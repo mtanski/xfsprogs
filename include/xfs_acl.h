@@ -97,9 +97,8 @@ extern struct xfs_zone *xfs_acl_zone;
 #define _ACL_ACCESS_EXISTS	xfs_acl_vhasacl_access
 #define _ACL_DEFAULT_EXISTS	xfs_acl_vhasacl_default
 #define _ACL_XFS_IACCESS(i,m,c)	(XFS_IFORK_Q(i) ? xfs_acl_iaccess(i,m,c) : -1)
-
-#define set_acl_flag(inode)	((inode)->i_flags |= S_POSIXACL)
-#define clear_acl_flag(inode)	((inode)->i_flags &= ~S_POSIXACL)
+#define _ACL_SET_IFLAG(inode)	((inode)->i_flags |= S_POSIXACL)
+#define _ACL_CLEAR_IFLAG(inode)	((inode)->i_flags &= ~S_POSIXACL)
 
 #else
 #define xfs_acl_vset(v,p,sz,t)	(-ENOTSUP)
@@ -116,8 +115,8 @@ extern struct xfs_zone *xfs_acl_zone;
 #define _ACL_ACCESS_EXISTS	(NULL)
 #define _ACL_DEFAULT_EXISTS	(NULL)
 #define _ACL_XFS_IACCESS(i,m,c)	(-1)
-#define set_acl_flag(inode)	do { } while (0)
-#define clear_acl_flag(inode)	do { } while (0)
+#define _ACL_SET_IFLAG(inode)	do { } while (0)
+#define _ACL_CLEAR_IFLAG(inode)	do { } while (0)
 #endif
 
 #endif	/* __KERNEL__ */
