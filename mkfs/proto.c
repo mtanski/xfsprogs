@@ -148,7 +148,7 @@ static char *
 getstr(
 	char	**pp)
 {
-	int	c;
+	char	c;
 	char	*p;
 	char	*rval;
 
@@ -174,7 +174,7 @@ getstr(
 			return rval;
 		}
 	}
-	if (!c) {
+	if (c != '\0') {
 		fprintf(stderr, _("%s: premature EOF in prototype file\n"),
 			progname);
 		exit(1);
@@ -594,6 +594,8 @@ parseproto(
 		tp = NULL;
 		for (;;) {
 			name = getstr(pp);
+			if (!name)
+				break;
 			if (strcmp(name, "$") == 0)
 				break;
 			parseproto(mp, ip, pp, name);
