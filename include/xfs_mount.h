@@ -308,6 +308,10 @@ typedef struct xfs_mount {
 						/* which bits matter in rpc
 						   log item pin masks */
 	uint			m_cxfstype;	/* mounted shared, etc. */
+	lock_t			m_freeze_lock;
+	uint			m_frozen;
+	sv_t			m_wait_unfreeze;
+	atomic_t		m_active_trans;
 } xfs_mount_t;
 
 /*
@@ -482,6 +486,14 @@ void            xfs_freesb(xfs_mount_t *);
 void		_xfs_force_shutdown(struct xfs_mount *, int, char *, int);
 int		xfs_syncsub(xfs_mount_t *, int, int, int *);
 void		xfs_xlatesb(void *, struct xfs_sb *, int, xfs_arch_t, __int64_t);
+
+#define XFS_FREEZE_WRITE	1
+#define XFS_FREEZE_TRANS	2
+
+void		xfs_start_freeze(xfs_mount_t *, int);
+void		xfs_finish_freeze(xfs_mount_t *);
+void		xfs_check_frozen(xfs_mount_t *, int);
+
 extern	struct vfsops xfs_vfsops;
 
 #endif	/* __KERNEL__ */

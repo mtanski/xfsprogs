@@ -453,6 +453,8 @@ typedef struct xfs_handle {
 #define XFS_IOC_ERROR_CLEARALL       _IOW('X', 117, struct xfs_error_injection)
 #endif /* DEBUG || INDUCE_IO_ERROR */
 #define	XFS_IOC_ATTRCTL_BY_HANDLE    _IOWR('X', 118, struct xfs_fsop_attr_handlereq)
+#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
+#define XFS_IOC_THAW		     _IOWR('X', 120, int)
 /*
  * ioctl command to export information not in standard interfaces
  * 	140: IRIX statvfs.f_fstr field - UUID from the superblock
