@@ -148,6 +148,7 @@ typedef struct xfs_log_callback {
 struct xfs_mount;
 xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
 		       xfs_log_ticket_t ticket,
+		       void		**iclog,
 		       uint		flags);
 int	  xfs_log_force(struct xfs_mount *mp,
 			xfs_lsn_t	 lsn,
@@ -160,9 +161,11 @@ int	  xfs_log_mount(struct xfs_mount *mp,
 int	  xfs_log_mount_finish(struct xfs_mount *mp, int);
 void	  xfs_log_move_tail(struct xfs_mount	*mp,
 			    xfs_lsn_t		tail_lsn);
-void	  xfs_log_notify(struct xfs_mount	*mp,
-			 xfs_lsn_t		lsn,
+int	  xfs_log_notify(struct xfs_mount	*mp,
+			 void			*iclog,
 			 xfs_log_callback_t	*callback_entry);
+int	  xfs_log_release_iclog(struct xfs_mount *mp,
+			 void			 *iclog_hndl);
 int	  xfs_log_reserve(struct xfs_mount *mp,
 			  int		   length,
 			  int		   count,

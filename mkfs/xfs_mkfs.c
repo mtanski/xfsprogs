@@ -442,8 +442,8 @@ main(
 	agcount = 8;
 	blflag = bsflag = slflag = ssflag = 0;
 	blocklog = blocksize = 0;
-	sectorlog = BBSHIFT;
-	sectorsize = BBSIZE;
+	sectorlog = XFS_MIN_SECTORSIZE_LOG;
+	sectorsize = XFS_MIN_SECTORSIZE;
 	lsectorlog = 0;
 	lsectorsize = 0;
 	agsize = daflag = dasize = dblocks = 0;
@@ -1056,8 +1056,8 @@ main(
 
 #ifdef EXPERIMENTAL_LARGE_SECTORS
 	if (!lsectorsize) {
-		lsectorlog = BBSHIFT;
-		lsectorsize = BBSIZE;
+		lsectorlog = XFS_MIN_SECTORSIZE_LOG;
+		lsectorsize = XFS_MIN_SECTORSIZE;
 	}
 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
 	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > sectorsize) {
@@ -1065,17 +1065,17 @@ main(
 		usage();
 	}
 #else
-	if (sectorsize != BBSIZE) {
-		fprintf(stderr, _("illegal sector size %d\n"),
-			sectorsize);
+	if (sectorsize != XFS_MIN_SECTORSIZE ||
+	    sectorlog != XFS_MIN_SECTORSIZE_LOG) {
+		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
 		usage();
 	}
-	if (lsectorsize != BBSIZE && lsectorsize) {
+	if (lsectorsize != XFS_MIN_SECTORSIZE && lsectorsize) {
 		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
 		usage();
 	}
-	lsectorlog = BBSHIFT;
-	lsectorsize = BBSIZE;
+	lsectorlog = XFS_MIN_SECTORSIZE_LOG;
+	lsectorsize = XFS_MIN_SECTORSIZE;
 #endif
 
 	if (!nvflag)
@@ -1639,7 +1639,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			 */
 			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
 				tmp_agsize = ((agsize) / dsunit) * dsunit;
-                	if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
+			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
 			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
 			    !daflag) {
 				agsize = tmp_agsize;
@@ -1660,7 +1660,7 @@ _("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
 				}
         		}
 		}
-		if (((agsize % dswidth) == 0) && (agcount > 1)) {
+		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
 			/* This is a non-optimal configuration because all AGs
 			 * start on the same disk in the stripe.  Changing 
 			 * the AG size by one sunit will guarantee that this

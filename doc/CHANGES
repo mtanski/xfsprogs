@@ -1,3 +1,8 @@
+xfsprogs-2.3.10 (17 February 2002)
+	- Fix a divide-by-zero error in mkfs with certain stripe unit
+	  and/or width options specified.
+	- Sync up user/kernel source in libxfs and headers.
+
 xfsprogs-2.3.9 (31 December 2002)
 	- Additional xfs_repair check in v2 directory handling for blks
 	  with no data entries (merged from IRIX), includes several
