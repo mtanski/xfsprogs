@@ -32,7 +32,6 @@ with the IRIX version of XFS.
 Summary: XFS filesystem-specific static libraries and headers.
 Group: Development/Libraries
 Requires: @pkg_name@
-Conflicts: xfs-cmds
 
 %description devel
 xfsprogs-devel contains the libraries and header files needed to
