@@ -128,8 +128,8 @@ findsize(char *path)
 {
 	int	fd;
 	int	error;
-	long	size;
-	struct stat64   st;
+	unsigned long	size;
+	struct stat64	st;
 
 	/* Test to see if we are dealing with a regular file rather than a
 	 * block device, if we are just use the size returned by stat64
