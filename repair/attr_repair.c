@@ -953,14 +953,8 @@ xfs_acl_valid(xfs_acl_t *aclp)
 
 	for (i = 0; i < aclp->acl_cnt; i++) {
 		entry = &aclp->acl_entry[i];
-		switch (entry->ae_perm) {
-			case ACL_READ:
-			case ACL_WRITE:
-			case ACL_EXECUTE:
-				break;
-			default:
-				goto acl_invalid;
-		}
+		if (entry->ae_perm & ~(ACL_READ|ACL_WRITE|ACL_EXECUTE))
+			goto acl_invalid;
 		switch (entry->ae_tag) {
 			case ACL_USER_OBJ:
 				if (user++)
