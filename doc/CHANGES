@@ -1,3 +1,6 @@
+[cvs]
+	- Support realtime bit inheritance on directories.
+
 xfsprogs-2.6.20 (28 July 2004)
 	- Fix a segfault on xfs_io open error path for non-XFS
 	  files.  Thanks to Steinar H. Gunderson for this fix.
