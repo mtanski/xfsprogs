@@ -30,7 +30,6 @@
 #
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
-#ident "$Revision: 1.7 $"
 
 OPTS=" "
 ISFILE=" "
