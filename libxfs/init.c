@@ -39,6 +39,11 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
+/* Until glibc catches up... */
+#ifndef BLKGETSIZE64
+#define BLKGETSIZE64 _IOR(0x12,114,sizeof(__uint64_t))
+#endif
+
 #define findrawpath(x)	x
 #define findblockpath(x) x
 
@@ -128,7 +133,7 @@ findsize(char *path)
 {
 	int	fd;
 	int	error;
-	unsigned long	size;
+	__uint64_t	size;
 	struct stat64	st;
 
 	/* Test to see if we are dealing with a regular file rather than a
@@ -150,7 +155,9 @@ findsize(char *path)
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	error = ioctl(fd, BLKGETSIZE, &size);
+	error = ioctl(fd, BLKGETSIZE64, &size);
+	/* BLKGETSIZE64 returns size in bytes */
+	size = size >> 9;
 	if (error < 0) {
 		fprintf(stderr, "%s: can't determine device size\n", progname);
 		exit(1);
