@@ -34,7 +34,7 @@ TOPDIR = ../..
 include $(TOPDIR)/include/builddefs
 
 BINTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-LDIRT = $(BINTAR)
+LDIRT = *.gz
 
 default install install-dev :
 
