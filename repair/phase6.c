@@ -69,8 +69,8 @@ typedef struct dir_hash_tab {
  * Track the contents of the freespace table in a directory.
  */
 typedef struct freetab {
-	int			naents;
-	int			nents;
+	int			naents;	/* expected number of data blocks */
+	int			nents;	/* number of data blocks processed */
 	struct freetab_ent {
 		xfs_dir2_data_off_t	v;
 		short			s;
@@ -1729,6 +1729,7 @@ longform_dir2_entry_check_data(
 	ptr = (char *)d->u;
 	nbad = 0;
 	needscan = needlog = 0;
+	junkit = 0;
 	freetab = *freetabp;
 	if (isblock) {
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, d);
@@ -1742,6 +1743,8 @@ longform_dir2_entry_check_data(
 		wantmagic = XFS_DIR2_DATA_MAGIC;
 	}
 	db = XFS_DIR2_DA_TO_DB(mp, da_bno);
+
+	/* check for data block beyond expected end */
 	if (freetab->naents <= db) {
 		struct freetab_ent e;
 
@@ -1758,31 +1761,62 @@ longform_dir2_entry_check_data(
 			freetab->ents[i] = e;
 		freetab->naents = db + 1;
 	}
-	if (freetab->nents < db + 1)
-		freetab->nents = db + 1;
+
+	/* check the data block */
 	while (ptr < endptr) {
+
+		/* check for freespace */
 		dup = (xfs_dir2_data_unused_t *)ptr;
-		if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG) {
-			if (ptr + INT_GET(dup->length, ARCH_CONVERT) > endptr || INT_GET(dup->length, ARCH_CONVERT) == 0 ||
-			    (INT_GET(dup->length, ARCH_CONVERT) & (XFS_DIR2_DATA_ALIGN - 1)))
+		if (XFS_DIR2_DATA_FREE_TAG ==
+		    INT_GET(dup->freetag, ARCH_CONVERT)) {
+
+			/* check for invalid freespace length */
+			if (ptr + INT_GET(dup->length, ARCH_CONVERT) > endptr ||
+			    INT_GET(dup->length, ARCH_CONVERT) == 0 ||
+			    (INT_GET(dup->length, ARCH_CONVERT) &
+			     (XFS_DIR2_DATA_ALIGN - 1)))
 				break;
-			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup, ARCH_CONVERT), ARCH_CONVERT) != 
+
+			/* check for invalid tag */
+			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(
+				    dup, ARCH_CONVERT), ARCH_CONVERT) != 
 			    (char *)dup - (char *)d)
 				break;
+
+			/* check for block with no data entries */
+			if ((ptr == (char *)d->u) &&
+			    (ptr + INT_GET(dup->length, ARCH_CONVERT) >=
+			     endptr)) {
+				junkit = 1;
+				*num_illegal += 1;
+				break;
+			}
+
+			/* continue at the end of the freespace */
 			ptr += INT_GET(dup->length, ARCH_CONVERT);
 			if (ptr >= endptr)
 				break;
 		}
+
+		/* validate data entry size */
 		dep = (xfs_dir2_data_entry_t *)ptr;
 		if (ptr + XFS_DIR2_DATA_ENTSIZE(dep->namelen) > endptr)
 			break;
-		if (INT_GET(*XFS_DIR2_DATA_ENTRY_TAG_P(dep), ARCH_CONVERT) != (char *)dep - (char *)d)
+		if (INT_GET(*XFS_DIR2_DATA_ENTRY_TAG_P(dep), ARCH_CONVERT) !=
+		    (char *)dep - (char *)d)
 			break;
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
 	}
+
+	/* did we find an empty or corrupt block? */
 	if (ptr != endptr) {
-		do_warn("corrupt block %u in directory inode %llu: ",
-			da_bno, ip->i_ino);
+		if (junkit) {
+			do_warn("empty data block %u in directory inode %llu: ",
+				da_bno, ip->i_ino);
+		} else {
+			do_warn("corrupt block %u in directory inode %llu: ",
+				da_bno, ip->i_ino);
+		}
 		if (!no_modify) {
 			do_warn("junking block\n");
 			dir2_kill_block(mp, ip, da_bno, bp);
@@ -1794,6 +1828,11 @@ longform_dir2_entry_check_data(
 		*bpp = NULL;
 		return;
 	}
+
+	/* update number of data blocks processed */
+	if (freetab->nents < db + 1)
+		freetab->nents = db + 1;
+
 	tp = libxfs_trans_alloc(mp, 0);
 	error = libxfs_trans_reserve(tp, 0, XFS_REMOVE_LOG_RES(mp), 0,
 		XFS_TRANS_PERM_LOG_RES, XFS_REMOVE_LOG_COUNT);
@@ -2218,7 +2257,7 @@ longform_dir2_rebuild_setup(
 {
 	xfs_da_args_t		args;
 	int			committed;
-	xfs_dir2_data_t		*data;
+	xfs_dir2_data_t		*data = NULL;
 	xfs_dabuf_t		*dbp;
 	int			error;
 	xfs_dir2_db_t		fbno;
@@ -2234,6 +2273,7 @@ longform_dir2_rebuild_setup(
 	int			nres;
 	xfs_trans_t		*tp;
 
+	/* read first directory block */
 	tp = libxfs_trans_alloc(mp, 0);
 	nres = XFS_DAENTER_SPACE_RES(mp, XFS_DATA_FORK);
 	error = libxfs_trans_reserve(tp,
@@ -2250,14 +2290,23 @@ longform_dir2_rebuild_setup(
 			mp->m_dirdatablk, ino);
 		/* NOTREACHED */
 	}
-	if (dbp && (data = dbp->data)->hdr.magic == XFS_DIR2_BLOCK_MAGIC) {
+
+	if (dbp)
+		data = dbp->data;
+
+	/* check for block format directory */
+	if (data &&
+	    INT_GET((data)->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC) {
 		xfs_dir2_block_t	*block;
 		xfs_dir2_leaf_entry_t	*blp;
 		xfs_dir2_block_tail_t	*btp;
 		int			needlog;
 		int			needscan;
 
+		/* convert directory block from block format to data format */
 		INT_SET(data->hdr.magic, ARCH_CONVERT, XFS_DIR2_DATA_MAGIC);
+
+		/* construct freelist */
 		block = (xfs_dir2_block_t *)data;
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
 		blp = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
@@ -2269,6 +2318,8 @@ longform_dir2_rebuild_setup(
 			libxfs_dir2_data_freescan(mp, data, &needlog, NULL);
 		libxfs_da_log_buf(tp, dbp, 0, mp->m_dirblksize - 1);
 	}
+
+	/* allocate blocks for btree */
 	bzero(&args, sizeof(args));
 	args.trans = tp;
 	args.dp = ip;
@@ -2533,6 +2584,8 @@ longform_dir2_rebuild(
 	xfs_fileoff_t	next_da_bno;
 
 	do_warn("rebuilding directory inode %llu\n", ino);
+
+	/* kill leaf blocks */
 	for (da_bno = mp->m_dirleafblk, next_da_bno = isblock ? NULLFILEOFF : 0;
 	     next_da_bno != NULLFILEOFF;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
@@ -2547,7 +2600,11 @@ longform_dir2_rebuild(
 		}
 		dir2_kill_block(mp, ip, da_bno, bp);
 	}
+
+	/* rebuild empty btree and freelist */
 	longform_dir2_rebuild_setup(mp, ino, ip, freetab);
+
+	/* rebuild directory */
 	for (da_bno = mp->m_dirdatablk, next_da_bno = 0;
 	     da_bno < mp->m_dirleafblk && next_da_bno != NULLFILEOFF;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
@@ -2556,6 +2613,8 @@ longform_dir2_rebuild(
 			break;
 		longform_dir2_rebuild_data(mp, ino, ip, da_bno);
 	}
+
+	/* put the directory in the appropriate on-disk format */
 	longform_dir2_rebuild_finish(mp, ino, ip);
 	*num_illegal = 0;
 }
@@ -2604,8 +2663,11 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		freetab->ents[i].v = NULLDATAOFF;
 		freetab->ents[i].s = 0;
 	}
+	/* is this a block, leaf, or node directory? */
 	libxfs_dir2_isblock(NULL, ip, &isblock);
 	libxfs_dir2_isleaf(NULL, ip, &isleaf);
+
+	/* check directory data */
 	hashtab = dir_hash_init(ip->i_d.di_size);
 	for (da_bno = 0, next_da_bno = 0;
 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
@@ -2626,6 +2688,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		/* it releases the buffer unless isblock is set */
 	}
 	fixit = (*num_illegal != 0) || dir2_is_badino(ino);
+
+	/* check btree and freespace */
 	if (isblock) {
 		ASSERT(bp);
 		block = bp->data;
