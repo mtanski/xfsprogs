@@ -30,9 +30,6 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-ifndef _BUILDMACROS_INCLUDED_
-_BUILDMACROS_INCLUDED_ = 1
-
 BUILDRULES = $(TOPDIR)/include/buildrules
 
 # LCFLAGS, LLDFLAGS, LLDLIBS, LSRCFILES and LDIRT may be specified in
@@ -168,11 +165,3 @@ SOURCE_MAKERULE = \
 		$(MAKEF) DIR=$$DIR/$$d -C $$d $@ || exit $$?; \
 	    fi; \
 	done
-
-endif
-
-#
-# For targets that should always be rebuilt,
-# define a target that is never up-to-date.
-# Targets needing this should depend on $(_FORCE)
-_FORCE = __force_build

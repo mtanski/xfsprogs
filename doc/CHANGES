@@ -1,4 +1,9 @@
-xfsprogs-2.0.2 (4 April 2002)
+xfsprogs-2.0.3 (13 April 2002)
+	- Important build system update, was causing libxfs to be
+	  built incorrectly, which can cause xfs_repair to fail by
+	  tripping asserts in additional libxfs debug code.
+
+xfsprogs-2.0.2 (04 April 2002)
 	- Bumped version of libhandle to libhandle.so.1.0.1
 	  This changes open_by_handle() and friends so that 
 	  O_LARGEFILE is added to the open flags.

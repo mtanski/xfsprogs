@@ -32,6 +32,9 @@
 # @configure_input@
 #
 
+ifndef _BUILDMACROS_INCLUDED_
+_BUILDMACROS_INCLUDED_ = 1
+
 DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
@@ -81,3 +84,11 @@ CFLAGS += -O1 $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall $(LCFLAGS) \
 	-D_FILE_OFFSET_BITS=64 -DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
 
 include $(TOPDIR)/include/buildmacros
+
+endif
+
+#
+# For targets that should always be rebuilt,
+# define a target that is never up-to-date.
+# Targets needing this should depend on $(_FORCE)
+_FORCE = __force_build
