@@ -317,6 +317,17 @@ main(int argc, char **argv)
 			geo.logblocks * (geo.blocksize / BBSIZE) );
 	drsize = xi.rtsize;
 
+	/*
+	 * Ok, Linux only has a 1024-byte resolution on device _size_,
+	 * and the sizes below are in basic 512-byte blocks,
+	 * so if we have (size % 2), on any partition, we can't get
+	 * to the last 512 bytes.  Just chop it down by a block.
+	 */
+	
+	ddsize -= (ddsize % 2);
+	dlsize -= (dlsize % 2);
+	drsize -= (drsize % 2);
+
 	error = 0;
 	if (dflag | aflag) {
 		xfs_growfs_data_t	in;

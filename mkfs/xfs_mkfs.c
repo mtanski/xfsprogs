@@ -1119,6 +1119,17 @@ main(int argc, char **argv)
 		usage();
 	}
 
+	/*
+	 * Ok, Linux only has a 1024-byte resolution on device _size_,
+	 * and the sizes below are in basic 512-byte blocks,
+	 * so if we have (size % 2), on any partition, we can't get
+	 * to the last 512 bytes.  Just chop it down by a block.
+	 */
+
+	xi.dsize -= (xi.dsize % 2);
+	xi.rtsize -= (xi.rtsize % 2);
+	xi.logBBsize -= (xi.logBBsize % 2);
+
 	if (!force_overwrite) {
 		if (check_overwrite(dfile) ||
 		    check_overwrite(logfile) ||
