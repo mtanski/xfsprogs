@@ -1,3 +1,7 @@
+xfsprogs-2.5.10 (30 September 2003)
+	- Fix up xfs_logprint to handle version 2 logs for its 
+	  operation output (previously core dumped on it).
+
 xfsprogs-2.5.9 (19 September 2003)
 	- Sync up user/kernel source in libxfs, libxlog and headers.
 	- Add new inode flags into xfs_db too.

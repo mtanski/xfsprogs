@@ -32,6 +32,7 @@
 
 #include "logprint.h"
 
+#define CLEARED_BLKS	(-5)
 #define ZEROED_LOG	(-4)
 #define FULL_READ	(-3)
 #define PARTIAL_READ	(-2)
@@ -100,6 +101,13 @@ print_xlog_op_line(void)
 }	/* print_xlog_op_line */
 
 void
+print_xlog_xhdr_line(void)
+{
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+}	/* print_xlog_xhdr_line */
+
+void
 print_xlog_record_line(void)
 {
     printf("======================================"
@@ -111,7 +119,7 @@ print_stars(void)
 {
     printf("***********************************"
 	   "***********************************\n");
-}	/* print_xlog_record_line */
+}	/* print_stars */
 
 /*
  * Given a pointer to a data segment, print out the data as if it were
@@ -879,18 +887,17 @@ print_lsn(xfs_caddr_t	string,
 
 
 int
-xlog_print_record(int		  fd,
-		 int		  num_ops,
-		 int		  len,
-		 int		  *read_type,
-		 xfs_caddr_t	  *partial_buf,
-		 xlog_rec_header_t *rhead)
+xlog_print_record(int			  fd,
+		 int			  num_ops,
+		 int			  len,
+		 int			  *read_type,
+		 xfs_caddr_t		  *partial_buf,
+		 xlog_rec_header_t	  *rhead,
+		 xlog_rec_ext_header_t	  *xhdrs)
 {
-    xlog_op_header_t	*op_head;
-    xlog_rec_header_t	*rechead;
     xfs_caddr_t		buf, ptr;
     int			read_len, skip;
-    int			ret, n, i;
+    int			ret, n, i, j, k;
 
     if (print_no_print)
 	    return NO_ERROR;
@@ -906,7 +913,7 @@ xlog_print_record(int		  fd,
     /* read_type => don't malloc() new buffer, use old one */
     if (*read_type == FULL_READ) {
 	if ((ptr = buf = (xfs_caddr_t)malloc(read_len)) == NULL) {
-	    fprintf(stderr, "xlog_print_record: malloc failed\n");
+	    fprintf(stderr, "%s: xlog_print_record: malloc failed\n", progname);
 	    exit(1);
 	}
     } else {
@@ -915,7 +922,7 @@ xlog_print_record(int		  fd,
 	ptr = *partial_buf;
     }
     if ((ret = (int) read(fd, buf, read_len)) == -1) {
-	fprintf(stderr, "xlog_print_record: read error\n");
+	fprintf(stderr, "%s: xlog_print_record: read error\n", progname);
 	exit(1);
     }
     /* Did we overflow the end? */
@@ -935,14 +942,26 @@ xlog_print_record(int		  fd,
     if (*read_type != FULL_READ)
 	read_len += *read_type;
 
-    /* Everything read in.  Start from beginning of buffer */
+    /* Everything read in.  Start from beginning of buffer
+     * Unpack the data, by putting the saved cycle-data back
+     * into the first word of each BB.
+     * Do some checks.
+     */	
     buf = ptr;
     for (i = 0; ptr < buf + read_len; ptr += BBSIZE, i++) {
-	rechead = (xlog_rec_header_t *)ptr;
+	xlog_rec_header_t *rechead = (xlog_rec_header_t *)ptr;
+
+	/* sanity checks */
 	if (INT_GET(rechead->h_magicno, ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM) {
+	    /* data should not have magicno as first word
+	     * as it should by cycle#
+	     */
 	    free(buf);
 	    return -1;
 	} else {
+	    /* verify cycle#
+	     * FIXME: cycle+1 should be a macro pv#900369
+	     */
 	    if (INT_GET(rhead->h_cycle, ARCH_CONVERT) !=
 			INT_GET(*(uint *)ptr, ARCH_CONVERT)) {
 		if (*read_type == FULL_READ)
@@ -952,13 +971,29 @@ xlog_print_record(int		  fd,
 		    return -1;
 	    }
 	}
-	INT_SET(*(uint *)ptr, ARCH_CONVERT,
-		INT_GET(rhead->h_cycle_data[i], ARCH_CONVERT));
+
+	/* copy back the data from the header */
+	if (i < XLOG_HEADER_CYCLE_SIZE / BBSIZE) {
+		/* from 1st header */
+		INT_SET(*(uint *)ptr, ARCH_CONVERT,
+			INT_GET(rhead->h_cycle_data[i], ARCH_CONVERT));
+	}
+	else {
+		ASSERT(xhdrs != NULL);
+		/* from extra headers */
+		j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+		k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE); 
+		INT_SET(*(uint *)ptr, ARCH_CONVERT,
+			INT_GET(xhdrs[j-1].xh_cycle_data[k], ARCH_CONVERT));
+	}
+	
     }
+
     ptr = buf;
     for (i=0; i<num_ops; i++) {
+	xlog_op_header_t *op_head = (xlog_op_header_t *)ptr;
+
 	print_xlog_op_line();
-	op_head = (xlog_op_header_t *)ptr;
 	xlog_print_op_header(op_head, i, &ptr);
 
 	/* print transaction data */
@@ -1069,8 +1104,16 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	return BAD_HEADER;
     }
 
+    /* check for cleared blocks written by xlog_clear_stale_blocks() */
+    if (INT_ISZERO(head->h_len, ARCH_CONVERT) &&
+	INT_ISZERO(head->h_chksum, ARCH_CONVERT) &&
+	INT_ISZERO(head->h_prev_block, ARCH_CONVERT) &&
+	INT_ISZERO(head->h_num_logops, ARCH_CONVERT) &&
+	INT_ISZERO(head->h_size, ARCH_CONVERT))
+	return CLEARED_BLKS;
+
     datalen=INT_GET(head->h_len, ARCH_CONVERT);
-    bbs=(datalen/BBSIZE)+(datalen%BBSIZE)?1:0;
+    bbs=BTOBB(datalen);
 
     printf("cycle: %d	version: %d	",
 	    INT_GET(head->h_cycle, ARCH_CONVERT),
@@ -1085,7 +1128,7 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 
     if (print_overwrite) {
 	printf("cycle num overwrites: ");
-	for (i=0; i< bbs; i++)
+	for (i=0; i< MIN(bbs, XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++)
 	    printf("%d - 0x%x  ",
 		    i,
 		    INT_GET(head->h_cycle_data[i], ARCH_CONVERT));
@@ -1111,10 +1154,29 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	    printf("? (%d)\n", INT_GET(head->h_fmt, ARCH_CONVERT));
 	    break;
     }
-
+    printf("h_size: %d\n", INT_GET(head->h_size, ARCH_CONVERT));
+	
     *len = INT_GET(head->h_len, ARCH_CONVERT);
     return(INT_GET(head->h_num_logops, ARCH_CONVERT));
 }	/* xlog_print_rec_head */
+
+void
+xlog_print_rec_xhead(xlog_rec_ext_header_t *head, int coverage)
+{
+    int i;
+
+    print_xlog_xhdr_line();
+    printf("extended-header: cycle: %d\n", INT_GET(head->xh_cycle, ARCH_CONVERT));
+
+    if (print_overwrite) {
+	printf("cycle num overwrites: ");
+	for (i = 0; i < coverage; i++)
+	    printf("%d - 0x%x  ",
+		    i,
+		    INT_GET(head->xh_cycle_data[i], ARCH_CONVERT));
+	printf("\n");
+    }
+}	/* xlog_print_rec_xhead */
 
 static void
 print_xlog_bad_zeroed(xfs_daddr_t blkno)
@@ -1149,6 +1211,108 @@ print_xlog_bad_data(xfs_daddr_t blkno)
 	    xlog_exit("Bad data in log");
 }	/* print_xlog_bad_data */
 
+static void
+print_xlog_bad_reqd_hdrs(xfs_daddr_t blkno, int num_reqd, int num_hdrs)
+{
+	print_stars();
+	printf("* ERROR: for header block=%lld\n"
+	       "*        not enough hdrs for data length, "
+		"required num = %d, hdr num = %d\n",
+		(long long)blkno, num_reqd, num_hdrs);
+	print_stars();
+	if (print_exit)
+	    xlog_exit("Not enough headers for data length.");
+}	/* print_xlog_bad_reqd_hdrs */
+
+static void
+xlog_reallocate_xhdrs(int num_hdrs, xlog_rec_ext_header_t **ret_xhdrs)
+{
+	int len = (num_hdrs-1) * sizeof(xlog_rec_ext_header_t);
+
+	*ret_xhdrs = (xlog_rec_ext_header_t *)realloc(*ret_xhdrs, len);
+	if (*ret_xhdrs == NULL) {
+		fprintf(stderr, "%s: xlog_print: malloc failed for ext hdrs\n", progname);
+		exit(1);
+	}
+}
+
+/* for V2 logs read each extra hdr and print it out */
+static int 
+xlog_print_extended_headers(
+	int			fd,
+	int			len,
+	xfs_daddr_t		*blkno,
+	xlog_rec_header_t	*hdr,
+	int 			*ret_num_hdrs,
+	xlog_rec_ext_header_t	**ret_xhdrs)
+{
+	int			i, j;
+	int			coverage_bb;
+	int 			num_hdrs;
+	int 			num_required;
+	char			xhbuf[XLOG_HEADER_SIZE];
+	xlog_rec_ext_header_t	*x;
+
+	num_required = howmany(len, XLOG_HEADER_CYCLE_SIZE); 
+	num_hdrs = INT_GET(hdr->h_size, ARCH_CONVERT) / XLOG_HEADER_CYCLE_SIZE;
+
+	if (num_required > num_hdrs) {
+	    print_xlog_bad_reqd_hdrs((*blkno)-1, num_required, num_hdrs);
+	}
+
+	if (num_hdrs == 1) {
+	    free(*ret_xhdrs);
+	    *ret_xhdrs = NULL;
+	    *ret_num_hdrs = 1;
+	    return 0;
+	}
+
+	if (*ret_xhdrs == NULL || num_hdrs > *ret_num_hdrs) {
+	    xlog_reallocate_xhdrs(num_hdrs, ret_xhdrs);
+	}
+
+	*ret_num_hdrs = num_hdrs;
+
+	/* don't include 1st header */
+	for (i = 1, x = *ret_xhdrs; i < num_hdrs; i++, (*blkno)++, x++) {
+	    /* read one extra header blk */
+	    if (read(fd, xhbuf, 512) == 0) {
+		printf("%s: physical end of log\n", progname);
+		print_xlog_record_line();
+		/* reached the end so return 1 */
+		return 1;
+	    }
+	    if (print_only_data) {
+		printf("BLKNO: %lld\n", (long long)*blkno);
+		xlog_recover_print_data(xhbuf, 512);
+	    }
+	    else {
+		if (i == num_hdrs - 1) {
+		    /* last header */	
+		    coverage_bb = BTOBB(len) % 
+				    (XLOG_HEADER_CYCLE_SIZE / BBSIZE); 
+		}
+		else {
+		    /* earliear header */
+		    coverage_bb = XLOG_HEADER_CYCLE_SIZE / BBSIZE;
+		}
+		xlog_print_rec_xhead((xlog_rec_ext_header_t*)xhbuf, coverage_bb);
+	    }
+
+	    /* Copy from buffer into xhdrs array for later.
+	     * Could endian convert here but then code later on
+	     * will look asymmetric with the 1 hdr normal case
+	     * which does endian coversion on access.
+	     */
+	    x->xh_cycle = ((xlog_rec_ext_header_t*)xhbuf)->xh_cycle;
+	    for (j = 0; j < XLOG_HEADER_CYCLE_SIZE / BBSIZE; j++) {
+		x->xh_cycle_data[j] = 
+		    ((xlog_rec_ext_header_t*)xhbuf)->xh_cycle_data[j];  
+	    }
+	}
+	return 0;
+}
+
 
 /*
  * This code is gross and needs to be rewritten.
@@ -1157,13 +1321,17 @@ void xfs_log_print(xlog_t       *log,
 		   int          fd,
 		   int		print_block_start)
 {
-    char	hbuf[XLOG_HEADER_SIZE];
-    int		num_ops, len;
-    xfs_daddr_t	block_end = 0, block_start, blkno, error;
-    int		read_type = FULL_READ;
-    xfs_caddr_t	partial_buf;
-    int         zeroed = 0;
-
+    char			hbuf[XLOG_HEADER_SIZE];
+    xlog_rec_header_t		*hdr = (xlog_rec_header_t *)&hbuf[0];
+    xlog_rec_ext_header_t 	*xhdrs = NULL;
+    int				num_ops, len, num_hdrs = 1;
+    xfs_daddr_t			block_end = 0, block_start, blkno, error;
+    xfs_daddr_t			zeroed_blkno = 0, cleared_blkno = 0;
+    int				read_type = FULL_READ;
+    xfs_caddr_t			partial_buf;
+    int         		zeroed = 0;
+    int         		cleared = 0;
+	
     logBBsize = log->l_logBBsize;
 
     /*
@@ -1172,15 +1340,15 @@ void xfs_log_print(xlog_t       *log,
      * we still end at the end of the logical log.
      */
     if ((error = xlog_print_find_oldest(log, &block_end))) {
-	    fprintf(stderr, "%s: problem finding oldest LR\n", progname);
-	    return;
+	fprintf(stderr, "%s: problem finding oldest LR\n", progname);
+	return;
     }
     if (print_block_start == -1)
-	    block_start = block_end;
+	block_start = block_end;
     else
-	    block_start = print_block_start;
+	block_start = print_block_start;
     xlog_print_lseek(log, fd, block_start, SEEK_SET);
-    blkno    = block_start;
+    blkno = block_start;
 
     for (;;) {
 	if (read(fd, hbuf, 512) == 0) {
@@ -1189,12 +1357,12 @@ void xfs_log_print(xlog_t       *log,
 	    break;
 	}
 	if (print_only_data) {
-		printf("BLKNO: %lld\n", (long long)blkno);
-		xlog_recover_print_data(hbuf, 512);
-		blkno++;
-		goto loop;
+	    printf("BLKNO: %lld\n", (long long)blkno);
+	    xlog_recover_print_data(hbuf, 512);
+	    blkno++;
+	    goto loop;
 	}
-	num_ops = xlog_print_rec_head((xlog_rec_header_t *)hbuf, &len);
+	num_ops = xlog_print_rec_head(hdr, &len);
 	blkno++;
 
 	if (zeroed && num_ops != ZEROED_LOG) {
@@ -1207,9 +1375,18 @@ void xfs_log_print(xlog_t       *log,
 	    zeroed = 0;
 	}
 
-	if (num_ops == ZEROED_LOG || num_ops == BAD_HEADER) {
+	if (num_ops == ZEROED_LOG || 
+	    num_ops == CLEARED_BLKS ||
+	    num_ops == BAD_HEADER) {
 	    if (num_ops == ZEROED_LOG) {
+		if (zeroed == 0)
+		    zeroed_blkno = blkno-1;
 		zeroed++;
+	    }
+	    else if (num_ops == CLEARED_BLKS) {
+		if (cleared == 0)
+		    cleared_blkno = blkno-1;
+		cleared++;
 	    } else {
 		print_xlog_bad_header(blkno-1, hbuf);
 	    }
@@ -1217,8 +1394,12 @@ void xfs_log_print(xlog_t       *log,
 	    goto loop;
 	}
 
-	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf,
-				  (xlog_rec_header_t *)hbuf);
+	if (INT_GET(hdr->h_version, ARCH_CONVERT) == 2) {
+	    if (xlog_print_extended_headers(fd, len, &blkno, hdr, &num_hdrs, &xhdrs) != 0)
+		break;
+	}
+
+	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf, hdr, xhdrs);
 	switch (error) {
 	    case 0: {
 		blkno += BTOBB(len);
@@ -1254,16 +1435,25 @@ void xfs_log_print(xlog_t       *log,
 	print_xlog_record_line();
 loop:
 	if (blkno >= logBBsize) {
-		if (zeroed) {
-		    printf("%s: skipped %d zeroed blocks\n", progname, zeroed);
-		    if (zeroed == logBBsize)
-			printf("%s: totally zeroed log\n", progname);
+	    if (cleared) {
+		printf("%s: skipped %d cleared blocks in range: %lld - %lld\n",
+			progname, cleared, cleared_blkno, cleared + cleared_blkno - 1);
+		if (cleared == logBBsize)
+		    printf("%s: totally cleared log\n", progname);
 
-		    zeroed=0;
-		}
-		printf("%s: physical end of log\n", progname);
-		print_xlog_record_line();
-		break;
+		cleared=0;
+	    }
+	    if (zeroed) {
+		printf("%s: skipped %d zeroed blocks in range: %lld - %lld\n",
+			progname, zeroed, zeroed_blkno, zeroed + zeroed_blkno - 1);
+		if (zeroed == logBBsize)
+		    printf("%s: totally zeroed log\n", progname);
+
+		zeroed=0;
+	    }
+	    printf("%s: physical end of log\n", progname);
+	    print_xlog_record_line();
+	    break;
 	}
     }
 
@@ -1281,13 +1471,15 @@ loop:
 		blkno++;
 		goto loop2;
 	    }
-	    num_ops = xlog_print_rec_head((xlog_rec_header_t *)hbuf, &len);
+	    num_ops = xlog_print_rec_head(hdr, &len);
 	    blkno++;
 
-	    if (num_ops == ZEROED_LOG || num_ops == BAD_HEADER) {
-		/* we only expect zeroed log entries at the end
-		 * of the _physical_ log, so treat them the same
-		 * as bad blocks here
+	    if (num_ops == ZEROED_LOG ||
+		num_ops == CLEARED_BLKS ||
+		num_ops == BAD_HEADER) {
+		/* we only expect zeroed log entries  or cleared log
+		 * entries at the end of the _physical_ log, 
+		 * so treat them the same as bad blocks here
 		 */
 		print_xlog_bad_header(blkno-1, hbuf);
 
@@ -1295,9 +1487,20 @@ loop:
 		    break;
 		continue;
 	    }
+
+	    if (INT_GET(hdr->h_version, ARCH_CONVERT) == 2) {
+		if (xlog_print_extended_headers(fd, len, &blkno, hdr, &num_hdrs, &xhdrs) != 0)
+		    break;
+	    }
+
 partial_log_read:
-	    error= xlog_print_record(fd, num_ops, len, &read_type,
-				    &partial_buf, (xlog_rec_header_t *)hbuf);
+	    error= xlog_print_record(fd, 
+				    num_ops,
+				    len, 
+				    &read_type,
+				    &partial_buf,
+				    (xlog_rec_header_t *)hbuf,
+				    xhdrs);
 	    if (read_type != FULL_READ)
 		len -= read_type;
 	    read_type = FULL_READ;
