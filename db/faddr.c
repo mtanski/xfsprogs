@@ -32,7 +32,9 @@
 
 #include <xfs/libxfs.h>
 #include "type.h"
+#include "fprint.h"
 #include "faddr.h"
+#include "field.h"
 #include "inode.h"
 #include "io.h"
 #include "bit.h"

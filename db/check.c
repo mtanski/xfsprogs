@@ -37,9 +37,12 @@
 #include "check.h"
 #include "command.h"
 #include "io.h"
+#include "type.h"
+#include "fprint.h"    
+#include "faddr.h"     
+#include "field.h"     
 #include "sb.h"
 #include "output.h"
-#include "type.h"
 #include "init.h"
 #include "malloc.h"
 

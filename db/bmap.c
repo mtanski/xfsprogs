@@ -33,6 +33,9 @@
 #include <xfs/libxfs.h>
 #include "command.h"
 #include "type.h"
+#include "fprint.h"
+#include "faddr.h"
+#include "field.h"
 #include "bmap.h"
 #include "io.h"
 #include "inode.h"

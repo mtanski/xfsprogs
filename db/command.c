@@ -32,9 +32,6 @@
 
 #include <xfs/libxfs.h>
 #include "addr.h"
-#include "agf.h"
-#include "agfl.h"
-#include "agi.h"
 #include "block.h"
 #include "bmap.h"
 #include "check.h"
@@ -46,6 +43,9 @@
 #include "faddr.h"
 #include "fprint.h"
 #include "field.h"
+#include "agf.h"
+#include "agfl.h"
+#include "agi.h"
 #include "frag.h"
 #include "freesp.h"
 #include "help.h"

@@ -31,9 +31,6 @@
  */
 
 #include <xfs/libxfs.h>
-#include "agf.h"
-#include "agfl.h"
-#include "agi.h"
 #include "block.h"
 #include "command.h"
 #include "type.h"
