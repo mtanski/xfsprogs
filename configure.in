@@ -166,7 +166,7 @@ dnl will we be making use of readline?
 AC_ARG_ENABLE(readline,
 	[ --enable-readline=[yes/no] Enable readline command editing [default=no]],,
 	enable_readline=no)
-libreadline="-lreadline"
+libreadline="-lreadline -lncurses"
 AC_SUBST(libreadline)
 AC_SUBST(enable_readline)
 
