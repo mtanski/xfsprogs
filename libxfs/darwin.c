@@ -70,48 +70,34 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 {
 }
 
-int
-platform_get_blocksize(int fd, char *path)
-{
-	return BBSIZE;
-}
-
 void
 platform_flush_device(int fd)
 {
 	ioctl(fd, DKIOCSYNCHRONIZECACHE, NULL);
 }
 
-__int64_t
-platform_findsize(char *path)
+void
+platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 {
-	__int64_t	ssize;
 	__uint64_t	size;
 	struct stat64	st;
-	int		fd;
 
-	if (stat64(path, &st) < 0) {
+	if (fstat64(fd, &st) < 0) {
 		fprintf(stderr,
 			_("%s: cannot stat the device file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	if ((st.st_mode & S_IFMT) == S_IFREG)
-		return (__int64_t)(st.st_size >> 9);
-
-	if ((fd = open(path, O_RDONLY, 0)) < 0) {
-		fprintf(stderr, _("%s: "
-			"error opening the device special file \"%s\": %s\n"),
-			progname, path, strerror(errno));
-		exit(1);
+	if ((st.st_mode & S_IFMT) == S_IFREG) {
+		*sz = (long long)(st.st_size >> 9);
+		*bsz = BBSIZE;
+		return;
 	}
-
 	if (ioctl(fd, DKIOCGETBLOCKCOUNT, &size) < 0) {
 		fprintf(stderr, _("%s: can't determine device size: %s\n"),
 			progname, strerror(errno));
 		exit(1);
 	}
-	close(fd);
-	ssize = (__int64_t)size;
-	return ssize;
+	*sz = (long long)size;
+	*bsz = BBSIZE;
 }

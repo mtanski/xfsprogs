@@ -120,67 +120,52 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 	}
 }
 
-int
-platform_get_blocksize(int fd, char *path)
-{
-	int	blocksize;
-
-	if (ioctl(fd, BLKSSZGET, &blocksize) < 0) {
-		fprintf(stderr, _("%s: warning - cannot get sector size "
-				"from block device %s: %s\n"),
-			progname, path, strerror(errno));
-		blocksize = BBSIZE;
-	}
-	return blocksize;
-}
-
 void
 platform_flush_device(int fd)
 {
 	ioctl(fd, BLKFLSBUF, 0);
 }
 
-__int64_t
-platform_findsize(char *path)
+void
+platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 {
-	int		fd;
-	int		error;
-	__int64_t	ssize;
-	__uint64_t	size;
 	struct stat64	st;
+	__uint64_t	size;
+	int		error;
 
-	if (stat64(path, &st) < 0) {
+	if (fstat64(fd, &st) < 0) {
 		fprintf(stderr, _("%s: "
 			"cannot stat the device file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	if ((st.st_mode & S_IFMT) == S_IFREG)
-		return (__int64_t)(st.st_size >> 9);
-
-	if ((fd = open(path, O_RDONLY, 0)) < 0) {
-		fprintf(stderr, _("%s: "
-			"error opening the device special file \"%s\": %s\n"),
-			progname, path, strerror(errno));
-		exit(1);
+	if ((st.st_mode & S_IFMT) == S_IFREG) {
+		*sz = (long long)(st.st_size >> 9);
+		*bsz = BBSIZE;
+		return;
 	}
 
 	error = ioctl(fd, BLKGETSIZE64, &size);
 	if (error >= 0) {
 		/* BLKGETSIZE64 returns size in bytes not 512-byte blocks */
-		ssize = size >> 9;
+		*sz = (long long)(size >> 9);
 	} else {
 		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
 		unsigned long tmpsize;
+
 		error = ioctl(fd, BLKGETSIZE, &tmpsize);
 		if (error < 0) {
 			fprintf(stderr, _("%s: can't determine device size\n"),
 				progname);
 			exit(1);
 		}
-		ssize = (__int64_t)tmpsize;
+		*sz = (long long)tmpsize;
 	}
 
-	close(fd);
-	return ssize;
+	if (ioctl(fd, BLKSSZGET, bsz) < 0) {
+		fprintf(stderr, _("%s: warning - cannot get sector size "
+				"from block device %s: %s\n"),
+			progname, path, strerror(errno));
+		*bsz = BBSIZE;
+	}
 }

@@ -64,19 +64,12 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 int
 platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 {
-	int		sts = 0;
-	return sts;
+	return 0;
 }
 
 void
 platform_set_blocksize(int fd, char *path, int blocksize)
 {
-}
-
-int
-platform_get_blocksize(int fd, char *path)
-{
-	return BBSIZE;
 }
 
 void
@@ -166,36 +159,24 @@ getdisksize(int fd, const char *fname)
 	return size;
 }
 
-__int64_t
-platform_findsize(char *path)
+void
+platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 {
-	int	fd;
-	struct stat   st;
-	__int64_t size;
+	struct stat	st;
+	__int64_t	size;
 
-	/* Test to see if we are dealing with a regular file rather than a
-	 * block device, if we are just use the size returned by stat64
-	 */
-	if (stat(path, &st) < 0) {
+	if (fstat(fd, &st) < 0) {
 		fprintf(stderr, _("%s: "
-			"cannot stat the device special file \"%s\": %s\n"),
+			"cannot stat the device file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
 	if ((st.st_mode & S_IFMT) == S_IFREG) {
-		return (__int64_t)(st.st_size >> 9);
+		*sz = (long long)(st.st_size >> 9);
+		*bsz = BBSIZE;
+		return;
 	}
 
-	if ((fd = open(path, 0)) < 0) {
-		fprintf(stderr, _("%s: "
-			"error opening the device special file \"%s\": %s\n"),
-			progname, path, strerror(errno));
-		exit(1);
-	}
-
-	size = getdisksize(fd, path);
-
-	close(fd);
-
-	return size;
+	*sz = (long long) getdisksize(fd, path);
+	*bsz = BBSIZE;
 }

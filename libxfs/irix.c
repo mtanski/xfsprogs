@@ -65,19 +65,21 @@ platform_flush_device(int fd)
 	return;
 }
 
-__int64_t
-platform_findsize(char *path)
+void
+platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 {
 	struct stat64		st;
 
-	if (stat64(path, &st) < 0) {
+	if (fstat64(fd, &st) < 0) {
 		fprintf(stderr,
 			_("%s: cannot stat the device file \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	if ((st.st_mode & S_IFMT) == S_IFREG)
-		return (__int64_t)(st.st_size >> 9);
-
-	return findsize(path);
+	if ((st.st_mode & S_IFMT) == S_IFREG) {
+		*sz = (long long)(st.st_size >> 9);
+	} else {
+		*sz = findsize(path);
+	}
+	*bsz = BBSIZE;
 }

@@ -329,13 +329,13 @@ voldone:
 						    a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {
-			if(!check_open(dname,flags,&rawfile,&blockfile))
+			if (!check_open(dname, flags, &rawfile, &blockfile))
 				goto done;
 			a->ddev = libxfs_device_open(rawfile,
 					a->dcreat, readonly, a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
-			a->dsize = platform_findsize(rawfile);
-			a->dbsize = platform_get_blocksize(a->dfd, rawfile);
+			platform_findsizes(rawfile, a->dfd,
+						&a->dsize, &a->dbsize);
 		}
 		needcd = 1;
 	} else
@@ -348,13 +348,13 @@ voldone:
 					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 		} else {
-			if(!check_open(logname,flags,&rawfile,&blockfile))
+			if (!check_open(logname, flags, &rawfile, &blockfile))
 				goto done;
 			a->logdev = libxfs_device_open(rawfile,
 					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
-			a->logBBsize = platform_findsize(rawfile);
-			a->lbsize = platform_get_blocksize(a->logfd, rawfile);
+			platform_findsizes(rawfile, a->logfd,
+						&a->logBBsize, &a->lbsize);
 		}
 		needcd = 1;
 	} else
@@ -367,13 +367,13 @@ voldone:
 					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 		} else {
-			if(!check_open(rtname,flags,&rawfile,&blockfile))
+			if (!check_open(rtname, flags, &rawfile, &blockfile))
 				goto done;
 			a->rtdev = libxfs_device_open(rawfile,
 					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
-			a->rtsize = platform_findsize(rawfile);
-			a->rtbsize = platform_get_blocksize(a->rtfd, rawfile);
+			platform_findsizes(rawfile, a->rtfd,
+						&a->rtsize, &a->rtbsize);
 		}
 		needcd = 1;
 	} else
