@@ -25,7 +25,7 @@ Description: Utilities for managing the XFS filesystem
  with the IRIX version of XFS.
 
 Package: xfslibs-dev
-Section: devel
+Section: libdevel
 Priority: extra
 Depends: libc6-dev, xfsprogs (>= 2.0.0)
 Conflicts: xfsprogs (<< 2.0.0)
