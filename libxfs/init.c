@@ -42,7 +42,7 @@
 #include <sys/mount.h>
 
 #ifndef BLKBSZSET
-#define BLKBSZSET _IO(0x12,108)	/* set device block size */
+#define BLKBSZSET _IO(0x12,110)	/* set device block size */
 #endif
 
 #define findrawpath(x)	x
