@@ -63,7 +63,6 @@ DIST_DIR = $(TOPDIR)/dist
 CCF	= $(CC) $(CFLAGS) $(CPPFLAGS)
 MAKEF	= $(MAKE) $(MAKEOPTS)
 CXXF	= $(CXX) $(CXXFLAGS)
-LDF	= $(LD) $(LDFLAGS)
 
 # For libtool.
 LIBNAME = $(basename $(LTLIBRARY))

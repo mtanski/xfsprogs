@@ -1,3 +1,10 @@
+xfsprogs-2.4.8 (26 April 2003)
+	- Rework configure.in to make use of shared macros.
+	- Fix up #include lines to allow compilation of sources
+	  with installed headers rather than local headers.
+	- Fix botches in xfs_bmap shell script which prevented any
+	  arguments being passed on to xfs_io (from Jan Derfinak).
+
 xfsprogs-2.4.7 (22 April 2003)
 	- Clarify XFS system call interfaces, fix up documentation.
 

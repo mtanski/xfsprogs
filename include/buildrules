@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 1999, 2001-2003 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as published
@@ -57,7 +57,7 @@ endif
 
 ifdef LINGUAS
 %.pot: $(XGETTEXTFILES)
-	$(XGETTEXT) -o $@ $(XGETTEXTFILES)
+	xgettext --omit-header --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
 
 %.tmpo: %.po
 	$(MSGMERGE) -o $@ $< $(PKG_NAME).pot

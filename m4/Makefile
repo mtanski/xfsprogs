@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -30,21 +30,18 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-BINTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-LDIRT = *.gz
+LSRCFILES = \
+	manual_format.m4 \
+	package_globals.m4 \
+	package_types.m4 \
+	package_utilies.m4 \
+	package_uuiddev.m4
 
-default install install-dev install-lib:
+default: 
 
 include $(BUILDRULES)
 
-dist : default
-	@HERE=`pwd`; cd $${DIST_ROOT:-/}; \
-	$(SORT) -u $$HERE/../bin-manifest | $(AWK) ' \
-		$$1 == "f" { printf (".%s\n", $$6); } \
-		$$1 == "d" { next; } \
-		$$1 == "l" { printf (".%s\n", $$3); }' \
-	| $(TAR) -T - -cf - | $(ZIP) --best > $$HERE/$(BINTAR)
-	@echo Wrote: `pwd`/$(BINTAR)
+install install-dev install-lib: default

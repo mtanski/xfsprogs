@@ -69,20 +69,19 @@ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
 PKG_LOCALE_DIR	= @datadir@/locale
 
 CC		= @cc@
-LD		= @ld@
 AWK		= @awk@
 SED		= @sed@
 TAR		= @tar@
 ZIP		= @zip@
 MAKE		= @make@
 ECHO		= @echo@
+SORT		= @sort@
 LN_S		= @LN_S@
 LIBTOOL		= @LIBTOOL@
 MAKEDEPEND	= @makedepend@
 
 MSGFMT		= @msgfmt@
 MSGMERGE	= @msgmerge@
-XGETTEXT	= @xgettext@ --omit-header --language=C --keyword=_
 
 RPM		= @rpm@
 RPMBUILD	= @rpmbuild@
@@ -110,7 +109,7 @@ PLDLIBS = -L/usr/local/lib -lintl
 PCFLAGS = -I/usr/local/include
 endif
 
-GCFLAGS += $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \
+GCFLAGS += -O1 $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \
 	-DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\" \
 	-DPACKAGE=\"$(PKG_NAME)\"
 

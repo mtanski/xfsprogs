@@ -51,18 +51,18 @@ dist : default $(SPECF) rpm-$(RPM_VERSION).rc
 # is not supported by rpm v.3, we have to resort to such ugly hacks
 ifneq ($(RPM_VERSION),2)
 rpm-$(RPM_VERSION).rc : rpmmacros
-	sed -e '/^macrofiles:/s|~/.rpmmacros|rpmmacros|' </usr/lib/rpm/rpmrc >$@
+	@$(SED) -e '/^macrofiles:/s|~/.rpmmacros|rpmmacros|' </usr/lib/rpm/rpmrc >$@
 
 rpmmacros : macros.template
-	@sed -e 's|%topdir%|$(TREEROOT)|g' < $< > $@
+	@$(SED) -e 's|%topdir%|$(TREEROOT)|g' < $< > $@
 else
 rpm-2.rc: rpm-2.rc.template
-	@sed -e 's|%topdir%|$(TOPDIR)|g' < $< > $@
+	@$(SED) -e 's|%topdir%|$(TOPDIR)|g' < $< > $@
 endif
 
 # Generate the rpm specfile format file list from the install-sh manifest
 rpmfiles rpmfiles-dev rpmfiles-lib:
-	sort -u $$DIST_MANIFEST | $(AWK) > $@ '\
+	$(SORT) -u $$DIST_MANIFEST | $(AWK) > $@ '\
 $$1 == "d" { printf ("%%%%dir %%%%attr(%s,%s,%s) %s\n", $$2, $$3, $$4, $$5); } \
 $$1 == "f" { if (match ($$6, "$(PKG_MAN_DIR)") || \
                 match ($$6, "$(PKG_DOC_DIR)")) \
@@ -81,7 +81,7 @@ $$1 == "l" { if (match ($$3, "$(PKG_MAN_DIR)") || \
 
 .PHONY: $(SPECF)
 ${SPECF} : ${SPECF}.in
-	sed -e's|@pkg_name@|$(PKG_NAME)|g' \
+	$(SED) -e's|@pkg_name@|$(PKG_NAME)|g' \
 	    -e's|@pkg_version@|$(PKG_VERSION)|g' \
 	    -e's|@pkg_release@|$(PKG_RELEASE)|g' \
 	    -e's|@pkg_distribution@|$(PKG_DISTRIBUTION)|g' \

@@ -38,14 +38,14 @@ include $(TOPDIR)/include/builddefs
 endif
 
 CONFIGURE = configure include/builddefs include/platform_defs.h
-LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
+LSRCFILES = configure configure.in Makepkgs aclocal.m4 install-sh README VERSION
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
 	db freeze fsck growfs io imap logprint mkfile mkfs repair rtcp \
-	man doc po debian build
+	m4 man doc po debian build
 
 default: $(CONFIGURE)
 ifeq ($(HAVE_BUILDDEFS), no)
@@ -75,6 +75,9 @@ $(CONFIGURE):
 		$$LOCAL_CONFIGURE_OPTIONS
 	touch .census
 
+aclocal.m4::
+	aclocal --acdir=$(TOPDIR)/m4 --output=$@
+
 install: default
 	$(SUBDIRS_MAKERULE)
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
@@ -85,5 +88,4 @@ install-dev: default
 
 realclean distclean: clean
 	rm -f $(LDIRT) $(CONFIGURE)
-	rm -rf autom4te.cache
-	[ ! -d Logs ] || rmdir Logs
+	rm -rf autom4te.cache Logs

@@ -1,301 +1,45 @@
-dnl unpacking check - this file must exist
 AC_INIT(include/libxfs.h)
 AC_CONFIG_HEADER(include/platform_defs.h)
 
-pkg_name="xfsprogs"
-AC_SUBST(pkg_name)
-
-#
-# Note: the following environment variables may be set to override the
-# defaults (to change paths and/or executables, build parameters, etc):
-#
-#   DEBUG  OPTIMIZER  MALLOCLIB
-#   PLATFORM  DISTRIBUTION  INSTALL_USER  INSTALL_GROUP
-#   MAKE  CC  LD  TAR  ZIP  AWK  SED  ECHO  RPM  LIBTOOL
-#   MSGFMT  MSGMERGE  XGETTEXT
-#
-
-DEBUG=${DEBUG:-'-DDEBUG'}		# -DNDEBUG
-OPTIMIZER=${OPTIMIZER:-'-O1 -g'}	# some gcc's miscompile at -O2
-MALLOCLIB=${MALLOCLIB:-''}		# /usr/lib/libefence.a
-
-dnl Debug build?
-debug_build="$DEBUG"
-AC_SUBST(debug_build)
-
-dnl Optimization options?
-opt_build="$OPTIMIZER"
-AC_SUBST(opt_build)
-
-dnl Alternate malloc library?
-malloc_lib="$MALLOCLIB"
-AC_SUBST(malloc_lib)
-
-dnl Set version
-. ./VERSION
-
-pkg_version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
-pkg_release=$PKG_BUILD
-AC_SUBST(pkg_version)
-AC_SUBST(pkg_release)
-
-pkg_platform=`uname -s`
-pkg_distribution="Generic $pkg_platform"
-pkg_platform=`echo $pkg_platform | tr 'A-Z' 'a-z' | sed -e 's/irix64/irix/'`
-test -z "$PLATFORM" || pkg_platform="$PLATFORM"
-test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
-AC_SUBST(pkg_distribution)
-AC_SUBST(pkg_platform)
-
-pkg_user=root
-test -z "$INSTALL_USER" || pkg_user="$INSTALL_USER"
-AC_SUBST(pkg_user)
-
-pkg_group=root
-test -z "$INSTALL_GROUP" || pkg_group="$INSTALL_GROUP"
-AC_SUBST(pkg_group)
-
-dnl check if user wants their own C compiler
-if test -z "$CC"; then
-	AC_PROG_CC
-fi
-cc=$CC
-AC_SUBST(cc)
-
-dnl check if users wants their own make
-if test -z "$MAKE"; then
-	AC_PATH_PROG(MAKE, make, /usr/bin/make)
-fi
-make=$MAKE
-AC_SUBST(make)
-
-dnl check if users wants their own linker
-if test -z "$LD"; then
-	AC_PATH_PROG(LD, ld, /usr/bin/ld)
-fi
-ld=$LD
-AC_SUBST(ld)
-
-dnl check if the tar program is available
-if test -z "$TAR"; then
-	AC_PATH_PROG(TAR, tar, /bin/tar)
-fi
-tar=$TAR
-AC_SUBST(tar)
-
-dnl check if the gzip program is available
-if test -z "$ZIP"; then
-	AC_PATH_PROG(ZIP, gzip, /bin/gzip)
-fi
-zip=$ZIP
-AC_SUBST(zip)
-
-dnl check if the makedepend program is available
-if test -z "$MAKEDEPEND"; then
-	AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)
-fi
-makedepend=$MAKEDEPEND
-AC_SUBST(makedepend)
-
-dnl check if the rpm program is available
-if test -z "$RPM"; then
-	AC_PATH_PROG(RPM, rpm, /bin/rpm)
-fi
-rpm=$RPM
-AC_SUBST(rpm)
-
-dnl .. and what version is rpm
-rpm_version=0
-test -x $RPM && \
-	rpm_version=`$RPM --version | awk '{print $NF}' | awk -F. '{print $1}'`
-AC_SUBST(rpm_version)
-
-dnl At some point in rpm 4.0, rpm can no longer build rpms, and
-dnl rpmbuild is needed (rpmbuild may go way back; not sure)
-dnl So, if rpm version >= 4.0, look for rpmbuild.  Otherwise build w/ rpm
-
-if test $rpm_version -ge 4; then
-	AC_PATH_PROG(RPMBUILD, rpmbuild)
-	rpmbuild=$RPMBUILD
-else
-	rpmbuild=$RPM
-fi
-AC_SUBST(rpmbuild)
-
-dnl check if symbolic links are supported
-AC_PROG_LN_S
-
-dnl check if user wants their own awk, sed and echo
-if test -z "$AWK"; then
-	AC_PATH_PROG(AWK, awk, /bin/awk)
-fi
-awk=$AWK
-AC_SUBST(awk)
-if test -z "$SED"; then
-	AC_PATH_PROG(SED, sed, /bin/sed)
-fi
-sed=$SED
-AC_SUBST(sed)
-if test -z "$ECHO"; then
-	AC_PATH_PROG(ECHO, echo, /bin/echo)
-fi
-echo=$ECHO
-AC_SUBST(echo)
-
-dnl ensure libtool is installed
-if test -z "$LIBTOOL"; then
-	AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
-fi
-if test -z "$LIBTOOL"; then
-	echo
-	echo 'FATAL ERROR: libtool does not seem to be installed.'
-	echo $pkg_name cannot be built without a working libtool installation.
-	exit 1
-fi
-libtool=$LIBTOOL
-AC_SUBST(libtool)
-
-dnl libtool to build libraries static only?
 AC_ARG_ENABLE(shared,
 [ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
 	enable_shared=yes)
 AC_SUBST(enable_shared)
 
-dnl will we be making use of readline?
-AC_ARG_ENABLE(readline,
-[ --enable-readline=[yes/no] Enable readline command editing [default=no]],,
-	enable_readline=no)
-if test $enable_readline = yes; then
-	libreadline="-lreadline -ltermcap"
-fi
-AC_SUBST(libreadline)
-AC_SUBST(enable_readline)
-
-dnl will we be making use of editline?
-AC_ARG_ENABLE(editline,
-[ --enable-editline=[yes/no] Enable editline command editing [default=no]],,
-	enable_editline=no)
-if test $enable_editline = yes; then
-	libeditline="-ledit -ltermcap"
-fi
-AC_SUBST(libeditline)
-AC_SUBST(enable_editline)
-
-dnl will we be making use of gettext?
 AC_ARG_ENABLE(gettext,
 [ --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
 	enable_gettext=yes)
 AC_SUBST(enable_gettext)
 
-dnl check if the msgfmt, msgmerge, xgettext programs are available
-if test "$enable_gettext" = yes; then
-	if test -z "$MSGFMT"; then
-		AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
-	fi
-	msgfmt=$MSGFMT
-	AC_SUBST(msgfmt)
-	if test -z "$MSGMERGE"; then
-		AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
-	fi
-	msgmerge=$MSGMERGE
-	AC_SUBST(msgmerge)
-	if test -z "$XGETTEXT"; then
-		AC_CHECK_PROG(XGETTEXT, xgettext, /usr/bin/xgettext)
-	fi
-	xgettext=$XGETTEXT
-	AC_SUBST(xgettext)
+AC_ARG_ENABLE(readline,
+[ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+	test $enable_readline = yes && libreadline="-lreadline -ltermcap",
+	enable_readline=no)
+AC_SUBST(libreadline)
+AC_SUBST(enable_readline)
 
-	if test -z "$XGETTEXT"; then
-		echo
-		echo 'FATAL ERROR: xgettext does not seem to be installed.'
-		echo $pkg_name cannot be built without a working gettext installation.
-		exit 1
-	fi
-fi
+AC_ARG_ENABLE(editline,
+[ --enable-editline=[yes/no] Enable editline command editing [default=no]],
+	test $enable_editline = yes && libeditline="-ledit -ltermcap",
+	enable_editline=no)
+AC_SUBST(libeditline)
+AC_SUBST(enable_editline)
 
-dnl Checks for UUID header and library.
-AC_CHECK_HEADER(uuid/uuid.h,, [
-	echo
-	echo 'FATAL ERROR: could not find a valid UUID header.'
-	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
-	exit 1
-])
-AC_CHECK_LIB(uuid, uuid_generate,, [
-	echo
-	echo 'FATAL ERROR: could not find a valid UUID library.'
-	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
-	exit 1
-])
+AC_PACKAGE_GLOBALS(xfsprogs)
+AC_PACKAGE_UTILITIES(xfsprogs)
 
-dnl
-dnl Caution: using libuuid shared adds an additional runtime dependency,
-dnl but the rpm spec file and debian control file do _not_ enforce this.
-dnl We want to keep our runtime dependencies to an absolute minimum for
-dnl this particular package, but the option is there.
-dnl
+AC_PACKAGE_NEED_UUID_UUID_H
+AC_PACKAGE_NEED_UUIDPARSE_LIBUUID
 AC_ARG_ENABLE(shared-uuid,
 [ --enable-shared-uuid=[yes/no]	Link shared libuuid [default=no].],
 	libuuid="/usr/lib/libuuid.a"
-	if test "$enable_shared_uuid" = yes; then
-		libuuid="-luuid"
-	fi,
+	test "$enable_shared_uuid" = yes && libuuid="-luuid",
 	libuuid="/usr/lib/libuuid.a")
 AC_SUBST(libuuid)
 
-dnl Check if we have a type for the pointer's size integer (__psint_t)
-AC_MSG_CHECKING([for __psint_t ])
-AC_TRY_COMPILE(
-[
-    #include <sys/types.h>
-    #include <stdlib.h>
-    #include <stddef.h>
-],
-[
-    __psint_t  psint;
-], AC_DEFINE(HAVE___PSINT_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
+AC_TYPE_PSINT
+AC_TYPE_PSUNSIGNED
+AC_SIZEOF_POINTERS_AND_LONG
+AC_MANUAL_FORMAT
 
-dnl Check if we have a type for the pointer's size unsigned (__psunsigned_t)
-AC_MSG_CHECKING([for __psunsigned_t ])
-AC_TRY_COMPILE(
-[
-    #include <sys/types.h>
-    #include <stdlib.h>
-    #include <stddef.h>
-],
-[
-    __psunsigned_t  psuint;
-], AC_DEFINE(HAVE___PSUNSIGNED_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
-
-dnl Check type sizes
-if test "$cross_compiling" = yes -a -z "$ac_cv_sizeof_long"; then
-	AC_MSG_WARN([Cross compiling; assuming 32bit long and 32bit pointers])
-fi
-AC_CHECK_SIZEOF(long, 4)
-AC_CHECK_SIZEOF(char *, 4)
-if test $ac_cv_sizeof_long -eq 4; then
-	AC_DEFINE(HAVE_32BIT_LONG)
-fi
-if test $ac_cv_sizeof_long -eq 8; then
-	AC_DEFINE(HAVE_64BIT_LONG)
-fi
-if test $ac_cv_sizeof_char_p -eq 4; then
-	AC_DEFINE(HAVE_32BIT_PTR)
-fi
-if test $ac_cv_sizeof_char_p -eq 8; then
-	AC_DEFINE(HAVE_64BIT_PTR)
-fi
-
-dnl man pages (source)
-dnl also check if man page source is gzipped
-dnl (usually on Debian, but not Redhat pre-7.0)
-have_zipped_manpages=false
-for d in ${prefix}/share/man ${prefix}/man ; do
-    if test -f $d/man1/man.1.gz; then
-	have_zipped_manpages=true
-	break
-    fi
-done
-AC_SUBST(have_zipped_manpages)
-
-dnl build definitions for use in Makefiles
 AC_OUTPUT(include/builddefs)
