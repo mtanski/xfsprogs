@@ -2406,17 +2406,6 @@ xfs_bmap_del_extent(
 			    ip->i_ino != mp->m_sb.sb_uquotino &&
 			    ip->i_ino != mp->m_sb.sb_gquotino)
 				qfield = XFS_TRANS_DQ_BCOUNT;
-			/*
-			 * If we're freeing meta-data, then the transaction
-			 * that frees the blocks must be synchronous.  This
-			 * ensures that noone can reuse the blocks before
-			 * they are permanently free.  For regular data
-			 * it is the callers responsibility to make the
-			 * data permanently inaccessible before calling
-			 * here to free it.
-			 */
-			if (iflags & XFS_BMAPI_METADATA)
-				xfs_trans_set_sync(tp);
 		}
 		/*
 		 * Set up del_endblock and cur for later.

@@ -207,7 +207,7 @@ int xfs_cfork_q(xfs_dinode_core_t *dcp);
 #define	XFS_CFORK_Q(dcp)                    xfs_cfork_q(dcp)
 #else
 #define	XFS_CFORK_Q_ARCH(dcp,arch)	    (INT_GET((dcp)->di_forkoff, arch) != 0)
-#define XFS_CFORK_Q(dcp)                    XFS_CFORK_Q_ARCH(dcp,ARCH_NOCONVERT)
+#define XFS_CFORK_Q(dcp)                    ((dcp)->di_forkoff != 0)
 
 #endif
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_CFORK_BOFF)
@@ -217,7 +217,7 @@ int xfs_cfork_boff(xfs_dinode_core_t *dcp);
 #define	XFS_CFORK_BOFF(dcp)	            xfs_cfork_boff(dcp)
 #else
 #define	XFS_CFORK_BOFF_ARCH(dcp,arch)	    ((int)(INT_GET((dcp)->di_forkoff, arch) << 3))
-#define XFS_CFORK_BOFF(dcp)                 XFS_CFORK_BOFF_ARCH(dcp,ARCH_NOCONVERT)
+#define XFS_CFORK_BOFF(dcp)                 ((int)((dcp)->di_forkoff << 3))
 
 #endif
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_CFORK_DSIZE)
@@ -228,7 +228,8 @@ int xfs_cfork_dsize(xfs_dinode_core_t *dcp, struct xfs_mount *mp);
 #else
 #define	XFS_CFORK_DSIZE_ARCH(dcp,mp,arch) \
 	(XFS_CFORK_Q_ARCH(dcp, arch) ? XFS_CFORK_BOFF_ARCH(dcp, arch) : XFS_LITINO(mp))
-#define XFS_CFORK_DSIZE(dcp,mp)             XFS_CFORK_DSIZE_ARCH(dcp,mp,ARCH_NOCONVERT)
+#define XFS_CFORK_DSIZE(dcp,mp) \
+	(XFS_CFORK_Q(dcp) ? XFS_CFORK_BOFF(dcp) : XFS_LITINO(mp))
 
 #endif
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_CFORK_ASIZE)
@@ -239,7 +240,8 @@ int xfs_cfork_asize(xfs_dinode_core_t *dcp, struct xfs_mount *mp);
 #else
 #define	XFS_CFORK_ASIZE_ARCH(dcp,mp,arch) \
 	(XFS_CFORK_Q_ARCH(dcp, arch) ? XFS_LITINO(mp) - XFS_CFORK_BOFF_ARCH(dcp, arch) : 0)
-#define XFS_CFORK_ASIZE(dcp,mp)             XFS_CFORK_ASIZE_ARCH(dcp,mp,ARCH_NOCONVERT)
+#define XFS_CFORK_ASIZE(dcp,mp) \
+	(XFS_CFORK_Q(dcp) ? XFS_LITINO(mp) - XFS_CFORK_BOFF(dcp) : 0)
 
 #endif
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_CFORK_SIZE)
@@ -251,7 +253,9 @@ int xfs_cfork_size(xfs_dinode_core_t *dcp, struct xfs_mount *mp, int w);
 #define	XFS_CFORK_SIZE_ARCH(dcp,mp,w,arch) \
 	((w) == XFS_DATA_FORK ? \
 		XFS_CFORK_DSIZE_ARCH(dcp, mp, arch) : XFS_CFORK_ASIZE_ARCH(dcp, mp, arch))
-#define XFS_CFORK_SIZE(dcp,mp,w)            XFS_CFORK_SIZE_ARCH(dcp,mp,w,ARCH_NOCONVERT)
+#define XFS_CFORK_SIZE(dcp,mp,w) \
+	((w) == XFS_DATA_FORK ? \
+		XFS_CFORK_DSIZE(dcp, mp) : XFS_CFORK_ASIZE(dcp, mp))
 
 #endif
 

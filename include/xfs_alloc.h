@@ -101,6 +101,11 @@ typedef struct xfs_alloc_arg {
 #define	XFS_ALLOC_KTRACE_ALLOC	1
 #define	XFS_ALLOC_KTRACE_FREE	2
 #define	XFS_ALLOC_KTRACE_MODAGF	3
+#define	XFS_ALLOC_KTRACE_BUSY	4
+#define	XFS_ALLOC_KTRACE_UNBUSY	5
+#define	XFS_ALLOC_KTRACE_BUSYSEARCH	6
+
+
 /*
  * Allocation tracing buffer size.
  */
@@ -200,6 +205,18 @@ xfs_free_extent(
 	struct xfs_trans *tp,	/* transaction pointer */
 	xfs_fsblock_t	bno,	/* starting block number of extent */
 	xfs_extlen_t	len);	/* length of extent */
+
+void
+xfs_alloc_mark_busy(xfs_trans_t *tp,
+		xfs_agnumber_t agno,
+		xfs_agblock_t bno,
+		xfs_extlen_t len);
+
+void
+xfs_alloc_clear_busy(xfs_trans_t *tp,
+		xfs_agnumber_t ag,
+		int idx);
+
 
 #endif	/* __KERNEL__ */
 

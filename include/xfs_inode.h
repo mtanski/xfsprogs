@@ -93,7 +93,6 @@ struct xfs_buf;
 struct xfs_bmap_free;
 struct xfs_bmbt_irec;
 struct xfs_bmbt_block;
-struct xfs_ext_attr;
 struct xfs_inode;
 struct xfs_inode_log_item;
 struct xfs_mount;
@@ -317,12 +316,10 @@ typedef struct xfs_inode {
 
 	/* Miscellaneous state. */
 	unsigned short		i_flags;	/* see defined flags below */
-	unsigned short		i_update_core;	/* timestamps/size is dirty */
-	unsigned short		i_update_size;	/* di_size field is dirty */
+	unsigned char		i_update_core;	/* timestamps/size is dirty */
+	unsigned char		i_update_size;	/* di_size field is dirty */
 	unsigned int		i_gen;		/* generation count */
 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
-	struct xfs_ext_attr	*i_ext_attr;	/* Critical ext attributes */
-	void			*i_ilock_ra;	/* current ilock ret addr */
 
 	xfs_dinode_core_t	i_d;		/* most of ondisk inode */
 	xfs_chashlist_t		*i_chash;	/* cluster hash list header */
@@ -420,7 +417,6 @@ void xfs_ifork_next_set(xfs_inode_t *ip, int w, int n);
 #define	XFS_ILOCK_EXCL		0x004
 #define	XFS_ILOCK_SHARED	0x008
 #define	XFS_IUNLOCK_NONOTIFY	0x010
-#define XFS_IOLOCK_NESTED	0x020
 #define XFS_EXTENT_TOKEN_RD	0x040
 #define XFS_SIZE_TOKEN_RD	0x080
 #define XFS_EXTSIZE_RD		(XFS_EXTENT_TOKEN_RD|XFS_SIZE_TOKEN_RD)
@@ -432,7 +428,6 @@ void xfs_ifork_next_set(xfs_inode_t *ip, int w, int n);
 
 #define XFS_LOCK_MASK	\
 	(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED | XFS_ILOCK_EXCL | \
-	 XFS_IOLOCK_NESTED | \
 	 XFS_ILOCK_SHARED | XFS_EXTENT_TOKEN_RD | XFS_SIZE_TOKEN_RD | \
 	 XFS_WILLLEND)
 

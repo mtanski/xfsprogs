@@ -526,6 +526,9 @@ xfs_alloc_ag_vextent(
 			TRACE_MODAGF(NULL, agf, XFS_AGF_FREEBLKS);
 			xfs_alloc_log_agf(args->tp, args->agbp,
 						XFS_AGF_FREEBLKS);
+			/* search the busylist for these blocks */
+			xfs_alloc_search_busy(args->tp, args->agno,
+					args->agbno, args->len);
 		}
 		if (!args->isfl)
 			xfs_trans_mod_sb(args->tp,
@@ -1385,17 +1388,6 @@ xfs_alloc_ag_vextent_small(
 				bp = xfs_btree_get_bufs(args->mp, args->tp,
 					args->agno, fbno, 0);
 				xfs_trans_binval(args->tp, bp);
-				/*
-				 * Since blocks move to the free list without
-				 * the coordination used in xfs_bmap_finish,
-				 * we can't allow the user to write to the
-				 * block until we know that the transaction
-				 * that moved it to the free list is
-				 * permanently on disk.  The only way to
-				 * ensure that is to make this transaction
-				 * synchronous.
-				 */
-				xfs_trans_set_sync(args->tp);
 			}
 			args->len = 1;
 			args->agbno = fbno;
@@ -1694,6 +1686,19 @@ xfs_free_ag_extent(
 			(haveright ? "both" : "left") :
 			(haveright ? "right" : "none"),
 		agno, bno, len, isfl);
+
+	/*
+	 * Since blocks move to the free list without the coordination
+	 * used in xfs_bmap_finish, we can't allow block to be available
+	 * for reallocation and non-transaction writing (user data)
+	 * until we know that the transaction that moved it to the free
+	 * list is permanently on disk.  We track the blocks by declaring 
+	 * these blocks as "busy"; the busy list is maintained on a per-ag 
+	 * basis and each transaction records which entries should be removed 
+	 * when the iclog commits to disk.  If a busy block is allocated,
+	 * the iclog is pushed up to the LSN that freed the block.
+	 */
+	xfs_alloc_mark_busy(tp, agno, bno, len);
 	return 0;
 
  error0:
@@ -1845,25 +1850,6 @@ xfs_alloc_fix_freelist(
 			return error;
 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
 		xfs_trans_binval(tp, bp);
-		/*
-		 * Since blocks move to the free list without
-		 * the coordination used in xfs_bmap_finish,
-		 * we can't allow block to be available for reallocation
-		 * and non-transaction writing (user data)
-		 * until we know that the transaction
-		 * that moved it to the free list is
-		 * permanently on disk.  The only way to
-		 * ensure that is to make this transaction
-		 * synchronous.  The one exception to this
-		 * is in the case of wsync-mounted filesystem
-		 * where we know that any block that made it
-		 * onto the freelist won't be seen again in
-		 * the file from which it came since the transactions
-		 * that free metadata blocks or shrink inodes in
-		 * wsync filesystems are all themselves synchronous.
-		 */
-		if (!(mp->m_flags & XFS_MOUNT_WSYNC))
-			xfs_trans_set_sync(tp);
 	}
 	/*
 	 * Initialize the args structure.
@@ -1962,6 +1948,16 @@ xfs_alloc_get_freelist(
 	TRACE_MODAGF(NULL, agf, XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT);
 	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT);
 	*bnop = bno;
+
+	/*
+	 * As blocks are freed, they are added to the per-ag busy list
+	 * and remain there until the freeing transaction is committed to
+	 * disk.  Now that we have allocated blocks, this list must be
+	 * searched to see if a block is being reused.  If one is, then
+	 * the freeing transaction must be pushed to disk NOW by forcing
+	 * to disk all iclogs up that transaction's LSN.
+	 */
+	xfs_alloc_search_busy(tp, INT_GET(agf->agf_seqno, ARCH_CONVERT), bno, 1);
 	return 0;
 }
 
@@ -2058,6 +2054,19 @@ xfs_alloc_put_freelist(
 		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl),
 		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl +
 			sizeof(xfs_agblock_t) - 1));
+	/*
+	 * Since blocks move to the free list without the coordination
+	 * used in xfs_bmap_finish, we can't allow block to be available
+	 * for reallocation and non-transaction writing (user data)
+	 * until we know that the transaction that moved it to the free
+	 * list is permanently on disk.  We track the blocks by declaring
+	 * these blocks as "busy"; the busy list is maintained on a per-ag
+	 * basis and each transaction records which entries should be removed
+	 * when the iclog commits to disk.  If a busy block is allocated,
+	 * the iclog is pushed up to the LSN that freed the block.
+	 */
+	xfs_alloc_mark_busy(tp, INT_GET(agf->agf_seqno, ARCH_CONVERT), bno, 1);
+
 	return 0;
 }
 
@@ -2141,6 +2150,7 @@ xfs_alloc_read_agf(
 			INT_GET(agf->agf_levels[XFS_BTNUM_BNOi], ARCH_CONVERT);
 		pag->pagf_levels[XFS_BTNUM_CNTi] =
 			INT_GET(agf->agf_levels[XFS_BTNUM_CNTi], ARCH_CONVERT);
+		spinlock_init(&pag->pagb_lock, "xfspagb");
 		pag->pagf_init = 1;
 	}
 #ifdef DEBUG

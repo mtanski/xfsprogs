@@ -173,7 +173,6 @@
 #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
 	( *(bpp) = libxfs_readbuf( *(dev_t*)devp, (blkno), (len), 1), 0 )
 
-
 /* transaction management */
 #define xfs_trans_set_sync(tp)			((void) 0)
 #define xfs_trans_agblocks_delta(tp, d)		((void) 0)	/* debug only */
@@ -184,7 +183,6 @@
 #define xfs_trans_reserve_blkquota(tp,i,n)	0
 #define xfs_trans_unreserve_blkquota(tp,i,n)	((void) 0)
 #define xfs_trans_unreserve_rtblkquota(tp,i,n)	((void) 0)
-
 
 /* memory management */
 #define KM_SLEEP	1
@@ -208,7 +206,6 @@
 #define xfs_dir2_trace_args_sb(where, args, s, bp)	((void) 0)
 #define xfs_dir_shortform_validate_ondisk(a,b)		((void) 0)
 
-
 /* block management */
 #define xfs_bmap_check_extents(ip,w)			((void) 0)
 #define xfs_bmap_trace_delete(f,d,ip,i,c,w)		((void) 0)
@@ -227,6 +224,9 @@
 #define XFS_BMBT_TRACE_ARGIK(c,i,k)			((void) 0)
 #define XFS_BMBT_TRACE_CURSOR(c,s)			((void) 0)
 
+/* space allocation */
+#define xfs_alloc_search_busy(tp,ag,b,len)		((void) 0)
+#define xfs_alloc_mark_busy(tp,ag,b,len)		((void) 0)
 
 /* anything else */
 typedef __uint32_t uint_t;
@@ -256,6 +256,7 @@ typedef struct { dev_t dev; } buftarg_t;
 #define mrunlock(a)			((void) 0)
 #define mraccess(a)			((void) 0)
 #define ismrlocked(a,b)			1
+#define spinlock_init(a,b)		((void) 0)
 #define ovbcopy(from,to,count)		memmove(to,from,count)
 #define __return_address		__builtin_return_address(0)
 #define xfs_btree_reada_bufl(m,fsb,c)	((void) 0)

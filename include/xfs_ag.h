@@ -40,6 +40,7 @@
 
 struct xfs_buf;
 struct xfs_mount;
+struct xfs_trans;
 
 #define	XFS_AGF_MAGIC	0x58414746	/* 'XAGF' */
 #define	XFS_AGI_MAGIC	0x58414749	/* 'XAGI' */
@@ -189,9 +190,27 @@ typedef	struct xfs_agfl
 } xfs_agfl_t;
 
 /*
+ * Busy block/extent entry.  Used in perag to mark blocks that have been freed
+ * but whose transactions aren't committed to disk yet.
+ */
+typedef struct xfs_perag_busy {
+	xfs_agblock_t	busy_start;
+	xfs_extlen_t	busy_length;
+	struct xfs_trans *busy_tp;	/* transaction that did the free */
+} xfs_perag_busy_t;
+
+/*
  * Per-ag incore structure, copies of information in agf and agi,
  * to improve the performance of allocation group selection.
+ *
+ * pick sizes which fit in allocation buckets well
  */
+#if (BITS_PER_LONG == 32)
+#define XFS_PAGB_NUM_SLOTS	84
+#elif (BITS_PER_LONG == 64)
+#define XFS_PAGB_NUM_SLOTS	128
+#endif
+
 typedef struct xfs_perag
 {
 	char		pagf_init;	/* this agf's entry is initialized */
@@ -204,6 +223,11 @@ typedef struct xfs_perag
 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
 	xfs_extlen_t	pagf_longest;	/* longest free space */
 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
+#ifdef __KERNEL__
+	lock_t		pagb_lock;	/* lock for pagb_list */
+	int		pagb_count;	/* pagb slots in use */
+	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
+#endif
 } xfs_perag_t;
 
 #define	XFS_AG_MIN_BYTES	(1LL << 24)	/* 16 MB */
