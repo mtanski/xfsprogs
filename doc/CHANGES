@@ -1,3 +1,6 @@
+xfsprogs-2.4.7 (22 April 2003)
+	- Clarify XFS system call interfaces, fix up documentation.
+
 xfsprogs-2.4.6 (11 April 2003)
 	- Fix a bug in detection of "clean" and "error" states with
 	  MD devices.

@@ -32,7 +32,7 @@
 #ifndef LIBXLOG_H
 #define LIBXLOG_H
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 
 /*
  * define the userlevel xlog_t to be the subset of the kernel's
@@ -60,10 +60,10 @@ typedef struct log {
 	int		l_grant_write_bytes;	/* */
 } xlog_t;
 
-#include <xfs_log_recover.h>
-#include <xfs_buf_item.h>
-#include <xfs_inode_item.h>
-#include <xfs_extfree_item.h>
+#include <xfs/xfs_log_recover.h>
+#include <xfs/xfs_buf_item.h>
+#include <xfs/xfs_inode_item.h>
+#include <xfs/xfs_extfree_item.h>
 
 /*
  * macros mapping kernel code to user code

@@ -116,9 +116,8 @@ except that a handle is specified instead of a file descriptor.
 The \f2fssetdm_by_handle\f1() function sets the
 di_dmevmask and di_dmstate fields in an XFS on-disk inode.
 It is analogous to the \f2XFS_IOC_FSSETDM\f1
-.I ioctl(2)
-command (see also
-.I xfs(5)), except that a handle is specified instead of a file descriptor.
+.I xfsctl(3)
+command, except that a handle is specified instead of a file.
 .P
 The \f2free_handle\f1() function
 frees the storage allocated for handles
@@ -129,10 +128,10 @@ and
 \f2handle_to_fshandle\f1().
 .SH "SEE ALSO"
 open(2),
-ioctl(2),
 readlink(2),
 attr_multi(3),
 attr_list(3),
+xfsctl(3),
 xfs(5).
 .SH "DIAGNOSTICS"
 .PP

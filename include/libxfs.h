@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,45 +32,45 @@
 #ifndef __LIBXFS_H__
 #define __LIBXFS_H__
 
-#include "platform_defs.h"
+#include <xfs/platform_defs.h>
 
-#include <xfs_fs.h>
-#include <xfs_types.h>
-#include <xfs_arch.h>
-#include <xfs_sb.h>
-#include <xfs_bit.h>
-#include <xfs_inum.h>
-#include <xfs_ag.h>
-#include <xfs_da_btree.h>
-#include <xfs_bmap_btree.h>
-#include <xfs_alloc_btree.h>
-#include <xfs_ialloc_btree.h>
-#include <xfs_alloc.h>
-#include <xfs_ialloc.h>
-#include <xfs_rtalloc.h>
-#include <xfs_btree.h>
-#include <xfs_dir.h>
-#include <xfs_dir_sf.h>
-#include <xfs_dir_leaf.h>
-#include <xfs_dir2.h>
-#include <xfs_dir2_data.h>
-#include <xfs_dir2_leaf.h>
-#include <xfs_dir2_block.h>
-#include <xfs_dir2_node.h>
-#include <xfs_dir2_sf.h>
-#include <xfs_attr_sf.h>
-#include <xfs_dinode.h>
-#include <xfs_attr_leaf.h>
-#include <xfs_quota.h>
-#include <xfs_mount.h>
-#include <xfs_trans_space.h>
-#include <xfs_inode.h>
-#include <xfs_buf_item.h>
-#include <xfs_inode_item.h>
-#include <xfs_bmap.h>
-#include <xfs_imap.h>
-#include <xfs_log.h>
-#include <xfs_log_priv.h>
+#include <xfs/xfs_fs.h>
+#include <xfs/xfs_types.h>
+#include <xfs/xfs_arch.h>
+#include <xfs/xfs_sb.h>
+#include <xfs/xfs_bit.h>
+#include <xfs/xfs_inum.h>
+#include <xfs/xfs_ag.h>
+#include <xfs/xfs_da_btree.h>
+#include <xfs/xfs_bmap_btree.h>
+#include <xfs/xfs_alloc_btree.h>
+#include <xfs/xfs_ialloc_btree.h>
+#include <xfs/xfs_alloc.h>
+#include <xfs/xfs_ialloc.h>
+#include <xfs/xfs_rtalloc.h>
+#include <xfs/xfs_btree.h>
+#include <xfs/xfs_dir.h>
+#include <xfs/xfs_dir_sf.h>
+#include <xfs/xfs_dir_leaf.h>
+#include <xfs/xfs_dir2.h>
+#include <xfs/xfs_dir2_data.h>
+#include <xfs/xfs_dir2_leaf.h>
+#include <xfs/xfs_dir2_block.h>
+#include <xfs/xfs_dir2_node.h>
+#include <xfs/xfs_dir2_sf.h>
+#include <xfs/xfs_attr_sf.h>
+#include <xfs/xfs_dinode.h>
+#include <xfs/xfs_attr_leaf.h>
+#include <xfs/xfs_quota.h>
+#include <xfs/xfs_mount.h>
+#include <xfs/xfs_trans_space.h>
+#include <xfs/xfs_inode.h>
+#include <xfs/xfs_buf_item.h>
+#include <xfs/xfs_inode_item.h>
+#include <xfs/xfs_bmap.h>
+#include <xfs/xfs_imap.h>
+#include <xfs/xfs_log.h>
+#include <xfs/xfs_log_priv.h>
 
 #ifndef XFS_SUPER_MAGIC
 #define XFS_SUPER_MAGIC 0x58465342
@@ -265,7 +265,7 @@ typedef struct xfs_buf_log_item {
 	xfs_buf_log_format_t	bli_format;	/* in-log header */
 } xfs_buf_log_item_t;
 
-#include <xfs_trans.h>
+#include <xfs/xfs_trans.h>
 
 typedef struct xfs_trans {
 	unsigned int	t_type;			/* transaction type */

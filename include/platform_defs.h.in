@@ -56,7 +56,7 @@
 #include <malloc.h>
 #include <getopt.h>
 #include <endian.h>
-#include "swab.h"
+#include <xfs/swab.h>
 
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 {
@@ -67,6 +67,14 @@ static __inline__ int platform_test_xfs_fd(int fd)
 {
 	struct statfs buf;
 	if (fstatfs(fd, &buf) < 0)
+		return 0;
+	return (buf.f_type == 0x58465342);	/* XFSB */
+}
+
+static __inline__ int platform_test_xfs_path(const char *path)
+{
+	struct statfs buf;
+	if (statfs(path, &buf) < 0)
 		return 0;
 	return (buf.f_type == 0x58465342);	/* XFSB */
 }
@@ -181,6 +189,14 @@ static __inline__ int platform_test_xfs_fd(int fd)
 	return (strcmp(buf.f_fstypename, "xfs") == 0);
 }
 
+static __inline__ int platform_test_xfs_path(const char *path)
+{
+	struct statfs buf;
+	if (statfs(path, &buf) < 0)
+		return 0;
+	return (strcmp(buf.f_fstypename, "xfs") == 0);
+}
+
 static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
 {
 	return fstatfs(fd, buf);
@@ -220,13 +236,13 @@ typedef unsigned char	uchar_t;
 #define pwrite64	pwrite
 #define ftruncate64	ftruncate
 #define fdatasync	fsync
-#define memalign(a,sz)	malloc(sz)
+#define memalign(a,sz)	valloc(sz)
 
 #include <machine/endian.h>
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#include "swab.h"
+#include <xfs/swab.h>
 
 #define O_LARGEFILE     0
 #ifndef O_DIRECT
@@ -283,7 +299,7 @@ typedef char*		xfs_caddr_t;
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#include "swab.h"
+#include <xfs/swab.h>
 
 #define INT_MAX		INT32_MAX
 #define UINT_MAX	UINT32_MAX
@@ -303,6 +319,14 @@ static __inline__ int platform_test_xfs_fd(int fd)
 {
 	struct statvfs sbuf;
 	if (fstatvfs(fd, &sbuf) < 0)
+		return 0;
+	return (strcmp(sbuf.f_basetype, "xfs") == 0);
+}
+
+static __inline__ int platform_test_xfs_path(const char *path)
+{
+	struct statvfs sbuf;
+	if (statvfs(path, &sbuf) < 0)
 		return 0;
 	return (strcmp(sbuf.f_basetype, "xfs") == 0);
 }
