@@ -189,7 +189,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvVd")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDtvVd")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -237,6 +237,9 @@ process_args(int argc, char **argv)
 			break;
 		case 'n':
 			no_modify = 1;
+			break;
+		case 't':
+			test_mode = 1;
 			break;
 		case 'v':
 			verbose = 1;
@@ -515,6 +518,8 @@ main(int argc, char **argv)
 
 	if (no_modify)
 		printf(_("No modify flag set, skipping phase 5\n"));
+	else if (test_mode)
+		printf(_("Test mode flag set, skipping phase 5\n"));
 	else
 		phase5(mp);
 

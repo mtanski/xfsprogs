@@ -185,14 +185,14 @@ typedef struct xfs_da_args {
 	int		index;		/* index of attr of interest in blk */
 	xfs_dablk_t	rmtblkno;	/* remote attr value starting blkno */
 	int		rmtblkcnt;	/* remote attr value block count */
-	int		rename;		/* T/F: this is an atomic rename op */
 	xfs_dablk_t	blkno2;		/* blkno of 2nd attr leaf of interest */
 	int		index2;		/* index of 2nd attr in blk */
 	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
 	int		rmtblkcnt2;	/* remote attr value block count */
-	int		justcheck;	/* check for ok with no space */
-	int		addname;	/* T/F: this is an add operation */
-	int		oknoent;	/* T/F: ok to return ENOENT, else die */
+	unsigned char	justcheck;	/* T/F: check for ok with no space */
+	unsigned char	rename;		/* T/F: this is an atomic rename op */
+	unsigned char	addname;	/* T/F: this is an add operation */
+	unsigned char	oknoent;	/* T/F: ok to return ENOENT, else die */
 } xfs_da_args_t;
 
 /*
@@ -252,9 +252,9 @@ typedef struct xfs_da_state {
 	unsigned int		node_ents;	/* how many entries in danode */
 	xfs_da_state_path_t	path;		/* search/split paths */
 	xfs_da_state_path_t	altpath;	/* alternate path for join */
-	unsigned int		inleaf     : 1;	/* insert into 1->lf, 0->splf */
-	unsigned int		extravalid : 1;	/* T/F: extrablk is in use */
-	unsigned int		extraafter : 1;	/* T/F: extrablk is after new */
+	unsigned char		inleaf;		/* insert into 1->lf, 0->splf */
+	unsigned char		extravalid;	/* T/F: extrablk is in use */
+	unsigned char		extraafter;	/* T/F: extrablk is after new */
 	xfs_da_state_blk_t	extrablk;	/* for double-splits on leafs */
 						/* for dirv2 extrablk is data */
 } xfs_da_state_t;

@@ -30,11 +30,8 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#define ustat __kernel_ustat
 #include <xfs/libxfs.h>
 #include <sys/stat.h>
-#undef ustat
-#include <sys/ustat.h>
 #include <sys/wait.h>
 #include <pthread.h>
 #include <signal.h>
@@ -222,6 +219,7 @@ handle_error:
 		pthread_mutex_unlock(&mainwait);
 	pthread_mutex_unlock(&glob_masks.mutex);
 	pthread_exit(NULL);
+	return NULL;
 }
 
 void
@@ -280,7 +278,7 @@ handler()
 					pthread_exit(NULL);
 				}
 
-				sigset(SIGCLD, handler);
+				signal(SIGCHLD, handler);
 				return;
 			} else  {
 				/* it just croaked it bigtime, log it */
@@ -302,7 +300,7 @@ handler()
 	do_warn(_("%s: Unknown child died (should never happen!)\n"), progname);
 	die_perror();
 	pthread_exit(NULL);
-	sigset(SIGCLD, handler);
+	signal(SIGCHLD, handler);
 }
 
 void
@@ -482,9 +480,9 @@ write_wbuf(void)
 		if (target[i].state != INACTIVE)
 			pthread_mutex_unlock(&targ[i].wait);	/* wake up */
 
-	sigrelse(SIGCLD);
+	sigrelse(SIGCHLD);
 	pthread_mutex_lock(&mainwait);
-	sighold(SIGCLD);
+	sighold(SIGCHLD);
 }
 
 
@@ -523,7 +521,6 @@ main(int argc, char **argv)
 	extern int	optind;
 	libxfs_init_t	xargs;
 	thread_args	*tcarg;
-	struct ustat	ustat_buf;
 	struct stat64	statbuf;
 
 	progname = basename(argv[0]);
@@ -647,7 +644,7 @@ main(int argc, char **argv)
 		 * check to make sure a filesystem isn't mounted
 		 * on the device
 		 */
-		if (ustat(statbuf.st_rdev, &ustat_buf) == 0)  {
+		if (platform_check_ismounted(source_name, NULL, &statbuf, 0))  {
 			do_log(
 	_("%s:  Warning -- a filesystem is mounted on the source device.\n"),
 				progname);
@@ -760,7 +757,8 @@ main(int argc, char **argv)
 			 * check to make sure a filesystem isn't mounted
 			 * on the device
 			 */
-			if (ustat(statbuf.st_rdev, &ustat_buf) == 0)  {
+			if (platform_check_ismounted(target[i].name,
+							NULL, &statbuf, 0))  {
 				do_log(_("%s:  a filesystem is mounted "
 					"on target device \"%s\".\n"
 					"%s cannot copy to mounted filesystems."
@@ -850,8 +848,8 @@ main(int argc, char **argv)
 
 	/* set up sigchild signal handler */
 
-	sigset(SIGCLD, handler);
-	sighold(SIGCLD);
+	signal(SIGCHLD, handler);
+	sighold(SIGCHLD);
 
 	/* make children */
 

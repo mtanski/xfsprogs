@@ -1,3 +1,9 @@
+xfsprogs-2.5.7 (29 August 2003)
+	- Sync up user/kernel source in libxfs and headers.
+	- Make xfs_copy a tad more portable, although work remains.
+	- Add a "test" mode to xfs_repair and xfs_check which allows
+	  for sparse (and hence extremely large) filesystem testing.
+
 xfsprogs-2.5.6 (19 August 2003)
 	- Fix a mkfs problem where it could exit inappropriately when
 	  a large data volume stripe unit was either specified on the

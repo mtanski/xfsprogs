@@ -1,6 +1,6 @@
 #!/bin/sh -f
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -33,13 +33,13 @@
 
 OPTS=" "
 ISFILE=" "
-USAGE="usage: xfs_check [-svfV] [-i ino]... [-b bno]... special"
+USAGE="Usage: xfs_check [-fsvV] [-i ino]... [-b bno]... special"
 
-
-while getopts "b:fi:svV" c
+while getopts "b:fi:stvV" c
 do
 	case $c in
 	s)	OPTS=$OPTS"-s ";;
+	t)	OPTS=$OPTS"-t ";;
 	v)	OPTS=$OPTS"-v ";;
 	V)	OPTS=$OPTS"-V ";;
 	i)	OPTS=$OPTS"-i "$OPTARG" ";;

@@ -120,7 +120,8 @@ EXTERN int	fs_fd;			/* filesystem fd */
 
 EXTERN int	verbose;
 EXTERN int	no_modify;
-EXTERN int	dangerously;		/* live danderously ... repair a ro mounted fs */
+EXTERN int	test_mode;		/* freespace is being faked, leave it */
+EXTERN int	dangerously;		/* live dangerously ... fix ro mount */
 EXTERN int	isa_file;
 EXTERN int	zap_log;
 EXTERN int	dumpcore;		/* abort, not exit on fatal errs */

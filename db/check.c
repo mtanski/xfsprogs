@@ -132,6 +132,7 @@ static int		inodata_hash_size;
 static inodata_t	***inomap;
 static int		nflag;
 static int		pflag;
+static int		tflag;
 static qdata_t		**qgdata;
 static int		qgdo;
 static qdata_t		**qudata;
@@ -373,7 +374,7 @@ static const cmdinfo_t	blockfree_cmd =
 	  NULL, "free block usage information", NULL };
 static const cmdinfo_t	blockget_cmd =
 	{ "blockget", "check", blockget_f, 0, -1, 0,
-	  "[-s|-v] [-n] [-b bno]... [-i ino] ...",
+	  "[-s|-v] [-n] [-t] [-b bno]... [-i ino] ...",
 	  "get block usage and check consistency", NULL };
 #ifdef DEBUG
 static const cmdinfo_t	blocktrash_cmd =
@@ -824,16 +825,18 @@ blockget_f(
 		return 0;
 	}
 	check_rootdir();
-	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-		/*
-		 * Check that there are no blocks either
-		 * a) unaccounted for or
-		 * b) bno-free but not cnt-free
-		 */
-		checknot_dbmap(agno, 0, mp->m_sb.sb_agblocks,
-			(1 << DBM_UNKNOWN) | (1 << DBM_FREE1));
-		check_linkcounts(agno);
+	/*
+	 * Check that there are no blocks either
+	 * a) unaccounted for or
+	 * b) bno-free but not cnt-free
+	 */
+	if (!tflag) {	/* are we in test mode, faking out freespace? */
+		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+			checknot_dbmap(agno, 0, mp->m_sb.sb_agblocks,
+				(1 << DBM_UNKNOWN) | (1 << DBM_FREE1));
 	}
+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+		check_linkcounts(agno);
 	if (mp->m_sb.sb_rblocks) {
 		checknot_rdbmap(0,
 			(xfs_extlen_t)(mp->m_sb.sb_rextents *
@@ -1742,8 +1745,8 @@ init(
 		sumfile = xcalloc(mp->m_rsumsize, 1);
 		sumcompute = xcalloc(mp->m_rsumsize, 1);
 	}
-	nflag = sflag = verbose = optind = 0;
-	while ((c = getopt(argc, argv, "b:i:npsv")) != EOF) {
+	nflag = sflag = tflag = verbose = optind = 0;
+	while ((c = getopt(argc, argv, "b:i:npstv")) != EOF) {
 		switch (c) {
 		case 'b':
 			bno = strtoll(optarg, NULL, 10);
@@ -1761,6 +1764,9 @@ init(
 			break;
 		case 's':
 			sflag = 1;
+			break;
+		case 't':
+			tflag = 1;
 			break;
 		case 'v':
 			verbose = 1;

@@ -1063,6 +1063,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 	xfs_da_args_t *args;
 
 	args = state->args;
+
 	/*
 	 * Descend thru the B-tree searching each level for the right
 	 * node to use, until the right hashval is found.
@@ -1078,15 +1079,13 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 		 * Read the next node down in the tree.
 		 */
 		blk->blkno = blkno;
-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
-					blkno, -1, &blk->bp,
-					state->args->whichfork);
+		error = xfs_da_read_buf(args->trans, args->dp, blkno,
+					-1, &blk->bp, args->whichfork);
 		if (error) {
 			blk->blkno = 0;
 			state->path.active--;
 			return(error);
 		}
-		ASSERT(blk->bp != NULL);
 		curr = blk->bp->data;
 		ASSERT(INT_GET(curr->magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC ||
 		       INT_GET(curr->magic, ARCH_CONVERT) == XFS_DIRX_LEAF_MAGIC(state->mp) ||
@@ -1105,7 +1104,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 			 */
 			max = INT_GET(node->hdr.count, ARCH_CONVERT);
 			probe = span = max / 2;
-			hashval = state->args->hashval;
+			hashval = args->hashval;
 			for (btree = &node->btree[probe]; span > 4;
 				   btree = &node->btree[probe]) {
 				span /= 2;
@@ -1168,22 +1167,22 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
 	for (;;) {
 		if (blk->magic == XFS_DIR_LEAF_MAGIC) {
 			ASSERT(XFS_DIR_IS_V1(state->mp));
-			retval = xfs_dir_leaf_lookup_int(blk->bp, state->args,
+			retval = xfs_dir_leaf_lookup_int(blk->bp, args,
 								  &blk->index);
 		} else if (blk->magic == XFS_DIR2_LEAFN_MAGIC) {
 			ASSERT(XFS_DIR_IS_V2(state->mp));
-			retval = xfs_dir2_leafn_lookup_int(blk->bp, state->args,
+			retval = xfs_dir2_leafn_lookup_int(blk->bp, args,
 							&blk->index, state);
 		}
 #ifdef __KERNEL__
 		else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
-			retval = xfs_attr_leaf_lookup_int(blk->bp, state->args);
-			blk->index = state->args->index;
-			state->args->blkno = blk->blkno;
+			retval = xfs_attr_leaf_lookup_int(blk->bp, args);
+			blk->index = args->index;
+			args->blkno = blk->blkno;
 		}
 #endif
 		if (((retval == ENOENT) || (retval == ENOATTR)) &&
-		    (blk->hashval == state->args->hashval)) {
+		    (blk->hashval == args->hashval)) {
 			error = xfs_da_path_shift(state, &state->path, 1, 1,
 							 &retval);
 			if (error)
