@@ -278,9 +278,6 @@ Disk quotas for user nathans (uid 16302):
 
 CAVEATS
 
-Group quota are not implemented in the first Linux/XFS release, but are
-pencilled in for the next release.
-
 The XFS allocation mechanism will always reserve the maximum amount of
 space required before proceeding with a space allocation.  If insufficient
 space for this reservation is available, due to the users block quota limit
@@ -294,7 +291,7 @@ limits.  This additional overhead is typically in the range of tens of
 filesystem-sized blocks.
 
 On IRIX, XFS supports project quota.  This is not (ever) likely to be
-supported on Linux/XFS, as the concept of a project is peculiar to IRIX.
+supported on Linux/XFS, as the concept of a project is specific to IRIX.
 A filesystem that has used user quota on IRIX, however, can be migrated
 to Linux, and vice-versa, as the ondisk format is shared between both
 versions of XFS (and Linux/XFS is "endian clean").

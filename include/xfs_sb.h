@@ -129,7 +129,7 @@ typedef struct xfs_sb
 	 * End contiguous fields.
 	 */
 	xfs_ino_t	sb_uquotino;	/* user quota inode */
-	xfs_ino_t	sb_pquotino;	/* project quota inode */
+	xfs_ino_t	sb_gquotino;	/* group quota inode */
 	__uint16_t	sb_qflags;	/* quota flags */
 	__uint8_t	sb_flags;	/* misc. flags */
 	__uint8_t	sb_shared_vn;	/* shared version number */
@@ -153,7 +153,7 @@ typedef enum {
 	XFS_SBS_SECTLOG, XFS_SBS_INODELOG, XFS_SBS_INOPBLOG, XFS_SBS_AGBLKLOG,
 	XFS_SBS_REXTSLOG, XFS_SBS_INPROGRESS, XFS_SBS_IMAX_PCT, XFS_SBS_ICOUNT,
 	XFS_SBS_IFREE, XFS_SBS_FDBLOCKS, XFS_SBS_FREXTENTS, XFS_SBS_UQUOTINO,
-	XFS_SBS_PQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
+	XFS_SBS_GQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
 	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
         XFS_SBS_DUMMY,
 	XFS_SBS_FIELDCOUNT
@@ -171,7 +171,7 @@ typedef enum {
 #define	XFS_SB_RSUMINO		XFS_SB_MVAL(RSUMINO)
 #define	XFS_SB_VERSIONNUM	XFS_SB_MVAL(VERSIONNUM)
 #define XFS_SB_UQUOTINO		XFS_SB_MVAL(UQUOTINO)
-#define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
+#define XFS_SB_GQUOTINO		XFS_SB_MVAL(GQUOTINO)
 #define XFS_SB_QFLAGS		XFS_SB_MVAL(QFLAGS)
 #define XFS_SB_SHARED_VN	XFS_SB_MVAL(SHARED_VN)
 #define XFS_SB_UNIT		XFS_SB_MVAL(UNIT)
@@ -180,7 +180,7 @@ typedef enum {
 #define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
 #define	XFS_SB_MOD_BITS		\
 	(XFS_SB_UUID | XFS_SB_ROOTINO | XFS_SB_RBMINO | XFS_SB_RSUMINO | \
-	 XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO | XFS_SB_PQUOTINO | \
+	 XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO | XFS_SB_GQUOTINO | \
 	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH)
 
 /*

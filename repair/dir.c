@@ -183,9 +183,9 @@ process_shortform_dir(
 	"entry in shorform dir %llu references user quota inode %llu\n",
 				ino, lino);
 			junkit = 1;
-		} else if (lino == mp->m_sb.sb_pquotino)  {
+		} else if (lino == mp->m_sb.sb_gquotino)  {
 			do_warn(
-	"entry in shorform dir %llu references proj quota inode %llu\n",
+	"entry in shorform dir %llu references group quota inode %llu\n",
 				ino, lino);
 			junkit = 1;
 		} else if ((irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
@@ -1924,9 +1924,9 @@ process_leaf_dir_block(
 				do_warn(
 				"\twould clear ino number in entry %d...\n", i);
 			}
-		} else if (lino == mp->m_sb.sb_pquotino)  {
+		} else if (lino == mp->m_sb.sb_gquotino)  {
 			do_warn(
-"entry #%d, bno %d in directory %llu references proj quota inode %llu\n",
+"entry #%d, bno %d in directory %llu references group quota inode %llu\n",
 				i, da_bno, ino, lino);
 			if (!no_modify)  {
 				do_warn(

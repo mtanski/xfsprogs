@@ -45,7 +45,7 @@
 typedef struct xfs_dq_logformat {
 	__uint16_t		qlf_type;      /* dquot log item type */
 	__uint16_t		qlf_size;      /* size of this item */
-	xfs_dqid_t		qlf_id;	       /* usr/proj id number : 32 bits */
+	xfs_dqid_t		qlf_id;	       /* usr/grp id number : 32 bits */
 	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
 	__int32_t		qlf_len;       /* len of dquot buffer */
 	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
@@ -62,7 +62,7 @@ typedef struct xfs_dq_logformat {
 typedef struct xfs_qoff_logformat {
 	unsigned short		qf_type;	/* quotaoff log item type */
 	unsigned short		qf_size;	/* size of this item */
-	unsigned int		qf_flags;	/* USR and/or PRJ */
+	unsigned int		qf_flags;	/* USR and/or GRP */
 	char			qf_pad[12];	/* padding for future */
 } xfs_qoff_logformat_t;
 

@@ -304,13 +304,13 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (sb->sb_inprogress == 1 && sb->sb_pquotino)  {
+	if (sb->sb_inprogress == 1 && sb->sb_gquotino)  {
 		if (!no_modify)
-			sb->sb_pquotino = 0;
+			sb->sb_gquotino = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(
-			"non-null project quota inode field in superblock %d\n",
+			"non-null group quota inode field in superblock %d\n",
 				i);
 		} else
 			rval |= XR_AG_SB_SEC;

@@ -47,8 +47,8 @@
 typedef struct	xfs_disk_dquot {
 /*16*/	u_int16_t	d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
 /*8 */	u_int8_t	d_version;	/* dquot version */
-/*8 */	u_int8_t	d_flags;	/* XFS_DQ_USER/DQ_PROJ */
-/*32*/	xfs_dqid_t	d_id;		/* user id or proj id */
+/*8 */	u_int8_t	d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
+/*32*/	xfs_dqid_t	d_id;		/* user,project,group id */
 /*64*/	xfs_qcnt_t	d_blk_hardlimit;/* absolute limit on disk blks */
 /*64*/	xfs_qcnt_t	d_blk_softlimit;/* preferred limit on disk blks */
 /*64*/	xfs_qcnt_t	d_ino_hardlimit;/* maximum # allocated inodes */
@@ -82,8 +82,8 @@ typedef struct xfs_dqblk {
  * flags for q_flags field in the dquot.
  */
 #define XFS_DQ_USER	 	0x0001		/* a user quota */
-#define XFS_DQ_PROJ	 	0x0002		/* a project quota */
-
+/* #define XFS_DQ_PROJ	 	0x0002		-- project quota (IRIX) */
+#define XFS_DQ_GROUP	 	0x0004		/* a group quota */
 #define XFS_DQ_FLOCKED		0x0008		/* flush lock taken */
 #define XFS_DQ_DIRTY		0x0010		/* dquot is dirty */
 #define XFS_DQ_WANT		0x0020		/* for lookup/reclaim race */
@@ -91,7 +91,7 @@ typedef struct xfs_dqblk {
 #define XFS_DQ_MARKER		0x0080		/* sentinel */
 
 /*
- * In the worst case, when both user and proj quotas on,
+ * In the worst case, when both user and group quotas are on,
  * we can have a max of three dquots changing in a single transaction.
  */
 #define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)

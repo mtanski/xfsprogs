@@ -77,10 +77,11 @@ typedef struct xfs_buf_log_format_t {
 #define	XFS_BLI_CANCEL		0x2
 /*
  * This flag indicates that the buffer contains on disk 
- * user or projectdquots and may require special recovery handling.   
+ * user or group dquots and may require special recovery handling.   
  */
 #define	XFS_BLI_UDQUOT_BUF	0x4
-#define	XFS_BLI_PDQUOT_BUF	0x8
+/* #define XFS_BLI_PDQUOT_BUF	0x8 */
+#define	XFS_BLI_GDQUOT_BUF	0x10
 
 #define	XFS_BLI_CHUNK		128
 #define	XFS_BLI_SHIFT		7

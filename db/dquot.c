@@ -50,8 +50,8 @@ static int	dquot_f(int argc, char **argv);
 static void	dquot_help(void);
 
 static const cmdinfo_t	dquot_cmd =
-	{ "dquot", NULL, dquot_f, 1, 2, 1, "[project|user id]",
-	  "set current address to project or user quota block", dquot_help };
+	{ "dquot", NULL, dquot_f, 1, 2, 1, "[gid|uid]",
+	  "set current address to group or user quota block", dquot_help };
 
 const field_t	dqblk_hfld[] = {
 	{ "", FLDT_DQBLK, OI(0), C1, 0, TYP_NONE },
@@ -111,7 +111,7 @@ dquot_f(
 {
 	bmap_ext_t	bm;
 	int		c;
-	int		doproj;
+	int		dogrp;
 	xfs_dqid_t	id;
 	xfs_ino_t	ino;
 	int		nex;
@@ -121,26 +121,26 @@ dquot_f(
 	int		qoff;
 	char		*s;
 
-	doproj = optind = 0;
-	while ((c = getopt(argc, argv, "pu")) != EOF) {
+	dogrp = optind = 0;
+	while ((c = getopt(argc, argv, "gu")) != EOF) {
 		switch (c) {
-		case 'p':
-			doproj = 1;
+		case 'g':
+			dogrp = 1;
 			break;
 		case 'u':
-			doproj = 0;
+			dogrp = 0;
 			break;
 		default:
 			dbprintf("bad option for dquot command\n");
 			return 0;
 		}
 	}
-	s = doproj ? "project" : "user";
+	s = dogrp ? "group" : "user";
 	if (optind != argc - 1) {
 		dbprintf("dquot command requires one %s id argument\n", s);
 		return 0;
 	}
-	ino = doproj ? mp->m_sb.sb_pquotino : mp->m_sb.sb_uquotino;
+	ino = dogrp ? mp->m_sb.sb_gquotino : mp->m_sb.sb_uquotino;
 	if (ino == 0 || ino == NULLFSINO) {
 		dbprintf("no %s quota inode present\n", s);
 		return 0;

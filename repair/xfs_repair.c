@@ -488,7 +488,7 @@ main(int argc, char **argv)
 	"Inode allocation btrees are too corrupted, skipping phases 6 and 7\n");
 	}
 
-	if (lost_quotas && !have_uquotino && !have_pquotino)  {
+	if (lost_quotas && !have_uquotino && !have_gquotino)  {
 		if (!no_modify)  {
 			do_warn(
 	"Warning:  no quota inodes were found.  Quotas disabled.\n");
@@ -519,17 +519,17 @@ main(int argc, char **argv)
 			}
 		}
 
-		if (lost_pquotino)  {
+		if (lost_gquotino)  {
 			if (!no_modify)  {
 				do_warn(
-		"Warning:  project quota information was cleared.\n");
+		"Warning:  group quota information was cleared.\n");
 				do_warn(
-"Project quotas can not be enforced until limit information is recreated.\n");
+"Group quotas can not be enforced until limit information is recreated.\n");
 			} else  {
 				do_warn(
-		"Warning:  project quota information would be cleared.\n");
+		"Warning:  group quota information would be cleared.\n");
 				do_warn(
-"Project quotas could not be enforced until limit information was recreated.\n");
+"Group quotas could not be enforced until limit information was recreated.\n");
 			}
 		}
 	}
@@ -552,10 +552,10 @@ main(int argc, char **argv)
 
 	sb = XFS_BUF_TO_SBP(sbp);
 
-	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_PQUOTA_CHKD))  {
+	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD))  {
 		do_warn(
 		"Note - quota info will be regenerated on next quota mount.\n");
-		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_PQUOTA_CHKD);
+		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD);
 	}
 
 	if (clear_sunit) {

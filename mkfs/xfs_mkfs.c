@@ -1526,7 +1526,7 @@ main(int argc, char **argv)
 	sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
 		(loginternal ? logblocks : 0);
 	sbp->sb_frextents = 0;	/* will do a free later */
-	sbp->sb_uquotino = sbp->sb_pquotino = 0;
+	sbp->sb_uquotino = sbp->sb_gquotino = 0;
 	sbp->sb_qflags = 0;
 	sbp->sb_unit = dsunit;
 	sbp->sb_width = dswidth;

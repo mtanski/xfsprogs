@@ -1,5 +1,10 @@
+xfsprogs-1.2.0 (1 April 2001)
+	- support for group quota added
+	- some headers updated, in particular <xqm.h>
+	- now in late stages of beta
+
 xfsprogs-1.1.9 (26 March 2001)
-	- Added automagic stripe unit/stripe width extraction for MD devices
+	- added automagic stripe unit/stripe width extraction for MD devices
 
 xfsprogs-1.1.8 (23 March 2001)
 	- mkfs heuristics to make a qualified guess of internal logsize

@@ -1,3 +1,11 @@
+xfsprogs (1.2.0) unstable; urgency=low
+
+  * Support for group quota added
+  * Stripe unit/stripe width extraction for MD devices
+  * Added mkfs.xfs heuristics for size of internal log
+
+ -- Nathan Scott <nathans@debian.org>  Sun,  1 Apr 2001 16:49:26 +1000
+
 xfsprogs (1.1.6) unstable; urgency=low
 
   * Fix sparc build failure - fcntl.h missing O_DIRECT (closes: #90211)

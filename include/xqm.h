@@ -118,19 +118,17 @@ typedef struct fs_disk_quota {
  */
 #define XFS_QUOTA_UDQ_ACCT	(1<<0)  /* user quota accounting */
 #define XFS_QUOTA_UDQ_ENFD	(1<<1)  /* user quota limits enforcement */
-#define XFS_QUOTA_PDQ_ACCT	(1<<2)  /* project quota accounting */
-#define XFS_QUOTA_PDQ_ENFD	(1<<3)  /* project quota limits enforcement */
-#define XFS_QUOTA_GDQ_ACCT	(1<<4)  /* group quota accounting */
-#define XFS_QUOTA_GDQ_ENFD	(1<<5)  /* group quota limits enforcement */
+#define XFS_QUOTA_GDQ_ACCT	(1<<2)  /* group quota accounting */
+#define XFS_QUOTA_GDQ_ENFD	(1<<3)  /* group quota limits enforcement */
 
 #define XFS_USER_QUOTA		(1<<0)	/* user quota type */
-#define XFS_PROJ_QUOTA		(1<<1)	/* project quota type */
+#define XFS_PROJ_QUOTA		(1<<1)	/* (IRIX) project quota type */
 #define XFS_GROUP_QUOTA		(1<<2)	/* group quota type */
 
 /*
  * fs_quota_stat is the struct returned in Q_XGETQSTAT for a given file system.
  * Provides a centralized way to get meta infomation about the quota subsystem.
- * eg. space taken up for user and aggregate quotas, number of dquots currently
+ * eg. space taken up for user and group quotas, number of dquots currently
  * incore.
  */
 #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
@@ -149,7 +147,7 @@ typedef struct fs_quota_stat {
 	__u16		qs_flags;	/* XFS_QUOTA_{U,P,G}DQ_{ACCT,ENFD} */
 	__s8		qs_pad;		/* unused */
 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
-	fs_qfilestat_t	qs_aquota;	/* aggr quota storage information */
+	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
 	__u32		qs_incoredqs;	/* number of dquots incore */
 	__s32		qs_btimelimit;  /* limit for blks timer */	
 	__s32		qs_itimelimit;  /* limit for inodes timer */	

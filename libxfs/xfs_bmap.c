@@ -2002,7 +2002,7 @@ xfs_bmap_alloc(
 			 */
 			if (XFS_IS_QUOTA_ON(mp) &&
 			    ap->ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ap->ip->i_ino != mp->m_sb.sb_pquotino)
+			    ap->ip->i_ino != mp->m_sb.sb_gquotino)
 				xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
 					ap->wasdel ?
 						XFS_TRANS_DQ_DELRTBCOUNT :
@@ -2226,7 +2226,7 @@ xfs_bmap_alloc(
 			 */
 			if (XFS_IS_QUOTA_ON(mp) &&
 			    ap->ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ap->ip->i_ino != mp->m_sb.sb_pquotino)
+			    ap->ip->i_ino != mp->m_sb.sb_gquotino)
 				xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
 					ap->wasdel ?
 						XFS_TRANS_DQ_DELBCOUNT :
@@ -2293,7 +2293,7 @@ xfs_bmap_btree_to_extents(
 	ip->i_d.di_nblocks--;
 	if (XFS_IS_QUOTA_ON(mp) &&
 	    ip->i_ino != mp->m_sb.sb_uquotino &&
-	    ip->i_ino != mp->m_sb.sb_pquotino)
+	    ip->i_ino != mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
 	xfs_trans_binval(tp, cbp);
 	if (cur->bc_bufs[0] == cbp)
@@ -2393,7 +2393,7 @@ xfs_bmap_del_extent(
 			nblks = len * mp->m_sb.sb_rextsize;
 			if (XFS_IS_QUOTA_ON(mp) &&
 			    ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ip->i_ino != mp->m_sb.sb_pquotino)
+			    ip->i_ino != mp->m_sb.sb_gquotino)
 				qfield = XFS_TRANS_DQ_RTBCOUNT;
 		}
 		/*
@@ -2404,7 +2404,7 @@ xfs_bmap_del_extent(
 			nblks = del->br_blockcount;
 			if (XFS_IS_QUOTA_ON(mp) &&
 			    ip->i_ino != mp->m_sb.sb_uquotino &&
-			    ip->i_ino != mp->m_sb.sb_pquotino)
+			    ip->i_ino != mp->m_sb.sb_gquotino)
 				qfield = XFS_TRANS_DQ_BCOUNT;
 			/*
 			 * If we're freeing meta-data, then the transaction
@@ -2789,7 +2789,7 @@ xfs_bmap_extents_to_btree(
 	ip->i_d.di_nblocks++;
 	if (XFS_IS_QUOTA_ON(mp) &&
 	    ip->i_ino != mp->m_sb.sb_uquotino &&
-	    ip->i_ino != mp->m_sb.sb_pquotino)
+	    ip->i_ino != mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
 	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
 	/*
@@ -2934,7 +2934,7 @@ xfs_bmap_local_to_extents(
 		ip->i_d.di_nblocks = 1;
 		if (XFS_IS_QUOTA_ON(args.mp) &&
 		    ip->i_ino != args.mp->m_sb.sb_uquotino &&
-		    ip->i_ino != args.mp->m_sb.sb_pquotino)
+		    ip->i_ino != args.mp->m_sb.sb_gquotino)
 			xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
 				1L);
 		flags |= XFS_ILOG_FEXT(whichfork);
@@ -4345,7 +4345,7 @@ xfs_bunmapi(
 				(int)del.br_blockcount, rsvd);
 			if (XFS_IS_QUOTA_ON(ip->i_mount)) {
 				ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
-				ASSERT(ip->i_ino != mp->m_sb.sb_pquotino);
+				ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
 				if (!isrt)
 					xfs_trans_unreserve_blkquota(NULL, ip, 
 					      (long)del.br_blockcount);

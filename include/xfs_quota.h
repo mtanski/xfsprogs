@@ -33,15 +33,15 @@
 #define __XFS_QUOTA_H__
 
 /* 
- * We use only 16-bit prid's in the inode, not the 64-bit version in the proc.
- * uid_t is hard-coded to 32 bits in the inode. Hence, an 'id' in a dquot is
- * 32 bits..
+ * uid_t and gid_t are hard-coded to 32 bits in the inode.
+ * Hence, an 'id' in a dquot is 32 bits..
  */
 typedef __int32_t	xfs_dqid_t;
+
 /*
  * Eventhough users may not have quota limits occupying all 64-bits, 
  * they may need 64-bit accounting. Hence, 64-bit quota-counters,
- * and quota-limits. This is a waste in the common case, but heh ...
+ * and quota-limits. This is a waste in the common case, but hey ...
  */
 typedef __uint64_t	xfs_qcnt_t;
 typedef __uint16_t      xfs_qwarncnt_t;
@@ -52,17 +52,18 @@ typedef __uint16_t      xfs_qwarncnt_t;
 #define XFS_UQUOTA_ACCT	0x0001  /* user quota accounting ON */
 #define XFS_UQUOTA_ENFD	0x0002  /* user quota limits enforced */
 #define XFS_UQUOTA_CHKD	0x0004  /* quotacheck run on usr quotas */
-#define XFS_PQUOTA_ACCT	0x0008  /* project quota accounting ON */
-#define XFS_PQUOTA_ENFD	0x0010  /* proj quota limits enforced */
-#define XFS_PQUOTA_CHKD	0x0020  /* quotacheck run on prj quotas */
+#define XFS_PQUOTA_ACCT	0x0008  /* (IRIX) project quota accounting ON */
+#define XFS_GQUOTA_ENFD	0x0010  /* group quota limits enforced */
+#define XFS_GQUOTA_CHKD	0x0020  /* quotacheck run on grp quotas */
+#define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
 
 /* 
  * Incore only flags for quotaoff - these bits get cleared when quota(s)
  * are in the process of getting turned off. These flags are in m_qflags but
  * never in sb_qflags.
  */
-#define XFS_UQUOTA_ACTIVE	0x0040  /* uquotas are being turned off */
-#define XFS_PQUOTA_ACTIVE	0x0080  /* pquotas are being turned off */
+#define XFS_UQUOTA_ACTIVE	0x0080  /* uquotas are being turned off */
+#define XFS_GQUOTA_ACTIVE	0x0100  /* gquotas are being turned off */
 
 /*
  * Typically, we turn quotas off if we weren't explicitly asked to 
@@ -72,16 +73,16 @@ typedef __uint16_t      xfs_qwarncnt_t;
  * This stops quotas getting turned off in the root filesystem everytime
  * the system boots up a miniroot.
  */
-#define XFS_QUOTA_MAYBE		0x0100 /* Turn quotas on if SB has quotas on */
+#define XFS_QUOTA_MAYBE		0x0200 /* Turn quotas on if SB has quotas on */
 
 /*
  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
  * quota will be not be switched off as long as that inode lock is held.
  */
 #define XFS_IS_QUOTA_ON(mp)  	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
-						   XFS_PQUOTA_ACTIVE))
+						   XFS_GQUOTA_ACTIVE))
 #define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
-#define XFS_IS_PQUOTA_ON(mp) 	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
+#define XFS_IS_GQUOTA_ON(mp) 	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
 
 /*
  * Flags to tell various functions what to do. Not all of these are meaningful
@@ -91,7 +92,7 @@ typedef __uint16_t      xfs_qwarncnt_t;
 #define XFS_QMOPT_DQLOCK	0x0000001 /* dqlock */
 #define XFS_QMOPT_DQALLOC	0x0000002 /* alloc dquot ondisk if needed */
 #define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
-#define XFS_QMOPT_PQUOTA	0x0000008 /* proj dquot requested */
+#define XFS_QMOPT_GQUOTA	0x0000008 /* group dquot requested */
 #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
 #define XFS_QMOPT_DQSUSER	0x0000020 /* don't cache super users dquot */
 #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
@@ -135,7 +136,7 @@ typedef __uint16_t      xfs_qwarncnt_t;
 #define XFS_TRANS_DQ_DELRTBCOUNT XFS_QMOPT_DELRTBCOUNT
 
 
-#define XFS_QMOPT_QUOTALL	(XFS_QMOPT_UQUOTA|XFS_QMOPT_PQUOTA)
+#define XFS_QMOPT_QUOTALL	(XFS_QMOPT_UQUOTA|XFS_QMOPT_GQUOTA)
 #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
 
 /*
@@ -149,21 +150,21 @@ typedef __uint16_t      xfs_qwarncnt_t;
  */
 #define XFS_NOT_DQATTACHED(mp, ip) ((XFS_IS_UQUOTA_ON(mp) &&\
 				     (ip)->i_udquot == NULL) || \
-				    (XFS_IS_PQUOTA_ON(mp) && \
-				     (ip)->i_pdquot == NULL))
+				    (XFS_IS_GQUOTA_ON(mp) && \
+				     (ip)->i_gdquot == NULL))
 
 #define XFS_QM_NEED_QUOTACHECK(mp) ((XFS_IS_UQUOTA_ON(mp) && \
 				     (mp->m_sb.sb_qflags & \
 				      XFS_UQUOTA_CHKD) == 0) || \
-				    (XFS_IS_PQUOTA_ON(mp) && \
+				    (XFS_IS_GQUOTA_ON(mp) && \
 				     (mp->m_sb.sb_qflags & \
-				      XFS_PQUOTA_CHKD) == 0))
+				      XFS_GQUOTA_CHKD) == 0))
 
 #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
-				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
+				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
+				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
 #define XFS_MOUNT_QUOTA_MASK	(XFS_MOUNT_QUOTA_ALL | XFS_UQUOTA_ACTIVE | \
-				 XFS_PQUOTA_ACTIVE)
+				 XFS_GQUOTA_ACTIVE)
 
 #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
 
@@ -230,13 +231,13 @@ extern struct xfs_dquot *	xfs_qm_vop_chown(struct xfs_trans *,
 						 struct xfs_dquot *);
 extern int		xfs_qm_vop_dqalloc(struct xfs_mount *,
 					   struct xfs_inode *,
-					   uid_t, xfs_prid_t, uint,
+					   uid_t, gid_t, uint,
 					   struct xfs_dquot	**,
 					   struct xfs_dquot	**);
 
 extern int		xfs_qm_vop_chown_dqalloc(struct xfs_mount *,
 						 struct xfs_inode *,
-						 int, uid_t, xfs_prid_t,
+						 int, uid_t, gid_t,
 						 struct xfs_dquot **,
 						 struct xfs_dquot **);
 
@@ -294,11 +295,11 @@ xfs_trans_reserve_quota_nblks(tp, ip, nblks, 0, XFS_QMOPT_RES_REGBLKS)
 #define 	xfs_trans_unreserve_blkquota(tp, ip, nblks) \
 xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_REGBLKS)
 
-#define 	xfs_trans_reserve_quota(tp, udq, pdq, nb, ni, f) \
-xfs_trans_reserve_quota_bydquots(tp, udq, pdq, nb, ni, f|XFS_QMOPT_RES_REGBLKS) 
+#define 	xfs_trans_reserve_quota(tp, udq, gdq, nb, ni, f) \
+xfs_trans_reserve_quota_bydquots(tp, udq, gdq, nb, ni, f|XFS_QMOPT_RES_REGBLKS) 
 
-#define 	xfs_trans_unreserve_quota(tp, ud, pd, b, i, f) \
-xfs_trans_reserve_quota_bydquots(tp, ud, pd, -(b), -(i), f|XFS_QMOPT_RES_REGBLKS)
+#define 	xfs_trans_unreserve_quota(tp, ud, gd, b, i, f) \
+xfs_trans_reserve_quota_bydquots(tp, ud, gd, -(b), -(i), f|XFS_QMOPT_RES_REGBLKS)
 
 /*
  * Realtime disk block quota reservations 

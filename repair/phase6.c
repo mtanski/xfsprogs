@@ -3747,12 +3747,12 @@ mark_standalone_inodes(xfs_mount_t *mp)
 					- irec->ino_startnum;
 			add_inode_reached(irec, offset);
 		}
-		if (mp->m_sb.sb_pquotino
-				&& mp->m_sb.sb_pquotino != NULLFSINO)  {
+		if (mp->m_sb.sb_gquotino
+				&& mp->m_sb.sb_gquotino != NULLFSINO)  {
 			irec = find_inode_rec(XFS_INO_TO_AGNO(mp,
-						mp->m_sb.sb_pquotino),
-				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_pquotino));
-			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_pquotino)
+						mp->m_sb.sb_gquotino),
+				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
+			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino)
 					- irec->ino_startnum;
 			add_inode_reached(irec, offset);
 		}

@@ -133,7 +133,7 @@ typedef	struct xfs_dio {
 	struct pm	*xd_pmp;
 	int		xd_blkalgn;
 	int		xd_ioflag;
-	xfs_off_t		xd_start;
+	xfs_off_t	xd_start;
 	size_t		xd_length;
 } xfs_dio_t;
 
@@ -298,7 +298,7 @@ typedef struct xfs_inode {
 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
 	struct bhv_desc		i_bhv_desc;	/* inode behavior descriptor*/
 	struct xfs_dquot	*i_udquot;	/* user dquot */
-	struct xfs_dquot	*i_pdquot;	/* project dquot */
+	struct xfs_dquot	*i_gdquot;	/* group dquot */
 
 	/* Inode location stuff */
 	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/

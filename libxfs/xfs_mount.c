@@ -136,7 +136,7 @@ static struct {
     { offsetof(xfs_sb_t, sb_fdblocks),   0 },
     { offsetof(xfs_sb_t, sb_frextents),  0 },
     { offsetof(xfs_sb_t, sb_uquotino),   0 },
-    { offsetof(xfs_sb_t, sb_pquotino),   0 },
+    { offsetof(xfs_sb_t, sb_gquotino),   0 },
     { offsetof(xfs_sb_t, sb_qflags),     0 },
     { offsetof(xfs_sb_t, sb_flags),      0 },
     { offsetof(xfs_sb_t, sb_shared_vn),  0 },

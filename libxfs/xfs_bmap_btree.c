@@ -383,7 +383,7 @@ xfs_bmbt_delrec(
 	xfs_trans_log_inode(cur->bc_tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
 	if (XFS_IS_QUOTA_ON(mp) &&
 	    cur->bc_private.b.ip->i_ino != mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != mp->m_sb.sb_pquotino)
+	    cur->bc_private.b.ip->i_ino != mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(cur->bc_tp, cur->bc_private.b.ip, 
 			XFS_TRANS_DQ_BCOUNT, -1L);
 	xfs_trans_binval(cur->bc_tp, rbp);
@@ -681,7 +681,7 @@ xfs_bmbt_killroot(
 	ip->i_d.di_nblocks--;
 	if (XFS_IS_QUOTA_ON(cur->bc_mp) &&
 	    ip->i_ino != cur->bc_mp->m_sb.sb_uquotino &&
-	    ip->i_ino != cur->bc_mp->m_sb.sb_pquotino)
+	    ip->i_ino != cur->bc_mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(cur->bc_tp, ip, XFS_TRANS_DQ_BCOUNT,
 			-1L);
 	xfs_trans_binval(cur->bc_tp, cbp);
@@ -1278,7 +1278,7 @@ xfs_bmbt_split(
 	xfs_trans_log_inode(args.tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
 	if (XFS_IS_QUOTA_ON(args.mp) &&
 	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_pquotino)
+	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(args.tp, cur->bc_private.b.ip,
 			XFS_TRANS_DQ_BCOUNT, 1L);
 	rbp = xfs_btree_get_bufl(args.mp, args.tp, args.fsbno, 0);
@@ -2115,7 +2115,7 @@ xfs_bmbt_newroot(
 	cur->bc_private.b.ip->i_d.di_nblocks++;
 	if (XFS_IS_QUOTA_ON(args.mp) &&
 	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_uquotino &&
-	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_pquotino)
+	    cur->bc_private.b.ip->i_ino != args.mp->m_sb.sb_gquotino)
 		xfs_trans_mod_dquot_byino(args.tp, cur->bc_private.b.ip,
 					  XFS_TRANS_DQ_BCOUNT, 1L);
 	bp = xfs_btree_get_bufl(args.mp, cur->bc_tp, args.fsbno, 0);

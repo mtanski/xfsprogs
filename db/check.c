@@ -134,8 +134,8 @@ static int		inodata_hash_size;
 static inodata_t	***inomap;
 static int		nflag;
 static int		pflag;
-static qdata_t		**qpdata;
-static int		qpdo;
+static qdata_t		**qgdata;
+static int		qgdo;
 static qdata_t		**qudata;
 static int		qudo;
 static unsigned		sbversion;
@@ -316,7 +316,7 @@ static void		process_leaf_node_dir_v2_int(inodata_t *id, int v,
 						     freetab_t *freetab);
 static xfs_ino_t	process_node_dir_v1(blkmap_t *blkmap, int *dot,
 					    int *dotdot, inodata_t *id);
-static void		process_quota(int isproj, inodata_t *id,
+static void		process_quota(int isgrp, inodata_t *id,
 				      blkmap_t *blkmap);
 static void		process_rtbitmap(blkmap_t *blkmap);
 static void		process_rtsummary(blkmap_t *blkmap);
@@ -324,7 +324,7 @@ static xfs_ino_t	process_sf_dir_v2(xfs_dinode_t *dip, int *dot,
 					  int *dotdot, inodata_t *id);
 static xfs_ino_t	process_shortform_dir_v1(xfs_dinode_t *dip, int *dot,
 						 int *dotdot, inodata_t *id);
-static void		quota_add(xfs_dqid_t projid, xfs_dqid_t userid,
+static void		quota_add(xfs_dqid_t grpid, xfs_dqid_t usrid,
 				  int dq, xfs_qcnt_t bc, xfs_qcnt_t ic,
 				  xfs_qcnt_t rc);
 static void		quota_add1(qdata_t **qt, xfs_dqid_t id, int dq,
@@ -897,8 +897,8 @@ blockget_f(
 	}
 	if (qudo)
 		quota_check("user", qudata);
-	if (qpdo)
-		quota_check("project", qpdata);
+	if (qgdo)
+		quota_check("group", qgdata);
 	if (sbver_err > mp->m_sb.sb_agcount / 2)
 		dbprintf("WARNING: this may be a newer XFS filesystem.\n");
 	if (error)
@@ -1778,7 +1778,7 @@ init(
 	if (mp->m_sb.sb_inoalignmt)
 		sbversion |= XFS_SB_VERSION_ALIGNBIT;
 	if ((mp->m_sb.sb_uquotino && mp->m_sb.sb_uquotino != NULLFSINO) ||
-	    (mp->m_sb.sb_pquotino && mp->m_sb.sb_pquotino != NULLFSINO))
+	    (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO))
 		sbversion |= XFS_SB_VERSION_QUOTABIT;
 	quota_init();
 	return 1;
@@ -2705,7 +2705,7 @@ process_inode(
 			addlink_inode(id);
 		}
 		else if (id->ino == mp->m_sb.sb_uquotino ||
-			 id->ino == mp->m_sb.sb_pquotino) {
+			 id->ino == mp->m_sb.sb_gquotino) {
 			type = DBM_QUOTA;
 			blkmap = blkmap_alloc(dic->di_nextents);
 			addlink_inode(id);
@@ -2760,7 +2760,7 @@ process_inode(
 			break;
 		}
 	}
-	if (qpdo || qudo) {
+	if (qgdo || qudo) {
 		switch (type) {
 		case DBM_DATA:
 		case DBM_DIR:
@@ -2815,8 +2815,16 @@ process_inode(
 	 * If the CHKD flag is not set, this can legitimately contain garbage;
 	 * xfs_repair may have cleared that bit.
 	 */
-	else if (type == DBM_QUOTA && (mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD))
-		process_quota(id->ino == mp->m_sb.sb_pquotino, id, blkmap);
+	else if (type == DBM_QUOTA) {
+		if (id->ino == mp->m_sb.sb_uquotino &&
+		    (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) &&
+		    (mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD))
+			process_quota(0, id, blkmap);
+		else if (id->ino == mp->m_sb.sb_gquotino &&
+			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
+			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
+			process_quota(1, id, blkmap);
+	}
 	if (blkmap)
 		blkmap_free(blkmap);
 }
@@ -3311,7 +3319,7 @@ process_node_dir_v1(
 
 static void
 process_quota(
-	int		isproj,
+	int		isgrp,
 	inodata_t	*id,
 	blkmap_t	*blkmap)
 {
@@ -3328,8 +3336,8 @@ process_quota(
 	int		t;
 
 	perblock = (int)(mp->m_sb.sb_blocksize / sizeof(*dqb));
-	s = isproj ? "project" : "user";
-	exp_flags = isproj ? XFS_DQ_PROJ : XFS_DQ_USER;
+	s = isgrp ? "group" : "user";
+	exp_flags = isgrp ? XFS_DQ_GROUP : XFS_DQ_USER;
 	dqid = 0;
 	qbno = NULLFILEOFF;
 	while ((qbno = blkmap_next_off(blkmap, qbno, &t)) !=
@@ -3396,7 +3404,7 @@ process_quota(
 				error++;
 				continue;
 			}
-			quota_add(isproj ? dqid : -1, isproj ? -1 : dqid, 1,
+			quota_add(isgrp ? dqid : -1, isgrp ? -1 : dqid, 1,
 				  INT_GET(dqb->dd_diskdq.d_bcount, ARCH_CONVERT),
 				  INT_GET(dqb->dd_diskdq.d_icount, ARCH_CONVERT),
 				  INT_GET(dqb->dd_diskdq.d_rtbcount, ARCH_CONVERT));
@@ -3693,17 +3701,17 @@ process_shortform_dir_v1(
 
 static void
 quota_add(
-	xfs_dqid_t	projid,
-	xfs_dqid_t	userid,
+	xfs_dqid_t	grpid,
+	xfs_dqid_t	usrid,
 	int		dq,
 	xfs_qcnt_t	bc,
 	xfs_qcnt_t	ic,
 	xfs_qcnt_t	rc)
 {
-	if (qudo && userid != -1)
-		quota_add1(qudata, userid, dq, bc, ic, rc);
-	if (qpdo && projid != -1)
-		quota_add1(qpdata, projid, dq, bc, ic, rc);
+	if (qudo && usrid != -1)
+		quota_add1(qudata, usrid, dq, bc, ic, rc);
+	if (qgdo && grpid != -1)
+		quota_add1(qgdata, grpid, dq, bc, ic, rc);
 }
 
 static void
@@ -3790,14 +3798,16 @@ quota_init(void)
 {
 	qudo = mp->m_sb.sb_uquotino != 0 &&
 	       mp->m_sb.sb_uquotino != NULLFSINO &&
+	       (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) &&
 	       (mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD);
-	qpdo = mp->m_sb.sb_pquotino != 0 &&
-	       mp->m_sb.sb_pquotino != NULLFSINO &&
-	       (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD);
+	qgdo = mp->m_sb.sb_gquotino != 0 &&
+	       mp->m_sb.sb_gquotino != NULLFSINO &&
+	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
+	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
 	if (qudo)
 		qudata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
-	if (qpdo)
-		qpdata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
+	if (qgdo)
+		qgdata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
 }
 
 static void

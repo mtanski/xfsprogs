@@ -890,9 +890,9 @@ process_sf_dir2(
 		} else if (lino == mp->m_sb.sb_uquotino)  {
 			junkit = 1;
 			junkreason = "user quota";
-		} else if (lino == mp->m_sb.sb_pquotino)  {
+		} else if (lino == mp->m_sb.sb_gquotino)  {
 			junkit = 1;
-			junkreason = "project quota";
+			junkreason = "group quota";
 		} else if ((irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino))) != NULL) {
 			/*
@@ -1401,9 +1401,9 @@ process_dir2_data(
 		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_uquotino) {
 			clearino = 1;
 			clearreason = "user quota";
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_pquotino) {
+		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_gquotino) {
 			clearino = 1;
-			clearreason = "project quota";
+			clearreason = "group quota";
 		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == old_orphanage_ino) {
 			/*
 			 * Do nothing, silently ignore it, entry has already

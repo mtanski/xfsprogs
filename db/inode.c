@@ -386,7 +386,7 @@ inode_next_type(void)
 		else if (iocur_top->ino == mp->m_sb.sb_rsumino)
 			return TYP_RTSUMMARY;
 		else if (iocur_top->ino == mp->m_sb.sb_uquotino ||
-			 iocur_top->ino == mp->m_sb.sb_pquotino)
+			 iocur_top->ino == mp->m_sb.sb_gquotino)
 			return TYP_DQBLK;
 		else
 			return TYP_DATA;

@@ -78,8 +78,8 @@ update_sb_version(xfs_mount_t *mp)
 		 * protect against stray bits in the quota flag field
 		 */
 		if (sb->sb_qflags & ~(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
-				XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|
-				XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD))  {
+				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD))  {
 			/*
 			 * update the incore superblock, if we're in
 			 * no_modify mode, it'll never get flushed out
@@ -88,13 +88,13 @@ update_sb_version(xfs_mount_t *mp)
 			do_warn("bogus quota flags 0x%x set in superblock",
 				sb->sb_qflags & ~(XFS_UQUOTA_ACCT|
 				XFS_UQUOTA_ENFD|
-				XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|
-				XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD));
+				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD));
 
 			sb->sb_qflags &= (XFS_UQUOTA_ACCT|
 				XFS_UQUOTA_ENFD|
-				XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|
-				XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD);
+				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD);
 
 			if (!no_modify)
 				do_warn(", bogus flags will be cleared\n");
@@ -123,8 +123,6 @@ update_sb_version(xfs_mount_t *mp)
 				XFS_SB_VERSION_SUBALIGN(sb);
 		}
 	}
-
-	return;
 }
 
 /*
@@ -145,7 +143,7 @@ parse_sb_version(xfs_sb_t *sb)
 	fs_ino_alignment = 0;
 	fs_has_extflgbit = 0;
 	have_uquotino = 0;
-	have_pquotino = 0;
+	have_gquotino = 0;
 	issue_warning = 0;
 
 	/*
@@ -271,9 +269,9 @@ Please run a 6.5 version of xfs_repair.\n");
 					sb->sb_uquotino != NULLFSINO)
 				have_uquotino = 1;
 
-			if (sb->sb_pquotino != 0 &&
-					sb->sb_pquotino != NULLFSINO)
-				have_pquotino = 1;
+			if (sb->sb_gquotino != 0 &&
+					sb->sb_gquotino != NULLFSINO)
+				have_gquotino = 1;
 		}
 	}
 

@@ -1982,9 +1982,9 @@ process_dinode_int(xfs_mount_t *mp,
 
 			return(1);
 		}
-	} else if (lino == mp->m_sb.sb_pquotino)  {
+	} else if (lino == mp->m_sb.sb_gquotino)  {
 		if (type != XR_INO_DATA)  {
-			do_warn("project quota inode has bad type 0x%x\n",
+			do_warn("group quota inode has bad type 0x%x\n",
 				INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT);
 
 			if (!no_modify)  {
@@ -1996,7 +1996,7 @@ process_dinode_int(xfs_mount_t *mp,
 			*used = is_free;
 			*isa_dir = 0;
 
-			mp->m_sb.sb_pquotino = NULLFSINO;
+			mp->m_sb.sb_gquotino = NULLFSINO;
 
 			return(1);
 		}

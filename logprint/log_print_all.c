@@ -224,8 +224,8 @@ xlog_recover_print_quotaoff(
 	ASSERT(qoff_f);
 	if (qoff_f->qf_flags & XFS_UQUOTA_ACCT) 
 		strcpy(str, "USER QUOTA");
-	if (qoff_f->qf_flags & XFS_PQUOTA_ACCT)
-		strcat(str, "PROJ QUOTA");
+	if (qoff_f->qf_flags & XFS_GQUOTA_ACCT)
+		strcat(str, "GROUP QUOTA");
 	printf("\tQUOTAOFF: #regs:%d   type:%s\n",
 	       qoff_f->qf_size, str);
 }
