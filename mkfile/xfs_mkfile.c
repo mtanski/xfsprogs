@@ -35,10 +35,8 @@
  */
 
 #include <libxfs.h>
-#include <malloc.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/vfs.h>
 #include <ctype.h>
 
 #define	MAXBUFFERSIZE	(256 * 1024)
@@ -65,7 +63,7 @@ openfd(char *name, int oflags)
 	}
 
 	fstatfs(fd, &buf);
-	if (buf.f_type != XFS_SUPER_MAGIC) {
+	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
 		fprintf(stderr, "%s: "
 			"file [\"%s\"] is not on an XFS filesystem\n",
 			progname, name);
@@ -154,7 +152,7 @@ main(int argc, char **argv)
 		argv[optind][len-1] = '\0';
 	}
 
-	size = atoll(argv[optind]) * mult;
+	size = strtoll(argv[optind], NULL, 10) * mult;
 
 	optind++;
 

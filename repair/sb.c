@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <malloc.h>
 #include "agheader.h"
 #include "globals.h"
 #include "protos.h"

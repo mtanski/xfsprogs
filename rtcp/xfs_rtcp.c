@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <malloc.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 

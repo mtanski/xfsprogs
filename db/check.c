@@ -1748,11 +1748,11 @@ init(
 	while ((c = getopt(argc, argv, "b:i:npsv")) != EOF) {
 		switch (c) {
 		case 'b':
-			bno = atoll(optarg);
+			bno = strtoll(optarg, NULL, 10);
 			add_blist(bno);
 			break;
 		case 'i':
-			ino = atoll(optarg);
+			ino = strtoll(optarg, NULL, 10);
 			add_ilist(ino);
 			break;
 		case 'n':
@@ -1839,7 +1839,7 @@ ncheck_f(
 	while ((c = getopt(argc, argv, "i:s")) != EOF) {
 		switch (c) {
 		case 'i':
-			ino = atoll(optarg);
+			ino = strtoll(optarg, NULL, 10);
 			ilist = xrealloc(ilist, (ilist_size + 1) *
 				sizeof(*ilist));
 			ilist[ilist_size++] = ino;
@@ -2778,6 +2778,7 @@ process_inode(
 			ic = 1;
 			break;
 		default:
+			break;
 		}
 		if (ic)
 			quota_add(dic->di_gid, dic->di_uid, 0, bc, ic, rc);

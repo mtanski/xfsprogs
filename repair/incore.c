@@ -31,7 +31,6 @@
  */
 
 #include <libxfs.h>
-#include <malloc.h>
 #include "avl.h"
 #include "globals.h"
 #include "incore.h"

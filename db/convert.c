@@ -161,6 +161,7 @@ bytevalue(ctype_t ctype, cval_t *val)
 		return (__uint64_t)val->inooff;
 	case CT_NONE:
 	case NCTS:
+		break;
 	}
 	/* NOTREACHED */
 	return 0;
@@ -261,6 +262,7 @@ convert_f(int argc, char **argv)
 	case CT_NONE:
 	case NCTS:
 		/* NOTREACHED */
+		break;
 	}
 	dbprintf("0x%llx (%llu)\n", v, v);
 	return 0;
@@ -320,6 +322,7 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
 	case CT_NONE:
 	case NCTS:
 		/* NOTREACHED */
+		break;
 	}
 	return 1;
 }

@@ -234,8 +234,9 @@
 /* anything else */
 typedef __uint32_t uint_t;
 typedef __uint32_t inst_t;	/* an instruction */
-typedef enum { B_FALSE, B_TRUE } boolean_t;
 typedef struct { dev_t dev; } xfs_buftarg_t;
+#undef MASK
+#define NBPP		getpagesize()
 #define STATIC
 #define ATTR_ROOT	0x0002	/* use attrs in root namespace */
 #define ENOATTR		ENODATA	/* Attribute not found */
@@ -282,9 +283,6 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 	__res = ((unsigned long) n) % (unsigned) base; \
 	n = ((unsigned long) n) / (unsigned) base; \
 	__res; })
-
-#include <asm/page.h>
-#define NBPP		PAGE_SIZE
 
 static inline int atomicIncWithWrap(int *a, int b)
 {

@@ -319,12 +319,12 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 			goto error_out;
 		}
 		if (INT_GET(node->hdr.count, ARCH_CONVERT) >
-					XFS_DA_NODE_ENTRIES(mp))  {
+						mp->m_dir_node_ents)  {
 			da_brelse(bp);
 			do_warn("bad record count in inode %llu, count = %d, "
 				"max = %d\n", da_cursor->ino,
 				INT_GET(node->hdr.count, ARCH_CONVERT),
-				XFS_DA_NODE_ENTRIES(mp));
+				mp->m_dir_node_ents);
 			goto error_out;
 		}
 
@@ -662,7 +662,8 @@ verify_dir2_path(xfs_mount_t	*mp,
 				dabno, cursor->ino);
 			bad++;
 		}
-		if (INT_GET(newnode->hdr.count, ARCH_CONVERT) > XFS_DA_NODE_ENTRIES(mp))  {
+		if (INT_GET(newnode->hdr.count, ARCH_CONVERT) >
+						mp->m_dir_node_ents)  {
 			do_warn("entry count %d too large in block %u for "
 				"directory inode %llu\n",
 				INT_GET(newnode->hdr.count, ARCH_CONVERT), dabno, cursor->ino);

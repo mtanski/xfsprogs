@@ -35,24 +35,30 @@
 #define __XFS_PLATFORM_DEFS_H__
 
 #include <stdio.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <endian.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/param.h>
 #include <sys/types.h>
-#include <uuid/uuid.h>
 
+#if defined(__linux__)
+
+#include <sys/vfs.h>
+#include <sys/param.h>
+#include <uuid/uuid.h>
+#include <linux/types.h>
+#include <malloc.h>
+#include <getopt.h>
+
+#include <endian.h>
 #if defined (__powerpc__) /* ppc fix from: Robert Ramiega (jedi@plukwa.net) */
 # define __BYTEORDER_HAS_U64__
 #endif
 #include <asm/byteorder.h>
-
-#include <errno.h>
-#include <fcntl.h>
 
 #ifndef O_DIRECT
 # if defined (__powerpc__)
@@ -68,6 +74,10 @@
 # define constpp	char * const *
 #endif
 
+#define ENOATTR		ENODATA	/* Attribute not found */
+#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+#define statfstype(bp)	((bp)->f_type)	/* statfs(2) fstyp */
+
 typedef loff_t		xfs_off_t;
 typedef __uint64_t	xfs_ino_t;
 typedef __uint32_t	xfs_dev_t;
@@ -75,6 +85,10 @@ typedef __int64_t	xfs_daddr_t;
 typedef char*		xfs_caddr_t;
 
 typedef unsigned char	uchar_t;
+typedef enum { B_FALSE,B_TRUE }	boolean_t;
+
+#endif
+
 
 /* long and pointer must be either 32 bit or 64 bit */
 #undef HAVE_32BIT_LONG

@@ -1,3 +1,8 @@
+xfsprogs-2.3.6 (31 October 2002)
+	- Sync up user/kernel source in lib{xfs,xlog} and headers.
+	- Fix several warnings from newer (3.2) versions of gcc.
+	- Minor header file shuffling.
+
 xfsprogs-2.3.5 (10 October 2002)
 	- Sync up user/kernel source in lib{xfs,xlog} and headers.
 	- Fix mkfs (libxfs) bug when using BLKFLSBUF ioctl - we passed

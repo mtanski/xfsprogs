@@ -37,7 +37,6 @@
 #include <libxfs.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/vfs.h>
 
 int aflag = 0;	/* Attribute fork. */
 int lflag = 0;	/* list number of blocks with each extent */
@@ -47,8 +46,8 @@ int bmv_iflags = 0;	/* Input flags for XFS_IOC_GETBMAPX */
 char *progname;
 
 int dofile(char *);
-__off64_t file_size(int fd, char * fname);
-int numlen(__off64_t);
+off64_t file_size(int fd, char * fname);
+int numlen(off64_t);
 
 int
 main(int argc, char **argv)
@@ -100,7 +99,7 @@ main(int argc, char **argv)
 	return(i ? 1 : 0);
 }
 
-__off64_t
+off64_t
 file_size(int	fd, char *fname)
 {
 	struct	stat64	st;
@@ -138,7 +137,7 @@ dofile(char *fname)
 		return 1;
 	}
 	fstatfs(fd, &buf);
-	if (buf.f_type != XFS_SUPER_MAGIC) {
+	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
 		fprintf(stderr, "%s: "
 			"specified file [\"%s\"] is not on an XFS filesystem\n",
 			progname, fname);
@@ -319,14 +318,14 @@ dofile(char *fname)
 #define MINTOT_WIDTH	5
 #define	max(a,b)	(a > b ? a : b)
 		int	  agno;
-		__off64_t agoff, bbperag;
+		off64_t	  agoff, bbperag;
 		int 	  foff_w, boff_w, aoff_w, tot_w, agno_w;
 		char 	  rbuf[32], bbuf[32], abuf[32];
 
 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
 		tot_w = MINTOT_WIDTH;
-		bbperag = (__off64_t)fsgeo.agblocks * 
-		          (__off64_t)fsgeo.blocksize / BBSIZE;
+		bbperag = (off64_t)fsgeo.agblocks * 
+		          (off64_t)fsgeo.blocksize / BBSIZE;
 
 		/* 
 		 * Go through the extents and figure out the width
@@ -404,9 +403,9 @@ dofile(char *fname)
 }
 
 int
-numlen( __off64_t val)
+numlen(off64_t val)
 {
-	__off64_t tmp;
+	off64_t tmp;
 	int len;
 
 	for (len=0, tmp=val; tmp > 0; tmp=tmp/10) len++;

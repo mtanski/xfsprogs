@@ -273,7 +273,7 @@ xlog_find_head(xlog_t  *log,
 	     * mkfs etc write a dummy unmount record to a fresh
 	     * log so we can store the uuid in there
 	     */
-	    xlog_warn("XFS: totally zeroed log\n");
+	    xlog_warn("XFS: totally zeroed log");
 	}
 
 	return 0;
@@ -851,7 +851,7 @@ xlog_unpack_data(xlog_rec_header_t *rhead,
 "XFS: Disregard message if filesystem was created with non-DEBUG kernel");
 		    if (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb)) {
 			    cmn_err(CE_DEBUG,
-				"XFS: LogR this is a LogV2 filesystem\n");
+				"XFS: LogR this is a LogV2 filesystem");
 		    }
 		    log->l_flags |= XLOG_CHKSUM_MISMATCH;
 	    }

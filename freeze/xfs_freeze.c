@@ -32,7 +32,6 @@
 
 #include <libxfs.h>
 #include <sys/ioctl.h>
-#include <sys/vfs.h>
 
 char	*progname;
 
@@ -83,7 +82,7 @@ main(int argc, char **argv)
 		return 1;
 	}
 	fstatfs(ffd, &buf);
-	if (buf.f_type != XFS_SUPER_MAGIC) {
+	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
 		fprintf(stderr,
 			"%s: specified file is not on an XFS filesystem\n",
 			progname);
