@@ -357,8 +357,12 @@ typedef struct xfs_mount {
 /*
  * Default minimum read and write sizes.
  */
-#define	XFS_READIO_LOG_LARGE	12	/* > 32MB memory */
+#define	XFS_READIO_LOG_LARGE	12
 #define	XFS_WRITEIO_LOG_LARGE	12
+/*
+ * Default allocation size
+ */
+#define XFS_WRITE_IO_LOG	16
 
 /*
  * Max and min values for UIO and mount-option defined I/O sizes;

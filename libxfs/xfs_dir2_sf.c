@@ -843,6 +843,7 @@ xfs_dir2_sf_replace(
 	int			i;		/* entry index */
 #if XFS_BIG_FILESYSTEMS || defined(DEBUG)
 	xfs_ino_t		ino=0;		/* entry old inode number */
+	int			i8elevated;	/* sf_toino8 set i8count=1 */
 #endif
 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
@@ -889,8 +890,10 @@ xfs_dir2_sf_replace(
 		 * Still fits, convert to 8-byte now.
 		 */
 		xfs_dir2_sf_toino8(args);
+		i8elevated = 1;
 		sfp = (xfs_dir2_sf_t *)dp->i_df.if_u1.if_data;
-	}
+	} else
+		i8elevated = 0;
 #endif
 	ASSERT(args->namelen != 1 || args->name[0] != '.');
 	/*
@@ -929,6 +932,10 @@ xfs_dir2_sf_replace(
 		 */
 		if (i == sfp->hdr.count) {
 			ASSERT(args->oknoent);
+#if XFS_BIG_FILESYSTEMS || defined(DEBUG)
+			if (i8elevated)
+				xfs_dir2_sf_toino4(args);
+#endif
 			return XFS_ERROR(ENOENT);
 		}
 	}
@@ -945,6 +952,19 @@ xfs_dir2_sf_replace(
 			xfs_dir2_sf_toino4(args);
 		else
 			sfp->hdr.i8count--;
+	}
+	/*
+	 * See if the old number was small, the new number is large.
+	 */
+	if (ino <= XFS_DIR2_MAX_SHORT_INUM &&
+	    args->inumber > XFS_DIR2_MAX_SHORT_INUM) {
+		/*
+		 * add to the i8count unless we just converted to 8-byte
+		 * inodes (which does an implied i8count = 1)
+		 */
+		ASSERT(sfp->hdr.i8count != 0);
+		if (!i8elevated)
+			sfp->hdr.i8count++;
 	}
 #endif
 	xfs_dir2_sf_check(args);
