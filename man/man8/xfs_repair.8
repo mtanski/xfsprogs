@@ -3,9 +3,9 @@
 xfs_repair \- repair an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_repair\f1 [ \f3\-n\f1 ] [ \f3\-o\f1 subopt[=value] ] xfs_special
+\f3xfs_repair\f1 [ \f3\-nL\f1 ] [ \f3\-o\f1 subopt[=value] ] xfs_special
 .sp .8v
-\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-n\f1 ] [ \f3\-o\f1 subopt[=value] ] ... file
+\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nL\f1 ] [ \f3\-o\f1 subopt[=value] ] ... file
 .fi
 .SH DESCRIPTION
 .I xfs_repair
@@ -34,6 +34,14 @@ Specifies that the special device is actually a file (see the
 \f2mkfs.xfs\f1 \f3\-d\f1 \f2file\f1 option).
 This might happen if an image copy
 of a filesystem has been copied or written into an ordinary file.
+.TP
+.B \-L
+Force Log Zeroing.
+Forces
+.I xfs_repair
+to zero the log even if it is dirty (contains metadata changes).
+When using this option the filesystem will likely appear to be corrupt,
+and can cause the loss of user files and/or data.
 .TP
 .B \-l
 Specifies the device special file where the filesystems external
@@ -340,6 +348,15 @@ will return a status of 1 if filesystem corruption was detected and
 .I xfs_repair
 run without the -n option will always return a status code of 0.
 .SH BUGS
+The filesystem to be checked and repaired must have been
+unmounted cleanly using normal system administration procedures
+(the
+.IR umount (8)
+command or system shutdown), not as a result of a crash or system reset.
+If the filesystem has not been unmounted cleanly, mount it and unmount
+it cleanly before running
+.IR xfs_repair .
+.PP
 .I xfs_repair
 does not do a thorough job on XFS extended attributes.
 The structure of the attribute fork will be consistent,
@@ -358,5 +375,6 @@ are encountered.
 .SH SEE ALSO
 dd(1),
 mkfs.xfs(8),
+umount(8),
 xfs_check(8),
 xfs(5).

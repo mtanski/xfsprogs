@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
+#include <libxlog.h>
 #include "avl.h"
 #include "avl64.h"
 #include "globals.h"
@@ -43,7 +43,7 @@
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
 extern void	phase1(xfs_mount_t *);
-extern void	phase2(xfs_mount_t *, libxfs_init_t *);
+extern void	phase2(xfs_mount_t *);
 extern void	phase3(xfs_mount_t *);
 extern void	phase4(xfs_mount_t *);
 extern void	phase5(xfs_mount_t *);
@@ -147,6 +147,7 @@ process_args(int argc, char **argv)
 	verbose = 0;
 	no_modify = 0;
 	isa_file = 0;
+	zap_log = 0;
 	dumpcore = 0;
 	full_backptrs = 0;
 	delete_attr_ok = 1;
@@ -169,7 +170,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fnDvVl:")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:flLnDvV:")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -207,6 +208,9 @@ process_args(int argc, char **argv)
 			break;
 		case 'f':
 			isa_file = 1;
+			break;
+		case 'L':
+			zap_log = 1;
 			break;
 		case 'n':
 			no_modify = 1;
@@ -401,7 +405,6 @@ calc_mkfs(xfs_mount_t *mp)
 int
 main(int argc, char **argv)
 {
-	libxfs_init_t	args;
 	xfs_mount_t	*temp_mp;
 	xfs_mount_t	*mp;
 	xfs_sb_t	*sb;
@@ -414,7 +417,7 @@ main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	process_args(argc, argv);
-	xfs_init(&args);
+	xfs_init(&x);
 
 	/* do phase1 to make sure we have a superblock */
 	phase1(temp_mp);
@@ -427,12 +430,12 @@ main(int argc, char **argv)
 	}
 
 	/* prepare the mount structure */
-	sbp = libxfs_readbuf(args.ddev, XFS_SB_DADDR, 1, 0);
+	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR, 1, 0);
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
 	sb = &xfs_m.m_sb;
 	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
 
-	mp = libxfs_mount(&xfs_m, sb, args.ddev, args.logdev, args.rtdev, 0);
+	mp = libxfs_mount(&xfs_m, sb, x.ddev, x.logdev, x.rtdev, 0);
 
 	if (!mp)  {
 		fprintf(stderr, "%s: cannot repair this filesystem.  Sorry.\n",
@@ -468,7 +471,7 @@ main(int argc, char **argv)
 
 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
 
-	phase2(mp, &args);
+	phase2(mp);
 
 	phase3(mp);
 
@@ -570,11 +573,11 @@ main(int argc, char **argv)
 	libxfs_writebuf(sbp, 0);
 
 	libxfs_umount(mp);
-	if (args.rtdev)
-		libxfs_device_close(args.rtdev);
-	if (args.logdev)
-		libxfs_device_close(args.logdev);
-	libxfs_device_close(args.ddev);
+	if (x.rtdev)
+		libxfs_device_close(x.rtdev);
+	if (x.logdev && x.logdev != x.ddev)
+		libxfs_device_close(x.logdev);
+	libxfs_device_close(x.ddev);
 
 	do_log("done\n");
 

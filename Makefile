@@ -43,7 +43,7 @@ LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
 LDIRT = config.log config.status config.cache confdefs.h conftest* \
 	Logs/* install.* install-dev.* *.gz
 
-SUBDIRS = include libxfs libhandle libdisk \
+SUBDIRS = include libxfs libxlog libhandle libdisk \
 	bmap db freeze fsck growfs imap logprint mkfile mkfs repair rtcp \
 	man doc debian build
 

@@ -33,7 +33,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-HFILES = arch.h handle.h jdm.h libxfs.h xqm.h \
+HFILES = arch.h handle.h jdm.h libxfs.h libxlog.h xqm.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
 	xfs_buf_item.h xfs_cred.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \

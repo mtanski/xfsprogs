@@ -121,6 +121,7 @@ EXTERN int	fs_fd;			/* filesystem fd */
 EXTERN int	verbose;
 EXTERN int	no_modify;
 EXTERN int	isa_file;
+EXTERN int	zap_log;
 EXTERN int	dumpcore;		/* abort, not exit on fatal errs */
 EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
 EXTERN int	force_geo;		/* can set geo on low confidence info */

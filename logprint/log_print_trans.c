@@ -51,7 +51,6 @@ xlog_recover_do_trans(xlog_t	     *log,
 	return 0;
 }	/* xlog_recover_do_trans */
 
-static int print_record_header=0;
 
 void
 xfs_log_print_trans(xlog_t      *log,
@@ -79,68 +78,3 @@ xfs_log_print_trans(xlog_t      *log,
             exit(1);
 
 }	/* xfs_log_print_trans */
-
-static int
-header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
-{
-    char uu_log[64], uu_sb[64];
-    
-    if (!uuid_compare(mp->m_sb.sb_uuid, head->h_fs_uuid)) return 0;
-
-    uuid_unparse(mp->m_sb.sb_uuid, uu_sb);
-    uuid_unparse(head->h_fs_uuid, uu_log);
-
-    printf("* ERROR: mismatched uuid in log\n"
-           "*            SB : %s\n*            log: %s\n",
-            uu_sb, uu_log);
-    
-    return 1;
-}
-
-int
-xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
-{
-    if (print_record_header) 
-        printf("\nLOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n",
-	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT), 
-               BLOCK_LSN(head->h_lsn, ARCH_CONVERT),
-	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT), 
-               BLOCK_LSN(head->h_lsn, ARCH_CONVERT));
-    
-    if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
-        
-        printf("* ERROR: bad magic number in log header: 0x%x\n",
-                INT_GET(head->h_magicno, ARCH_CONVERT));
-        
-    } else if (header_check_uuid(mp, head)) {
-        
-        /* failed - fall through */
-        
-    } else if (INT_GET(head->h_fmt, ARCH_CONVERT) != XLOG_FMT) {
-        
-	printf("* ERROR: log format incompatible (log=%d, ours=%d)\n",
-                INT_GET(head->h_fmt, ARCH_CONVERT), XLOG_FMT);
-        
-    } else {
-        /* everything is ok */
-        return 0;
-    }
-    
-    /* bail out now or just carry on regardless */
-    if (print_exit)
-        xlog_exit("Bad log");
- 
-    return 0;   
-}
-
-int
-xlog_header_check_mount(xfs_mount_t *mp, xlog_rec_header_t *head)
-{
-    if (uuid_is_null(head->h_fs_uuid)) return 0;
-    if (header_check_uuid(mp, head)) {
-        /* bail out now or just carry on regardless */
-        if (print_exit)
-            xlog_exit("Bad log");
-    }
-    return 0;
-}

@@ -45,8 +45,8 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c rt.c sb.c \
 	scan.c versions.c xfs_repair.c
 
-LLDLIBS = $(LIBXFS) $(LIBUUID)
-LTDEPENDENCIES = $(LIBXFS)
+LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID)
+LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
 LLDFLAGS = -static
 
 default: $(LTCOMMAND)

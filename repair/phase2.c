@@ -30,7 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
+#include <libxlog.h>
 #include "avl.h"
 #include "globals.h"
 #include "agheader.h"
@@ -41,16 +41,60 @@
 void	set_mp(xfs_mount_t *mpp);
 void	scan_ag(xfs_agnumber_t agno);
 
+/* workaround craziness in the xlog routines */
+int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
+
 static void
-zero_log(xfs_mount_t *mp, libxfs_init_t *args)
+zero_log(xfs_mount_t *mp)
 {
-        int logdev = (mp->m_sb.sb_logstart == 0) ? args->logdev : args->ddev;
-        
+	int error;
+	xlog_t	log;
+	xfs_daddr_t head_blk, tail_blk;
+	dev_t logdev = (mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev;
+
+	memset(&log, 0, sizeof(log));
+	if (!x.logdev)
+		x.logdev = x.ddev;
+	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
+
+	log.l_dev = logdev;
+	log.l_logsize = BBTOB(x.logBBsize);
+	log.l_logBBsize = x.logBBsize;
+	log.l_logBBstart = x.logBBstart;
+	log.l_mp = mp;
+
+	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk, 0))) {
+		do_error("xlog_find_tail returned error %d\n", error);
+		return;
+	} else {
+		if (verbose) {
+			do_warn("zero_log: head block %lld tail block %lld\n",
+				head_blk, tail_blk);
+		}
+		if (head_blk != tail_blk) {
+			if (zap_log) {
+				do_warn(
+"ALERT: The filesystem has valuable metadata changes in a log which is being\n"
+"destroyed because the -L option was used.\n");
+			} else {
+				do_warn(
+"ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
+"be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
+"re-running xfs_repair.  If you are unable to mount the filesystem, then use\n"
+"the -L option to destroy the log and attempt a repair.\n"
+"Note that destroying the log may cause corruption -- please attempt a mount\n"
+"of the filesystem before doing this.\n");
+				exit(2);
+			}
+		}
+	}
+
 	libxfs_log_clear(logdev, 
 		XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
-                &mp->m_sb.sb_uuid,
-                XLOG_FMT);
+		&mp->m_sb.sb_uuid,
+		XLOG_FMT);
 }
 
 /*
@@ -63,7 +107,7 @@ zero_log(xfs_mount_t *mp, libxfs_init_t *args)
  */
 
 void
-phase2(xfs_mount_t *mp, libxfs_init_t *args)
+phase2(xfs_mount_t *mp)
 {
 	xfs_agnumber_t		i;
 	xfs_agblock_t		b;
@@ -75,7 +119,7 @@ phase2(xfs_mount_t *mp, libxfs_init_t *args)
 
 	/* Check whether this fs has internal or external log */
 	if (mp->m_sb.sb_logstart == 0) {
-		if (!args->logname) {
+		if (!x.logname) {
 			fprintf (stderr,
 				"This filesystem has an external log.  "
 				"Specify log device with the -l option.\n");
@@ -83,14 +127,14 @@ phase2(xfs_mount_t *mp, libxfs_init_t *args)
 		}
 		
 		fprintf (stderr, "Phase 2 - using external log on %s\n", 
-			 args->logname);
+			 x.logname);
 	} else
 		fprintf (stderr, "Phase 2 - using internal log\n");
 
 	/* Zero log if applicable */
 	if (!no_modify)  {
 		do_log("        - zero log...\n");
-		zero_log(mp, args);
+		zero_log(mp);
 	}
 
 	do_log("        - scan filesystem freespace and inode maps...\n");

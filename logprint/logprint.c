@@ -43,7 +43,6 @@ int     print_no_data;
 int     print_no_print;
 int     print_exit = 1; /* -e is now default. specify -c to override */
 
-libxfs_init_t	x;
 xfs_mount_t	mp;
 
 void

@@ -41,6 +41,7 @@ MALLOCLIB = @malloc_lib@
 
 LIBUUID = @libuuid@
 LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
 LIBDISK = $(TOPDIR)/libdisk/libdisk.la
 LIBHANDLE = $(TOPDIR)/libhandle/libhandle.la
 
