@@ -1687,13 +1687,14 @@ main(int argc, char **argv)
 
 	/*
 	 * Zero out the last 64k on the device, to obliterate any
-	 * old MD RAID (or other) metadata at the end of the device
+	 * old MD RAID (or other) metadata at the end of the device.
 	 */
-	
-	buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(65536)), 
-			    BTOBB(65536));
-	bzero(XFS_BUF_PTR(buf), 65536);
-	libxfs_writebuf(buf, 1);
+	if (!xi.disfile) {
+		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(65536)), 
+				    BTOBB(65536));
+		bzero(XFS_BUF_PTR(buf), 65536);
+		libxfs_writebuf(buf, 1);
+	}
 
 	/*
 	 * Zero the log if there is one.
