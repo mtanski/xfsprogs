@@ -117,45 +117,44 @@ MAKEF	= $(MAKE) $(MAKEOPTS)
 CXXF	= $(CXX) $(CXXFLAGS)
 LDF	= $(LD) $(LDFLAGS)
 
-# For libtool.  Pieces from Automake, slightly modified.
-top_builddir = $(TOPDIR)
+# For libtool.
 DIRT += $(LTOBJECTS) $(LTLIBRARY)
 LTLINK = $(LIBTOOL) --mode=link $(CC)
 LTEXEC = $(LIBTOOL) --mode=execute
 LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT
-LTVERSION = $(LT_CURRENT).$(LT_REVISION).$(LT_AGE)
+LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 LTOBJECTS = $(OBJECTS:.o=.lo)
 ifeq ($(ENABLE_SHARED),yes)
-LTLDFLAGS += -rpath $(PKG_LIB_DIR) 
-LTLDFLAGS += -version-info $(subst .,:,$(LTVERSION))
+LTLDFLAGS += -rpath $(PKG_SLIB_DIR) 
+LTLDFLAGS += -version-info $(LTVERSION)
 endif
 LIBNAME = $(basename $(LTLIBRARY))
 
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).so.$(LTVERSION) $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 644 -T so_dot_version $(LIBNAME).lai $(PKG_SLIB_DIR); \
 	test "$(PKG_DISTRIBUTION)" = debian || \
-	../$(INSTALL) -S $(LIBNAME).so.$(LTVERSION) $(PKG_LIB_DIR)/$(LIBNAME).so.$(LT_CURRENT)
+	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_SLIB_DIR)
 endif
 
 ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB_DEV = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la; \
-	../$(INSTALL) -S $(LIBNAME).so.$(LT_CURRENT) $(PKG_LIB_DIR)/$(LIBNAME).so
+	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_SLIB_DIR)/$(LIBNAME).la ; \
+	../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_SLIB_DIR)
 else
 INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
 endif
 
 INSTALL_LTLIB_STATIC = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
-	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
-	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR)
+	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_SLIB_DIR)
 
 INSTALL_MAN = \
     @for d in $(MAN_PAGES); do \

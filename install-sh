@@ -58,6 +58,7 @@ _usage() {
     echo "or     $prog [-D] [-o owner] [-g group] [-m mode] file directory/file"
     echo "or     $prog [-o owner] [-g group] [-m mode] file [file ...] directory"
     echo "or     $prog -S file target  (creates \"target\" symlink)"
+    echo "or     $prog -T lt_arg [-o owner] [-g group] [-m mode] libtool.lai directory"
     echo ""
     echo "The \$DIST_MANIFEST and \$DIST_ROOT environment variables affect the"
     echo "behaviour of this command - see comments in the script."
@@ -75,13 +76,13 @@ _chown ()
 	_st=$?
 	if [ $_st -ne 0 ] ; then
 	    if [ $REAL_UID != '0' ] ; then
-		if [ ! -f $DIST_ROOT/.chown.quite ] ; then
+		if [ ! -f $DIST_ROOT/.chown.quiet ] ; then
 		    echo '==============================================='
 		    echo Ownership of files under ${DIST_ROOT:-/}
 		    echo cannot be changed
 		    echo '==============================================='
 		    if [ -n "$DIST_ROOT" ] ; then
-			touch $DIST_ROOT/.chown.quite
+			touch $DIST_ROOT/.chown.quiet
 		    fi
 		fi
 	       _st=0
@@ -103,6 +104,7 @@ HERE=`pwd`
 dflag=false
 Dflag=false
 Sflag=false
+Tflag=false
 DIRMODE=755
 FILEMODE=644
 OWNER=`id -u`
@@ -127,7 +129,7 @@ fi
 
 [ -n "$DIST_ROOT" -a $REAL_UID -ne 0 ] && CHOWN=true
 
-while getopts "Dcm:d:S:o:g:" c $*
+while getopts "Dcm:d:S:o:g:T:" c $*
 do
    case $c in
    c)
@@ -152,6 +154,10 @@ do
    d) 
 	dir=$DIST_ROOT/$OPTARG
 	dflag=true
+	;;
+   T)
+	lt_install=$OPTARG
+	Tflag=true
 	;;
    *)
    	_usage
@@ -187,13 +193,113 @@ then
     #
     if [ $# -ne 1 ]
     then
-	_usage
+    	_usage
     else
-	target=$DIST_ROOT/$1
+    	target=$DIST_ROOT/$1
     fi
     $LN -s -f $symlink $target
     status=$?
     $MANIFEST l $symlink ${target#$DIST_ROOT} 
+elif $Tflag
+then
+    #
+    # -T (install libs built by libtool)
+    #
+    if [ $# -ne 2 ]
+    then
+	_usage
+    else
+	libtool_lai=$1
+	# source the libtool variables
+	if [ ! -f $libtool_lai ]
+	then
+		echo "$prog: Unable to find libtool library file $libtool_lai"
+		exit 2
+	fi
+	. $libtool_lai
+	target=$DIST_ROOT/$2
+    fi
+    case $lt_install in
+    so_dot_version)
+	# Loop until we find libfoo.so.x.y.z, then break out.
+	for solib in $library_names
+	do
+		# does it have enough parts?  libfoo.so.x.y.z == 5
+		cnt=`echo "$solib" | sed -e 's/\./ /g' | wc -w`
+		if [ $cnt -eq 5 ]
+		then
+			install_name=$target/$solib
+			$CP $solib $install_name
+			status=$?
+			$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$solib ${install_name#$DIST_ROOT}
+			break
+		fi
+	done
+	;;
+
+    so_*)
+	case $lt_install in
+	so_dot_current)
+		# ln -s libfoo.so.x.y.z to libfoo.so.x
+		from_parts=5  # libfoo.so.x.y.z
+		to_parts=3    # libfoo.so.x
+		;;
+	so_base)
+		# ln -s libfoo.so.x to libfoo.so
+		from_parts=3  # libfoo.so.x
+		to_parts=2    # libfoo.so
+		;;
+	*)
+		echo "$prog: -T $lt_install invalid"
+		exit 2
+		;;
+	esac
+
+	# Loop until we find the names, then break out.
+	for solib in $library_names
+	do
+		# does it have enough parts?
+		cnt=`echo "$solib" | sed -e 's/\./ /g' | wc -w`
+		if [ $cnt -eq $from_parts ]
+		then
+			from_name=$solib
+		elif [ $cnt -eq $to_parts ]
+		then
+			to_name=$solib
+		fi
+
+		if [ -n "$from_name" ] && [ -n "$to_name" ]
+		then
+			install_name=$target/$to_name
+			$LN -s -f $from_name $install_name
+			status=$?
+			$MANIFEST l $from_name ${install_name#$DIST_ROOT}
+			break
+		fi
+	done
+	;;
+    old_lib)
+	install_name=$target/$old_library
+	$CP $old_library $install_name
+	status=$?
+	$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$old_library ${install_name#$DIST_ROOT}
+	;;
+    *)
+	echo "$prog: -T $lt_install invalid"
+	exit 2
+	;;
+    esac
+
+    case $lt_install in
+    old_lib|so_dot_version)
+	if [ $status -eq 0 ]
+	then
+		$CHMOD $FILEMODE $install_name
+		$CHOWN $OWNER $GROUP $install_name
+	fi
+	;;
+    esac
+
 else
     list=""
     dir=""
@@ -211,7 +317,7 @@ else
 	$CP $f $dir
 	status=$?
 	if [ $status -eq 0 ]
-	then
+	then 
 	    if [ -f $dir/$f ]
 	    then
 		$CHMOD $FILEMODE $dir/$f
@@ -222,8 +328,7 @@ else
 		    status=$?
 		fi
 		$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$f ${dir#$DIST_ROOT}/$f
-	    elif [ -f $dir ]
-	    then
+	    else
 		$CHMOD $FILEMODE $dir
 		status=$?
 		if [ $status -eq 0 ]

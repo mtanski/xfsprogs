@@ -35,6 +35,11 @@ clean:
 
 binary-indep:
 
+# Note1: dev pkg with .so symlinks to base pkg confuses debstd;
+# so the .so 'Dangling symlink' message is benign.
+# Note2: absolute symlinks (required by policy) confuse debstd;
+# so we'll filter out symlink messages entirely now.
+# 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
@@ -43,9 +48,7 @@ binary-arch: checkroot built
 	$(pkgdev) $(MAKE) -C . install-dev
 	$(pkgtmp) $(MAKE) -C build src-manifest
 	@echo "== dpkg-buildpackage: debstd" 1>&2
-	# Note: dev pkg with .so symlinks to base pkg confuses debstd;
-	# so the .so 'Dangling symlink' message below is benign.
-	$(stdenv) debstd -m
+	$(stdenv) debstd -m | grep -v 'Dangling symlink'
 	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
 	dpkg-gencontrol -isp -p$(develop) -P$(dirdev)
 	chown -R root.root $(dirtmp) $(dirdev)
