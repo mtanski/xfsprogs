@@ -101,7 +101,6 @@ pwrite_f(
 	ssize_t		count, total;
 	unsigned int	seed = 0xcdcdcdcd;
 	unsigned int	bsize = 4096;
-	xfs_fsop_geom_t	geometry;
 	char		*sp, *infile = NULL;
 	int		c, fd = -1, dflag = 0;
 
@@ -160,7 +159,7 @@ pwrite_f(
 		return 0;
 
 	if (infile &&
-	    ((fd = openfile(infile, &geometry, 0, 0, dflag, 1, 0, 0, 0)) < 0))
+	    ((fd = openfile(infile, NULL, 0, 0, dflag, 1, 0, 0, 0)) < 0))
 		return 0;
 
 	if (!write_buffer(offset, count, bsize, fd, skip, &total)) {

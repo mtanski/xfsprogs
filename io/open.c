@@ -74,6 +74,9 @@ openfile(
 		perror(path);
 		return -1;
 	}
+	if (!geom)
+		return fd;
+
 	if (!platform_test_xfs_fd(fd)) {
 		fprintf(stderr, _("%s: specified file "
 			"[\"%s\"] is not on an XFS filesystem\n"),
