@@ -348,8 +348,8 @@ get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
 		*swidth = lv->lv_stripes * lv->lv_stripesize;
 		
 		return;
-#endif /* HAVE_LIBLVM */
 	}
+#endif /* HAVE_LIBLVM */
 }
 
 
