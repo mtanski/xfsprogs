@@ -263,11 +263,11 @@ xfs_iformat(
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 
-	switch (ip->i_d.di_mode & IFMT) {
-	case IFIFO:
-	case IFCHR:
-	case IFBLK:
-	case IFSOCK:
+	switch (ip->i_d.di_mode & S_IFMT) {
+	case S_IFIFO:
+	case S_IFCHR:
+	case S_IFBLK:
+	case S_IFSOCK:
 		if (unlikely(INT_GET(dip->di_core.di_format, ARCH_CONVERT) != XFS_DINODE_FMT_DEV)) {
 			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
 					      ip->i_mount, dip);
@@ -277,15 +277,15 @@ xfs_iformat(
 		ip->i_df.if_u2.if_rdev = INT_GET(dip->di_u.di_dev, ARCH_CONVERT);
 		break;
 
-	case IFREG:
-	case IFLNK:
-	case IFDIR:
+	case S_IFREG:
+	case S_IFLNK:
+	case S_IFDIR:
 		switch (INT_GET(dip->di_core.di_format, ARCH_CONVERT)) {
 		case XFS_DINODE_FMT_LOCAL:
 			/*
 			 * no local regular files yet
 			 */
-			if (unlikely((INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFREG)) {
+			if (unlikely((INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFREG)) {
 				xfs_fs_cmn_err(CE_WARN, ip->i_mount,
 					"corrupt inode (local format for regular file) %Lu.  Unmount and run xfs_repair.",
 					(unsigned long long) ip->i_ino);

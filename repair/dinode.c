@@ -1914,10 +1914,10 @@ process_dinode_int(xfs_mount_t *mp,
 	 * as we reset the inode when we re-use it.
 	 */
 	if (INT_GET(dinoc->di_mode, ARCH_CONVERT) != 0 &&
-		((((INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT) >> 12) > 15) ||
+		((((INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT) >> 12) > 15) ||
 		dinoc->di_format < XFS_DINODE_FMT_DEV ||
 		dinoc->di_format > XFS_DINODE_FMT_UUID ||
-			(!(okfmts[(INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT) >> 12] &
+			(!(okfmts[(INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT) >> 12] &
 			  (1 << dinoc->di_format))))) {
 		/* bad inode format */
 		retval++;
@@ -1951,12 +1951,12 @@ process_dinode_int(xfs_mount_t *mp,
 
 	/* set type and map type info */
 
-	switch (INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT) {
-	case IFDIR:
+	switch (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT) {
+	case S_IFDIR:
 		type = XR_INO_DIR;
 		*isa_dir = 1;
 		break;
-	case IFREG:
+	case S_IFREG:
 		if (INT_GET(dinoc->di_flags, ARCH_CONVERT) & XFS_DIFLAG_REALTIME)
 			type = XR_INO_RTDATA;
 		else if (lino == mp->m_sb.sb_rbmino)
@@ -1966,25 +1966,25 @@ process_dinode_int(xfs_mount_t *mp,
 		else
 			type = XR_INO_DATA;
 		break;
-	case IFLNK:
+	case S_IFLNK:
 		type = XR_INO_SYMLINK;
 		break;
-	case IFCHR:
+	case S_IFCHR:
 		type = XR_INO_CHRDEV;
 		break;
-	case IFBLK:
+	case S_IFBLK:
 		type = XR_INO_BLKDEV;
 		break;
-	case IFSOCK:
+	case S_IFSOCK:
 		type = XR_INO_SOCK;
 		break;
-	case IFIFO:
+	case S_IFIFO:
 		type = XR_INO_FIFO;
 		break;
 	default:
 		type = XR_INO_UNKNOWN;
 		do_warn(_("Unexpected inode type %#o inode %llu\n"),
-			(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT), lino);
+			(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
 		abort();
 		break;
 	}
@@ -1999,9 +1999,9 @@ process_dinode_int(xfs_mount_t *mp,
 		if (!no_modify)  {
 			do_warn(_("resetting to directory\n"));
 			INT_MOD_EXPR(dinoc->di_mode, ARCH_CONVERT,
-			  &= ~(INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT));
+			  &= ~(INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT));
 			INT_MOD_EXPR(dinoc->di_mode, ARCH_CONVERT,
-			  |= INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFDIR);
+			  |= INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFDIR);
 		} else  {
 			do_warn(_("would reset to directory\n"));
 		}
@@ -2016,7 +2016,7 @@ process_dinode_int(xfs_mount_t *mp,
 	} else if (lino == mp->m_sb.sb_uquotino)  {
 		if (type != XR_INO_DATA)  {
 			do_warn(_("user quota inode has bad type 0x%x\n"),
-				INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT);
+				INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT);
 
 			if (!no_modify)  {
 				*dirty += clear_dinode(mp, dino, lino);
@@ -2034,7 +2034,7 @@ process_dinode_int(xfs_mount_t *mp,
 	} else if (lino == mp->m_sb.sb_gquotino)  {
 		if (type != XR_INO_DATA)  {
 			do_warn(_("group quota inode has bad type 0x%x\n"),
-				INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT);
+				INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT);
 
 			if (!no_modify)  {
 				*dirty += clear_dinode(mp, dino, lino);
@@ -2060,9 +2060,9 @@ process_dinode_int(xfs_mount_t *mp,
 		if (!no_modify)  {
 			do_warn(_("resetting to regular file\n"));
 			INT_MOD_EXPR(dinoc->di_mode, ARCH_CONVERT,
-			  &= ~(INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFMT));
+			  &= ~(INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT));
 			INT_MOD_EXPR(dinoc->di_mode, ARCH_CONVERT,
-			  |= INT_GET(dinoc->di_mode, ARCH_CONVERT) & IFREG);
+			  |= INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFREG);
 		} else  {
 			do_warn(_("would reset to regular file\n"));
 		}

@@ -390,12 +390,12 @@ inode_init(void)
 typnm_t
 inode_next_type(void)
 {
-	switch (iocur_top->mode & IFMT) {
-	case IFDIR:
+	switch (iocur_top->mode & S_IFMT) {
+	case S_IFDIR:
 		return XFS_DIR_IS_V2(mp) ? TYP_DIR2 : TYP_DIR;
-	case IFLNK:
+	case S_IFLNK:
 		return TYP_SYMLINK;
-	case IFREG:
+	case S_IFREG:
 		if (iocur_top->ino == mp->m_sb.sb_rbmino)
 			return TYP_RTBITMAP;
 		else if (iocur_top->ino == mp->m_sb.sb_rsumino)
@@ -460,7 +460,7 @@ inode_u_c_count(
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFREG ?
+	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFREG ?
 		(int)INT_GET(dip->di_core.di_size, ARCH_CONVERT) : 0;
 }
 
@@ -504,7 +504,7 @@ inode_u_sfdir_count(
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFDIR
+	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFDIR
 	       && XFS_DIR_IS_V1(mp);
 }
 
@@ -520,7 +520,7 @@ inode_u_sfdir2_count(
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFDIR &&
+	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFDIR &&
 	       XFS_DIR_IS_V2(mp);
 }
 
@@ -563,7 +563,7 @@ inode_u_symlink_count(
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFLNK ?
+	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFLNK ?
 		(int)INT_GET(dip->di_core.di_size, ARCH_CONVERT) : 0;
 }
 
@@ -601,7 +601,7 @@ set_cur_inode(
 	dip = iocur_top->data;
 	iocur_top->ino = ino;
 	iocur_top->mode = INT_GET(dip->di_core.di_mode, ARCH_CONVERT);
-	if ((iocur_top->mode & IFMT) == IFDIR)
+	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
 		iocur_top->dirino = ino;
 
 	/* track updated info in ring */

@@ -206,17 +206,17 @@ rsvfile(
 	libxfs_trans_ijoin(tp, ip, 0);
 	libxfs_trans_ihold(tp, ip);
 
-	ip->i_d.di_mode &= ~ISUID;
+	ip->i_d.di_mode &= ~S_ISUID;
 
 	/*
 	 * Note that we don't have to worry about mandatory
 	 * file locking being disabled here because we only
-	 * clear the ISGID bit if the Group execute bit is
+	 * clear the S_ISGID bit if the Group execute bit is
 	 * on, but if it was on then mandatory locking wouldn't
 	 * have been enabled.
 	 */
-	if (ip->i_d.di_mode & (IEXEC >> 3))
-		ip->i_d.di_mode &= ~ISGID;
+	if (ip->i_d.di_mode & S_IXGRP)
+		ip->i_d.di_mode &= ~S_ISGID;
 
 	libxfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 
@@ -426,7 +426,7 @@ parseproto(
 	case '-':
 		break;
 	case 'u':
-		mode |= ISUID;
+		mode |= S_ISUID;
 		break;
 	default:
 		fprintf(stderr, _("%s: bad format string %s\n"),
@@ -437,7 +437,7 @@ parseproto(
 	case '-':
 		break;
 	case 'g':
-		mode |= ISGID;
+		mode |= S_ISGID;
 		break;
 	default:
 		fprintf(stderr, _("%s: bad format string %s\n"),
@@ -463,7 +463,7 @@ parseproto(
 	case IF_REGULAR:
 		buf = newregfile(pp, &len);
 		getres(tp, XFS_B_TO_FSB(mp, len));
-		error = libxfs_inode_alloc(&tp, pip, mode|IFREG, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1,
 					mp->m_dev, &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
@@ -481,7 +481,7 @@ parseproto(
 		llen = cvtnum(mp->m_sb.sb_blocksize, mp->m_sb.sb_sectsize, value);
 		getres(tp, XFS_B_TO_FSB(mp, llen));
 
-		error = libxfs_inode_alloc(&tp, pip, mode|IFREG, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1,
 						mp->m_dev, &creds, &ip);
 		if (error)
 			fail(_("Inode pre-allocation failed"), error);
@@ -504,7 +504,7 @@ parseproto(
 		getres(tp, 0);
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
-		error = libxfs_inode_alloc(&tp, pip, mode|IFBLK, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFBLK, 1,
 				makedev(majdev, mindev), &creds, &ip);
 		if (error) {
 			fail(_("Inode allocation failed"), error);
@@ -520,7 +520,7 @@ parseproto(
 		getres(tp, 0);
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
-		error = libxfs_inode_alloc(&tp, pip, mode|IFCHR, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFCHR, 1,
 				makedev(majdev, mindev), &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
@@ -533,7 +533,7 @@ parseproto(
 
 	case IF_FIFO:
 		getres(tp, 0);
-		error = libxfs_inode_alloc(&tp, pip, mode|IFIFO, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFIFO, 1,
 				mp->m_dev, &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
@@ -546,7 +546,7 @@ parseproto(
 		buf = getstr(pp);
 		len = (int)strlen(buf);
 		getres(tp, XFS_B_TO_FSB(mp, len));
-		error = libxfs_inode_alloc(&tp, pip, mode|IFLNK, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFLNK, 1,
 				mp->m_dev, &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
@@ -558,7 +558,7 @@ parseproto(
 		break;
 	case IF_DIRECTORY:
 		getres(tp, 0);
-		error = libxfs_inode_alloc(&tp, pip, mode|IFDIR, 1,
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR, 1,
 				mp->m_dev, &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
@@ -642,7 +642,7 @@ rtinit(
 	if ((i = libxfs_trans_reserve(tp, MKFS_BLOCKRES_INODE, 0, 0, 0, 0)))
 		res_failed(i);
 	bzero(&creds, sizeof(creds));
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, IFREG, 1,
+	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1,
 				mp->m_dev, &creds, &rbmip);
 	if (error) {
 		fail(_("Realtime bitmap inode allocation failed"), error);
@@ -660,7 +660,7 @@ rtinit(
 	libxfs_mod_sb(tp, XFS_SB_RBMINO);
 	libxfs_trans_ihold(tp, rbmip);
 	mp->m_rbmip = rbmip;
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, IFREG, 1,
+	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1,
 				mp->m_dev, &creds, &rsumip);
 	if (error) {
 		fail(_("Realtime summary inode allocation failed"), error);

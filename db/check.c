@@ -2654,11 +2654,11 @@ process_inode(
 	/*
 	 * di_mode is a 16-bit uint so no need to check the < 0 case
 	 */
-	if ((((dic->di_mode & IFMT) >> 12) > 15) ||
-	    (!(okfmts[(dic->di_mode & IFMT) >> 12] & (1 << dic->di_format)))) {
+	if ((((dic->di_mode & S_IFMT) >> 12) > 15) ||
+	    (!(okfmts[(dic->di_mode & S_IFMT) >> 12] & (1 << dic->di_format)))) {
 		if (!sflag || id->ilist || CHECK_BLIST(bno))
 			dbprintf("bad format %d for inode %lld type %#o\n",
-				dic->di_format, id->ino, dic->di_mode & IFMT);
+				dic->di_format, id->ino, dic->di_mode & S_IFMT);
 		error++;
 		return;
 	}
@@ -2693,14 +2693,14 @@ process_inode(
 			dic->di_flags & XFS_DIFLAG_NOATIME  ? " noa" : "",
 			dic->di_flags & XFS_DIFLAG_NODUMP   ? " nod" : "");
 	security = 0;
-	switch (dic->di_mode & IFMT) {
-	case IFDIR:
+	switch (dic->di_mode & S_IFMT) {
+	case S_IFDIR:
 		type = DBM_DIR;
 		if (dic->di_format == XFS_DINODE_FMT_LOCAL)
 			break;
 		blkmap = blkmap_alloc(dic->di_nextents);
 		break;
-	case IFREG:
+	case S_IFREG:
 		if (dic->di_flags & XFS_DIFLAG_REALTIME)
 			type = DBM_RTDATA;
 		else if (id->ino == mp->m_sb.sb_rbmino) {
@@ -2720,10 +2720,10 @@ process_inode(
 		}
 		else
 			type = DBM_DATA;
-		if (dic->di_mode & (ISUID | ISGID))
+		if (dic->di_mode & (S_ISUID | S_ISGID))
 			security = 1;
 		break;
-	case IFLNK:
+	case S_IFLNK:
 		type = DBM_SYMLINK;
 		break;
 	default:

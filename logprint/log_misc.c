@@ -689,7 +689,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     }
 
     bcopy(*ptr, &dino, sizeof(dino));
-    mode = dino.di_mode & IFMT;
+    mode = dino.di_mode & S_IFMT;
     size = (int)dino.di_size;
     xlog_print_trans_inode_core(&dino);
     *ptr += sizeof(xfs_dinode_core_t);
@@ -728,7 +728,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("LOCAL inode data\n");
-	    if (mode == IFDIR) {
+	    if (mode == S_IFDIR) {
 		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
 	    }
 	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
@@ -764,7 +764,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("LOCAL inode attr\n");
-	    if (mode == IFDIR) {
+	    if (mode == S_IFDIR) {
 		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
 	    }
 	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);

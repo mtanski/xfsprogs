@@ -199,18 +199,18 @@ libxfs_ialloc(
 	ip->i_d.di_dmstate = 0;
 	ip->i_d.di_flags = 0;
 	flags = XFS_ILOG_CORE;
-	switch (mode & IFMT) {
-	case IFIFO:
-	case IFCHR:
-	case IFBLK:
-	case IFSOCK:
+	switch (mode & S_IFMT) {
+	case S_IFIFO:
+	case S_IFCHR:
+	case S_IFBLK:
+	case S_IFSOCK:
 		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
 		ip->i_df.if_u2.if_rdev = makedev(major(rdev), minor(rdev));			ip->i_df.if_flags = 0;
 		flags |= XFS_ILOG_DEV;
 		break;
-	case IFREG:
-	case IFDIR:
-	case IFLNK:
+	case S_IFREG:
+	case S_IFDIR:
+	case S_IFLNK:
 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 		ip->i_df.if_flags = XFS_IFEXTENTS;
 		ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
@@ -318,11 +318,11 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 
 #ifdef DEBUG
 	ASSERT(ip->i_d.di_magic == XFS_DINODE_MAGIC);
-	if ((ip->i_d.di_mode & IFMT) == IFREG) {
+	if ((ip->i_d.di_mode & S_IFMT) == S_IFREG) {
 		ASSERT( (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS) ||
 			(ip->i_d.di_format == XFS_DINODE_FMT_BTREE) );
 	}
-	else if ((ip->i_d.di_mode & IFMT) == IFDIR) {
+	else if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR) {
 		ASSERT( (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS) ||
 			(ip->i_d.di_format == XFS_DINODE_FMT_BTREE)   ||
 			(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) );
@@ -441,7 +441,7 @@ xfs_dir_bogus_removename(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
 	xfs_da_args_t args;
 	int count, totallen, newsize, retval;
 
-	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
+	ASSERT((dp->i_d.di_mode & S_IFMT) == S_IFDIR);
 	if (namelen >= MAXNAMELEN) {
 		return EINVAL;
 	}
@@ -503,7 +503,7 @@ xfs_dir2_bogus_removename(
 	int		rval;		/* return value */
 	int		v;		/* type-checking value */
 
-	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
+	ASSERT((dp->i_d.di_mode & S_IFMT) == S_IFDIR);
 	if (namelen >= MAXNAMELEN)
 		return EINVAL;
 

@@ -357,7 +357,7 @@ mk_rbmino(xfs_mount_t *mp)
 	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
-	ip->i_d.di_mode = IFREG;
+	ip->i_d.di_mode = S_IFREG;
 	ip->i_d.di_version = XFS_DINODE_VERSION_1;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
@@ -592,7 +592,7 @@ mk_rsumino(xfs_mount_t *mp)
 	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
-	ip->i_d.di_mode = IFREG;
+	ip->i_d.di_mode = S_IFREG;
 	ip->i_d.di_version = XFS_DINODE_VERSION_1;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
@@ -690,7 +690,7 @@ mk_root_dir(xfs_mount_t *mp)
 	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
-	ip->i_d.di_mode = (__uint16_t) mode|IFDIR;
+	ip->i_d.di_mode = (__uint16_t) mode|S_IFDIR;
 	ip->i_d.di_version = XFS_DINODE_VERSION_1;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
@@ -752,7 +752,7 @@ mk_orphanage(xfs_mount_t *mp)
 		do_error(_("%d - couldn't iget root inode to make %s\n"),
 			i, ORPHANAGE);
 
-	error = libxfs_inode_alloc(&tp, pip, mode|IFDIR,
+	error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
 					1, mp->m_dev, &zerocr, &ip);
 
 	if (error) {

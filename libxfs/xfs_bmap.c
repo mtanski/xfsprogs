@@ -2851,7 +2851,7 @@ xfs_bmap_local_to_extents(
 	 * We don't want to deal with the case of keeping inode data inline yet.
 	 * So sending the data fork of a regular inode is invalid.
 	 */
-	ASSERT(!((ip->i_d.di_mode & IFMT) == IFREG &&
+	ASSERT(!((ip->i_d.di_mode & S_IFMT) == S_IFREG &&
 		 whichfork == XFS_DATA_FORK));
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
