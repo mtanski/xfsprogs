@@ -1,4 +1,5 @@
-xfsprogs-current
+xfsprogs-1.3.13 (25 October 2001)
+	- fix bug in mkfs for 1Tbyte + filesystems
 	- sync with recent kernel changes - this does not affect
 	  userspace (libxfs), all affected code is removed by cpp.
 
