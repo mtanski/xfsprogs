@@ -1,3 +1,7 @@
+xfsprogs-2.6.0 (28 October 2003)
+	- Change to mkfs strategy for allocation group count and size
+	  default.  Scales significantly better for large filesystems.
+
 xfsprogs-2.5.11 (10 October 2003)
 	- Incorporate Jan Derfinaks change to the Linux block ioctls
 	  used in libxfs, allowing this code to compile cleanly with

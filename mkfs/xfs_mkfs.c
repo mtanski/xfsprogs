@@ -166,6 +166,10 @@ char	*sopts[] = {
 	NULL
 };
 
+#define TERABYTES(count, blog)	((__uint64_t)(count) << (40 - (blog)))
+#define GIGABYTES(count, blog)	((__uint64_t)(count) << (30 - (blog)))
+#define MEGABYTES(count, blog)	((__uint64_t)(count) << (20 - (blog)))
+
 /*
  * Use this macro before we have superblock and mount structure
  */
@@ -336,6 +340,136 @@ fixup_log_stripe(
 	return logstart;
 }
 
+void
+calc_default_ag_geometry(
+	int		blocklog,
+	__uint64_t	dblocks,
+	__uint64_t	*agsize,
+	__uint64_t	*agcount)
+{
+	__uint64_t	blocks;
+	__uint64_t	count = 0;
+	int		shift = 0;
+
+	/*
+	 * First handle the extremes - the points at which we will
+	 * always use the maximum AG size, the points at which we
+	 * always use the minimum, and a "small-step" for 16-128Mb.
+	 */
+	if (dblocks >= TERABYTES(64, blocklog)) {
+		blocks = XFS_AG_MAX_BLOCKS(blocklog);
+		goto done;
+	} else if (dblocks < MEGABYTES(16, blocklog)) {
+		blocks = dblocks;
+		count = 1;
+		goto done;
+	} else if (dblocks < MEGABYTES(128, blocklog)) {
+		blocks = MEGABYTES(16, blocklog);
+		goto done;
+	}
+
+	/*
+	 * For the remainder we choose an AG size based on the
+	 * number of data blocks available, trying to keep the
+	 * number of AGs relatively small (especially compared
+	 * to the original algorithm).  AG count is calculated
+	 * based on the prefered AG size, not vice-versa - the
+	 * count can be increased by growfs, so prefer to use
+	 * smaller counts at mkfs time.
+	 * 
+	 * This scales us up smoothly between min/max AG sizes.
+	 */
+	if (dblocks > GIGABYTES(512, blocklog))
+		shift = 5;
+	else if (dblocks > GIGABYTES(8, blocklog))
+		shift = 4;
+	else if (dblocks >= MEGABYTES(128, blocklog))
+		shift = 3;
+	else
+		ASSERT(0);
+	blocks = dblocks >> shift;
+
+done:
+	if (!count)
+		count = dblocks / blocks + (dblocks % blocks != 0);
+	*agsize = blocks;
+	*agcount = count;
+}
+
+static void
+validate_ag_geometry(
+	int		blocklog,
+	__uint64_t	dblocks,
+	__uint64_t	agsize,
+	__uint64_t	agcount)
+{
+	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+		fprintf(stderr,
+	_("agsize (%lldb) too small, need at least %lld blocks\n"),
+			(long long)agsize,
+			(long long)XFS_AG_MIN_BLOCKS(blocklog));
+		usage();
+	}
+
+	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+		fprintf(stderr,
+	_("agsize (%lldb) too big, maximum is %lld blocks\n"),
+			(long long)agsize,
+			(long long)XFS_AG_MAX_BLOCKS(blocklog));
+		usage();
+	}
+
+	if (agsize > dblocks) {
+		fprintf(stderr,
+	_("agsize (%lldb) too big, data area is %lld blocks\n"),
+			(long long)agsize, (long long)dblocks);
+			usage();
+	}
+
+	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+		fprintf(stderr,
+	_("too many allocation groups for size = %lld\n"),
+				(long long)agsize);
+		fprintf(stderr, _("need at most %lld allocation groups\n"),
+			(long long)(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
+				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
+		usage();
+	}
+
+	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+		fprintf(stderr,
+	_("too few allocation groups for size = %lld\n"), (long long)agsize);
+		fprintf(stderr,
+	_("need at least %lld allocation groups\n"),
+		(long long)(dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
+			(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
+		usage();
+	}
+
+	/*
+	 * If the last AG is too small, reduce the filesystem size
+	 * and drop the blocks.
+	 */
+	if ( dblocks % agsize != 0 &&
+	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
+		fprintf(stderr,
+	_("last AG size %lld blocks too small, minimum size is %lld blocks\n"),
+			(long long)(dblocks % agsize),
+			(long long)XFS_AG_MIN_BLOCKS(blocklog));
+		usage();
+	}
+
+	/*
+	 * If agcount is too large, make it smaller.
+	 */
+	if (agcount > XFS_MAX_AGNUMBER + 1) {
+		fprintf(stderr,
+	_("%lld allocation groups is too many, maximum is %lld\n"),
+			(long long)agcount, (long long)XFS_MAX_AGNUMBER + 1);
+		usage();
+	}
+}
+
 int
 main(
 	int			argc,
@@ -436,7 +570,6 @@ main(
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	agcount = 8;
 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
@@ -1131,9 +1264,6 @@ main(
 		usage();
 	}
 
-	if (!daflag)
-		agcount = 8;
-
 	if (xi.disfile && (!dsize || !xi.dname)) {
 		fprintf(stderr,
 	_("if -d file then -d name and -d size are required\n"));
@@ -1483,10 +1613,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		nbmblocks = 0;
 	}
 
-	if (dasize) {
+	if (dasize) {		/* User-specified AG size */
 		/*
-		 * If the specified agsize isn't a multiple of fs blks,
-		 * complain.
+		 * Check specified agsize is a multiple of blocksize.
 		 */
 		if (agsize % blocksize) {
 			fprintf(stderr,
@@ -1494,86 +1623,13 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 				(long long)agsize, blocksize);
 			usage();
 		}
-
 		agsize /= blocksize;
-
-		/*
-		 * If the specified agsize is too small, or too large,
-		 * complain.
-		 */
-		if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
-			fprintf(stderr,
-		_("agsize (%lldb) too small, need at least %lld blocks\n"),
-				(long long)agsize,
-				(long long)XFS_AG_MIN_BLOCKS(blocklog));
-			usage();
-		}
-
-		if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-			fprintf(stderr,
-		_("agsize (%lldb) too big, maximum is %lld blocks\n"),
-				(long long)agsize,
-				(long long)XFS_AG_MAX_BLOCKS(blocklog));
-			usage();
-		}
-
-		if (agsize > dblocks)  {
-			fprintf(stderr,
-		_("agsize (%lldb) too big, data area is %lld blocks\n"),
-				(long long)agsize, (long long)dblocks);
-			usage();
-		}
-
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
-	} else {
+
+	} else if (daflag)	/* User-specified AG size */
 		agsize = dblocks / agcount + (dblocks % agcount != 0);
-	}
-
-	/*
-	 * If the ag size is too small, complain if agcount/agsize was
-	 * specified, and fix it otherwise.
-	 */
-	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
-		if (daflag || dasize) {
-			fprintf(stderr,
-			_("too many allocation groups for size = %lld\n"),
-				(long long)agsize);
-			fprintf(stderr,
-				_("need at most %lld allocation groups\n"),
-				(long long)
-				(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
-				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
-			usage();
-		}
-		agsize = XFS_AG_MIN_BLOCKS(blocklog);
-		if (dblocks < agsize) {
-			agcount = 1;
-			agsize = dblocks;
-		} else {
-			agcount = dblocks / agsize;
-			agsize = dblocks / agcount +(dblocks % agcount != 0);
-		}
-	}
-
-	/*
-	 * If the ag size is too large, complain if agcount/agsize was
-	 * specified, and fix it otherwise.
-	 */
-	else if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-		if (daflag || dasize) {
-			fprintf(stderr,
-			_("too few allocation groups for size = %lld\n"),
-				(long long)agsize);
-			fprintf(stderr,
-				_("need at least %lld allocation groups\n"),
-				(long long)
-				(dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
-				(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
-			usage();
-		}
-		agsize = XFS_AG_MAX_BLOCKS(blocklog);
-		agcount = dblocks / agsize + (dblocks % agsize != 0);
-	}
+	else
+		calc_default_ag_geometry(blocklog, dblocks, &agsize, &agcount);
 
 	/*
 	 * If the last AG is too small, reduce the filesystem size
@@ -1586,48 +1642,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		ASSERT(agcount != 0);
 	}
 
-	/*
-	 * If agcount was not specified, and agsize is larger than
-	 * we'd like, make it the size we want.
-	 */
-	if (!daflag && !dasize &&
-	    (agsize > XFS_AG_BEST_BLOCKS(blocklog,dblocks))) {
-		agsize = XFS_AG_BEST_BLOCKS(blocklog,dblocks);
-		agcount = dblocks / agsize + (dblocks % agsize != 0);
-		/*
-		 * If the last AG is too small, reduce the filesystem size
-		 * and drop the blocks.
-		 */
-		if ( dblocks % agsize != 0 &&
-		    (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
-			dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
-			agcount--;
-			ASSERT(agcount != 0);
-		}
-	}
-
-	/*
-	 * If agcount is too large, make it smaller.
-	 */
-	if (agcount > XFS_MAX_AGNUMBER + 1) {
-		agcount = XFS_MAX_AGNUMBER + 1;
-		agsize = dblocks / agcount + (dblocks % agcount != 0);
-
-		if (dasize || daflag)
-			fprintf(stderr,
-		_("agsize set to %lld, agcount %lld > max (%lld)\n"),
-				(long long)agsize, (long long)agcount,
-				(long long)XFS_MAX_AGNUMBER+1);
-
-		if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-			/*
-			 * We're confused.
-			 */
-			fprintf(stderr, _("%s: can't compute agsize/agcount\n"),
-				progname);
-			exit(1);
-		}
-	}
+	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
 
 	xlv_dsunit = xlv_dswidth = 0;
 	if (!xi.disfile)
