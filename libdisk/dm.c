@@ -60,6 +60,8 @@ dm_get_subvol_stripe(
 	/* Quest for dmsetup */
 	if (!access("/usr/local/sbin/dmsetup", R_OK|X_OK))
 		largv[0] = "/usr/local/sbin/dmsetup";
+	else if (!access("/usr/sbin/dmsetup", R_OK|X_OK))
+		largv[0] = "/usr/sbin/dmsetup";
 	else if (!access("/sbin/dmsetup", R_OK|X_OK))
 		largv[0] = "/sbin/dmsetup";
 	else {
