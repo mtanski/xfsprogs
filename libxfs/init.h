@@ -40,6 +40,7 @@ extern int platform_check_iswritable (char *path, char *block,
 					struct stat64 *sptr, int fatal);
 extern __int64_t platform_findsize (char *path);
 extern void platform_set_blocksize (int fd, char *path, int blocksize);
+extern int platform_get_blocksize (int fd, char *path);
 extern void platform_flush_device (int fd);
 
 #endif	/* LIBXFS_INIT_H */

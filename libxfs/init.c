@@ -170,9 +170,9 @@ libxfs_device_close(dev_t dev)
 	exit(1);
 }
 
-int
-check_open(char *path, int flags,char **rawfile,char **blockfile){
-
+static int
+check_open(char *path, int flags, char **rawfile, char **blockfile)
+{
 	int readonly = (flags & LIBXFS_ISREADONLY);
 	int inactive = (flags & LIBXFS_ISINACTIVE);
 	int dangerously = (flags & LIBXFS_DANGEROUSLY);
@@ -203,8 +203,6 @@ check_open(char *path, int flags,char **rawfile,char **blockfile){
 	return 1;
 }
 
-
-
 /*
  * libxfs initialization.
  * Caller gets a 0 on failure (and we print a message), 1 on success.
@@ -232,8 +230,9 @@ libxfs_init(libxfs_init_t *a)
 	dname = a->dname;
 	logname = a->logname;
 	rtname = a->rtname;
-	a->ddev = a->logdev = a->rtdev = 0;
 	a->dfd = a->logfd = a->rtfd = -1;
+	a->ddev = a->logdev = a->rtdev = 0;
+	a->dbsize = a->lbsize = a->rtbsize = 0;
 	a->dsize = a->logBBsize = a->logBBstart = a->rtsize = 0;
 
 	(void)getcwd(curdir,MAXPATHLEN);
@@ -244,7 +243,6 @@ libxfs_init(libxfs_init_t *a)
 	flags = a->isreadonly;
 
 	if (a->volname) {
-		
 		if(!check_open(a->volname,flags,&rawfile,&blockfile))
 			goto done;
 		needcd = 1;
@@ -337,6 +335,7 @@ voldone:
 					a->dcreat, readonly, a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 			a->dsize = platform_findsize(rawfile);
+			a->dbsize = platform_get_blocksize(a->dfd, rawfile);
 		}
 		needcd = 1;
 	} else
@@ -355,6 +354,7 @@ voldone:
 					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 			a->logBBsize = platform_findsize(rawfile);
+			a->lbsize = platform_get_blocksize(a->logfd, rawfile);
 		}
 		needcd = 1;
 	} else
@@ -373,6 +373,7 @@ voldone:
 					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 			a->rtsize = platform_findsize(rawfile);
+			a->rtbsize = platform_get_blocksize(a->rtfd, rawfile);
 		}
 		needcd = 1;
 	} else
@@ -651,10 +652,9 @@ libxfs_mount(
 	}
 
 	/* Initialize realtime fields in the mount structure */
-	if (rtmount_init(mp)) {
+	if (!(flags & LIBXFS_MOUNT_DEBUGGER) && rtmount_init(mp)) {
 		fprintf(stderr, _("%s: realtime device init failed\n"),
 			progname);
-		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
 			return NULL;
 	}
 
@@ -682,9 +682,10 @@ libxfs_mount(
 		}
 		ASSERT(mp->m_rootip != NULL);
 	}
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp))
-		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-			return NULL;
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) &&
+	    !(flags & LIBXFS_MOUNT_DEBUGGER) &&
+	    rtmount_inodes(mp))
+		return NULL;
 	return mp;
 }
 

@@ -1,3 +1,10 @@
+[cvs]
+	- Extract device sector size at mkfs time and issue warnings
+	  if the requested filesystem sector size is too small.
+	- Sync up user/kernel source in libxfs, libxlog and headers.
+	- Skip realtime initialisation in libxfs mount path if the
+	  caller is xfs_db, otherwise we get nonsense warnings.
+
 xfsprogs-2.4.10 (12 May 2003)
 	- Fix a bug in mkfs - creating version 2 logs, an incorrect
 	  stripe unit value was being passed to libxfs_clear_log.

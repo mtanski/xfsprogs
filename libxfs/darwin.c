@@ -68,7 +68,12 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 void
 platform_set_blocksize(int fd, char *path, int blocksize)
 {
-	return;
+}
+
+int
+platform_get_blocksize(int fd, char *path)
+{
+	return BBSIZE;
 }
 
 void

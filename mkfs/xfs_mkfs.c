@@ -1382,6 +1382,7 @@ main(
 			(long long)dblocks, XFS_MIN_DATA_BLOCKS);
 		usage();
 	}
+
 	if (loginternal && xi.logdev) {
 		fprintf(stderr,
 			_("can't have both external and internal logs\n"));
@@ -1391,6 +1392,26 @@ main(
 	_("data and log sector sizes must be equal for internal logs\n"));
 		usage();
 	}
+
+	if (xi.dbsize > sectorsize) {
+		fprintf(stderr, _(
+"Warning: the data subvolume sector size %u is less than the sector size \n\
+reported by the device (%u).\n"),
+			sectorsize, xi.dbsize);
+	}
+	if (!loginternal && xi.lbsize > lsectorsize) {
+		fprintf(stderr, _(
+"Warning: the log subvolume sector size %u is less than the sector size\n\
+reported by the device (%u).\n"),
+			lsectorsize, xi.lbsize);
+	}
+	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+		fprintf(stderr, _(
+"Warning: the realtime subvolume sector size %u is less than the sector size\n\
+reported by the device (%u).\n"),
+			sectorsize, xi.rtbsize);
+	}
+
 	if (dirversion == 1)
 		i = max_trres_v1[sectorlog - XFS_MIN_SECTORSIZE_LOG]
 				[blocklog - XFS_MIN_BLOCKSIZE_LOG]
@@ -1807,7 +1828,6 @@ _("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
 		/*
 		 * Align the logstart at stripe unit boundary.
 		 */
-
 		if (lsunit && ((logstart % lsunit) != 0)) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
 					agsize, lsunit, &logblocks, blocklog);

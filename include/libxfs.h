@@ -92,6 +92,7 @@ typedef struct {
 	int             risfile;        /* realtime "subvolume" is a reg file */        int             rcreat;         /* try to create realtime subvolume */
 	char            *notvolmsg;     /* format string for not XLV message */
 	int             notvolok;       /* set if not XLV => try data */
+	int		setblksize;	/* attempt to set device blksize */
 				/* output results */
 	dev_t           ddev;           /* device for data subvolume */
 	dev_t           logdev;         /* device for log subvolume */
@@ -100,11 +101,14 @@ typedef struct {
 	long long       logBBsize;      /* size of log subvolume (BBs) */
 					/* (blocks allocated for use as
 					 * log is stored in mount structure) */
-	long long       logBBstart;     /* start block of log subvolume (BBs) */        long long       rtsize;         /* size of realtime subvolume (BBs) */
+	long long       logBBstart;     /* start block of log subvolume (BBs) */
+	long long       rtsize;         /* size of realtime subvolume (BBs) */
+	int		dbsize;		/* data subvolume device blksize */
+	int		lbsize;		/* log subvolume device blksize */
+	int		rtbsize;	/* realtime subvolume device blksize */
 	int             dfd;            /* data subvolume file descriptor */
 	int             logfd;          /* log subvolume file descriptor */
 	int             rtfd;           /* realtime subvolume file descriptor */
-	int		setblksize;	/* attempt to set device block size */
 } libxfs_init_t;
 
 #define LIBXFS_EXIT_ON_FAILURE	0x0001	/* exit the program if a call fails */

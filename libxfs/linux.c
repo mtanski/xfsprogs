@@ -47,6 +47,9 @@ extern char *progname;
 #ifndef BLKBSZSET
 # define BLKBSZSET	_IOW(0x12,113,sizeof(int))
 #endif
+#ifndef BLKSSZGET
+# define BLKSSZGET	_IO(0x12,104)
+#endif
 
 #define PROC_MOUNTED	"/proc/mounts"
 
@@ -115,6 +118,20 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 				"on block device %s: %s\n"),
 			progname, path, strerror(errno));
 	}
+}
+
+int
+platform_get_blocksize(int fd, char *path)
+{
+	int	blocksize;
+
+	if (ioctl(fd, BLKSSZGET, &blocksize) < 0) {
+		fprintf(stderr, _("%s: warning - cannot get sector size "
+				"from block device %s: %s\n"),
+			progname, path, strerror(errno));
+		blocksize = BBSIZE;
+	}
+	return blocksize;
 }
 
 void
