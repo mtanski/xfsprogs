@@ -714,7 +714,6 @@ int
 libxfs_trans_commit(xfs_trans_t *tp, uint flags, xfs_lsn_t *commit_lsn_p)
 {
 	xfs_sb_t	*sbp;
-	int		error;
 
 	if (tp == NULL)
 		return 0;

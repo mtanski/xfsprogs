@@ -526,11 +526,11 @@ xfs_dir2_bogus_removename(
 	 */
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_removename(&args);
-	else if (rval = xfs_dir2_isblock(tp, dp, &v))
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
 		return rval;
 	else if (v)
 		rval = xfs_dir2_block_removename(&args);
-	else if (rval = xfs_dir2_isleaf(tp, dp, &v))
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
 		return rval;
 	else if (v)
 		rval = xfs_dir2_leaf_removename(&args);
@@ -577,7 +577,6 @@ libxfs_bmap_finish(
 	xfs_bmap_free_item_t	*free;	/* free extent list item */
 	xfs_bmap_free_item_t	*next;	/* next item on free list */
 	int			error;
-	xfs_trans_t		*ntp;
 
 	if (flist->xbf_count == 0) {
 		*committed = 0;
@@ -586,8 +585,8 @@ libxfs_bmap_finish(
 
 	for (free = flist->xbf_first; free != NULL; free = next) {
 		next = free->xbfi_next;
-		if (error = xfs_free_extent(*tp, free->xbfi_startblock,
-				free->xbfi_blockcount))
+		if ((error = xfs_free_extent(*tp, free->xbfi_startblock,
+				free->xbfi_blockcount)))
 			return error;
 		xfs_bmap_del_free(flist, NULL, free);
 	}

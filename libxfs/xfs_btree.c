@@ -192,7 +192,6 @@ xfs_btree_check_lblock(
 		 XFS_FSB_SANITY_CHECK(mp, INT_GET(block->bb_rightsib, ARCH_CONVERT)));
 	if (XFS_TEST_ERROR(!lblock_ok, mp, XFS_ERRTAG_BTREE_CHECK_LBLOCK,
 			XFS_RANDOM_BTREE_CHECK_LBLOCK)) {
-#pragma mips_frequency_hint NEVER
 		if (bp)
 			xfs_buftrace("LBTREE ERROR", bp);
 		return XFS_ERROR(EFSCORRUPTED);
@@ -311,7 +310,6 @@ xfs_btree_check_sblock(
 	if (XFS_TEST_ERROR(!sblock_ok, cur->bc_mp,
 			XFS_ERRTAG_BTREE_CHECK_SBLOCK,
 			XFS_RANDOM_BTREE_CHECK_SBLOCK)) {
-#pragma mips_frequency_hint NEVER
 		if (bp)
 			xfs_buftrace("SBTREE ERROR", bp);
 		return XFS_ERROR(EFSCORRUPTED);
@@ -412,10 +410,9 @@ xfs_btree_dup_cursor(
 	for (i = 0; i < new->bc_nlevels; i++) {
 		new->bc_ptrs[i] = cur->bc_ptrs[i];
 		new->bc_ra[i] = cur->bc_ra[i];
-		if (bp = cur->bc_bufs[i]) {
-			if (error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
-				XFS_BUF_ADDR(bp), mp->m_bsize, 0, &bp)) {
-#pragma mips_frequency_hint NEVER
+		if ((bp = cur->bc_bufs[i])) {
+			if ((error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+				XFS_BUF_ADDR(bp), mp->m_bsize, 0, &bp))) {
 				xfs_btree_del_cursor(new, error);
 				*ncur = NULL;
 				return error;
@@ -562,7 +559,7 @@ xfs_btree_init_cursor(
 	xfs_agi_t	*agi;		/* (I) allocation group inodespace */
 	xfs_btree_cur_t	*cur;		/* return value */
 	xfs_ifork_t	*ifp;		/* (I) inode fork pointer */
-	int		nlevels;	/* number of levels in the btree */
+	int		nlevels=0;	/* number of levels in the btree */
 
 	ASSERT(xfs_btree_cur_zone != NULL);
 	/*
@@ -737,9 +734,8 @@ xfs_btree_read_bufl(
 
 	ASSERT(fsbno != NULLFSBLOCK);
 	d = XFS_FSB_TO_DADDR(mp, fsbno);
-	if (error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
-			mp->m_bsize, lock, &bp)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+			mp->m_bsize, lock, &bp))) {
 		return error;
 	}
 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
@@ -765,15 +761,14 @@ xfs_btree_read_bufs(
 	int		refval)		/* ref count value for buffer */
 {
 	xfs_buf_t	*bp;		/* return value */
-	xfs_daddr_t		d;		/* real disk block address */
+	xfs_daddr_t	d;		/* real disk block address */
 	int		error;
 
 	ASSERT(agno != NULLAGNUMBER);
 	ASSERT(agbno != NULLAGBLOCK);
 	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
-	if (error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
-					mp->m_bsize, lock, &bp)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+					mp->m_bsize, lock, &bp))) {
 		return error;
 	}
 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));

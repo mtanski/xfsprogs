@@ -144,7 +144,7 @@ xfs_rtfind_back(
 		 * Calculate the difference between the value there
 		 * and what we're looking for.
 		 */
-		if (wdiff = (*b ^ want) & mask) {
+		if ((wdiff = (*b ^ want) & mask)) {
 			/*
 			 * Different.  Mark where we are and return.
 			 */
@@ -190,7 +190,7 @@ xfs_rtfind_back(
 		/*
 		 * Compute difference between actual and desired value.
 		 */
-		if (wdiff = *b ^ want) {
+		if ((wdiff = *b ^ want)) {
 			/*
 			 * Different, mark where we are and return.
 			 */
@@ -237,7 +237,7 @@ xfs_rtfind_back(
 		/*
 		 * Compute difference between actual and desired value.
 		 */
-		if (wdiff = (*b ^ want) & mask) {
+		if ((wdiff = (*b ^ want) & mask)) {
 			/*
 			 * Different, mark where we are and return.
 			 */
@@ -318,7 +318,7 @@ xfs_rtfind_forw(
 		 * Calculate the difference between the value there
 		 * and what we're looking for.
 		 */
-		if (wdiff = (*b ^ want) & mask) {
+		if ((wdiff = (*b ^ want) & mask)) {
 			/*
 			 * Different.  Mark where we are and return.
 			 */
@@ -363,7 +363,7 @@ xfs_rtfind_forw(
 		/*
 		 * Compute difference between actual and desired value.
 		 */
-		if (wdiff = *b ^ want) {
+		if ((wdiff = *b ^ want)) {
 			/*
 			 * Different, mark where we are and return.
 			 */
@@ -399,7 +399,7 @@ xfs_rtfind_forw(
 	 * If not ending on a word boundary, deal with the last
 	 * (partial) word.
 	 */
-	if (lastbit = len - i) {
+	if ((lastbit = len - i)) {
 		/*
 		 * Calculate mask for all the relevant bits in this word.
 		 */
@@ -407,7 +407,7 @@ xfs_rtfind_forw(
 		/*
 		 * Compute difference between actual and desired value.
 		 */
-		if (wdiff = (*b ^ want) & mask) {
+		if ((wdiff = (*b ^ want) & mask)) {
 			/*
 			 * Different, mark where we are and return.
 			 */
@@ -633,7 +633,7 @@ xfs_rtmodify_range(
 	 * If not ending on a word boundary, deal with the last
 	 * (partial) word.
 	 */
-	if (lastbit = len - i) {
+	if ((lastbit = len - i)) {
 		/*
 		 * Compute a mask of relevant bits.
 		 */

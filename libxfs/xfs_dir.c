@@ -90,7 +90,7 @@ xfs_dir_init(xfs_trans_t *trans, xfs_inode_t *dir, xfs_inode_t *parent_dir)
 	args.trans = trans;
 
 	ASSERT((dir->i_d.di_mode & IFMT) == IFDIR);
-	if (error = xfs_dir_ino_validate(trans->t_mountp, parent_dir->i_ino))
+	if ((error = xfs_dir_ino_validate(trans->t_mountp, parent_dir->i_ino)))
 		return error;
 
 	return(xfs_dir_shortform_create(&args, parent_dir->i_ino));
@@ -110,7 +110,7 @@ xfs_dir_createname(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
 
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
 
-	if (retval = xfs_dir_ino_validate(trans->t_mountp, inum))
+	if ((retval = xfs_dir_ino_validate(trans->t_mountp, inum)))
 		return (retval);
 
 	XFS_STATS_INC(xs_dir_create);
@@ -268,7 +268,7 @@ xfs_dir_replace(xfs_trans_t *trans, xfs_inode_t *dp, char *name, int namelen,
 		return(XFS_ERROR(EINVAL));
 	}
 
-	if (retval = xfs_dir_ino_validate(trans->t_mountp, inum))
+	if ((retval = xfs_dir_ino_validate(trans->t_mountp, inum)))
 		return retval;
 
 	/*

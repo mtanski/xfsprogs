@@ -118,7 +118,6 @@ xfs_dir_shortform_addname(xfs_da_args_t *args)
 	 * failed part way through.
 	 */
 	if (dp->i_d.di_size < sizeof(xfs_dir_sf_hdr_t)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -169,7 +168,6 @@ xfs_dir_shortform_removename(xfs_da_args_t *args)
 	 * failed part way through.
 	 */
 	if (dp->i_d.di_size < sizeof(xfs_dir_sf_hdr_t)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -223,7 +221,6 @@ xfs_dir_shortform_lookup(xfs_da_args_t *args)
 	 * failed part way through.
 	 */
 	if (dp->i_d.di_size < sizeof(xfs_dir_sf_hdr_t)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -275,7 +272,6 @@ xfs_dir_shortform_to_leaf(xfs_da_args_t *iargs)
 	 * failed part way through.
 	 */
 	if (dp->i_d.di_size < sizeof(xfs_dir_sf_hdr_t)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -364,7 +360,6 @@ xfs_dir_shortform_replace(xfs_da_args_t *args)
 	 * failed part way through.
 	 */
 	if (dp->i_d.di_size < sizeof(xfs_dir_sf_hdr_t)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -793,7 +788,7 @@ xfs_dir_leaf_compact(xfs_trans_t *trans, xfs_dabuf_t *bp, int musthave,
 	xfs_dir_leaf_hdr_t *hdr_s, *hdr_d;
 	xfs_mount_t *mp;
 	char *tmpbuffer;
-	char *tmpbuffer2;
+	char *tmpbuffer2=NULL;
 	int rval;
 	int lbsize;
 
@@ -809,7 +804,7 @@ xfs_dir_leaf_compact(xfs_trans_t *trans, xfs_dabuf_t *bp, int musthave,
 	 */
 	if (musthave || justcheck) {
 	        tmpbuffer2 = kmem_alloc(lbsize, KM_SLEEP);
-	  	bcopy(bp->data, tmpbuffer2, lbsize);
+		bcopy(bp->data, tmpbuffer2, lbsize);
 	} 
 	bzero(bp->data, lbsize);
 

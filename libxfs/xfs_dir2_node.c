@@ -106,17 +106,15 @@ xfs_dir2_leaf_to_node(
 	/*
 	 * Add a freespace block to the directory.
 	 */
-	if (error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fdb)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fdb))) {
 		return error;
 	}
 	ASSERT(fdb == XFS_DIR2_FREE_FIRSTDB(mp));
 	/*
 	 * Get the buffer for the new freespace block.
 	 */
-	if (error = xfs_da_get_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fdb), -1, &fbp,
-			XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_da_get_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fdb), -1, &fbp,
+			XFS_DATA_FORK))) {
 		return error;
 	}
 	ASSERT(fbp != NULL);
@@ -186,7 +184,6 @@ xfs_dir2_leafn_add(
 	 * a compact.
 	 */
 	if (INT_GET(leaf->hdr.count, ARCH_CONVERT) == XFS_DIR2_MAX_LEAF_ENTS(mp)) {
-#pragma mips_frequency_hint NEVER
 		if (INT_ISZERO(leaf->hdr.stale, ARCH_CONVERT))
 			return XFS_ERROR(ENOSPC);
 		compact = INT_GET(leaf->hdr.stale, ARCH_CONVERT) > 1;
@@ -204,7 +201,6 @@ xfs_dir2_leafn_add(
 	 * the entry closest to index.
 	 */
 	if (compact) {
-#pragma mips_frequency_hint NEVER
 		xfs_dir2_leaf_compact_x1(bp, &index, &lowstale, &highstale,
 			&lfloglow, &lfloghigh);
 	}
@@ -375,10 +371,10 @@ xfs_dir2_leafn_lookup_int(
 	xfs_inode_t		*dp;		/* incore directory inode */
 	int			error;		/* error return value */
 	int			fi;		/* free entry index */
-	xfs_dir2_free_t		*free;		/* free block structure */
+	xfs_dir2_free_t		*free=NULL;	/* free block structure */
 	int			index;		/* leaf entry index */
 	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
-	int			length;		/* length of new data entry */
+	int			length=0;	/* length of new data entry */
 	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
 	xfs_mount_t		*mp;		/* filesystem mount point */
 	xfs_dir2_db_t		newdb;		/* new data block number */
@@ -412,7 +408,7 @@ xfs_dir2_leafn_lookup_int(
 		curfdb = curbp ? state->extrablk.blkno : -1;
 		curdb = -1;
 		length = XFS_DIR2_DATA_ENTSIZE(args->namelen);
-		if (free = (curbp ? curbp->data : NULL))
+		if ((free = (curbp ? curbp->data : NULL)))
 			ASSERT(INT_GET(free->hdr.magic, ARCH_CONVERT) == XFS_DIR2_FREE_MAGIC);
 	}
 	/*
@@ -467,12 +463,11 @@ xfs_dir2_leafn_lookup_int(
 					/*
 					 * Read the free block.
 					 */
-					if (error = xfs_da_read_buf(tp, dp,
+					if ((error = xfs_da_read_buf(tp, dp,
 							XFS_DIR2_DB_TO_DA(mp,
 								newfdb),
 							-1, &curbp,
-							XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+							XFS_DATA_FORK))) {
 						return error;
 					}
 					curfdb = newfdb;
@@ -495,7 +490,6 @@ xfs_dir2_leafn_lookup_int(
 				 * If it has room, return it.
 				 */
 				if (INT_GET(free->bests[fi], ARCH_CONVERT) == NULLDATAOFF) {
-#pragma mips_frequency_hint NEVER
 					return XFS_ERROR(EFSCORRUPTED);
 				}
 				if (INT_GET(free->bests[fi], ARCH_CONVERT) >= length) {
@@ -528,11 +522,10 @@ xfs_dir2_leafn_lookup_int(
 				/*
 				 * Read the data block.
 				 */
-				if (error =
+				if ((error =
 				    xfs_da_read_buf(tp, dp,
 					    XFS_DIR2_DB_TO_DA(mp, newdb), -1,
-					    &curbp, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+					    &curbp, XFS_DATA_FORK))) {
 					return error;
 				}
 				xfs_dir2_data_check(dp, curbp);
@@ -568,7 +561,7 @@ xfs_dir2_leafn_lookup_int(
 	 * If we are holding a buffer, give it back in case our caller
 	 * finds it useful.
 	 */
-	if (state->extravalid = (curbp != NULL)) {
+	if ((state->extravalid = (curbp != NULL))) {
 		state->extrablk.bp = curbp;
 		state->extrablk.index = -1;
 		/*
@@ -618,7 +611,6 @@ xfs_dir2_leafn_moveents(
 	 * Silently return if nothing to do.
 	 */
 	if (count == 0) {
-#pragma mips_frequency_hint NEVER
 		return;
 	}
 	tp = args->trans;
@@ -731,8 +723,7 @@ xfs_dir2_leafn_rebalance(
 	/*
 	 * If the block order is wrong, swap the arguments.
 	 */
-	if (swap = xfs_dir2_leafn_order(blk1->bp, blk2->bp)) {
-#pragma mips_frequency_hint NEVER
+	if ((swap = xfs_dir2_leafn_order(blk1->bp, blk2->bp))) {
 		xfs_da_state_blk_t	*tmp;	/* temp for block swap */
 
 		tmp = blk1;
@@ -885,9 +876,8 @@ xfs_dir2_leafn_remove(
 		 * read in the free block.
 		 */
 		fdb = XFS_DIR2_DB_TO_FDB(mp, db);
-		if (error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fdb),
-				-1, &fbp, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+		if ((error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fdb),
+				-1, &fbp, XFS_DATA_FORK))) {
 			return error;
 		}
 		free = fbp->data;
@@ -905,7 +895,6 @@ xfs_dir2_leafn_remove(
 		 * (usually).
 		 */
 		if (longest == mp->m_dirblksize - (uint)sizeof(data->hdr)) {
-#pragma mips_frequency_hint NEVER
 			/*
 			 * Try to punch out the data block.
 			 */
@@ -929,7 +918,6 @@ xfs_dir2_leafn_remove(
 		 * in the free block.
 		 */
 		if (data == NULL) {
-#pragma mips_frequency_hint NEVER
 			/*
 			 * One less used entry in the free table.
 			 */
@@ -1031,7 +1019,6 @@ xfs_dir2_leafn_split(
 	ASSERT(oldblk->magic == XFS_DIR2_LEAFN_MAGIC);
 	error = xfs_da_grow_inode(args, &blkno);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		return error;
 	}
 	/*
@@ -1040,7 +1027,6 @@ xfs_dir2_leafn_split(
 	error = xfs_dir2_leaf_init(args, XFS_DIR2_DA_TO_DB(mp, blkno),
 		&newblk->bp, XFS_DIR2_LEAFN_MAGIC);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		return error;
 	}
 	newblk->blkno = blkno;
@@ -1052,7 +1038,6 @@ xfs_dir2_leafn_split(
 	xfs_dir2_leafn_rebalance(state, oldblk, newblk);
 	error = xfs_da_blk_link(state, oldblk, newblk);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		return error;
 	}
 	/*
@@ -1123,7 +1108,6 @@ xfs_dir2_leafn_toosmall(
 	 * to merge with the forward block unless it is NULL.
 	 */
 	if (count == 0) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * Make altpath point to the block we want to keep and
 		 * path point to the block we want to drop (this one).
@@ -1152,10 +1136,9 @@ xfs_dir2_leafn_toosmall(
 		/*
 		 * Read the sibling leaf block.
 		 */
-		if (error =
+		if ((error =
 		    xfs_da_read_buf(state->args->trans, state->args->dp, blkno,
-			    -1, &bp, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+			    -1, &bp, XFS_DATA_FORK))) {
 			return error;
 		}
 		ASSERT(bp != NULL);
@@ -1200,7 +1183,6 @@ xfs_dir2_leafn_toosmall(
 		error = xfs_da_path_shift(state, &state->path, forward, 0,
 			&rval);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		return error;
 	}
 	*action = rval ? 0 : 1;
@@ -1278,7 +1260,6 @@ xfs_dir2_node_addname(
 	if (error)
 		rval = error;
 	if (rval != ENOENT) {
-#pragma mips_frequency_hint NEVER
 		goto done;
 	}
 	/*
@@ -1288,7 +1269,6 @@ xfs_dir2_node_addname(
 	rval = xfs_dir2_node_addname_int(args,
 		state->extravalid ? &state->extrablk : NULL);
 	if (rval) {
-#pragma mips_frequency_hint NEVER
 		goto done;
 	}
 	blk = &state->path.blk[state->path.active - 1];
@@ -1304,7 +1284,6 @@ xfs_dir2_node_addname(
 		if (!args->justcheck)
 			xfs_da_fixhashpath(state, &state->path);
 	} else {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * It didn't work, we need to split the leaf block.
 		 */
@@ -1343,9 +1322,9 @@ xfs_dir2_node_addname_int(
 	xfs_dir2_db_t		fbno;		/* freespace block number */
 	xfs_dabuf_t		*fbp;		/* freespace buffer */
 	int			findex;		/* freespace entry index */
-	xfs_dir2_db_t		foundbno;	/* found freespace block no */
+	xfs_dir2_db_t		foundbno=0;	/* found freespace block no */
 	int			foundindex;	/* found freespace entry idx */
-	xfs_dir2_free_t		*free;		/* freespace block structure */
+	xfs_dir2_free_t		*free=NULL;	/* freespace block structure */
 	xfs_dir2_db_t		ifbno;		/* initial freespace block no */
 	xfs_dir2_db_t		lastfbno;	/* highest freespace block no */
 	int			length;		/* length of the new entry */
@@ -1410,7 +1389,7 @@ xfs_dir2_node_addname_int(
 	if (dbno == -1) {
 		xfs_fileoff_t	fo;		/* freespace block number */
 
-		if (error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK))
+		if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK)))
 			return error;
 		lastfbno = XFS_DIR2_DA_TO_DB(mp, (xfs_dablk_t)fo);
 		fbno = ifbno;
@@ -1448,14 +1427,12 @@ xfs_dir2_node_addname_int(
 			 * This should be really rare, so there's no reason
 			 * to avoid it.
 			 */
-			if (error = xfs_da_read_buf(tp, dp,
+			if ((error = xfs_da_read_buf(tp, dp,
 					XFS_DIR2_DB_TO_DA(mp, fbno), -1, &fbp,
-					XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+					XFS_DATA_FORK))) {
 				return error;
 			}
 			if (fbp == NULL) {
-#pragma mips_frequency_hint NEVER
 				continue;
 			}
 			free = fbp->data;
@@ -1507,7 +1484,6 @@ xfs_dir2_node_addname_int(
 	 * freeblock, we need to add a new freeblock.
 	 */
 	if (dbno == -1 && foundindex == -1) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * Not allowed to allocate, so return failure.
 		 */
@@ -1517,15 +1493,15 @@ xfs_dir2_node_addname_int(
 		/*
 		 * Add the new freeblock.
 		 */
-		if (error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
-				&fbno)) {
+		if ((error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
+				&fbno))) {
 			return error;
 		}
 		/*
 		 * Get a buffer for the new block.
 		 */
-		if (error = xfs_da_get_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fbno),
-				-1, &fbp, XFS_DATA_FORK)) {
+		if ((error = xfs_da_get_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fbno),
+				-1, &fbp, XFS_DATA_FORK))) {
 			return error;
 		}
 		ASSERT(fbp != NULL);
@@ -1548,14 +1524,13 @@ xfs_dir2_node_addname_int(
 	 * go read the freeblock again.
 	 */
 	if (dbno == -1 && fbp == NULL) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * We're going to use the empty slot we found before.
 		 */
 		findex = foundindex;
 		fbno = foundbno;
-		if (error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fbno),
-				-1, &fbp, XFS_DATA_FORK)) {
+		if ((error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, fbno),
+				-1, &fbp, XFS_DATA_FORK))) {
 			return error;
 		}
 		ASSERT(fbp != NULL);
@@ -1567,7 +1542,6 @@ xfs_dir2_node_addname_int(
 	 * the freespace entries refer to it.
 	 */
 	if (dbno == -1) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * Not allowed to allocate, return failure.
 		 */
@@ -1604,9 +1578,9 @@ xfs_dir2_node_addname_int(
 			if (fblk && fblk->bp)
 				fblk->bp = NULL;
 			fbno = XFS_DIR2_DB_TO_FDB(mp, dbno);
-			if (error = xfs_da_read_buf(tp, dp,
+			if ((error = xfs_da_read_buf(tp, dp,
 					XFS_DIR2_DB_TO_DA(mp, fbno), -1, &fbp,
-					XFS_DATA_FORK)) {
+					XFS_DATA_FORK))) {
 				xfs_da_buf_done(dbp);
 				return error;
 			}
@@ -1662,9 +1636,8 @@ xfs_dir2_node_addname_int(
 		/*
 		 * Read the data block in.
 		 */
-		if (error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, dbno),
-				-1, &dbp, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+		if ((error = xfs_da_read_buf(tp, dp, XFS_DIR2_DB_TO_DA(mp, dbno),
+				-1, &dbp, XFS_DATA_FORK))) {
 			if (fblk == NULL || fblk->bp == NULL)
 				xfs_da_buf_done(fbp);
 			return error;
@@ -1802,14 +1775,12 @@ xfs_dir2_node_removename(
 	 */
 	error = xfs_da_node_lookup_int(state, &rval);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		rval = error;
 	}
 	/*
 	 * Didn't find it, upper layer screwed up.
 	 */
 	if (rval != EEXIST) {
-#pragma mips_frequency_hint NEVER
 		xfs_da_state_free(state);
 		return rval;
 	}
@@ -1823,7 +1794,6 @@ xfs_dir2_node_removename(
 	error = xfs_dir2_leafn_remove(args, blk->bp, blk->index,
 		&state->extrablk, &rval);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		return error;
 	}
 	/*
@@ -1876,7 +1846,6 @@ xfs_dir2_node_replace(
 	 */
 	error = xfs_da_node_lookup_int(state, &rval);
 	if (error) {
-#pragma mips_frequency_hint NEVER
 		rval = error;
 	}
 	/*
@@ -1912,7 +1881,6 @@ xfs_dir2_node_replace(
 	 * Didn't find it, and we're holding a data block.  Drop it.
 	 */
 	else if (state->extravalid) {
-#pragma mips_frequency_hint NEVER
 		xfs_da_brelse(args->trans, state->extrablk.bp);
 		state->extrablk.bp = NULL;
 	}
@@ -1950,9 +1918,8 @@ xfs_dir2_node_trim_free(
 	/*
 	 * Read the freespace block.
 	 */
-	if (error = xfs_da_read_buf(tp, dp, (xfs_dablk_t)fo, -1, &bp,
-			XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_da_read_buf(tp, dp, (xfs_dablk_t)fo, -1, &bp,
+			XFS_DATA_FORK))) {
 		return error;
 	}
 	free = bp->data;
@@ -1968,9 +1935,9 @@ xfs_dir2_node_trim_free(
 	/*
 	 * Blow the block away.
 	 */
-	if (error =
+	if ((error =
 	    xfs_dir2_shrink_inode(args, XFS_DIR2_DA_TO_DB(mp, (xfs_dablk_t)fo),
-		    bp)) {
+		    bp))) {
 		/*
 		 * Can't fail with ENOSPC since that only happens with no
 		 * space reservation, when breaking up an extent into two

@@ -52,7 +52,7 @@ CFILES = arch.c init.c logitem.c rdwr.c trans.c util.c \
 # -DLI_DEBUG		log item (ino/buf) manipulation
 # -DXACT_DEBUG		transaction state changes
 # 
-LCFLAGS += -Wno-unknown-pragmas -Wno-unused -Wno-uninitialized -I.
+LCFLAGS += -I.
 
 # don't try linking xfs_repair with a debug libxfs.
 DEBUG = -DNDEBUG

@@ -211,7 +211,7 @@ xfs_lowbit64(
 #else
 	__uint32_t	vw;
 
-	if (vw = v) {
+	if ((vw = v)) {
 		if (vw & 0x0000ffff)
 			if (vw & 0x000000ff)
 				i = 0;
@@ -223,7 +223,7 @@ xfs_lowbit64(
 			else
 				i = 24;
 		return i + xfs_lowbit[(vw >> i) & 0xff];
-	} else if (vw = v >> 32) {
+	} else if ((vw = v >> 32)) {
 		if (vw & 0x0000ffff)
 			if (vw & 0x000000ff)
 				i = 32;
@@ -277,7 +277,7 @@ xfs_highbit64(
 #else
 	__uint32_t	vw;
 
-	if (vw = v >> 32) {
+	if ((vw = v >> 32)) {
 		if (vw & 0xffff0000)
 			if (vw & 0xff000000)
 				i = 56;
@@ -289,7 +289,7 @@ xfs_highbit64(
 			else
 				i = 32;
 		return i + xfs_highbit[(vw >> (i - 32)) & 0xff];
-	} else if (vw = v) {
+	} else if ((vw = v)) {
 		if (vw & 0xffff0000)
 			if (vw & 0xff000000)
 				i = 24;

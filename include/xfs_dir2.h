@@ -79,7 +79,7 @@ typedef int (*xfs_dir2_put_t)(struct xfs_dir2_put_args *pa);
 typedef struct xfs_dir2_put_args {
 	xfs_off_t		cook;		/* cookie of (next) entry */
 	xfs_intino_t	ino;		/* inode number */
-	struct dirent	*dbp;		/* buffer pointer */
+	struct xfs_dirent	*dbp;		/* buffer pointer */
 	char		*name;		/* directory entry name */
 	int		namelen;	/* length of name */
 	int		done;		/* output: set if value was stored */

@@ -150,7 +150,7 @@ typedef struct xfs_dir_put_args
 {
 	xfs_dircook_t	cook;		/* cookie of (next) entry */
 	xfs_intino_t	ino;		/* inode number */
-	struct dirent	*dbp;		/* buffer pointer */
+	struct xfs_dirent	*dbp;		/* buffer pointer */
 	char		*name;		/* directory entry name */
 	int		namelen;	/* length of name */
 	int		done;		/* output: set if value was stored */
@@ -196,7 +196,7 @@ int xfs_dir_shortform_lookup(struct xfs_da_args *args);
 int xfs_dir_shortform_to_leaf(struct xfs_da_args *args);
 int xfs_dir_shortform_removename(struct xfs_da_args *args);
 int xfs_dir_shortform_getdents(struct xfs_inode *dp, struct uio *uio, int *eofp,
-				      struct dirent *dbp, xfs_dir_put_t put);
+				      struct xfs_dirent *dbp, xfs_dir_put_t put);
 int xfs_dir_shortform_replace(struct xfs_da_args *args);
 
 /*
@@ -224,7 +224,7 @@ int	xfs_dir_leaf_remove(struct xfs_trans *trans,
 				   int index_to_remove);
 int	xfs_dir_leaf_getdents_int(struct xfs_dabuf *bp, struct xfs_inode *dp,
 					 xfs_dablk_t bno, struct uio *uio,
-					 int *eobp, struct dirent *dbp,
+					 int *eobp, struct xfs_dirent *dbp,
 					 xfs_dir_put_t put, xfs_daddr_t nextda);
 
 /*

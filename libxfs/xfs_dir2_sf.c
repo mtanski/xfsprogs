@@ -62,7 +62,7 @@ xfs_dir2_block_sfsize(
 	xfs_mount_t		*mp;		/* mount structure pointer */
 	int			namelen;	/* total name bytes */
 	xfs_ino_t		parent;		/* parent inode number */
-	int			size;		/* total computed size */
+	int			size=0;		/* total computed size */
 
 	mp = dp->i_mount;
 
@@ -157,8 +157,7 @@ xfs_dir2_block_to_sf(
 	block = kmem_alloc(mp->m_dirblksize, KM_SLEEP);
 	bcopy(bp->data, block, mp->m_dirblksize);
 	logflags = XFS_ILOG_CORE;
-	if (error = xfs_dir2_shrink_inode(args, mp->m_dirdatablk, bp)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_dir2_shrink_inode(args, mp->m_dirdatablk, bp))) {
 		ASSERT(error != ENOSPC);
 		goto out;
 	}
@@ -267,7 +266,6 @@ xfs_dir2_sf_addname(
 	 * Make sure the shortform value has some of its header.
 	 */
 	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -285,7 +283,6 @@ xfs_dir2_sf_addname(
 	 * Do we have to change to 8 byte inodes?
 	 */
 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && sfp->hdr.i8count == 0) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * Yes, adjust the entry size and the total size.
 		 */
@@ -311,7 +308,6 @@ xfs_dir2_sf_addname(
 	if (new_isize > XFS_IFORK_DSIZE(dp) ||
 	    (pick =
 	     xfs_dir2_sf_addname_pick(args, objchange, &sfep, &offset)) == 0) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * Just checking or no space reservation, it doesn't fit.
 		 */
@@ -561,7 +557,6 @@ xfs_dir2_sf_addname_pick(
 	 */
 #if XFS_BIG_FILESYSTEMS
 	if (objchange) {
-#pragma mips_frequency_hint NEVER
 		return 2;
 	}
 #else
@@ -699,7 +694,6 @@ xfs_dir2_sf_lookup(
 	 * Bail out if the directory is way too short.
 	 */
 	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -769,7 +763,6 @@ xfs_dir2_sf_removename(
 	 * Bail out if the directory is way too short.
 	 */
 	if (oldsize < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -797,7 +790,6 @@ xfs_dir2_sf_removename(
 	 * Didn't find it.
 	 */
 	if (i == sfp->hdr.count) {
-#pragma mips_frequency_hint NEVER
 		return XFS_ERROR(ENOENT);
 	}
 	/*
@@ -827,7 +819,6 @@ xfs_dir2_sf_removename(
 	 * Are we changing inode number size?
 	 */
 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM) {
-#pragma mips_frequency_hint NEVER
 		if (sfp->hdr.i8count == 1)
 			xfs_dir2_sf_toino4(args);
 		else
@@ -849,7 +840,7 @@ xfs_dir2_sf_replace(
 	xfs_inode_t		*dp;		/* incore directory inode */
 	int			i;		/* entry index */
 #if XFS_BIG_FILESYSTEMS || defined(DEBUG)
-	xfs_ino_t		ino;		/* entry old inode number */
+	xfs_ino_t		ino=0;		/* entry old inode number */
 #endif
 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
@@ -862,7 +853,6 @@ xfs_dir2_sf_replace(
 	 * Bail out if the shortform directory is way too small.
 	 */
 	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-#pragma mips_frequency_hint NEVER
 		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
 		return XFS_ERROR(EIO);
 	}
@@ -875,7 +865,6 @@ xfs_dir2_sf_replace(
 	 * New inode number is large, and need to convert to 8-byte inodes.
 	 */
 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && sfp->hdr.i8count == 0) {
-#pragma mips_frequency_hint NEVER
 		int	error;			/* error return value */
 		int	newsize;		/* new inode size */
 
@@ -937,7 +926,6 @@ xfs_dir2_sf_replace(
 		 * Didn't find it.
 		 */
 		if (i == sfp->hdr.count) {
-#pragma mips_frequency_hint NEVER
 			ASSERT(args->oknoent);
 			return XFS_ERROR(ENOENT);
 		}
@@ -948,7 +936,6 @@ xfs_dir2_sf_replace(
 	 */
 	if (ino > XFS_DIR2_MAX_SHORT_INUM &&
 	    args->inumber <= XFS_DIR2_MAX_SHORT_INUM) {
-#pragma mips_frequency_hint NEVER
 		/*
 		 * And the old count was one, so need to convert to small.
 		 */

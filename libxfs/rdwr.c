@@ -456,7 +456,6 @@ libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 void
 libxfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
 {
-	int		fd;
 	xfs_buf_t	*bp;
 	xfs_mount_t	*mp;
 

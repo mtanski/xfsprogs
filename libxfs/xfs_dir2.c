@@ -75,8 +75,7 @@ xfs_dir2_init(
 	args.dp = dp;
 	args.trans = tp;
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
-	if (error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino))) {
 		return error;
 	}
 	return xfs_dir2_sf_create(&args, pdp->i_ino);
@@ -101,8 +100,7 @@ xfs_dir2_createname(
 	int			v;		/* type-checking value */
 
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
-	if (rval = xfs_dir_ino_validate(tp->t_mountp, inum)) {
-#pragma mips_frequency_hint NEVER
+	if ((rval = xfs_dir_ino_validate(tp->t_mountp, inum))) {
 		return rval;
 	}
 	XFS_STATS_INC(xs_dir_create);
@@ -126,13 +124,11 @@ xfs_dir2_createname(
 	 */
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_addname(&args);
-	else if (rval = xfs_dir2_isblock(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_block_addname(&args);
-	else if (rval = xfs_dir2_isleaf(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_leaf_addname(&args);
@@ -158,7 +154,6 @@ xfs_dir2_lookup(
 
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
 	if (namelen >= MAXNAMELEN) {
-#pragma mips_frequency_hint NEVER
 		return XFS_ERROR(EINVAL);
 	}
 	XFS_STATS_INC(xs_dir_lookup);
@@ -182,13 +177,11 @@ xfs_dir2_lookup(
 	 */
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_lookup(&args);
-	else if (rval = xfs_dir2_isblock(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_block_lookup(&args);
-	else if (rval = xfs_dir2_isleaf(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_leaf_lookup(&args);
@@ -240,13 +233,11 @@ xfs_dir2_removename(
 	 */
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_removename(&args);
-	else if (rval = xfs_dir2_isblock(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_block_removename(&args);
-	else if (rval = xfs_dir2_isleaf(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_leaf_removename(&args);
@@ -275,11 +266,9 @@ xfs_dir2_replace(
 
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);
 	if (namelen >= MAXNAMELEN) {
-#pragma mips_frequency_hint NEVER
 		return XFS_ERROR(EINVAL);
 	}
-	if (rval = xfs_dir_ino_validate(tp->t_mountp, inum)) {
-#pragma mips_frequency_hint NEVER
+	if ((rval = xfs_dir_ino_validate(tp->t_mountp, inum))) {
 		return rval;
 	}
 	/*
@@ -301,13 +290,11 @@ xfs_dir2_replace(
 	 */
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_replace(&args);
-	else if (rval = xfs_dir2_isblock(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_block_replace(&args);
-	else if (rval = xfs_dir2_isleaf(tp, dp, &v)) {
-#pragma mips_frequency_hint NEVER
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v))) {
 		return rval;
 	} else if (v)
 		rval = xfs_dir2_leaf_replace(&args);
@@ -356,8 +343,7 @@ xfs_dir2_grow_inode(
 	/*
 	 * Find the first hole for our block.
 	 */
-	if (error = xfs_bmap_first_unused(tp, dp, count, &bno, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_bmap_first_unused(tp, dp, count, &bno, XFS_DATA_FORK))) {
 		return error;
 	}
 	nmap = 1;
@@ -365,11 +351,10 @@ xfs_dir2_grow_inode(
 	/*
 	 * Try mapping the new block contiguously (one extent).
 	 */
-	if (error = xfs_bmapi(tp, dp, bno, count,
+	if ((error = xfs_bmapi(tp, dp, bno, count,
 			XFS_BMAPI_WRITE|XFS_BMAPI_METADATA|XFS_BMAPI_CONTIG,
 			args->firstblock, args->total, &map, &nmap,
-			args->flist)) {
-#pragma mips_frequency_hint NEVER
+			args->flist))) {
 		return error;
 	}
 	ASSERT(nmap <= 1);
@@ -385,7 +370,6 @@ xfs_dir2_grow_inode(
 	 * Try again with contiguous flag turned on.
 	 */
 	else if (nmap == 0 && count > 1) {
-#pragma mips_frequency_hint NEVER
 		xfs_fileoff_t	b;	/* current file offset */
 
 		/*
@@ -403,10 +387,10 @@ xfs_dir2_grow_inode(
 			 */
 			nmap = MIN(XFS_BMAP_MAX_NMAP, count);
 			c = (int)(bno + count - b);
-			if (error = xfs_bmapi(tp, dp, b, c,
+			if ((error = xfs_bmapi(tp, dp, b, c,
 					XFS_BMAPI_WRITE|XFS_BMAPI_METADATA,
 					args->firstblock, args->total,
-					&mapp[mapi], &nmap, args->flist)) {
+					&mapp[mapi], &nmap, args->flist))) {
 				kmem_free(mapp, sizeof(*mapp) * count);
 				return error;
 			}
@@ -424,7 +408,6 @@ xfs_dir2_grow_inode(
 	 * Didn't work.
 	 */
 	else {
-#pragma mips_frequency_hint NEVER
 		mapi = 0;
 		mapp = NULL;
 	}
@@ -439,7 +422,6 @@ xfs_dir2_grow_inode(
 	if (got != count || mapp[0].br_startoff != bno ||
 	    mapp[mapi - 1].br_startoff + mapp[mapi - 1].br_blockcount !=
 	    bno + count) {
-#pragma mips_frequency_hint NEVER
 		if (mapp != &map)
 			kmem_free(mapp, sizeof(*mapp) * count);
 		return XFS_ERROR(ENOSPC);
@@ -479,8 +461,7 @@ xfs_dir2_isblock(
 	int		rval;		/* return value */
 
 	mp = dp->i_mount;
-	if (rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK))) {
 		return rval;
 	}
 	rval = XFS_FSB_TO_B(mp, last) == mp->m_dirblksize;
@@ -503,8 +484,7 @@ xfs_dir2_isleaf(
 	int		rval;		/* return value */
 
 	mp = dp->i_mount;
-	if (rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK))) {
 		return rval;
 	}
 	*vp = last == mp->m_dirleafblk + (1 << mp->m_sb.sb_dirblklog);
@@ -538,10 +518,9 @@ xfs_dir2_shrink_inode(
 	/*
 	 * Unmap the fsblock(s).
 	 */
-	if (error = xfs_bunmapi(tp, dp, da, mp->m_dirblkfsbs,
+	if ((error = xfs_bunmapi(tp, dp, da, mp->m_dirblkfsbs,
 			XFS_BMAPI_METADATA, 0, args->firstblock, args->flist,
-			&done)) {
-#pragma mips_frequency_hint NEVER
+			&done))) {
 		/*
 		 * ENOSPC actually can happen if we're in a removename with
 		 * no space reservation, and the resulting block removal
@@ -574,8 +553,7 @@ xfs_dir2_shrink_inode(
 	if (dp->i_d.di_size > XFS_DIR2_DB_OFF_TO_BYTE(mp, db + 1, 0))
 		return 0;
 	bno = da;
-	if (error = xfs_bmap_last_before(tp, dp, &bno, XFS_DATA_FORK)) {
-#pragma mips_frequency_hint NEVER
+	if ((error = xfs_bmap_last_before(tp, dp, &bno, XFS_DATA_FORK))) {
 		/*
 		 * This can't really happen unless there's kernel corruption.
 		 */

@@ -319,7 +319,7 @@ extern void
 
 extern int
 	xfs_dir2_leaf_getdents(struct xfs_trans *tp, struct xfs_inode *dp,
-			       struct uio *uio, int *eofp, struct dirent *dbp,
+			       struct uio *uio, int *eofp, struct xfs_dirent *dbp,
 			       xfs_dir2_put_t put);
 
 extern int

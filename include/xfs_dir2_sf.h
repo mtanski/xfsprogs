@@ -242,7 +242,7 @@ extern int
 
 extern int
 	xfs_dir2_sf_getdents(struct xfs_inode *dp, struct uio *uio, int *eofp,
-			     struct dirent *dbp, xfs_dir2_put_t put);
+			     struct xfs_dirent *dbp, xfs_dir2_put_t put);
 
 extern int
 	xfs_dir2_sf_lookup(struct xfs_da_args *args);
