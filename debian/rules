@@ -62,7 +62,7 @@ binary-indep:
 # Note2: absolute symlinks (required by policy) confuse debstd;
 # so we'll filter out symlink messages entirely now.
 # 
-binary-arch: checkroot built
+binary-arch: checkroot bfbuilt built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
 	-rm -rf $(dirtmp) $(dirdev) $(dirbfs)
