@@ -29,23 +29,26 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef __XQM_H__
-#define __XQM_H__
+#ifndef _LINUX_XQM_H
+#define _LINUX_XQM_H
 
 #include <linux/types.h>
-
-#define XQM_CMD(cmd)	( ('X'<<8)+(cmd) )
-#define IS_XQM_CMD(cmd)	( ((int)(cmd)>>8) == 'X' )
+#include <linux/quota.h>
 
 /*
- * Disk quota - quotactl(2) commands for XFS Quota Manager (XQM).
+ * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
  */
-#define Q_XQUOTAON   XQM_CMD(0x1)  /* enable quota accounting/enforcement */
-#define Q_XQUOTAOFF  XQM_CMD(0x2)  /* disable quota accounting/enforcement */
-#define Q_XGETQUOTA  XQM_CMD(0x3)  /* get disk limits & usage */
-#define Q_XSETQLIM   XQM_CMD(0x4)  /* set disk limits only */
-#define Q_XGETQSTAT  XQM_CMD(0x5)  /* returns fs_quota_stat_t struct */
-#define Q_XQUOTARM   XQM_CMD(0x6)  /* free quota files' space */
+
+#ifndef XQM_CMD	/* may have been defined in <linux/quota.h> already */
+#define XQM_CMD(x)     ( ('X'<<8)+(x) )	/* note: forms first QCMD argument */
+#define IS_XQM_CMD(x)  ( ((int)(x)>>8) == 'X' )
+#define Q_XQUOTAON     XQM_CMD(0x1)	/* enable accounting/enforcement */
+#define Q_XQUOTAOFF    XQM_CMD(0x2)	/* disable accounting/enforcement */
+#define Q_XGETQUOTA    XQM_CMD(0x3)	/* get disk limits and usage */
+#define Q_XSETQLIM     XQM_CMD(0x4)	/* set disk limits */
+#define Q_XGETQSTAT    XQM_CMD(0x5)	/* get quota subsystem status */
+#define Q_XQUOTARM     XQM_CMD(0x6)	/* free disk space used by dquots */
+#endif /* XQM_CMD */
 
 /*
  * fs_disk_quota structure:
@@ -156,4 +159,4 @@ typedef struct fs_quota_stat {
 	__u16		qs_iwarnlimit;	/* limit for num warnings */
 } fs_quota_stat_t;
 
-#endif	/* __XQM_H__ */
+#endif	/* _LINUX_XQM_H */

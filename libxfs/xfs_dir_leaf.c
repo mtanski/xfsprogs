@@ -158,7 +158,7 @@ xfs_dir_shortform_removename(xfs_da_args_t *args)
 {
 	xfs_dir_shortform_t *sf;
 	xfs_dir_sf_entry_t *sfe;
-	int base, size, i;
+	int base, size = 0, i;
 	xfs_inode_t *dp;
 
 	dp = args->dp;
