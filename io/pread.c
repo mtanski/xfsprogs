@@ -64,9 +64,11 @@ alloc_buffer(
 	unsigned int	seed)
 {
 	if (bsize > buffersize) {
-		buffer = realloc(buffer, buffersize = bsize);
+		if (buffer)
+			free(buffer);
+		buffer = memalign(getpagesize(), buffersize = bsize);
 		if (!buffer) {
-			perror("realloc");
+			perror("memalign");
 			buffersize = 0;
 			return 0;
 		}
