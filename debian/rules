@@ -13,9 +13,7 @@ pkgbfs = DIST_ROOT=`pwd`/$(dirbfs); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
-bfsopts = OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS= \
-	  "--enable-shared-uuid=yes --enable-gettext=no"; \
-	  $(options) export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
+bfsopts = OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; $(options) export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
 checkdir = test -f debian/rules
 
 build: built

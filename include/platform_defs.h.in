@@ -148,6 +148,7 @@ typedef unsigned long long __psunsigned_t;
 # define textdomain(d)          do { } while (0)
 # define bindtextdomain(d,dir)  do { } while (0)
 #endif
+#include <locale.h>
 
 #ifdef DEBUG
 # define ASSERT		assert
