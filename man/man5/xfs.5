@@ -55,7 +55,7 @@ in progress at the time of the crash.
 .PP
 The realtime section is used to store the data of realtime files.
 These files had an attribute bit set through
-.IR ioctl (2)
+.IR xfsctl (3)
 after file creation, before any data was written to the file.
 The realtime section is divided into a number of
 .I extents
