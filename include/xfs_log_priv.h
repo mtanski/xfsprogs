@@ -54,10 +54,16 @@ struct xfs_mount;
 #define XLOG_MAX_ICLOGS		8
 #define XLOG_CALLBACK_SIZE	10
 #define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Illegal cycle number */
+#define XLOG_VERSION_1		1
+#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
+#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
 #define XLOG_RECORD_BSIZE	(16*1024)	/* eventually 32k */
-#define XLOG_MAX_RECORD_BSIZE	(32*1024)
+#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
+#define XLOG_MAX_RECORD_BSIZE	(256*1024)
+#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
 #define XLOG_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
-#define XLOG_MAX_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XLOG_BTOLRBB)
 int xlog_btolrbb(int b);
 #define XLOG_BTOLRBB(b)		xlog_btolrbb(b)
@@ -67,6 +73,10 @@ int xlog_btolrbb(int b);
 
 #define XLOG_HEADER_SIZE	512
 
+#define XLOG_TOTAL_REC_SHIFT(log) \
+	BTOBB(XLOG_MAX_ICLOGS << (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb) ? \
+	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+   
 /*
  *  set lsns
  */
@@ -115,7 +125,7 @@ int xlog_btolrbb(int b);
 #define GET_CLIENT_ID(i,arch) \
     ((i) >> 24)
 #endif
-   
+
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XLOG_GRANT_SUB_SPACE)
 void xlog_grant_sub_space(struct log *log, int bytes, int type);
 #define XLOG_GRANT_SUB_SPACE(log,bytes,type)	\
@@ -348,7 +358,7 @@ typedef struct xlog_ticket {
 
 typedef struct xlog_op_header {
 	xlog_tid_t oh_tid;	/* transaction id of operation	:  4 b */
-	int	   oh_len;	/* bytes in data region		:  2 b */
+	int	   oh_len;	/* bytes in data region		:  4 b */
 	__uint8_t  oh_clientid;	/* who sent me this		:  1 b */
 	__uint8_t  oh_flags;	/* 				:  1 b */
 	ushort	   oh_res2;	/* 32 bit align			:  2 b */
@@ -382,12 +392,17 @@ typedef struct xlog_rec_header {
 	uint	  h_chksum;	/* may not be used; non-zero if used	:  4 */
 	int	  h_prev_block; /* block number to previous LR		:  4 */
 	int	  h_num_logops;	/* number of log operations in this LR	:  4 */
-	uint	  h_cycle_data[XLOG_MAX_RECORD_BSIZE / BBSIZE];
+	uint	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];	
         /* new fields */
         int       h_fmt;        /* format of log record                 :  4 */
         uuid_t    h_fs_uuid;    /* uuid of FS                           : 16 */
+	int       h_size;	/* iclog size				:  4 */
 } xlog_rec_header_t;
 
+typedef struct xlog_rec_ext_header {
+	uint	  xh_cycle;	/* write cycle of log			: 4 */
+	uint	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
+} xlog_rec_ext_header_t;
 #ifdef __KERNEL__
 /*
  * - A log record header is 512 bytes.  There is plenty of room to grow the
@@ -406,7 +421,6 @@ typedef struct xlog_rec_header {
  * - ic_state is the state of the iclog.
  */
 typedef struct xlog_iclog_fields {
-	struct tq_struct	ic_write_sched;
 	sv_t			ic_forcesema;
 	struct xlog_in_core	*ic_next;
 	struct xlog_in_core	*ic_prev;
@@ -423,14 +437,16 @@ typedef struct xlog_iclog_fields {
 	int			ic_roundoff;
 	int			ic_bwritecnt;
 	ushort_t		ic_state;
+	char			*ic_datap;	/* pointer to iclog data */
+	struct tq_struct	ic_write_sched;
 } xlog_iclog_fields_t;
 
 typedef struct xlog_in_core2 {
 	union {
 		xlog_rec_header_t hic_header;
+		xlog_rec_ext_header_t hic_xheader;
 		char		  hic_sector[XLOG_HEADER_SIZE];
 	} ic_h;
-	__uint8_t		  hic_data[1];
 } xlog_in_core_2_t;
 
 typedef struct xlog_in_core {
@@ -456,8 +472,8 @@ typedef struct xlog_in_core {
 #define	ic_roundoff	hic_fields.ic_roundoff
 #define	ic_bwritecnt	hic_fields.ic_bwritecnt
 #define	ic_state	hic_fields.ic_state
+#define ic_datap	hic_fields.ic_datap
 #define ic_header	hic_data->ic_h.hic_header
-#define ic_data		hic_data->hic_data
 
 /*
  * The reservation head lsn is not made up of a cycle number and block number.
@@ -514,6 +530,8 @@ typedef struct log {
     uint		l_flags;
     uint		l_quotaoffs_flag;/* XFS_DQ_*, if QUOTAOFFs found */
     struct xfs_buf_cancel **l_buf_cancel_table;	
+    int			l_iclog_hsize;  /* size of iclog header */
+    int			l_iclog_heads;  /* number of iclog header sectors */
 } xlog_t;
 
 

@@ -80,11 +80,14 @@ libxfs_log_clear(
         xfs_daddr_t start,
         uint        length,
         uuid_t      *fs_uuid, 
+	int	    version,
+	int	    sunit,
         int         fmt)
 {
 	xfs_buf_t		*buf;
         xlog_rec_header_t       *head;
         xlog_op_header_t        *op;
+	int			i, len;
         /* the data section must be 32 bit size aligned */
         struct {
             __uint16_t magic;
@@ -99,11 +102,15 @@ libxfs_log_clear(
         libxfs_device_zero(device, start, length);   
                    
         /* then write a log record header */
-        buf = libxfs_getbuf(device, start, 1);
+	if ((version == 2) && sunit)
+		len = BTOBB(sunit);
+	else
+		len = 1;
+        buf = libxfs_getbuf(device, start, len);
         if (!buf) 
             return -1;
         
-        memset(XFS_BUF_PTR(buf), 0, BBSIZE);
+        memset(XFS_BUF_PTR(buf), 0, BBSIZE * len);
 	head = (xlog_rec_header_t *)XFS_BUF_PTR(buf);
         
         /* note that oh_tid actually contains the cycle number
@@ -113,18 +120,34 @@ libxfs_log_clear(
         
 	INT_SET(head->h_magicno,        ARCH_CONVERT, XLOG_HEADER_MAGIC_NUM);
 	INT_SET(head->h_cycle,          ARCH_CONVERT, 1);
-	INT_SET(head->h_version,        ARCH_CONVERT, 1);
-	INT_SET(head->h_len,            ARCH_CONVERT, 20);
+	INT_SET(head->h_version,        ARCH_CONVERT, version);
+	if (len != 1)
+		INT_SET(head->h_len,            ARCH_CONVERT, sunit - BBSIZE);
+	else
+		INT_SET(head->h_len,            ARCH_CONVERT, 20);
 	INT_SET(head->h_chksum,         ARCH_CONVERT, 0);
 	INT_SET(head->h_prev_block,     ARCH_CONVERT, -1);
 	INT_SET(head->h_num_logops,     ARCH_CONVERT, 1);
 	INT_SET(head->h_cycle_data[0],  ARCH_CONVERT, 0xb0c0d0d0);
 	INT_SET(head->h_fmt,            ARCH_CONVERT, fmt);
+	INT_SET(head->h_size,		ARCH_CONVERT, XLOG_HEADER_CYCLE_SIZE);
         
         ASSIGN_ANY_LSN(head->h_lsn,         1, 0, ARCH_CONVERT);
         ASSIGN_ANY_LSN(head->h_tail_lsn,    1, 0, ARCH_CONVERT);
         
         memcpy(head->h_fs_uuid,  fs_uuid, sizeof(uuid_t));
+
+	if (len > 1) {
+		xfs_caddr_t	dp;
+		uint		cycle_lsn;
+
+		cycle_lsn = CYCLE_LSN_NOCONV(head->h_lsn, ARCH_CONVERT);
+		dp = XFS_BUF_PTR(buf) + BBSIZE;
+		for (i = 1; i < len; i++) {
+			*(uint *)dp = cycle_lsn;
+			dp += BBSIZE;
+		}
+	}
         
         if (libxfs_writebuf(buf, 0))
             return -1;

@@ -107,12 +107,16 @@ char	*lopts[] = {
 	"internal",
 #define	L_SIZE		2
 	"size",
-#define L_DEV		3
+#define L_VERSION	3
+	"version",
+#define L_LSUNIT	4
+	"sunit",
+#define L_DEV		5
 	"logdev",
 #ifdef MKFS_SIMULATION
-#define	L_FILE		4
+#define	L_FILE		6
 	"file",
-#define	L_NAME		5
+#define	L_NAME		7
 	"name",
 #endif
 	NULL
@@ -340,6 +344,54 @@ check_overwrite(char *device)
 	return 0;
 }
 
+xfs_dfsbno_t
+fixup_log_stripe(
+	xfs_mount_t	*mp,
+	int		lsflag,
+	xfs_dfsbno_t	logstart,
+	__uint64_t	agsize,
+	int		sunit,
+	xfs_drfsbno_t	*logblocks,
+	int		blocklog)
+{
+	__uint64_t	tmp_logblocks;
+
+	sunit = XFS_B_TO_FSB(mp, sunit);
+	logstart = ((logstart + (sunit - 1))/sunit) * sunit;
+	/* 
+	 * Make sure that the log size is a multiple of the
+	 * stripe unit
+	 */
+	if ((*logblocks % sunit) != 0) {
+		if (!lsflag) {
+			tmp_logblocks = ((*logblocks + (sunit - 1))
+						/ sunit) * sunit;
+			/*
+			 * If the log is too large, round down
+			 * instead of round up
+			 */
+			if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
+			    ((tmp_logblocks << blocklog) > XFS_MAX_LOG_BYTES)) {
+				tmp_logblocks = (*logblocks / sunit) * sunit;
+			}
+			*logblocks = tmp_logblocks;
+		} else {
+			fprintf(stderr,
+	"internal log size %lld is not a multiple of the log stripe unit %d\n", 
+					(long long)*logblocks, sunit);
+			usage();
+		}
+	}
+
+	if (*logblocks > agsize-XFS_FSB_TO_AGBNO(mp,logstart)) {
+		fprintf(stderr,
+	"Due to stripe alignment, the internal log size %lld is too large.\n"
+	"Must fit in allocation group\n",
+			(long long)*logblocks);
+		usage();
+	}
+	return logstart;
+}
 
 int
 main(int argc, char **argv)
@@ -394,7 +446,11 @@ main(int argc, char **argv)
 	int			loginternal;
 	char			*logsize;
 	xfs_dfsbno_t		logstart;
+	int			logversion;
+	int			lvflag;
 	int			lsflag;
+	int			lsunit;
+	char			*logstripe;
 	int			min_logblocks;
 	mnt_check_state_t       *mnt_check_state;
 	int                     mnt_partition_count;
@@ -419,7 +475,6 @@ main(int argc, char **argv)
 	xfs_sb_t		*sbp;
 	int			sectlog;
 	__uint64_t		tmp_agsize;
-	__uint64_t		tmp_logblocks;
 	uuid_t			uuid;
 	int			worst_freelist;
 	libxfs_init_t		xi;
@@ -434,8 +489,9 @@ main(int argc, char **argv)
 	blocklog = libxfs_highbit32(blocksize);
 	agsize = daflag = dblocks = 0;
 	ilflag = imflag = ipflag = isflag = 0;
-	liflag = laflag = lsflag = ldflag = 0;
+	liflag = laflag = lsflag = ldflag = lvflag = 0;
 	loginternal = 1;
+	logversion = 1;
 	logagno = logblocks = rtblocks = 0;
 	nlflag = nsflag = nvflag = 0;
 	dirblocklog = dirblocksize = dirversion = 0;
@@ -446,9 +502,9 @@ main(int argc, char **argv)
 	xi.notvolok = 1;
 	xi.setblksize = 1;
 	dfile = logfile = rtfile = NULL;
-	dsize = logsize = rtsize = rtextsize = protofile = NULL;
+	dsize = logsize = logstripe = rtsize = rtextsize = protofile = NULL;
 	opterr = 0;
-	dsu = dsw = dsunit = dswidth = nodsflag = lalign = 0;
+	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsunit = 0;
 	do_overlap_checks = 1;
 	extent_flagging = 0;
 	force_overwrite = 0;
@@ -750,6 +806,13 @@ main(int argc, char **argv)
 						illegal(value, "l internal");
 					liflag = 1;
 					break;
+				case L_LSUNIT:
+					if (!value)
+						reqval('l', lopts, L_LSUNIT);
+					if (logstripe)
+						respec('l', lopts, L_LSUNIT);
+					logstripe = value;
+					break;
 #ifdef HAVE_VOLUME_MANAGER
 				case L_NAME:
 					if (!value)
@@ -762,6 +825,16 @@ main(int argc, char **argv)
 					xi.logname = value;
 					break;
 #endif
+				case L_VERSION:
+					if (!value)
+						reqval('n', nopts, L_VERSION);
+					if (lvflag)
+						respec('n', nopts, L_VERSION);
+					logversion = atoi(value);
+					if (logversion < 1 || logversion > 2)
+						illegal(value, "l version");
+					lvflag = 1;
+					break;
 				case L_SIZE:
 					if (!value)
 						reqval('l', lopts, L_SIZE);
@@ -1003,6 +1076,9 @@ main(int argc, char **argv)
 	"warning: log length %lld not a multiple of %d, truncated to %lld\n",
 				(long long)logbytes, blocksize,
 				(long long)(logblocks << blocklog));
+	}
+	if (logstripe) {
+		lsunit = cvtnum(blocksize, logstripe);
 	}
 #ifdef HAVE_VOLUME_MANAGER
 	if (xi.risfile && (!rtsize || !xi.rtname)) {
@@ -1560,6 +1636,28 @@ main(int argc, char **argv)
 		}
 	}
 
+	/*
+	 * check that log sunit is modulo fsblksize or default it to dsunit.
+	 */
+
+	if (lsunit) {
+		if (lsunit % blocksize != 0) {
+			fprintf(stderr,
+"log stripe unit (%d) is not a multiple of the block size (%d)\n",
+			lsunit, blocksize);
+			exit(1);
+		}
+	} else {
+		if (dsunit)
+			lsunit = dsunit;
+	}
+
+	if (lsunit > 256 * 1024) {
+		fprintf(stderr,
+"log stripe unit (%d) is too large for kernel to handle\n", lsunit);
+		exit(1);
+	}
+
 	protostring = setup_proto(protofile);
 	bsize = 1 << (blocklog - BBSHIFT);
 	mp = &mbuf;
@@ -1597,40 +1695,16 @@ main(int argc, char **argv)
 		/*
 		 * Align the logstart at stripe unit boundary.
 		 */
-		if (dsunit && ((logstart % dsunit) != 0)) {
-			logstart = ((logstart + (dsunit - 1))/dsunit) * dsunit;
-			/* 
-			 * Make sure that the log size is a multiple of the
-			 * stripe unit
-			 */
-			if ((logblocks % dsunit) != 0) {
-			    if (!lsflag) {
-				tmp_logblocks = ((logblocks + (dsunit - 1))
-							/ dsunit) * dsunit;
-				/*
-				 * If the log is too large, round down
-				 * instead of round up
-				 */
-				if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
-				    ((tmp_logblocks << blocklog) > XFS_MAX_LOG_BYTES)) {
-					tmp_logblocks = (logblocks / dsunit) * dsunit;
-				}
-				logblocks = tmp_logblocks;
-			    } else {
-				fprintf(stderr,
-	"internal log size %lld is not a multiple of the stripe unit %d\n", 
-					(long long)logblocks, dsunit);
-				usage();
-			    }
-			}
 
-			if (logblocks > agsize-XFS_FSB_TO_AGBNO(mp,logstart)) {
-				fprintf(stderr,
-	"Due to stripe alignment, the internal log size %lld is too large.\n"
-	"Must fit in allocation group\n",
-					(long long)logblocks);
-				usage();
-			}
+		if (lsunit && ((logstart % lsunit) != 0)) {
+			logstart = fixup_log_stripe(mp, lsflag, logstart,
+						agsize, lsunit, &logblocks,
+						blocklog);
+			lalign = 1;
+		} else if (dsunit && ((logstart % dsunit) != 0)) {
+			logstart = fixup_log_stripe(mp, lsflag, logstart,
+						agsize, dsunit, &logblocks,
+						blocklog);
 			lalign = 1;
 		}
 	} else
@@ -1674,6 +1748,10 @@ main(int argc, char **argv)
 	sbp->sb_width = dswidth;
 	if (dirversion == 2)
 		sbp->sb_dirblklog = dirblocklog - blocklog;
+	if (logversion == 2)
+		sbp->sb_logsunit = (lsunit == 0) ? 1 : lsunit;
+	else
+		sbp->sb_logsunit = 0;
 	if (iaflag) {
 		sbp->sb_inoalignmt = XFS_INODE_BIG_CLUSTER_SIZE >> blocklog;
 		iaflag = sbp->sb_inoalignmt != 0;
@@ -1681,7 +1759,7 @@ main(int argc, char **argv)
 		sbp->sb_inoalignmt = 0;
 	sbp->sb_versionnum =
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
-			dirversion == 2);
+			dirversion == 2, logversion == 2);
 
 	/*
 	 * Zero out the first 68k in on the device, to obliterate any old 
@@ -1707,13 +1785,15 @@ main(int argc, char **argv)
 		   "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
 		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
 		   "naming   =version %-14d bsize=%-6d\n"
-		   "log      =%-22s bsize=%-6d blocks=%lld\n"
+		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+		   "         =%-22s sunit=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
 			"", dsunit, dswidth, extent_flagging,
 			dirversion, dirversion == 1 ? blocksize : dirblocksize,
 			logfile, 1 << blocklog, (long long)logblocks,
+			logversion, "", lsunit,
 			rtfile, rtextblocks << blocklog,
 			(long long)rtblocks, (long long)rtextents);
 	/*
@@ -1749,7 +1829,7 @@ main(int argc, char **argv)
                     XFS_FSB_TO_DADDR(mp, logstart),
 		    (xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
                     &sbp->sb_uuid,
-                    XLOG_FMT);
+                    logversion, lsunit, XLOG_FMT);
 
 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
 	if (mp == NULL) {
@@ -2143,6 +2223,7 @@ usage(void)
 			    su=value,sw=value]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx]\n\
+			    version=n,sunit=value]\n\
 /* naming */		[-n log=n|size=num|version=n]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
 /* prototype file */	[-p fname]\n\

@@ -54,6 +54,16 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
 	mp->m_blockwmask = mp->m_blockwsize - 1;
 
+
+	if (XFS_SB_VERSION_HASLOGV2(sbp)) {
+		if (sbp->sb_logsunit <= 1) {
+			mp->m_lstripemask = 1;
+		} else {
+			mp->m_lstripemask =
+				1 << xfs_highbit32(sbp->sb_logsunit >> BBSHIFT);
+		}
+	}
+
 	/*
 	 * Setup for attributes, in case they get created.
 	 * This value is for inodes getting attributes for the first time,
@@ -147,6 +157,7 @@ static struct {
     { offsetof(xfs_sb_t, sb_width),      0 },
     { offsetof(xfs_sb_t, sb_dirblklog),  0 },
     { offsetof(xfs_sb_t, sb_dummy),      1 },
+    { offsetof(xfs_sb_t, sb_logsunit),   0 },
     { sizeof(xfs_sb_t),                  0 }
 };
 

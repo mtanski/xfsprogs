@@ -1,4 +1,5 @@
-[cvs]
+xfsprogs-2.1.0 (14 Jun 2002)
+	- support for xfs version 2 log format.
 	- Fix for xfs_repair mangling i8count for dir2_sf directories
 	- Minor mkfs.xfs man page update for blocksize limits on Linux
 

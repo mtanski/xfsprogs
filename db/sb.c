@@ -99,6 +99,7 @@ const field_t	sb_flds[] = {
 	{ "unit", FLDT_UINT32D, OI(OFF(unit)), C1, 0, TYP_NONE },
 	{ "width", FLDT_UINT32D, OI(OFF(width)), C1, 0, TYP_NONE },
 	{ "dirblklog", FLDT_UINT8D, OI(OFF(dirblklog)), C1, 0, TYP_NONE },
+	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
 	{ NULL }
 };
 

@@ -257,7 +257,8 @@ uuid_f(
                     XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
                     XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
                     &uu,
-                    XLOG_FMT)) {
+		    XFS_SB_VERSION_HASLOGV2(&mp->m_sb) ? 2 : 1,
+                    mp->m_sb.sb_logsunit, XLOG_FMT)) {
                         dbprintf("error clearing log\n");
                         return 0;
                     }

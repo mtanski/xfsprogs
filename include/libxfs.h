@@ -117,7 +117,8 @@ extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
-extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *, int);
+extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *,
+				int, int, int);
 
 /* 
  * Define a user-level mount structure with all we need
@@ -169,6 +170,7 @@ typedef struct xfs_mount {
 	__uint64_t		m_maxicount;	/* maximum inode count */
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */
+	int			m_lstripemask;	/* log stripe mask */
 	int			m_sinoalign;	/* stripe unit inode alignmnt */
 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
 	__uint8_t		m_dirversion;	/* 1 or 2 */

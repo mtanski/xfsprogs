@@ -306,9 +306,10 @@ Log section options.
 These options specify the location, size, and other parameters of the
 log section of the filesystem.
 The valid suboptions are:
-.BI internal[= value ]
-and
-\f3size=\f1\f2value\f1.
+.BI internal[= value ],
+\f3size=\f1\f2value\f1,
+\f3version=\f1\f2[1|2]\f1 and
+\f3sunit=\f1\f2value\f1.
 .IP
 The
 .B internal
@@ -339,6 +340,21 @@ meaning multiplication by the filesystem block size, as described above.
 The overriding minimum value for size is 512 blocks.
 With some combinations of filesystem block size, inode size,
 and directory block size, the minimum log size is larger than 512 blocks.
+.IP
+Using the
+.B version
+option to set a version 2 log enables the
+.B sunit
+option, and allows the logbsize to be increased beyond 32K.
+The
+.B sunit 
+option specifies the alignment to be used for log writes,
+it can be in bytes or filesystem blocks.
+Log writes will be aligned on this boundary,
+and rounded up to this boundary.
+This gives major improvements in performance on some configurations
+such as software raid5 when the sunit is specified as the filesystem
+block size.
 .TP
 .B \-n
 Naming options.

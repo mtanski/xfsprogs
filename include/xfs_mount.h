@@ -278,6 +278,7 @@ typedef struct xfs_mount {
 #endif
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */
+	int			m_lstripemask;	/* log stripe mask */
 	int			m_sinoalign;	/* stripe unit inode alignmnt */
 	int			m_attr_magicpct;/* 37% of the blocksize */
 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
