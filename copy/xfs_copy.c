@@ -40,6 +40,8 @@
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
+extern int	platform_check_ismounted(char *, char *, struct stat64 *, int);
+
 int		logfd;
 char 		*logfile_name;
 FILE		*logerr;
