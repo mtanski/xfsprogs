@@ -68,7 +68,7 @@ alloc_buffer(
 	if (bsize > buffersize) {
 		if (buffer)
 			free(buffer);
-		buffer = memalign(getpagesize(), buffersize = bsize);
+		buffer = memalign(pagesize, buffersize = bsize);
 		if (!buffer) {
 			perror("memalign");
 			buffersize = 0;

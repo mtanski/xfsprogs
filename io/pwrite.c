@@ -165,7 +165,7 @@ pwrite_f(
 	if (alloc_buffer(blocksize, uflag, seed) < 0)
 		return 0;
 
-	c = O_RDONLY | (dflag ? IO_DIRECT : 0);
+	c = IO_READONLY | (dflag ? IO_DIRECT : 0);
 	if (infile && ((fd = openfile(infile, NULL, c, 0)) < 0))
 		return 0;
 
