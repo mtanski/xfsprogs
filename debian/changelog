@@ -1,3 +1,11 @@
+xfsprogs (1.3.13-0) unstable; urgency=low
+
+  * New upstream release
+  * Fixes an important mkfs.xfs bug for >1TB filesystems
+  * xfs_repair will no longer blindly zero a dirty log
+
+ -- Nathan Scott <nathans@debian.org>  Fri, 26 Oct 2001 10:42:26 +1000
+
 xfsprogs (1.3.11-0) unstable; urgency=low
 
   * Upstream release fixing several issues on 64 bit platforms
