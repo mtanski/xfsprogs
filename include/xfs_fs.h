@@ -354,6 +354,15 @@ typedef struct xfs_fsop_attr_handlereq {
 } xfs_fsop_attr_handlereq_t;
 
 /*
+ * Compound structure for passing args through ioctl to xfs_fssetdm_by_handle
+ */
+typedef struct xfs_fsop_setdm_handlereq {
+	struct xfs_fsop_handlereq hreq; /* handle request interface     */
+					/* structure                    */
+	struct fsdmidata data;	        /* DMI data to set              */
+} xfs_fsop_setdm_handlereq_t;
+
+/*
  * File system identifier. Should be unique (at least per machine).
  */
 typedef struct {
@@ -442,19 +451,20 @@ typedef struct xfs_handle {
 #define	XFS_IOC_OPEN_BY_HANDLE	     _IOWR('X', 107, struct xfs_fsop_handlereq)
 #define	XFS_IOC_READLINK_BY_HANDLE   _IOWR('X', 108, struct xfs_fsop_handlereq)
 #define XFS_IOC_SWAPEXT		     _IOWR('X', 109, struct xfs_swapext)
-#define	XFS_IOC_FSGROWFSDATA	     _IOW('X', 110, struct xfs_growfs_data)
-#define	XFS_IOC_FSGROWFSLOG	     _IOW('X', 111, struct xfs_growfs_log)
-#define	XFS_IOC_FSGROWFSRT	     _IOW('X', 112, struct xfs_growfs_rt)
+#define	XFS_IOC_FSGROWFSDATA	     _IOW ('X', 110, struct xfs_growfs_data)
+#define	XFS_IOC_FSGROWFSLOG	     _IOW ('X', 111, struct xfs_growfs_log)
+#define	XFS_IOC_FSGROWFSRT	     _IOW ('X', 112, struct xfs_growfs_rt)
 #define	XFS_IOC_FSCOUNTS	     _IOR ('X', 113, struct xfs_fsop_counts)
 #define	XFS_IOC_SET_RESBLKS	     _IOR ('X', 114, struct xfs_fsop_resblks)
 #define	XFS_IOC_GET_RESBLKS	     _IOR ('X', 115, struct xfs_fsop_resblks)
 #if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
-#define XFS_IOC_ERROR_INJECTION      _IOW('X', 116, struct xfs_error_injection)
-#define XFS_IOC_ERROR_CLEARALL       _IOW('X', 117, struct xfs_error_injection)
+#define XFS_IOC_ERROR_INJECTION      _IOW ('X', 116, struct xfs_error_injection)
+#define XFS_IOC_ERROR_CLEARALL       _IOW ('X', 117, struct xfs_error_injection)
 #endif /* DEBUG || INDUCE_IO_ERROR */
 #define	XFS_IOC_ATTRCTL_BY_HANDLE    _IOWR('X', 118, struct xfs_fsop_attr_handlereq)
 #define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
 #define XFS_IOC_THAW		     _IOWR('X', 120, int)
+#define	XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
 /*
  * ioctl command to export information not in standard interfaces
  * 	140: IRIX statvfs.f_fstr field - UUID from the superblock
