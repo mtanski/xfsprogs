@@ -1,4 +1,7 @@
 
+xfsprogs-1.1.1 (30 January 2001)
+	- minor rpm and deb packaging work
+
 xfsprogs-1.1.0 (15 January 2001)
 	- rework xfs-cmds package into base, devel and dump packages
 	- completed Debian packaging

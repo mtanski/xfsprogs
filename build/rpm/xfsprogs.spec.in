@@ -69,11 +69,18 @@ files()
 {
 	sort | uniq | awk ' 
 $1 == "d" { printf ("%%%%dir %%%%attr(%s,%s,%s) %s\n", $2, $3, $4, $5); } 
-$1 == "f" { if (match ($6, "@pkg_man_dir@") || match ($6, "@pkg_doc_dir@")) {
+$1 == "f" { if (match ($6, "@pkg_man_dir@") || match ($6, "@pkg_doc_dir@"))
 		printf ("%%%%doc ");
-	    }
-	    printf ("%%%%attr(%s,%s,%s) %s\n", $2, $3, $4, $6); }
-$1 == "l" { print "%attr(0777,root,root)", $3; }'
+	    if (match ($6, "@pkg_man_dir@"))
+		printf ("%%%%attr(%s,%s,%s) %s*\n", $2, $3, $4, $6);
+	    else
+		printf ("%%%%attr(%s,%s,%s) %s\n", $2, $3, $4, $6); }
+$1 == "l" { if (match ($3, "@pkg_man_dir@") || match ($3, "@pkg_doc_dir@"))
+		printf ("%%%%doc ");
+	    if (match ($3, "@pkg_man_dir@"))
+		printf ("%attr(0777,root,root) %s*\n", $3);
+	    else
+		printf ("%attr(0777,root,root) %s\n", $3); }'
 }
 set +x
 files < "$DIST_INSTALL" > files.rpm

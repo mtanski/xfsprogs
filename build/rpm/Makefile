@@ -72,5 +72,7 @@ ${SPECF} : ${SPECF}.in
 	    -e's|@pkg_var_dir@|$(PKG_VAR_DIR)|g' \
 	    -e's|@pkg_share_dir@|$(PKG_SHARE_DIR)|g' \
 	    -e's|@pkg_log_dir@|$(PKG_LOG_DIR)|g' \
+	    -e's|@pkg_doc_dir@|$(PKG_DOC_DIR)|g' \
+	    -e's|@pkg_man_dir@|$(PKG_MAN_DIR)|g' \
 	    -e's|@pkg_tmp_dir@|$(PKG_TMP_DIR)|g' \
 	    -e's|@make@|$(MAKE)|g' < $< > $@
