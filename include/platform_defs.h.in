@@ -111,8 +111,11 @@ typedef char*		xfs_caddr_t;
 typedef unsigned char	uchar_t;
 #define	_UCHAR_T_DEFINED	1
 #endif
-typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
+#ifndef _BOOLEAN_T_DEFINED
+ typedef enum { B_FALSE, B_TRUE } boolean_t;
+ #define _BOOLEAN_T_DEFINED 1
+#endif
 
 #elif defined(__FreeBSD__)
 
