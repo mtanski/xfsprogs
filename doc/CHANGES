@@ -1,3 +1,14 @@
+xfsprogs-2.6.3 (19 January 2003)
+	- Merge Steve Langasek's work on the Debian installer
+	  support for xfsprogs.
+	- Add knowledge to xfs_db about the security namespace in
+	  its extended attributes commands.
+	- Sync up user/kernel source in libxfs and headers.
+	- Fix a couple of compilation warnings.
+	- Workaround for some versions of autoconf mishandling the
+	  AC_CHECK_SIZEOF macro.
+	- Fix a memory leak in libxfs, most noticable in xfs_repair.
+
 xfsprogs-2.6.2 (17 December 2003)
 	- Fix dev_t sizing issues in user tools - glibc uses a 64
 	  bit number and XFS has a 32 device bit number, confusion

@@ -2,22 +2,26 @@
 
 package = xfsprogs
 develop = xfslibs-dev
-bootpkg = xfsprogs-bf
+bootpkg = xfsprogs-udeb
+
+version = $(shell dpkg-parsechangelog | grep ^Version: | cut -d ' ' -f 2)
+target ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+udebpkg = $(bootpkg)_$(version)_$(target).udeb
 
 dirtmp = debian/tmp
 dirdev = debian/$(develop)
-dirbfs = debian/$(bootpkg)
+dirdi  = debian/$(bootpkg)
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
-pkgbfs = DIST_ROOT=`pwd`/$(dirbfs); export DIST_ROOT;
+pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; LOCAL_CONFIGURE_OPTIONS=--enable-readline=yes; export DEBUG DISTRIBUTION LOCAL_CONFIGURE_OPTIONS;
-bfsopts = $(options) OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
+diopts = $(options) OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
 checkdir = test -f debian/rules
 
 build: built
-built: bfbuild config
+built: dibuild config
 	@echo "== dpkg-buildpackage: build" 1>&2
 	$(MAKE) default
 	touch built
@@ -29,11 +33,11 @@ config: .census
 	$(options) $(MAKE) configure
 	touch .census
 
-bfbuild: 
+dibuild: 
 	$(checkdir)
 	@echo "== dpkg-buildpackage: bootfloppies" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
-		$(bfsopts) $(MAKE) configure; \
+		$(diopts) $(MAKE) configure; \
 		for dir in include libxfs libdisk mkfs; do \
 			$(MAKE) -C $$dir; \
 		done; \
@@ -46,33 +50,33 @@ clean:
 	$(checkdir)
 	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
 	$(MAKE) distclean
-	-rm -rf $(dirtmp) $(dirdev) $(dirbfs) debian/*substvars debian/files*
+	-rm -rf $(dirtmp) $(dirdev) $(dirdi) debian/*substvars debian/files*
 
 binary-indep:
 
-# Note1: dev pkg with .so symlinks to base pkg confuses debstd;
-# so the .so 'Dangling symlink' message is benign.
-# Note2: absolute symlinks (required by policy) confuse debstd;
-# so we'll filter out symlink messages entirely now.
-# 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
-	-rm -rf $(dirtmp) $(dirdev) $(dirbfs)
+	-rm -rf $(dirtmp) $(dirdev) $(dirdi)
 	$(pkgtmp) $(MAKE) -C . install
 	$(pkgdev) $(MAKE) -C . install-dev
-	$(pkgbfs) $(MAKE) -C debian install-boot
+	$(pkgdi) $(MAKE) -C debian install-d-i
 	$(pkgtmp) $(MAKE) -C build src-manifest
-	@echo "== dpkg-buildpackage: debstd" 1>&2
-	$(stdenv) debstd -m | grep -v 'Dangling symlink'
-	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
-	dpkg-gencontrol -isp -p$(develop) -P$(dirdev)
-	dpkg-gencontrol -isp -p$(bootpkg) -P$(dirbfs)
-	chown -R root.root $(dirtmp) $(dirdev) $(dirbfs)
-	chmod -R go=rX $(dirtmp) $(dirdev) $(dirbfs)
-	dpkg --build $(dirtmp) .. 
-	dpkg --build $(dirdev) ..
-	dpkg --build $(dirbfs) ..
+
+	dh_installdocs -p$(package) -p$(develop)
+	dh_installchangelogs -N$(bootpkg)
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs -p$(package)
+	dh_installdeb -N$(bootpkg)
+	dh_shlibdeps
+	dh_gencontrol -N$(bootpkg)
+	dh_gencontrol -p$(bootpkg) -- -n$(udebpkg)
+
+	dh_md5sums -N$(bootpkg)
+	dh_builddeb -N$(bootpkg)
+	dh_builddeb -p$(bootpkg) --filename=$(udebpkg)
 
 binary: binary-indep binary-arch
 

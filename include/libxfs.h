@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -364,7 +364,7 @@ extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
 extern void	libxfs_idata_realloc (xfs_inode_t *, int, int);
-extern void    libxfs_idestroy_fork (xfs_inode_t *, int);
+extern void	libxfs_idestroy_fork (xfs_inode_t *, int);
 extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_ichgtime (xfs_inode_t *, int);

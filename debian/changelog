@@ -1,14 +1,15 @@
-xfsprogs (2.6.2-1) unstable; urgency=low
+xfsprogs (2.6.3-1) unstable; urgency=low
 
   * New upstream release.
+  * Add support for debian-installer.  (closes: #225444)
+    Author: Steve Langasek.
+  * Use debhelper instead of debmake, for proper udeb building.
+    Author: Steve Langasek.
+  * Drop boot-floppies support.  (closes: #112715)
+    Author: Steve Langasek.
+  * Add support for the security attribute namespace.
 
- -- Nathan Scott <nathans@debian.org>  Wed, 17 Dec 2003 21:16:53 +1100
-
-xfsprogs (2.6.1-1) unstable; urgency=low
-
-  * New upstream release.
-
- -- Nathan Scott <nathans@debian.org>  Thu, 27 Nov 2003 13:47:17 +1100
+ -- Nathan Scott <nathans@debian.org>  Mon, 19 Jan 2004 10:08:59 +1100
 
 xfsprogs (2.6.0-1) unstable; urgency=low
 
@@ -38,7 +39,7 @@ xfsprogs (2.5.5-1) unstable; urgency=low
 xfsprogs (2.5.4-1) unstable; urgency=low
 
   * New upstream release, includes xfs_copy command
-  * Fix shell quoting in xfs_bmap, from Kai S. Juse (closes: 202588)
+  * Fix shell quoting in xfs_bmap, from Kai S. Juse (closes: #202588)
 
  -- Nathan Scott <nathans@debian.org>  Wed, 23 Jul 2003 10:36:28 +1000
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -263,7 +263,8 @@ xfs_attr_leaf_add_work(xfs_dabuf_t *bp, xfs_da_args_t *args, int mapindex)
 				      + INT_GET(map->size, ARCH_CONVERT));
 	INT_SET(entry->hashval, ARCH_CONVERT, args->hashval);
 	entry->flags = tmp ? XFS_ATTR_LOCAL : 0;
-	entry->flags |= (args->flags & ATTR_ROOT) ? XFS_ATTR_ROOT : 0;
+	entry->flags |= (args->flags & ATTR_SECURE) ? XFS_ATTR_SECURE :
+			((args->flags & ATTR_ROOT) ? XFS_ATTR_ROOT : 0);
 	if (args->rename) {
 		entry->flags |= XFS_ATTR_INCOMPLETE;
 		if ((args->blkno2 == args->blkno) &&

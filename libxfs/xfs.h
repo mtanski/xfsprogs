@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -102,7 +102,7 @@
 #define xfs_iread			libxfs_iread
 #define xfs_ialloc			libxfs_ialloc
 #define xfs_idata_realloc		libxfs_idata_realloc
-#define xfs_idestroy_fork              libxfs_idestroy_fork
+#define xfs_idestroy_fork		libxfs_idestroy_fork
 #define xfs_itobp			libxfs_itobp
 #define xfs_ichgtime			libxfs_ichgtime
 #define xfs_bmapi			libxfs_bmapi
@@ -243,6 +243,7 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define NBPP		getpagesize()
 #define STATIC
 #define ATTR_ROOT	0x0002	/* use attrs in root namespace */
+#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define unlikely(x)	(x)

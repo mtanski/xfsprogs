@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -196,7 +196,7 @@ pread_f(
 	cvtstr((double)total, s1, sizeof(s1));
 	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
 	timestr(&t2, ts, sizeof(ts));
-	printf(_("---- %s, %d ops; %s (%s/sec and %.f ops/sec)\n"),
+	printf(_("---- %s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
 		s1, c, ts, s2, tdiv((double)c, t2));
 	return 0;
 }
