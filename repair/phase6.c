@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -2718,13 +2718,16 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
 		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
-		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK)) {
+		if (libxfs_da_read_bufr(NULL, ip, da_bno,
+				da_bno == 0 ? -2 : -1, &bp, XFS_DATA_FORK)) {
 			do_error(_("can't read block %u for directory inode "
 				   "%llu\n"),
 				da_bno, ino);
 			/* NOTREACHED */
 		}
+		/* is there a hole at the start? */
+		if (da_bno == 0 && bp == NULL)
+			continue;
 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
 			stack, irec, ino_offset, &bp, hashtab, &freetab, da_bno,
 			isblock);
