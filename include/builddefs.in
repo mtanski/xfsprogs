@@ -41,6 +41,7 @@ MALLOCLIB = @malloc_lib@
 
 LIBUUID = @libuuid@
 LIBPTHREAD = @libpthread@
+LIBTERMCAP = @libtermcap@
 LIBEDITLINE = @libeditline@
 LIBREADLINE = @libreadline@
 LIBXFS = $(TOPDIR)/libxfs/libxfs.la

@@ -13,17 +13,22 @@ AC_SUBST(enable_gettext)
 
 AC_ARG_ENABLE(readline,
 [ --enable-readline=[yes/no] Enable readline command editing [default=no]],
-	test $enable_readline = yes && libreadline="-lreadline -ltermcap",
+	test $enable_readline = yes && libreadline="-lreadline",
 	enable_readline=no)
 AC_SUBST(libreadline)
 AC_SUBST(enable_readline)
 
 AC_ARG_ENABLE(editline,
 [ --enable-editline=[yes/no] Enable editline command editing [default=no]],
-	test $enable_editline = yes && libeditline="-ledit -ltermcap",
+	test $enable_editline = yes && libeditline="-ledit",
 	enable_editline=no)
 AC_SUBST(libeditline)
 AC_SUBST(enable_editline)
+
+AC_ARG_ENABLE(termcap,
+[ --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
+	test $enable_termcap = yes && libtermcap="-ltermcap",)
+AC_SUBST(libtermcap)
 
 AC_PACKAGE_GLOBALS(xfsprogs)
 AC_PACKAGE_UTILITIES(xfsprogs)

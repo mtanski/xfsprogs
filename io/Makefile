@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -77,12 +77,12 @@ LSRCFILES += inject.c resblks.c shutdown.c
 endif
 
 ifeq ($(ENABLE_READLINE),yes)
-LLDLIBS += $(LIBREADLINE)
+LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
 CFLAGS += -DENABLE_READLINE
 endif
 
 ifeq ($(ENABLE_EDITLINE),yes)
-LLDLIBS += $(LIBEDITLINE)
+LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
 CFLAGS += -DENABLE_EDITLINE
 endif
 
