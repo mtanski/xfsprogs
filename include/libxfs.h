@@ -422,7 +422,7 @@ extern int	libxfs_alloc_fix_freelist (xfs_alloc_arg_t *, int);
 extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 				xfs_off_t, int, int);
 
-extern xfs_dahash_t	libxfs_da_hashname (char *, int);
+extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (xfs_da_args_t *, int, int *);
 
 extern xfs_filblks_t	libxfs_bmbt_get_blockcount (xfs_bmbt_rec_t *);

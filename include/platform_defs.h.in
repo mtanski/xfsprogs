@@ -74,6 +74,8 @@ typedef __uint32_t	xfs_dev_t;
 typedef __int64_t	xfs_daddr_t;
 typedef char*		xfs_caddr_t;
 
+typedef unsigned char	uchar_t;
+
 /* long and pointer must be either 32 bit or 64 bit */
 #undef HAVE_64BIT_LONG
 #undef HAVE_32BIT_LONG
