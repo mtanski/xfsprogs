@@ -279,6 +279,7 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 # define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
 #else
 # define xfs_fs_cmn_err(a,b,...)	( fprintf(stderr, __VA_ARGS__) )
+# define cmn_err(a,...)			( fprintf(stderr, __VA_ARGS__) )
 # define printk(...)			( fprintf(stderr, __VA_ARGS__) )
 #endif
 
