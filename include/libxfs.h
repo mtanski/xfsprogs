@@ -183,6 +183,7 @@ typedef struct xfs_mount {
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
 extern void	libxfs_mount_common (xfs_mount_t *, xfs_sb_t *);
+extern void	libxfs_initialize_perag (xfs_mount_t *, int);
 extern void	libxfs_umount (xfs_mount_t *);
 extern int	libxfs_rtmount_init (xfs_mount_t *);
 extern void	libxfs_alloc_compute_maxlevels (xfs_mount_t *);

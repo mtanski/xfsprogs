@@ -214,3 +214,64 @@ xfs_xlatesb(void *data, xfs_sb_t *sb, int dir, xfs_arch_t arch,
     }
     
 }
+
+void
+xfs_initialize_perag(xfs_mount_t *mp, int agcount)
+{
+	int		index, max_metadata;
+	xfs_perag_t	*pag;
+	xfs_agino_t	agino;
+	xfs_ino_t	ino;
+	xfs_sb_t	*sbp = &mp->m_sb;
+	xfs_ino_t	max_inum = XFS_MAXINUMBER_32;
+
+	/* Check to see if the filesystem can overflow 32 bit inodes */
+	agino = XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
+	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
+
+	/* Clear the mount flag if no inode can overflow 32 bits
+	 * on this filesystem.
+	 */
+	if (ino <= max_inum) {
+		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+	}
+
+	/* If we can overflow then setup the ag headers accordingly */
+	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
+		/* Calculate how much should be reserved for inodes to
+		 * meet the max inode percentage.
+		 */
+		if (mp->m_maxicount) {
+			__uint64_t	icount;
+
+			icount = sbp->sb_dblocks * sbp->sb_imax_pct;
+			do_div(icount, 100);
+			icount += sbp->sb_agblocks - 1;
+			do_div(icount, mp->m_ialloc_blks);
+			max_metadata = icount;
+		} else {
+			max_metadata = agcount;
+		}
+		for (index = 0; index < agcount; index++) {
+			ino = XFS_AGINO_TO_INO(mp, index, agino);
+			if (ino > max_inum) {
+				index++;
+				break;
+			}
+
+			/* This ag is prefered for inodes */
+			pag = &mp->m_perag[index];
+			pag->pagi_inodeok = 1;
+			if (index < max_metadata)
+				pag->pagf_metadata = 1;
+		}
+	} else {
+		/* Setup default behavior for smaller filesystems */
+		for (index = 0; index < agcount; index++) {
+			pag = &mp->m_perag[index];
+			pag->pagi_inodeok = 1;
+		}
+	}
+	mp->m_maxagi = index;
+}
+

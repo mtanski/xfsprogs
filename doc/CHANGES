@@ -1,3 +1,7 @@
+xfsprogs-1.3.15 (12 December 2001)
+	- reenable the use of the BLKBSZSET ioctl, its baaack
+	- sync recent XFS kernel source changes back into libxfs
+
 xfsprogs-1.3.14 (05 December 2001)
 	- fix minor debian package version numbering issue
 	- add documentation for xfs_db(8) label/uuid commands

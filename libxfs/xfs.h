@@ -95,6 +95,7 @@
 #define xfs_dir2_bogus_removename	libxfs_dir2_bogus_removename
 
 #define xfs_mount_common                libxfs_mount_common
+#define xfs_initialize_perag            libxfs_initialize_perag
 #define xfs_rtmount_init                libxfs_rtmount_init
 #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
 #define xfs_iread			libxfs_iread

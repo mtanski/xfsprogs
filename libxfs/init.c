@@ -205,16 +205,12 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	
-#ifdef HAVE_BLKBSZSET
+
 	/*
-	 * Set device blocksize to 512 bytes
-	 *
-	 * See bug #801063, but we no longer have this ioctl in the kernel -
-	 * it will be needed again though when the fs blocksize != pagesize.
+	 * Set device blocksize to 512 bytes (see bug #801063)
 	 */
 #ifndef BLKBSZSET
-#define BLKBSZSET _IO(0x12,110)	/* set device block size */
+#define BLKBSZSET _IOW(0x12,113,sizeof(int))	/* set device block size */
 #endif
 	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
 		int blocksize = 512; /* bytes */
@@ -224,11 +220,11 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 				progname, path, strerror(errno));
 		}
 	}
-#endif
 
-	/* get the device number from the stat buf - unless
+	/*
+	 * Get the device number from the stat buf - unless
 	 * we're not opening a real device, in which case
-	 * choose a new fake device number
+	 * choose a new fake device number.
 	 */
 	dev=(statb.st_rdev)?(statb.st_rdev):(nextfakedev--);
 
@@ -753,6 +749,8 @@ libxfs_mount(
 			progname, (long)size, strerror(errno));
 		exit(1);
 	}
+
+	libxfs_initialize_perag(mp, sbp->sb_agcount);
 
 	/*
 	 * mkfs calls mount before the root inode is allocated.
