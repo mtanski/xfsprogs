@@ -1536,6 +1536,17 @@ main(int argc, char **argv)
 			} else {
 				agsize = tmp_agsize;
 				agcount = dblocks/agsize + (dblocks % agsize != 0);
+				/*
+				 * If the last AG is too small, reduce the
+				 * filesystem size and drop the blocks.
+				 */
+				if ( dblocks % agsize != 0 &&
+				    (dblocks % agsize <
+				    XFS_AG_MIN_BLOCKS(blocklog))) {
+					dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
+					agcount--;
+					ASSERT(agcount != 0);
+				}
 			}
 		}
 	} else {
@@ -1741,8 +1752,8 @@ main(int argc, char **argv)
                     XLOG_FMT);
 
 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
-	if (!mp) {
-		fprintf(stderr, "%s: mount initialization failed\n", progname);
+	if (mp == NULL) {
+		fprintf(stderr, "%s: filesystem failed to initialize\n", progname);
 		exit(1);
 	}
 	if (xi.logdev &&
