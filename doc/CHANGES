@@ -1,3 +1,12 @@
+xfsprogs-2.6.6 (03 March 2003)
+	- mkfs now opens the devices it's operating on with the
+	  O_EXCL flag set, which is used by the Linux 2.6 block
+	  layer to ensure concurrent access does not happen.
+	- Allow xfs_io to operate on files from other filesystems,
+	  with the XFS-specific commands unavailable in this mode.
+	- Fix configure scripts to also search for a UUID library
+	  in /usr/lib64 which is its home on AMD64/x86_64.
+
 xfsprogs-2.6.5 (20 February 2003)
 	- Fix up mkfs to ensure that the log size is a multiple of
 	  the v2 log stripe size even if the log happens to be aligned
