@@ -52,6 +52,7 @@ usage(void)
 	fprintf(stderr, "Usage: %s [options...] <device>\n\n\
 Options:\n\
     -c	            try to continue if error found in log\n\
+    -f	            specified device is actually a file\n\
     -l <device>     filename of external log\n\
     -n	            don't try and interpret log data\n\
     -o	            print buffer data in hex\n\
@@ -129,7 +130,7 @@ main(int argc, char **argv)
         xlog_t	        log = {0};
 
 	progname = basename(argv[0]);
-	while ((c = getopt(argc, argv, "bel:iqnors:tDVvc")) != EOF) {
+	while ((c = getopt(argc, argv, "befl:iqnors:tDVvc")) != EOF) {
 		switch (c) {
 			case 'D': {
 				print_only_data++;
@@ -138,6 +139,10 @@ main(int argc, char **argv)
 			}
 			case 'b': {
 				print_buffer++;
+				break;
+			}
+			case 'f': {
+				x.disfile = 1;
 				break;
 			}
 			case 'l': {
