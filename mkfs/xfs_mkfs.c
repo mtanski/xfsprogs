@@ -300,8 +300,8 @@ get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
 			usage();
 		}
 
-		/* Deduct a disk from stripe width on RAID5 */
-		if (md.level == 5)
+		/* Deduct a disk from stripe width on RAID4/5 */
+		if (md.level == 4 || md.level == 5)
 			md.nr_disks--;
 			
 		/* Update sizes */
