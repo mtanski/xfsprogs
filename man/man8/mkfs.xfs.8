@@ -426,6 +426,153 @@ in which case the default value is the filesystem block size.
 For version 1 directories the block size is the same as the 
 filesystem block size.
 .TP
+\f3\-p\f1 \f2protofile\f1
+If the optional
+.B \-p
+.I protofile
+argument is given,
+.I mkfs.xfs
+uses
+.I protofile
+as a prototype file
+and takes its directions from that file.
+The blocks and inodes
+specifiers in the
+.I protofile
+are provided for backwards compatibility, but are otherwise unused.
+The syntax of the protofile is defined by a number of tokens separated by spaces
+or newlines. Note that the line numbers are not part of the syntax but
+are meant to help you in the
+following discussion of the file
+contents.
+.nf
+.sp .8v
+.in +5
+\f71       /stand/\f1\f2diskboot\f1\f7
+2       4872 110
+3       d--777 3 1
+4       usr     d--777 3 1
+5       sh      ---755 3 1 /bin/sh
+6       ken     d--755 6 1
+7               $
+8       b0      b--644 3 1 0 0
+9       c0      c--644 3 1 0 0
+10      fifo    p--644 3 1
+11      slink   l--644 3 1 /a/symbolic/link
+12      :  This is a comment line
+13      $
+14      $\f1
+.in -5
+.fi
+.IP
+Line 1 is a dummy string.
+(It was formerly the bootfilename.)
+It is present for backward
+compatibility; boot blocks are not used on SGI systems.
+.IP
+Note that some string of characters must be present as the first line of
+the proto file to cause it to be parsed correctly; the value
+of this string is immaterial since it is ignored.
+.IP
+Line 2 contains two numeric values (formerly the numbers of blocks and inodes).
+These are also merely for backward compatibility: two numeric values must
+appear at this point for the proto file to be correctly parsed,
+but their values are immaterial since they are ignored.
+.IP
+The lines 3 through 11 specify the files and directories you want to 
+include in this filesystem. Line 3 defines the
+root directory. Other directories and
+files that you want in the filesystem
+are indicated by lines 4 through 6 and
+lines 8 through 10. Line 11 contains
+symbolic link syntax.
+.IP
+Notice the dollar sign (
+.B $
+) syntax on line 7. This syntax directs the 
+.I mkfs.xfs 
+command to terminate the branch of the filesystem it
+is currently on and then continue
+from the directory specified by 
+the next line,in this case line 8
+It must be the last character
+on a line.
+The colon
+on line 12 introduces a comment; all characters up until the
+following newline are ignored.
+Note that this means you cannot
+have a file in a prototype file whose name contains a colon.
+The
+.B $
+on lines 13 and 14 end the process, since no additional
+specifications follow.
+.IP
+File specifications provide the following:
+.IP
+  * file mode
+.br
+  * user ID
+.br
+  * group ID
+.br
+  * the file's beginning contents
+.P
+.IP
+A 6-character string defines the mode for
+a file. The first character of this string
+defines the file type. The character range
+for this first character is 
+.B \-bcdpl.
+A file may be a regular file, a block special file,
+a character special file, directory files, named
+pipes (first-in, first out files), and symbolic
+links.
+The second character of the mode string is
+used to specify setuserID mode, in which case
+it is 
+.BR u .
+If setuserID mode is not specified, the second character is 
+.BR \- .
+The third character of the mode string is
+used to specify the setgroupID mode, in which
+case it is 
+.BR g .
+If setgroupID mode is not specified, the second character is 
+.BR \- .
+The remaining characters of the mode string are
+a three digit octal number. This octal number
+defines the owner, group, and other read, write,
+and execute permissions for the file, respectively.
+Form more information on file permissions, see the
+.IR chmod(1) 
+command.
+.IP
+Following the mode character string are two
+decimal number tokens that specify the user and group IDs
+of the file's owner.
+.IP
+In a regular file, the next token specifies the
+pathname from which the contents and size of the
+file are copied.
+In a block or character special file, the next token
+are two decimal numbers that specify the major and minor
+device numbers.
+When a file is a symbolic link, the next token
+specifies the contents of the link.
+
+When the file is a directory, the 
+.I mkfs.xfs 
+command creates the entries 
+.B dot
+(.) and 
+.B dot-dot
+(..) and then reads the list of names and file specifications
+in a recursive manner for all of the entries
+in the directory. A scan of the protofile is
+always terminated with the dollar (
+.B $
+) token.
+.TP
 .B \-q
 Quiet option.
 .IP
