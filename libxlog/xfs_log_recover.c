@@ -1240,6 +1240,16 @@ xlog_do_recovery_pass(xlog_t	*log,
 	    rhead = (xlog_rec_header_t *)XFS_BUF_PTR(hbp);
 	    ASSERT(INT_GET(rhead->h_magicno, ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM);
 	    ASSERT(BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT) <= INT_MAX));
+	    bblks = (int) BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT));	/* blocks in data section */
+
+	    if ((INT_GET(rhead->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) ||
+		(BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT) > INT_MAX)) ||
+		(bblks <= 0) ||
+		(blk_no > log->l_logBBsize)) {
+		    error = EFSCORRUPTED;
+		    goto bread_err2;
+	    }
+
 	    if ((INT_GET(rhead->h_version, ARCH_CONVERT) & (~XLOG_VERSION_OKBITS)) != 0) {
 		xlog_warn("XFS: xlog_do_recovery_pass: unrecognised log version number.");
 		error = XFS_ERROR(EIO);

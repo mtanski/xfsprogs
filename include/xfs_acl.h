@@ -65,8 +65,6 @@ typedef struct xfs_acl {
 
 #ifdef CONFIG_FS_POSIX_ACL
 
-#include <linux/posix_acl.h>
-
 struct vattr;
 struct vnode;
 struct xfs_inode;
@@ -84,6 +82,10 @@ extern int xfs_acl_vremove(struct vnode *vp, int);
 
 extern struct xfs_zone *xfs_acl_zone;
 
+#define _ACL_TYPE_ACCESS	1
+#define _ACL_TYPE_DEFAULT	2
+#define _ACL_PERM_INVALID(perm)	((perm) & ~(ACL_READ|ACL_WRITE|ACL_EXECUTE))
+
 #define _ACL_DECL(a)		xfs_acl_t *(a) = NULL
 #define _ACL_ALLOC(a)		((a) = kmem_zone_alloc(xfs_acl_zone, KM_SLEEP))
 #define _ACL_FREE(a)		((a)? kmem_zone_free(xfs_acl_zone, (a)) : 0)
@@ -94,8 +96,10 @@ extern struct xfs_zone *xfs_acl_zone;
 #define _ACL_GET_DEFAULT(pv,pd)	(xfs_acl_vtoacl(pv,NULL,pd) == 0)
 #define _ACL_ACCESS_EXISTS	xfs_acl_vhasacl_access
 #define _ACL_DEFAULT_EXISTS	xfs_acl_vhasacl_default
-#define _ACL_XFS_IACCESS(i,m,c)	\
-	(XFS_IFORK_Q(i) ? xfs_acl_iaccess(i,m,c) : -1)
+#define _ACL_XFS_IACCESS(i,m,c)	(XFS_IFORK_Q(i) ? xfs_acl_iaccess(i,m,c) : -1)
+
+#define set_acl_flag(inode)	((inode)->i_flags |= S_POSIXACL)
+#define clear_acl_flag(inode)	((inode)->i_flags &= ~S_POSIXACL)
 
 #else
 #define xfs_acl_vset(v,p,sz,t)	(-ENOTSUP)
@@ -112,6 +116,8 @@ extern struct xfs_zone *xfs_acl_zone;
 #define _ACL_ACCESS_EXISTS	(NULL)
 #define _ACL_DEFAULT_EXISTS	(NULL)
 #define _ACL_XFS_IACCESS(i,m,c)	(-1)
+#define set_acl_flag(inode)	do { } while (0)
+#define clear_acl_flag(inode)	do { } while (0)
 #endif
 
 #endif	/* __KERNEL__ */
