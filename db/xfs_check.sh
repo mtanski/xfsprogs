@@ -32,10 +32,10 @@
 #
 
 OPTS=" "
-ISFILE=" "
-USAGE="Usage: xfs_check [-fsvV] [-i ino]... [-b bno]... special"
+DBOPTS=" "
+USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
 
-while getopts "b:fi:stvV" c
+while getopts "b:fi:l:stvV" c
 do
 	case $c in
 	s)	OPTS=$OPTS"-s ";;
@@ -44,7 +44,8 @@ do
 	V)	OPTS=$OPTS"-V ";;
 	i)	OPTS=$OPTS"-i "$OPTARG" ";;
 	b)	OPTS=$OPTS"-b "$OPTARG" ";;
-	f)	ISFILE=" -f";;
+	f)	DBOPTS=$DBOPTS" -f";;
+	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;
@@ -53,7 +54,7 @@ done
 set -- extra $@
 shift $OPTIND
 case $# in
-	1)	xfs_db$ISFILE -i -p xfs_check -c "check$OPTS" $1
+	1)	xfs_db$DBOPTS -i -p xfs_check -c "check$OPTS" $1
 		status=$?
 		;;
 	*)	echo $USAGE 1>&2

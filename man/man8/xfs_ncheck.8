@@ -3,11 +3,11 @@
 xfs_ncheck \- generate pathnames from i-numbers for XFS
 .SH SYNOPSIS
 .nf
-\f3xfs_ncheck\f1 [ \f3\-i\f1 ino ] ... \c
-[ \f3\-s\f1 ] xfs_special
+\f3xfs_ncheck\f1 [ \f3\-i\f1 ino ] ...
+		[ \f3\-s\f1 ] [ \f3\-l\f1 logdev ] xfs_special
 .sp .8v
-\f3xfs_ncheck\f1 \f3\-f\f1 [ \f3\-i\f1 ino ] ... \c
-[ \f3\-s\f1 ] file
+\f3xfs_ncheck\f1 \f3\-f\f1 [ \f3\-i\f1 ino ] ...
+		[ \f3\-s\f1 ] [ \f3\-l\f1 logdev ] file
 .fi
 .SH DESCRIPTION
 .I xfs_ncheck
@@ -30,6 +30,15 @@ Specifies that the special device is actually a file (see the
 \f2mkfs.xfs\f1 \f3\-d\f1 \f2file\f1 option).
 This might happen if an image copy
 of a filesystem has been made into an ordinary file.
+.TP
+.B \-l
+Specifies the device special file where the filesystem's external
+log resides.
+Only for those filesystems which use an external log.
+See the
+\f2mkfs.xfs\f1 \f3\-l\f1 option, and refer to
+.IR xfs (5)
+for a detailed description of the XFS log.
 .TP
 .B \-s
 Limits the report to special files and files with setuserid mode.

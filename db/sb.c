@@ -220,8 +220,8 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 /* workaround craziness in the xlog routines */
 int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
 
-static int
-zero_log(uuid_t *uuidp)
+int
+sb_logcheck(void)
 {
 	xlog_t		log;
 	xfs_daddr_t	head_blk, tail_blk;
@@ -265,10 +265,19 @@ zero_log(uuid_t *uuidp)
 "of the filesystem before doing this.\n", progname);
 		return 0;
 	}
+	return 1;
+}
+
+static int
+sb_logzero(uuid_t *uuidp)
+{
+	if (!sb_logcheck())
+		return 0;
 
 	dbprintf("Clearing log and setting UUID\n");
 
-	if (libxfs_log_clear(log.l_dev,
+	if (libxfs_log_clear(
+			(mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev,
 			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
 			uuidp,
@@ -370,7 +379,7 @@ uuid_f(
 		}
 
 		/* clear the log (setting uuid) if its not dirty */
-		if (!zero_log(&uu))
+		if (!sb_logzero(&uu))
 			return 0;
 
 		dbprintf("writing all SBs\n");

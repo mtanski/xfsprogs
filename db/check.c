@@ -37,6 +37,7 @@
 #include "check.h"
 #include "command.h"
 #include "io.h"
+#include "sb.h"
 #include "output.h"
 #include "type.h"
 #include "init.h"
@@ -1725,6 +1726,8 @@ init(
 			mp->m_sb.sb_magicnum);
 		return 0;
 	}
+	if (!sb_logcheck())
+		return 0;
 	rt = mp->m_sb.sb_rextents != 0;
 	dbmap = xmalloc((mp->m_sb.sb_agcount + rt) * sizeof(*dbmap));
 	inomap = xmalloc((mp->m_sb.sb_agcount + rt) * sizeof(*inomap));

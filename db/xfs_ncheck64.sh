@@ -32,18 +32,18 @@
 #
 
 OPTS=" "
-ISFILE=" "
-USAGE="usage: xfs_ncheck64 [-sfvV] [-i ino]... special"
+DBOPTS=" "
+USAGE="usage: xfs_ncheck64 [-sfvV] [-l logdev] [-i ino]... special"
 
-
-while getopts "b:fi:svV" c
+while getopts "b:fi:l:svV" c
 do
 	case $c in
 	s)	OPTS=$OPTS"-s ";;
 	i)	OPTS=$OPTS"-i "$OPTARG" ";;
 	v)	OPTS=$OPTS"-v ";;
 	V)	OPTS=$OPTS"-V ";;
-	f)	ISFILE=" -f";;
+	f)	DBOPTS=" -f";;
+	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;
@@ -52,7 +52,7 @@ done
 set -- extra $@
 shift $OPTIND
 case $# in
-	1)	xfs_db64$ISFILE -r -p xfs_ncheck64 -c "blockget -ns" -c "ncheck$OPTS" $1
+	1)	xfs_db64$DBOPTS -r -p xfs_ncheck64 -c "blockget -ns" -c "ncheck$OPTS" $1
 		status=$?
 		;;
 	*)	echo $USAGE 1>&2

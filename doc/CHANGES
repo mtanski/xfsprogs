@@ -1,3 +1,9 @@
+xfsprogs-2.6.15 (09 June 2004)
+	- Make xfs_check test for a dirty log before proceeding to
+	  check the filesystem.
+	- Fix couple of minor bugs in xfs_io (readonly handling on
+	  writes, off-by-one error in open file error reporting).
+
 xfsprogs-2.6.14 (13 May 2004)
 	- Allow logprint to copy a log to a file (-C) and to dump
 	  a log from beginning to end showing ondisk log record (-d).
