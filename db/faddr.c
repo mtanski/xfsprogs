@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -184,6 +184,7 @@ fa_cfsblock(
 	typnm_t		next)
 {
 	xfs_dfsbno_t	bno;
+	int		nb;
 
 	bno = (xfs_dfsbno_t)getbitval(obj, bit, BMBT_STARTBLOCK_BITLEN,
 		BVUNSIGNED);
@@ -191,9 +192,10 @@ fa_cfsblock(
 		dbprintf("null block number, cannot set new addr\n");
 		return;
 	}
+	nb = next == TYP_DIR2 ? mp->m_dirblkfsbs : 1;
 	ASSERT(typtab[next].typnm == next);
-	set_cur(&typtab[next], XFS_FSB_TO_DADDR(mp, bno), blkbb, DB_RING_ADD,
-		NULL);
+	set_cur(&typtab[next], XFS_FSB_TO_DADDR(mp, bno), nb * blkbb,
+		DB_RING_ADD, NULL);
 }
 
 void
