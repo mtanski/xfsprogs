@@ -420,7 +420,7 @@ The possible data types are:
 \f3agf\f1, \f3agfl\f1, \f3agi\f1, \f3attr\f1, \f3bmapbta\f1, \f3bmapbtd\f1,
 \f3bnobt\f1, \f3cntbt\f1, \f3data\f1, \f3dir\f1, \f3dir2\f1, \f3dqblk\f1,
 \f3inobt\f1, \f3inode\f1, \f3log\f1, \f3rtbitmap\f1, \f3rtsummary\f1,
-\f3sb\f1, and \f3symlink\f1.
+\f3sb\f1, \f3symlink\f1, and \f3text\f1.
 See the TYPES section below for more information on these data types.
 .TP
 \f3uuid\f1 [ \f2uuid\f1 or \f2generate\f1 or \f2rewrite\f1 ]
@@ -1202,6 +1202,12 @@ Symbolic link blocks are used only when the symbolic link value does
 not fit inside the inode.
 The block content is just the string value.
 Bytes past the logical end of the symbolic link value have arbitrary values.
+.TP
+\f3text\f1
+User file blocks, and other blocks whose type is unknown,
+have this type for display purposes in \f2xfs_db\f1.
+The block data is displayed in two columns: Hexadecimal format 
+and printable ASCII chars.
 .SH DIAGNOSTICS
 Many messages can come from the \f3check\f1 (\f3blockget\f1) command;
 these are documented in \f2xfs_check\f1(8).

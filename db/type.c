@@ -60,6 +60,7 @@
 #include "attr.h"
 #include "dquot.h"
 #include "dir2.h"
+#include "text.h"
 
 static const typ_t	*findtyp(char *name);
 static int		type_f(int argc, char **argv);
@@ -91,6 +92,7 @@ const typ_t	typtab[] = {
 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
 	{ TYP_SB, "sb", handle_struct, sb_hfld },
 	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+	{ TYP_TEXT, "text", handle_text, NULL },	
 	{ TYP_NONE, NULL }
 };
 
@@ -195,3 +197,15 @@ handle_block(
 	else
 		print_block(fields, argc, argv);
 }
+
+void
+handle_text(
+	int           action,
+	const field_t *fields,
+	int           argc,
+	char          **argv)
+{
+	if (action != DB_WRITE)
+		print_text(fields, argc, argv);
+}
+

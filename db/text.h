@@ -30,7 +30,4 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-extern char	*fsdevice;
-extern char	**cmdline;
-extern int	ncmdline;
-extern void	init(int argc, char **argv);
+extern void     print_text(const struct field *fields, int argc, char **argv);

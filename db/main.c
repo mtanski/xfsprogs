@@ -35,20 +35,31 @@
 #include "data.h"
 #include "init.h"
 #include "input.h"
+#include "malloc.h"
 
 int
 main(
 	int	argc,
 	char	**argv)
 {
-	int	c;
-	int	done;
+	int	c, i, done = 0;
 	char	*input;
 	char	**v;
 
 	pushfile(stdin);
 	init(argc, argv);
-	done = 0;
+
+	for (i = 0; !done && i < ncmdline; i++) {
+		v = breakline(cmdline[i], &c);
+		if (c)
+			done = command(c, v);
+		xfree(v);
+	}
+	if (cmdline) {
+		xfree(cmdline);
+		return exitcode;
+	}
+
 	while (!done) {
 		if ((input = fetchline()) == NULL)
 			break;

@@ -1,3 +1,10 @@
+xfsprogs (1.3.16-1) unstable, urgency=low
+
+  * Remove temporary file use in xfs_db
+  * Add "type text" command into xfs_db
+
+ -- Nathan Scott <nathans@debian.org>  Mon, 17 Dec 2001 12:17:54 +1100
+
 xfsprogs (1.3.15-1) unstable; urgency=low
 
   * Fix minor package version numbering issue (closes: #117545)

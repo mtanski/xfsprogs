@@ -41,8 +41,11 @@
 #include "mount.h"
 #include "sig.h"
 #include "output.h"
+#include "malloc.h"
 
 char	*fsdevice;
+char	**cmdline;
+int	ncmdline;
 
 static void
 usage(void)
@@ -53,28 +56,17 @@ usage(void)
 
 void
 init(
-	int		argc,
-	char		**argv)
+	int	argc,
+	char	**argv)
 {
-	int		c;
-	FILE		*cfile = NULL;
+	int	c;
 
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "c:fip:rxVl:")) != EOF) {
 		switch (c) {
 		case 'c':
-			if (!cfile)
-				cfile = tmpfile();
-                        if (!cfile) {
-                                perror("tmpfile");
-                                exit(1);
-                        }
-			if (fprintf(cfile, "%s\n", optarg) < 0) {
-                                perror("fprintf(tmpfile)");
-                                dbprintf("%s: error writing temporary file\n",
-                                        progname);
-                                exit(1);
-                        }
+			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
+			cmdline[ncmdline++] = optarg;
 			break;
 		case 'f':
 			xfsargs.disfile = 1;
@@ -131,18 +123,4 @@ init(
 	push_cur();
 	init_commands();
 	init_sig();
-	if (cfile) {
-		if (fprintf(cfile, "q\n")<0) {
-                    perror("fprintf(tmpfile)");
-                    dbprintf("%s: error writing temporary file\n", progname);
-                    exit(1);
-                }
-                if (fflush(cfile)<0) {
-                    perror("fflush(tmpfile)");
-                    dbprintf("%s: error writing temporary file\n", progname);
-                    exit(1);
-                }
-		rewind(cfile);
-		pushfile(cfile);
-	}
 }

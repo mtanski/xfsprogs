@@ -41,7 +41,7 @@ typedef enum typnm
 	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_DATA, TYP_DIR,
 	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
-	TYP_NONE
+	TYP_TEXT, TYP_NONE
 } typnm_t;
 
 #define DB_WRITE 1
@@ -66,3 +66,5 @@ extern void	handle_string(int action, const struct field *fields, int argc,
 			      char **argv);
 extern void	handle_struct(int action, const struct field *fields, int argc,
 			      char **argv);
+extern void	handle_text(int action, const struct field *fields, int argc,
+			    char **argv);
