@@ -74,7 +74,7 @@ typedef struct log {
  * macros mapping kernel code to user code
  */
 #define STATIC			static
-#define EFSCORRUPTED            EIO
+#define EFSCORRUPTED            990
 #define XFS_ERROR(e)		(e)
 
 #define xlog_warn(fmt,args...) \

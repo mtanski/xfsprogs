@@ -231,8 +231,8 @@ typedef enum { B_FALSE, B_TRUE } boolean_t;
 typedef struct { dev_t dev; } buftarg_t;
 #define STATIC
 #define ATTR_ROOT	1	/* use attrs in root namespace */
-#define ENOATTR		1009	/* Attribute not found */
-#define EFSCORRUPTED	1010	/* Filesystem is corrupted */
+#define ENOATTR		ENODATA	/* Attribute not found */
+#define EFSCORRUPTED	990	/* Filesystem is corrupted */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define KERN_WARNING
