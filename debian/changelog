@@ -3,6 +3,7 @@ xfsprogs (1.3.7-0) unstable; urgency=low
   * New upstream release
   * Change to libhandle licensing (was GPL, now LGPL-2.1)
   * Create a boot-floppies package with smaller mkfs.xfs (closes: #111426)
+  * Make install-sh posix compliant so ash as /bin/sh works (closes: #111985)
 
  -- Nathan Scott <nathans@debian.org>  Mon, 10 Sep 2001 10:52:04 +1000
 

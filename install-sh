@@ -216,7 +216,7 @@ then
 		echo "$prog: Unable to find libtool library file $libtool_lai"
 		exit 2
 	fi
-	. $libtool_lai
+	. ./$libtool_lai
 	target=$DIST_ROOT/$2
     fi
     case $lt_install in
