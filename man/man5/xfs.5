@@ -353,100 +353,100 @@ in the third argument.
 Partial filesystem blocks are zeroed, and whole filesystem blocks are
 removed from the file.  The file size does not change.
 
-.TP
-.B XFS_IOC_GETBIOSIZE
-This command gets information about the preferred buffered I/O
-size used by the system when performing buffered I/O (e.g.
-standard Unix non-direct I/O) to and from the file.
-The information is passed back in a structure of type
-.B "struct biosize"
-pointed to by the third argument.
-biosize lengths are expressed in log base 2.
-That is if the value is 14, then the true size is 2^14 (2 raised to
-the 14th power).
-The
-.B biosz_read
-field will contain the current value used by the system when reading
-from the file.
-Except at the end-of-file, the system will read from the file in
-multiples of this length.
-The
-.B biosz_write
-field will contain the current value used by the system when writing
-to the file.
-Except at the end-of-file, the system will write to the file in
-multiples of this length.
-The
-.B dfl_biosz_read
-and
-.B dfl_biosz_write
-will be set to the system default values for the opened file.
-The
-.B biosz_flags
-field will be set to 1 if the current read or write value has been
-explicitly set.
-
-.TP
-.B XFS_IOC_SETBIOSIZE
-This command the preferred buffered I/O size used by the system
-when performing buffered I/O (e.g. standard Unix non-direct
-I/O) to and from the file.
-The information is passed in a structure of type
-.B "struct biosize"
-pointed to by the third argument.
-Using smaller preferred I/O sizes can result in performance
-improvements if the file is typically accessed using small
-synchronous I/Os or if only a small amount of the file is accessed
-using small random I/Os, resulting in little or no use of the
-additional data read in near the random I/Os.
-
-To explicitly set the the preferred I/O sizes, the
-.B biosz_flags
-field should be set to zero and the
-.B biosz_read
-and
-.B biosz_write
-fields should be set to the log base 2 of the desired read and
-write lengths, respectively (e.g. 13 for 8K bytes, 14 for 16K
-bytes, 15 for 32K bytes, etc.).  Valid values are 13-16
-inclusive for machines with a 4K byte pagesize and 14-16 for
-machines with a 16K byte pagesize.  The specified read and
-write values must also result in lengths that are greater than
-or equal to the filesystem block size.
-The
-.B dfl_biosz_read
-and
-.B dfl_biosz_write
-fields are ignored.
-
-If biosizes have already been explicitly set due to a prior use
-of
-.BR XFS_IOC_SETBIOSIZE ,
-and the requested sizes are larger then the
-existing sizes, the
-.I ioctl
-call will return successfully and the
-system will use the smaller of the two sizes.  However, if
-.B biosz_flags
-is set to 1, the system will use the new values
-regardless of whether the new sizes are larger or smaller than the old.
-
-To reset the biosize values to the defaults for the filesystem
-that the file resides in, the
-.B biosz_flags
-field should be set to 2.
-The remainder of the fields will be ignored in that case.
-
-Changes made by
-.B XFS_IOC_SETBIOSIZE
-are transient.
-The sizes are reset to the default values once the reference count on the
-file drops to zero (e.g. all open file descriptors to that file
-have been closed).
-See
-.I mount(8)
-for details on how to set the
-default biosize values for a filesystem.
+.\" .TP
+.\" .B XFS_IOC_GETBIOSIZE
+.\" This command gets information about the preferred buffered I/O
+.\" size used by the system when performing buffered I/O (e.g.
+.\" standard Unix non-direct I/O) to and from the file.
+.\" The information is passed back in a structure of type
+.\" .B "struct biosize"
+.\" pointed to by the third argument.
+.\" biosize lengths are expressed in log base 2.
+.\" That is if the value is 14, then the true size is 2^14 (2 raised to
+.\" the 14th power).
+.\" The
+.\" .B biosz_read
+.\" field will contain the current value used by the system when reading
+.\" from the file.
+.\" Except at the end-of-file, the system will read from the file in
+.\" multiples of this length.
+.\" The
+.\" .B biosz_write
+.\" field will contain the current value used by the system when writing
+.\" to the file.
+.\" Except at the end-of-file, the system will write to the file in
+.\" multiples of this length.
+.\" The
+.\" .B dfl_biosz_read
+.\" and
+.\" .B dfl_biosz_write
+.\" will be set to the system default values for the opened file.
+.\" The
+.\" .B biosz_flags
+.\" field will be set to 1 if the current read or write value has been
+.\" explicitly set.
+.\" 
+.\" .TP
+.\" .B XFS_IOC_SETBIOSIZE
+.\" This command sets information about the preferred buffered I/O size
+.\" used by the system when performing buffered I/O (e.g. standard Unix
+.\" non-direct I/O) to and from the file.
+.\" The information is passed in a structure of type
+.\" .B "struct biosize"
+.\" pointed to by the third argument.
+.\" Using smaller preferred I/O sizes can result in performance
+.\" improvements if the file is typically accessed using small
+.\" synchronous I/Os or if only a small amount of the file is accessed
+.\" using small random I/Os, resulting in little or no use of the
+.\" additional data read in near the random I/Os.
+.\" 
+.\" To explicitly set the the preferred I/O sizes, the
+.\" .B biosz_flags
+.\" field should be set to zero and the
+.\" .B biosz_read
+.\" and
+.\" .B biosz_write
+.\" fields should be set to the log base 2 of the desired read and
+.\" write lengths, respectively (e.g. 13 for 8K bytes, 14 for 16K
+.\" bytes, 15 for 32K bytes, etc.).  Valid values are 13-16
+.\" inclusive for machines with a 4K byte pagesize and 14-16 for
+.\" machines with a 16K byte pagesize.  The specified read and
+.\" write values must also result in lengths that are greater than
+.\" or equal to the filesystem block size.
+.\" The
+.\" .B dfl_biosz_read
+.\" and
+.\" .B dfl_biosz_write
+.\" fields are ignored.
+.\" 
+.\" If biosizes have already been explicitly set due to a prior use
+.\" of
+.\" .BR XFS_IOC_SETBIOSIZE ,
+.\" and the requested sizes are larger then the
+.\" existing sizes, the
+.\" .I ioctl
+.\" call will return successfully and the
+.\" system will use the smaller of the two sizes.  However, if
+.\" .B biosz_flags
+.\" is set to 1, the system will use the new values
+.\" regardless of whether the new sizes are larger or smaller than the old.
+.\" 
+.\" To reset the biosize values to the defaults for the filesystem
+.\" that the file resides in, the
+.\" .B biosz_flags
+.\" field should be set to 2.
+.\" The remainder of the fields will be ignored in that case.
+.\" 
+.\" Changes made by
+.\" .B XFS_IOC_SETBIOSIZE
+.\" are transient.
+.\" The sizes are reset to the default values once the reference count on the
+.\" file drops to zero (e.g. all open file descriptors to that file
+.\" have been closed).
+.\" See
+.\" .I mount(8)
+.\" for details on how to set the
+.\" default biosize values for a filesystem.
 
 .PP
 .nf
