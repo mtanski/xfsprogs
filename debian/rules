@@ -34,7 +34,9 @@ bfbuild:
 	@echo "== dpkg-buildpackage: bootfloppies" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
 		$(bfsopts) $(MAKE) configure; \
-		for dir in libxfs libdisk mkfs; do $(MAKE) -C $$dir; done; \
+		for dir in include libxfs libdisk mkfs; do \
+			$(MAKE) -C $$dir; \
+		done; \
 		mv mkfs/mkfs.xfs mkfs/mkfs.xfs-$(bootpkg); \
 		$(MAKE) distclean; \
 	fi
