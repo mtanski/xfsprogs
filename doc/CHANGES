@@ -1,4 +1,13 @@
-[current cvs]
+xfsprogs-2.0.5 (02 May 2002)
+	- size AGs so that they do not always start on the same 
+	  part of a striped disk
+	- Fix an off-by-one error on rounding down an AG that is
+	  too small to be an AG
+	- don't auto-grow the log to be larger than an AG
+	- change the error philosophy for -d su=,sw= away from forcing 
+	  the XFS stripe size to match the XLV stripe size and instead 
+	  accept, with a warning, the stripe unit & width supplied on 
+	  the commandline.
 	- Update xfs_growfs man page
 	- Don't build libxlog.a with DEBUG enabled
 	- xfs_db fixes from ASANO Masahiro at NEC

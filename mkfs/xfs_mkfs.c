@@ -1401,6 +1401,7 @@ main(int argc, char **argv)
 	if (!daflag &&
 	    (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
 		dblocks -= dblocks % agsize;
+		agcount--;
 	}
 
 	/*
@@ -1453,13 +1454,11 @@ main(int argc, char **argv)
 			fprintf(stderr, "%s: "
   "Specified data stripe unit %d is not the same as the xlv stripe unit %d\n", 
 				progname, dsunit, xlv_dsunit);
-			exit(1);
 		}
 		if (xlv_dswidth && xlv_dswidth != dswidth) {
 			fprintf(stderr, "%s: "
-"Specified data stripe width (%d) is not the same as the xlv stripe width (%d)\n",
+"Specified data stripe width %d is not the same as the xlv stripe width %d\n",
 				progname, dswidth, xlv_dswidth);
-			exit(1);
 		}
 	} else {
 		dsunit = xlv_dsunit;
@@ -1515,6 +1514,26 @@ main(int argc, char **argv)
 				}
         		}
 		}
+		if ((agsize % dswidth) == 0) {
+			/* This is a non-optimal configuration because all AGs
+			 * start on the same disk in the stripe.  Decreasing
+			 * the AG size by one sunit will guarantee that this
+			 * does not happen
+			 */
+			tmp_agsize = agsize - dsunit;
+			if (tmp_agsize < XFS_AG_MIN_BLOCKS(blocklog))
+				tmp_agsize = agsize + dsunit;
+			if (daflag || dasize) {
+				fprintf(stderr,
+"Warning: AG size is a multiple of stripe width.  This can cause performance\n"
+"problems by aligning all AGs on the same disk.  To avoid this, rerun mkfs with\n"
+"an AG size that is one stripe unit smaller, for example %lld\n",
+					tmp_agsize);
+			} else {
+				agsize = tmp_agsize;
+				agcount = dblocks/agsize + (dblocks % agsize != 0);
+			}
+		}
 	} else {
 		if (nodsflag)
 			dsunit = dswidth = 0;
@@ -1535,6 +1554,14 @@ main(int argc, char **argv)
 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
 	if (loginternal) {
+		/*
+		 * Readjust the log size to fit within an AG if it was sized
+		 * automaticly.
+		 */
+		if (!logsize) {
+			logblocks = MIN(logblocks,
+					agsize - XFS_PREALLOC_BLOCKS(mp));
+		}
 		if (logblocks > agsize - XFS_PREALLOC_BLOCKS(mp)) {
 			fprintf(stderr,
 	"internal log size %lld too large, must fit in allocation group\n",
