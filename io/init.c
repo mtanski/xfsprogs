@@ -55,6 +55,7 @@ usage(void)
 void
 init_commands(void)
 {
+	attr_init();
 	bmap_init();
 	fadvise_init();
 	file_init();

@@ -78,6 +78,7 @@ extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
 extern off64_t		filesize(void);
 extern int		openfile(char *, xfs_fsop_geom_t *, int, mode_t);
 extern int		addfile(char *, int , xfs_fsop_geom_t *, int);
+extern void		printxattr(uint, int, int, const char *, int, int);
 
 extern void		*buffer;
 extern ssize_t		buffersize;
@@ -86,6 +87,7 @@ extern int		read_buffer(int, off64_t, long long, long long *,
 					int, int);
 extern void		dump_buffer(off64_t, ssize_t);
 
+extern void		attr_init(void);
 extern void		bmap_init(void);
 extern void		file_init(void);
 extern void		freeze_init(void);
