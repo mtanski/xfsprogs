@@ -2143,18 +2143,21 @@ xfs_da_do_buf(
 		xfs_dir2_data_t		*data;
 		xfs_dir2_free_t		*free;
 		xfs_da_blkinfo_t	*info;
+		uint			magic, magic1;
 
 		info = rbp->data;
 		data = rbp->data;
 		free = rbp->data;
-		if (XFS_TEST_ERROR((INT_GET(info->magic, ARCH_CONVERT) != XFS_DA_NODE_MAGIC) &&
-				   (INT_GET(info->magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC) &&
-				   (INT_GET(info->magic, ARCH_CONVERT) != XFS_ATTR_LEAF_MAGIC) &&
-				   (INT_GET(info->magic, ARCH_CONVERT) != XFS_DIR2_LEAF1_MAGIC) &&
-				   (INT_GET(info->magic, ARCH_CONVERT) != XFS_DIR2_LEAFN_MAGIC) &&
-				   (INT_GET(data->hdr.magic, ARCH_CONVERT) != XFS_DIR2_BLOCK_MAGIC) &&
-				   (INT_GET(data->hdr.magic, ARCH_CONVERT) != XFS_DIR2_DATA_MAGIC) &&
-				   (INT_GET(free->hdr.magic, ARCH_CONVERT) != XFS_DIR2_FREE_MAGIC),
+		magic = INT_GET(info->magic, ARCH_CONVERT);
+		magic1 = INT_GET(data->hdr.magic, ARCH_CONVERT);
+		if (XFS_TEST_ERROR((magic != XFS_DA_NODE_MAGIC) &&
+				   (magic != XFS_DIR_LEAF_MAGIC) &&
+				   (magic != XFS_ATTR_LEAF_MAGIC) &&
+				   (magic != XFS_DIR2_LEAF1_MAGIC) &&
+				   (magic != XFS_DIR2_LEAFN_MAGIC) &&
+				   (magic1 != XFS_DIR2_BLOCK_MAGIC) &&
+				   (magic1 != XFS_DIR2_DATA_MAGIC) &&
+				   (magic1 != XFS_DIR2_FREE_MAGIC),
 				mp, XFS_ERRTAG_DA_READ_BUF,
 				XFS_RANDOM_DA_READ_BUF)) {
 			xfs_buftrace("DA READ ERROR", rbp->bps[0]);
