@@ -42,10 +42,10 @@
 extern char *progname;
 
 #ifndef BLKGETSIZE64
-# define BLKGETSIZE64	_IOR(0x12,114,sizeof(__uint64_t))
+# define BLKGETSIZE64	_IOR(0x12,114,size_t)
 #endif
 #ifndef BLKBSZSET
-# define BLKBSZSET	_IOW(0x12,113,sizeof(int))
+# define BLKBSZSET	_IOW(0x12,113,size_t)
 #endif
 #ifndef BLKSSZGET
 # define BLKSSZGET	_IO(0x12,104)

@@ -1,3 +1,8 @@
+xfsprogs-2.5.11 (10 October 2003)
+	- Incorporate Jan Derfinaks change to the Linux block ioctls
+	  used in libxfs, allowing this code to compile cleanly with
+	  include files from Linux 2.6.0-test5 onward.
+
 xfsprogs-2.5.10 (30 September 2003)
 	- Fix up xfs_logprint to handle version 2 logs for its 
 	  operation output (previously core dumped on it).
