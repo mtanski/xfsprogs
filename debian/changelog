@@ -3,6 +3,7 @@ xfsprogs (1.3.1-0) unstable; urgency=low
   * Reworked package slightly so that its not Debian native
   * Debian-specific changes now documented in changelog.Debian.gz
   * New upstream release (see /usr/share/doc/xfsprogs/changelog.gz)
+  * Checked standards compliance - update standards version to 3.5.5
 
  -- Nathan Scott <nathans@debian.org>  Sat, 15 Jul 2001 16:34:43 +1000
 
