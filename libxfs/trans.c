@@ -37,7 +37,9 @@
  */
 
 xfs_trans_t *
-libxfs_trans_alloc(xfs_mount_t *mp, int type)
+libxfs_trans_alloc(
+	xfs_mount_t	*mp,
+	int		type)
 {
 	xfs_trans_t	*ptr;
 
@@ -57,9 +59,10 @@ libxfs_trans_alloc(xfs_mount_t *mp, int type)
 }
 
 xfs_trans_t *
-libxfs_trans_dup(xfs_trans_t *tp)
+libxfs_trans_dup(
+	xfs_trans_t	*tp)
 {
-	xfs_trans_t *ptr;
+	xfs_trans_t	*ptr;
 
 	ptr = libxfs_trans_alloc(tp->t_mountp, tp->t_type);
 #ifdef XACT_DEBUG
@@ -69,8 +72,13 @@ libxfs_trans_dup(xfs_trans_t *tp)
 }
 
 int
-libxfs_trans_reserve(xfs_trans_t *tp,
-	uint blocks, uint logspace, uint rtextents, uint flags, uint logcount)
+libxfs_trans_reserve(
+	xfs_trans_t	*tp,
+	uint		blocks,
+	uint		logspace,
+	uint		rtextents,
+	uint		flags,
+	uint		logcount)
 {
 	xfs_sb_t	*mpsb = &tp->t_mountp->m_sb;
 
@@ -88,10 +96,12 @@ libxfs_trans_reserve(xfs_trans_t *tp,
 }
 
 void
-libxfs_trans_cancel(xfs_trans_t *tp, int flags)
+libxfs_trans_cancel(
+	xfs_trans_t	*tp,
+	int		flags)
 {
 #ifdef XACT_DEBUG
-	xfs_trans_t *otp = tp;
+	xfs_trans_t	*otp = tp;
 #endif
 	if (tp != NULL) {
 		xfs_trans_free_items(tp, flags);
@@ -104,8 +114,12 @@ libxfs_trans_cancel(xfs_trans_t *tp, int flags)
 }
 
 int
-libxfs_trans_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino,
-		uint lock_flags, xfs_inode_t **ipp)
+libxfs_trans_iget(
+	xfs_mount_t		*mp,
+	xfs_trans_t		*tp,
+	xfs_ino_t		ino,
+	uint			lock_flags,
+	xfs_inode_t		**ipp)
 {
 	int			error;
 	xfs_inode_t		*ip;
@@ -132,7 +146,10 @@ libxfs_trans_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino,
 }
 
 void
-libxfs_trans_iput(xfs_trans_t *tp, xfs_inode_t *ip, uint lock_flags)
+libxfs_trans_iput(
+	xfs_trans_t		*tp,
+	xfs_inode_t		*ip,
+	uint			lock_flags)
 {
 	xfs_inode_log_item_t	*iip;
 	xfs_log_item_desc_t	*lidp;
@@ -156,7 +173,10 @@ libxfs_trans_iput(xfs_trans_t *tp, xfs_inode_t *ip, uint lock_flags)
 }
 
 void
-libxfs_trans_ijoin(xfs_trans_t *tp, xfs_inode_t *ip, uint lock_flags)
+libxfs_trans_ijoin(
+	xfs_trans_t		*tp,
+	xfs_inode_t		*ip,
+	uint			lock_flags)
 {
 	xfs_inode_log_item_t	*iip;
 
@@ -176,7 +196,9 @@ libxfs_trans_ijoin(xfs_trans_t *tp, xfs_inode_t *ip, uint lock_flags)
 }
 
 void
-libxfs_trans_ihold(xfs_trans_t *tp, xfs_inode_t *ip)
+libxfs_trans_ihold(
+	xfs_trans_t		*tp,
+	xfs_inode_t		*ip)
 {
 	ASSERT(ip->i_transp == tp);
 	ASSERT(ip->i_itemp != NULL);
@@ -188,7 +210,9 @@ libxfs_trans_ihold(xfs_trans_t *tp, xfs_inode_t *ip)
 }
 
 void
-libxfs_trans_inode_alloc_buf(xfs_trans_t *tp, xfs_buf_t *bp)
+libxfs_trans_inode_alloc_buf(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp)
 {
 	xfs_buf_log_item_t	*bip;
 
@@ -209,9 +233,9 @@ libxfs_trans_inode_alloc_buf(xfs_trans_t *tp, xfs_buf_t *bp)
  */
 void
 xfs_trans_log_inode(
-	xfs_trans_t	*tp,
-	xfs_inode_t	*ip,
-	uint		flags)
+	xfs_trans_t		*tp,
+	xfs_inode_t		*ip,
+	uint			flags)
 {
 	xfs_log_item_desc_t	*lidp;
 
@@ -248,7 +272,11 @@ xfs_trans_log_inode(
  * value of b_blkno.
  */
 void
-libxfs_trans_log_buf(xfs_trans_t *tp, xfs_buf_t *bp, uint first, uint last)
+libxfs_trans_log_buf(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp,
+	uint			first,
+	uint			last)
 {
 	xfs_buf_log_item_t	*bip;
 	xfs_log_item_desc_t	*lidp;
@@ -271,7 +299,9 @@ libxfs_trans_log_buf(xfs_trans_t *tp, xfs_buf_t *bp, uint first, uint last)
 }
 
 void
-libxfs_trans_brelse(xfs_trans_t *tp, xfs_buf_t *bp)
+libxfs_trans_brelse(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp)
 {
 	xfs_buf_log_item_t	*bip;
 	xfs_log_item_desc_t	*lidp;
@@ -306,7 +336,9 @@ libxfs_trans_brelse(xfs_trans_t *tp, xfs_buf_t *bp)
 }
 
 void
-libxfs_trans_binval(xfs_trans_t *tp, xfs_buf_t *bp)
+libxfs_trans_binval(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp)
 {
 	xfs_log_item_desc_t	*lidp;
 	xfs_buf_log_item_t	*bip;
@@ -328,7 +360,9 @@ libxfs_trans_binval(xfs_trans_t *tp, xfs_buf_t *bp)
 }
 
 void
-libxfs_trans_bjoin(xfs_trans_t *tp, xfs_buf_t *bp)
+libxfs_trans_bjoin(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp)
 {
 	xfs_buf_log_item_t	*bip;
 
@@ -344,7 +378,9 @@ libxfs_trans_bjoin(xfs_trans_t *tp, xfs_buf_t *bp)
 }
 
 void
-libxfs_trans_bhold(xfs_trans_t *tp, xfs_buf_t *bp)
+libxfs_trans_bhold(
+	xfs_trans_t		*tp,
+	xfs_buf_t		*bp)
 {
 	xfs_buf_log_item_t	*bip;
 
@@ -359,7 +395,12 @@ libxfs_trans_bhold(xfs_trans_t *tp, xfs_buf_t *bp)
 }
 
 xfs_buf_t *
-libxfs_trans_get_buf(xfs_trans_t *tp, dev_t dev, xfs_daddr_t d, int len, uint f)
+libxfs_trans_get_buf(
+	xfs_trans_t		*tp,
+	dev_t			dev,
+	xfs_daddr_t		d,
+	int			len,
+	uint			f)
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
@@ -398,8 +439,14 @@ libxfs_trans_get_buf(xfs_trans_t *tp, dev_t dev, xfs_daddr_t d, int len, uint f)
 }
 
 int
-libxfs_trans_read_buf(xfs_mount_t *mp, xfs_trans_t *tp, dev_t dev,
-			xfs_daddr_t blkno, int len, uint f, xfs_buf_t **bpp)
+libxfs_trans_read_buf(
+	xfs_mount_t		*mp,
+	xfs_trans_t		*tp,
+	dev_t			dev,
+	xfs_daddr_t		blkno,
+	int			len,
+	uint			f,
+	xfs_buf_t		**bpp)
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
@@ -457,7 +504,10 @@ libxfs_trans_read_buf(xfs_mount_t *mp, xfs_trans_t *tp, dev_t dev,
  * Originally derived from xfs_trans_mod_sb().
  */
 void
-libxfs_trans_mod_sb(xfs_trans_t *tp, uint field, long delta)
+libxfs_trans_mod_sb(
+	xfs_trans_t		*tp,
+	uint			field,
+	long			delta)
 {
 	switch (field) {
 	case XFS_TRANS_SB_RES_FDBLOCKS:
@@ -488,15 +538,16 @@ libxfs_trans_mod_sb(xfs_trans_t *tp, uint field, long delta)
  */
 
 STATIC void
-inode_item_done(xfs_inode_log_item_t *iip)
+inode_item_done(
+	xfs_inode_log_item_t	*iip)
 {
-	xfs_dinode_t	*dip;
-	xfs_inode_t	*ip;
-	xfs_mount_t	*mp;
-	xfs_buf_t	*bp;
-	int		hold;
-	int		error;
-	extern xfs_zone_t *xfs_ili_zone;
+	xfs_dinode_t		*dip;
+	xfs_inode_t		*ip;
+	xfs_mount_t		*mp;
+	xfs_buf_t		*bp;
+	int			hold;
+	int			error;
+	extern xfs_zone_t	*xfs_ili_zone;
 
 	ip = iip->ili_inode;
 	mp = iip->ili_item.li_mountp;
@@ -555,11 +606,12 @@ ili_done:
 }
 
 STATIC void
-buf_item_done(xfs_buf_log_item_t *bip)
+buf_item_done(
+	xfs_buf_log_item_t	*bip)
 {
-	extern xfs_zone_t *xfs_buf_item_zone;
-	xfs_buf_t	*bp;
-	int		hold;
+	xfs_buf_t		*bp;
+	int			hold;
+	extern xfs_zone_t	*xfs_buf_item_zone;
 
 	bp = bip->bli_buf;
 	ASSERT(bp != NULL);
@@ -587,7 +639,8 @@ buf_item_done(xfs_buf_log_item_t *bip)
  * item described by the given chunk.
  */
 static void
-trans_chunk_committed(xfs_log_item_chunk_t *licp)
+trans_chunk_committed(
+	xfs_log_item_chunk_t	*licp)
 {
 	xfs_log_item_desc_t	*lidp;
 	xfs_log_item_t		*lip;
@@ -614,7 +667,8 @@ trans_chunk_committed(xfs_log_item_chunk_t *licp)
  * Calls trans_chunk_committed() to process the items in each chunk.
  */
 static void
-trans_committed(xfs_trans_t *tp)
+trans_committed(
+	xfs_trans_t		*tp)
 {
 	xfs_log_item_chunk_t	*licp;
 	xfs_log_item_chunk_t	*next_licp;
@@ -711,7 +765,10 @@ xfs_trans_unlock_chunk(
  * Commit the changes represented by this transaction
  */
 int
-libxfs_trans_commit(xfs_trans_t *tp, uint flags, xfs_lsn_t *commit_lsn_p)
+libxfs_trans_commit(
+	xfs_trans_t	*tp,
+	uint		flags,
+	xfs_lsn_t	*commit_lsn_p)
 {
 	xfs_sb_t	*sbp;
 
