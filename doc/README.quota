@@ -224,21 +224,22 @@ GETTING STARTED
 EXAMPLES
 
 >>> Enabling quota enforcement on a non-root XFS filesystem
-	
+
 [root@troppo]# echo /dev/hdb10 /mnt/xqm xfs rw,usrquota 0 0 >>/etc/fstab
 [root@troppo]# mount /mnt/xqm
 
 >>> Set limits for a user (can also use edquota, interactively)
 
-[root@troppo]# setquota nathans /mnt/xqm 600 800 15 20
+[root@troppo]# setquota nathans 600 800 15 20 /mnt/xqm
 
 >>> Report current user quota 
 
 [root@troppo]# repquota /mnt/xqm
 *** Report for user quotas on device /dev/hdb10
-Block grace time: 7days Inode grace time: 7days
+Block grace time: 7days; Inode grace time: 7days
                         Block limits               File limits
-user            used    soft    hard  grace    used  soft  hard  grace
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
 root      --    1552       0       0             11     0     0       
 nathans   --     440     600     800              8    15    20       
 pcpqa     --     880       0       0              1     0     0       
@@ -258,9 +259,10 @@ sh-2.04$ ^D
 
 [root@troppo]# repquota /mnt/xqm
 *** Report for user quotas on device /dev/hdb10
-Block grace time: 7days Inode grace time: 7days
+Block grace time: 7days; Inode grace time: 7days
                         Block limits               File limits
-user            used    soft    hard  grace    used  soft  hard  grace
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
 root      --    1560       0       0             11     0     0       
 nathans   -+     440     600     800             20    15    20 7 days
 pcpqa     --     880       0       0              1     0     0       
@@ -268,7 +270,6 @@ pcpqa     --     880       0       0              1     0     0
 >>> From the users point of view:
 
 [nathans@troppo]$ quota
-quota
 Disk quotas for user nathans (uid 16302): 
      Filesystem  blocks   quota   limit   grace   files   quota   limit   grace
      /dev/hdb10     440     600     800              20*     15      20  7 days
