@@ -1981,9 +1981,6 @@ process_dinode_int(xfs_mount_t *mp,
 	case IFIFO:
 		type = XR_INO_FIFO;
 		break;
-	case IFMNT:
-		type = XR_INO_MOUNTPOINT;
-		break;
 	default:
 		type = XR_INO_UNKNOWN;
 		do_warn(_("Unexpected inode type %#o inode %llu\n"),

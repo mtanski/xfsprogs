@@ -37,16 +37,6 @@ extern "C" {
 #endif
 
 /*
- * Compatibility macros for IRIX fstyp.h, in case anyone needs them.
- */
-#define FSTYPSZ		16	/* max size of fs identifier */
-/* Opcodes for the sysfs() system call. */
-#define GETFSIND	1	/* translate fs identifier to fstype index */
-#define GETFSTYP	2	/* translate fstype index to fs identifier */
-#define GETNFSTYP	3	/* return the number of fstypes */
-extern int sysfs (int, ...);
-
-/*
  * fstype allows the user to determine the filesystem identifier of
  * mounted or unmounted filesystems, using heuristics.
  * The filesystem type is required by mount(2) and sometimes by mount(8)
