@@ -1113,7 +1113,7 @@ xfs_idata_realloc(
 		 * Stuck with malloc/realloc.
 		 * For inline data, the underlying buffer must be
 		 * a multiple of 4 bytes in size so that it can be
-		 * logged and stay on word boundaries.	We enforce
+		 * logged and stay on word boundaries.  We enforce
 		 * that here.
 		 */
 		real_size = roundup(new_size, 4);
@@ -1198,7 +1198,7 @@ xfs_idestroy_fork(
 
 	/*
 	 * If the format is local, then we can't have an extents
-	 * array so just look for an inline data array.	 If we're
+	 * array so just look for an inline data array.  If we're
 	 * not local then we may or may not have an extents list,
 	 * so check and free it up if we do.
 	 */

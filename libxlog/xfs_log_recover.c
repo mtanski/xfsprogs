@@ -11,7 +11,7 @@
  *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
+ * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
@@ -34,7 +34,7 @@
 
 /*
  * This routine finds (to an approximation) the first block in the physical
- * log which contains the given cycle.	It uses a binary search algorithm.
+ * log which contains the given cycle.  It uses a binary search algorithm.
  * Note that the algorithm can not be perfect because the disk will not
  * necessarily be perfect.
  */
@@ -91,8 +91,8 @@ xlog_find_verify_cycle( xlog_t		*log,
 	xfs_daddr_t		i, j;
 	uint			cycle;
 	xfs_buf_t		*bp;
-	char			*buf	    = NULL;
-	int			error	    = 0;
+	char                    *buf        = NULL;
+	int			error       = 0;
 	xfs_daddr_t		bufblks;
 
 	bufblks = 1 << ffs(nbblks);
@@ -148,17 +148,17 @@ out:
 
 STATIC int
 xlog_find_verify_log_record(xlog_t	*log,
-			    xfs_daddr_t start_blk,
-			    xfs_daddr_t *last_blk,
+			    xfs_daddr_t	start_blk,
+			    xfs_daddr_t	*last_blk,
 			    int		extra_bblks)
 {
-    xfs_daddr_t		i;
+    xfs_daddr_t         i;
     xfs_buf_t		*bp;
-    char		*buf	    = NULL;
-    xlog_rec_header_t	*head	    = NULL;
-    int			error	    = 0;
-    int			smallmem    = 0;
-    int			num_blks    = *last_blk - start_blk;
+    char                *buf        = NULL;
+    xlog_rec_header_t	*head       = NULL;
+    int			error       = 0;
+    int                 smallmem    = 0;
+    int                 num_blks    = *last_blk - start_blk;
     int			xhdrs;
 
     ASSERT(start_blk != 0 || *last_blk != start_blk);
@@ -214,8 +214,8 @@ xlog_find_verify_log_record(xlog_t	*log,
     /*
      * We may have found a log record header before we expected one.
      * last_blk will be the 1st block # with a given cycle #.  We may end
-     * up reading an entire log record.	 In this case, we don't want to
-     * reset last_blk.	Only when last_blk points in the middle of a log
+     * up reading an entire log record.  In this case, we don't want to
+     * reset last_blk.  Only when last_blk points in the middle of a log
      * record do we update last_blk.
      */
     if (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb)) {
@@ -257,12 +257,12 @@ int
 xlog_find_head(xlog_t  *log,
 	       xfs_daddr_t *return_head_blk)
 {
-    xfs_buf_t	*bp;
+    xfs_buf_t   *bp;
     xfs_daddr_t new_blk, first_blk, start_blk, last_blk, head_blk;
-    int	    num_scan_bblks;
+    int     num_scan_bblks;
     uint    first_half_cycle, last_half_cycle;
     uint    stop_on_cycle;
-    int	    error, log_bbnum = log->l_logBBsize;
+    int     error, log_bbnum = log->l_logBBsize;
 
     /* Is the end of the log device zeroed? */
     if ((error = xlog_find_zeroed(log, &first_blk)) == -1) {
@@ -300,12 +300,12 @@ xlog_find_head(xlog_t  *log,
     /*
      * If the 1st half cycle number is equal to the last half cycle number,
      * then the entire log is stamped with the same cycle number.  In this
-     * case, head_blk can't be set to zero (which makes sense).	 The below
+     * case, head_blk can't be set to zero (which makes sense).  The below
      * math doesn't work out properly with head_blk equal to zero.  Instead,
      * we set it to log_bbnum which is an illegal block number, but this
      * value makes the math correct.  If head_blk doesn't changed through
      * all the tests below, *head_blk is set to zero at the very end rather
-     * than log_bbnum.	In a sense, log_bbnum and zero are the same block
+     * than log_bbnum.  In a sense, log_bbnum and zero are the same block
      * in a circular file.
      */
     if (first_half_cycle == last_half_cycle) {
@@ -313,15 +313,15 @@ xlog_find_head(xlog_t  *log,
 	 * In this case we believe that the entire log should have cycle
 	 * number last_half_cycle.  We need to scan backwards from the
 	 * end verifying that there are no holes still containing
-	 * last_half_cycle - 1.	 If we find such a hole, then the start
+	 * last_half_cycle - 1.  If we find such a hole, then the start
 	 * of that hole will be the new head.  The simple case looks like
-	 *	  x | x ... | x - 1 | x
+	 *        x | x ... | x - 1 | x
 	 * Another case that fits this picture would be
-	 *	  x | x + 1 | x ... | x
+	 *        x | x + 1 | x ... | x
 	 * In this case the head really is somwhere at the end of the
 	 * log, as one of the latest writes at the beginning was incomplete.
 	 * One more case is
-	 *	  x | x + 1 | x ... | x - 1 | x
+	 *        x | x + 1 | x ... | x - 1 | x
 	 * This is really the combination of the above two cases, and the
 	 * head has to end up at the start of the x-1 hole at the end of
 	 * the log.
@@ -339,20 +339,20 @@ xlog_find_head(xlog_t  *log,
 	 * In this case we want to find the first block with cycle number
 	 * matching last_half_cycle.  We expect the log to be some
 	 * variation on
-	 *	  x + 1 ... | x ...
+	 *        x + 1 ... | x ...
 	 * The first block with cycle number x (last_half_cycle) will be
-	 * where the new head belongs.	First we do a binary search for
+	 * where the new head belongs.  First we do a binary search for
 	 * the first occurrence of last_half_cycle.  The binary search
 	 * may not be totally accurate, so then we scan back from there
 	 * looking for occurrences of last_half_cycle before us.  If
 	 * that backwards scan wraps around the beginning of the log,
 	 * then we look for occurrences of last_half_cycle - 1 at the
 	 * end of the log.  The cases we're looking for look like
-	 *	  x + 1 ... | x | x + 1 | x ...
-	 *				 ^ binary search stopped here
+	 *        x + 1 ... | x | x + 1 | x ...
+	 *                               ^ binary search stopped here
 	 * or
-	 *	  x + 1 ... | x ... | x - 1 | x
-	 *	  <---------> less than scan distance
+	 *        x + 1 ... | x ... | x - 1 | x
+	 *        <---------> less than scan distance
 	 */
 	stop_on_cycle = last_half_cycle;
 	if ((error = xlog_find_cycle_start(log, bp, first_blk,
@@ -361,7 +361,7 @@ xlog_find_head(xlog_t  *log,
     }
 
     /*
-     * Now validate the answer.	 Scan back some number of maximum possible
+     * Now validate the answer.  Scan back some number of maximum possible
      * blocks and make sure each one has the expected cycle number.  The
      * maximum is determined by the total possible amount of buffering
      * in the in-core log.  The following number can be made tighter if
@@ -382,27 +382,27 @@ xlog_find_head(xlog_t  *log,
     } else {			/* need to read 2 parts of log */
 	/*
 	 * We are going to scan backwards in the log in two parts.  First
-	 * we scan the physical end of the log.	 In this part of the log,
+	 * we scan the physical end of the log.  In this part of the log,
 	 * we are looking for blocks with cycle number last_half_cycle - 1.
 	 * If we find one, then we know that the log starts there, as we've
 	 * found a hole that didn't get written in going around the end
-	 * of the physical log.	 The simple case for this is
-	 *	  x + 1 ... | x ... | x - 1 | x
-	 *	  <---------> less than scan distance
+	 * of the physical log.  The simple case for this is
+	 *        x + 1 ... | x ... | x - 1 | x
+	 *        <---------> less than scan distance
 	 * If all of the blocks at the end of the log have cycle number
 	 * last_half_cycle, then we check the blocks at the start of the
 	 * log looking for occurrences of last_half_cycle.  If we find one,
 	 * then our current estimate for the location of the first
 	 * occurrence of last_half_cycle is wrong and we move back to the
 	 * hole we've found.  This case looks like
-	 *	  x + 1 ... | x | x + 1 | x ...
-	 *				 ^ binary search stopped here
+	 *        x + 1 ... | x | x + 1 | x ...
+	 *                               ^ binary search stopped here
 	 * Another case we need to handle that only occurs in 256k logs is
-	 *	  x + 1 ... | x ... | x+1 | x ...
-	 *		     ^ binary search stops here
+	 *        x + 1 ... | x ... | x+1 | x ...
+	 *                   ^ binary search stops here
 	 * In a 256k log, the scan at the end of the log will see the x+1
 	 * blocks.  We need to skip past those since that is certainly not
-	 * the head of the log.	 By searching for last_half_cycle-1 we
+	 * the head of the log.  By searching for last_half_cycle-1 we
 	 * accomplish that.
 	 */
 	start_blk = log_bbnum - num_scan_bblks + head_blk;
@@ -437,7 +437,7 @@ bad_blk:
      */
     num_scan_bblks = BTOBB(XLOG_MAX_RECORD_BSIZE);
     if (head_blk >= num_scan_bblks) {
-	start_blk = head_blk - num_scan_bblks;	/* don't read head_blk */
+	start_blk = head_blk - num_scan_bblks;  /* don't read head_blk */
 
 	/* start ptr at last block ptr before head_blk */
 	if ((error = xlog_find_verify_log_record(log,
@@ -482,7 +482,7 @@ bad_blk:
     /*
      * When returning here, we have a good block number.  Bad block
      * means that during a previous crash, we didn't have a clean break
-     * from cycle number N to cycle number N-1.	 In this case, we need
+     * from cycle number N to cycle number N-1.  In this case, we need
      * to find the first block with cycle number N-1.
      */
     return 0;
@@ -502,11 +502,11 @@ bp_err:
  * This will be the block number of the last record to have its
  * associated buffers synced to disk.  Every log record header has
  * a sync lsn embedded in it.  LSNs hold block numbers, so it is easy
- * to get a sync block number.	The only concern is to figure out which
+ * to get a sync block number.  The only concern is to figure out which
  * log record header to believe.
  *
  * The following algorithm uses the log record header with the largest
- * lsn.	 The entire log record does not need to be valid.  We only care
+ * lsn.  The entire log record does not need to be valid.  We only care
  * that the header is valid.
  *
  * We could speed up search by using current head_blk buffer, but it is not
@@ -612,7 +612,7 @@ xlog_find_tail(xlog_t		*log,
 
 	/*
 	 * Look for unmount record.  If we find it, then we know there
-	 * was a clean unmount.	 Since 'i' could be the last block in
+	 * was a clean unmount.  Since 'i' could be the last block in
 	 * the physical log, we convert to a log block before comparing
 	 * to the head_blk.
 	 *
@@ -696,11 +696,12 @@ exit:
 	return error;
 }	/* xlog_find_tail */
 
+
 /*
  * Is the log zeroed at all?
  *
  * The last binary search should be changed to perform an X block read
- * once X becomes small enough.	 You can then search linearly through
+ * once X becomes small enough.  You can then search linearly through
  * the X blocks.  This will cut down on the number of reads we need to do.
  *
  * If the log is partially zeroed, this routine will pass back the blkno
@@ -717,10 +718,10 @@ xlog_find_zeroed(struct log	*log,
 		 xfs_daddr_t	*blk_no)
 {
 	xfs_buf_t	*bp;
-	uint		first_cycle, last_cycle;
+	uint	        first_cycle, last_cycle;
 	xfs_daddr_t	new_blk, last_blk, start_blk;
-	xfs_daddr_t	num_scan_bblks;
-	int		error, log_bbnum = log->l_logBBsize;
+	xfs_daddr_t     num_scan_bblks;
+	int	        error, log_bbnum = log->l_logBBsize;
 
 	/* check totally zeroed log */
 	bp = xlog_get_bp(1,log->l_mp);
@@ -758,7 +759,7 @@ xlog_find_zeroed(struct log	*log,
 		goto bp_err;
 
 	/*
-	 * Validate the answer.	 Because there is no way to guarantee that
+	 * Validate the answer.  Because there is no way to guarantee that
 	 * the entire log is made up of log records which are the same size,
 	 * we scan over the defined maximum blocks.  At this point, the maximum
 	 * is not chosen to mean anything special.   XXXmiken
@@ -773,8 +774,8 @@ xlog_find_zeroed(struct log	*log,
 	/*
 	 * We search for any instances of cycle number 0 that occur before
 	 * our current estimate of the head.  What we're trying to detect is
-	 *	  1 ... | 0 | 1 | 0...
-	 *			 ^ binary search ends here
+	 *        1 ... | 0 | 1 | 0...
+	 *                       ^ binary search ends here
 	 */
 	if ((error = xlog_find_verify_cycle(log, start_blk,
 					 (int)num_scan_bblks, 0, &new_blk)))
@@ -873,6 +874,7 @@ xlog_recover_find_tid(xlog_recover_t *q,
 	return p;
 }	/* xlog_recover_find_tid */
 
+
 STATIC void
 xlog_recover_put_hashq(xlog_recover_t **q,
 		       xlog_recover_t *trans)
@@ -880,6 +882,7 @@ xlog_recover_put_hashq(xlog_recover_t **q,
 	trans->r_next = *q;
 	*q = trans;
 }	/* xlog_recover_put_hashq */
+
 
 STATIC void
 xlog_recover_new_tid(xlog_recover_t	**q,
@@ -931,7 +934,7 @@ xlog_recover_unlink_tid(xlog_recover_t	**q,
  * Remember that EFIs, EFDs, and IUNLINKs are handled later.
  */
 STATIC void
-xlog_recover_free_trans(xlog_recover_t	    *trans)
+xlog_recover_free_trans(xlog_recover_t      *trans)
 {
 	xlog_recover_item_t *first_item, *item, *free_item;
 	int i;
@@ -1177,7 +1180,7 @@ xlog_recover_process_data(xlog_t	    *log,
  * Read the log from tail to head and process the log records found.
  * Handle the two cases where the tail and head are in the same cycle
  * and where the active portion of the log wraps around the end of
- * the physical log separately.	 The pass parameter is passed through
+ * the physical log separately.  The pass parameter is passed through
  * to the routines called to process the data and is not looked at
  * here.
  */
@@ -1201,12 +1204,12 @@ xlog_do_recovery_pass(xlog_t	*log,
 
     /*
      * Read the header of the tail block and get the iclog buffer size from
-     * h_size.	Use this to tell how many sectors make up the log header.
+     * h_size.  Use this to tell how many sectors make up the log header.
      */
     if (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb)) {
 	/*
 	 * When using variable length iclogs, read first sector of iclog
-	 * header and extract the header size from it.	Get a new hbp that
+	 * header and extract the header size from it.  Get a new hbp that
 	 * is the correct size.
 	 */
 	hbp = xlog_get_bp(1, log->l_mp);
@@ -1287,7 +1290,7 @@ xlog_do_recovery_pass(xlog_t	*log,
 	}
     } else {
 	/*
-	 * Perform recovery around the end of the physical log.	 When the head
+	 * Perform recovery around the end of the physical log.  When the head
 	 * is not on the same cycle number as the tail, we can't do a sequential
 	 * recovery as above.
 	 */
