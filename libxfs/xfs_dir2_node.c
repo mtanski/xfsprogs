@@ -1323,10 +1323,10 @@ xfs_dir2_node_addname_int(
 	xfs_dabuf_t		*fbp;		/* freespace buffer */
 	int			findex;		/* freespace entry index */
 	xfs_dir2_db_t		foundbno=0;	/* found freespace block no */
-	int			foundindex;	/* found freespace entry idx */
+	int			foundindex=0;	/* found freespace entry idx */
 	xfs_dir2_free_t		*free=NULL;	/* freespace block structure */
 	xfs_dir2_db_t		ifbno;		/* initial freespace block no */
-	xfs_dir2_db_t		lastfbno;	/* highest freespace block no */
+	xfs_dir2_db_t		lastfbno=0;	/* highest freespace block no */
 	int			length;		/* length of the new entry */
 	int			logfree;	/* need to log free entry */
 	xfs_mount_t		*mp;		/* filesystem mount point */

@@ -49,7 +49,7 @@ xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
 {
 	xfs_log_item_desc_t	*lidp;
 	xfs_log_item_chunk_t	*licp;
-	int			i;
+	int			i = 0;
 
 	/*
 	 * If there are no free descriptors, allocate a new chunk
