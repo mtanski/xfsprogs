@@ -1,4 +1,4 @@
-xfsprogs (1.3.16-1) unstable, urgency=low
+xfsprogs (1.3.16-1) unstable; urgency=low
 
   * Remove temporary file use in xfs_db
   * Add "type text" command into xfs_db
