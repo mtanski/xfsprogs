@@ -52,9 +52,10 @@ typedef struct filehandle {
 	xfs_ino_t fh_ino;		/* 64 bit ino */
 } filehandle_t;
 
+
 static void
 jdm_fill_filehandle( filehandle_t *handlep,
-		     fshandle_t *fshandlep, 
+		     fshandle_t *fshandlep,
 		     xfs_bstat_t *statp )
 {
 	handlep->fh_fshandle = *fshandlep;
@@ -96,6 +97,30 @@ jdm_getfshandle( char *mntpnt )
 	return ( jdm_fshandle_t * )fshandlep;
 }
 
+
+/* externally visible functions */
+
+void
+jdm_new_filehandle( jdm_filehandle_t **handlep,
+		    size_t *hlen,
+		    jdm_fshandle_t *fshandlep,
+		    xfs_bstat_t *statp)
+{
+	/* allocate and fill filehandle */
+	*hlen = sizeof(filehandle_t);
+	*handlep = (filehandle_t *) malloc(*hlen);
+
+	if (*handlep)
+		jdm_fill_filehandle(*handlep, (fshandle_t *) fshandlep, statp);
+}
+
+/* ARGSUSED */
+void
+jdm_delete_filehandle( jdm_filehandle_t *handlep, size_t hlen )
+{
+	free(handlep);
+}
+
 intgen_t
 jdm_open( jdm_fshandle_t *fshp, xfs_bstat_t *statp, intgen_t oflags )
 {
@@ -126,39 +151,3 @@ jdm_readlink( jdm_fshandle_t *fshp,
 				   bufsz );
 	return rval;
 }
-
-#ifdef EXTATTR
-intgen_t
-jdm_attr_multi(	jdm_fshandle_t *fshp,
-	      xfs_bstat_t *statp,
-	      char *bufp, int rtrvcnt, int flags)
-{
-	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-	filehandle_t filehandle;
-	intgen_t rval;
-
-	jdm_fill_filehandle( &filehandle, fshandlep, statp );
-	rval = attr_multi_by_handle ( ( void * )&filehandle,
-				      sizeof( filehandle ),
-				      (void *) bufp,
-				      rtrvcnt, flags);
-	return rval;
-}
-
-intgen_t
-jdm_attr_list(	jdm_fshandle_t *fshp,
-		xfs_bstat_t *statp,
-		char *bufp, size_t bufsz, int flags, 
-		struct attrlist_cursor *cursor)
-{
-	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-	filehandle_t filehandle;
-	intgen_t rval;
-
-	jdm_fill_filehandle( &filehandle, fshandlep, statp );
-	rval = attr_list_by_handle (( void * )&filehandle,
-			sizeof( filehandle ),
-			bufp, bufsz, flags, cursor);
-	return rval;
-}
-#endif

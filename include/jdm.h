@@ -33,24 +33,35 @@
 #define __JDM_H__
 
 typedef int	intgen_t;
-typedef void	jdm_fshandle_t;
+typedef void	jdm_fshandle_t;		/* filesystem handle */
+typedef void	jdm_filehandle_t;	/* filehandle */
 
 struct xfs_bstat;
-extern jdm_fshandle_t *jdm_getfshandle	(char *mntpnt);
-extern intgen_t jdm_open	(jdm_fshandle_t *fsh, struct xfs_bstat *sp,
-				 intgen_t oflags);
-extern intgen_t jdm_readlink	(jdm_fshandle_t *fsh, struct xfs_bstat *sp,
-				 char *bufp, size_t bufsz);
 
-#ifdef EXTATTR
 
-struct attrlist_cursor;
-extern intgen_t jdm_attr_multi	(jdm_fshandle_t *fsh, struct xfs_bstat *sp,
-				 char *bufp, int rtrvcnt, int flags);
-extern intgen_t	jdm_attr_list	(jdm_fshandle_t *fsh, struct xfs_bstat *sp,
-				 char *bufp, size_t bufsz, int flags, 
-				 struct attrlist_cursor *cursor);
-#endif	/* EXTATTR */
+extern jdm_fshandle_t *
+jdm_getfshandle( char *mntpnt);
+
+extern void
+jdm_new_filehandle( jdm_filehandle_t **handlep,	/* new filehandle */
+		    size_t *hlen,		/* new filehandle size */
+		    jdm_fshandle_t *fshandlep,	/* filesystem filehandle */
+		    struct xfs_bstat *sp);	/* bulkstat info */
+		    
+extern void
+jdm_delete_filehandle( jdm_filehandle_t *handlep,/* filehandle to delete */
+		       size_t hlen);		/* filehandle size */
+
+extern intgen_t
+jdm_open( jdm_fshandle_t *fshandlep,
+	  struct xfs_bstat *sp,
+	  intgen_t oflags);
+
+extern intgen_t
+jdm_readlink( jdm_fshandle_t *fshandlep,
+	      struct xfs_bstat *sp,
+	      char *bufp,
+	      size_t bufsz);
 
 /* macro for determining the size of a structure member */
 #define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )

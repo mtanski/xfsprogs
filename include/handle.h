@@ -41,6 +41,7 @@ extern int  path_to_fshandle (char *__path, void **__hanp, size_t *__hlen);
 extern int  fd_to_handle (int __fd, void **__hanp, size_t *__hlen);
 extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
 				size_t *__fshlen);
+extern int  handle_to_fsfd (void *__hanp);
 extern void free_handle (void *__hanp, size_t __hlen);
 extern int  open_by_handle (void *__hanp, size_t __hlen, int __rw);
 extern int  readlink_by_handle (void *__hanp, size_t __hlen, void *__buf,

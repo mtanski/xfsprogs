@@ -332,6 +332,7 @@ typedef struct xfs_fsop_handlereq {
  * code path.
  */
 /*#define INDUCE_IO_ERROR*/
+
 #if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
 /*
  * Error injection.
@@ -341,6 +342,16 @@ typedef struct xfs_error_injection {
 	__s32           errtag;
 } xfs_error_injection_t;
 #endif /* DEBUG || INDUCE_IO_ERROR */
+
+/*
+ * Compound structure for passing args through ioctl to xfs_attrctl_by_handle
+ */
+typedef struct xfs_fsop_attr_handlereq {
+	struct xfs_fsop_handlereq *hreq;/* handle request interface	*/
+					/* structure			*/
+	struct attr_op	*ops;		/* array of attribute ops	*/
+	int		count;		/* number of attribute ops	*/
+} xfs_fsop_attr_handlereq_t;
 
 /*
  * File system identifier. Should be unique (at least per machine).
@@ -438,10 +449,10 @@ typedef struct xfs_handle {
 #define	XFS_IOC_SET_RESBLKS	     _IOR ('X', 114, struct xfs_fsop_resblks)
 #define	XFS_IOC_GET_RESBLKS	     _IOR ('X', 115, struct xfs_fsop_resblks)
 #if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
-#define XFS_IOC_ERROR_INJECTION  _IOW('X', 116, struct xfs_error_injection)
-#define XFS_IOC_ERROR_CLEARALL   _IOW('X', 117, struct xfs_error_injection)
+#define XFS_IOC_ERROR_INJECTION      _IOW('X', 116, struct xfs_error_injection)
+#define XFS_IOC_ERROR_CLEARALL       _IOW('X', 117, struct xfs_error_injection)
 #endif /* DEBUG || INDUCE_IO_ERROR */
-
+#define	XFS_IOC_ATTRCTL_BY_HANDLE    _IOWR('X', 118, struct xfs_fsop_attr_handlereq)
 /*
  * ioctl command to export information not in standard interfaces
  * 	140: IRIX statvfs.f_fstr field - UUID from the superblock

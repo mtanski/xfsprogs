@@ -43,7 +43,6 @@
 #include "handle.h"
 #include <libxfs.h>
 
-
 /* just pick a value we know is more than big enough */
 #define	MAXHANSIZ	64
 
@@ -62,12 +61,23 @@ typedef union {
 	char	*path;
 } comarg_t;
 
-int	obj_to_handle (
-		int		fsfd,
-		int		opcode,
-		comarg_t	obj,
-		void		**hanp,
-		size_t		*hlen);
+
+int
+obj_to_handle (
+	int		fsfd,
+	int		opcode,
+	comarg_t	obj,
+	void		**hanp,
+	size_t		*hlen);
+
+
+/*
+ * Filesystem Handle -> Open File Descriptor Cache
+ *
+ * Maps filesystem handles to a corresponding open file descriptor for that
+ * filesystem. We need this because we're doing handle operations via ioctl
+ * and we need to remember the open file descriptor for each filesystem.
+ */
 
 struct fdhash {
 	int	fsfd;
@@ -98,7 +108,7 @@ path_to_fshandle (
 	obj.path = path;
 
 	result = obj_to_handle (fd, XFS_IOC_PATH_TO_FSHANDLE,
-							obj, hanp, hlen);
+				obj, hanp, hlen);
 
 	if (result >= 0) {
 		fdhp = malloc(sizeof(struct fdhash));
@@ -188,6 +198,19 @@ handle_to_fshandle (
 
 
 int
+handle_to_fsfd(void *hanp)
+{
+	struct fdhash	*fdhp;
+
+	for (fdhp = fdhash_head; fdhp != NULL; fdhp = fdhp->fnxt) {
+		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0)
+			return fdhp->fsfd;
+	}
+	return -1;
+}
+
+
+int
 obj_to_handle (
 	int		fsfd,
 	int		opcode,
@@ -231,6 +254,7 @@ obj_to_handle (
 }
 
 
+
 int
 open_by_handle (
 	void		*hanp,
@@ -239,20 +263,9 @@ open_by_handle (
 {
 	int		fd;
 	int		result;
-	struct fdhash	*fdhp;
 	xfs_fsop_handlereq_t hreq;
 
-	fd = -1;
-
-	for (fdhp = fdhash_head; fdhp != NULL; fdhp = fdhp->fnxt) {
-
-		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0) {
-			fd = fdhp->fsfd;
-			break;
-		}
-	}
-
-	if (fd < 0) {
+	if ((fd = handle_to_fsfd(hanp)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -278,21 +291,10 @@ readlink_by_handle (
 	size_t		bufsiz)
 {
 	int		fd;
-	struct fdhash	*fdhp;
 	xfs_fsop_handlereq_t hreq;
 
 
-	fd = -1;
-
-	for (fdhp = fdhash_head; fdhp != NULL; fdhp = fdhp->fnxt) {
-
-		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0) {
-			fd = fdhp->fsfd;
-			break;
-		}
-	}
-
-	if (fd < 0) {
+	if ((fd = handle_to_fsfd(hanp)) < 0) {
 		errno = EBADF;
 		return -1;
 	}
