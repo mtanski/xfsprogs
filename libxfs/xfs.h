@@ -262,7 +262,6 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define mraccess(a)			((void) 0)
 #define ismrlocked(a,b)			1
 #define spinlock_init(a,b)		((void) 0)
-#define ovbcopy(from,to,count)		memmove(to,from,count)
 #define __return_address		__builtin_return_address(0)
 #define xfs_btree_reada_bufl(m,fsb,c)	((void) 0)
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)

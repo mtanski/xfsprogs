@@ -53,7 +53,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 			progname, size, strerror(errno));
 		exit(1);
 	}
-	bzero(z, size);
+	memset(z, 0, size);
 	fd = libxfs_device_to_fd(dev);
 	for (bno = start; bno < start + len; ) {
 		nblks = (uint)BTOBB(size);

@@ -670,9 +670,19 @@ xlog_find_tail(xlog_t  *log,
 	 * overwrite the unmount record after a clean unmount.
 	 *
 	 * Do this only if we are going to recover the filesystem
+	 *
+	 * NOTE: This used to say "if (!readonly)"
+	 * However on Linux, we can & do recover a read-only filesystem.
+	 * We only skip recovery if NORECOVERY is specified on mount,
+	 * in which case we would not be here.
+	 *
+	 * But... if the -device- itself is readonly, just skip this.
+	 * We can't recover this device anyway, so it won't matter.
 	 */
-	if (!readonly)
+
+	if (!is_read_only(log->l_mp->m_logdev_targp->pbr_kdev)) {
 		error = xlog_clear_stale_blocks(log, tail_lsn);
+	}
 #endif
 
 bread_err:
@@ -998,7 +1008,7 @@ xlog_recover_add_item(xlog_recover_item_t **itemq)
  * will appear in the current log item.
  */
 STATIC int
-xlog_recover_add_to_trans(xlog_recover_t	*trans,
+ xlog_recover_add_to_trans(xlog_recover_t	*trans,
 			  xfs_caddr_t		dp,
 			  int			len)
 {
@@ -1009,7 +1019,7 @@ xlog_recover_add_to_trans(xlog_recover_t	*trans,
 	if (!len)
 		return 0;
 	ptr = kmem_zalloc(len, 0);
-	bcopy(dp, ptr, len);
+	memcpy(ptr, dp, len);
 
 	in_f = (xfs_inode_log_format_t *)ptr;
 	item = trans->r_itemq;
@@ -1017,7 +1027,7 @@ xlog_recover_add_to_trans(xlog_recover_t	*trans,
 		ASSERT(*(uint *)dp == XFS_TRANS_HEADER_MAGIC);
 		if (len == sizeof(xfs_trans_header_t))
 			xlog_recover_add_item(&trans->r_itemq);
-		bcopy(dp, &trans->r_theader, len); /* s, d, l */
+		memcpy(&trans->r_theader, dp, len); /* d, s, l */
 		return 0;
 	}
 	if (item->ri_prev->ri_total != 0 &&
@@ -1055,7 +1065,7 @@ xlog_recover_add_to_cont_trans(xlog_recover_t	*trans,
 		/* finish copying rest of trans header */
 		xlog_recover_add_item(&trans->r_itemq);
 		ptr = (xfs_caddr_t)&trans->r_theader+sizeof(xfs_trans_header_t)-len;
-		bcopy(dp, ptr, len); /* s, d, l */
+		memcpy(ptr, dp, len); /* d, s, l */
 		return 0;
 	}
 	item = item->ri_prev;
@@ -1064,7 +1074,7 @@ xlog_recover_add_to_cont_trans(xlog_recover_t	*trans,
 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
 
 	ptr = kmem_realloc(old_ptr, len+old_len, old_len, 0);
-	bcopy(dp , &ptr[old_len], len); /* s, d, l */
+	memcpy(&ptr[old_len], dp, len); /* d, s, l */
 	item->ri_buf[item->ri_cnt-1].i_len += len;
 	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
 	return 0;
@@ -1238,7 +1248,7 @@ xlog_do_recovery_pass(xlog_t	*log,
 	return ENOMEM;
     }
 
-    bzero(rhash, sizeof(rhash));
+    memset(rhash, 0, sizeof(rhash));
     if (tail_blk <= head_blk) {
 	for (blk_no = tail_blk; blk_no < head_blk; ) {
 	    if ((error = xlog_bread(log, blk_no, hblks, hbp)))

@@ -1,5 +1,12 @@
+xfsprogs-2.3.5 (10 October 2002)
+	- Sync up user/kernel source in lib{xfs,xlog} and headers.
+	- Fix mkfs (libxfs) bug when using BLKFLSBUF ioctl - we passed
+	  in the device number instead of a file descriptor (and EBADF
+	  was the end result, which we ignored).
+	- Thanks to Anton Blanchard <anton@samba.org> for fixing this.
+
 xfsprogs-2.3.4 (04 October 2002)
-	- xfs_repair: fix size calculation bug in repair's memory allocation,
+	- Fix size calculation bug in xfs_repair's memory allocation,
 	  reduces memory usage by a factor of 4.
 
 xfsprogs-2.3.3 (16 September 2002)

@@ -173,7 +173,7 @@ libxfs_ialloc(
 	ip->i_d.di_uid = cr->cr_uid;
 	ip->i_d.di_gid = cr->cr_gid;
 	ip->i_d.di_projid = prid;
-	bzero(&(ip->i_d.di_pad[0]), sizeof(ip->i_d.di_pad));
+	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 
 	/*
 	 * If the superblock version is up to where we support new format
@@ -366,8 +366,8 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 				XFS_DINODE_VERSION_2);
 			ip->i_d.di_onlink = 0;
 			INT_ZERO(dip->di_core.di_onlink, ARCH_CONVERT);
-			bzero(&(ip->i_d.di_pad[0]), sizeof(ip->i_d.di_pad));
-			bzero(&(dip->di_core.di_pad[0]),
+			memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
+			memset(&(dip->di_core.di_pad[0]), 0,
 				sizeof(dip->di_core.di_pad));
 			ASSERT(ip->i_d.di_projid == 0);
 		}

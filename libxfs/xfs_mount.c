@@ -204,9 +204,9 @@ xfs_xlatesb(
 		    size == 1 ||
 		    xfs_sb_info[f].type == 1) {
 			if (dir > 0) {
-				bcopy(buf_ptr + first, mem_ptr + first, size);
+				memcpy(mem_ptr + first, buf_ptr + first, size);
 			} else {
-				bcopy(mem_ptr + first, buf_ptr + first, size);
+				memcpy(buf_ptr + first, mem_ptr + first, size);
 			}
 		} else {
 			switch (size) {

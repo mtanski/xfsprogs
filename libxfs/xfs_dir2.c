@@ -71,7 +71,7 @@ xfs_dir2_init(
 	xfs_da_args_t	args;		/* operation arguments */
 	int		error;		/* error return value */
 
-	bzero((char *)&args, sizeof(args));
+	memset((char *)&args, 0, sizeof(args));
 	args.dp = dp;
 	args.trans = tp;
 	ASSERT((dp->i_d.di_mode & IFMT) == IFDIR);

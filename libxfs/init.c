@@ -241,19 +241,19 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 	 * we're not opening a real device, in which case
 	 * choose a new fake device number.
 	 */
-	dev=(statb.st_rdev)?(statb.st_rdev):(nextfakedev--);
+	dev = (statb.st_rdev) ? (statb.st_rdev) : (nextfakedev--);
 
-	for (d=0;d<MAX_DEVS;d++)
+	for (d = 0; d < MAX_DEVS; d++)
 		if (dev_map[d].dev == dev) {
 			fprintf(stderr, "%s: device %lld is already open\n",
 			    progname, (long long)dev);
 			exit(1);
 		}
 
-	for (d=0;d<MAX_DEVS;d++)
+	for (d = 0; d < MAX_DEVS; d++)
 		if (!dev_map[d].dev) {
-			dev_map[d].dev=dev;
-			dev_map[d].fd=fd;
+			dev_map[d].dev = dev;
+			dev_map[d].fd = fd;
 
 			return dev;
 		}
@@ -267,12 +267,12 @@ libxfs_device_close(dev_t dev)
 {
 	int	d;
 
-	for (d=0;d<MAX_DEVS;d++)
+	for (d = 0; d < MAX_DEVS; d++)
 		if (dev_map[d].dev == dev) {
-			int fd;
+			int	fd;
 
-			fd=dev_map[d].dev;
-			dev_map[d].dev=dev_map[d].fd=0;
+			fd = dev_map[d].fd;
+			dev_map[d].dev = dev_map[d].fd = 0;
 
 			fsync(fd);
 			ioctl(fd, BLKFLSBUF, 0);
