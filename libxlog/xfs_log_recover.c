@@ -746,7 +746,10 @@ xlog_find_zeroed(struct log	*log,
 	 * to search the end of the log because we know it is zero.
 	 */
 	if ((error = xlog_find_verify_log_record(log, start_blk, 
-				&last_blk, 0)))
+				&last_blk, 0)) == -1) {
+	    error = XFS_ERROR(EIO);
+	    goto bp_err;
+	} else if (error)
 	    goto bp_err;
 
 	*blk_no = last_blk;
