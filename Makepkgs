@@ -54,13 +54,15 @@ fi
 SUDO=${SUDO:-sudo}
 test ! -z "$SUDO" && sudo=$SUDO
 if $debian ; then
-    echo
-    echo "== Debian build, log is $LOGDIR/debian"
+    LOGDEB=`pwd`
+    LOGDEB=../`basename $LOGDEB`.log
+    echo "== Debian build, log is $LOGDEB"; echo
     if $verbose ; then
-	exec dpkg-buildpackage -r$SUDO | tee $LOGDIR/debian
+	dpkg-buildpackage -r$SUDO | tee $LOGDEB
     else
-	exec dpkg-buildpackage -r$SUDO > $LOGDIR/debian
+	dpkg-buildpackage -r$SUDO > $LOGDEB
     fi
+    exit 0
 fi
 
 echo
