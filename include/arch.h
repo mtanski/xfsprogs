@@ -56,16 +56,15 @@
 
 /* generic swapping macros */
 
-#define INT_SWAP16(A) ((typeof(A))(__swab16((__u16)A)))
-#define INT_SWAP32(A) ((typeof(A))(__swab32((__u32)A)))
-#define INT_SWAP64(A) ((typeof(A))(__swab64((__u64)A)))
+#define INT_SWAP16(type,var) ((typeof(type))(__swab16((__u16)(var))))
+#define INT_SWAP32(type,var) ((typeof(type))(__swab32((__u32)(var))))
+#define INT_SWAP64(type,var) ((typeof(type))(__swab64((__u64)(var))))
 
 #define INT_SWAP(type, var) \
-    ((sizeof(type) == 8) ? INT_SWAP64(var) : \
-    ((sizeof(type) == 4) ? INT_SWAP32(var) : \
-    ((sizeof(type) == 2) ? INT_SWAP16(var) : \
+    ((sizeof(type) == 8) ? INT_SWAP64(type,var) : \
+    ((sizeof(type) == 4) ? INT_SWAP32(type,var) : \
+    ((sizeof(type) == 2) ? INT_SWAP16(type,var) : \
     (var))))
-  
 
 #define INT_SWAP_UNALIGNED_32(from,to) \
     { \
@@ -142,13 +141,12 @@
 
 /* does not return a value */   
 #define INT_SET(reference,arch,valueref) \
-    (void)( \
-        ((reference) = (valueref)), \
-        ( \
-           ((arch) != ARCH_NOCONVERT) ? \
-               (reference) = INT_SWAP((reference),(reference)) \
-           : 0 \
-        ) \
+    (__builtin_constant_p(valueref) ? \
+	(void)( (reference) = ( ((arch) != ARCH_NOCONVERT) ? (INT_SWAP((reference),(valueref))) : (valueref)) ) : \
+	(void)( \
+	    ((reference) = (valueref)), \
+	    ( ((arch) != ARCH_NOCONVERT) ? (reference) = INT_SWAP((reference),(reference)) : 0 ) \
+	) \
     )
 
 /* does not return a value */   
