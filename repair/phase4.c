@@ -237,7 +237,8 @@ longform_delete_orphanage(xfs_mount_t	*mp,
 	res = 0;
 
 	do {
-		ASSERT(fsbno != NULLDFSBNO);
+		if (fsbno == NULLDFSBNO)
+			break;
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
 					XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
