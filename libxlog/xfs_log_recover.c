@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -1193,7 +1193,7 @@ xlog_valid_rec_header(
 	xlog_rec_header_t	*rhead,
 	xfs_daddr_t		blkno)
 {
-	int			bblks;
+	int			hlen;
 
 	if (unlikely(
 	    (INT_GET(rhead->h_magicno, ARCH_CONVERT) !=
@@ -1212,8 +1212,8 @@ xlog_valid_rec_header(
 	}
 
 	/* LR body must have data or it wouldn't have been written */
-	bblks = INT_GET(rhead->h_len, ARCH_CONVERT);
-	if (unlikely( bblks <= 0 || bblks > INT_MAX )) {
+	hlen = INT_GET(rhead->h_len, ARCH_CONVERT);
+	if (unlikely( hlen <= 0 || hlen > INT_MAX )) {
 		XFS_ERROR_REPORT("xlog_valid_rec_header(2)",
 				XFS_ERRLEVEL_LOW, log->l_mp);
 		return XFS_ERROR(EFSCORRUPTED);
@@ -1375,7 +1375,7 @@ xlog_do_recovery_pass(
 				error = xlog_bread(log, 0, wrapped_hblks, hbp);
 				if (error)
 					goto bread_err2;
-				XFS_BUF_SET_PTR(hbp, bufaddr, hblks);
+				XFS_BUF_SET_PTR(hbp, bufaddr, BBTOB(hblks));
 				if (!offset)
 					offset = xlog_align(log, 0,
 							wrapped_hblks, hbp);
@@ -1433,8 +1433,7 @@ xlog_do_recovery_pass(
 				if ((error = xlog_bread(log, wrapped_hblks,
 						bblks - split_bblks, dbp)))
 					goto bread_err2;
-				XFS_BUF_SET_PTR(dbp, bufaddr,
-						XLOG_BIG_RECORD_BSIZE);
+				XFS_BUF_SET_PTR(dbp, bufaddr, h_size);
 				if (!offset)
 					offset = xlog_align(log, wrapped_hblks,
 						bblks - split_bblks, dbp);

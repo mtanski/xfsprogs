@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -73,24 +73,6 @@ typedef __int64_t __psint_t;
 typedef __uint64_t __psunsigned_t;
 #else
 #error BITS_PER_LONG must be 32 or 64
-#endif
-
-/*
- * Some types are conditional depending on the target system.
- * XFS_BIG_BLKNOS needs block layer disk addresses to be 64 bits.
- * XFS_BIG_INUMS needs the VFS inode number to be 64 bits, as well
- * as requiring XFS_BIG_BLKNOS to be set.
- */
-#if defined(CONFIG_LBD) || (defined(HAVE_SECTOR_T) && (BITS_PER_LONG == 64))
-# define XFS_BIG_BLKNOS	1
-# if BITS_PER_LONG == 64
-#  define XFS_BIG_INUMS	1
-# else
-#  define XFS_BIG_INUMS	0
-# endif
-#else
-# define XFS_BIG_BLKNOS	0
-# define XFS_BIG_INUMS	0
 #endif
 
 #endif	/* __KERNEL__ */
