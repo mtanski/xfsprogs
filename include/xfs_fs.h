@@ -480,14 +480,4 @@ typedef struct xfs_handle {
 #define SEEKLIMIT	0x7fffffffffffffffLL
 #define BBSEEKLIMIT	OFFTOBBT(SEEKLIMIT)     
 
-
-#ifdef __KERNEL__
-
-/*
- * Function prototypes
- */
-extern int init_xfs_fs(void);
-
-#endif	/* __KERNEL__ */
-
 #endif	/* _LINUX_XFS_FS_H */
