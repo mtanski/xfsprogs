@@ -557,7 +557,6 @@ int		xfs_iaccess(xfs_inode_t *, mode_t, cred_t *);
 uint		xfs_iroundup(uint);
 void		xfs_ichgtime(xfs_inode_t *, int);
 xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
-xfs_inode_t	*xfs_get_inode(dev_t, xfs_ino_t);
 void		xfs_lock_inodes(xfs_inode_t **, int, int, uint);
 
 #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
