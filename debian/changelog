@@ -2,7 +2,7 @@ xfsprogs (1.2.4) unstable; urgency=low
 
   * Add -L option to mkfs.xfs (filesystem label)
 
-  -- Nathan Scott <nathans@debian.org>  Tue,  1 May 2001 14:03:14 +1000
+ -- Nathan Scott <nathans@debian.org>  Tue,  1 May 2001 14:03:14 +1000
 
 xfsprogs (1.2.3) unstable; urgency=low
 
