@@ -165,7 +165,7 @@ setbitval(
 #endif
    
         /* only need to swap LE integers */ 
-        if (big || (nbits!=2 && nbits!=4 && nbits!=8) ) {
+        if (big || (nbits!=8 && nbits!=32 && nbits!=64) ) {
                 /* We don't have type info, so we can only assume
                  * that 2,4 & 8 byte values are integers. sigh.
                  */
