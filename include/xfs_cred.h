@@ -35,10 +35,10 @@
 /*
  * Access Control Lists
  */
-typedef ushort  xfs_acl_perm_t;
-typedef int     xfs_acl_type_t;
-typedef int     xfs_acl_tag_t;
-typedef int	xfs_acl_id_t;
+typedef __uint16_t	xfs_acl_perm_t;
+typedef __int32_t	xfs_acl_type_t;
+typedef __int32_t	xfs_acl_tag_t;
+typedef __int32_t	xfs_acl_id_t;
 
 #define XFS_ACL_MAX_ENTRIES 25
 #define XFS_ACL_NOT_PRESENT (-1)
@@ -50,7 +50,7 @@ typedef struct xfs_acl_entry {
 } xfs_acl_entry_t;
 
 typedef struct xfs_acl {
-	int		acl_cnt;
+	__int32_t	acl_cnt;
 	xfs_acl_entry_t	acl_entry[XFS_ACL_MAX_ENTRIES];
 } xfs_acl_t;
 
@@ -94,14 +94,14 @@ typedef struct xfs_cap_set {
  */
 #define XFS_MAC_MAX_SETS	250
 typedef struct xfs_mac_label {
-	unsigned char	ml_msen_type;	/* MSEN label type */
-	unsigned char	ml_mint_type;	/* MINT label type */
-	unsigned char	ml_level;	/* Hierarchical level  */
-	unsigned char	ml_grade;	/* Hierarchical grade  */
-	unsigned short	ml_catcount;	/* Category count */
-	unsigned short	ml_divcount;	/* Division count */
+	__uint8_t	ml_msen_type;	/* MSEN label type */
+	__uint8_t	ml_mint_type;	/* MINT label type */
+	__uint8_t	ml_level;	/* Hierarchical level  */
+	__uint8_t	ml_grade;	/* Hierarchical grade  */
+	__uint16_t	ml_catcount;	/* Category count */
+	__uint16_t	ml_divcount;	/* Division count */
 					/* Category set, then Division set */
-	unsigned short	ml_list[XFS_MAC_MAX_SETS];
+	__uint16_t	ml_list[XFS_MAC_MAX_SETS];
 } xfs_mac_label_t;
 
 /* On-disk XFS extended attribute names (access control lists) */
