@@ -3,6 +3,7 @@ xfsprogs-2.6.18 (23 June 2004)
 	  handle length on systems where size_t is 64 bits.
 	- Minor autoconf fixups to get rpm test working on
 	  all platforms again.
+	- Minor man page updates fixing minus/hyphen usage.
 
 xfsprogs-2.6.17 (23 June 2004)
 	- Fix use of isset macro, getting realtime devices to

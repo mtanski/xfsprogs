@@ -220,7 +220,7 @@ and fills in the
 field to indicate the length of the array.
 If the
 .B bmv_length
-value is set to -1 then the length of the interesting area is the rest
+value is set to \-1 then the length of the interesting area is the rest
 of the file.
 On return from a call, the header is updated so that the command can be
 reused to obtain more information, without re-initializing the structures.
@@ -234,7 +234,7 @@ and
 .BR bmv_length .
 If a region of the file has no blocks (is a hole in the file) then the
 .B bmv_block
-field is set to -1.
+field is set to \-1.
 
 .TP
 .B XFS_IOC_GETBMAPA
