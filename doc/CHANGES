@@ -1,3 +1,10 @@
+xfsprogs-2.2.2 (19 August 2002)
+	- Fix endian bug in xfs_db, was not flipping 16-bit numbers.
+	- Make xfs_repair recognize a NULLFSINO and print that in
+	  addition to "18446744073709551615" for easy recognition.
+	- Fix format string that xfs_repair uses when fixing inodes,
+	  so that the new inode numbers are printed correctly.
+
 xfsprogs-2.2.1 (09 August 2002)
 	- Fix buglet in libdisk get_driver_block_major() routine which
 	  would result in incorrect majors being returned for not-found

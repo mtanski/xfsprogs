@@ -343,16 +343,18 @@ calc_mkfs(xfs_mount_t *mp)
 	 */
 	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
 		do_warn(
-	"sb root inode value %llu inconsistent with calculated value %llu\n",
-		mp->m_sb.sb_rootino, first_prealloc_ino);
+	"sb root inode value %llu %sinconsistent with calculated value %lu\n",
+		mp->m_sb.sb_rootino,
+		(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
+		first_prealloc_ino);
 
 		if (!no_modify)
 			do_warn(
-			"resetting superblock root inode pointer to %llu\n",
+			"resetting superblock root inode pointer to %lu\n",
 				first_prealloc_ino);
 		else
 			do_warn(
-			"would reset superblock root inode pointer to %llu\n",
+			"would reset superblock root inode pointer to %lu\n",
 				first_prealloc_ino);
 
 		/*
@@ -364,16 +366,18 @@ calc_mkfs(xfs_mount_t *mp)
 
 	if (mp->m_sb.sb_rbmino != first_prealloc_ino + 1)  {
 		do_warn(
-"sb realtime bitmap inode %llu inconsistent with calculated value %llu\n",
-		mp->m_sb.sb_rbmino, first_prealloc_ino + 1);
+"sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n",
+		mp->m_sb.sb_rbmino,
+		(mp->m_sb.sb_rbmino == NULLFSINO ? "(NULLFSINO) ":""),
+		first_prealloc_ino + 1);
 
 		if (!no_modify)
 			do_warn(
-		"resetting superblock realtime bitmap ino pointer to %llu\n",
+		"resetting superblock realtime bitmap ino pointer to %lu\n",
 				first_prealloc_ino + 1);
 		else
 			do_warn(
-		"would reset superblock realtime bitmap ino pointer to %llu\n",
+		"would reset superblock realtime bitmap ino pointer to %lu\n",
 				first_prealloc_ino + 1);
 
 		/*
@@ -385,16 +389,18 @@ calc_mkfs(xfs_mount_t *mp)
 
 	if (mp->m_sb.sb_rsumino != first_prealloc_ino + 2)  {
 		do_warn(
-"sb realtime summary inode %llu inconsistent with calculated value %llu\n",
-		mp->m_sb.sb_rsumino, first_prealloc_ino + 2);
+"sb realtime summary inode %llu %sinconsistent with calculated value %lu\n",
+		mp->m_sb.sb_rsumino,
+		(mp->m_sb.sb_rsumino == NULLFSINO ? "(NULLFSINO) ":""),
+		first_prealloc_ino + 2);
 
 		if (!no_modify)
 			do_warn(
-		"resetting superblock realtime summary ino pointer to %llu\n",
+		"resetting superblock realtime summary ino pointer to %lu\n",
 				first_prealloc_ino + 2);
 		else
 			do_warn(
-		"would reset superblock realtime summary ino pointer to %llu\n",
+		"would reset superblock realtime summary ino pointer to %lu\n",
 				first_prealloc_ino + 2);
 
 		/*
