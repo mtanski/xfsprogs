@@ -2013,6 +2013,7 @@ xfs_da_do_buf(
 	int		nbplist=0;
 	int		nfsb;
 	int		nmap;
+	int		mem_flags = trans ? KM_SLEEP : KM_SLEEP_IO;
 	xfs_dabuf_t	*rbp;
 
 	mp = dp->i_mount;
@@ -2050,8 +2051,7 @@ xfs_da_do_buf(
 			xfs_fsblock_t	firstblock;
 
 			firstblock = NULLFSBLOCK;
-			mapp = kmem_alloc(sizeof(*mapp) * nfsb,
-				trans ? KM_SLEEP : KM_SLEEP_IO);
+			mapp = kmem_alloc(sizeof(*mapp) * nfsb, mem_flags);
 			nmap = nfsb;
 			if ((error = xfs_bmapi(trans, dp, (xfs_fileoff_t)bno,
 					nfsb,
@@ -2072,7 +2072,7 @@ xfs_da_do_buf(
 		goto exit0;
 	}
 	if (caller != 3 && nmap > 1) {
-		bplist = kmem_alloc(sizeof(*bplist) * nmap, KM_SLEEP);
+		bplist = kmem_alloc(sizeof(*bplist) * nmap, mem_flags);
 		nbplist = 0;
 	} else
 		bplist = NULL;
@@ -2132,9 +2132,9 @@ xfs_da_do_buf(
 	 * Build a dabuf structure.
 	 */
 	if (bplist) {
-		rbp = xfs_da_buf_make(nbplist, bplist, ra);
+		rbp = xfs_da_buf_make(nbplist, bplist, ra, mem_flags);
 	} else if (bp)
-		rbp = xfs_da_buf_make(1, &bp, ra);
+		rbp = xfs_da_buf_make(1, &bp, ra, mem_flags);
 	else
 		rbp = NULL;
 	/*
@@ -2297,7 +2297,7 @@ lock_t		xfs_dabuf_global_lock;
  */
 /* ARGSUSED */
 STATIC xfs_dabuf_t *
-xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
+xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra, int mem_flags)
 {
 	xfs_buf_t		*bp;
 	xfs_dabuf_t	*dabuf;
@@ -2305,9 +2305,9 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
 	int		off;
 
 	if (nbuf == 1)
-		dabuf = kmem_zone_alloc(xfs_dabuf_zone, KM_SLEEP);
+		dabuf = kmem_zone_alloc(xfs_dabuf_zone, mem_flags);
 	else
-		dabuf = kmem_alloc(XFS_DA_BUF_SIZE(nbuf), KM_SLEEP);
+		dabuf = kmem_alloc(XFS_DA_BUF_SIZE(nbuf), mem_flags);
 	dabuf->dirty = 0;
 #ifdef XFS_DABUF_DEBUG
 	dabuf->ra = ra;

@@ -451,7 +451,7 @@ int  xfs_alloc_split (xfs_btree_cur_t *, int, xfs_agblock_t *,
 			xfs_alloc_key_t *, xfs_btree_cur_t **, int *);
 
 /* xfs_da_btree.c */
-xfs_dabuf_t *xfs_da_buf_make (int, xfs_buf_t **, inst_t *);
+xfs_dabuf_t *xfs_da_buf_make (int, xfs_buf_t **, inst_t *, int);
 int  xfs_da_root_join (xfs_da_state_t *, xfs_da_state_blk_t *);
 int  xfs_da_root_split (xfs_da_state_t *, xfs_da_state_blk_t *,
 			xfs_da_state_blk_t *);
