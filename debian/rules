@@ -7,7 +7,7 @@ dirtmp = debian/tmp
 dirdev = debian/$(develop)
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
-stdenv = GZIP=-q; export GZIP;
+stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
 checkdir = test -f debian/rules
