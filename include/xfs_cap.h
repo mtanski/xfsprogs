@@ -46,53 +46,16 @@ typedef struct xfs_cap_set {
 /* On-disk XFS extended attribute names */
 #define SGI_CAP_FILE	"SGI_CAP_FILE"
 #define SGI_CAP_FILE_SIZE	(sizeof(SGI_CAP_FILE)-1)
+#define SGI_CAP_LINUX	"SGI_CAP_LINUX"
+#define SGI_CAP_LINUX_SIZE	(sizeof(SGI_CAP_LINUX)-1)
 
-/* On-disk bitfield positions, as defined for us by IRIX */
-#define	XFS_CAP_CHOWN			1
-#define	XFS_CAP_DAC_WRITE		2
-#define	XFS_CAP_DAC_READ_SEARCH		3
-#define	XFS_CAP_FOWNER			4
-#define	XFS_CAP_FSETID			5
-#define	XFS_CAP_KILL			6
-#define	XFS_CAP_LINK_DIR		7
-#define	XFS_CAP_SETFPRIV		8
-#define	XFS_CAP_SETPPRIV		9
-#define	XFS_CAP_SETGID			10
-#define	XFS_CAP_SETUID			11
-#define	XFS_CAP_MAC_DOWNGRADE		12
-#define	XFS_CAP_MAC_READ		13
-#define	XFS_CAP_MAC_RELABEL_SUBJ	14
-#define	XFS_CAP_MAC_WRITE		15
-#define	XFS_CAP_MAC_UPGRADE		16
-#define	XFS_CAP_INF_NOFLOAT_OBJ		17	/* Currently unused */
-#define	XFS_CAP_INF_NOFLOAT_SUBJ	18	/* Currently unused */
-#define	XFS_CAP_INF_DOWNGRADE		19	/* Currently unused */
-#define	XFS_CAP_INF_UPGRADE		20	/* Currently unused */
-#define	XFS_CAP_INF_RELABEL_SUBJ	21	/* Currently unused */
-#define	XFS_CAP_AUDIT_CONTROL		22
-#define	XFS_CAP_AUDIT_WRITE		23
-#define	XFS_CAP_MAC_MLD			24
-#define	XFS_CAP_MEMORY_MGT		25
-#define	XFS_CAP_SWAP_MGT		26
-#define	XFS_CAP_TIME_MGT		27
-#define	XFS_CAP_SYSINFO_MGT		28
-#define	XFS_CAP_MOUNT_MGT		29
-#define	XFS_CAP_QUOTA_MGT		30
-#define	XFS_CAP_PRIV_PORT		31
-#define	XFS_CAP_STREAMS_MGT		32
-#define	XFS_CAP_SCHED_MGT		33
-#define	XFS_CAP_PROC_MGT		34
-#define	XFS_CAP_SVIPC_MGT		35
-#define	XFS_CAP_NETWORK_MGT		36
-#define	XFS_CAP_DEVICE_MGT		37
-#define	XFS_CAP_ACCT_MGT		38
-#define	XFS_CAP_SHUTDOWN		39
-#define	XFS_CAP_CHROOT			40
-#define	XFS_CAP_DAC_EXECUTE		41
-#define	XFS_CAP_MAC_RELABEL_OPEN	42
-#define	XFS_CAP_SIGMASK			43	/* Not implemented */
-#define	XFS_CAP_XTCB			44	/* X11 Trusted Client */
-
+/*
+ * For Linux, we take the bitfields directly from capability.h
+ * and no longer attempt to keep this attribute ondisk compatible
+ * with IRIX.  Since this attribute is only set on exectuables,
+ * it just doesn't make much sense to try.  We do use a different
+ * named attribute though, to avoid confusion.
+ */
 
 #ifdef __KERNEL__
 

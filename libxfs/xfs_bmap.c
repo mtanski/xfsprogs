@@ -3578,7 +3578,7 @@ xfs_bmapi(
 	xfs_extlen_t	alen;		/* allocated extent length */
 	xfs_fileoff_t	aoff;		/* allocated file offset */
 	xfs_bmalloca_t	bma;		/* args for xfs_bmap_alloc */
-	int		contig;		/* allocation must be one extent */
+	char		contig;		/* allocation must be one extent */
 	xfs_btree_cur_t	*cur;		/* bmap btree cursor */
 	char		delay;		/* this request is for delayed alloc */
 	xfs_fileoff_t	end;		/* end of mapped file region */
@@ -3600,14 +3600,14 @@ xfs_bmapi(
 	xfs_extnum_t	nextents;	/* number of extents in file */
 	xfs_fileoff_t	obno;		/* old block number (offset) */
 	xfs_bmbt_irec_t	prev;		/* previous extent list record */
-	int		stateless;	/* ignore state flag set */
+	char		stateless;	/* ignore state flag set */
 	int		tmp_logflags;	/* temp flags holder */
 	char		trim;		/* output trimmed to match range */
 	char		userdata;	/* allocating non-metadata */
 	char		wasdelay;	/* old extent was delayed */
 	int		whichfork;	/* data or attr fork */
 	char		wr;		/* this is a write request */
-	int		rsvd;		/* OK to allocate reserved blocks */
+	char		rsvd;		/* OK to allocate reserved blocks */
 #ifdef DEBUG
 	xfs_fileoff_t	orig_bno;	/* original block number value */
 	int		orig_flags;	/* original flags arg value */
@@ -4539,7 +4539,7 @@ xfs_bmap_isaeof(
 	xfs_inode_t	*ip,		/* incore inode pointer */
 	xfs_fileoff_t   off,		/* file offset in fsblocks */
 	int             whichfork,	/* data or attribute fork */
-	int		*aeof)		/* return value */
+	char		*aeof)		/* return value */
 {
 	int		error;		/* error return value */
 	xfs_ifork_t	*ifp;		/* inode fork pointer */

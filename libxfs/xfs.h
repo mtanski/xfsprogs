@@ -420,7 +420,7 @@ int  xfs_bmap_extents_to_btree (xfs_trans_t *, xfs_inode_t *, xfs_fsblock_t *,
 			xfs_bmap_free_t *, xfs_btree_cur_t **, int, int *, int);
 void xfs_bmap_delete_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t, int);
 xfs_filblks_t xfs_bmap_worst_indlen (xfs_inode_t *, xfs_filblks_t);
-int  xfs_bmap_isaeof (xfs_inode_t *, xfs_fileoff_t, int, int *);
+int  xfs_bmap_isaeof (xfs_inode_t *, xfs_fileoff_t, int, char *);
 void xfs_bmap_insert_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t,
 			xfs_bmbt_irec_t *, int);
 

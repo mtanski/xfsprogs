@@ -138,11 +138,11 @@ typedef struct xfs_bmalloca {
 	xfs_extlen_t		total;	/* total blocks needed for xaction */
 	xfs_extlen_t		minlen;	/* mininum allocation size (blocks) */
 	xfs_extlen_t		minleft; /* amount must be left after alloc */
-	int			eof;	/* set if allocating past last extent */
-	int			wasdel;	/* replacing a delayed allocation */
-	int			userdata;/* set if is user data */
-	int			low;	/* low on space, using seq'l ags */
-	int			aeof;   /* allocated space at eof */
+	char			eof;	/* set if allocating past last extent */
+	char			wasdel;	/* replacing a delayed allocation */
+	char			userdata;/* set if is user data */
+	char			low;	/* low on space, using seq'l ags */
+	char			aeof;   /* allocated space at eof */
 } xfs_bmalloca_t;
 
 #ifdef __KERNEL__
@@ -360,7 +360,7 @@ xfs_bmap_isaeof(
         struct xfs_inode	*ip,
         xfs_fileoff_t   	off,
         int             	whichfork,
-        int             	*aeof);
+        char             	*aeof);
 
 /*
  * Check if the endoff is outside the last extent. If so the caller will grow 
