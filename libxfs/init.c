@@ -41,8 +41,8 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
-#ifndef BLKSETSIZE	/* Baaad m'kay, but it's not in libc yet */
-#define BLKSETSIZE _IO(0x12,108)	/* set device block size */
+#ifndef BLKBSZSET
+#define BLKBSZSET _IO(0x12,108)	/* set device block size */
 #endif
 
 #define findrawpath(x)	x
@@ -203,7 +203,7 @@ libxfs_device_open(char *path, int creat, int readonly)
 	
 	/* Set device blocksize to 512 bytes */
 	if ((statb.st_mode & S_IFMT) == S_IFBLK) {
-		if (ioctl(fd, BLKSETSIZE, &blocksize) < 0) {
+		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
 			fprintf(stderr, "%s: warning - cannot set blocksize on "
 				"block device %s: %s\n",
 				progname, path, strerror(errno));
