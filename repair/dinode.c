@@ -444,7 +444,7 @@ convert_extent(
 {
 	xfs_bmbt_irec_t irec, *s = &irec;
 	/* Just use the extent parsing routine from the kernel */
-	libxfs_bmbt_get_all((xfs_bmbt_rec_t *)rp, s);
+	libxfs_bmbt_get_all(rp, s);
 
 	if (fs_has_extflgbit)  {
 		if (s->br_state == XFS_EXT_UNWRITTEN) {

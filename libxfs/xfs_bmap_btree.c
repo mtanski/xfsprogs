@@ -1552,14 +1552,21 @@ xfs_bmbt_delete(
  * Convert a compressed bmap extent record to an uncompressed form.
  * This code must be in sync with the routines xfs_bmbt_get_startoff,
  * xfs_bmbt_get_startblock, xfs_bmbt_get_blockcount and xfs_bmbt_get_state.
+ *
+ * In the kernel this function is called with xfs_bmbt_rec_t, the caller has
+ * already ensured that the data is suitably aligned.  In commands, the data is
+ * aligned to 32 bit until it gets here so this routine has to convert to the
+ * machine alignment.  This is a divergence between kernel and commands.  KAO.
  */
 void
 xfs_bmbt_get_all(
-	xfs_bmbt_rec_t	*r,
+	xfs_bmbt_rec_32_t *rp,
 	xfs_bmbt_irec_t	*s)
 {
 	int	ext_flag;
 	xfs_exntst_t st;
+	xfs_bmbt_rec_t rpcopy, *r = &rpcopy;
+	memcpy(&rpcopy, rp, sizeof(rpcopy));
 
 #if BMBT_USE_64
 	ext_flag = (int)((INT_GET(r->l0, ARCH_CONVERT)) >> (64 - BMBT_EXNTFLAG_BITLEN));
