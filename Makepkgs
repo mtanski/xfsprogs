@@ -52,18 +52,19 @@ fi
 # build RPM packages - manual clean before starting
 echo "== clean, log is $LOGDIR/clean"
 if $verbose ; then
-	$MAKE distclean 2>&1 | tee $LOGDIR/clean
+	$MAKE clean 2>&1 | tee $LOGDIR/clean
 else
-	$MAKE distclean > $LOGDIR/clean 2>&1 
+	$MAKE clean > $LOGDIR/clean 2>&1 
 fi
 if [ $? -ne 0 ] ; then
-	echo \"$MAKE distclean\" failed, see log in $LOGDIR/clean
+	echo \"$MAKE clean\" failed, see log in $LOGDIR/clean
 	tail $LOGDIR/clean
 	exit 1
 fi
 
 echo
 echo "== configure, log is $LOGDIR/configure"
+rm -f .census	# force configure to run here
 if $verbose ; then
 	autoconf 2>&1 | tee $LOGDIR/configure
 	./configure 2>&1 | tee -a $LOGDIR/configure
