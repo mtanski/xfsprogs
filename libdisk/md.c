@@ -33,14 +33,17 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <volume.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <volume.h>
 #include "md.h"
 
 int
 mnt_is_md_subvol(dev_t dev)
 {
-	if (dev >> 8 == MD_MAJOR)
+	if (major(dev) == MD_MAJOR)
+		return 1;
+	if (major(dev) == get_driver_block_major("md"))
 		return 1;
 	return 0;
 }
@@ -54,7 +57,7 @@ md_get_subvol_stripe(
 	struct stat64	*sb)
 {
 	if (mnt_is_md_subvol(sb->st_rdev)) {
-		struct md_array_info_s	md;
+		struct md_array_info	md;
 		int  fd;
 
 		/* Open device */

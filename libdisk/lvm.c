@@ -37,13 +37,18 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/major.h>
 #include <volume.h>
+
+#ifndef LVM_BLK_MAJOR
+#define LVM_BLK_MAJOR	58
+#endif
 
 int
 mnt_is_lvm_subvol(dev_t dev)
 {
-	if (dev >> 8 == LVM_BLK_MAJOR)
+	if (major(dev) == LVM_BLK_MAJOR)
+		return 1;
+	if (major(dev) == get_driver_block_major("lvm"))
 		return 1;
 	return 0;
 }
