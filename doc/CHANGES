@@ -1,3 +1,9 @@
+xfsprogs-2.2.1 (09 August 2002)
+	- Fix buglet in libdisk get_driver_block_major() routine which
+	  would result in incorrect majors being returned for not-found
+	  drivers.
+	- Fix problem in install process with newer autoconf versions.
+
 xfsprogs-2.2.0 (08 August 2002)
 	- mkfs.xfs defaults to a blocksize of 4096 bytes, and no longer
 	  uses getpagesize(2) to dynamically configure the default size.
