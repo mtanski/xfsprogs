@@ -2914,8 +2914,8 @@ process_node_dir(
 	 */
 	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <
 			(da_cursor.greatest_bno + 1) * mp->m_sb.sb_blocksize)  {
-		if ((xfs_fsize_t) (da_cursor.greatest_bno
-				* mp->m_sb.sb_blocksize) > UINT_MAX)  {
+		if ((xfs_fsize_t) da_cursor.greatest_bno
+				* mp->m_sb.sb_blocksize > UINT_MAX)  {
 			do_warn(
 	_("out of range internal directory block numbers (inode %llu)\n"),
 				ino);
