@@ -12,10 +12,12 @@ The map lists each \f2extent\fP used by the file, as well as regions
 in the file that do not have any corresponding blocks (\f2hole\f1s).
 Each line of the listings takes the following form:
 
-.Ex
-\f2extent\f1\f7: [\f1\f2startoffset\f1\f7..\f1\f2endoffset\f1\f7]: \c
+.nf
+.ft CW
+    \f2extent\f1\f7: [\f1\f2startoffset\f1\f7..\f1\f2endoffset\f1\f7]: \c
 \f1\f2startblock\f1\f7..\f1\f2endblock\f1
-.Ee
+.ft 
+.fi 
 
 Holes are marked by replacing the \f2startblock..endblock\f1 with \f2hole\fP.
 All the file offsets and disk blocks are in units of 512-byte blocks,
@@ -29,9 +31,11 @@ will be generated for a DMAPI file and offline portions will be reported as hole
 .PP
 If the \f3-l\f1 option is used, then
 
-.Ex
-\f1\f2<nblocks>\f1\f7 \f1\f2blocks\f1\f7
-.Ee
+.nf
+.ft CW
+    \f1\f2<nblocks>\f1\f7 \f1\f2blocks\f1\f7
+.ft
+.fi
 
 will be appended to each line.  \f1\f2Nblocks\f1\f7 is the length
 of the extent described on the line in units of 512-byte blocks.

@@ -99,17 +99,21 @@ unfortunately might dump core
 rather than produce useful output.
 If the filesystem is completely corrupt, a core dump might
 be produced instead of the message
-.Ex
-\f2xxx\f1\f7 is not a valid filesystem\f1
-.Ee
+.nf
+.ft CW
+    \f2xxx\f1\f7 is not a valid filesystem\f1
+.ft 
+.fi 
 .PP
 If the filesystem is very large (has many files) then
 .I xfs_check
 might run out of memory.
 In this case the message
-.Ex
-out of memory
-.Ee
+.nf 
+.ft CW
+    out of memory
+.ft 
+.fi 
 is printed.
 .PP
 The following is a description of the most likely problems and the associated

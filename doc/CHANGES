@@ -1,3 +1,7 @@
+xfsprogs-2.6.19 (16 July 2004)
+	- Fix two byte count size wraps in xfs_copy.
+	- Minor man page fixes from Eric Raymond.
+
 xfsprogs-2.6.18 (23 June 2004)
 	- Fix libhandle from possibly returning an invalid
 	  handle length on systems where size_t is 64 bits.
