@@ -2337,7 +2337,7 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
 	}
 #ifdef XFS_DABUF_DEBUG
 	{
-		int		s;
+		SPLDECL(s);
 		xfs_dabuf_t	*p;
 
 		s = mutex_spinlock(&xfs_dabuf_global_lock);
@@ -2392,7 +2392,7 @@ xfs_da_buf_done(xfs_dabuf_t *dabuf)
 		kmem_free(dabuf->data, BBTOB(dabuf->bbcount));
 #ifdef XFS_DABUF_DEBUG
 	{
-		int	s;
+		SPLDECL(s);
 
 		s = mutex_spinlock(&xfs_dabuf_global_lock);
 		if (dabuf->prev)

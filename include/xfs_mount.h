@@ -82,7 +82,7 @@ struct xfs_dio;
 struct xfs_bmbt_irec;
 struct xfs_bmap_free;
 
-#define	SPLDECL(s)		int s
+#define	SPLDECL(s)		unsigned long s
 #define	AIL_LOCK_T		lock_t
 #define	AIL_LOCKINIT(x,y)	spinlock_init(x,y)
 #define	AIL_LOCK_DESTROY(x)	spinlock_destroy(x)
