@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 
 #: ../freeze/xfs_freeze.c:90 ../growfs/xfs_growfs.c:214 ../imap/xfs_imap.c:66
-#: ../io/open.c:78
+#: ../io/open.c:83
 #, c-format
 msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
 msgstr ""
@@ -24,29 +24,29 @@ msgstr ""
 msgid "%s: cannot unfreeze filesystem mounted at %s: %s\n"
 msgstr ""
 
-#: ../growfs/explore.c:55
+#: ../growfs/explore.c:57
 #, c-format
 msgid "%s: cannot access mount list %s: %s\n"
 msgstr ""
 
-#: ../growfs/explore.c:60
+#: ../growfs/explore.c:62
 #, c-format
 msgid "%s: cannot access mount point %s: %s\n"
 msgstr ""
 
-#: ../growfs/explore.c:67
+#: ../growfs/explore.c:69
 #, c-format
 msgid "%s: ignoring entry %s in %s: %s\n"
 msgstr ""
 
-#: ../growfs/explore.c:75
+#: ../growfs/explore.c:81
 #, c-format
 msgid "%s: %s is not an XFS filesystem\n"
 msgstr ""
 
-#: ../growfs/explore.c:84
+#: ../growfs/explore.c:90
 #, c-format
-msgid "%s: %s is not a filesystem mount point, according to %s\n"
+msgid "%s: %s is not a mounted XFS filesystem, according to %s\n"
 msgstr ""
 
 #: ../growfs/xfs_growfs.c:53
@@ -283,7 +283,7 @@ msgstr ""
 msgid "%s: no extents\n"
 msgstr ""
 
-#: ../io/bmap.c:261 ../io/bmap.c:367
+#: ../io/bmap.c:261 ../io/bmap.c:376
 msgid "hole"
 msgstr ""
 
@@ -292,63 +292,72 @@ msgstr ""
 msgid " %lld blocks\n"
 msgstr ""
 
-#: ../io/bmap.c:335
+#: ../io/bmap.c:340
 msgid "EXT"
 msgstr ""
 
-#: ../io/bmap.c:336
+#: ../io/bmap.c:341
 msgid "FILE-OFFSET"
 msgstr ""
 
-#: ../io/bmap.c:337
+#: ../io/bmap.c:342
 msgid "BLOCK-RANGE"
 msgstr ""
 
-#: ../io/bmap.c:338
+#: ../io/bmap.c:343
 msgid "AG"
 msgstr ""
 
-#: ../io/bmap.c:339
+#: ../io/bmap.c:344
 msgid "AG-OFFSET"
 msgstr ""
 
-#: ../io/bmap.c:340
+#: ../io/bmap.c:345
 msgid "TOTAL"
 msgstr ""
 
-#: ../io/bmap.c:396
-msgid " FLG Values:\n"
+#: ../io/bmap.c:346
+msgid " FLAGS"
 msgstr ""
 
-#: ../io/bmap.c:397
-#, c-format
-msgid "    %5.5o Doesn't begin on stripe unit\n"
+#: ../io/bmap.c:405
+msgid " FLAG Values:\n"
 msgstr ""
 
-#: ../io/bmap.c:399
+#: ../io/bmap.c:406
 #, c-format
-msgid "    %5.5o Doesn't end   on stripe unit\n"
+msgid "    %*.*o Unwritten preallocated extent\n"
 msgstr ""
 
-#: ../io/bmap.c:401
+#: ../io/bmap.c:408
 #, c-format
-msgid "    %5.5o Doesn't begin on stripe width\n"
+msgid "    %*.*o Doesn't begin on stripe unit\n"
 msgstr ""
 
-#: ../io/bmap.c:403
+#: ../io/bmap.c:410
 #, c-format
-msgid "    %5.5o Doesn't end   on stripe width\n"
+msgid "    %*.*o Doesn't end   on stripe unit\n"
+msgstr ""
+
+#: ../io/bmap.c:412
+#, c-format
+msgid "    %*.*o Doesn't begin on stripe width\n"
 msgstr ""
 
 #: ../io/bmap.c:414
+#, c-format
+msgid "    %*.*o Doesn't end   on stripe width\n"
+msgstr ""
+
+#: ../io/bmap.c:425
 msgid "bmap"
 msgstr ""
 
-#: ../io/bmap.c:418
+#: ../io/bmap.c:429
 msgid "[-adlpv] [-n nx]"
 msgstr ""
 
-#: ../io/bmap.c:419
+#: ../io/bmap.c:430
 msgid "print block mapping for an XFS file"
 msgstr ""
 
@@ -428,7 +437,7 @@ msgstr ""
 msgid "Usage: %s [-r] [-p prog] [-c cmd]... file\n"
 msgstr ""
 
-#: ../io/open.c:122
+#: ../io/open.c:127
 msgid ""
 "\n"
 " opens a new file in the requested mode, after closing the current file\n"
@@ -445,255 +454,354 @@ msgid ""
 " -s -- open with O_SYNC\n"
 " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
 " -x -- mark the file as a realtime XFS file immediately after opening it\n"
-" Note1: read/write direct IO requests must be blocksize aligned.\n"
-" Note2: the bmap for non-regular files can be obtained provided the file\n"
-" was opened appropriately (in particular, must be opened read-only).\n"
+" Note1: usually read/write direct IO requests must be blocksize aligned.\n"
+" Note2: some kernels, however, allow sectorsize alignment for direct IO.\n"
+" Note3: the bmap for non-regular files can be obtained provided the file\n"
+"        was opened correctly (in particular, must be opened read-only).\n"
 "\n"
 msgstr ""
 
-#: ../io/open.c:242
+#: ../io/open.c:248
 msgid "socket"
 msgstr ""
 
-#: ../io/open.c:244
+#: ../io/open.c:250
 msgid "directory"
 msgstr ""
 
-#: ../io/open.c:246
+#: ../io/open.c:252
 msgid "char device"
 msgstr ""
 
-#: ../io/open.c:248
+#: ../io/open.c:254
 msgid "block device"
 msgstr ""
 
-#: ../io/open.c:250
+#: ../io/open.c:256
 msgid "regular file"
 msgstr ""
 
-#: ../io/open.c:252
+#: ../io/open.c:258
 msgid "symbolic link"
 msgstr ""
 
-#: ../io/open.c:254
+#: ../io/open.c:260
 msgid "fifo"
 msgstr ""
 
-#: ../io/open.c:268 ../io/open.c:373
+#: ../io/open.c:328
+#, c-format
+msgid "invalid lsattr argument -- '%c'\n"
+msgstr ""
+
+#: ../io/open.c:349
+msgid ""
+"\n"
+" displays the set of extended inode flags associated with the current file\n"
+"\n"
+" Each individual flag is displayed as a single character, in this order:\n"
+" r -- file data is stored in the realtime section\n"
+" p -- file has preallocated extents (cannot be changed using chattr)\n"
+" i -- immutable, file cannot be modified\n"
+" a -- append-only, file can only be appended to\n"
+" s -- all updates are synchronous\n"
+" A -- the access time is not updated for this inode\n"
+" d -- do not include this file in a dump of the filesystem\n"
+"\n"
+" Options:\n"
+" -a -- show all flags which can be set alongside those which are set\n"
+" -v -- verbose mode; show long names of flags, not single characters\n"
+"\n"
+msgstr ""
+
+#: ../io/open.c:402 ../io/open.c:416
+#, c-format
+msgid "%s: unknown flag\n"
+msgstr ""
+
+#: ../io/open.c:422
+#, c-format
+msgid "%s: bad chattr command, not +/-X\n"
+msgstr ""
+
+#: ../io/open.c:436
+msgid ""
+"\n"
+" modifies the set of extended inode flags associated with the current file\n"
+"\n"
+" Examples:\n"
+" 'chattr +a' - sets the append-only flag\n"
+" 'chattr -a' - clears the append-only flag\n"
+"\n"
+" +/-r -- set/clear the realtime flag\n"
+" +/-i -- set/clear the immutable flag\n"
+" +/-a -- set/clear the append-only flag\n"
+" +/-s -- set/clear the sync flag\n"
+" +/-A -- set/clear the no-atime flag\n"
+" +/-d -- set/clear the no-dump flag\n"
+" Note1: user must have certain capabilities to modify immutable/append-"
+"only.\n"
+" Note2: immutable/append-only files cannot be deleted; removing these files\n"
+"        requires the immutable/append-only flag to be cleared first.\n"
+" Note3: the realtime flag can only be set if the filesystem has a realtime\n"
+"        section, and the (regular) file must be empty when the flag is set.\n"
+"\n"
+msgstr ""
+
+#: ../io/open.c:467 ../io/open.c:573
 #, c-format
 msgid "fd.path = \"%s\"\n"
 msgstr ""
 
-#: ../io/open.c:270
+#: ../io/open.c:469
 #, c-format
 msgid "fd.flags = %s,%s,%s%s%s\n"
 msgstr ""
 
-#: ../io/open.c:271
+#: ../io/open.c:470
 msgid "sync"
 msgstr ""
 
-#: ../io/open.c:271
+#: ../io/open.c:470
 msgid "non-sync"
 msgstr ""
 
-#: ../io/open.c:272
+#: ../io/open.c:471
 msgid "direct"
 msgstr ""
 
-#: ../io/open.c:272
+#: ../io/open.c:471
 msgid "non-direct"
 msgstr ""
 
-#: ../io/open.c:273
+#: ../io/open.c:472
 msgid "read-only"
 msgstr ""
 
-#: ../io/open.c:273
+#: ../io/open.c:472
 msgid "read-write"
 msgstr ""
 
-#: ../io/open.c:274
+#: ../io/open.c:473
 msgid ",real-time"
 msgstr ""
 
-#: ../io/open.c:275
+#: ../io/open.c:474
 msgid ",append-only"
 msgstr ""
 
-#: ../io/open.c:279
+#: ../io/open.c:478
 #, c-format
 msgid "stat.ino = %lld\n"
 msgstr ""
 
-#: ../io/open.c:280
+#: ../io/open.c:479
 #, c-format
 msgid "stat.type = %s\n"
 msgstr ""
 
-#: ../io/open.c:281
+#: ../io/open.c:480
 #, c-format
 msgid "stat.size = %lld\n"
 msgstr ""
 
-#: ../io/open.c:282
+#: ../io/open.c:481
 #, c-format
 msgid "stat.blocks = %lld\n"
 msgstr ""
 
-#: ../io/open.c:284
+#: ../io/open.c:483
 #, c-format
 msgid "stat.atime = %s"
 msgstr ""
 
-#: ../io/open.c:285
+#: ../io/open.c:484
 #, c-format
 msgid "stat.mtime = %s"
 msgstr ""
 
-#: ../io/open.c:286
+#: ../io/open.c:485
 #, c-format
 msgid "stat.ctime = %s"
 msgstr ""
 
-#: ../io/open.c:292
+#: ../io/open.c:491
 #, c-format
-msgid "xattr.xflags = 0x%x\n"
+msgid "xattr.xflags = 0x%x "
 msgstr ""
 
-#: ../io/open.c:293
+#: ../io/open.c:493
 #, c-format
 msgid "xattr.extsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:294
+#: ../io/open.c:494
 #, c-format
 msgid "xattr.nextents = %u\n"
 msgstr ""
 
-#: ../io/open.c:327
+#: ../io/open.c:527
 #, c-format
 msgid "invalid setfl argument -- '%c'\n"
 msgstr ""
 
-#: ../io/open.c:348
+#: ../io/open.c:548
 #, c-format
 msgid "non-numeric extsize argument -- %s\n"
 msgstr ""
 
-#: ../io/open.c:378
+#: ../io/open.c:578
 #, c-format
 msgid "statfs.f_bsize = %lld\n"
 msgstr ""
 
-#: ../io/open.c:379
+#: ../io/open.c:579
 #, c-format
 msgid "statfs.f_blocks = %lld\n"
 msgstr ""
 
-#: ../io/open.c:381
+#: ../io/open.c:581
+#, c-format
+msgid "statfs.f_frsize = %lld\n"
+msgstr ""
+
+#: ../io/open.c:583
 #, c-format
 msgid "statfs.f_bavail = %lld\n"
 msgstr ""
 
-#: ../io/open.c:387
+#: ../io/open.c:585
+#, c-format
+msgid "statfs.f_files = %lld\n"
+msgstr ""
+
+#: ../io/open.c:586
+#, c-format
+msgid "statfs.f_ffree = %lld\n"
+msgstr ""
+
+#: ../io/open.c:591
 #, c-format
 msgid "geom.bsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:388
+#: ../io/open.c:592
 #, c-format
 msgid "geom.agcount = %u\n"
 msgstr ""
 
-#: ../io/open.c:389
+#: ../io/open.c:593
 #, c-format
 msgid "geom.agblocks = %u\n"
 msgstr ""
 
-#: ../io/open.c:390
+#: ../io/open.c:594
 #, c-format
 msgid "geom.datablocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:392
+#: ../io/open.c:596
 #, c-format
 msgid "geom.rtblocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:394
+#: ../io/open.c:598
 #, c-format
 msgid "geom.rtextents = %llu\n"
 msgstr ""
 
-#: ../io/open.c:396
+#: ../io/open.c:600
 #, c-format
 msgid "geom.rtextsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:397
+#: ../io/open.c:601
 #, c-format
 msgid "geom.sunit = %u\n"
 msgstr ""
 
-#: ../io/open.c:398
+#: ../io/open.c:602
 #, c-format
 msgid "geom.swidth = %u\n"
 msgstr ""
 
-#: ../io/open.c:406
+#: ../io/open.c:610
 msgid "open"
 msgstr ""
 
-#: ../io/open.c:407
+#: ../io/open.c:611
 msgid "o"
 msgstr ""
 
-#: ../io/open.c:411
+#: ../io/open.c:615
 msgid "[-acdrstx] [path]"
 msgstr ""
 
-#: ../io/open.c:413
+#: ../io/open.c:617
 msgid "close the current file, open file specified by path"
 msgstr ""
 
-#: ../io/open.c:416
+#: ../io/open.c:620
 msgid "stat"
 msgstr ""
 
-#: ../io/open.c:420
+#: ../io/open.c:624
 msgid "[-v]"
 msgstr ""
 
-#: ../io/open.c:422
+#: ../io/open.c:626
 msgid "statistics on the currently open file"
 msgstr ""
 
-#: ../io/open.c:424
+#: ../io/open.c:628
 msgid "setfl"
 msgstr ""
 
-#: ../io/open.c:426
+#: ../io/open.c:630
 msgid "[-adx]"
 msgstr ""
 
-#: ../io/open.c:428
+#: ../io/open.c:632
 msgid "set/clear append/direct flags on the open file"
 msgstr ""
 
-#: ../io/open.c:430
+#: ../io/open.c:634
 msgid "statfs"
 msgstr ""
 
-#: ../io/open.c:433
+#: ../io/open.c:637
 msgid "statistics on the filesystem of the currently open file"
 msgstr ""
 
-#: ../io/open.c:435
+#: ../io/open.c:639
+msgid "chattr"
+msgstr ""
+
+#: ../io/open.c:641
+msgid "[+/-riasAd]"
+msgstr ""
+
+#: ../io/open.c:645
+msgid "change extended inode flags on the currently open file"
+msgstr ""
+
+#: ../io/open.c:648
+msgid "lsattr"
+msgstr ""
+
+#: ../io/open.c:650
+msgid "[-a | -v]"
+msgstr ""
+
+#: ../io/open.c:654
+msgid "list extended inode flags set on the currently open file"
+msgstr ""
+
+#: ../io/open.c:657
 msgid "extsize"
 msgstr ""
 
-#: ../io/open.c:440
+#: ../io/open.c:662
 msgid "set prefered extent size (in bytes) for the open file"
 msgstr ""
 
@@ -712,17 +820,17 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pread.c:153 ../io/pwrite.c:113
+#: ../io/pread.c:153 ../io/pwrite.c:112
 #, c-format
 msgid "non-numeric bsize -- %s\n"
 msgstr ""
 
-#: ../io/pread.c:171 ../io/prealloc.c:53 ../io/pwrite.c:149
+#: ../io/pread.c:171 ../io/prealloc.c:53 ../io/pwrite.c:148
 #, c-format
 msgid "non-numeric offset argument -- %s\n"
 msgstr ""
 
-#: ../io/pread.c:177 ../io/prealloc.c:58 ../io/pwrite.c:155
+#: ../io/pread.c:177 ../io/prealloc.c:58 ../io/pwrite.c:154
 #, c-format
 msgid "non-numeric length argument -- %s\n"
 msgstr ""
@@ -804,34 +912,34 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pwrite.c:127
+#: ../io/pwrite.c:126
 #, c-format
 msgid "non-numeric skip -- %s\n"
 msgstr ""
 
-#: ../io/pwrite.c:134
+#: ../io/pwrite.c:133
 #, c-format
 msgid "non-numeric seed -- %s\n"
 msgstr ""
 
-#: ../io/pwrite.c:170
+#: ../io/pwrite.c:169
 #, c-format
 msgid "wrote %ld/%ld bytes at offset %lld\n"
 msgstr ""
 
-#: ../io/pwrite.c:179
+#: ../io/pwrite.c:178
 msgid "pwrite"
 msgstr ""
 
-#: ../io/pwrite.c:180
+#: ../io/pwrite.c:179
 msgid "w"
 msgstr ""
 
-#: ../io/pwrite.c:185
+#: ../io/pwrite.c:184
 msgid "[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len"
 msgstr ""
 
-#: ../io/pwrite.c:187
+#: ../io/pwrite.c:186
 msgid "writes a number of bytes at a specified offset"
 msgstr ""
 
@@ -1427,21 +1535,24 @@ msgstr ""
 
 #: ../mkfs/xfs_mkfs.c:1773
 #, c-format
-msgid ""
-"log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"
+msgid "log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1800
+#: ../mkfs/xfs_mkfs.c:1776
+msgid "log stripe unit adjusted to 32KiB\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:1801
 #, c-format
 msgid "internal log size %lld too large, must fit in allocation group\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1807
+#: ../mkfs/xfs_mkfs.c:1808
 #, c-format
 msgid "log ag number %d too large, must be less than %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1833
+#: ../mkfs/xfs_mkfs.c:1834
 #, c-format
 msgid ""
 "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
@@ -1454,55 +1565,55 @@ msgid ""
 "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1938
+#: ../mkfs/xfs_mkfs.c:1939
 #, c-format
-msgid "%s: Growing the data section file failed\n"
+msgid "%s: Growing the data section failed\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1966
+#: ../mkfs/xfs_mkfs.c:1967
 #, c-format
 msgid "%s: filesystem failed to initialize\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1974
+#: ../mkfs/xfs_mkfs.c:1975
 #, c-format
 msgid "%s: log size (%lld) is too small for transaction reservations\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2192
+#: ../mkfs/xfs_mkfs.c:2193
 #, c-format
 msgid "%s: root inode created in AG %u, not AG 0\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2268
+#: ../mkfs/xfs_mkfs.c:2269
 #, c-format
 msgid "Cannot specify both -%c %s and -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2279
+#: ../mkfs/xfs_mkfs.c:2280
 #, c-format
 msgid "Illegal value %s for -%s option\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2296
+#: ../mkfs/xfs_mkfs.c:2297
 #, c-format
 msgid "-%c %s option requires a value\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2309 ../repair/xfs_repair.c:143
+#: ../mkfs/xfs_mkfs.c:2310 ../repair/xfs_repair.c:143
 msgid "option respecified\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2318 ../repair/xfs_repair.c:150
+#: ../mkfs/xfs_mkfs.c:2319 ../repair/xfs_repair.c:150
 #, c-format
 msgid "unknown option -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2357
+#: ../mkfs/xfs_mkfs.c:2358
 msgid "blocksize not available yet.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2381
+#: ../mkfs/xfs_mkfs.c:2382
 #, c-format
 msgid ""
 "Usage: %s\n"
@@ -1565,7 +1676,7 @@ msgstr ""
 msgid "%s: can't tell if \"%s\" is writable: %s\n"
 msgstr ""
 
-#: ../libxfs/darwin.c:87 ../libxfs/freebsd.c:169 ../libxfs/irix.c:75
+#: ../libxfs/darwin.c:87 ../libxfs/freebsd.c:127 ../libxfs/irix.c:75
 #: ../libxfs/linux.c:137
 #, c-format
 msgid "%s: cannot stat the device file \"%s\": %s\n"
@@ -1576,19 +1687,39 @@ msgstr ""
 msgid "%s: can't determine device size: %s\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:118
+#: ../libxfs/freebsd.c:62
 #, c-format
-msgid "%s: can't figure out partition info\n"
+msgid "%s: %s possibly contains a mounted filesystem\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:142
+#: ../libxfs/freebsd.c:73 ../libxfs/linux.c:73
 #, c-format
-msgid "%s: can't read disk label: %s\n"
+msgid "%s: %s contains a mounted filesystem\n"
 msgstr ""
 
-#: ../libxfs/freebsd.c:152
+#: ../libxfs/freebsd.c:88 ../libxfs/linux.c:91
 #, c-format
-msgid "%s: partition %s is unavailable\n"
+msgid "%s: %s contains a possibly writable, mounted filesystem\n"
+msgstr ""
+
+#: ../libxfs/freebsd.c:102 ../libxfs/linux.c:105
+#, c-format
+msgid "%s: %s contains a mounted and writable filesystem\n"
+msgstr ""
+
+#: ../libxfs/freebsd.c:140
+#, c-format
+msgid "%s: Not a device or file: \"%s\"n"
+msgstr ""
+
+#: ../libxfs/freebsd.c:147
+#, c-format
+msgid "%s: DIOCGMEDIASIZE failed on \"%s\": %s\n"
+msgstr ""
+
+#: ../libxfs/freebsd.c:154
+#, c-format
+msgid "%s: DIOCGSECTORSIZE failed on \"%s\": %s\n"
 msgstr ""
 
 #: ../libxfs/init.c:87 ../libxfs/init.c:168
@@ -1716,21 +1847,6 @@ msgstr ""
 msgid "%s: cannot read root inode (%d)\n"
 msgstr ""
 
-#: ../libxfs/linux.c:73
-#, c-format
-msgid "%s: %s contains a mounted filesystem\n"
-msgstr ""
-
-#: ../libxfs/linux.c:91
-#, c-format
-msgid "%s: %s contains a possibly writable, mounted filesystem\n"
-msgstr ""
-
-#: ../libxfs/linux.c:105
-#, c-format
-msgid "%s: %s contains a mounted and writable filesystem\n"
-msgstr ""
-
 #: ../libxfs/linux.c:117
 #, c-format
 msgid "%s: warning - cannot set blocksize on block device %s: %s\n"
@@ -1766,42 +1882,42 @@ msgstr ""
 msgid "%s: %s not progressing?\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:200
+#: ../libxfs/rdwr.c:216
 #, c-format
 msgid "%s: buf calloc failed (%ld bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:227
+#: ../libxfs/rdwr.c:243
 #, c-format
 msgid "%s: read failed: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:274
+#: ../libxfs/rdwr.c:290
 #, c-format
 msgid "%s: pwrite64 failed: %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:281
+#: ../libxfs/rdwr.c:297
 #, c-format
 msgid "%s: error - wrote only %d of %d bytes\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:329
+#: ../libxfs/rdwr.c:345
 #, c-format
 msgid "%s: zone init failed (%s, %d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:348
+#: ../libxfs/rdwr.c:364
 #, c-format
 msgid "%s: zone calloc failed (%s, %d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:383
+#: ../libxfs/rdwr.c:399
 #, c-format
 msgid "%s: calloc failed (%d bytes): %s\n"
 msgstr ""
 
-#: ../libxfs/rdwr.c:414
+#: ../libxfs/rdwr.c:430
 #, c-format
 msgid "%s: realloc failed (%d bytes): %s\n"
 msgstr ""

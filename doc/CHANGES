@@ -1,3 +1,17 @@
+xfsprogs-2.5.8 (12 September 2003)
+	- Add missing options to xfs_db frag command one-line summary.
+	- Add xfs_io commands for setting and clearing new inode flags
+	  for immutable/append-only/sync/no-atime/no-dump.
+	- Dump some other statfs fields in the xfs_io statfs commands.
+	- Remove "test" mode from xfs_repair, only useful in xfs_check.
+	- Fix problem in xfs_logprint where it was trying to continue
+	  in the presence of a corrupt log when it shouldn't have.
+	- Fix an incorrect assertion in xfs_logprint in regards to the
+	  validity of the log start block.
+	- Fix xfs_growfs (and hence xfs_info) to allow it to be given
+	  either a mount point or a device in the mount table - it'll
+	  figure it out and should do the right thing either way now.
+
 xfsprogs-2.5.7 (29 August 2003)
 	- Sync up user/kernel source in libxfs and headers.
 	- Make xfs_copy a tad more portable, although work remains.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -241,7 +241,7 @@ main(int argc, char **argv)
 	printf("daddr: %lld length: %lld\n\n",
 		(long long)x.logBBstart, (long long)x.logBBsize);
 
-	ASSERT(x.logBBstart <= INT_MAX);
+	ASSERT(x.logBBsize <= INT_MAX);
 
 	/* init log structure */
 	log.l_dev	   = x.logdev;

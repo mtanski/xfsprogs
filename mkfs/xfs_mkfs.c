@@ -1936,7 +1936,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	 * will succeed.
 	 */
 	if (xi.disfile && ftruncate64(xi.dfd, dblocks * blocksize) < 0) {
-		fprintf(stderr, _("%s: Growing the data section file failed\n"),
+		fprintf(stderr, _("%s: Growing the data section failed\n"),
 			progname);
 		exit(1);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -103,7 +103,7 @@ static void		scanfunc_ino(xfs_btree_sblock_t *ablock, int level,
 
 static const cmdinfo_t	frag_cmd =
 	{ "frag", NULL, frag_f, 0, -1, 0,
-	  "[-a] [-d] [-f] [-l] [-r]",
+	  "[-a] [-d] [-f] [-l] [-q] [-R] [-r] [-v]",
 	  "get file fragmentation data", NULL };
 
 static extmap_t *

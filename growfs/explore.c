@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -43,10 +43,12 @@ explore_mtab(char *mtab, char *mntpoint)
 {
 	struct mntent	*mnt;
 	struct stat64	statuser;
-	struct stat64	statmtab;
+	struct stat64	statmtab_dir;
+	struct stat64	statmtab_dev;
 	FILE		*mtp;
 	char		*rtend;
 	char		*logend;
+	int		havedev;
 
 	if (!mtab)
 		mtab = MOUNTED;
@@ -63,13 +65,17 @@ explore_mtab(char *mtab, char *mntpoint)
 	}
 
 	while ((mnt = getmntent(mtp)) != NULL) {
-		if (stat64(mnt->mnt_dir, &statmtab) < 0) {
+		if (stat64(mnt->mnt_dir, &statmtab_dir) < 0) {
 			fprintf(stderr, _("%s: ignoring entry %s in %s: %s\n"),
 				progname, mnt->mnt_dir, mtab, strerror(errno));
 			continue;
 		}
-		if (statuser.st_ino != statmtab.st_ino ||
-				statuser.st_dev != statmtab.st_dev)
+		havedev = (stat64(mnt->mnt_fsname, &statmtab_dev) != -1);
+		if ( !((statuser.st_ino == statmtab_dir.st_ino &&
+				statuser.st_dev == statmtab_dir.st_dev) ||
+		       (statuser.st_ino == statmtab_dev.st_ino &&
+				statuser.st_dev == statmtab_dev.st_dev &&
+				havedev)) )
 			continue;
 		else if (strcmp(mnt->mnt_type, "xfs") != 0) {
 			fprintf(stderr, _("%s: %s is not an XFS filesystem\n"),
@@ -81,7 +87,7 @@ explore_mtab(char *mtab, char *mntpoint)
 
 	if (mnt == NULL) {
 		fprintf(stderr,
-		_("%s: %s is not a filesystem mount point, according to %s\n"),
+		_("%s: %s is not a mounted XFS filesystem, according to %s\n"),
 			progname, mntpoint, MOUNTED);
 		exit(1);
 	}

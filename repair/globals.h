@@ -120,7 +120,6 @@ EXTERN int	fs_fd;			/* filesystem fd */
 
 EXTERN int	verbose;
 EXTERN int	no_modify;
-EXTERN int	test_mode;		/* freespace is being faked, leave it */
 EXTERN int	dangerously;		/* live dangerously ... fix ro mount */
 EXTERN int	isa_file;
 EXTERN int	zap_log;

@@ -16,6 +16,13 @@ S: Peter Bangs Vej 258, 2TH
 S: 2500 Valby
 S: Denmark
 
+N: Ethan Benson
+E: erbenson@alaska.net
+D: Additional inode flags (immutable, append-only, etc)
+S: P.O. Box 770525
+S: Eagle River, AK 99577
+S: Alaska
+
 N: Danny Cox
 E: danscox@mindspring.com
 D: ACL port to Linux

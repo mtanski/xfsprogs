@@ -1030,6 +1030,10 @@ xlog_print_record(int		  fd,
 		    default: {
 			fprintf(stderr, "%s: unknown log operation type (%x)\n",
 				progname, *(unsigned short *)ptr);
+			if (print_exit) {
+				free(buf);
+				return BAD_HEADER;
+			}
 			skip = 0;
 			ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
 		    }
