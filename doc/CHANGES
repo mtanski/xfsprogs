@@ -1,5 +1,7 @@
-cvs
-	- Fix a few more libxfs/repair leaks
+xfsprogs-2.6.4 (17 February 2003)
+	- Fix a few more libxfs/repair leaks.
+	- Fix up some libhandle routines, add the open_by_fshandle
+	  routine required by recent versions of xfsdump.
 
 xfsprogs-2.6.3 (19 January 2003)
 	- Merge Steve Langasek's work on the Debian installer
