@@ -15,7 +15,7 @@ URL: http://oss.sgi.com/projects/xfs/
 Group: System Environment/Base
 
 %description
-A set of commands to use the XFS file system, including mkfs.xfs.
+A set of commands to use the XFS filesystem, including mkfs.xfs.
 
 XFS is a high performance journaling filesystem which originated
 on the SGI IRIX platform.  It is completely multi-threaded, can
