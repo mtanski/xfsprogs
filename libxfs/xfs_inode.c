@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -186,8 +186,9 @@ xfs_itobp(
 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp, XFS_ERRTAG_ITOBP_INOTOBP,
 				 XFS_RANDOM_ITOBP_INOTOBP))) {
 #ifdef DEBUG
-			prdev("bad inode magic/vsn daddr 0x%llx #%d (magic=%x)",
-				mp->m_dev, (unsigned long long)imap.im_blkno, i,
+			prdev("bad inode magic/vsn daddr %lld #%d (magic=%x)",
+				mp->m_ddev_targp,
+				(unsigned long long)imap.im_blkno, i,
 				INT_GET(dip->di_core.di_magic, ARCH_CONVERT));
 #endif
 			XFS_CORRUPTION_ERROR("xfs_itobp", XFS_ERRLEVEL_HIGH,
@@ -683,9 +684,6 @@ xfs_iread(
 #endif
 #ifdef XFS_RW_TRACE
 	ip->i_rwtrace = ktrace_alloc(XFS_RW_KTRACE_SIZE, KM_SLEEP);
-#endif
-#ifdef XFS_STRAT_TRACE
-	ip->i_strat_trace = ktrace_alloc(XFS_STRAT_KTRACE_SIZE, KM_SLEEP);
 #endif
 #ifdef XFS_ILOCK_TRACE
 	ip->i_lock_trace = ktrace_alloc(XFS_ILOCK_KTRACE_SIZE, KM_SLEEP);

@@ -53,8 +53,8 @@
  * endian issues in treating two 32 bit numbers as one 64 bit number
  */
 static
-#if defined(__GNUC__) && (__GNUC__ == 2) && (__GNUC_MINOR__ == 95)
-__attribute__((unused))	/* gcc 2.95 miscompiles this when inlined */
+#if defined(__GNUC__) && (__GNUC__ == 2) && ( (__GNUC_MINOR__ == 95) || (__GNUC_MINOR__ == 96))
+__attribute__((unused))	/* gcc 2.95, 2.96 miscompile this when inlined */
 #else
 __inline__
 #endif
@@ -153,10 +153,10 @@ xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
 int	  xfs_log_force(struct xfs_mount *mp,
 			xfs_lsn_t	 lsn,
 			uint		 flags);
-int	  xfs_log_mount(struct xfs_mount *mp,
-			dev_t		 log_dev,
-			xfs_daddr_t		 start_block,
-			int		 num_bblocks);
+int	  xfs_log_mount(struct xfs_mount	*mp,
+			struct xfs_buftarg	*log_target,
+			xfs_daddr_t		start_block,
+			int		 	num_bblocks);
 int	  xfs_log_mount_finish(struct xfs_mount *mp, int);
 void	  xfs_log_move_tail(struct xfs_mount	*mp,
 			    xfs_lsn_t		tail_lsn);

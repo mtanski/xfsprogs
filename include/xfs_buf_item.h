@@ -96,6 +96,7 @@ typedef struct xfs_buf_log_format_t {
 #define	XFS_BLI_STALE		0x04
 #define	XFS_BLI_LOGGED		0x08
 #define	XFS_BLI_INODE_ALLOC_BUF	0x10
+#define XFS_BLI_STALE_INODE	0x20
 
 
 #ifdef __KERNEL__
@@ -103,6 +104,15 @@ typedef struct xfs_buf_log_format_t {
 struct xfs_buf;
 struct ktrace;
 struct xfs_mount;
+struct xfs_buf_log_item;
+
+#if defined(XFS_BLI_TRACE)
+#define	XFS_BLI_TRACE_SIZE	32
+
+void	xfs_buf_item_trace(char *, struct xfs_buf_log_item *);
+#else
+#define	xfs_buf_item_trace(id, bip)
+#endif
 
 /*
  * This is the in core log item structure used to track information
@@ -115,7 +125,7 @@ typedef struct xfs_buf_log_item {
 	unsigned int		bli_flags;	/* misc flags */
 	unsigned int		bli_recur;	/* lock recursion count */
 	atomic_t		bli_refcount;	/* cnt of tp refs */
-#ifdef DEBUG
+#ifdef XFS_BLI_TRACE
 	struct ktrace		*bli_trace;	/* event trace buf */
 #endif
 #ifdef XFS_TRANS_DEBUG
@@ -130,28 +140,11 @@ typedef struct xfs_buf_log_item {
  * items which have been canceled and should not be replayed.
  */
 typedef struct xfs_buf_cancel {
-	xfs_daddr_t			bc_blkno;
+	xfs_daddr_t		bc_blkno;
 	uint			bc_len;
 	int			bc_refcount;
 	struct xfs_buf_cancel	*bc_next;
 } xfs_buf_cancel_t;
-
-#define	XFS_BLI_TRACE_SIZE	32
-
-
-#if defined(XFS_ALL_TRACE)
-#define	XFS_BLI_TRACE
-#endif
-
-#if !defined(DEBUG)
-#undef XFS_BLI_TRACE
-#endif
-
-#if defined(XFS_BLI_TRACE)
-void	xfs_buf_item_trace(char *, xfs_buf_log_item_t *);
-#else
-#define	xfs_buf_item_trace(id, bip)
-#endif
 
 void	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
 void	xfs_buf_item_relse(struct xfs_buf *);

@@ -59,6 +59,7 @@ xfs_inobt_insrec(
 	xfs_btree_cur_t		*ncur;	/* new cursor to be used at next lvl */
 	xfs_inobt_key_t		nkey;	/* new key value, from split */
 	xfs_inobt_rec_t		nrec;	/* new record value, for caller */
+	int			numrecs;
 	int			optr;	/* old ptr value */
 	xfs_inobt_ptr_t		*pp;	/* pointer to btree addresses */
 	int			ptr;	/* index in btree block for this rec */
@@ -91,13 +92,14 @@ xfs_inobt_insrec(
 	 */
 	bp = cur->bc_bufs[level];
 	block = XFS_BUF_TO_INOBT_BLOCK(bp);
+	numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
 #ifdef DEBUG
 	if ((error = xfs_btree_check_sblock(cur, block, level, bp)))
 		return error;
 	/*
 	 * Check that the new entry is being inserted in the right place.
 	 */
-	if (ptr <= INT_GET(block->bb_numrecs, ARCH_CONVERT)) {
+	if (ptr <= numrecs) {
 		if (level == 0) {
 			rp = XFS_INOBT_REC_ADDR(block, ptr, cur);
 			xfs_btree_check_rec(cur->bc_btnum, recp, rp);
@@ -113,7 +115,7 @@ xfs_inobt_insrec(
 	 * If the block is full, we can't insert the new entry until we
 	 * make the block un-full.
 	 */
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) == XFS_INOBT_BLOCK_MAXRECS(level, cur)) {
+	if (numrecs == XFS_INOBT_BLOCK_MAXRECS(level, cur)) {
 		/*
 		 * First, try shifting an entry to the right neighbor.
 		 */
@@ -164,6 +166,7 @@ xfs_inobt_insrec(
 	 * At this point we know there's room for our new entry in the block
 	 * we're pointing at.
 	 */
+	numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
 	if (level > 0) {
 		/*
 		 * It's a non-leaf entry.  Make a hole for the new data
@@ -172,15 +175,15 @@ xfs_inobt_insrec(
 		kp = XFS_INOBT_KEY_ADDR(block, 1, cur);
 		pp = XFS_INOBT_PTR_ADDR(block, 1, cur);
 #ifdef DEBUG
-		for (i = INT_GET(block->bb_numrecs, ARCH_CONVERT); i >= ptr; i--) {
+		for (i = numrecs; i >= ptr; i--) {
 			if ((error = xfs_btree_check_sptr(cur, INT_GET(pp[i - 1], ARCH_CONVERT), level)))
 				return error;
 		}
 #endif
 		memmove(&kp[ptr], &kp[ptr - 1],
-			(INT_GET(block->bb_numrecs, ARCH_CONVERT) - ptr + 1) * sizeof(*kp));
+			(numrecs - ptr + 1) * sizeof(*kp));
 		memmove(&pp[ptr], &pp[ptr - 1],
-			(INT_GET(block->bb_numrecs, ARCH_CONVERT) - ptr + 1) * sizeof(*pp));
+			(numrecs - ptr + 1) * sizeof(*pp));
 		/*
 		 * Now stuff the new data in, bump numrecs and log the new data.
 		 */
@@ -190,23 +193,25 @@ xfs_inobt_insrec(
 #endif
 		kp[ptr - 1] = key; /* INT_: struct copy */
 		INT_SET(pp[ptr - 1], ARCH_CONVERT, *bnop);
-		INT_MOD(block->bb_numrecs, ARCH_CONVERT, +1);
-		xfs_inobt_log_keys(cur, bp, ptr, INT_GET(block->bb_numrecs, ARCH_CONVERT));
-		xfs_inobt_log_ptrs(cur, bp, ptr, INT_GET(block->bb_numrecs, ARCH_CONVERT));
+		numrecs++;
+		INT_SET(block->bb_numrecs, ARCH_CONVERT, numrecs);
+		xfs_inobt_log_keys(cur, bp, ptr, numrecs);
+		xfs_inobt_log_ptrs(cur, bp, ptr, numrecs);
 	} else {
 		/*
 		 * It's a leaf entry.  Make a hole for the new record.
 		 */
 		rp = XFS_INOBT_REC_ADDR(block, 1, cur);
 		memmove(&rp[ptr], &rp[ptr - 1],
-			(INT_GET(block->bb_numrecs, ARCH_CONVERT) - ptr + 1) * sizeof(*rp));
+			(numrecs - ptr + 1) * sizeof(*rp));
 		/*
 		 * Now stuff the new record in, bump numrecs
 		 * and log the new data.
 		 */
 		rp[ptr - 1] = *recp; /* INT_: struct copy */
-		INT_MOD(block->bb_numrecs, ARCH_CONVERT, +1);
-		xfs_inobt_log_recs(cur, bp, ptr, INT_GET(block->bb_numrecs, ARCH_CONVERT));
+		numrecs++;
+		INT_SET(block->bb_numrecs, ARCH_CONVERT, numrecs);
+		xfs_inobt_log_recs(cur, bp, ptr, numrecs);
 	}
 	/*
 	 * Log the new number of records in the btree header.
@@ -216,7 +221,7 @@ xfs_inobt_insrec(
 	/*
 	 * Check that the key/record is in the right place, now.
 	 */
-	if (ptr < INT_GET(block->bb_numrecs, ARCH_CONVERT)) {
+	if (ptr < numrecs) {
 		if (level == 0)
 			xfs_btree_check_rec(cur->bc_btnum, rp + ptr - 1,
 				rp + ptr);
@@ -346,7 +351,7 @@ xfs_inobt_lookup(
 	xfs_agblock_t		agbno;	/* a.g. relative btree block number */
 	xfs_agnumber_t		agno;	/* allocation group number */
 	xfs_inobt_block_t	*block=NULL;	/* current btree block */
-	int			diff;	/* difference for the current key */
+	__int64_t		diff;	/* difference for the current key */
 	int			error;	/* error return value */
 	int			keyno=0;	/* current key number */
 	int			level;	/* level in the btree */
@@ -371,7 +376,7 @@ xfs_inobt_lookup(
 	 */
 	for (level = cur->bc_nlevels - 1, diff = 1; level >= 0; level--) {
 		xfs_buf_t	*bp;	/* buffer pointer for btree block */
-		xfs_daddr_t		d;	/* disk address of btree block */
+		xfs_daddr_t	d;	/* disk address of btree block */
 
 		/*
 		 * Get the disk address we're looking for.
@@ -465,7 +470,8 @@ xfs_inobt_lookup(
 				/*
 				 * Compute difference to get next direction.
 				 */
-				diff = (int)startino - cur->bc_rec.i.ir_startino;
+				diff = (__int64_t)
+					startino - cur->bc_rec.i.ir_startino;
 				/*
 				 * Less than, move right.
 				 */
