@@ -1,4 +1,5 @@
 xfsprogs-2.2.3 (28 August 2002)
+	- Update libdisk for a few other filesystems.
 	- Fix call to lvdisplay on LVM volumes so that lvdisplay
 	  always gets the full, real path to the volume, as required.
 
