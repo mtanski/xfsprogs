@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -92,6 +92,7 @@ extern void		bmap_init(void);
 extern void		file_init(void);
 extern void		freeze_init(void);
 extern void		fsync_init(void);
+extern void		getrusage_init(void);
 extern void		help_init(void);
 extern void		inject_init(void);
 extern void		mmap_init(void);

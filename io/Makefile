@@ -36,10 +36,9 @@ include $(TOPDIR)/include/builddefs
 LTCOMMAND = xfs_io
 LSRCFILES = xfs_bmap.sh xfs_freeze.sh
 HFILES = command.h input.h init.h io.h
-CFILES = command.c input.c init.c \
-	attr.c bmap.c file.c freeze.c fsync.c help.c \
-	mmap.c open.c pread.c prealloc.c pwrite.c quit.c \
-	truncate.c
+CFILES = command.c input.c init.c help.c quit.c \
+	attr.c bmap.c file.c freeze.c fsync.c getrusage.c \
+	mmap.c open.c pread.c prealloc.c pwrite.c truncate.c
 
 ifeq ($(HAVE_FADVISE),yes)
 CFILES += fadvise.c

@@ -266,15 +266,29 @@ void
 timestr(
 	struct timeval	*tv,
 	char		*ts,
-	size_t		size)
+	size_t		size,
+	int		format)
 {
-	if (!tv->tv_sec)
-		snprintf(ts, size, "%.4f sec",
-			((double) tv->tv_usec / 1000000.0));
-	else
-		snprintf(ts, size, "%02u:%02u:%02u.%-u",
+	double		usec = (double)tv->tv_usec / 1000000.0;
+
+	if (format & TERSE_FIXED_TIME) {
+		if (!HOURS(tv->tv_sec)) {
+			snprintf(ts, size, "%u:%02u.%02u",
+				(unsigned int) MINUTES(tv->tv_sec),
+				(unsigned int) SECONDS(tv->tv_sec),
+				(unsigned int) usec * 100);
+			return;
+		}
+		format |= VERBOSE_FIXED_TIME;	/* fallback if hours needed */
+	}
+
+	if ((format & VERBOSE_FIXED_TIME) || tv->tv_sec) {
+		snprintf(ts, size, "%u:%02u:%02u.%02u",
 			(unsigned int) HOURS(tv->tv_sec),
 			(unsigned int) MINUTES(tv->tv_sec),
 			(unsigned int) SECONDS(tv->tv_sec),
-			(unsigned int) tv->tv_usec);
+			(unsigned int) usec * 100);
+	} else {
+		snprintf(ts, size, "0.%04u sec", (unsigned int) usec * 10000);
+	}
 }

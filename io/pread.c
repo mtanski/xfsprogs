@@ -152,11 +152,12 @@ pread_f(
 	int		blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
-	int		uflag = 0, vflag = 0;
+	int		Cflag, uflag, vflag;
 	int		c;
 
+	Cflag = uflag = vflag = 0;
 	init_cvtnum(&blocksize, &sectsize);
-	while ((c = getopt(argc, argv, "b:uv")) != EOF) {
+	while ((c = getopt(argc, argv, "b:Cuv")) != EOF) {
 		switch (c) {
 		case 'b':
 			blocksize = cvtnum(blocksize, sectsize, optarg);
@@ -164,6 +165,9 @@ pread_f(
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
+			break;
+		case 'C':
+			Cflag = 1;
 			break;
 		case 'u':
 			uflag = 1;
@@ -199,13 +203,20 @@ pread_f(
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
 
-	printf(_("read %lld/%lld bytes at offset %lld\n"),
-		total, count, (long long)offset);
-	cvtstr((double)total, s1, sizeof(s1));
-	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
-	timestr(&t2, ts, sizeof(ts));
-	printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
-		s1, c, ts, s2, tdiv((double)c, t2));
+	/* Finally, report back -- -C gives a parsable format */
+	timestr(&t2, ts, sizeof(ts), Cflag ? VERBOSE_FIXED_TIME : 0);
+	if (!Cflag) {
+		cvtstr((double)total, s1, sizeof(s1));
+		cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
+		printf(_("read %lld/%lld bytes at offset %lld\n"),
+			total, count, (long long)offset);
+		printf(_("%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"),
+			s1, c, ts, s2, tdiv((double)c, t2));
+	} else {/* bytes,ops,time,bytes/sec,ops/sec */
+		printf("%lld,%d,%s,%.3f,%.3f\n",
+			total, c, ts,
+			tdiv((double)total, t2), tdiv((double)c, t2));
+	}
 	return 0;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -39,6 +39,7 @@ char	*progname;
 int	exitcode;
 int	expert;
 size_t	pagesize;
+struct timeval stopwatch;
 
 static int	ncmdline;
 static char	**cmdline;
@@ -61,6 +62,7 @@ init_commands(void)
 	file_init();
 	freeze_init();
 	fsync_init();
+	getrusage_init();
 	help_init();
 	inject_init();
 	mmap_init();
@@ -86,10 +88,12 @@ init(
 	xfs_fsop_geom_t	geometry = { 0 };
 
 	progname = basename(argv[0]);
-	pagesize = getpagesize();
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
+
+	pagesize = getpagesize();
+	gettimeofday(&stopwatch, NULL);
 
 	while ((c = getopt(argc, argv, "ac:dFfmp:rRstVx")) != EOF) {
 		switch (c) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -34,3 +34,4 @@ extern char	*progname;
 extern int	exitcode;
 extern int	expert;
 extern size_t	pagesize;
+extern struct timeval stopwatch;

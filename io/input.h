@@ -38,5 +38,12 @@ extern long long cvtnum(int blocksize, int sectorsize, char *s);
 extern void	cvtstr(double value, char *str, size_t sz);
 extern struct timeval tsub(struct timeval t1, struct timeval t2);
 extern double	tdiv(double value, struct timeval tv);
-extern void	timestr(struct timeval *tv, char *str, size_t sz);
+
+enum {
+	DEFAULT_TIME		= 0x0,
+	TERSE_FIXED_TIME	= 0x1,
+	VERBOSE_FIXED_TIME	= 0x2,
+};
+
+extern void	timestr(struct timeval *tv, char *str, size_t sz, int flags);
 
