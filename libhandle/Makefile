@@ -35,7 +35,7 @@ include $(TOPDIR)/include/builddefs
 
 LTLIBRARY = libhandle.la
 LT_CURRENT = 1
-LT_REVISION = 0
+LT_REVISION = 1
 LT_AGE = 0
 
 CFILES = handle.c jdm.c

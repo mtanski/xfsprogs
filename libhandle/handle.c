@@ -226,7 +226,7 @@ obj_to_handle (
 		hreq.path    = obj.path;
 	}
 
-	hreq.oflags   = 0;
+	hreq.oflags   = O_LARGEFILE;
 	hreq.ihandle  = NULL;
 	hreq.ihandlen = 0;
 	hreq.ohandle  = hbuf;
@@ -268,7 +268,7 @@ open_by_handle (
 
 	hreq.fd       = 0;
 	hreq.path     = NULL;
-	hreq.oflags   = rw;
+	hreq.oflags   = rw | O_LARGEFILE;
 	hreq.ihandle  = hanp;
 	hreq.ihandlen = hlen;
 	hreq.ohandle  = NULL;
@@ -297,7 +297,7 @@ readlink_by_handle (
 
 	hreq.fd       = 0;
 	hreq.path     = NULL;
-	hreq.oflags   = 0;
+	hreq.oflags   = O_LARGEFILE;
 	hreq.ihandle  = hanp;
 	hreq.ihandlen = hlen;
 	hreq.ohandle  = buf;
@@ -324,7 +324,7 @@ attr_multi_by_handle(
 
 	amhreq.hreq.fd       = 0;
 	amhreq.hreq.path     = NULL;
-	amhreq.hreq.oflags   = 0;
+	amhreq.hreq.oflags   = O_LARGEFILE;
 	amhreq.hreq.ihandle  = hanp;
 	amhreq.hreq.ihandlen = hlen;
 	amhreq.hreq.ohandle  = NULL;
@@ -355,7 +355,7 @@ attr_list_by_handle(
 
 	alhreq.hreq.fd       = 0;
 	alhreq.hreq.path     = NULL;
-	alhreq.hreq.oflags   = 0;
+	alhreq.hreq.oflags   = O_LARGEFILE;
 	alhreq.hreq.ihandle  = hanp;
 	alhreq.hreq.ihandlen = hlen;
 	alhreq.hreq.ohandle  = NULL;
@@ -386,7 +386,7 @@ fssetdm_by_handle (
 
 	dmhreq.hreq.fd       = 0;
 	dmhreq.hreq.path     = NULL;
-	dmhreq.hreq.oflags   = 0;
+	dmhreq.hreq.oflags   = O_LARGEFILE;
 	dmhreq.hreq.ihandle  = hanp;
 	dmhreq.hreq.ihandlen = hlen;
 	dmhreq.hreq.ohandle  = NULL;
