@@ -496,7 +496,8 @@ main(int argc, char **argv)
 	int		open_flags;
 	xfs_off_t	pos, end_pos;
 	size_t		length;
-	int		c, size, sizeb, first_residue, tmp_residue;
+	int		c, first_residue, tmp_residue;
+	__uint64_t	size, sizeb;
 	__uint64_t	numblocks = 0;
 	int		wblocks = 0;
 	int		num_threads = 0;
