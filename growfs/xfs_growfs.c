@@ -77,19 +77,23 @@ report_info(
 	char		*mntpoint,
 	int		unwritten,
 	int		dirversion,
+	int		logversion,
 	int		isint)
 {
 	printf("meta-data=%-22s isize=%-6d agcount=%d, agsize=%d blks\n"
 	       "data     =%-22s bsize=%-6d blocks=%lld, imaxpct=%d\n"
 	       "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
 	       "naming   =version %-14d bsize=%-6d\n"
-	       "log      =%-22s bsize=%-6d blocks=%d\n"
+	       "log      =%-22s bsize=%-6d blocks=%d version=%d\n"
+	       "         =%-22s sunit=%d blks\n"
 	       "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 	       mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
 	       "", geo.blocksize, (long long)geo.datablocks, geo.imaxpct,
 	       "", geo.sunit, geo.swidth, unwritten,
 	       dirversion, geo.dirblocksize,
 	       isint ? "internal" : "external", geo.blocksize, geo.logblocks,
+	       logversion,
+	       "", geo.logsunit / geo.blocksize,
 	       geo.rtblocks ? "external" : "none",
 	       geo.rtextsize * geo.blocksize,
 	       (long long)geo.rtblocks, (long long)geo.rtextents);
@@ -170,6 +174,7 @@ main(int argc, char **argv)
 	long long		ddsize;	/* device size in 512-byte blocks */
 	int			dflag;	/* -d flag */
 	int			dirversion; /* directory version number */
+	int			logversion; /* log version number */
 	long long		dlsize;	/* device size in 512-byte blocks */
 	long long		drsize;	/* device size in 512-byte blocks */
 	long long		dsize;	/* new data size in fs blocks */
@@ -273,9 +278,11 @@ main(int argc, char **argv)
 	isint = geo.logstart > 0;
 	unwritten = geo.flags & XFS_FSOP_GEOM_FLAGS_EXTFLG ? 1 : 0;
 	dirversion = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? 2 : 1;
+	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
 
 	if (nflag) {
-		report_info(geo, fname, unwritten, dirversion, isint);
+		report_info(geo, fname, unwritten, dirversion, logversion, 
+				isint);
 		exit(0);
 	}
 
@@ -310,7 +317,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	report_info(geo, fname, unwritten, dirversion, isint);
+	report_info(geo, fname, unwritten, dirversion, logversion, isint);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :
