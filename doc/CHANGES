@@ -1,3 +1,8 @@
+xfsprogs-2.4.12 (02 June 2003)
+	- Fix xfs_logprint handling of any version 2 log device.
+	- Remove calls to exit in libhandle, propogate errors to
+	  caller, and bumped libhandle version from 1.0.1 to 1.0.2.
+
 xfsprogs-2.4.11 (30 May 2003)
 	- Extract device sector size at mkfs time and issue warnings
 	  if the requested filesystem sector size is too small.

@@ -56,19 +56,8 @@ typedef union {
 	char	*path;
 } comarg_t;
 
-static int
-obj_to_handle (
-	char		*fspath,
-	int		fsfd,
-	unsigned int	opcode,
-	comarg_t	obj,
-	void		**hanp,
-	size_t		*hlen);
-
-static int
-handle_to_fsfd (
-	void		*hanp,
-	char		**path);
+static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
+static int handle_to_fsfd(void *, char **);
 
 
 /*
@@ -86,10 +75,10 @@ struct fdhash {
 	char	fspath[MAXPATHLEN];
 };
 
-static struct fdhash *fdhash_head = NULL;
+static struct fdhash *fdhash_head;
 
 int
-path_to_fshandle (
+path_to_fshandle(
 	char		*path,		/* input,  path to convert */
 	void		**hanp,		/* output, pointer to data */
 	size_t		*hlen)		/* output, size of returned data */
@@ -100,17 +89,12 @@ path_to_fshandle (
 	struct fdhash	*fdhp;
 
 	fd = open(path, O_RDONLY);
-
-	if (fd <  0) {
-		perror(path);
-		exit(1);
-	}
+	if (fd < 0)
+		return -1;
 
 	obj.path = path;
-
 	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
 				obj, hanp, hlen);
-
 	if (result >= 0) {
 		fdhp = malloc(sizeof(struct fdhash));
 		if (fdhp == NULL) {
@@ -132,9 +116,8 @@ path_to_fshandle (
 	return result;
 }
 
-
 int
-path_to_handle (
+path_to_handle(
 	char		*path,		/* input,  path to convert */
 	void		**hanp,		/* output, pointer to data */
 	size_t		*hlen)		/* output, size of returned data */
@@ -144,24 +127,18 @@ path_to_handle (
 	comarg_t	obj;
 
 	fd = open(path, O_RDONLY);
-
-	if (fd <  0) {
-		perror(path);
-		exit(1);
-	}
+	if (fd < 0)
+		return -1;
 
 	obj.path = path;
-
-	result = obj_to_handle (path, fd, XFS_IOC_PATH_TO_HANDLE, obj, hanp, hlen);
-
+	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
+				obj, hanp, hlen);
 	close(fd);
-
 	return result;
 }
 
-
 int
-handle_to_fshandle (
+handle_to_fshandle(
 	void		*hanp,
 	size_t		hlen,
 	void		**fshanp,
@@ -169,19 +146,13 @@ handle_to_fshandle (
 {
 	if (hlen < FSIDSIZE)
 		return EINVAL;
-
-	*fshanp = malloc (FSIDSIZE);
-
+	*fshanp = malloc(FSIDSIZE);
 	if (*fshanp == NULL)
 		return ENOMEM;
-
 	*fshlen = FSIDSIZE;
-
 	memcpy(*fshanp, hanp, FSIDSIZE);
-
 	return 0;
 }
-
 
 static int
 handle_to_fsfd(void *hanp, char **path)
@@ -194,12 +165,12 @@ handle_to_fsfd(void *hanp, char **path)
 			return fdhp->fsfd;
 		}
 	}
+	errno = EBADF;
 	return -1;
 }
 
-
 static int
-obj_to_handle (
+obj_to_handle(
 	char		*fspath,
 	int		fsfd,
 	unsigned int	opcode,
@@ -236,13 +207,11 @@ obj_to_handle (
 	}
 
 	memcpy(*hanp, hbuf, (int) *hlen);
-
 	return 0;
 }
 
-
 int
-open_by_handle (
+open_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	int		rw)
@@ -251,10 +220,8 @@ open_by_handle (
 	char		*path;
 	xfs_fsop_handlereq_t hreq;
 
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
-		errno = EBADF;
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
-	}
 
 	hreq.fd       = 0;
 	hreq.path     = NULL;
@@ -268,7 +235,7 @@ open_by_handle (
 }
 
 int
-readlink_by_handle (
+readlink_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	void		*buf,
@@ -278,11 +245,8 @@ readlink_by_handle (
 	char		*path;
 	xfs_fsop_handlereq_t hreq;
 
-
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
-		errno = EBADF;
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
-	}
 
 	hreq.fd       = 0;
 	hreq.path     = NULL;
@@ -307,10 +271,8 @@ attr_multi_by_handle(
 	char		*path;
 	xfs_fsop_attrmulti_handlereq_t amhreq;
 
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
-		errno = EBADF;
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
-	}
 
 	amhreq.hreq.fd       = 0;
 	amhreq.hreq.path     = NULL;
@@ -339,10 +301,8 @@ attr_list_by_handle(
 	char		*path;
 	xfs_fsop_attrlist_handlereq_t alhreq;
 
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
-		errno = EBADF;
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
-	}
 
 	alhreq.hreq.fd       = 0;
 	alhreq.hreq.path     = NULL;
@@ -361,7 +321,7 @@ attr_list_by_handle(
 }
 
 int
-fssetdm_by_handle (
+fssetdm_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	struct fsdmidata *fsdmidata)
@@ -370,11 +330,8 @@ fssetdm_by_handle (
 	char		*path;
 	xfs_fsop_setdm_handlereq_t dmhreq;
 
-
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0) {
-		errno = EBADF;
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
-	}
 
 	dmhreq.hreq.fd       = 0;
 	dmhreq.hreq.path     = NULL;
@@ -389,11 +346,10 @@ fssetdm_by_handle (
 	return xfsctl(path, fd, XFS_IOC_FSSETDM_BY_HANDLE, &dmhreq);
 }
 
-/*ARGSUSED*/
 void
-free_handle (
+free_handle(
 	void		*hanp,
 	size_t		hlen)
 {
-	free (hanp);
+	free(hanp);
 }
