@@ -46,8 +46,11 @@ CHANGES.gz:
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-ifneq ($(PKG_DISTRIBUTION), debian)
+	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS $(README) $(PKG_DOC_DIR)
+ifeq ($(PKG_DISTRIBUTION), debian)
+	$(INSTALL) -S CHANGES.gz $(PKG_DOC_DIR)/changelog.gz
+else
 	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
 endif
-	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS $(README) $(PKG_DOC_DIR)
+
 install-dev:

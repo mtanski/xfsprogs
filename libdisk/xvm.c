@@ -38,10 +38,11 @@
 #include <volume.h>
 #include "xvm.h"
 
-static int
+int
 mnt_is_xvm_subvol(dev_t dev)
 {
-	/* TODO - DeanJ? - for now, always return false */
+	if (major(dev) == get_driver_block_major("xvm"))
+		return 1;
 	return 0;
 }
 
@@ -62,10 +63,43 @@ xvm_get_subvol_stripe(
 	int		*swidth,
 	struct stat64	*sb)
 {
-	if (!mnt_is_xvm_subvol(sb->st_dev))
+	int fd;
+	xvm_getdev_t getdev;
+	xvm_subvol_stripe_t subvol_stripe;
+
+	if (!mnt_is_xvm_subvol(sb->st_rdev))
 		return 0;
 
-	/* TODO - DeanJ? - for now, always return false */
+	/*
+	 * This will actually open the data subvolume.
+	 */
+	if ((fd = open(dev, O_RDONLY)) < 0)
+		return 0;
 
-	return 0;
+	/*
+	 * Go and get the the information for the correct
+	 * subvolume.
+	 */
+	if (ioctl(fd, DIOCGETVOLDEV, &getdev) < 0) {
+		close(fd);
+		return 0;
+	}
+	if ( (type == SVTYPE_RT) && (getdev.rt_subvol_dev) )
+		subvol_stripe.dev = getdev.rt_subvol_dev;
+	else if ( (type == SVTYPE_DATA) && (getdev.data_subvol_dev) )
+		subvol_stripe.dev = getdev.data_subvol_dev;
+	else {
+		close(fd);
+		return 0;
+	}
+
+	if (ioctl(fd, DIOCGETVOLSTRIPE, &subvol_stripe) < 0) {
+		close(fd);
+		return 0;
+	}
+
+	*sunit = subvol_stripe.unit_size;
+	*swidth = *sunit * subvol_stripe.width_size;
+	close(fd);
+	return 1;
 }

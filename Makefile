@@ -38,13 +38,10 @@ include $(TOPDIR)/include/builddefs
 endif
 
 CONFIGURE = configure include/builddefs include/platform_defs.h
-
-LT_LSRCFILES = config.guess config.sub ltmain.sh ltconfig aclocal.m4
-LSRCFILES = configure configure.in Makepkgs install-sh README VERSION \
-	$(LT_LSRCFILES)
+LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
 
 LDIRT = config.log config.status config.cache confdefs.h conftest* \
-	Logs/* built .census install.* install-dev.* *.gz libtool
+	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libhandle libdisk \
 	bmap db freeze fsck growfs logprint mkfile mkfs repair rtcp \

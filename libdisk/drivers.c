@@ -61,3 +61,29 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 		return;
 	/* ... add new device drivers here */
 }
+
+/*
+ * General purpose routine which dredges through procfs trying to
+ * match up device driver names with the associated major numbers
+ * being used in the running kernel.
+ */
+int
+get_driver_block_major(const char *driver)
+{
+	FILE	*f;
+	char	buf[64], puf[64];
+	int	major = -1;
+
+#define PROC_DEVICES	"/proc/devices"
+	if ((f = fopen(PROC_DEVICES, "r")) == NULL)
+		return major;
+	while (fgets(buf, sizeof(buf), f))	/* skip to block dev section */
+		if (strcmp("Block devices:\n", buf) == 0)
+			break;
+	while (fgets(buf, sizeof(buf), f))
+		if ((sscanf(buf, "%u %s\n", &major, puf) == 2) &&
+		    (strcmp(puf, driver) == 0))
+			break;
+	fclose(f);
+	return major;
+}

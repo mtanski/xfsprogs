@@ -35,13 +35,20 @@
 #include <sys/stat.h>
 #include <volume.h>
 
-#if HAVE_LIBLVM
-  #include "lvm_user.h"
+#include "lvm_user.h"
 
+#if HAVE_LIBLVM
   char *cmd;		/* Not used. liblvm is broken */
   int opt_d;		/* Same thing */
 #endif
 
+int
+mnt_is_lvm_subvol(dev_t dev)
+{
+	if (dev >> 8 == LVM_BLK_MAJOR)
+		return 1;
+	return 0;
+}
 
 int
 lvm_get_subvol_stripe(
@@ -52,7 +59,7 @@ lvm_get_subvol_stripe(
 	struct stat64	*sb)
 {
 #if HAVE_LIBLVM
-	if (sb->st_rdev >> 8 == LVM_BLK_MAJOR) {
+	if (mnt_is_lvm_subvol(sb->st_rdev)) {
 		lv_t	*lv;
 		char	*vgname;
 

@@ -34,7 +34,18 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LSRCFILES = changelog control copyright rules
+DEV_DOC_DIR = $(PKG_DOC_DIR)/../xfslibs-dev
 
-default install install-dev:
+default:
 
 include $(BUILDRULES)
+
+install: default
+	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+	$(INSTALL) -m 644 changelog $(PKG_DOC_DIR)/changelog.Debian
+
+install-dev: default
+	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+	$(INSTALL) -m 755 -d $(DEV_DOC_DIR)
+	$(INSTALL) -m 644 copyright $(DEV_DOC_DIR)
+	$(INSTALL) -m 644 changelog $(DEV_DOC_DIR)/changelog.Debian

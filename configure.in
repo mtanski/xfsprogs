@@ -3,12 +3,6 @@ AC_INIT(include/libxfs.h)
 pkg_name="xfsprogs"
 AC_SUBST(pkg_name)
 
-# For libtool
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
-AC_SUBST(enable_shared)
-
-
 #
 # Note: the following environment variables may be set to override the
 # defaults (to change paths and/or executables, build parameters, etc):
@@ -107,6 +101,24 @@ AC_SUBST(sed)
 test -z "$ECHO" && AC_PATH_PROG(ECHO, echo, /bin/echo)
 echo=$ECHO
 AC_SUBST(echo)
+
+dnl ensure libtool is installed
+AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+if test "$LIBTOOL" = ""; then
+	echo
+	echo 'FATAL ERROR: libtool does not seem to be installed.'
+	echo $pkg_name cannot be built without a working libtool installation.
+	exit 1
+fi
+libtool=$LIBTOOL
+AC_SUBST(libtool)
+
+dnl libtool to build libraries static only?
+AC_ARG_ENABLE(enable_shared,
+	[ --enable-shared=[yes/no]	Enable use of shared libraries [default=yes].],
+	,
+	enable_shared=yes)
+AC_SUBST(enable_shared)
 
 dnl Checks for UUID header and library.
 AC_CHECK_HEADER(uuid/uuid.h,, [
@@ -250,14 +262,6 @@ AC_SUBST(pkg_doc_dir)
 dnl
 dnl output files
 dnl
-
-#For libtool, from section 5.4.2 of the libtool manual.  Just in
-# case we ever need them.
-LTLIBOBJS=`echo "$LIBOBJS" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
-AC_SUBST(LTLIBOBJS)
-LTALLOCA=`echo "$ALLOCA" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
-AC_SUBST(LTALLOCA)
-
 
 AC_OUTPUT( \
 dnl  Build definitions for use in Makefiles

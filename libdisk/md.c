@@ -37,6 +37,14 @@
 #include "md.h"
 
 int
+mnt_is_md_subvol(dev_t dev)
+{
+	if (dev >> 8 == MD_MAJOR)
+		return 1;
+	return 0;
+}
+
+int
 md_get_subvol_stripe(
 	char		*dfile,
 	sv_type_t	type,
@@ -44,7 +52,7 @@ md_get_subvol_stripe(
 	int		*swidth,
 	struct stat64	*sb)
 {
-	if (sb->st_rdev >> 8 == MD_MAJOR) {
+	if (mnt_is_md_subvol(sb->st_rdev)) {
 		struct md_array_info_s	md;
 		int  fd;
 

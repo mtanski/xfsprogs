@@ -52,12 +52,12 @@ fi
 # build RPM packages - manual clean before starting
 echo "== clean, log is $LOGDIR/clean"
 if $verbose ; then
-	$MAKE clean 2>&1 | tee $LOGDIR/clean
+	$MAKE distclean 2>&1 | tee $LOGDIR/clean
 else
-	$MAKE clean > $LOGDIR/clean 2>&1 
+	$MAKE distclean > $LOGDIR/clean 2>&1 
 fi
 if [ $? -ne 0 ] ; then
-	echo \"$MAKE clean\" failed, see log in $LOGDIR/clean
+	echo \"$MAKE distclean\" failed, see log in $LOGDIR/clean
 	tail $LOGDIR/clean
 	exit 1
 fi

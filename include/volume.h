@@ -61,5 +61,6 @@ typedef enum sv_type_e {
 } sv_type_t;
 
 extern void get_subvol_stripe_wrapper (char *, sv_type_t, int *, int *);
+extern int  get_driver_block_major (const char *);
 
 #endif /* __VOLUME_H__ */

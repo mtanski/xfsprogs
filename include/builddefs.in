@@ -77,7 +77,6 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 MAKEDEPEND = @makedepend@
 
 LIBTOOL	= @LIBTOOL@
-LIBTOOL_DEPS = @LIBTOOL_DEPS@
 ENABLE_SHARED = @enable_shared@
 
 #

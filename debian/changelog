@@ -1,3 +1,11 @@
+xfsprogs (1.3.1-0) unstable; urgency=low
+
+  * Reworked package slightly so that its not Debian native
+  * Debian-specific changes now documented in changelog.Debian.gz
+  * New upstream release (see /usr/share/doc/xfsprogs/changelog.gz)
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 15 Jul 2001 16:34:43 +1000
+
 xfsprogs (1.3.0) unstable; urgency=low
 
   * Reworked Makefiles to use libtool

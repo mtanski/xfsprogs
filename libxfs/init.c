@@ -39,10 +39,6 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
-#ifndef BLKBSZSET
-#define BLKBSZSET _IO(0x12,110)	/* set device block size */
-#endif
-
 #define findrawpath(x)	x
 #define findblockpath(x) x
 
@@ -194,7 +190,6 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 	dev_t		dev;
 	int		d;
 	struct stat     statb;
-	int		blocksize = 512; /* bytes */
 
 	if ((fd = open(path,
 			(readonly ? O_RDONLY : O_RDWR) |
@@ -211,14 +206,25 @@ libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 		exit(1);
 	}
 	
-	/* Set device blocksize to 512 bytes */
+#ifdef HAVE_BLKBSZSET
+	/*
+	 * Set device blocksize to 512 bytes
+	 *
+	 * See bug #801063, but we no longer have this ioctl in the kernel -
+	 * it will be needed again though when the fs blocksize != pagesize.
+	 */
+#ifndef BLKBSZSET
+#define BLKBSZSET _IO(0x12,110)	/* set device block size */
+#endif
 	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
+		int blocksize = 512; /* bytes */
 		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
 			fprintf(stderr, "%s: warning - cannot set blocksize on "
 				"block device %s: %s\n",
 				progname, path, strerror(errno));
 		}
 	}
+#endif
 
 	/* get the device number from the stat buf - unless
 	 * we're not opening a real device, in which case
