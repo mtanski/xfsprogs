@@ -34,6 +34,7 @@
 OPTS=""
 VERSION=false
 USAGE="Usage: xfs_bmap [-adlpvV] [-n nx] file..."
+DIRNAME=`dirname $0`
 
 while getopts "adln:pvV" c
 do
@@ -50,16 +51,16 @@ do
 		;;
 	esac
 done
-$VERSION && xfs_io -p xfs_bmap -V
+$VERSION && $DIRNAME/xfs_io -p xfs_bmap -V
 
 set -- extra $@
 shift $OPTIND
 
 while [ "$1" != "" ]
 do
-	eval xfs_io -r -p xfs_bmap -c 'bmap $OPTS' $1
+	eval $DIRNAME/xfs_io -r -p xfs_bmap -c \"bmap $OPTS\" $1
 	status=$?
 	[ $status -ne 0 ] && exit $status
-	shift $OPTIND
+	shift
 done
 exit 0
