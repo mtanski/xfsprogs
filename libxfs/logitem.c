@@ -45,7 +45,9 @@ xfs_zone_t	*xfs_ili_zone;		/* inode log item zone */
  * with its li_desc field.
  */
 xfs_log_item_desc_t *
-xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
+xfs_trans_add_item(
+	xfs_trans_t		*tp,
+	xfs_log_item_t		*lip)
 {
 	xfs_log_item_desc_t	*lidp;
 	xfs_log_item_chunk_t	*licp;
@@ -140,7 +142,9 @@ xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
  * to the given slot.
  */
 void
-xfs_trans_free_item(xfs_trans_t *tp, xfs_log_item_desc_t *lidp)
+xfs_trans_free_item(
+	xfs_trans_t		*tp,
+	xfs_log_item_desc_t	*lidp)
 {
 	uint			slot;
 	xfs_log_item_chunk_t	*licp;
@@ -186,7 +190,9 @@ xfs_trans_free_item(xfs_trans_t *tp, xfs_log_item_desc_t *lidp)
  * Just return it.
  */
 xfs_log_item_desc_t *
-xfs_trans_find_item(xfs_trans_t *tp, xfs_log_item_t *lip)
+xfs_trans_find_item(
+	xfs_trans_t		*tp,
+	xfs_log_item_t		*lip)
 {
 	ASSERT(lip->li_desc != NULL);
 
@@ -202,8 +208,8 @@ xfs_trans_find_item(xfs_trans_t *tp, xfs_log_item_t *lip)
  */
 void
 xfs_trans_free_items(
-	xfs_trans_t	*tp,
-	int		flags)
+	xfs_trans_t		*tp,
+	int			flags)
 {
 	xfs_log_item_chunk_t	*licp;
 	xfs_log_item_chunk_t	*next_licp;
@@ -246,15 +252,15 @@ xfs_trans_free_items(
  */
 STATIC xfs_buf_t *
 xfs_trans_buf_item_match(
-	xfs_trans_t	*tp,
-	xfs_buftarg_t	*target,
-	xfs_daddr_t	blkno,
-	int		len)
+	xfs_trans_t		*tp,
+	xfs_buftarg_t		*target,
+	xfs_daddr_t		blkno,
+	int			len)
 {
 	xfs_log_item_chunk_t	*licp;
 	xfs_log_item_desc_t	*lidp;
 	xfs_buf_log_item_t	*blip;
-	xfs_buf_t			*bp;
+	xfs_buf_t		*bp;
 	int			i;
 
 #ifdef LI_DEBUG
@@ -321,15 +327,15 @@ xfs_trans_buf_item_match(
  */
 STATIC xfs_buf_t *
 xfs_trans_buf_item_match_all(
-	xfs_trans_t	*tp,
-	xfs_buftarg_t	*target,
-	xfs_daddr_t	blkno,
-	int		len)
+	xfs_trans_t		*tp,
+	xfs_buftarg_t		*target,
+	xfs_daddr_t		blkno,
+	int			len)
 {
 	xfs_log_item_chunk_t	*licp;
 	xfs_log_item_desc_t	*lidp;
 	xfs_buf_log_item_t	*blip;
-	xfs_buf_t			*bp;
+	xfs_buf_t		*bp;
 	int			i;
 
 #ifdef LI_DEBUG
@@ -403,8 +409,8 @@ xfs_trans_buf_item_match_all(
  */
 void
 xfs_buf_item_init(
-	xfs_buf_t	*bp,
-	xfs_mount_t	*mp)
+	xfs_buf_t		*bp,
+	xfs_mount_t		*mp)
 {
 	xfs_log_item_t		*lip;
 	xfs_buf_log_item_t	*bip;
@@ -472,8 +478,8 @@ xfs_buf_item_log(
  */
 void
 xfs_inode_item_init(
-	xfs_inode_t	*ip,
-	xfs_mount_t	*mp)
+	xfs_inode_t		*ip,
+	xfs_mount_t		*mp)
 {
 	xfs_inode_log_item_t	*iip;
 
