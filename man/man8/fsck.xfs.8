@@ -15,9 +15,19 @@ XFS is a journaling filesystem and performs recovery at
 time if necessary, so
 .I fsck.xfs
 simply exits with a zero exit status.
+.PP
+If you wish to check check the consistency of an XFS
+filesystem, or repair a damaged or corrupt XFS filesystem,
+see 
+.IR xfs_check (8)
+and
+.IR xfs_repair (8).
+.
 .SH FILES
 .IR /etc/fstab .
 .SH SEE ALSO
 fsck(8),
 fstab(5),
-xfs(5).
+xfs(5),
+xfs_check(8),
+xfs_repair(8).
