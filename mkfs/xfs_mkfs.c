@@ -1215,8 +1215,11 @@ main(int argc, char **argv)
 		usage();
 	} else if (!loginternal && !xi.logdev)
 		logblocks = 0;
-	else if (loginternal && !logsize)
+	else if (loginternal && !logsize) {
 		logblocks = MAX(XFS_DFL_LOG_SIZE, i * XFS_DFL_LOG_FACTOR);
+                logblocks = MAX(logblocks, dblocks / 8192); 
+                logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
+        } 
 	if (logblocks < min_logblocks) {
 		fprintf(stderr,
 		"log size %lld blocks too small, minimum size is %d blocks\n",

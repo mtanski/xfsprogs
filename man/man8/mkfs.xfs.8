@@ -118,9 +118,7 @@ In this case, the log section must be specified as
 (with a size, see the
 .B \-l
 option below) and there can be no real-time section.
-Note that the default log in this case is an internal log with
-at least 1000 blocks, actual size depending on the filesystem block
-size and the directory block size.
+Depending on the filesystem size, mkfs.xfs will try to 
 .IP
 The
 .B file
@@ -252,10 +250,16 @@ If the value is omitted, 1 is assumed.
 The
 .B size
 suboption is used to specify the size of the log section.
-This suboption is required if
-.B \-l internal[=1]
-is given.
-Otherwise, it is only needed if the log section of the filesystem
+.IP
+If the log is contained within the data section and 
+.B size
+isn't specified, mkfs will try to select a suitable log size depending
+on the size of the filesystem.  The actual logsize depends on the
+filesystem block size and the directory block size.
+.IP
+Otherwise, the
+.B size
+option is only needed if the log section of the filesystem
 should occupy less space than the size of the special file.
 The size is specified in bytes or blocks, with a \f3b\f1 suffix 
 meaning multiplication by the filesystem block size, as described above.
