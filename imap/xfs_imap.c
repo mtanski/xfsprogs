@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2001 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -29,18 +29,68 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef _XR_ATTRREPAIR_H
-#define _XR_ATTRREPAIR_H
 
-#define ACL_USER_OBJ	0x01	/* owner */
-#define ACL_USER	0x02	/* additional users */
-#define ACL_GROUP_OBJ	0x04	/* group */
-#define ACL_GROUP	0x08	/* additional groups */
-#define ACL_MASK	0x10	/* mask entry */
-#define ACL_OTHER_OBJ	0x20	/* other entry */
+/* 
+ * Inode map display utility for XFS.
+ */
 
-struct blkmap;
-extern int process_attributes (xfs_mount_t *, xfs_ino_t, xfs_dinode_t *,
-				struct blkmap *, int *);
+#include <libxfs.h>
+#include <sys/ioctl.h>
+#include <sys/vfs.h>
 
-#endif /* _XR_ATTRREPAIR_H */
+int main(int argc, char **argv)
+{
+	int		count;
+	int		nent;
+	int		fd;
+	int		i;
+	char		*name;
+	char		*progname;
+	__s64		last = 0;
+	xfs_inogrp_t	*t;
+	xfs_fsop_bulkreq_t bulkreq;
+	struct statfs	buf;
+
+	progname = basename(argv[0]);
+
+	if (argc < 2)
+		name = ".";
+	else
+		name = argv[1];
+	fd = open(name, O_RDONLY);
+	if (fd < 0) {
+		perror(name);
+		return 1;
+	}
+	fstatfs(fd, &buf);
+	if (buf.f_type != XFS_SUPER_MAGIC) {
+		fprintf(stderr, "%s: "
+			"specified file [\"%s\"] is not on an XFS filesystem\n",
+			progname, name);
+		exit(1);
+	}
+
+	if (argc < 3)
+		nent = 1;
+	else
+		nent = atoi(argv[2]);
+
+	t = malloc(nent * sizeof(*t));
+
+	bulkreq.lastip  = &last;
+	bulkreq.icount  = nent;
+	bulkreq.ubuffer = t;
+	bulkreq.ocount  = &count;
+
+	while (ioctl(fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+		if (count == 0)
+			return 0;
+		for (i = 0; i < count; i++) {
+			printf("ino %10lld count %2d mask %016llx\n",
+				t[i].xi_startino, t[i].xi_alloccount,
+				t[i].xi_allocmask);
+		}
+	}
+	perror("ioctl(XFS_IOC_FSINUMBERS)");
+	return 1;
+}

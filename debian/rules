@@ -16,8 +16,8 @@ options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
 bfsopts = $(options) OPTIMIZER=-Os; export OPTIMIZER;
 checkdir = test -f debian/rules
 
-build: bfbuilt built
-built: config
+build: built
+built: bfbuild config
 	@echo "== dpkg-buildpackage: build" 1>&2
 	$(MAKE) default
 	touch built
@@ -30,28 +30,21 @@ config: .census
 	$(options) ./configure
 	touch .census
 
-bfbuilt: bfconfig
-	@echo "== dpkg-buildpackage: bootfloppies build" 1>&2
-	for dir in libxfs libdisk mkfs; \
-	do \
-		$(MAKE) -C $$dir; \
-	done
-	mv mkfs/mkfs.xfs mkfs/mkfs.xfs-$(bootpkg)
-	$(MAKE) distclean
-	touch bfbuilt
-
-bfconfig: .bfcensus
-.bfcensus:
-	@echo "== dpkg-buildpackage: bootfloppies configure" 1>&2
+bfbuild: 
 	$(checkdir)
-	autoconf
-	$(bfsopts) ./configure --enable-shared-uuid=yes
-	touch .bfcensus
+	@echo "== dpkg-buildpackage: bootfloppies" 1>&2
+	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
+		autoconf; \
+		$(bfsopts) ./configure --enable-shared-uuid=yes; \
+		for dir in libxfs libdisk mkfs; do $(MAKE) -C $$dir; done; \
+		mv mkfs/mkfs.xfs mkfs/mkfs.xfs-$(bootpkg); \
+		$(MAKE) distclean; \
+	fi
 
 clean:
 	@echo "== dpkg-buildpackage: clean" 1>&2
 	$(checkdir)
-	-rm -f bfbuilt built .bfcensus .census mkfs/mkfs.xfs-$(bootpkg)
+	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
 	$(MAKE) distclean
 	-rm -rf $(dirtmp) $(dirdev) $(dirbfs) debian/*substvars debian/files*
 
@@ -62,7 +55,7 @@ binary-indep:
 # Note2: absolute symlinks (required by policy) confuse debstd;
 # so we'll filter out symlink messages entirely now.
 # 
-binary-arch: checkroot bfbuilt built
+binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
 	-rm -rf $(dirtmp) $(dirdev) $(dirbfs)

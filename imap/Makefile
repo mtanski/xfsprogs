@@ -30,49 +30,15 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = .
-HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
-
-ifeq ($(HAVE_BUILDDEFS), yes)
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
-endif
 
-CONFIGURE = configure include/builddefs include/platform_defs.h
-LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
+LTCOMMAND = xfs_imap
+CFILES = xfs_imap.c
 
-LDIRT = config.log config.status config.cache confdefs.h conftest* \
-	Logs/* install.* install-dev.* *.gz
+default: $(LTCOMMAND)
 
-SUBDIRS = include libxfs libhandle libdisk \
-	bmap db freeze fsck growfs imap logprint mkfile mkfs repair rtcp \
-	man doc debian build
-
-default: $(CONFIGURE)
-ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
-else
-	$(SUBDIRS_MAKERULE)
-endif
-
-ifeq ($(HAVE_BUILDDEFS), yes)
 include $(BUILDRULES)
-else
-clean:	# if configure hasn't run, nothing to clean
-endif
 
-$(CONFIGURE):
-	autoconf
-	./configure
-	touch .census
-
-install: default
-	$(SUBDIRS_MAKERULE)
-	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
-
-install-dev: default
-	$(SUBDIRS_MAKERULE)
-
-realclean distclean: clean
-	rm -f $(LDIRT) $(CONFIGURE)
-	[ ! -d Logs ] || rmdir Logs
+install:
+install-dev:

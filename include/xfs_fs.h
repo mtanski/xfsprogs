@@ -52,7 +52,7 @@ struct biosize {
 };
 	
 /* 
- * direct I/O attribute record used with F_DIOINFO
+ * Direct I/O attribute record used with XFS_IOC_DIOINFO
  * d_miniosz is the min xfer size, xfer size multiple and file seek offset
  * alignment.
  */
@@ -63,7 +63,7 @@ struct dioattr {
 };
 
 /*
- * Structure for F_FSGETXATTR[A] and F_FSSETXATTR.
+ * Structure for XFS_IOC_FSGETXATTR[A] and XFS_IOC_FSSETXATTR.
  */
 struct fsxattr {
 	__u32	 	fsx_xflags;	/* xflags field value (get/set)	*/
@@ -85,7 +85,7 @@ struct fsxattr {
 
 
 /*
- * Structure for F_GETBMAP.
+ * Structure for XFS_IOC_GETBMAP.
  * On input, fill in bmv_offset and bmv_length of the first structure
  * to indicate the area of interest in the file, and bmv_entry with the
  * number of array elements given.  The first structure is updated on
@@ -100,12 +100,13 @@ struct getbmap {
 };
 
 /*
- *	Structure for F_GETBMAPX.  The fields bmv_offset through bmv_entries
+ *	Structure for XFS_IOC_GETBMAPX.  Fields bmv_offset through bmv_entries
  *	are used exactly as in the getbmap structure.  The getbmapx structure
  *	has additional bmv_iflags and bmv_oflags fields. The bmv_iflags field
  *	is only used for the first structure.  It contains input flags 
- *	specifying F_GETBMAPX actions.  The bmv_oflags field is filled in
- *	by the F_GETBMAPX command for each returned structure after the first.
+ *	specifying XFS_IOC_GETBMAPX actions.  The bmv_oflags field is filled
+ *	in by the XFS_IOC_GETBMAPX command for each returned structure after
+ *	the first.
  */
 struct getbmapx {
 	__s64		bmv_offset;	/* file offset of segment in blocks */
@@ -119,20 +120,19 @@ struct getbmapx {
 	__s32		bmv_unused2;	/* future use			    */
 };
 
-/*	bmv_iflags values - set by F_GETBMAPX caller.	*/
-
+/*	bmv_iflags values - set by XFS_IOC_GETBMAPX caller.	*/
 #define	BMV_IF_ATTRFORK		0x1	/* return attr fork rather than data */
 #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
 #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
-
 #define BMV_IF_VALID	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC)
+#ifdef __KERNEL__
+#define	BMV_IF_EXTENDED	0x40000000	/* getpmapx if set */
+#endif
 
-/*	bmv_oflags values - returned from F_GETBMAPX for each non-header segment */
-
+/*	bmv_oflags values - returned for for each non-header segment */
 #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
 
 /*	Convert getbmap <-> getbmapx - move fields from p1 to p2. */
-
 #define	GETBMAP_CONVERT(p1,p2) {	\
 	p2.bmv_offset = p1.bmv_offset;	\
 	p2.bmv_block = p1.bmv_block;	\
@@ -140,12 +140,6 @@ struct getbmapx {
 	p2.bmv_count = p1.bmv_count;	\
 	p2.bmv_entries = p1.bmv_entries;  }
 
-#ifdef __KERNEL__
-
-/*	Kernel only bmv_iflags value.	*/
-#define	BMV_IF_EXTENDED	0x40000000	/* getpmapx if set */
-
-#endif	/* __KERNEL__ */
 
 /*
  * Structure for XFS_IOC_FSSETDM.
@@ -236,24 +230,18 @@ typedef struct xfs_fsop_resblks {
 #define	XFS_MAX_LOG_BYTES	(128 * 1024 * 1024)
 
 /*
- * XFS_IOC_FSGROWFSDATA
+ * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
  */
 typedef struct xfs_growfs_data {
 	__u64		newblocks;	/* new data subvol size, fsblocks */
 	__u32		imaxpct;	/* new inode space percentage limit */
 } xfs_growfs_data_t;
 
-/*
- * XFS_IOC_FSGROWFSLOG
- */
 typedef struct xfs_growfs_log {
 	__u32		newblocks;	/* new log size, fsblocks */
 	__u32		isint;		/* 1 if new log is internal */
 } xfs_growfs_log_t;
 
-/*
- * XFS_IOC_FSGROWFSRT
- */
 typedef struct xfs_growfs_rt {
 	__u64		newblocks;	/* new realtime size, fsblocks */
 	__u32		extsize;	/* new realtime extent size, fsblocks */
@@ -304,13 +292,22 @@ typedef struct xfs_fsop_bulkreq {
 
 
 /*
- * Structures returned from xfs_inumbers syssgi routine.
+ * Structures returned from xfs_inumbers routine (XFS_IOC_FSINUMBERS).
  */
 typedef struct xfs_inogrp {
 	__u64		xi_startino;	/* starting inode number	*/
 	__s32		xi_alloccount;	/* # bits set in allocmask	*/
 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
 } xfs_inogrp_t;
+
+
+/*
+ * Error injection.
+ */
+typedef struct xfs_error_injection {
+	__s32           fd;
+	__s32           errtag;
+} xfs_error_injection_t;
 
 
 /*
@@ -326,25 +323,47 @@ typedef struct xfs_fsop_handlereq {
 	__u32		*ohandlen;	/* user buffer length		*/
 } xfs_fsop_handlereq_t;
 
-/* 
- * Error injection can be turned on ethier by DEBUG or by INDUCE_IO_ERROR
- * below since relying only on DEBUG will undoubtedly be a different
- * code path.
- */
-/*#define INDUCE_IO_ERROR*/
-
-#if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
 /*
- * Error injection.
+ * Compound structures for passing args through Handle Request interfaces
+ * xfs_fssetdm_by_handle, xfs_attrlist_by_handle, xfs_attrmulti_by_handle
+ * - ioctls: XFS_IOC_FSSETDM_BY_HANDLE, XFS_IOC_ATTRLIST_BY_HANDLE, and
+ *           XFS_IOC_ATTRMULTI_BY_HANDLE
  */
-typedef struct xfs_error_injection {
-	__s32           fd;
-	__s32           errtag;
-} xfs_error_injection_t;
-#endif /* DEBUG || INDUCE_IO_ERROR */
+
+typedef struct xfs_fsop_setdm_handlereq {
+	struct xfs_fsop_handlereq hreq; /* handle interface structure */
+	struct fsdmidata *data;	        /* DMAPI data to set          */
+} xfs_fsop_setdm_handlereq_t;
+
+typedef struct xfs_attrlist_cursor {
+	__u32	opaque[4];
+} xfs_attrlist_cursor_t;
+
+typedef struct xfs_fsop_attrlist_handlereq {
+	struct xfs_fsop_handlereq hreq; /* handle interface structure */
+	struct xfs_attrlist_cursor pos; /* opaque cookie, list offset */
+	__u32 flags;                    /* flags, use ROOT/USER names */
+	__u32 buflen;                   /* length of buffer supplied  */
+	void *buffer;                   /* attrlist data to return    */
+} xfs_fsop_attrlist_handlereq_t;
+
+typedef struct xfs_attr_multiop {
+	__u32	am_opcode;
+	__s32	am_error;
+	void	*am_attrname;
+	void	*am_attrvalue;
+	__u32	am_length;
+	__u32	am_flags;
+} xfs_attr_multiop_t;
+
+typedef struct xfs_fsop_attrmulti_handlereq {
+	struct xfs_fsop_handlereq hreq; /* handle interface structure */
+	__u32 opcount;                  /* count of following multiop */
+	struct xfs_attr_multiop *ops;   /* attr_multi data to get/set */
+} xfs_fsop_attrmulti_handlereq_t;
 
 /*
- * Compound structure for passing args through ioctl to xfs_attrctl_by_handle
+ * Structure for XFS_IOC_ATTRCTL_BY_HANDLE ioctl, will be removed later.
  */
 typedef struct xfs_fsop_attr_handlereq {
 	struct xfs_fsop_handlereq *hreq;/* handle request interface	*/
@@ -352,15 +371,6 @@ typedef struct xfs_fsop_attr_handlereq {
 	struct attr_op	*ops;		/* array of attribute ops	*/
 	int		count;		/* number of attribute ops	*/
 } xfs_fsop_attr_handlereq_t;
-
-/*
- * Compound structure for passing args through ioctl to xfs_fssetdm_by_handle
- */
-typedef struct xfs_fsop_setdm_handlereq {
-	struct xfs_fsop_handlereq hreq; /* handle request interface     */
-					/* structure                    */
-	struct fsdmidata *data;	        /* DMAPI data to set            */
-} xfs_fsop_setdm_handlereq_t;
 
 /*
  * File system identifier. Should be unique (at least per machine).
@@ -375,7 +385,6 @@ typedef struct {
  * "file handles".
  */
 #define MAXFIDSZ        46
-
 typedef struct fid {
 	__u16		fid_len;		/* length of data in bytes */
 	unsigned char	fid_data[MAXFIDSZ];	/* data (variable length)  */
@@ -402,7 +411,6 @@ typedef struct xfs_handle {
 	} ha_u;
 	xfs_fid_t	ha_fid;		/* file system specific file ID  */
 } xfs_handle_t;
-
 #define ha_fsid ha_u._ha_fsid
 
 #define	XFS_HSIZE(handle)	(((char *) &(handle).ha_fid.xfs_fid_pad  \
@@ -457,19 +465,20 @@ typedef struct xfs_handle {
 #define	XFS_IOC_FSCOUNTS	     _IOR ('X', 113, struct xfs_fsop_counts)
 #define	XFS_IOC_SET_RESBLKS	     _IOR ('X', 114, struct xfs_fsop_resblks)
 #define	XFS_IOC_GET_RESBLKS	     _IOR ('X', 115, struct xfs_fsop_resblks)
-#if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
 #define XFS_IOC_ERROR_INJECTION      _IOW ('X', 116, struct xfs_error_injection)
 #define XFS_IOC_ERROR_CLEARALL       _IOW ('X', 117, struct xfs_error_injection)
-#endif /* DEBUG || INDUCE_IO_ERROR */
+/*      XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118      */
 #define	XFS_IOC_ATTRCTL_BY_HANDLE    _IOWR('X', 118, struct xfs_fsop_attr_handlereq)
 #define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
 #define XFS_IOC_THAW		     _IOWR('X', 120, int)
 #define	XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+#define	XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+#define	XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
 /*
  * ioctl command to export information not in standard interfaces
  * 	140: IRIX statvfs.f_fstr field - UUID from the superblock
  */
-#define XFS_IOC_GETFSUUID	_IOR ('X', 140, unsigned char[16])
+#define XFS_IOC_GETFSUUID            _IOR ('X', 140, unsigned char[16])
 
 
 /*

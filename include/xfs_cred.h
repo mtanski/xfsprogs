@@ -40,6 +40,30 @@
 #endif
 
 /*
+ * Access Control Lists
+ */
+typedef ushort  acl_perm_t;
+typedef int     acl_type_t;
+typedef int     acl_tag_t;
+
+#define ACL_MAX_ENTRIES 25
+#define ACL_NOT_PRESENT -1
+
+typedef struct acl_entry {
+	acl_tag_t	ae_tag;
+	uid_t		ae_id;
+	acl_perm_t	ae_perm;
+} acl_entry_s;
+
+typedef struct acl {
+	int		acl_cnt;
+	acl_entry_s	acl_entry[ACL_MAX_ENTRIES];
+} acl_s;
+
+typedef struct acl_entry * acl_entry_t;
+typedef struct acl * acl_t;
+
+/*
  * Capabilities
  */
 typedef __uint64_t cap_value_t;
@@ -123,15 +147,32 @@ extern int mac_xfs_vaccess(vnode_t *, cred_t *, mode_t);
 #define _MAC_VACCESS(v,c,m)	\
 	(mac_enabled? (mac_never(), mac_xfs_vaccess(v,c,m)): 0)
 
-#define VREAD	01
-#define VWRITE	02
+#define VREAD		00400
+#define VWRITE		00200
+#define VEXEC		00100
+#define MACEXEC		00100
+#define MACWRITE	00200
+#define MACREAD		00400
 #endif	/* __KERNEL__ */
 
-#define MACWRITE	00200
-#define SGI_MAC_FILE "/dev/null"
-#define SGI_MAC_FILE_SIZE 10
-#define SGI_CAP_FILE "/dev/null"
-#define SGI_CAP_FILE_SIZE 10
+
+/* On-disk XFS extended attribute names (access control lists) */
+#define SGI_ACL_FILE	"SGI_ACL_FILE"
+#define SGI_ACL_DEFAULT	"SGI_ACL_DEFAULT"
+#define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+#define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+
+/* On-disk XFS extended attribute names (mandatory access control) */
+#define SGI_BI_FILE	"SGI_BI_FILE"
+#define SGI_BLS_FILE	"SGI_BLS_FILE"
+#define SGI_MAC_FILE	"SGI_MAC_FILE"
+#define SGI_BI_FILE_SIZE	(sizeof(SGI_BI_FILE)-1)
+#define SGI_BLS_FILE_SIZE	(sizeof(SGI_BLS_FILE)-1)
+#define SGI_MAC_FILE_SIZE	(sizeof(SGI_MAC_FILE)-1)
+
+/* On-disk XFS extended attribute names (capabilities) */
+#define SGI_CAP_FILE	"SGI_CAP_FILE"
+#define SGI_CAP_FILE_SIZE	(sizeof(SGI_CAP_FILE)-1)
 
 /* MSEN label type names. Choose an upper case ASCII character.  */
 #define MSEN_ADMIN_LABEL	'A'	/* Admin: low<admin != tcsec<high */
