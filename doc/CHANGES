@@ -1,5 +1,8 @@
-[cvs]
+xfsprogs-2.6.21 (09 August 2004)
 	- Support realtime bit inheritance on directories.
+	- Fix xfs_io build with unusual (old) glibc versions.
+	- Fix tools to not issue the BLKFLSBUF ioctl to ramdisk
+	  devices.  Thanks to Bo Yang for this fix.
 
 xfsprogs-2.6.20 (28 July 2004)
 	- Fix a segfault on xfs_io open error path for non-XFS

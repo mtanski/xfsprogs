@@ -1,3 +1,10 @@
+xfsprogs (2.6.21-1) unstable; urgency=low
+
+  * New upstream release.
+  * Fix xfs_io build for older glibc versions (current stable).
+
+ -- Nathan Scott <nathans@debian.org>  Mon, 09 Aug 2004 16:09:42 +1000
+
 xfsprogs (2.6.20-1) unstable; urgency=low
 
   * New upstream release.
