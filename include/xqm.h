@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 1995, 2001, 2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2.1 of the GNU Lesser General Public License
@@ -40,12 +40,12 @@
  */
 
 #define XQM_CMD(x)	(('X'<<8)+(x))	/* note: forms first QCMD argument */
-#define Q_XQUOTAON	XQM_CMD(0x1)	/* enable accounting/enforcement */
-#define Q_XQUOTAOFF	XQM_CMD(0x2)	/* disable accounting/enforcement */
-#define Q_XGETQUOTA	XQM_CMD(0x3)	/* get disk limits and usage */
-#define Q_XSETQLIM	XQM_CMD(0x4)	/* set disk limits */
-#define Q_XGETQSTAT	XQM_CMD(0x5)	/* get quota subsystem status */
-#define Q_XQUOTARM	XQM_CMD(0x6)	/* free disk space used by dquots */
+#define Q_XQUOTAON	XQM_CMD(1)	/* enable accounting/enforcement */
+#define Q_XQUOTAOFF	XQM_CMD(2)	/* disable accounting/enforcement */
+#define Q_XGETQUOTA	XQM_CMD(3)	/* get disk limits and usage */
+#define Q_XSETQLIM	XQM_CMD(4)	/* set disk limits */
+#define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
+#define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
 
 /*
  * fs_disk_quota structure:
@@ -105,13 +105,17 @@ typedef struct fs_disk_quota {
 #define FS_DQ_TIMER_MASK	(FS_DQ_BTIMER | FS_DQ_ITIMER | FS_DQ_RTBTIMER)
 
 /*
- * The following constants define the default amount of time given a user
- * before the soft limits are treated as hard limits (usually resulting
- * in an allocation failure).  These may be modified by the quotactl(2)
- * system call with the Q_XSETQLIM command.
+ * Warning counts are set in both super user's dquot and others. For others,
+ * warnings are set/cleared by the administrators (or automatically by going
+ * below the soft limit).  Superusers warning values set the warning limits
+ * for the rest.  In case these values are zero, the DQ_{F,B}WARNLIMIT values
+ * defined below are used. 
+ * These values also apply only to the d_fieldmask field for Q_XSETQLIM.
  */
-#define	DQ_FTIMELIMIT	(7 * 24*60*60)		/* 1 week */
-#define	DQ_BTIMELIMIT	(7 * 24*60*60)		/* 1 week */
+#define FS_DQ_BWARNS	(1<<9)
+#define FS_DQ_IWARNS	(1<<10)
+#define FS_DQ_RTBWARNS	(1<<11)
+#define FS_DQ_WARNS_MASK	(FS_DQ_BWARNS | FS_DQ_IWARNS | FS_DQ_RTBWARNS)
 
 /*
  * Various flags related to quotactl(2).  Only relevant to XFS filesystems.
@@ -120,9 +124,11 @@ typedef struct fs_disk_quota {
 #define XFS_QUOTA_UDQ_ENFD	(1<<1)  /* user quota limits enforcement */
 #define XFS_QUOTA_GDQ_ACCT	(1<<2)  /* group quota accounting */
 #define XFS_QUOTA_GDQ_ENFD	(1<<3)  /* group quota limits enforcement */
+#define XFS_QUOTA_PDQ_ACCT	(1<<2)  /* project quota accounting */
+#define XFS_QUOTA_PDQ_ENFD	(1<<3)  /* project quota limits enforcement */
 
 #define XFS_USER_QUOTA		(1<<0)	/* user quota type */
-#define XFS_PROJ_QUOTA		(1<<1)	/* (IRIX) project quota type */
+#define XFS_PROJ_QUOTA		(1<<1)	/* project quota type */
 #define XFS_GROUP_QUOTA		(1<<2)	/* group quota type */
 
 /*
