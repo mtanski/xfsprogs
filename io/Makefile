@@ -41,11 +41,32 @@ CFILES = command.c input.c init.c \
 	mmap.c open.c pread.c prealloc.c pwrite.c quit.c \
 	truncate.c
 
-ifeq ($(PKG_PLATFORM),linux)
-CFILES += fadvise.c sendfile.c
-LCFLAGS += -DHAVE_FADVISE -DHAVE_SENDFILE
+ifeq ($(HAVE_FADVISE),yes)
+CFILES += fadvise.c
+LCFLAGS += -DHAVE_FADVISE
 else
-LSRCFILES += fadvise.c sendfile.c
+LSRCFILES += fadvise.c
+endif
+
+ifeq ($(HAVE_MADVISE),yes)
+CFILES += madvise.c
+LCFLAGS += -DHAVE_MADVISE
+else
+LSRCFILES += madvise.c
+endif
+
+ifeq ($(HAVE_MINCORE),yes)
+CFILES += mincore.c
+LCFLAGS += -DHAVE_MINCORE
+else
+LSRCFILES += mincore.c
+endif
+
+ifeq ($(HAVE_SENDFILE),yes)
+CFILES += sendfile.c
+LCFLAGS += -DHAVE_SENDFILE
+else
+LSRCFILES += sendfile.c
 endif
 
 ifneq ($(PKG_PLATFORM),irix)

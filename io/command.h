@@ -59,48 +59,4 @@ extern void		add_command(const cmdinfo_t *ci);
 extern int		command_usage(const cmdinfo_t *ci);
 extern int		command(int argc, char **argv);
 extern const cmdinfo_t	*find_command(const char *cmd);
-extern void		init_commands(void);
 
-extern void		bmap_init(void);
-extern void		file_init(void);
-extern void		freeze_init(void);
-extern void		fsync_init(void);
-extern void		help_init(void);
-extern void		inject_init(void);
-extern void		mmap_init(void);
-extern void		open_init(void);
-extern void		pread_init(void);
-extern void		prealloc_init(void);
-extern void		pwrite_init(void);
-extern void		quit_init(void);
-extern void		truncate_init(void);
-
-#ifdef HAVE_FADVISE
-extern void		fadvise_init(void);
-#else
-#define fadvise_init()	do { } while (0)
-#endif
-
-#ifdef HAVE_INJECT
-extern void		inject_init(void);
-#else
-#define inject_init()	do { } while (0)
-#endif
-
-#ifdef HAVE_RESBLKS
-extern void		resblks_init(void);
-#else
-#define resblks_init()	do { } while (0)
-#endif
-
-#ifdef HAVE_SENDFILE
-extern void		sendfile_init(void);
-#else
-#define sendfile_init()	do { } while (0)
-#endif
-
-#ifdef HAVE_SHUTDOWN
-extern void		shutdown_init(void);
-#else
-#define shutdown_init()	do { } while (0)
-#endif

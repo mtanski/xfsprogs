@@ -43,8 +43,6 @@ static cmdinfo_t mread_cmd;
 static cmdinfo_t msync_cmd;
 static cmdinfo_t munmap_cmd;
 static cmdinfo_t mwrite_cmd;
-static cmdinfo_t madvise_cmd;
-static cmdinfo_t mincore_cmd;
 
 mmap_region_t	*maptable;
 int		mapcount;
@@ -79,7 +77,7 @@ print_mapping(
 		(long long)map->offset, (long)map->length);
 }
 
-static void *
+void *
 check_mapping_range(
 	mmap_region_t	*map,
 	off64_t		offset,
@@ -594,174 +592,6 @@ mwrite_f(
 	return 0;
 }
 
-static void
-madvise_help(void)
-{
-	printf(_(
-"\n"
-" advise the page cache about access patterns expected for a mapping\n"
-"\n"
-" Modifies page cache behavior when operating on the current mapping.\n"
-" The range arguments are required by some advise commands ([*] below).\n"
-" With no arguments, the POSIX_MADV_NORMAL advice is implied.\n"
-" -d -- don't need these pages (POSIX_MADV_DONTNEED) [*]\n"
-" -r -- expect random page references (POSIX_MADV_RANDOM)\n"
-" -s -- expect sequential page references (POSIX_MADV_SEQUENTIAL)\n"
-" -w -- will need these pages (POSIX_MADV_WILLNEED) [*]\n"
-" Notes:\n"
-"   NORMAL sets the default readahead setting on the file.\n"
-"   RANDOM sets the readahead setting on the file to zero.\n"
-"   SEQUENTIAL sets double the default readahead setting on the file.\n"
-"   WILLNEED forces the maximum readahead.\n"
-"\n"));
-}
-
-int
-madvise_f(
-	int		argc,
-	char		**argv)
-{
-	off64_t		offset;
-	size_t		length;
-	void		*start;
-	int		advise = MADV_NORMAL;
-	int		c, blocksize, sectsize;
-
-	while ((c = getopt(argc, argv, "drsw")) != EOF) {
-		switch (c) {
-		case 'd':	/* Don't need these pages */
-			advise = MADV_DONTNEED;
-			break;
-		case 'r':	/* Expect random page references */
-			advise = MADV_RANDOM;
-			break;
-		case 's':	/* Expect sequential page references */
-			advise = MADV_SEQUENTIAL;
-			break;
-		case 'w':	/* Will need these pages */
-			advise = MADV_WILLNEED;
-			break;
-		default:
-			return command_usage(&madvise_cmd);
-		}
-	}
-
-	if (optind == argc) {
-		offset = mapping->offset;
-		length = mapping->length;
-	} else if (optind == argc - 2) {
-		init_cvtnum(&blocksize, &sectsize);
-		offset = cvtnum(blocksize, sectsize, argv[optind]);
-		if (offset < 0) {
-			printf(_("non-numeric offset argument -- %s\n"),
-				argv[optind]);
-			return 0;
-		}
-		optind++;
-		length = cvtnum(blocksize, sectsize, argv[optind]);
-		if (length < 0) {
-			printf(_("non-numeric length argument -- %s\n"),
-				argv[optind]);
-			return 0;
-		}
-	} else {
-		return command_usage(&madvise_cmd);
-	}
-
-	start = check_mapping_range(mapping, offset, length, 1);
-	if (!start)
-		return 0;
-
-	if (madvise(start, length, advise) < 0) {
-		perror("madvise");
-		return 0;
-	}
-	return 0;
-}
-
-#if defined(__sgi__)
-int mincore(caddr_t p, size_t s, char *v) { errno = ENOSYS; return -1; }
-#endif
-
-int
-mincore_f(
-	int		argc,
-	char		**argv)
-{
-	off64_t		offset;
-	size_t		length;
-	void		*start;
-	void		*current, *previous;
-	unsigned char	*vec;
-	int		i, blocksize, sectsize;
-
-	if (argc == 1) {
-		offset = mapping->offset;
-		length = mapping->length;
-	} else if (argc == 3) {
-		init_cvtnum(&blocksize, &sectsize);
-		offset = cvtnum(blocksize, sectsize, argv[1]);
-		if (offset < 0) {
-			printf(_("non-numeric offset argument -- %s\n"),
-				argv[1]);
-			return 0;
-		}
-		length = cvtnum(blocksize, sectsize, argv[2]);
-		if (length < 0) {
-			printf(_("non-numeric length argument -- %s\n"),
-				argv[2]);
-			return 0;
-		}
-	} else {
-		return command_usage(&mincore_cmd);
-	}
-
-	start = check_mapping_range(mapping, offset, length, 1);
-	if (!start)
-		return 0;
-
-	vec = calloc(length/pagesize, sizeof(unsigned char));
-	if (!vec) {
-		perror("calloc");
-		return 0;
-	}
-
-	if (mincore(start, length, vec) < 0) {
-		perror("mincore");
-		free(vec);
-		return 0;
-	}
-
-	previous = NULL;
-	current = start;
-	for (i = 0; i < length/pagesize; i++, current += pagesize) {
-		if (vec[i]) {
-			if (!previous) {	/* print start address */
-				printf("0x%lx - ", (unsigned long)current);
-				previous = start + (i * pagesize);
-			}
-		} else if (previous) {		/* print end and page count */
-			printf(_("0x%lx  %lu pages (%llu : %lu)\n"),
-				(unsigned long)current,
-				(unsigned long)(current - previous) / pagesize,
-				(unsigned long long)offset +
-					(unsigned long long)(previous - start),
-				(unsigned long)(current - previous));
-			previous = NULL;
-		}
-	}
-	if (previous)
-		printf(_("0x%lx  %lu pages (%llu : %lu)\n"),
-			(unsigned long)current,
-			(unsigned long)(current - previous) / pagesize,
-			(unsigned long long)offset +
-				(unsigned long long)(previous - start),
-			(unsigned long)(current - previous));
-
-	free(vec);
-	return 0;
-}
-
 void
 mmap_init(void)
 {
@@ -816,30 +646,9 @@ mmap_init(void)
 		_("writes data into a region in the current memory mapping");
 	mwrite_cmd.help = mwrite_help;
 
-	madvise_cmd.name = _("madvise");
-	madvise_cmd.altname = _("ma");
-	madvise_cmd.cfunc = madvise_f;
-	madvise_cmd.argmin = 0;
-	madvise_cmd.argmax = -1;
-	madvise_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
-	madvise_cmd.args = _("[-drsw] [off len]");
-	madvise_cmd.oneline = _("give advice about use of memory");
-	madvise_cmd.help = madvise_help;
-
-	mincore_cmd.name = _("mincore");
-	mincore_cmd.altname = _("mi");
-	mincore_cmd.cfunc = mincore_f;
-	mincore_cmd.argmin = 0;
-	mincore_cmd.argmax = 2;
-	mincore_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
-	mincore_cmd.args = _("[off len]");
-	mincore_cmd.oneline = _("find mapping pages that are memory resident");
-
 	add_command(&mmap_cmd);
 	add_command(&mread_cmd);
 	add_command(&msync_cmd);
 	add_command(&munmap_cmd);
 	add_command(&mwrite_cmd);
-	add_command(&madvise_cmd);
-	add_command(&mincore_cmd);
 }

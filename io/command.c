@@ -123,25 +123,3 @@ find_command(
 	}
 	return NULL;
 }
-
-void
-init_commands(void)
-{
-	bmap_init();
-	fadvise_init();
-	file_init();
-	freeze_init();
-	fsync_init();
-	help_init();
-	inject_init();
-	mmap_init();
-	open_init();
-	pread_init();
-	prealloc_init();
-	pwrite_init();
-	quit_init();
-	resblks_init();
-	sendfile_init();
-	shutdown_init();
-	truncate_init();
-}

@@ -69,6 +69,7 @@ extern mmap_region_t	*maptable;	/* mmap'd region array */
 extern int		mapcount;	/* #entries in the mapping table */
 extern mmap_region_t	*mapping;	/* active mapping table entry */
 extern int maplist_f(void);
+extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
 
 /*
  * Various xfs_io helper routines/globals
@@ -84,3 +85,60 @@ extern int		alloc_buffer(ssize_t, int, unsigned int);
 extern int		read_buffer(int, off64_t, long long, long long *,
 					int, int);
 extern void		dump_buffer(off64_t, ssize_t);
+
+extern void		bmap_init(void);
+extern void		file_init(void);
+extern void		freeze_init(void);
+extern void		fsync_init(void);
+extern void		help_init(void);
+extern void		inject_init(void);
+extern void		mmap_init(void);
+extern void		open_init(void);
+extern void		pread_init(void);
+extern void		prealloc_init(void);
+extern void		pwrite_init(void);
+extern void		quit_init(void);
+extern void		truncate_init(void);
+
+#ifdef HAVE_FADVISE
+extern void		fadvise_init(void);
+#else
+#define fadvise_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_INJECT
+extern void		inject_init(void);
+#else
+#define inject_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_RESBLKS
+extern void		resblks_init(void);
+#else
+#define resblks_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_SENDFILE
+extern void		sendfile_init(void);
+#else
+#define sendfile_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_SHUTDOWN
+extern void		shutdown_init(void);
+#else
+#define shutdown_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_MADVISE
+extern void		madvise_init(void);
+#else
+#define madvise_init()	do { } while (0)
+#endif
+
+#ifdef HAVE_MINCORE
+extern void		mincore_init(void);
+#else
+#define mincore_init()	do { } while (0)
+#endif
+
