@@ -1,4 +1,11 @@
-xfsprogs-2.4.2 (27 March 2003)
+xfsprogs-2.4.3 (27 March 2003)
+	- Cleanups to the build process, in particular the automatic
+	  rpm package generation Makefile and spec file template.
+	- Makepkgs script can now propagate failures back from make.
+	- Minor configure.in update to deal with readline libraries
+	  which have not been linked correctly.
+
+xfsprogs-2.4.2 (25 March 2003)
 	- Added the xfs_io(8) command, an xfs_db(8) alike command
 	  for testing and debugging the XFS file IO path.
 	- Added an optional dependency on the GNU readline library
