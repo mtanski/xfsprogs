@@ -339,12 +339,12 @@ process_inode(
 
 	dic = &dip->di_core;
 	ino = XFS_AGINO_TO_INO(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT), agino);
-	switch (INT_GET(dic->di_mode, ARCH_CONVERT) & IFMT) {
+	switch (dic->di_mode & IFMT) {
 	case IFDIR:
 		skipd = !dflag;
 		break;
 	case IFREG:
-		if (!rflag && (INT_GET(dic->di_flags, ARCH_CONVERT) & XFS_DIFLAG_REALTIME))
+		if (!rflag && (dic->di_flags & XFS_DIFLAG_REALTIME))
 			skipd = 1;
 		else if (!Rflag &&
 			 (ino == mp->m_sb.sb_rbmino ||
