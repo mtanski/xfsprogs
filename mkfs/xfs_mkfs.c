@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -82,6 +82,8 @@ char	*dopts[] = {
 	"sectlog",
 #define D_SECTSIZE	11
 	"sectsize",
+#define D_NOALIGN	12
+	"noalign",
 	NULL
 };
 
@@ -118,12 +120,10 @@ char	*lopts[] = {
 	"sectlog",
 #define	L_SECTSIZE	8
 	"sectsize",
-#ifdef MKFS_SIMULATION
 #define	L_FILE		9
 	"file",
 #define	L_NAME		10
 	"name",
-#endif
 	NULL
 };
 
@@ -144,12 +144,12 @@ char	*ropts[] = {
 	"size",
 #define	R_DEV		2
 	"rtdev",
-#ifdef MKFS_SIMULATION
 #define	R_FILE		3
 	"file",
 #define	R_NAME		4
 	"name",
-#endif
+#define R_NOALIGN	5
+	"noalign",
 	NULL
 };
 
@@ -571,6 +571,7 @@ main(
 	xfs_extlen_t		nbmblocks;
 	int			nlflag;
 	int			nodsflag;
+	int			norsflag;
 	xfs_alloc_rec_t		*nrec;
 	int			nsflag;
 	int			nvflag;
@@ -619,7 +620,8 @@ main(
 	iaflag = XFS_IFLAG_ALIGN;
 	dfile = logfile = rtfile = NULL;
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsu = lsunit = 0;
+	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+	nodsflag = norsflag = 0;
 	extent_flagging = 1;
 	force_overwrite = 0;
 	worst_freelist = 0;
@@ -730,6 +732,9 @@ main(
 						reqval('d', dopts, D_SUNIT);
 					if (dsunit)
 						respec('d', dopts, D_SUNIT);
+					if (nodsflag)
+						conflict('d', dopts, D_NOALIGN,
+							 D_SUNIT);
 					if (!isdigits(value)) {
 						fprintf(stderr,
 	_("%s: Specify data sunit in 512-byte blocks, no unit suffix\n"),
@@ -743,6 +748,9 @@ main(
 						reqval('d', dopts, D_SWIDTH);
 					if (dswidth)
 						respec('d', dopts, D_SWIDTH);
+					if (nodsflag)
+						conflict('d', dopts, D_NOALIGN,
+							 D_SWIDTH);
 					if (!isdigits(value)) {
 						fprintf(stderr,
 	_("%s: Specify data swidth in 512-byte blocks, no unit suffix\n"),
@@ -756,6 +764,9 @@ main(
 						reqval('d', dopts, D_SU);
 					if (dsu)
 						respec('d', dopts, D_SU);
+					if (nodsflag)
+						conflict('d', dopts, D_NOALIGN,
+							 D_SU);
 					dsu = cvtnum(
 						blocksize, sectorsize, value);
 					break;
@@ -764,6 +775,9 @@ main(
 						reqval('d', dopts, D_SW);
 					if (dsw)
 						respec('d', dopts, D_SW);
+					if (nodsflag)
+						conflict('d', dopts, D_NOALIGN,
+							 D_SW);
 					if (!isdigits(value)) {
 						fprintf(stderr,
 		_("%s: Specify data sw as multiple of su, no unit suffix\n"),
@@ -771,6 +785,21 @@ main(
 						exit(1);
 					}
 					dsw = cvtnum(0, 0, value);
+					break;
+				case D_NOALIGN:
+					if (dsu)
+						conflict('d', dopts, D_SU,
+							 D_NOALIGN);
+					if (dsunit)
+						conflict('d', dopts, D_SUNIT,
+							 D_NOALIGN);
+					if (dsw)
+						conflict('d', dopts, D_SW,
+							 D_NOALIGN);
+					if (dswidth)
+						conflict('d', dopts, D_SWIDTH,
+							 D_NOALIGN);
+					nodsflag = 1;
 					break;
 				case D_UNWRITTEN:
 					if (!value)
@@ -1162,7 +1191,9 @@ main(
 						respec('r', ropts, R_SIZE);
 					rtsize = value;
 					break;
-
+				case R_NOALIGN:
+					norsflag = 1;
+					break;
 				default:
 					unknown('r', value);
 				}
@@ -1411,12 +1442,12 @@ main(
 
 		dummy1 = rswidth = 0;
 
-		if (!xi.disfile)
+		if (!norsflag && !xi.risfile)
 			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1, 
 						  &rswidth);
 
 		/* check that rswidth is a multiple of fs blocksize */
-		if (rswidth && !(BBTOB(rswidth) % blocksize)) {
+		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
 			rswidth = DTOBT(rswidth);
 			rtextbytes = rswidth << blocklog;
 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
@@ -1657,11 +1688,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
 
 	xlv_dsunit = xlv_dswidth = 0;
-	if (!xi.disfile)
+	if (!nodsflag && !xi.disfile)
 		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
 						&xlv_dsunit, &xlv_dswidth);
-	if (dsunit) {
-
+	if (!nodsflag && dsunit) {
 		if (xlv_dsunit && xlv_dsunit != dsunit) {
 			fprintf(stderr,
 				_("%s: Specified data stripe unit %d is not "
