@@ -179,21 +179,11 @@ typedef struct xfs_iocore {
 #define IO_IS_XFS(io)	((io)->io_flags & XFS_IOCORE_ISXFS)
 
 /*
- * Clear out the read-ahead state in the in-core inode.
- * We actually only need to clear i_next_offset and
- * i_last_req_sz to get the effect of making all the
- * read ahead state unusable.
- */
-#define XFS_INODE_CLEAR_READ_AHEAD(io) 
-
-
-/*
  * xfs_iocore prototypes
  */
 
 extern void xfs_iocore_inode_init(struct xfs_inode *);
 extern void xfs_iocore_inode_reinit(struct xfs_inode *);
-extern void xfs_iocore_reset(xfs_iocore_t *);
 
 
 /*

@@ -82,21 +82,12 @@ struct xfs_dio;
 struct xfs_bmbt_irec;
 struct xfs_bmap_free;
 
-#if defined(INTERRUPT_LATENCY_TESTING)
-#define	SPLDECL(s)	       
-#define	AIL_LOCK_T		mutex_t
-#define	AIL_LOCKINIT(x,y)	mutex_init(x,MUTEX_DEFAULT, y)
-#define	AIL_LOCK_DESTROY(x)	mutex_destroy(x)
-#define	AIL_LOCK(mp,s)		mutex_lock(&(mp)->m_ail_lock, PZERO)
-#define	AIL_UNLOCK(mp,s)	mutex_unlock(&(mp)->m_ail_lock)
-#else	/* !INTERRUPT_LATENCY_TESTING */
 #define	SPLDECL(s)		int s
 #define	AIL_LOCK_T		lock_t
 #define	AIL_LOCKINIT(x,y)	spinlock_init(x,y)
 #define	AIL_LOCK_DESTROY(x)	spinlock_destroy(x)
 #define	AIL_LOCK(mp,s)		s=mutex_spinlock(&(mp)->m_ail_lock)
 #define	AIL_UNLOCK(mp,s)	mutex_spinunlock(&(mp)->m_ail_lock, s)
-#endif /* !INTERRUPT_LATENCY_TESTING */
 
 
 /* Prototypes and functions for I/O core modularization, a vector
