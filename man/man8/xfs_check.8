@@ -71,9 +71,10 @@ and file system blocks may be accomplished using
 .B convert
 command.
 .PP
-Any non-verbose output from
+Any output that is produced when
 .I xfs_check
-means that the filesystem has an inconsistency.
+is not run in verbose mode indicates
+that the filesystem has an inconsistency.
 The filesystem can be repaired using either
 .IR xfs_repair(8)
 to fix the filesystem in place,
