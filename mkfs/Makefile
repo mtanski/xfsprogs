@@ -40,10 +40,7 @@ FSTYP = fstyp
 HFILES = xfs_mkfs.h proto.h
 CFILES = $(HFILES:.h=.c)
 
-# Note: ordering for libdisk and liblvm is important - we must
-# now present liblvm to ld twice :( -> libdisk works around the
-# liblvm unresolved symbol problem, but also calls into liblvm.
-LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBLVM) $(LIBDISK) $(LIBLVM)
+LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
 LLDFLAGS = -static
 

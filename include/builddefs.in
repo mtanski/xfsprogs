@@ -44,8 +44,6 @@ LIBXFS = $(TOPDIR)/libxfs/libxfs.la
 LIBDISK = $(TOPDIR)/libdisk/libdisk.la
 LIBHANDLE = $(TOPDIR)/libhandle/libhandle.la
 
-LIBLVM = @liblvm@
-USELVM = -DHAVE_LIBLVM=@have_liblvm@
 DK_INC_DIR = @dk_inc_dir@
 
 PKG_NAME = @pkg_name@

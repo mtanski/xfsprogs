@@ -38,9 +38,8 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-LCFLAGS = $(USELVM)
 CFILES = fstype.c pttype.c md.c xvm.c lvm.c drivers.c mountinfo.c
-HFILES = fstype.h pttype.h md.h xvm.h lvm.h lvm_user.h liblvm.h
+HFILES = fstype.h pttype.h md.h xvm.h
 
 default: $(LTLIBRARY)
 

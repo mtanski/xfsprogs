@@ -148,25 +148,6 @@ AC_ARG_ENABLE(shared-uuid,
 	libuuid="/usr/lib/libuuid.a")
 AC_SUBST(libuuid)
 
-dnl Note - the plan is for liblvm to go away soon...
-dnl Checks for LVM library
-AC_MSG_CHECKING([for liblvm.a])
-liblvm=""
-for dir in /usr/local/lib /usr/lib /lib; do
-        if test -f $dir/liblvm.a; then
-                liblvm=$dir/liblvm.a
-        fi
-done
-if test -n "$liblvm"; then
-	AC_MSG_RESULT(yes)
-        have_liblvm=1
-else
-	AC_MSG_RESULT(no)
-        have_liblvm=0
-fi
-AC_SUBST(liblvm) 
-AC_SUBST(have_liblvm) 
-
 dnl Check if we have a type for the pointer's size integer (__psint_t)
 AC_MSG_CHECKING([for __psint_t ])
 AC_TRY_COMPILE(

@@ -38,7 +38,7 @@ DEV_DOC_DIR = $(PKG_DOC_DIR)/../xfslibs-dev
 BOOT_DOC_DIR = $(PKG_DOC_DIR)/../xfsprogs-bf
 BOOT_MAN_DIR = $(PKG_MAN_DIR)/man8
 BOOT_MKFS_BIN = $(TOPDIR)/mkfs/mkfs.xfs-xfsprogs-bf
-BOOT_MKFS_MAN = $(TOPDIR)/man/man8/mkfs.xfs.8.gz
+BOOT_MKFS_MAN = $(TOPDIR)/man/man8/mkfs.xfs.8
 
 default:
 
@@ -67,5 +67,5 @@ ifeq ($(PKG_DISTRIBUTION), debian)
 	$(INSTALL) -m 644 copyright $(BOOT_DOC_DIR)
 	$(INSTALL) -m 644 changelog $(BOOT_DOC_DIR)/changelog.Debian
 	$(INSTALL) -m 755 $(BOOT_MKFS_BIN) $(PKG_SBIN_DIR)/mkfs.xfs
-	$(INSTALL) -m 644 $(BOOT_MKFS_MAN) $(BOOT_MAN_DIR)/mkfs.xfs.8.gz
+	$(INSTALL) -m 644 $(BOOT_MKFS_MAN) $(BOOT_MAN_DIR)/mkfs.xfs.8
 endif

@@ -32,15 +32,13 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <linux/major.h>
 #include <volume.h>
-
-#include "lvm_user.h"
-
-#if HAVE_LIBLVM
-  char *cmd;		/* Not used. liblvm is broken */
-  int opt_d;		/* Same thing */
-#endif
 
 int
 mnt_is_lvm_subvol(dev_t dev)
@@ -58,45 +56,75 @@ lvm_get_subvol_stripe(
 	int		*swidth,
 	struct stat64	*sb)
 {
-#if HAVE_LIBLVM
-	if (mnt_is_lvm_subvol(sb->st_rdev)) {
-		lv_t	*lv;
-		char	*vgname;
+	int		lvpipe[2], stripes = 0, stripesize = 0;
+	char		*largv[3], buf[1024];
+	FILE		*stream;
 
-		/* Find volume group */
-		if (! (vgname = vg_name_of_lv(dfile))) {
-			fprintf(stderr, "Can't find volume group for %s\n", 
-				dfile);
-			exit(1);
-		}
-		
-		/* Logical volume */
-		if (! lvm_tab_lv_check_exist(dfile)) {
-			fprintf(stderr, "Logical volume %s doesn't exist!\n",
-				dfile);
-			exit(1);
-		}
-		
-		/* Get status */
-		if (lv_status_byname(vgname, dfile, &lv) < 0 || lv == NULL) {
-			fprintf(stderr, "Could not get status info from %s\n",
-				dfile);
-			exit(1);
-		}
-		
-		/* Check that data is consistent */
-		if (lv_check_consistency(lv) < 0) {
-			fprintf(stderr, "Logical volume %s is inconsistent\n",
-				dfile);
-			exit(1);
-		}
-		
-		/* Update sizes */
-		*sunit = lv->lv_stripesize;
-		*swidth = lv->lv_stripes * lv->lv_stripesize;
-		
-		return 1;
+	if (!mnt_is_lvm_subvol(sb->st_rdev))
+		return 0;
+
+	/* Quest for lvdisplay */
+	if (!access("/usr/local/sbin/lvdisplay", R_OK|X_OK))
+		largv[0] = "/usr/local/sbin/lvdisplay";
+	else if (!access("/usr/sbin/lvdisplay", R_OK|X_OK))
+		largv[0] = "/usr/sbin/lvdisplay";
+	else if (!access("/sbin/lvdisplay", R_OK|X_OK))
+		largv[0] = "/sbin/lvdisplay";
+	else {
+		fprintf(stderr,
+			"Warning - LVM device, but no lvdisplay(8) found\n");
+		return 0;
 	}
-#endif /* HAVE_LIBLVM */
-	return 0;
+
+	largv[1] = dfile;
+	largv[2] = NULL;
+
+	/* Open pipe */
+	if (pipe(lvpipe) < 0) {
+		fprintf(stderr, "Could not open pipe\n");
+		exit(1);
+	}
+
+	/* Spawn lvdisplay */
+	switch (fork()) {
+	case 0:
+		/* Plumbing */
+		close(lvpipe[0]);
+
+		if (lvpipe[1] != STDOUT_FILENO)
+			dup2(lvpipe[1], STDOUT_FILENO);
+
+		execv(largv[0], largv);
+
+		fprintf(stderr, "\nFailed to execute %s\n", largv[0]);
+		exit(1);
+
+	case -1:
+		fprintf(stderr, "Failed forking lvdisplay process\n");
+		exit(1);
+
+	default:
+		break;
+	}
+
+	close(lvpipe[1]);
+	stream = fdopen(lvpipe[0], "r");
+
+	/* Scan stream for keywords */
+	while (fgets(buf, 1023, stream) != NULL) {
+
+		if (!strncmp(buf, "Stripes", 7))
+			sscanf(buf, "Stripes %d", &stripes);
+
+		if (!strncmp(buf, "Stripe size", 11))
+			sscanf(buf, "Stripe size (KByte) %d", &stripesize);
+	}
+
+	/* Update sizes */
+	*sunit = stripesize << 1;
+	*swidth = (stripes * stripesize) << 1;
+
+	fclose(stream);
+
+	return 1;
 }

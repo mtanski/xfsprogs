@@ -54,11 +54,11 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 		exit(1);
 	}
 
-	if ( md_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+	if ( md_get_subvol_stripe(dev, type, sunit, swidth, &sb))
 		return;
-	if (lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+	if (lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
 		return;
-	if (xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+	if (xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
 		return;
 	/* ... add new device drivers here */
 }
