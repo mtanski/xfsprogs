@@ -443,8 +443,11 @@ convert_extent(
 	int			*fp)	/* extent flag */
 {
 	xfs_bmbt_irec_t irec, *s = &irec;
+	xfs_bmbt_rec_t rpcopy, *p = &rpcopy;
+
+	memcpy(&rpcopy, rp, sizeof(rpcopy));
 	/* Just use the extent parsing routine from the kernel */
-	libxfs_bmbt_get_all(rp, s);
+	libxfs_bmbt_get_all(p, s);
 
 	if (fs_has_extflgbit)  {
 		if (s->br_state == XFS_EXT_UNWRITTEN) {

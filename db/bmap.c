@@ -289,15 +289,17 @@ bmap_one_extent(
 
 void
 convert_extent(
-	xfs_bmbt_rec_64_t		*rp,
+	xfs_bmbt_rec_64_t	*rp,
 	xfs_dfiloff_t		*op,
 	xfs_dfsbno_t		*sp,
 	xfs_dfilblks_t		*cp,
 	int			*fp)
 {
 	xfs_bmbt_irec_t irec, *s = &irec;
+	xfs_bmbt_rec_t rpcopy, *p = &rpcopy;
 
-	libxfs_bmbt_get_all((xfs_bmbt_rec_t *)rp, s);
+	memmove(&rpcopy, rp, sizeof(rpcopy));
+	libxfs_bmbt_get_all(p, s);
 
 	if (s->br_state == XFS_EXT_UNWRITTEN) {
 		*fp = 1;
