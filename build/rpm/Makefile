@@ -51,7 +51,7 @@ dist : default $(SPECF) rpm-$(RPM_VERSION).rc
 # is not supported by rpm v.3, we have to resort to such ugly hacks
 ifneq ($RPM_VERSION,2)
 rpm-$(RPM_VERSION).rc : rpmmacros
-	sed -e '/^macrofiles:/s|~/.rpmmacros|./rpmmacros|' </usr/lib/rpm/rpmrc >$@
+	sed -e '/^macrofiles:/s|~/.rpmmacros|rpmmacros|' </usr/lib/rpm/rpmrc >$@
 
 rpmmacros : macros.template
 	@sed -e 's|%topdir%|$(TREEROOT)|g' < $< > $@
