@@ -82,7 +82,10 @@ typedef __uint32_t	xfs_dev_t;
 typedef __int64_t	xfs_daddr_t;
 typedef char*		xfs_caddr_t;
 
+#ifndef	_UCHAR_T_DEFINED
 typedef unsigned char	uchar_t;
+#define	_UCHAR_T_DEFINED	1
+#endif
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
 #endif
