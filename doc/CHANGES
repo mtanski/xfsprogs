@@ -1,3 +1,10 @@
+xfsprogs-2.6.28 (30 March 2005)
+	- Fix compiler warning in repair/dir.c size checks.
+	- Fix more compilation problem with version 4 of gcc
+	  (thanks to Andreas Jochens).
+	- Make xfs_db and xfs_repair cope with filesystems that
+	  have project quota enabled.
+
 xfsprogs-2.6.27 (23 March 2005)
 	- Fix default mkfs allocation group size calculations
 	  for filesystem sizes in the range 32 - 64 terabytes.
