@@ -1,6 +1,11 @@
-xfsprogs-current
+xfsprogs-1.3.7 (10 September 2001)
 	- enable preallocation in xfs_mkfile [missed during port?]
 	- fix xfs_db core dump when reporting freespace
+	- allow libuuid to be linked dynamically if desired (based
+	  on a patch from Colin Walters <walters@verbum.org>, helps
+	  the folk working on the Debian installer for XFS)
+	- licensing change for "libhandle" (was GPL, now LGPL-2.1)
+	  and some related header files
 
 xfsprogs-1.3.6 (31 August 2001)
 	- make mkfs.xfs aware of geometries that might cause
