@@ -526,7 +526,7 @@ xlog_find_tail(xlog_t  *log,
 	xfs_lsn_t		tail_lsn;
 	int			hblks;
 
-	found = error = 0;
+	found = 0;
 
 	/*
 	 * Find previous log record
@@ -551,10 +551,11 @@ xlog_find_tail(xlog_t  *log,
 	 * Search backwards looking for log record header block
 	 */
 	ASSERT(*head_blk < INT_MAX);
-	for (i=(int)(*head_blk)-1; i>=0; i--) {
+	for (i = (int)(*head_blk) - 1; i >= 0; i--) {
 		if ((error = xlog_bread(log, i, 1, bp)))
 			goto bread_err;
-		if (INT_GET(*(uint *)(XFS_BUF_PTR(bp)), ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM) {
+		if (XLOG_HEADER_MAGIC_NUM ==
+		    INT_GET(*(uint *)(XFS_BUF_PTR(bp)), ARCH_CONVERT)) {
 			found = 1;
 			break;
 		}
@@ -566,10 +567,11 @@ xlog_find_tail(xlog_t  *log,
 	 * the previous code.
 	 */
 	if (!found) {
-		for (i=log->l_logBBsize-1; i>=(int)(*head_blk); i--) {
+		for (i = log->l_logBBsize - 1; i >= (int)(*head_blk); i--) {
 			if ((error = xlog_bread(log, i, 1, bp)))
 				goto bread_err;
-			if (INT_GET(*(uint*)(XFS_BUF_PTR(bp)), ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM) {
+			if (XLOG_HEADER_MAGIC_NUM ==
+			    INT_GET(*(uint*)(XFS_BUF_PTR(bp)), ARCH_CONVERT)) {
 				found = 2;
 				break;
 			}
@@ -621,7 +623,8 @@ xlog_find_tail(xlog_t  *log,
 	if (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb)) {
 		int	h_size = INT_GET(rhead->h_size, ARCH_CONVERT);
 		int	h_version = INT_GET(rhead->h_version, ARCH_CONVERT);
-		if ((h_version && XLOG_VERSION_2) &&
+
+		if ((h_version & XLOG_VERSION_2) &&
 		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
 			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
 			if (h_size % XLOG_HEADER_CYCLE_SIZE)
@@ -632,10 +635,11 @@ xlog_find_tail(xlog_t  *log,
 	} else {
 		hblks = 1;
 	}
-	after_umount_blk = (i + hblks +
-		(int)BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT))) % log->l_logBBsize;
+	after_umount_blk = (i + hblks + (int)
+		BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT))) % log->l_logBBsize;
 	tail_lsn = log->l_tail_lsn;
-	if (*head_blk == after_umount_blk && INT_GET(rhead->h_num_logops, ARCH_CONVERT) == 1) {
+	if (*head_blk == after_umount_blk &&
+	    INT_GET(rhead->h_num_logops, ARCH_CONVERT) == 1) {
 		umount_data_blk = (i + hblks) % log->l_logBBsize;
 		if ((error = xlog_bread(log, umount_data_blk, 1, bp))) {
 			goto bread_err;

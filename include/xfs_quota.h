@@ -66,16 +66,6 @@ typedef __uint16_t	xfs_qwarncnt_t;
 #define XFS_GQUOTA_ACTIVE	0x0100	/* gquotas are being turned off */
 
 /*
- * Typically, we turn quotas off if we weren't explicitly asked to
- * mount quotas. This is the mount option not to do that.
- * This option is handy in the miniroot, when trying to mount /root.
- * We can't really know what's in /etc/fstab until /root is already mounted!
- * This stops quotas getting turned off in the root filesystem everytime
- * the system boots up a miniroot.
- */
-#define XFS_QUOTA_MAYBE		0x0200 /* Turn quotas on if SB has quotas on */
-
-/*
  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
  * quota will be not be switched off as long as that inode lock is held.
  */
