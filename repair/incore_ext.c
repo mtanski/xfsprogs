@@ -122,7 +122,8 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 		ASSERT(ext_flist.list == NULL);
 
 		if ((rec = malloc(sizeof(extent_alloc_rec_t))) == NULL)
-			do_error("couldn't allocate new extent descriptors.\n");
+			do_error(
+			_("couldn't allocate new extent descriptors.\n"));
 
 		record_allocation(&rec->alloc_rec, ba_list);
 
@@ -251,7 +252,7 @@ add_bno_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	ext = mk_extent_tree_nodes(startblock, blockcount, XR_E_FREE);
 
 	if (avl_insert(extent_bno_ptrs[agno], (avlnode_t *) ext) == NULL)  {
-		do_error("xfs_repair:  duplicate bno extent range\n");
+		do_error(_("duplicate bno extent range\n"));
 	}
 }
 
@@ -367,7 +368,7 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	}
 
 	if (avl_insert(extent_bcnt_ptrs[agno], (avlnode_t *) ext) == NULL)  {
-		do_error("xfs_repair:  duplicate bno extent range\n");
+		do_error(_(":  duplicate bno extent range\n"));
 	}
 
 	return;
@@ -529,7 +530,7 @@ add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 
 		if (avl_insert(extent_tree_ptrs[agno],
 				(avlnode_t *) ext) == NULL)  {
-			do_error("xfs_repair:  duplicate extent range\n");
+			do_error(_("duplicate extent range\n"));
 		}
 
 		return;
@@ -580,7 +581,7 @@ add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	ext = mk_extent_tree_nodes(new_startblock, new_blockcount, XR_E_MULT);
 
 	if (avl_insert(extent_tree_ptrs[agno], (avlnode_t *) ext) == NULL)  {
-		do_error("xfs_repair:  duplicate extent range\n");
+		do_error(_("duplicate extent range\n"));
 	}
 
 	return;
@@ -666,7 +667,8 @@ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
 		ASSERT(rt_ext_flist.list == NULL);
 
 		if ((rec = malloc(sizeof(rt_extent_alloc_rec_t))) == NULL)
-			do_error("couldn't allocate new extent descriptors.\n");
+			do_error(
+			_("couldn't allocate new extent descriptors.\n"));
 
 		record_allocation(&rec->alloc_rec, rt_ba_list);
 
@@ -779,7 +781,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 
 		if (avl64_insert(rt_ext_tree_ptr,
 				(avl64node_t *) ext) == NULL)  {
-			do_error("xfs_repair:  duplicate extent range\n");
+			do_error(_("duplicate extent range\n"));
 		}
 
 		return;
@@ -831,7 +833,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 				new_blockcount, XR_E_MULT);
 
 	if (avl64_insert(rt_ext_tree_ptr, (avl64node_t *) ext) == NULL)  {
-		do_error("xfs_repair:  duplicate extent range\n");
+		do_error(_("duplicate extent range\n"));
 	}
 
 	return;
@@ -879,26 +881,32 @@ incore_ext_init(xfs_mount_t *mp)
 
 	if ((extent_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
-		do_error("couldn't malloc dup extent tree descriptor table\n");
+		do_error(
+	_("couldn't malloc dup extent tree descriptor table\n"));
 
 	if ((extent_bno_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
-		do_error("couldn't malloc free by-bno extent tree descriptor table\n");
+		do_error(
+	_("couldn't malloc free by-bno extent tree descriptor table\n"));
 
 	if ((extent_bcnt_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
-		do_error("couldn't malloc free by-bcnt extent tree descriptor table\n");
+		do_error(
+	_("couldn't malloc free by-bcnt extent tree descriptor table\n"));
 
 	for (i = 0; i < agcount; i++)  {
 		if ((extent_tree_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
-			do_error("couldn't malloc dup extent tree descriptor\n");
+			do_error(
+			_("couldn't malloc dup extent tree descriptor\n"));
 		if ((extent_bno_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
-			do_error("couldn't malloc bno extent tree descriptor\n");
+			do_error(
+			_("couldn't malloc bno extent tree descriptor\n"));
 		if ((extent_bcnt_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
-			do_error("couldn't malloc bcnt extent tree descriptor\n");
+			do_error(
+			_("couldn't malloc bcnt extent tree descriptor\n"));
 	}
 
 	for (i = 0; i < agcount; i++)  {
@@ -908,7 +916,7 @@ incore_ext_init(xfs_mount_t *mp)
 	}
 
 	if ((rt_ext_tree_ptr = malloc(sizeof(avltree_desc_t))) == NULL)
-		do_error("couldn't malloc dup rt extent tree descriptor\n");
+		do_error(_("couldn't malloc dup rt extent tree descriptor\n"));
 
 	avl64_init_tree(rt_ext_tree_ptr, &avl64_extent_tree_ops);
 

@@ -164,28 +164,28 @@ process_shortform_dir(
 			/*
 			 * junk the entry, mark lino as NULL since it's bad
 			 */
-			do_warn("invalid inode number %llu in directory %llu\n",
-				lino, ino);
+			do_warn(
+	_("invalid inode number %llu in directory %llu\n"), lino, ino);
 			lino = NULLFSINO;
 			junkit = 1;
 		} else if (lino == mp->m_sb.sb_rbmino)  {
 			do_warn(
-	"entry in shorform dir %llu references realtime bitmap inode %llu\n",
+	_("entry in shortform dir %llu references rt bitmap inode %llu\n"),
 				ino, lino);
 			junkit = 1;
 		} else if (lino == mp->m_sb.sb_rsumino)  {
 			do_warn(
-	"entry in shorform dir %llu references realtime summary inode %llu\n",
+	_("entry in shortform dir %llu references rt summary inode %llu\n"),
 				ino, lino);
 			junkit = 1;
 		} else if (lino == mp->m_sb.sb_uquotino)  {
 			do_warn(
-	"entry in shorform dir %llu references user quota inode %llu\n",
+	_("entry in shortform dir %llu references user quota inode %llu\n"),
 				ino, lino);
 			junkit = 1;
 		} else if (lino == mp->m_sb.sb_gquotino)  {
 			do_warn(
-	"entry in shorform dir %llu references group quota inode %llu\n",
+	_("entry in shortform dir %llu references group quota inode %llu\n"),
 				ino, lino);
 			junkit = 1;
 		} else if ((irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
@@ -205,7 +205,7 @@ process_shortform_dir(
 
 			if (!ino_discovery && is_inode_free(irec_p, ino_off))  {
 				do_warn(
-	"entry references free inode %llu in shortform directory %llu\n",
+	_("entry references free inode %llu in shortform directory %llu\n"),
 					lino, ino);
 				junkit = 1;
 			}
@@ -224,7 +224,7 @@ process_shortform_dir(
 			 * phase) so this is clearly a bogus entry.
 			 */
 			do_warn(
-	"entry references non-existent inode %llu in shortform dir %llu\n",
+	_("entry references non-existent inode %llu in shortform dir %llu\n"),
 					lino, ino);
 			junkit = 1;
 		}
@@ -248,23 +248,23 @@ process_shortform_dir(
 					 (__psint_t) sf);
 				if (!no_modify)  {
 					do_warn(
-		"zero length entry in shortform dir %llu, resetting to %d\n",
+		_("zero length entry in shortform dir %llu, resetting to %d\n"),
 						ino, namelen);
 					sf_entry->namelen = namelen;
 				} else  {
 					do_warn(
-		"zero length entry in shortform dir %llu, would set to %d\n",
+		_("zero length entry in shortform dir %llu, would set to %d\n"),
 						ino, namelen);
 				}
 			} else  {
 				do_warn(
-	"zero length entry in shortform dir %llu",
+		_("zero length entry in shortform dir %llu, "),
 					ino);
 				if (!no_modify)
-					do_warn(", junking %d entries\n",
+					do_warn(_("junking %d entries\n"),
 						num_entries - i);
 				else
-					do_warn(", would junk %d entries\n",
+					do_warn(_("would junk %d entries\n"),
 						num_entries - i);
 				/*
 				 * don't process the rest of the directory,
@@ -282,37 +282,38 @@ process_shortform_dir(
 					((__psint_t) &sf_entry->name[0] -
 					 (__psint_t) sf);
 				do_warn(
-	"size of last entry overflows space left in in shortform dir %llu, ",
+	_("size of last entry overflows space left in in shortform dir %llu, "),
 					ino);
 				if (!no_modify)  {
-					do_warn("resetting to %d\n",
+					do_warn(_("resetting to %d\n"),
 						namelen);
 					sf_entry->namelen = namelen;
 					*dino_dirty = 1;
 				} else  {
-					do_warn("would reset to %d\n",
+					do_warn(_("would reset to %d\n"),
 						namelen);
 				}
 			} else  {
 				do_warn(
-	"size of entry #%d overflows space left in in shortform dir %llu\n",
+	_("size of entry #%d overflows space left in in shortform dir %llu\n"),
 					i, ino);
 				if (!no_modify)  {
 					if (i == num_entries - 1)
-						do_warn("junking entry #%d\n",
+						do_warn(
+						_("junking entry #%d\n"),
 							i);
 					else
 						do_warn(
-						"junking %d entries\n",
+						_("junking %d entries\n"),
 							num_entries - i);
 				} else  {
 					if (i == num_entries - 1)
 						do_warn(
-						"would junk entry #%d\n",
+						_("would junk entry #%d\n"),
 							i);
 					else
 						do_warn(
-						"would junk %d entries\n",
+						_("would junk %d entries\n"),
 							num_entries - i);
 				}
 
@@ -331,7 +332,7 @@ process_shortform_dir(
 			 * junk entry
 			 */
 			do_warn(
-		"entry contains illegal character in shortform dir %llu\n",
+		_("entry contains illegal character in shortform dir %llu\n"),
 				ino);
 			junkit = 1;
 		}
@@ -352,7 +353,8 @@ process_shortform_dir(
 
 			if (!no_modify)  {
 				tmp_elen = XFS_DIR_SF_ENTSIZE_BYENTRY(sf_entry);
-				INT_MOD(dip->di_core.di_size, ARCH_CONVERT, -(tmp_elen));
+				INT_MOD(dip->di_core.di_size,
+					ARCH_CONVERT, -(tmp_elen));
 				ino_dir_size -= tmp_elen;
 
 				tmp_sfe = (xfs_dir_sf_entry_t *)
@@ -385,11 +387,11 @@ process_shortform_dir(
 				*repair = 1;
 
 				do_warn(
-			"junking entry \"%s\" in directory inode %llu\n",
+		_("junking entry \"%s\" in directory inode %llu\n"),
 					name, ino);
 			} else  {
 				do_warn(
-		"would have junked entry \"%s\" in directory inode %llu\n",
+		_("would have junked entry \"%s\" in directory inode %llu\n"),
 					name, ino);
 			}
 		}
@@ -414,10 +416,12 @@ process_shortform_dir(
 
 	if (INT_GET(sf->hdr.count, ARCH_CONVERT) != i)  {
 		if (no_modify)  {
-do_warn("would have corrected entry count in directory %llu from %d to %d\n",
+			do_warn(
+	_("would have corrected entry count in directory %llu from %d to %d\n"),
 			ino, INT_GET(sf->hdr.count, ARCH_CONVERT), i);
 		} else  {
-do_warn("corrected entry count in directory %llu, was %d, now %d\n",
+			do_warn(
+	_("corrected entry count in directory %llu, was %d, now %d\n"),
 			ino, INT_GET(sf->hdr.count, ARCH_CONVERT), i);
 			INT_SET(sf->hdr.count, ARCH_CONVERT, i);
 			*dino_dirty = 1;
@@ -428,17 +432,18 @@ do_warn("corrected entry count in directory %llu, was %d, now %d\n",
 	if ((__psint_t) next_sfe - (__psint_t) sf != ino_dir_size)  {
 		if (no_modify)  {
 			do_warn(
-		"would have corrected directory %llu size from %lld to %lld\n",
+	_("would have corrected directory %llu size from %lld to %lld\n"),
 				ino, (__int64_t) ino_dir_size,
 			(__int64_t)((__psint_t) next_sfe - (__psint_t) sf));
 		} else  {
 			do_warn(
-			"corrected directory %llu size, was %lld, now %lld\n",
+	_("corrected directory %llu size, was %lld, now %lld\n"),
 				ino, (__int64_t) ino_dir_size,
 			(__int64_t)((__psint_t) next_sfe - (__psint_t) sf));
 
-			INT_SET(dip->di_core.di_size, ARCH_CONVERT, (xfs_fsize_t)
-					((__psint_t) next_sfe - (__psint_t) sf));
+			INT_SET(dip->di_core.di_size,
+				ARCH_CONVERT, (xfs_fsize_t)
+				((__psint_t) next_sfe - (__psint_t) sf));
 			*dino_dirty = 1;
 			*repair = 1;
 		}
@@ -455,16 +460,17 @@ do_warn("corrected entry count in directory %llu, was %d, now %d\n",
 		*parent = NULLFSINO;
 
 		do_warn(
-	"bogus .. inode number (%llu) in directory inode %llu,",
+	_("bogus .. inode number (%llu) in directory inode %llu, "),
 				*parent, ino);
 		if (!no_modify)  {
-			do_warn("clearing inode number\n");
+			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR_SF_PUT_DIRINO_ARCH(parent, &sf->hdr.parent, ARCH_CONVERT);
+			XFS_DIR_SF_PUT_DIRINO_ARCH(parent,
+					&sf->hdr.parent, ARCH_CONVERT);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
-			do_warn("would clear inode number\n");
+			do_warn(_("would clear inode number\n"));
 		}
 	} else if (ino == mp->m_sb.sb_rootino && ino != *parent) {
 		/*
@@ -472,15 +478,16 @@ do_warn("corrected entry count in directory %llu, was %d, now %d\n",
 		 */
 		if (!no_modify)  {
 			do_warn(
-	"corrected root directory %llu .. entry, was %llu, now %llu\n",
+	_("corrected root directory %llu .. entry, was %llu, now %llu\n"),
 				ino, *parent, ino);
 			*parent = ino;
-			XFS_DIR_SF_PUT_DIRINO_ARCH(parent, &sf->hdr.parent, ARCH_CONVERT);
+			XFS_DIR_SF_PUT_DIRINO_ARCH(parent,
+					&sf->hdr.parent, ARCH_CONVERT);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
 			do_warn(
-	"would have corrected root directory %llu .. entry from %llu to %llu\n",
+	_("would have corrected root directory %llu .. entry from %llu to %llu\n"),
 				ino, *parent, ino);
 		}
 	} else if (ino == *parent && ino != mp->m_sb.sb_rootino)  {
@@ -489,16 +496,17 @@ do_warn("corrected entry count in directory %llu, was %d, now %d\n",
 		 * to .
 		 */
 		*parent = NULLFSINO;
-		do_warn("bad .. entry in dir ino %llu, points to self,",
+		do_warn(_("bad .. entry in dir ino %llu, points to self, "),
 			ino);
 		if (!no_modify)  {
-			do_warn(" clearing inode number\n");
+			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR_SF_PUT_DIRINO_ARCH(parent, &sf->hdr.parent, ARCH_CONVERT);
+			XFS_DIR_SF_PUT_DIRINO_ARCH(parent,
+					&sf->hdr.parent, ARCH_CONVERT);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
-			do_warn(" would clear inode number\n");
+			do_warn(_("would clear inode number\n"));
 		}
 	}
 
@@ -552,21 +560,21 @@ set_da_freemap(xfs_mount_t *mp, da_freemap_t *map, int start, int stop)
 		/*
 		 * allow == relation since [x, x) claims 1 byte
 		 */
-		do_warn("bad range claimed [%d, %d) in da block\n",
+		do_warn(_("bad range claimed [%d, %d) in da block\n"),
 			start, stop);
 		return(1);
 	}
 
 	if (stop > mp->m_sb.sb_blocksize)  {
 		do_warn(
-		"byte range end [%d %d) in da block larger than blocksize %d\n",
+	_("byte range end [%d %d) in da block larger than blocksize %d\n"),
 			start, stop, mp->m_sb.sb_blocksize);
 		return(1);
 	}
 
 	for (i = start; i < stop; i ++)  {
 		if (map[i / NBBY] & (mask << i % NBBY))  {
-			do_warn("multiply claimed byte %d in da block\n", i);
+			do_warn(_("multiply claimed byte %d in da block\n"), i);
 			return(1);
 		}
 		map[i / NBBY] |= (mask << i % NBBY);
@@ -596,7 +604,7 @@ verify_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes,
 		if (start >= mp->m_sb.sb_blocksize ||
 				start + len > mp->m_sb.sb_blocksize)  {
 			do_warn(
-	"hole (start %d, len %d) out of range, block %d, dir ino %llu\n",
+	_("hole (start %d, len %d) out of range, block %d, dir ino %llu\n"),
 				start, len, da_bno, ino);
 			return(1);
 		}
@@ -607,7 +615,7 @@ verify_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes,
 				 * bad news -- hole claims a used byte is free
 				 */
 				do_warn(
-		"hole claims used byte %d, block %d, dir ino %llu\n",
+			_("hole claims used byte %d, block %d, dir ino %llu\n"),
 					j, da_bno, ino);
 				return(1);
 			}
@@ -722,7 +730,7 @@ compare_da_freemaps(xfs_mount_t *mp, da_hole_map_t *holemap,
 	if ((holemap->lost_holes > 0 ? 1 : 0) != block_hmap->lost_holes)  {
 		if (verbose)  {
 			do_warn(
-		"- derived hole value %d, saw %d, block %d, dir ino %llu\n",
+		_("- derived hole value %d, saw %d, block %d, dir ino %llu\n"),
 				holemap->lost_holes, block_hmap->lost_holes,
 				da_bno, ino);
 			res = 1;
@@ -741,7 +749,7 @@ compare_da_freemaps(xfs_mount_t *mp, da_hole_map_t *holemap,
 		if (!found)  {
 			if (verbose)  {
 				do_warn(
-"- derived hole (base %d, size %d) in block %d, dir inode %llu not found\n",
+_("- derived hole (base %d, size %d) in block %d, dir inode %llu not found\n"),
 					holemap->hentries[i].base,
 					holemap->hentries[i].size,
 					da_bno, ino);
@@ -817,12 +825,12 @@ traverse_int_dablock(xfs_mount_t	*mp,
 				XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
 			if (whichfork == XFS_DATA_FORK)
-				do_warn("can't read block %u (fsbno %llu) for "
-					"directory inode %llu\n",
+				do_warn(_("can't read block %u (fsbno %llu) "
+					"for directory inode %llu\n"),
 					bno, fsbno, da_cursor->ino);
 			else
-				do_warn("can't read block %u (fsbno %llu) for "
-					"attrbute fork of inode %llu\n",
+				do_warn(_("can't read block %u (fsbno %llu) "
+					"for attrbute fork of inode %llu\n"),
 					bno, fsbno, da_cursor->ino);
 			goto error_out;
 		}
@@ -830,15 +838,18 @@ traverse_int_dablock(xfs_mount_t	*mp,
 		node = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
 
 		if (INT_GET(node->hdr.info.magic, ARCH_CONVERT) != XFS_DA_NODE_MAGIC)  {
-			do_warn("bad dir/attr magic number in inode %llu, file "
-				"bno = %u, fsbno = %llu\n", da_cursor->ino, bno, fsbno);
+			do_warn(_("bad dir/attr magic number in inode %llu, "
+				  "file bno = %u, fsbno = %llu\n"),
+				da_cursor->ino, bno, fsbno);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
 		if (INT_GET(node->hdr.count, ARCH_CONVERT) >
 						mp->m_dir_node_ents)  {
-			do_warn("bad record count in inode %llu, count = %d, max = %d\n",
-				da_cursor->ino, INT_GET(node->hdr.count, ARCH_CONVERT),
+			do_warn(_("bad record count in inode %llu, "
+				  "count = %d, max = %d\n"),
+				da_cursor->ino,
+				INT_GET(node->hdr.count, ARCH_CONVERT),
 				mp->m_dir_node_ents);
 			libxfs_putbuf(bp);
 			goto error_out;
@@ -854,11 +865,13 @@ traverse_int_dablock(xfs_mount_t	*mp,
 				i--;
 			} else  {
 				if (whichfork == XFS_DATA_FORK) 
-					do_warn("bad directory btree for directory "
-						"inode %llu\n", da_cursor->ino);
+					do_warn(_("bad directory btree for "
+						  "directory inode %llu\n"),
+						da_cursor->ino);
 				else
-					do_warn("bad attribute fork btree for "
-						"inode %llu\n", da_cursor->ino);
+					do_warn(_("bad attribute fork btree "
+						  "for inode %llu\n"),
+						da_cursor->ino);
 				libxfs_putbuf(bp);
 				goto error_out;
 			}
@@ -910,8 +923,9 @@ release_da_cursor_int(xfs_mount_t	*mp,
 
 	if (cursor->level[level].bp != NULL)  {
 		if (!error)  {
-			do_warn("release_da_cursor_int got unexpected non-null bp, "
-				"dabno = %u\n", cursor->level[level].bno);
+			do_warn(_("release_da_cursor_int got unexpected "
+				  "non-null bp, dabno = %u\n"),
+				cursor->level[level].bno);
 		}
 		ASSERT(error != 0);
 
@@ -970,7 +984,7 @@ get_first_dblock_fsbno(xfs_mount_t	*mp,
 	fsbno = get_bmapi(mp, dino, ino, bno, XFS_DATA_FORK);
 
 	if (fsbno == NULLDFSBNO)  {
-		do_warn("bmap of block #%u of inode %llu failed\n",
+		do_warn(_("bmap of block #%u of inode %llu failed\n"),
 			bno, ino);
 		return(fsbno);
 	}
@@ -989,16 +1003,19 @@ get_first_dblock_fsbno(xfs_mount_t	*mp,
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn("can't read block %u (fsbno %llu) for directory "
-				"inode %llu\n", bno, fsbno, ino);
+			do_warn(_("can't read block %u (fsbno %llu) "
+				  "for directory inode %llu\n"),
+				bno, fsbno, ino);
 			return(NULLDFSBNO);
 		}
 
 		node = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
 
-		if (INT_GET(node->hdr.info.magic, ARCH_CONVERT) != XFS_DA_NODE_MAGIC)  {
-			do_warn("bad dir/attr magic number in inode %llu, file "
-				"bno = %u, fsbno = %llu\n", ino, bno, fsbno);
+		if (XFS_DA_NODE_MAGIC !=
+		    INT_GET(node->hdr.info.magic, ARCH_CONVERT))  {
+			do_warn(_("bad dir/attr magic number in inode %llu, "
+				  "file bno = %u, fsbno = %llu\n"),
+				ino, bno, fsbno);
 			libxfs_putbuf(bp);
 			return(NULLDFSBNO);
 		}
@@ -1012,7 +1029,8 @@ get_first_dblock_fsbno(xfs_mount_t	*mp,
 		fsbno = get_bmapi(mp, dino, ino, bno, XFS_DATA_FORK);
 
 		if (fsbno == NULLDFSBNO)  {
-			do_warn("bmap of block #%u of inode %llu failed\n", bno, ino);
+			do_warn(_("bmap of block #%u of inode %llu failed\n"),
+				bno, ino);
 			return(NULLDFSBNO);
 		}
 
@@ -1057,7 +1075,8 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 * match, etc.
 	 */
 	if (entry != INT_GET(node->hdr.count, ARCH_CONVERT) - 1)  {
-		do_warn("directory/attribute block used/count inconsistency - %d/%hu\n",
+		do_warn(_("directory/attribute block used/count "
+			  "inconsistency - %d/%hu\n"),
 			entry, INT_GET(node->hdr.count, ARCH_CONVERT));
 		bad++;
 	}
@@ -1065,19 +1084,22 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 * hash values monotonically increasing ???
 	 */
 	if (cursor->level[this_level].hashval >=
-				INT_GET(node->btree[entry].hashval, ARCH_CONVERT)) {
-		do_warn("directory/attribute block hashvalue inconsistency, "
-			"expected > %u / saw %u\n", cursor->level[this_level].hashval,
+	    INT_GET(node->btree[entry].hashval, ARCH_CONVERT)) {
+		do_warn(_("directory/attribute block hashvalue inconsistency, "
+			  "expected > %u / saw %u\n"),
+			cursor->level[this_level].hashval,
 			INT_GET(node->btree[entry].hashval, ARCH_CONVERT));
 		bad++;
 	}
 	if (INT_GET(node->hdr.info.forw, ARCH_CONVERT) != 0)  {
-		do_warn("bad directory/attribute forward block pointer, expected 0, "
-			"saw %u\n", INT_GET(node->hdr.info.forw, ARCH_CONVERT));
+		do_warn(_("bad directory/attribute forward block pointer, "
+			  "expected 0, saw %u\n"),
+			INT_GET(node->hdr.info.forw, ARCH_CONVERT));
 		bad++;
 	}
 	if (bad) {
-		do_warn("bad directory block in dir ino %llu\n", cursor->ino);
+		do_warn(_("bad directory block in dir ino %llu\n"),
+			cursor->ino);
 		return(1);
 	}
 	/*
@@ -1091,10 +1113,10 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 * ok, now check descendant block number against this level
 	 */
 	if (cursor->level[p_level].bno !=
-			INT_GET(node->btree[entry].before, ARCH_CONVERT))  {
+	    INT_GET(node->btree[entry].before, ARCH_CONVERT))  {
 #ifdef XR_DIR_TRACE
-		fprintf(stderr, "bad directory btree pointer, child bno should be %d, "
-			"block bno is %d, hashval is %u\n",
+		fprintf(stderr, "bad directory btree pointer, child bno should "
+				"be %d, block bno is %d, hashval is %u\n",
 			INT_GET(node->btree[entry].before, ARCH_CONVERT),
 			cursor->level[p_level].bno,
 			cursor->level[p_level].hashval);
@@ -1104,17 +1126,19 @@ verify_final_da_path(xfs_mount_t	*mp,
 	}
 
 	if (cursor->level[p_level].hashval !=
-				INT_GET(node->btree[entry].hashval, ARCH_CONVERT)) {
+	    INT_GET(node->btree[entry].hashval, ARCH_CONVERT)) {
 		if (!no_modify)  {
-			do_warn("correcting bad hashval in non-leaf dir/attr block\n");
-			do_warn("\tin (level %d) in inode %llu.\n",
+			do_warn(_("correcting bad hashval in non-leaf "
+				  "dir/attr block\n\tin (level %d) in "
+				  "inode %llu.\n"),
 				this_level, cursor->ino);
 			INT_SET(node->btree[entry].hashval, ARCH_CONVERT,
 				cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {
-			do_warn("would correct bad hashval in non-leaf dir/attr "
-				"block\n\tin (level %d) in inode %llu.\n",
+			do_warn(_("would correct bad hashval in non-leaf "
+				  "dir/attr block\n\tin (level %d) in "
+				  "inode %llu.\n"),
 				this_level, cursor->ino);
 		}
 	}
@@ -1250,15 +1274,17 @@ verify_da_path(xfs_mount_t	*mp,
 		fsbno = blkmap_get(cursor->blkmap, dabno);
 
 		if (fsbno == NULLDFSBNO) {
-			do_warn("can't get map info for block %u of directory "
-				"inode %llu\n", dabno, cursor->ino);
+			do_warn(_("can't get map info for block %u "
+				  "of directory inode %llu\n"),
+				dabno, cursor->ino);
 			return(1);
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn("can't read block %u (%llu) for directory inode %llu\n",
+			do_warn(_("can't read block %u (%llu) "
+				  "for directory inode %llu\n"),
 				dabno, fsbno, cursor->ino);
 			return(1);
 		}
@@ -1269,30 +1295,33 @@ verify_da_path(xfs_mount_t	*mp,
 		 * entry count, verify level
 		 */
 		bad = 0;
-		if (INT_GET(newnode->hdr.info.magic, ARCH_CONVERT) != XFS_DA_NODE_MAGIC)  {
-			do_warn("bad magic number %x in block %u (%llu) for directory "
-				"inode %llu\n",
+		if (XFS_DA_NODE_MAGIC !=
+		    INT_GET(newnode->hdr.info.magic, ARCH_CONVERT))  {
+			do_warn(_("bad magic number %x in block %u (%llu) "
+				  "for directory inode %llu\n"),
 				INT_GET(newnode->hdr.info.magic, ARCH_CONVERT),
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
 		if (INT_GET(newnode->hdr.info.back, ARCH_CONVERT) !=
-						cursor->level[this_level].bno)  {
-			do_warn("bad back pointer in block %u (%llu) for directory "
-				"inode %llu\n", dabno, fsbno, cursor->ino);
+		    cursor->level[this_level].bno)  {
+			do_warn(_("bad back pointer in block %u (%llu) "
+				  "for directory inode %llu\n"),
+				dabno, fsbno, cursor->ino);
 			bad++;
 		}
 		if (INT_GET(newnode->hdr.count, ARCH_CONVERT) >
-						mp->m_dir_node_ents)  {
-			do_warn("entry count %d too large in block %u (%llu) for "
-				"directory inode %llu\n",
+		    mp->m_dir_node_ents)  {
+			do_warn(_("entry count %d too large in block %u (%llu) "
+				  "for directory inode %llu\n"),
 				INT_GET(newnode->hdr.count, ARCH_CONVERT),
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
 		if (INT_GET(newnode->hdr.level, ARCH_CONVERT) != this_level)  {
-			do_warn("bad level %d in block %u (%llu) for directory inode "
-				"%llu\n", INT_GET(newnode->hdr.level, ARCH_CONVERT),
+			do_warn(_("bad level %d in block %u (%llu) "
+				  "for directory inode %llu\n"),
+				INT_GET(newnode->hdr.level, ARCH_CONVERT),
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
@@ -1332,8 +1361,8 @@ verify_da_path(xfs_mount_t	*mp,
 	if (cursor->level[p_level].bno !=
 			INT_GET(node->btree[entry].before, ARCH_CONVERT))  {
 #ifdef XR_DIR_TRACE
-		fprintf(stderr, "bad directory btree pointer, child bno should be %d, "
-			"block bno is %d, hashval is %u\n",
+		fprintf(stderr, "bad directory btree pointer, child bno "
+			"should be %d, block bno is %d, hashval is %u\n",
 			INT_GET(node->btree[entry].before, ARCH_CONVERT),
 			cursor->level[p_level].bno,
 			cursor->level[p_level].hashval);
@@ -1348,15 +1377,17 @@ verify_da_path(xfs_mount_t	*mp,
 	if (cursor->level[p_level].hashval !=
 			INT_GET(node->btree[entry].hashval, ARCH_CONVERT))  {
 		if (!no_modify)  {
-			do_warn("correcting bad hashval in interior dir/attr block\n");
-			do_warn("\tin (level %d) in inode %llu.\n",
+			do_warn(_("correcting bad hashval in interior "
+				  "dir/attr block\n\tin (level %d) in "
+				  "inode %llu.\n"),
 				this_level, cursor->ino);
 			INT_SET(node->btree[entry].hashval, ARCH_CONVERT,
 				cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {
-			do_warn("would correct bad hashval in interior dir/attr "
-				"block\n\tin (level %d) in inode %llu.\n",
+			do_warn(_("would correct bad hashval in interior "
+				  "dir/attr block\n\tin (level %d) in "
+				  "inode %llu.\n"),
 				this_level, cursor->ino);
 		}
 	}
@@ -1474,7 +1505,7 @@ junk_zerolen_dir_leaf_entries(
 		if (current_hole < XFS_DIR_LEAF_MAPSIZE)  {
 			ASSERT(sizeof(xfs_dir_leaf_name_t) <= bytes);
 
-			do_warn("marking bad entry in directory inode %llu\n",
+			do_warn(_("marking bad entry in directory inode %llu\n"),
 				ino);
 
 			entry->namelen = 1;
@@ -1500,7 +1531,7 @@ junk_zerolen_dir_leaf_entries(
 			 */
 			INT_MOD(hdr->count, ARCH_CONVERT, -1);
 			do_warn(
-			"deleting zero length entry in directory inode %llu\n",
+		_("deleting zero length entry in directory inode %llu\n"),
 				ino);
 			/*
 			 * overwrite the bad entry unless it's the
@@ -1599,7 +1630,7 @@ junk_zerolen_dir_leaf_entries(
 				 * a bad entry
 				 */
 				do_warn(
-				"deleting entry in directory inode %llu\n",
+				_("deleting entry in directory inode %llu\n"),
 					ino);
 				/*
 				 * overwrite the bad entry unless it's the
@@ -1748,7 +1779,7 @@ process_leaf_dir_block(
 	 */
 
 	if ((dir_freemap = alloc_da_freemap(mp)) == NULL)  {
-		do_error("couldn't allocate directory block freemap\n");
+		do_error(_("couldn't allocate directory block freemap\n"));
 		abort();
 	}
 #endif
@@ -1761,8 +1792,8 @@ process_leaf_dir_block(
 	i = stop = sizeof(xfs_dir_leaf_hdr_t);
 	if (set_da_freemap(mp, dir_freemap, 0, stop))  {
 		do_warn(
-"directory block header conflicts with used space in directory inode %llu\n",
-				ino);
+_("directory block header conflicts with used space in directory inode %llu\n"),
+			ino);
 		return(1);
 	}
 
@@ -1783,17 +1814,22 @@ process_leaf_dir_block(
 		 * if it is, delete the entry since we can't
 		 * grab the inode #.
 		 */
-		if (INT_GET(entry->nameidx, ARCH_CONVERT) >= mp->m_sb.sb_blocksize)  {
+		if (INT_GET(entry->nameidx, ARCH_CONVERT) >=
+		    mp->m_sb.sb_blocksize)  {
 			if (!no_modify)  {
 				*buf_dirty = 1;
 
 				if (INT_GET(leaf->hdr.count, ARCH_CONVERT) > 1)  {
 					do_warn(
-"nameidx %d for entry #%d, bno %d, ino %llu > fs blocksize, deleting entry\n",
-						INT_GET(entry->nameidx, ARCH_CONVERT), i, da_bno, ino);
-					ASSERT(INT_GET(leaf->hdr.count, ARCH_CONVERT) > i);
+_("nameidx %d for entry #%d, bno %d, ino %llu > fs blocksize, deleting entry\n"),
+						INT_GET(entry->nameidx,
+							ARCH_CONVERT),
+						i, da_bno, ino);
+					ASSERT(INT_GET(leaf->hdr.count,
+							ARCH_CONVERT) > i);
 
-					bytes = (INT_GET(leaf->hdr.count, ARCH_CONVERT) - i) *
+					bytes = (INT_GET(leaf->hdr.count,
+							ARCH_CONVERT) - i) *
 						sizeof(xfs_dir_leaf_entry_t);
 
 					/*
@@ -1825,21 +1861,26 @@ process_leaf_dir_block(
 					entry--;
 				} else  {
 					do_warn(
-"nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, marking entry bad\n",
-						INT_GET(entry->nameidx, ARCH_CONVERT), i, da_bno, ino);
-					INT_SET(entry->nameidx, ARCH_CONVERT, mp->m_sb.sb_blocksize -
+_("nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, marking entry bad\n"),
+						INT_GET(entry->nameidx,
+							ARCH_CONVERT),
+						i, da_bno, ino);
+					INT_SET(entry->nameidx, ARCH_CONVERT,
+						mp->m_sb.sb_blocksize -
 						sizeof(xfs_dir_leaf_name_t));
 					namest = XFS_DIR_LEAF_NAMESTRUCT(leaf,
-							INT_GET(entry->nameidx, ARCH_CONVERT));
+							INT_GET(entry->nameidx,
+								ARCH_CONVERT));
 					lino = NULLFSINO;
 					XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
-							&namest->inumber, ARCH_CONVERT);
+						&namest->inumber, ARCH_CONVERT);
 					namest->name[0] = '/';
 				}
 			} else  {
 				do_warn(
-"nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, would delete entry\n",
-					INT_GET(entry->nameidx, ARCH_CONVERT), i, da_bno, ino);
+_("nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, would delete entry\n"),
+					INT_GET(entry->nameidx, ARCH_CONVERT),
+					i, da_bno, ino);
 			}
 			continue;
 		}
@@ -1850,7 +1891,8 @@ process_leaf_dir_block(
 		 * we can still try for the inode as long as nameidx
 		 * is ok.
 		 */
-		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
+		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf,
+				INT_GET(entry->nameidx, ARCH_CONVERT));
 		XFS_DIR_SF_GET_DIRINO_ARCH(&namest->inumber, &lino, ARCH_CONVERT);
 
 		/*
@@ -1873,78 +1915,91 @@ process_leaf_dir_block(
 			 * since it's still structurally intact.
 			 */
 			do_warn(
-"invalid ino number %llu in dir ino %llu, entry #%d, bno %d\n",
+	_("invalid ino number %llu in dir ino %llu, entry #%d, bno %d\n"),
 				lino, ino, i, da_bno);
 			if (!no_modify)  {
 				do_warn(
-				"\tclearing ino number in entry %d...\n", i);
-
+				_("\tclearing ino number in entry %d...\n"),
+					i);
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-				"\twould clear ino number in entry %d...\n", i);
+				_("\twould clear ino number in entry %d...\n"),
+					i);
 			}
 		} else if (lino == mp->m_sb.sb_rbmino)  {
 			do_warn(
-"entry #%d, bno %d in directory %llu references realtime bitmap inode %llu\n",
+_("entry #%d, bno %d in directory %llu references realtime bitmap inode %llu\n"),
 				i, da_bno, ino, lino);
 			if (!no_modify)  {
 				do_warn(
-				"\tclearing ino number in entry %d...\n", i);
+				_("\tclearing ino number in entry %d...\n"),
+					i);
 
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-				"\twould clear ino number in entry %d...\n", i);
+				_("\twould clear ino number in entry %d...\n"),
+					i);
 			}
 		} else if (lino == mp->m_sb.sb_rsumino)  {
 			do_warn(
-"entry #%d, bno %d in directory %llu references realtime summary inode %llu\n",
+_("entry #%d, bno %d in directory %llu references realtime summary inode %llu\n"),
 				i, da_bno, ino, lino);
 			if (!no_modify)  {
 				do_warn(
-				"\tclearing ino number in entry %d...\n", i);
+				_("\tclearing ino number in entry %d...\n"), i);
 
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-				"\twould clear ino number in entry %d...\n", i);
+				_("\twould clear ino number in entry %d...\n"),
+					i);
 			}
 		} else if (lino == mp->m_sb.sb_uquotino)  {
 			do_warn(
-"entry #%d, bno %d in directory %llu references user quota inode %llu\n",
+_("entry #%d, bno %d in directory %llu references user quota inode %llu\n"),
 				i, da_bno, ino, lino);
 			if (!no_modify)  {
 				do_warn(
-				"\tclearing ino number in entry %d...\n", i);
+				_("\tclearing ino number in entry %d...\n"),
+					i);
 
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-				"\twould clear ino number in entry %d...\n", i);
+				_("\twould clear ino number in entry %d...\n"),
+					i);
 			}
 		} else if (lino == mp->m_sb.sb_gquotino)  {
 			do_warn(
-"entry #%d, bno %d in directory %llu references group quota inode %llu\n",
+_("entry #%d, bno %d in directory %llu references group quota inode %llu\n"),
 				i, da_bno, ino, lino);
 			if (!no_modify)  {
 				do_warn(
-				"\tclearing ino number in entry %d...\n", i);
+				_("\tclearing ino number in entry %d...\n"),
+					i);
 
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-				"\twould clear ino number in entry %d...\n", i);
+				_("\twould clear ino number in entry %d...\n"),
+					i);
 			}
 		} else if (lino == old_orphanage_ino)  {
 			/*
@@ -1974,15 +2029,15 @@ process_leaf_dir_block(
 			if (!ino_discovery && is_inode_free(irec_p, ino_off))  {
 				if (!no_modify)  {
 					do_warn(
-"entry references free inode %llu in directory %llu, will clear entry\n",
+_("entry references free inode %llu in directory %llu, will clear entry\n"),
 						lino, ino);
 					lino = NULLFSINO;
 					XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
-							&namest->inumber, ARCH_CONVERT);
+						&namest->inumber, ARCH_CONVERT);
 					*buf_dirty = 1;
 				} else  {
 					do_warn(
-"entry references free inode %llu in directory %llu, would clear entry\n",
+_("entry references free inode %llu in directory %llu, would clear entry\n"),
 						lino, ino);
 				}
 			}
@@ -1990,15 +2045,16 @@ process_leaf_dir_block(
 			add_inode_uncertain(mp, lino, 0);
 		} else  {
 			do_warn(
-	"bad ino number %llu in dir ino %llu, entry #%d, bno %d\n",
+	_("bad ino number %llu in dir ino %llu, entry #%d, bno %d\n"),
 				lino, ino, i, da_bno);
 			if (!no_modify)  {
-				do_warn("clearing inode number...\n");
+				do_warn(_("clearing inode number...\n"));
 				lino = NULLFSINO;
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				*buf_dirty = 1;
 			} else  {
-				do_warn("would clear inode number...\n");
+				do_warn(_("would clear inode number...\n"));
 			}
 		}
 		/*
@@ -2018,11 +2074,12 @@ process_leaf_dir_block(
 
 			if (INT_GET(leaf->hdr.count, ARCH_CONVERT) > 1)  {
 				do_warn(
-	"entry #%d, dir inode %llu, has zero-len name, deleting entry\n",
+	_("entry #%d, dir inode %llu, has zero-len name, deleting entry\n"),
 					i, ino);
 				ASSERT(INT_GET(leaf->hdr.count, ARCH_CONVERT) > i);
 
-				bytes = (INT_GET(leaf->hdr.count, ARCH_CONVERT) - i) *
+				bytes = (INT_GET(leaf->hdr.count,
+						ARCH_CONVERT) - i) *
 					sizeof(xfs_dir_leaf_entry_t);
 
 				/*
@@ -2032,8 +2089,7 @@ process_leaf_dir_block(
 				 * just zero it.
 				 */
 				if (bytes > sizeof(xfs_dir_leaf_entry_t))  {
-					memmove(entry, entry + 1,
-						bytes);
+					memmove(entry, entry + 1, bytes);
 					bzero((void *)
 						((__psint_t) entry + bytes),
 						sizeof(xfs_dir_leaf_entry_t));
@@ -2057,19 +2113,23 @@ process_leaf_dir_block(
 				 * inode number for now
 				 */
 				do_warn(
-	"entry #%d, dir inode %llu, has zero-len name, marking entry bad\n",
+	_("entry #%d, dir inode %llu, has zero-len name, marking entry bad\n"),
 					i, ino);
-				INT_SET(entry->nameidx, ARCH_CONVERT, mp->m_sb.sb_blocksize -
+				INT_SET(entry->nameidx, ARCH_CONVERT,
+					mp->m_sb.sb_blocksize -
 						sizeof(xfs_dir_leaf_name_t));
 				namest = XFS_DIR_LEAF_NAMESTRUCT(leaf,
-						INT_GET(entry->nameidx, ARCH_CONVERT));
-				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino, &namest->inumber, ARCH_CONVERT);
+						INT_GET(entry->nameidx,
+							ARCH_CONVERT));
+				XFS_DIR_SF_PUT_DIRINO_ARCH(&lino,
+					&namest->inumber, ARCH_CONVERT);
 				namest->name[0] = '/';
 			}
-		} else if (INT_GET(entry->nameidx, ARCH_CONVERT) + entry->namelen > XFS_LBSIZE(mp))  {
+		} else if (INT_GET(entry->nameidx, ARCH_CONVERT) +
+					entry->namelen > XFS_LBSIZE(mp))  {
 			do_warn(
-"bad size, entry #%d in dir inode %llu, block %u -- entry overflows block\n",
-			i, ino, da_bno);
+_("bad size, entry #%d in dir inode %llu, block %u -- entry overflows block\n"),
+				i, ino, da_bno);
 
 			return(1);
 		}
@@ -2079,7 +2139,7 @@ process_leaf_dir_block(
 
 		if (set_da_freemap(mp, dir_freemap, start, stop))  {
 			do_warn(
-"dir entry slot %d in block %u conflicts with used space in dir inode %llu\n",
+_("dir entry slot %d in block %u conflicts with used space in dir inode %llu\n"),
 				i, da_bno, ino);
 			return(1);
 		}
@@ -2118,32 +2178,33 @@ process_leaf_dir_block(
 			 */
 			if (!no_modify)  {
 				do_warn(
-	"illegal name \"%s\" in directory inode %llu, entry will be cleared\n",
+_("illegal name \"%s\" in directory inode %llu, entry will be cleared\n"),
 					fname, ino);
 				namest->name[0] = '/';
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-	"illegal name \"%s\" in directory inode %llu, entry would be cleared\n",
+_("illegal name \"%s\" in directory inode %llu, entry would be cleared\n"),
 					fname, ino);
 			}
-		} else if (!nm_illegal && INT_GET(entry->hashval, ARCH_CONVERT) != hashval)  {
+		} else if (!nm_illegal &&
+			   INT_GET(entry->hashval, ARCH_CONVERT) != hashval)  {
 			/*
 			 * try resetting the hashvalue to the correct
 			 * value for the string, if the string has been
 			 * corrupted, too, that will get picked up next
 			 */
-			do_warn("\tmismatched hash value for entry \"%s\"\n",
+			do_warn(_("\tmismatched hash value for entry \"%s\"\n"),
 				fname);
 			if (!no_modify)  {
 				do_warn(
-			"\t\tin directory inode %llu.  resetting hash value.\n",
+		_("\t\tin directory inode %llu.  resetting hash value.\n"),
 					ino);
 				INT_SET(entry->hashval, ARCH_CONVERT, hashval);
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-		"\t\tin directory inode %llu.  would reset hash value.\n",
+		_("\t\tin directory inode %llu.  would reset hash value.\n"),
 					ino);
 			}
 		}
@@ -2173,18 +2234,19 @@ process_leaf_dir_block(
 			 * inode number in the entry so we can attach
 			 * the inode to the orphanage later.
 			 */
-			do_warn("\tbad hash ordering for entry \"%s\"\n",
+			do_warn(_("\tbad hash ordering for entry \"%s\"\n"),
 				fname);
 			if (!no_modify)  {
 				do_warn(
-		"\t\tin directory inode %llu.  will clear entry\n",
+			_("\t\tin directory inode %llu.  will clear entry\n"),
 					ino);
-				INT_SET(entry->hashval, ARCH_CONVERT, last_hashval);
+				INT_SET(entry->hashval, ARCH_CONVERT,
+					last_hashval);
 				namest->name[0] = '/';
 				*buf_dirty = 1;
 			} else  {
 				do_warn(
-		"\t\tin directory inode %llu.  would clear entry\n",
+			_("\t\tin directory inode %llu.  would clear entry\n"),
 					ino);
 			}
 		}
@@ -2195,22 +2257,24 @@ process_leaf_dir_block(
 		 * if heap data conflicts with something,
 		 * blow it out and skip the rest of the loop
 		 */
-		if (set_da_freemap(mp, dir_freemap, INT_GET(entry->nameidx, ARCH_CONVERT),
-				INT_GET(entry->nameidx, ARCH_CONVERT) + sizeof(xfs_dir_leaf_name_t) +
-				entry->namelen - 1))  {
+		if (set_da_freemap(mp, dir_freemap,
+				INT_GET(entry->nameidx, ARCH_CONVERT),
+				INT_GET(entry->nameidx, ARCH_CONVERT)
+				+ sizeof(xfs_dir_leaf_name_t)
+				+ entry->namelen - 1))  {
 			do_warn(
-"name \"%s\" (block %u, slot %d) conflicts with used space in dir inode %llu\n",
+_("name \"%s\" (block %u, slot %d) conflicts with used space in dir inode %llu\n"),
 				fname, da_bno, i, ino);
 			if (!no_modify)  {
 				entry->namelen = 0;
 				*buf_dirty = 1;
 
 				do_warn(
-		"will clear entry \"%s\" (#%d) in directory inode %llu\n",
+		_("will clear entry \"%s\" (#%d) in directory inode %llu\n"),
 					fname, i, ino);
 			} else  {
 				do_warn(
-		"would clear entry \"%s\" (#%d)in directory inode %llu\n",
+		_("would clear entry \"%s\" (#%d)in directory inode %llu\n"),
 					fname, i, ino);
 			}
 			continue;
@@ -2246,15 +2310,16 @@ process_leaf_dir_block(
 						ino != mp->m_sb.sb_rootino)  {
 					*parent = NULLFSINO;
 					do_warn(
-	"bad .. entry in dir ino %llu, points to self",
+			_("bad .. entry in dir ino %llu, points to self"),
 						ino);
 					if (!no_modify)  {
-						do_warn("will clear entry\n");
-
+						do_warn(
+						_("will clear entry\n"));
 						namest->name[0] = '/';
 						*buf_dirty = 1;
 					} else  {
-						do_warn("would clear entry\n");
+						do_warn(
+						_("would clear entry\n"));
 					}
 				} else if (ino != lino &&
 						ino == mp->m_sb.sb_rootino)  {
@@ -2264,7 +2329,7 @@ process_leaf_dir_block(
 					 */
 					if (!no_modify)  {
 						do_warn(
-		"correcting .. entry in root inode %llu, was %llu\n",
+		_("correcting .. entry in root inode %llu, was %llu\n"),
 							ino, *parent);
 						XFS_DIR_SF_PUT_DIRINO_ARCH(
 							&ino,
@@ -2272,7 +2337,7 @@ process_leaf_dir_block(
 						*buf_dirty = 1;
 					} else  {
 						do_warn(
-	"bad .. entry (%llu) in root inode %llu should be %llu\n",
+		_("bad .. entry (%llu) in root inode %llu should be %llu\n"),
 							*parent,
 							ino, ino);
 					}
@@ -2289,13 +2354,13 @@ process_leaf_dir_block(
 				 */
 				if (!no_modify)  {
 					do_warn(
-"multiple .. entries in directory inode %llu, will clear second entry\n",
+_("multiple .. entries in directory inode %llu, will clear second entry\n"),
 						ino);
 					namest->name[0] = '/';
 					*buf_dirty = 1;
 				} else  {
 					do_warn(
-"multiple .. entries in directory inode %llu, would clear second entry\n",
+_("multiple .. entries in directory inode %llu, would clear second entry\n"),
 						ino);
 				}
 			}
@@ -2308,33 +2373,34 @@ process_leaf_dir_block(
 				if (lino != ino)  {
 					if (!no_modify)  {
 						do_warn(
-	". in directory inode %llu has wrong value (%llu), fixing entry...\n",
+_(". in directory inode %llu has wrong value (%llu), fixing entry...\n"),
 							ino, lino);
 						XFS_DIR_SF_PUT_DIRINO_ARCH(&ino,
-							&namest->inumber, ARCH_CONVERT);
+							&namest->inumber,
+								ARCH_CONVERT);
 						*buf_dirty = 1;
 					} else  {
 						do_warn(
-			". in directory inode %llu has wrong value (%llu)\n",
+			_(". in directory inode %llu has wrong value (%llu)\n"),
 							ino, lino);
 					}
 				}
 			} else  {
 				do_warn(
-				"multiple . entries in directory inode %llu\n",
+			_("multiple . entries in directory inode %llu\n"),
 					ino);
 				/*
 				 * mark entry as to be junked.
 				 */
 				if (!no_modify)  {
 					do_warn(
-			"will clear one . entry in directory inode %llu\n",
+			_("will clear one . entry in directory inode %llu\n"),
 						ino);
 					namest->name[0] = '/';
 					*buf_dirty = 1;
 				} else  {
 					do_warn(
-			"would clear one . entry in directory inode %llu\n",
+			_("would clear one . entry in directory inode %llu\n"),
 						ino);
 				}
 			}
@@ -2344,14 +2410,14 @@ process_leaf_dir_block(
 			 */
 			if (lino == ino)  {
 				do_warn(
-			"entry \"%s\" in directory inode %llu points to self, ",
+		_("entry \"%s\" in directory inode %llu points to self, "),
 					fname, ino);
 				if (!no_modify)  {
-					do_warn("will clear entry\n");
+					do_warn(_("will clear entry\n"));
 					namest->name[0] = '/';
 					*buf_dirty = 1;
 				} else  {
-					do_warn("would clear entry\n");
+					do_warn(_("would clear entry\n"));
 				}
 			}
 		}
@@ -2363,22 +2429,25 @@ process_leaf_dir_block(
 	 * pointing to used bytes.  we're being conservative here
 	 * since the block will get compacted anyhow by the kernel.
 	 */
-	if ((leaf->hdr.holes == 0 && first_used != INT_GET(leaf->hdr.firstused, ARCH_CONVERT)) ||
-			INT_GET(leaf->hdr.firstused, ARCH_CONVERT) > first_used)  {
+	if ((leaf->hdr.holes == 0 &&
+	     first_used != INT_GET(leaf->hdr.firstused, ARCH_CONVERT)) ||
+	    INT_GET(leaf->hdr.firstused, ARCH_CONVERT) > first_used)  {
 		if (!no_modify)  {
 			if (verbose)
 				do_warn(
-"- resetting first used heap value from %d to %d in block %u of dir ino %llu\n",
-					(int) INT_GET(leaf->hdr.firstused, ARCH_CONVERT), first_used,
-					da_bno, ino);
+_("- resetting first used heap value from %d to %d in block %u of dir ino %llu\n"),
+					(int) INT_GET(leaf->hdr.firstused,
+						ARCH_CONVERT),
+					first_used, da_bno, ino);
 			INT_SET(leaf->hdr.firstused, ARCH_CONVERT, first_used);
 			*buf_dirty = 1;
 		} else  {
 			if (verbose)
 				do_warn(
-"- would reset first used value from %d to %d in block %u of dir ino %llu\n",
-					(int) INT_GET(leaf->hdr.firstused, ARCH_CONVERT), first_used,
-					da_bno, ino);
+_("- would reset first used value from %d to %d in block %u of dir ino %llu\n"),
+					(int) INT_GET(leaf->hdr.firstused,
+						ARCH_CONVERT),
+					first_used, da_bno, ino);
 		}
 	}
 
@@ -2386,17 +2455,19 @@ process_leaf_dir_block(
 		if (!no_modify)  {
 			if (verbose)
 				do_warn(
-"- resetting namebytes cnt from %d to %d in block %u of dir inode %llu\n",
-					(int) INT_GET(leaf->hdr.namebytes, ARCH_CONVERT), bytes_used,
-					da_bno, ino);
+_("- resetting namebytes cnt from %d to %d in block %u of dir inode %llu\n"),
+					(int) INT_GET(leaf->hdr.namebytes,
+						ARCH_CONVERT),
+					bytes_used, da_bno, ino);
 			INT_SET(leaf->hdr.namebytes, ARCH_CONVERT, bytes_used);
 			*buf_dirty = 1;
 		} else  {
 			if (verbose)
 				do_warn(
-"- would reset namebytes cnt from %d to %d in block %u of dir inode %llu\n",
-					(int) INT_GET(leaf->hdr.namebytes, ARCH_CONVERT), bytes_used,
-					da_bno, ino);
+_("- would reset namebytes cnt from %d to %d in block %u of dir inode %llu\n"),
+					(int) INT_GET(leaf->hdr.namebytes,
+						ARCH_CONVERT),
+					bytes_used, da_bno, ino);
 		}
 	}
 
@@ -2429,7 +2500,7 @@ process_leaf_dir_block(
 		if (holemap.lost_holes > 0)  {
 			if (verbose)
 				do_warn(
-	"- found unexpected lost holes in block %u, dir inode %llu\n",
+	_("- found unexpected lost holes in block %u, dir inode %llu\n"),
 					da_bno, ino);
 
 			reset_holes = 1;
@@ -2437,14 +2508,14 @@ process_leaf_dir_block(
 				XFS_DIR_LEAF_MAPSIZE, ino, da_bno))  {
 			if (verbose)
 				do_warn(
-			"- hole info non-optimal in block %u, dir inode %llu\n",
+		_("- hole info non-optimal in block %u, dir inode %llu\n"),
 					da_bno, ino);
 			reset_holes = 1;
 		}
 	} else if (verify_da_freemap(mp, dir_freemap, &holemap, ino, da_bno))  {
 		if (verbose)
 			do_warn(
-			"- hole info incorrect in block %u, dir inode %llu\n",
+		_("- hole info incorrect in block %u, dir inode %llu\n"),
 				da_bno, ino);
 		reset_holes = 1;
 	}
@@ -2455,7 +2526,7 @@ process_leaf_dir_block(
 		 */
 		if (verbose)  {
 			do_warn(
-	"- existing hole info for block %d, dir inode %llu (base, size) - \n",
+_("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 				da_bno, ino);
 			do_warn("- \t");
 			for (i = 0; i < XFS_DIR_LEAF_MAPSIZE; i++)  {
@@ -2463,13 +2534,13 @@ process_leaf_dir_block(
 				"- (%d, %d) ", bholemap.hentries[i].base,
 					bholemap.hentries[i].size);  
 			}
-			do_warn("- holes flag = %d\n", bholemap.lost_holes);
+			do_warn(_("- holes flag = %d\n"), bholemap.lost_holes);
 		}
 
 		if (!no_modify)  {
 			if (verbose)
 				do_warn(
-		"- compacting block %u in dir inode %llu\n",
+			_("- compacting block %u in dir inode %llu\n"),
 					da_bno, ino);
 
 			new_leaf = (xfs_dir_leafblock_t *) &dirbuf[0];
@@ -2510,7 +2581,7 @@ process_leaf_dir_block(
 						sizeof(xfs_dir_leaf_entry_t)
 						+ (__psint_t) d_entry)  {
 					do_warn(
-	"not enough space in block %u of dir inode %llu for all entries\n",
+	_("not enough space in block %u of dir inode %llu for all entries\n"),
 						da_bno, ino);
 					break;
 				}
@@ -2578,7 +2649,7 @@ process_leaf_dir_block(
 		} else  {
 			if (verbose)
 				do_warn(
-			"- would compact block %u in dir inode %llu\n",
+			_("- would compact block %u in dir inode %llu\n"),
 					da_bno, ino);
 		}
 	}
@@ -2639,7 +2710,8 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 		ASSERT(da_bno != 0);
 
 		if (dev_bno == NULLDFSBNO) {
-			do_warn("can't map block %u for directory inode %llu\n",
+			do_warn(
+			_("can't map block %u for directory inode %llu\n"),
 				da_bno, ino);
 			goto error_out;
 		}
@@ -2649,8 +2721,9 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
 					XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn("can't read file block %u (fsbno %llu, daddr %lld) "
-				"for directory inode %llu\n",
+			do_warn(
+			_("can't read file block %u (fsbno %llu, daddr %lld) "
+			  "for directory inode %llu\n"),
 				da_bno, dev_bno, (__int64_t) bd_addr, ino);
 			goto error_out;
 		}
@@ -2660,9 +2733,12 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 		/*
 		 * check magic number for leaf directory btree block
 		 */
-		if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC) {
-			do_warn("bad directory leaf magic # %#x for dir ino %llu\n",
-				INT_GET(leaf->hdr.info.magic, ARCH_CONVERT), ino);
+		if (XFS_DIR_LEAF_MAGIC !=
+		    INT_GET(leaf->hdr.info.magic, ARCH_CONVERT)) {
+			do_warn(
+			_("bad directory leaf magic # %#x for dir ino %llu\n"),
+				INT_GET(leaf->hdr.info.magic, ARCH_CONVERT),
+				ino);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
@@ -2699,8 +2775,9 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 		da_cursor->level[0].dirty = buf_dirty;
 
 		if (INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != prev_bno)  {
-			do_warn("bad sibling back pointer for directory block %u "
-				"in directory inode %llu\n", da_bno, ino);
+			do_warn(_("bad sibling back pointer for directory "
+				  "block %u in directory inode %llu\n"),
+				da_bno, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
@@ -2730,7 +2807,7 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 		/*
 		 * verify the final path up (right-hand-side) if still ok
 		 */
-		do_warn("bad hash path in directory %llu\n", da_cursor->ino);
+		do_warn(_("bad hash path in directory %llu\n"), da_cursor->ino);
 		goto error_out;
 	}
 
@@ -2840,13 +2917,13 @@ process_node_dir(
 		if ((xfs_fsize_t) (da_cursor.greatest_bno
 				* mp->m_sb.sb_blocksize) > UINT_MAX)  { 
 			do_warn(
-"out of range internal directory block numbers (inode %llu)\n",
+	_("out of range internal directory block numbers (inode %llu)\n"),
 				ino);
 			return(1);
 		}
 
 		do_warn(
-"setting directory inode (%llu) size to %llu bytes, was %lld bytes\n",
+_("setting directory inode (%llu) size to %llu bytes, was %lld bytes\n"),
 			ino,
 			(xfs_dfiloff_t) (da_cursor.greatest_bno + 1)
 				* mp->m_sb.sb_blocksize,
@@ -2901,13 +2978,15 @@ process_leaf_dir(
 
 	bno = blkmap_get(blkmap, 0);
 	if (bno == NULLDFSBNO) {
-		do_warn("block 0 for directory inode %llu is missing\n", ino);
+		do_warn(_("block 0 for directory inode %llu is missing\n"),
+			ino);
 		return(1);
 	}
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 			XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp) {
-		do_warn("can't read block 0 for directory inode %llu\n", ino);
+		do_warn(_("can't read block 0 for directory inode %llu\n"),
+			ino);
 		return(1);
 	}
 	/*
@@ -2919,7 +2998,7 @@ process_leaf_dir(
 	 * check magic number for leaf directory btree block
 	 */
 	if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC) {
-		do_warn("bad directory leaf magic # %#x for dir ino %llu\n",
+		do_warn(_("bad directory leaf magic # %#x for dir ino %llu\n"),
 			INT_GET(leaf->hdr.info.magic, ARCH_CONVERT), ino);
 		libxfs_putbuf(bp);
 		return(1);
@@ -2941,16 +3020,16 @@ process_leaf_dir(
 	 * check sibling pointers in leaf block (above doesn't do it)
 	 */
 	if (INT_GET(leaf->hdr.info.forw, ARCH_CONVERT) != 0 ||
-				INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != 0)  {
+	    INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != 0)  {
 		if (!no_modify)  {
-			do_warn("clearing forw/back pointers for directory inode "
-				"%llu\n", ino);
+			do_warn(_("clearing forw/back pointers for "
+				  "directory inode %llu\n"), ino);
 			buf_dirty = 1;
 			INT_ZERO(leaf->hdr.info.forw, ARCH_CONVERT);
 			INT_ZERO(leaf->hdr.info.back, ARCH_CONVERT);
 		} else  {
-			do_warn("would clear forw/back pointers for directory inode "
-				"%llu\n", ino);
+			do_warn(_("would clear forw/back pointers for "
+				  "directory inode %llu\n"), ino);
 		}
 	}
 
@@ -2993,14 +3072,16 @@ process_dir(
 	 * is only called ONCE so all the subordinate routines will
 	 * fix '.' and junk '..' if they're bogus.
 	 */
-	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <= XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT))  {
+	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <=
+	    XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT))  {
 		dot = 1;
 		dotdot = 1;
 		if (process_shortform_dir(mp, ino, dip, ino_discovery,
 				dino_dirty, parent, dirname, &repair))  {
 			res = 1;
 		}
-	} else if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <= XFS_LBSIZE(mp))  {
+	} else if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <=
+		   XFS_LBSIZE(mp))  {
 		if (process_leaf_dir(mp, ino, dip, ino_discovery,
 				dino_dirty, blkmap, &dot, &dotdot,
 				parent, dirname, &repair))  {
@@ -3017,7 +3098,7 @@ process_dir(
 	 * bad . entries in all directories will be fixed up in phase 6
 	 */
 	if (dot == 0) {
-		do_warn("no . entry for directory %llu\n", ino);
+		do_warn(_("no . entry for directory %llu\n"), ino);
 	}
 
 	/*
@@ -3027,9 +3108,9 @@ process_dir(
 	 * fixed in place since we know what it should be
 	 */
 	if (dotdot == 0 && ino != mp->m_sb.sb_rootino) {
-		do_warn("no .. entry for directory %llu\n", ino);
+		do_warn(_("no .. entry for directory %llu\n"), ino);
 	} else if (dotdot == 0 && ino == mp->m_sb.sb_rootino) {
-		do_warn("no .. entry for root directory %llu\n", ino);
+		do_warn(_("no .. entry for root directory %llu\n"), ino);
 		need_root_dotdot = 1;
 	}
 	

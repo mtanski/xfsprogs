@@ -1053,7 +1053,7 @@ avl_insert(
 	if ((np = avl_insert_find_growth(tree, start, end, &growth)) == NULL) {
 		if (start != end)  { /* non-zero length range */
 			fprintf(stderr,
-			"avl_insert: Warning! duplicate range [%llu,%llu]\n",
+		_("avl_insert: Warning! duplicate range [%llu,%llu]\n"),
 				(unsigned long long)start,
 				(unsigned long long)end);
 		}

@@ -226,10 +226,8 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
 	ASSERT(big_extent_len > 0);
 
 	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t *)
-					* big_extent_len)) == NULL)  {
-		do_error("could not set up btree block array\n");
-		exit(1);
-	}
+					* big_extent_len)) == NULL)
+		do_error(_("could not set up btree block array\n"));
 
 	agb_ptr = curs->free_btree_blocks = curs->btree_blocks;
 
@@ -240,10 +238,8 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
 	 * grab the smallest extent and use it up, then get the
 	 * next smallest.  This mimics the init_*_cursor code.
 	 */
-	if ((ext_ptr =  findfirst_bcnt_extent(agno)) == NULL)  {
-		do_error("error - not enough free space in filesystem\n");
-		exit(1);
-	}
+	if ((ext_ptr =  findfirst_bcnt_extent(agno)) == NULL)
+		do_error(_("error - not enough free space in filesystem\n"));
 
 	agb_ptr = curs->btree_blocks;
 	j = curs->level[0].num_blocks;
@@ -465,11 +461,9 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	 * figure out how many free extents will be used up by
 	 * our space allocation
 	 */
-	if ((ext_ptr = findfirst_bcnt_extent(agno)) == NULL)  {
-		do_error("can't rebuild fs trees -- not enough free space "
-			"on ag %u\n", agno);
-		exit(1);
-	}
+	if ((ext_ptr = findfirst_bcnt_extent(agno)) == NULL)
+		do_error(_("can't rebuild fs trees -- not enough free space "
+			   "on ag %u\n"), agno);
 
 	i = 0;
 	while (ext_ptr != NULL && blocks_needed > 0)  {
@@ -491,11 +485,9 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 		}
 #endif
 	}
-	if (blocks_needed > 0)  {
-		do_error("ag %u - not enough free space to build freespace "
-			"btrees\n", agno);
-		exit(1);
-	}
+	if (blocks_needed > 0)
+		do_error(_("ag %u - not enough free space to build freespace "
+			   "btrees\n"), agno);
 
 	ASSERT(num_extents >= extents_used);
 
@@ -529,9 +521,9 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 				 * the old tree had more than one level.
 				 * this is bad.
 				 */
-				 do_warn("not enough free blocks left to "
-					"describe all free blocks in AG %u\n",
-					agno);
+				 do_warn(_("not enough free blocks left to "
+					   "describe all free blocks in AG "
+					   "%u\n"), agno);
 			}
 #ifdef XR_BLD_FREE_TRACE
 			fprintf(stderr,
@@ -1339,10 +1331,12 @@ build_agf_agfl(xfs_mount_t	*mp,
 
 		if (j > 0)  {
 			if (j == lostblocks)
-				do_warn("lost %d blocks in ag %u\n", j, agno);
+				do_warn(_("lost %d blocks in ag %u\n"),
+					j, agno);
 			else
-				do_warn("thought we were going to lose %d "
-					"blocks in ag %u, actually lost %d\n",
+				do_warn(_("thought we were going to lose %d "
+					  "blocks in ag %u, actually lost "
+					  "%d\n"),
 					lostblocks, j, agno);
 		}
 
@@ -1388,7 +1382,7 @@ sync_sb(xfs_mount_t *mp)
 
 	bp = libxfs_getsb(mp, 0);
 	if (!bp)
-		do_error("couldn't get superblock\n");
+		do_error(_("couldn't get superblock\n"));
 
 	sbp = XFS_BUF_TO_SBP(bp);
 
@@ -1442,7 +1436,7 @@ phase5(xfs_mount_t *mp)
 	extern int	count_bcnt_extents(xfs_agnumber_t);
 #endif
 
-	do_log("Phase 5 - rebuild AG headers and trees...\n");
+	do_log(_("Phase 5 - rebuild AG headers and trees...\n"));
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
@@ -1491,8 +1485,9 @@ phase5(xfs_mount_t *mp)
 			 * and clearing the in-use bit in the incore inode
 			 * tree.  Then try mk_incore_fstree() again.
 			 */
-			do_error("unable to rebuild AG %u.  "
-				"Not enough free space in on-disk AG.\n", agno);
+			do_error(_("unable to rebuild AG %u.  "
+				  "Not enough free space in on-disk AG.\n"),
+				agno);
 		}
 
 		/*
@@ -1529,9 +1524,8 @@ phase5(xfs_mount_t *mp)
 			 * and clearing the in-use bit in the incore inode
 			 * tree.  Then try mk_incore_fstree() again.
 			 */
-			do_error("unable to rebuild AG %u.  No free space.\n",
-				agno);
-			exit(1);
+			do_error(
+			_("unable to rebuild AG %u.  No free space.\n"), agno);
 		}
 
 #ifdef XR_BLD_FREE_TRACE
@@ -1558,7 +1552,7 @@ phase5(xfs_mount_t *mp)
 				: 0;
 
 		if (extra_blocks > 0)  {
-			do_warn("lost %d blocks in agno %d, sorry.\n",
+			do_warn(_("lost %d blocks in agno %d, sorry.\n"),
 				extra_blocks, agno);
 			sb_fdblocks -= extra_blocks;
 		}
@@ -1616,13 +1610,13 @@ phase5(xfs_mount_t *mp)
 
 	if (mp->m_sb.sb_rblocks)  {
 		do_log(
-		"        - generate realtime summary info and bitmap...\n");
+		_("        - generate realtime summary info and bitmap...\n"));
 		rtinit(mp);
 		generate_rtinfo(mp, btmcompute, sumcompute);
 		teardown_rt_bmap(mp);
 	}
 
-	do_log("        - reset superblock...\n");
+	do_log(_("        - reset superblock...\n"));
 
 	/*
 	 * sync superblock counter and set version bits correctly

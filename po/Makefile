@@ -37,7 +37,7 @@ include $(TOPDIR)/include/builddefs
 LINGUAS = 
 LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
 
-# TODO: db/ logprint/ repair/
+# TODO: db/ logprint/
 XGETTEXTFILES =	\
 		$(TOPDIR)/bmap/xfs_bmap.c \
 		$(TOPDIR)/freeze/xfs_freeze.c \
@@ -56,6 +56,33 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/libxfs/trans.c \
 		$(TOPDIR)/libxfs/util.c \
 		$(TOPDIR)/libxlog/util.c \
+		$(TOPDIR)/repair/agheader.c \
+		$(TOPDIR)/repair/attr_repair.c \
+		$(TOPDIR)/repair/avl.c \
+		$(TOPDIR)/repair/avl64.c \
+		$(TOPDIR)/repair/bmap.c \
+		$(TOPDIR)/repair/dino_chunks.c \
+		$(TOPDIR)/repair/dinode.c \
+		$(TOPDIR)/repair/dir.c \
+		$(TOPDIR)/repair/dir2.c \
+		$(TOPDIR)/repair/dir_stack.c \
+		$(TOPDIR)/repair/incore.c \
+		$(TOPDIR)/repair/incore_ext.c \
+		$(TOPDIR)/repair/incore_ino.c \
+		$(TOPDIR)/repair/init.c \
+		$(TOPDIR)/repair/io.c \
+		$(TOPDIR)/repair/phase1.c \
+		$(TOPDIR)/repair/phase2.c \
+		$(TOPDIR)/repair/phase3.c \
+		$(TOPDIR)/repair/phase4.c \
+		$(TOPDIR)/repair/phase5.c \
+		$(TOPDIR)/repair/phase6.c \
+		$(TOPDIR)/repair/phase7.c \
+		$(TOPDIR)/repair/rt.c \
+		$(TOPDIR)/repair/sb.c \
+		$(TOPDIR)/repair/scan.c \
+		$(TOPDIR)/repair/versions.c \
+		$(TOPDIR)/repair/xfs_repair.c \
 		$(TOPDIR)/rtcp/xfs_rtcp.c
 
 default: $(LINGUAS:%=%.mo)

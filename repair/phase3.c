@@ -80,8 +80,8 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 						XR_E_INO);
 					break;
 				case XR_E_BAD_STATE:
-					do_error(
-						"bad state in block map %d\n",
+					do_error(_(
+						"bad state in block map %d\n"),
 						state);
 					abort();
 					break;
@@ -123,11 +123,9 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 	bp = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE, 0);
-	if (!bp) {
-		do_error("cannot read agi block %lld for ag %u\n",
+	if (!bp)
+		do_error(_("cannot read agi block %lld for ag %u\n"),
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)), agno);
-		exit(1);
-	}
 
 	agip = XFS_BUF_TO_AGI(bp);
 
@@ -135,20 +133,21 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  {
 		if (INT_GET(agip->agi_unlinked[i], ARCH_CONVERT) != NULLAGINO)  {
-			err += walk_unlinked_list(mp, agno,
-						INT_GET(agip->agi_unlinked[i], ARCH_CONVERT));
+			err += walk_unlinked_list(mp, agno, INT_GET(
+					agip->agi_unlinked[i], ARCH_CONVERT));
 			/*
 			 * clear the list
 			 */
 			if (!no_modify)  {
-				INT_SET(agip->agi_unlinked[i], ARCH_CONVERT, NULLAGINO);
+				INT_SET(agip->agi_unlinked[i], ARCH_CONVERT,
+					NULLAGINO);
 				agi_dirty = 1;
 			}
 		}
 	}
 
 	if (err)
-		do_warn("error following ag %d unlinked list\n", agno);
+		do_warn(_("error following ag %d unlinked list\n"), agno);
 
 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
 
@@ -163,11 +162,11 @@ phase3(xfs_mount_t *mp)
 {
 	int i, j;
 
-	printf("Phase 3 - for each AG...\n");
+	do_log(_("Phase 3 - for each AG...\n"));
 	if (!no_modify)
-		printf("        - scan and clear agi unlinked lists...\n");
+		do_log(_("        - scan and clear agi unlinked lists...\n"));
 	else
-		printf("        - scan (but don't clear) agi unlinked lists...\n");
+		do_log(_("        - scan (but don't clear) agi unlinked lists...\n"));
 
 	/*
 	 * first, let's look at the possibly bogus inodes
@@ -182,11 +181,11 @@ phase3(xfs_mount_t *mp)
 
 	/* ok, now that the tree's ok, let's take a good look */
 
-	printf(
-	    "        - process known inodes and perform inode discovery...\n");
+	do_log(_(
+	    "        - process known inodes and perform inode discovery...\n"));
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		do_log("        - agno = %d\n", i);
+		do_log(_("        - agno = %d\n"), i);
 		/*
 		 * turn on directory processing (inode discovery) and 
 		 * attribute processing (extra_attr_check)
@@ -197,7 +196,7 @@ phase3(xfs_mount_t *mp)
 	/*
 	 * process newly discovered inode chunks
 	 */
-	printf("        - process newly discovered inodes...\n");
+	do_log(_("        - process newly discovered inodes...\n"));
 	do  {
 		/*
 		 * have to loop until no ag has any uncertain
@@ -213,4 +212,3 @@ phase3(xfs_mount_t *mp)
 		}
 	} while (j != 0);
 }
-

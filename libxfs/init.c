@@ -66,7 +66,7 @@ check_isactive(char *name, char *block, int fatal)
 		return 0;
 	if ((st.st_mode & S_IFMT) != S_IFBLK)
 		return 0;
-	if (check_ismounted(name, block, &st, 0))
+	if (check_ismounted(name, block, &st, 0) == 0)
 		return 0;
 	return check_iswritable(name, block, &st, fatal);
 }

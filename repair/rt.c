@@ -58,11 +58,11 @@ rtinit(xfs_mount_t *mp)
 	if ((btmcompute = calloc(mp->m_sb.sb_rbmblocks *
 			mp->m_sb.sb_blocksize, 1)) == NULL)
 		do_error(
-		"couldn't allocate memory for incore realtime bitmap.\n");
+	_("couldn't allocate memory for incore realtime bitmap.\n"));
 
 	if ((sumcompute = calloc(mp->m_rsumsize, 1)) == NULL)
 		do_error(
-		"couldn't allocate memory for incore realtime summary info.\n");
+	_("couldn't allocate memory for incore realtime summary info.\n"));
 }
 
 /*
@@ -162,7 +162,7 @@ check_summary(xfs_mount_t *mp)
 		     bno++, csp++, fsp++) {
 			if (*csp != *fsp) {
 				do_warn(
-	"rt summary mismatch, size %d block %llu, file: %d, computed: %d\n",
+	_("rt summary mismatch, size %d block %llu, file: %d, computed: %d\n"),
 						log, bno, *fsp, *csp);
 				error = 1;
 			}
@@ -213,7 +213,7 @@ process_rtbitmap(xfs_mount_t	*mp,
 		bno = blkmap_get(blkmap, bmbno);
 
 		if (bno == NULLDFSBNO) {
-			do_warn("can't find block %d for rtbitmap inode\n",
+			do_warn(_("can't find block %d for rtbitmap inode\n"),
 					bmbno);
 			error = 1;
 			continue;
@@ -221,7 +221,7 @@ process_rtbitmap(xfs_mount_t	*mp,
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1));
 		if (!bp) {
-			do_warn("can't read block %d for rtbitmap inode\n",
+			do_warn(_("can't read block %d for rtbitmap inode\n"),
 					bmbno);
 			error = 1;
 			continue;
@@ -275,7 +275,7 @@ process_rtsummary(xfs_mount_t	*mp,
 	for (sumbno = 0; sumbno < blkmap->count; sumbno++) {
 		bno = blkmap_get(blkmap, sumbno);
 		if (bno == NULLDFSBNO) {
-			do_warn("block %d for rtsummary inode is missing\n",
+			do_warn(_("block %d for rtsummary inode is missing\n"),
 					sumbno);
 			error++;
 			continue;
@@ -283,7 +283,7 @@ process_rtsummary(xfs_mount_t	*mp,
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1));
 		if (!bp) {
-			do_warn("can't read block %d for rtsummary inode\n",
+			do_warn(_("can't read block %d for rtsummary inode\n"),
 					sumbno);
 			error++;
 			continue;

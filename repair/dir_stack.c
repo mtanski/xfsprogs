@@ -102,7 +102,7 @@ push_dir(dir_stack_t *stack, xfs_ino_t ino)
 	if (dirstack_freelist.cnt == 0)  {
 		if ((elem = malloc(sizeof(dir_stack_elem_t))) == NULL)  {
 			do_error(
-			"couldn't malloc dir stack element, try more swap\n");
+		_("couldn't malloc dir stack element, try more swap\n"));
 			exit(1);
 		}
 	} else  {

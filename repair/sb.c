@@ -108,12 +108,12 @@ find_secondary_sb(xfs_sb_t *rsb)
 	int		retval;
 	int		bsize;
 
-	do_warn("\nattempting to find secondary superblock...\n");
+	do_warn(_("\nattempting to find secondary superblock...\n"));
 
 	sb = (xfs_sb_t *) memalign(MEM_ALIGN, BSIZE);
 	if (!sb) {
 		do_error(
-	"error finding secondary superblock -- failed to memalign buffer\n");
+	_("error finding secondary superblock -- failed to memalign buffer\n"));
 		exit(1);
 	}
 
@@ -151,7 +151,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			if (verify_sb(&bufsb, 0) != XR_OK)
 				continue;
 
-			do_warn("found candidate secondary superblock...\n");
+			do_warn(_("found candidate secondary superblock...\n"));
 
 			/*
 			 * found one.  now verify it by looking
@@ -162,12 +162,13 @@ find_secondary_sb(xfs_sb_t *rsb)
 			clear_sunit = 1;
 
 			if (verify_set_primary_sb(rsb, 0, &dirty) == XR_OK)  {
-				do_warn("verified secondary superblock...\n");
+				do_warn(
+			_("verified secondary superblock...\n"));
 				done = 1;
 				retval = 1;
 			} else  {
 				do_warn(
-				"unable to verify superblock, continuing...\n");
+			_("unable to verify superblock, continuing...\n"));
 			}
 		}
 	}
@@ -429,20 +430,20 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 		return;
         
         if ((buf = calloc(size, 1)) == NULL) {
-		do_error("failed to malloc superblock buffer\n");
+		do_error(_("failed to malloc superblock buffer\n"));
                 return;
 	}
 
 	if (lseek64(fs_fd, 0LL, SEEK_SET) != 0LL) {
                 free(buf);
-		do_error("couldn't seek to offset 0 in filesystem\n");
+		do_error(_("couldn't seek to offset 0 in filesystem\n"));
         }
         
 	libxfs_xlate_sb(buf, sbp, -1, ARCH_CONVERT, XFS_SB_ALL_BITS);
 
 	if (write(fs_fd, buf, size) != size) {
                 free(buf);
-		do_error("primary superblock write failed!\n");
+		do_error(_("primary superblock write failed!\n"));
         }
 
         free(buf);
@@ -459,7 +460,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
         
         if ((buf = calloc(size, 1)) == NULL) {
 		do_error(
-	"error reading superblock %u -- failed to malloc buffer\n",
+	_("error reading superblock %u -- failed to malloc buffer\n"),
 			agno, off);
 		exit(1);
 	}
@@ -468,7 +469,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 
 	if (lseek64(fs_fd, off, SEEK_SET) != off)  {
 		do_warn(
-	"error reading superblock %u -- seek to offset %lld failed\n",
+	_("error reading superblock %u -- seek to offset %lld failed\n"),
 			agno, off);
 		return(XR_EOF);
 	}
@@ -476,7 +477,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 	if ((rval = read(fs_fd, buf, size)) != size)  {
 		error = errno;
 		do_warn(
-"superblock read failed, offset %lld, size %d, ag %u, rval %d\n",
+	_("superblock read failed, offset %lld, size %d, ag %u, rval %d\n"),
 			off, size, rval, agno);
 		do_error("%s\n", strerror(error));
 	}
@@ -549,7 +550,7 @@ add_geo(fs_geo_list_t *list, fs_geometry_t *geo_p, int index)
 	}
 
 	if ((current = malloc(sizeof(fs_geo_list_t))) == NULL) {
-		do_error("couldn't malloc geometry structure\n");
+		do_error(_("couldn't malloc geometry structure\n"));
 		exit(1);
 	}
 
@@ -666,7 +667,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 			int		sb_index,
 			int		*sb_modified)
 {
-	xfs_off_t		off;
+	xfs_off_t	off;
 	fs_geometry_t	geo;
 	xfs_sb_t	*sb;
 	fs_geo_list_t	*list;
@@ -694,7 +695,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	sb = (xfs_sb_t *) alloc_ag_buf(size);
 	checked = calloc(rsb->sb_agcount, sizeof(char));
 	if (!checked) {
-		do_error("calloc failed in verify_set_primary_sb\n");
+		do_error(_("calloc failed in verify_set_primary_sb\n"));
 		exit(1);
 	}
 
@@ -761,7 +762,8 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 		 */
 		if (current->refs != 2)  {
 			if (!force_geo)  {
-				do_warn("Only two AGs detected and they do not match - cannot proceed.\n");
+				do_warn(
+	_("Only two AGs detected and they do not match - cannot proceed.\n"));
 				exit(1);
 			}
 		}
@@ -773,7 +775,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 		 * option is in effect.
 		 */
 		if (!force_geo)  {
-			do_warn("Only one AG detected - cannot proceed.\n");
+			do_warn(_("Only one AG detected - cannot proceed.\n"));
 			exit(1);
 		}
 	default:
@@ -784,7 +786,8 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 		 * XFS normally doesn't alter the secondary superblocks.
 		 */
 		if (current->refs < num_sbs / 2)  {
-			do_warn("Not enough matching superblocks - cannot proceed.\n");
+			do_warn(
+		_("Not enough matching superblocks - cannot proceed.\n"));
 			exit(1);
 		}
 	}
@@ -799,7 +802,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 			* current->geo.sb_blocksize;
 		if (get_sb(sb, off, current->geo.sb_sectsize,
 				current->index) != XR_OK)
-			do_error("could not read superblock\n");
+			do_error(_("could not read superblock\n"));
 
 		copy_sb(sb, rsb);
 

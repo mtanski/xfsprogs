@@ -50,13 +50,15 @@ set_nlinks(xfs_dinode_core_t	*dinoc,
 	if (!no_modify)  {
 		if (INT_GET(dinoc->di_nlink, ARCH_NOCONVERT) != nrefs)  {
 			*dirty = 1;
-			do_warn("resetting inode %llu nlinks from %d to %d\n",
-					ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT), nrefs);
+			do_warn(
+		_("resetting inode %llu nlinks from %d to %d\n"),
+				ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT),
+				nrefs);
 
 			if (nrefs > XFS_MAXLINK_1)  {
 				ASSERT(fs_inode_nlink);
 				do_warn(
-"nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n",
+_("nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"),
 					nrefs, ino);
 
 			}
@@ -65,8 +67,9 @@ set_nlinks(xfs_dinode_core_t	*dinoc,
 	} else  {
 		if (INT_GET(dinoc->di_nlink, ARCH_NOCONVERT) != nrefs)
 			do_warn(
-			"would have reset inode %llu nlinks from %d to %d\n",
-				ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT), nrefs);
+			_("would have reset inode %llu nlinks from %d to %d\n"),
+				ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT),
+				nrefs);
 	}
 }
 
@@ -84,15 +87,15 @@ phase7(xfs_mount_t *mp)
 	__uint32_t		nrefs;
 
 	if (!no_modify)
-		printf("Phase 7 - verify and correct link counts...\n");
+		do_log(_("Phase 7 - verify and correct link counts...\n"));
 	else
-		printf("Phase 7 - verify link counts...\n");
+		do_log(_("Phase 7 - verify link counts...\n"));
 
 	tp = libxfs_trans_alloc(mp, XFS_TRANS_REMOVE);
 
 	error = libxfs_trans_reserve(tp, (no_modify ? 0 : 10),
-		XFS_REMOVE_LOG_RES(mp), 0, XFS_TRANS_PERM_LOG_RES,
-		XFS_REMOVE_LOG_COUNT);
+			XFS_REMOVE_LOG_RES(mp), 0, XFS_TRANS_PERM_LOG_RES,
+			XFS_REMOVE_LOG_COUNT);
 
 	ASSERT(error == 0);
 
@@ -126,11 +129,11 @@ phase7(xfs_mount_t *mp)
 				if (error)  {
 					if (!no_modify)
 						do_error(
-					"couldn't map inode %llu, err = %d\n",
+				_("couldn't map inode %llu, err = %d\n"),
 							ino, error);
 					else  {
 						do_warn(
-	"couldn't map inode %llu, err = %d, can't compare link counts\n",
+	_("couldn't map inode %llu, err = %d, can't compare link counts\n"),
 							ino, error);
 						continue;
 					}

@@ -39,8 +39,8 @@
 void
 no_sb(void)
 {
-	do_warn("Sorry, could not find valid secondary superblock\n");
-	do_warn("Exiting now.\n");
+	do_warn(_("Sorry, could not find valid secondary superblock\n"));
+	do_warn(_("Exiting now.\n"));
 	exit(1);
 }
 
@@ -51,7 +51,7 @@ alloc_ag_buf(int size)
 
         bp = (char *)memalign(MEM_ALIGN, size);
         if (!bp)
-		do_error("could not allocate ag header buffer (%d bytes)\n",
+		do_error(_("could not allocate ag header buffer (%d bytes)\n"),
 			size);
 	return(bp);
 }
@@ -71,7 +71,7 @@ phase1(xfs_mount_t *mp)
 
 	io_init();
 
-	do_log("Phase 1 - find and verify superblock...\n");
+	do_log(_("Phase 1 - find and verify superblock...\n"));
 
 	primary_sb_modified = 0;
 	need_root_inode = 0;
@@ -87,22 +87,21 @@ phase1(xfs_mount_t *mp)
 	ag_bp = alloc_ag_buf(MAX_SECTSIZE);
 	sb = (xfs_sb_t *) ag_bp;
 
-	if (get_sb(sb, 0LL, MAX_SECTSIZE, 0) == XR_EOF)  {
-		do_error("error reading primary superblock\n");
-	}
+	if (get_sb(sb, 0LL, MAX_SECTSIZE, 0) == XR_EOF)
+		do_error(_("error reading primary superblock\n"));
 
 	/*
 	 * is this really an sb, verify internal consistency
 	 */
 	if ((rval = verify_sb(sb, 1)) != XR_OK)  {
-		do_warn("bad primary superblock - %s !!!\n",
+		do_warn(_("bad primary superblock - %s !!!\n"),
 			err_string(rval));
 		if (!find_secondary_sb(sb))
 			no_sb();
 		primary_sb_modified = 1;
 	} else if ((rval = verify_set_primary_sb(sb, 0,
 					&primary_sb_modified)) != XR_OK)  {
-		do_warn("couldn't verify primary superblock - %s !!!\n",
+		do_warn(_("couldn't verify primary superblock - %s !!!\n"),
 			err_string(rval));
 		if (!find_secondary_sb(sb))
 			no_sb();
@@ -111,10 +110,10 @@ phase1(xfs_mount_t *mp)
 	
 	if (primary_sb_modified)  {
 		if (!no_modify)  {
-			do_warn("writing modified primary superblock\n");
+			do_warn(_("writing modified primary superblock\n"));
 			write_primary_sb(sb, sb->sb_sectsize);
 		} else  {
-			do_warn("would write modified primary superblock\n");
+			do_warn(_("would write modified primary superblock\n"));
 		}
 	}
 

@@ -118,7 +118,9 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 
 		if (xfs_acl_valid((xfs_acl_t *) valuep) != 0) { /* 0 is valid */
 			clearit = 1;
-			do_warn("entry contains illegal value in attribute named SGI_ACL_FILE or SGI_ACL_DEFAULT\n");
+			do_warn(
+	_("entry contains illegal value in attribute named SGI_ACL_FILE "
+	  "or SGI_ACL_DEFAULT\n"));
 		}
 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
 		if (value == NULL) {
@@ -130,7 +132,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 
 		if (xfs_mac_valid((xfs_mac_label_t *)valuep) != 1) { /* 1 is valid */
 			 /*
-			 *if sysconf says MAC enabled, 
+			 * if sysconf says MAC enabled, 
 			 *	temp = mac_from_text("msenhigh/mintlow", NULL)
 			 *	copy it to value, update valuelen, totsize
 			 *	This causes pushing up or down of all following
@@ -138,12 +140,14 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			 * else clearit = 1;
 			 */
 			clearit = 1;
-			do_warn("entry contains illegal value in attribute named SGI_MAC_LABEL\n");
+			do_warn(
+	_("entry contains illegal value in attribute named SGI_MAC_LABEL\n"));
 		}
 	} else if (strncmp(namevalue, SGI_CAP_FILE, SGI_CAP_FILE_SIZE) == 0) {
 		if ( valuelen != sizeof(xfs_cap_set_t)) {
 			clearit = 1;
-			do_warn("entry contains illegal value in attribute named SGI_CAP_FILE\n");
+			do_warn(
+	_("entry contains illegal value in attribute named SGI_CAP_FILE\n"));
 		}
 	}
 
@@ -181,13 +185,17 @@ process_shortform_attr(
 		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) != sizeof(xfs_attr_sf_hdr_t)) {
 			/* whoops there's a discrepancy. Clear the hdr */
 			if (!no_modify) {
-				do_warn("there are no attributes in the fork for inode %llu \n", ino);
+				do_warn(
+		_("there are no attributes in the fork for inode %llu\n"),
+					ino);
 				INT_SET(asf->hdr.totsize, ARCH_CONVERT,
 						sizeof(xfs_attr_sf_hdr_t));
 				*repair = 1;
 				return(1); 	
 			} else {
-				do_warn("would junk the attribute fork since the count is 0 for inode %llu\n",ino);
+				do_warn(
+	_("would junk the attribute fork since count is 0 for inode %llu\n"),
+					ino);
 				return(1);
 			}
                 }
@@ -206,13 +214,15 @@ process_shortform_attr(
 
 		/* if the namelen is 0, can't get to the rest of the entries */
 		if (INT_GET(currententry->namelen, ARCH_CONVERT) == 0) {
-			do_warn("zero length name entry in attribute fork, ");
+			do_warn(_("zero length name entry in attribute fork,"));
 			if (!no_modify) {
-				do_warn("truncating attributes for inode %llu to %d \n", ino, i);
+				do_warn(
+		_(" truncating attributes for inode %llu to %d\n"), ino, i);
 				*repair = 1;
 				break; 	/* and then update hdr fields */
 			} else {
-				do_warn("would truncate attributes for inode %llu to %d \n", ino, i);
+				do_warn(
+		_(" would truncate attributes for inode %llu to %d\n"), ino, i);
 				break;
 			}
 		} else {
@@ -220,16 +230,23 @@ process_shortform_attr(
 			 * rough check to make sure we haven't gone outside of
 			 * totsize.
 			 */
-			if ((remainingspace < INT_GET(currententry->namelen, ARCH_CONVERT)) ||
-				((remainingspace - INT_GET(currententry->namelen, ARCH_CONVERT))
-					  < INT_GET(currententry->valuelen, ARCH_CONVERT))) {
-				do_warn("name or value attribute lengths are too large, \n");
+			if ((remainingspace <
+				INT_GET(currententry->namelen, ARCH_CONVERT)) ||
+			   ((remainingspace -
+				INT_GET(currententry->namelen, ARCH_CONVERT)) <
+				INT_GET(currententry->valuelen, ARCH_CONVERT))) {
+				do_warn(
+			_("name or value attribute lengths are too large,\n"));
 				if (!no_modify) {
-					do_warn(" truncating attributes for inode %llu to %d \n", ino, i);
+					do_warn(
+			_(" truncating attributes for inode %llu to %d\n"),
+						ino, i);
 					*repair = 1; 
 					break; /* and then update hdr fields */
 				} else {
-					do_warn(" would truncate attributes for inode %llu to %d \n", ino, i);	
+					do_warn(
+			_(" would truncate attributes for inode %llu to %d\n"),
+						ino, i);	
 					break;
 				}	
 			}
@@ -240,19 +257,23 @@ process_shortform_attr(
 		*/
 		if (namecheck((char *)&currententry->nameval[0], 
 				INT_GET(currententry->namelen, ARCH_CONVERT)))  {
-			do_warn("entry contains illegal character in shortform attribute name\n");
+			do_warn(
+	_("entry contains illegal character in shortform attribute name\n"));
 			junkit = 1;
 		}
 
 		if (INT_GET(currententry->flags, ARCH_CONVERT) & XFS_ATTR_INCOMPLETE) {
-			do_warn("entry has INCOMPLETE flag on in shortform attribute\n");
+			do_warn(
+	_("entry has INCOMPLETE flag on in shortform attribute\n"));
 			junkit = 1;
 		}
 
 		/* Only check values for root security attributes */
 		if (INT_GET(currententry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT) 
-		       junkit = valuecheck((char *)&currententry->nameval[0], NULL, 
-				INT_GET(currententry->namelen, ARCH_CONVERT), INT_GET(currententry->valuelen, ARCH_CONVERT));
+		       junkit = valuecheck((char *)&currententry->nameval[0],
+				NULL, 
+				INT_GET(currententry->namelen, ARCH_CONVERT),
+				INT_GET(currententry->valuelen, ARCH_CONVERT));
 
 		remainingspace = remainingspace - 
 				XFS_ATTR_SF_ENTSIZE(currententry);
@@ -260,7 +281,9 @@ process_shortform_attr(
 		if (junkit) {
 			if (!no_modify) {
 				/* get rid of only this entry */
-				do_warn("removing attribute entry %d for inode %llu \n", i, ino);
+				do_warn(
+			_("removing attribute entry %d for inode %llu\n"),
+					i, ino);
 				tempentry = (xfs_attr_sf_entry_t *)
 					((__psint_t) currententry +
 					 XFS_ATTR_SF_ENTSIZE(currententry));
@@ -270,7 +293,9 @@ process_shortform_attr(
 				*repair = 1;
 				continue; /* go back up now */
 			} else { 
-				do_warn("would remove attribute entry %d for inode %llu \n", i, ino);
+				do_warn(
+			_("would remove attribute entry %d for inode %llu\n"),
+					i, ino);
                         }
                 }
 
@@ -280,15 +305,16 @@ process_shortform_attr(
 			 XFS_ATTR_SF_ENTSIZE(currententry));
 		currentsize = currentsize + XFS_ATTR_SF_ENTSIZE(currententry);
 	
-		} /* end the loop */
+	} /* end the loop */
 
-	
 	if (INT_GET(asf->hdr.count, ARCH_CONVERT) != i)  {
 		if (no_modify)  {
-			do_warn("would have corrected attribute entry count in inode %llu from %d to %d\n",
+			do_warn(_("would have corrected attribute entry count "
+				  "in inode %llu from %d to %d\n"),
 				ino, INT_GET(asf->hdr.count, ARCH_CONVERT), i);
 		} else  {
-			do_warn("corrected attribute entry count in inode %llu, was %d, now %d\n",
+			do_warn(_("corrected attribute entry count in inode "
+				  "%llu, was %d, now %d\n"),
 				ino, INT_GET(asf->hdr.count, ARCH_CONVERT), i);
 			INT_SET(asf->hdr.count, ARCH_CONVERT, i);
 			*repair = 1;
@@ -298,11 +324,15 @@ process_shortform_attr(
 	/* ASSUMPTION: currentsize <= totsize */
 	if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) != currentsize)  {
 		if (no_modify)  {
-			do_warn("would have corrected attribute totsize in inode %llu from %d to %d\n",
-				ino, INT_GET(asf->hdr.totsize, ARCH_CONVERT), currentsize);
+			do_warn(_("would have corrected attribute totsize in "
+				  "inode %llu from %d to %d\n"),
+				ino, INT_GET(asf->hdr.totsize, ARCH_CONVERT),
+				currentsize);
 		} else  {
-			do_warn("corrected attribute entry totsize in inode %llu, was %d, now %d\n",
-				ino, INT_GET(asf->hdr.totsize, ARCH_CONVERT), currentsize);
+			do_warn(_("corrected attribute entry totsize in "
+				  "inode %llu, was %d, now %d\n"),
+				ino, INT_GET(asf->hdr.totsize, ARCH_CONVERT),
+				currentsize);
 			INT_SET(asf->hdr.totsize, ARCH_CONVERT, currentsize);
 			*repair = 1;
 		}
@@ -329,16 +359,16 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 	while (amountdone < valuelen) {
 		bno = blkmap_get(blkmap, blocknum + i);
 		if (bno == NULLDFSBNO) {
-			do_warn("remote block for attributes of inode %llu"
-				" is missing\n", ino);
+			do_warn(_("remote block for attributes of inode %llu"
+				  " is missing\n"), ino);
 			clearit = 1;
 			break;
 		}
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn("can't read remote block for attributes"
-				" of inode %llu\n", ino);
+			do_warn(_("can't read remote block for attributes"
+				  " of inode %llu\n"), ino);
 			clearit = 1;
 			break;
 		}
@@ -393,7 +423,8 @@ process_leaf_attr_block(
 				* sizeof(xfs_attr_leaf_entry_t)
 				+ sizeof(xfs_attr_leaf_hdr_t)
 							> XFS_LBSIZE(mp)) {
-		do_warn("bad attribute count %d in attr block %u, inode %llu\n",
+		do_warn(
+	_("bad attribute count %d in attr block %u, inode %llu\n"),
 			(int) INT_GET(leaf->hdr.count, ARCH_CONVERT),
 						da_bno, ino);
 		return (1);
@@ -409,58 +440,67 @@ process_leaf_attr_block(
 	
 		/* check if index is within some boundary. */
 		if (INT_GET(entry->nameidx, ARCH_CONVERT) > XFS_LBSIZE(mp)) {
-			do_warn("bad attribute nameidx %d in attr block %u, inode %llu\n",
+			do_warn(
+		_("bad attribute nameidx %d in attr block %u, inode %llu\n"),
 				(int)INT_GET(entry->nameidx, ARCH_CONVERT),
 				da_bno,ino);
 			clearit = 1;
 			break;
-			}
+		}
 
 		if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_INCOMPLETE) {
 			/* we are inconsistent state. get rid of us */
-			do_warn("attribute entry #%d in attr block %u, inode %llu is INCOMPLETE\n",
+			do_warn(
+	_("attribute entry #%d in attr block %u, inode %llu is INCOMPLETE\n"),
 				i, da_bno, ino);
 			clearit = 1;
 			break;
-			}
+		}
 
 		/* mark the entry used */
 		start = (__psint_t)&leaf->entries[i] - (__psint_t)leaf;
 		stop = start + sizeof(xfs_attr_leaf_entry_t);
 		if (set_da_freemap(mp, attr_freemap, start, stop))  {
-			do_warn("attribute entry %d in attr block %u, inode %llu claims already used space\n",
-				i,da_bno,ino);
+			do_warn(
+		_("attribute entry %d in attr block %u, inode %llu claims "
+		  "already used space\n"),
+				i, da_bno, ino);
 			clearit = 1;
 			break;	/* got an overlap */
-			}
+		}
 
 		if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_LOCAL) {
 
 			local = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);	
 			if ((INT_GET(local->namelen, ARCH_CONVERT) == 0) || 
-					(namecheck((char *)&local->nameval[0], 
-						INT_GET(local->namelen, ARCH_CONVERT)))) {
-				do_warn("attribute entry %d in attr block %u, inode %llu has bad name (namelen = %d)\n",
-					i, da_bno, ino, (int) INT_GET(local->namelen, ARCH_CONVERT));
-
+				(namecheck((char *)&local->nameval[0], 
+				    INT_GET(local->namelen, ARCH_CONVERT))))  {
+				do_warn(
+			_("attribute entry %d in attr block %u, inode %llu "
+			  "has bad name (namelen = %d)\n"),
+					i, da_bno, ino, (int)
+					INT_GET(local->namelen, ARCH_CONVERT));
 				clearit = 1;
 				break;
-				};
+			}
 
-			/* Check on the hash value. Checking ordering of hash values
-			 * is not necessary, since one wrong one clears the whole
+			/* Check on the hash value. Checking order of values
+			 * is not necessary, since one wrong clears the whole
 			 * fork. If the ordering's wrong, it's caught here or 
  			 * the kernel code has a bug with transaction logging
-			 * or attributes itself. For paranoia reasons, let's check
+			 * or attributes itself. Being paranoid, let's check
 			 * ordering anyway in case both the name value and the 
 		  	 * hashvalue were wrong but matched. Unlikely, however.
 			*/
 			if (INT_GET(entry->hashval, ARCH_CONVERT) != 
 				libxfs_da_hashname((char *)&local->nameval[0],
-					INT_GET(local->namelen, ARCH_CONVERT)) ||
-				(INT_GET(entry->hashval, ARCH_CONVERT)
-							< last_hashval)) {
-				do_warn("bad hashvalue for attribute entry %d in attr block %u, inode %llu\n",
+					INT_GET(local->namelen,
+						ARCH_CONVERT)) ||
+			   (INT_GET(entry->hashval, ARCH_CONVERT) <
+							last_hashval)) {
+				do_warn(
+			_("bad hashvalue for attribute entry %d in "
+			  "attr block %u, inode %llu\n"),
 					i, da_bno, ino);
 				clearit = 1;
 				break;
@@ -469,14 +509,19 @@ process_leaf_attr_block(
 			/* Only check values for root security attributes */
 			if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT) 
 				if (valuecheck((char *)&local->nameval[0], NULL,
-					    INT_GET(local->namelen, ARCH_CONVERT), INT_GET(local->valuelen, ARCH_CONVERT))) {
-					do_warn("bad security value for attribute entry %d in attr block %u, inode %llu\n",
-						i,da_bno,ino);
+				    INT_GET(local->namelen, ARCH_CONVERT),
+				    INT_GET(local->valuelen, ARCH_CONVERT)))  {
+					do_warn(
+			_("bad security value for attribute entry %d in "
+			  "attr block %u, inode %llu\n"),
+						i, da_bno, ino);
 					clearit = 1;
 					break;
-				};
+				}
+
 			thissize = XFS_ATTR_LEAF_ENTSIZE_LOCAL(
-					INT_GET(local->namelen, ARCH_CONVERT), INT_GET(local->valuelen, ARCH_CONVERT));
+					INT_GET(local->namelen, ARCH_CONVERT),
+					INT_GET(local->valuelen, ARCH_CONVERT));
 
 		} else {
 			/* do the remote case */
@@ -494,30 +539,45 @@ process_leaf_attr_block(
 				   (INT_GET(entry->hashval, ARCH_CONVERT)
 						< last_hashval) ||
 				   (INT_GET(remotep->valueblk, ARCH_CONVERT) == 0)) {
-				do_warn("inconsistent remote attribute entry %d in attr block %u, ino %llu\n",
+				do_warn(
+			_("inconsistent remote attribute entry %d in "
+			  "attr block %u, ino %llu\n"),
 					i, da_bno, ino);
 				clearit = 1;
 				break;
-			};
+			}
 
 			if (INT_GET(entry->flags, ARCH_CONVERT) & XFS_ATTR_ROOT) {
 				char*	value;
-				if ((value = malloc(INT_GET(remotep->valuelen, ARCH_CONVERT)))==NULL){
-					do_warn("cannot malloc enough for remotevalue attribute for inode %llu\n",ino);
-					do_warn("SKIPPING this remote attribute\n");
+
+				if ((value = malloc(INT_GET(remotep->valuelen,
+						ARCH_CONVERT))) == NULL) {
+					do_warn(
+	_("cannot malloc enough for remotevalue attribute for inode %llu\n"),
+						ino);
+					do_warn(
+				_("SKIPPING this remote attribute\n"));
 					continue;
 				}
 				if (rmtval_get(mp, ino, blkmap,
-						INT_GET(remotep->valueblk, ARCH_CONVERT),
-						INT_GET(remotep->valuelen, ARCH_CONVERT), value)) {
-					do_warn("remote attribute get failed for entry %d, inode %llu\n", i,ino);
+						INT_GET(remotep->valueblk,
+							ARCH_CONVERT),
+						INT_GET(remotep->valuelen,
+							ARCH_CONVERT), value)) {
+					do_warn(
+	_("remote attribute get failed for entry %d, inode %llu\n"), i, ino);
 					clearit = 1;
 					free(value);
 					break;
 				}
 				if (valuecheck((char *)&remotep->name[0], value,
-					    INT_GET(remotep->namelen, ARCH_CONVERT), INT_GET(remotep->valuelen, ARCH_CONVERT))){
-					do_warn("remote attribute value check  failed for entry %d, inode %llu\n", i, ino);
+						INT_GET(remotep->namelen,
+							ARCH_CONVERT),
+						INT_GET(remotep->valuelen,
+							ARCH_CONVERT))) {
+					do_warn(
+	_("remote attribute value check failed for entry %d, inode %llu\n"),
+						i, ino);
 					clearit = 1;
 					free(value);
 					break;
@@ -529,9 +589,12 @@ process_leaf_attr_block(
 		*current_hashval = last_hashval 
 				 = INT_GET(entry->hashval, ARCH_CONVERT);
 
-		if (set_da_freemap(mp, attr_freemap, INT_GET(entry->nameidx, ARCH_CONVERT),
-				INT_GET(entry->nameidx, ARCH_CONVERT) + thissize))  {
-			do_warn("attribute entry %d in attr block %u, inode %llu claims used space\n",
+		if (set_da_freemap(mp, attr_freemap,
+					INT_GET(entry->nameidx, ARCH_CONVERT),
+					INT_GET(entry->nameidx, ARCH_CONVERT) +
+						thissize))  {
+			do_warn(_("attribute entry %d in attr block %u, "
+				  "inode %llu claims used space\n"),
 				i, da_bno, ino);
 			clearit = 1;
 			break;	/* got an overlap */
@@ -554,7 +617,9 @@ process_leaf_attr_block(
 		    && firstb != INT_GET(leaf->hdr.firstused, ARCH_CONVERT))
 		    || INT_GET(leaf->hdr.firstused, ARCH_CONVERT) > firstb)  {
 			if (!no_modify)  {
-				do_warn("- resetting first used heap value from %d to %d in block %u of attribute fork of inode %llu\n",
+				do_warn(
+	_("- resetting first used heap value from %d to %d in "
+	  "block %u of attribute fork of inode %llu\n"),
 					(int)INT_GET(leaf->hdr.firstused,
 						ARCH_CONVERT), firstb,
 						da_bno, ino);
@@ -562,7 +627,9 @@ process_leaf_attr_block(
 						ARCH_CONVERT, firstb);
 				*repair = 1;
 			} else  {
-				do_warn("- would reset first used value from %d to %d in block %u of attribute fork of inode %llu\n",
+				do_warn(
+	_("- would reset first used value from %d to %d in "
+	  "block %u of attribute fork of inode %llu\n"),
 					(int)INT_GET(leaf->hdr.firstused,
 						ARCH_CONVERT), firstb,
 						da_bno, ino);
@@ -571,14 +638,18 @@ process_leaf_attr_block(
 
 		if (usedbs != INT_GET(leaf->hdr.usedbytes, ARCH_CONVERT))  {
 			if (!no_modify)  {
-				do_warn("- resetting usedbytes cnt from %d to %d in block %u of attribute fork of inode %llu\n",
+				do_warn(
+	_("- resetting usedbytes cnt from %d to %d in "
+	  "block %u of attribute fork of inode %llu\n"),
 					(int)INT_GET(leaf->hdr.usedbytes,
 					  ARCH_CONVERT), usedbs, da_bno, ino);
 				INT_SET(leaf->hdr.usedbytes,
 						ARCH_CONVERT, usedbs);
 				*repair = 1;
 			} else  {
-				do_warn("- would reset usedbytes cnt from %d to %d in block %u of attribute fork of %llu\n",
+				do_warn(
+	_("- would reset usedbytes cnt from %d to %d in "
+	  "block %u of attribute fork of %llu\n"),
 					(int)INT_GET(leaf->hdr.usedbytes,
 					    ARCH_CONVERT), usedbs,da_bno,ino);
 			}
@@ -626,16 +697,16 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		ASSERT(da_bno != 0);
 
 		if (dev_bno == NULLDFSBNO) {
-			do_warn("can't map block %u for attribute fork "
-				"for inode %llu\n", da_bno, ino);
+			do_warn(_("can't map block %u for attribute fork "
+				  "for inode %llu\n"), da_bno, ino);
 			goto error_out; 
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
 					XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn("can't read file block %u (fsbno %llu) for"
-				" attribute fork of inode %llu\n",
+			do_warn(_("can't read file block %u (fsbno %llu) for"
+				" attribute fork of inode %llu\n"),
 				da_bno, dev_bno, ino);
 			goto error_out;
 		}
@@ -645,7 +716,8 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		/* check magic number for leaf directory btree block */
 		if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT)
 						!= XFS_ATTR_LEAF_MAGIC) {
-			do_warn("bad attribute leaf magic %#x for inode %llu\n",
+			do_warn(_("bad attribute leaf magic %#x "
+				  "for inode %llu\n"),
 				 leaf->hdr.info.magic, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
@@ -676,8 +748,9 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		da_cursor->level[0].dirty = repair; 
 
 		if (INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != prev_bno)  {
-			do_warn("bad sibling back pointer for block %u in "
-				"attribute fork for inode %llu\n", da_bno, ino);
+			do_warn(_("bad sibling back pointer for block %u in "
+				  "attribute fork for inode %llu\n"),
+				da_bno, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
@@ -704,7 +777,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		/*
 		 * verify the final path up (right-hand-side) if still ok
 		 */
-		do_warn("bad hash path in attribute fork for inode %llu\n",
+		do_warn(_("bad hash path in attribute fork for inode %llu\n"),
 			da_cursor->ino);
 		goto error_out;
 	}
@@ -805,22 +878,22 @@ process_longform_attr(
 			/* it's okay the kernel can handle this state */
 			return(0);
 		else	{
-			do_warn("block 0 of inode %llu attribute fork"
-				" is missing\n", ino);
+			do_warn(_("block 0 of inode %llu attribute fork"
+				  " is missing\n"), ino);
 			return(1);
 		}
 	}
 	/* FIX FOR bug 653709 -- EKN */
 	if (mp->m_sb.sb_agcount < XFS_FSB_TO_AGNO(mp, bno)) {
-		do_warn("agno of attribute fork of inode %llu out of "
-			"regular partition\n", ino);
+		do_warn(_("agno of attribute fork of inode %llu out of "
+			  "regular partition\n"), ino);
 		return(1);
 	}
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp) {
-		do_warn("can't read block 0 of inode %llu attribute fork\n",
+		do_warn(_("can't read block 0 of inode %llu attribute fork\n"),
 			ino);
 		return(1);
 	}
@@ -834,14 +907,14 @@ process_longform_attr(
 	if (   INT_GET(leaf->hdr.info.forw, ARCH_CONVERT) != 0
 	    || INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != 0)  {
 		if (!no_modify)  {
-			do_warn("clearing forw/back pointers in block 0 "
-				"for attributes in inode %llu\n", ino);
+			do_warn(_("clearing forw/back pointers in block 0 "
+				  "for attributes in inode %llu\n"), ino);
 			repairlinks = 1;
 			INT_SET(leaf->hdr.info.forw, ARCH_CONVERT, 0);
 			INT_SET(leaf->hdr.info.back, ARCH_CONVERT, 0);
 		} else  {
-			do_warn("would clear forw/back pointers in block 0 "
-				"for attributes in inode %llu\n", ino);
+			do_warn(_("would clear forw/back pointers in block 0 "
+				  "for attributes in inode %llu\n"), ino);
 		}
 	}
 
@@ -870,7 +943,7 @@ process_longform_attr(
 			libxfs_putbuf(bp);	
 		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
 	default:
-		do_warn("bad attribute leaf magic # %#x for dir ino %llu\n", 
+		do_warn(_("bad attribute leaf magic # %#x for dir ino %llu\n"),
 			INT_GET(leaf->hdr.info.magic, ARCH_CONVERT), ino);
 		libxfs_putbuf(bp);
 		return(1);
@@ -920,7 +993,8 @@ process_attributes(
 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
 
 	if (dinoc->di_aformat == XFS_DINODE_FMT_LOCAL) {
-		ASSERT(INT_GET(asf->hdr.totsize, ARCH_CONVERT) <= XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT));
+		ASSERT(INT_GET(asf->hdr.totsize, ARCH_CONVERT) <=
+			XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT));
 		err = process_shortform_attr(ino, dip, repair);
 	} else if (dinoc->di_aformat == XFS_DINODE_FMT_EXTENTS ||
 		   dinoc->di_aformat == XFS_DINODE_FMT_BTREE)  {
@@ -929,7 +1003,7 @@ process_attributes(
 			/* if err, convert this to shortform and clear it */
 			/* if repair and no error, it's taken care of */
 	} else  {
-		do_warn("illegal attribute format %d, ino %llu\n",
+		do_warn(_("illegal attribute format %d, ino %llu\n"),
 			dinoc->di_aformat, ino);
 		err = 1; 
 	}

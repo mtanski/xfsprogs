@@ -65,27 +65,27 @@ zero_log(xfs_mount_t *mp)
 	log.l_mp = mp;
 
 	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk, 0))) {
-		do_warn("zero_log: cannot find log head/tail "
-			"(xlog_find_tail=%d), zeroing it anyway\n",
+		do_warn(_("zero_log: cannot find log head/tail "
+			  "(xlog_find_tail=%d), zeroing it anyway\n"),
 			error);
 	} else {
 		if (verbose) {
-			do_warn("zero_log: head block %lld tail block %lld\n",
+			do_warn(_("zero_log: head block %lld tail block %lld\n"),
 				head_blk, tail_blk);
 		}
 		if (head_blk != tail_blk) {
 			if (zap_log) {
-				do_warn(
+				do_warn(_(
 "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
-"destroyed because the -L option was used.\n");
+"destroyed because the -L option was used.\n"));
 			} else {
-				do_warn(
+				do_warn(_(
 "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
 "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
 "re-running xfs_repair.  If you are unable to mount the filesystem, then use\n"
 "the -L option to destroy the log and attempt a repair.\n"
 "Note that destroying the log may cause corruption -- please attempt a mount\n"
-"of the filesystem before doing this.\n");
+"of the filesystem before doing this.\n"));
 				exit(2);
 			}
 		}
@@ -121,25 +121,21 @@ phase2(xfs_mount_t *mp)
 
 	/* Check whether this fs has internal or external log */
 	if (mp->m_sb.sb_logstart == 0) {
-		if (!x.logname) {
-			fprintf (stderr,
-				"This filesystem has an external log.  "
-				"Specify log device with the -l option.\n");
-			exit (1);
-		}
+		if (!x.logname)
+			do_error(_("This filesystem has an external log.  "
+				   "Specify log device with the -l option.\n"));
 		
-		fprintf (stderr, "Phase 2 - using external log on %s\n", 
-			 x.logname);
+		do_log(_("Phase 2 - using external log on %s\n"), x.logname);
 	} else
-		fprintf (stderr, "Phase 2 - using internal log\n");
+		do_log(_("Phase 2 - using internal log\n"));
 
 	/* Zero log if applicable */
 	if (!no_modify)  {
-		do_log("        - zero log...\n");
+		do_log(_("        - zero log...\n"));
 		zero_log(mp);
 	}
 
-	do_log("        - scan filesystem freespace and inode maps...\n");
+	do_log(_("        - scan filesystem freespace and inode maps...\n"));
 
 	/*
 	 * account for space used by ag headers and log if internal
@@ -162,7 +158,7 @@ phase2(xfs_mount_t *mp)
 	if ((ino_rec = find_inode_rec(0, mp->m_sb.sb_rootino)) == NULL)  {
 		ASSERT(mp->m_sb.sb_rbmino == mp->m_sb.sb_rootino + 1 &&
 			mp->m_sb.sb_rsumino == mp->m_sb.sb_rootino + 2);
-		do_warn("root inode chunk not found\n");
+		do_warn(_("root inode chunk not found\n"));
 
 		/*
 		 * mark the first 3 used, the rest are free
@@ -184,36 +180,36 @@ phase2(xfs_mount_t *mp)
 				XR_E_INO);
 		}
 	} else  {
-		do_log("        - found root inode chunk\n");
+		do_log(_("        - found root inode chunk\n"));
 
 		/*
 		 * blocks are marked, just make sure they're in use
 		 */
 		if (is_inode_free(ino_rec, 0))  {
-			do_warn("root inode marked free, ");
+			do_warn(_("root inode marked free, "));
 			set_inode_used(ino_rec, 0);
 			if (!no_modify)
-				do_warn("correcting\n");
+				do_warn(_("correcting\n"));
 			else
-				do_warn("would correct\n");
+				do_warn(_("would correct\n"));
 		}
 
 		if (is_inode_free(ino_rec, 1))  {
-			do_warn("realtime bitmap inode marked free, ");
+			do_warn(_("realtime bitmap inode marked free, "));
 			set_inode_used(ino_rec, 1);
 			if (!no_modify)
-				do_warn("correcting\n");
+				do_warn(_("correcting\n"));
 			else
-				do_warn("would correct\n");
+				do_warn(_("would correct\n"));
 		}
 
 		if (is_inode_free(ino_rec, 2))  {
-			do_warn("realtime summary inode marked free, ");
+			do_warn(_("realtime summary inode marked free, "));
 			set_inode_used(ino_rec, 2);
 			if (!no_modify)
-				do_warn("correcting\n");
+				do_warn(_("correcting\n"));
 			else
-				do_warn("would correct\n");
+				do_warn(_("would correct\n"));
 		}
 	}
 }

@@ -85,7 +85,7 @@ update_sb_version(xfs_mount_t *mp)
 			 * no_modify mode, it'll never get flushed out
 			 * so this is ok.
 			 */
-			do_warn("bogus quota flags 0x%x set in superblock",
+			do_warn(_("bogus quota flags 0x%x set in superblock"),
 				sb->sb_qflags & ~(XFS_UQUOTA_ACCT|
 				XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
@@ -97,9 +97,9 @@ update_sb_version(xfs_mount_t *mp)
 				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD);
 
 			if (!no_modify)
-				do_warn(", bogus flags will be cleared\n");
+				do_warn(_(", bogus flags will be cleared\n"));
 			else
-				do_warn(", bogus flags would be cleared\n");
+				do_warn(_(", bogus flags would be cleared\n"));
 		}
 	} else  {
 		sb->sb_qflags = 0;
@@ -155,7 +155,7 @@ parse_sb_version(xfs_sb_t *sb)
 		if (!fs_has_extflgbit_allowed)  {
 			issue_warning = 1;
 			do_warn(
-			   "This filesystem has uninitialized extent flags.\n");
+			_("This filesystem has uninitialized extent flags.\n"));
 		}
 	}
 
@@ -163,40 +163,38 @@ parse_sb_version(xfs_sb_t *sb)
 		fs_shared = 1;
 		if (!fs_shared_allowed)  {
 			issue_warning = 1;
-			do_warn("This filesystem is marked shared.\n");
+			do_warn(_("This filesystem is marked shared.\n"));
 		}
 	}
 
 	if (issue_warning)  {
 		do_warn(
-"This filesystem uses 6.5 feature(s) not yet supported in this release.\n\
-Please run a 6.5 version of xfs_repair.\n");
+_("This filesystem uses feature(s) not yet supported in this release.\n"
+  "Please run a more recent version of xfs_repair.\n"));
 		return(1);
 	}
 
 	if (!XFS_SB_GOOD_VERSION(sb))  {
+		do_warn(_("WARNING:  unknown superblock version %d\n"),
+			XFS_SB_VERSION_NUM(sb));
 		do_warn(
-	"WARNING:  unknown superblock version %d\n", XFS_SB_VERSION_NUM(sb));
-		do_warn(
-	"This filesystem contains features not understood by this program.\n");
+_("This filesystem contains features not understood by this program.\n"));
 		return(1);
 	}
 
 	if (XFS_SB_VERSION_NUM(sb) == XFS_SB_VERSION_4)  {
 		if (!fs_sb_feature_bits_allowed)  {
-			do_warn(
-	"WARNING:  you have disallowed superblock feature bits disallowed\n");
-			do_warn(
-	"\tbut this superblock has feature bits.  The superblock\n");
-
 			if (!no_modify)  {
 				do_warn(
-	"\twill be downgraded.  This may cause loss of filesystem meta-data\n");
+_("WARNING:  you have disallowed superblock-feature-bits-allowed\n"
+  "\tbut this superblock has feature bits.  The superblock\n"
+  "\twill be downgraded.  This may cause loss of filesystem meta-data\n"));
 			} else   {
 				do_warn(
-	"\twould be downgraded.  This might cause loss of filesystem\n");
-				do_warn(
-	"\tmeta-data.\n");
+_("WARNING:  you have disallowed superblock-feature-bits-allowed\n"
+  "\tbut this superblock has feature bits.  The superblock\n"
+  "\twould be downgraded.  This might cause loss of filesystem\n"
+  "\tmeta-data.\n"));
 			}
 		} else   {
 			fs_sb_feature_bits = 1;
@@ -205,18 +203,16 @@ Please run a 6.5 version of xfs_repair.\n");
 
 	if (XFS_SB_VERSION_HASATTR(sb))  {
 		if (!fs_attributes_allowed)  {
-			do_warn(
-	"WARNING:  you have disallowed attributes but this filesystem\n");
 			if (!no_modify)  {
 				do_warn(
-	"\thas attributes.  The filesystem will be downgraded and\n");
-				do_warn(
-	"\tall attributes will be removed.\n");
+_("WARNING:  you have disallowed attributes but this filesystem\n"
+  "\thas attributes.  The filesystem will be downgraded and\n"
+  "\tall attributes will be removed.\n"));
 			} else  {
 				do_warn(
-	"\thas attributes.  The filesystem would be downgraded and\n");
-				do_warn(
-	"\tall attributes would be removed.\n");
+_("WARNING:  you have disallowed attributes but this filesystem\n"
+  "\thas attributes.  The filesystem would be downgraded and\n"
+  "\tall attributes would be removed.\n"));
 			}
 		} else   {
 			fs_attributes = 1;
@@ -225,22 +221,18 @@ Please run a 6.5 version of xfs_repair.\n");
 
 	if (XFS_SB_VERSION_HASNLINK(sb))  {
 		if (!fs_inode_nlink_allowed)  {
-			do_warn(
-	"WARNING:  you have disallowed version 2 inodes but this filesystem\n");
 			if (!no_modify)  {
 				do_warn(
-	"\thas version 2 inodes.  The filesystem will be downgraded and\n");
-				do_warn(
-	"\tall version 2 inodes will be converted to version 1 inodes.\n");
-				do_warn(
-	"\tThis may cause some hard links to files to be destroyed\n");
+_("WARNING:  you have disallowed version 2 inodes but this filesystem\n"
+  "\thas version 2 inodes.  The filesystem will be downgraded and\n"
+  "\tall version 2 inodes will be converted to version 1 inodes.\n"
+  "\tThis may cause some hard links to files to be destroyed\n"));
 			} else  {
 				do_warn(
-	"\thas version 2 inodes.  The filesystem would be downgraded and\n");
-				do_warn(
-	"\tall version 2 inodes would be converted to version 1 inodes.\n");
-				do_warn(
-	"\tThis might cause some hard links to files to be destroyed\n");
+_("WARNING:  you have disallowed version 2 inodes but this filesystem\n"
+  "\thas version 2 inodes.  The filesystem would be downgraded and\n"
+  "\tall version 2 inodes would be converted to version 1 inodes.\n"
+  "\tThis might cause some hard links to files to be destroyed\n"));
 			}
 		} else   {
 			fs_inode_nlink = 1;
@@ -249,18 +241,16 @@ Please run a 6.5 version of xfs_repair.\n");
 
 	if (XFS_SB_VERSION_HASQUOTA(sb))  {
 		if (!fs_quotas_allowed)  {
-			do_warn(
-	"WARNING:  you have disallowed quotas but this filesystem\n");
 			if (!no_modify)  {
 				do_warn(
-	"\thas quotas.  The filesystem will be downgraded and\n");
-				do_warn(
-	"\tall quota information will be removed.\n");
+_("WARNING:  you have disallowed quotas but this filesystem\n"
+  "\thas quotas.  The filesystem will be downgraded and\n"
+  "\tall quota information will be removed.\n"));
 			} else  {
 				do_warn(
-	"\thas quotas.  The filesystem would be downgraded and\n");
-				do_warn(
-	"\tall quota information would be removed.\n");
+_("WARNING:  you have disallowed quotas but this filesystem\n"
+  "\thas quotas.  The filesystem would be downgraded and\n"
+  "\tall quota information would be removed.\n"));
 			}
 		} else   {
 			fs_quotas = 1;
@@ -280,18 +270,16 @@ Please run a 6.5 version of xfs_repair.\n");
 			fs_aligned_inodes = 1;
 			fs_ino_alignment = sb->sb_inoalignmt;
 		} else   {
-			do_warn(
-	"WARNING:  you have disallowed aligned inodes but this filesystem\n");
 			if (!no_modify)  {
 				do_warn(
-	"\thas aligned inodes.  The filesystem will be downgraded.\n");
-				do_warn(
-"\tThis will permanently degrade the performance of this filesystem.\n");
+_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
+  "\thas aligned inodes.  The filesystem will be downgraded.\n"
+  "\tThis will permanently degrade the performance of this filesystem.\n"));
 			} else  {
 				do_warn(
-	"\thas aligned inodes.  The filesystem would be downgraded.\n");
-				do_warn(
-"\tThis would permanently degrade the performance of this filesystem.\n");
+_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
+  "\thas aligned inodes.  The filesystem would be downgraded.\n"
+  "\tThis would permanently degrade the performance of this filesystem.\n"));
 			}
 		}
 	}

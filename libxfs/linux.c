@@ -98,7 +98,7 @@ check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
 			break;
 	}
-	if (mnt != NULL) {
+	if (mnt == NULL) {
 		fprintf(stderr, _("%s: %s contains a mounted and writable "
 				"filesystem\n"), progname, name);
 		sts = fatal;

@@ -138,7 +138,8 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 								irec->ino_startnum)),
 						len, 0);
 					if (!bp)
-						do_error("couldn't read %s inode %llu\n",
+						do_error(
+					_("couldn't read %s inode %llu\n"),
 							ORPHANAGE, lino);
 
 					/*
@@ -162,7 +163,8 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 							0));
 				}
 
-				do_warn("        - clearing existing \"%s\" inode\n",
+				do_warn(
+			_("        - clearing existing \"%s\" inode\n"),
 					ORPHANAGE);
 
 				ino_dirty = clear_dinode(mp, dino, lino);
@@ -193,7 +195,9 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 			 */
 			namest->name[0] = '/';
 			*dirty = 1;
-			do_warn("        - marking entry \"%s\" to be deleted\n", fname);
+			do_warn(
+			_("        - marking entry \"%s\" to be deleted\n"),
+				fname);
 			res++;
 		}
 	}
@@ -218,10 +222,9 @@ longform_delete_orphanage(xfs_mount_t	*mp,
 	da_bno = 0;
 	*rbuf_dirty = 0;
 
-	if ((fsbno = get_first_dblock_fsbno(mp, ino, dino)) == NULLDFSBNO)  {
-		do_error("couldn't map first leaf block of directory inode %llu\n", ino);
-		exit(1);
-	}
+	if ((fsbno = get_first_dblock_fsbno(mp, ino, dino)) == NULLDFSBNO)
+		do_error(
+	_("couldn't map first leaf block of directory inode %llu\n"), ino);
 
 	/*
 	 * cycle through the entire directory looking to delete
@@ -241,21 +244,19 @@ longform_delete_orphanage(xfs_mount_t	*mp,
 			break;
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
 					XFS_FSB_TO_BB(mp, 1), 0);
-		if (!bp) {
-			do_error("can't read block %u (fsbno %llu) for directory inode "
-				"%llu\n", da_bno, fsbno, ino);
-			exit(1);
-		}
+		if (!bp)
+			do_error(_("can't read block %u (fsbno %llu) for "
+				   "directory inode %llu\n"),
+				da_bno, fsbno, ino);
 
 		leaf = (xfs_dir_leafblock_t *)XFS_BUF_PTR(bp);
 
-		if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC) {
-			do_error("bad magic # (0x%x) for directory leaf block "
-				"(bno %u fsbno %llu)\n",
+		if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) !=
+		    XFS_DIR_LEAF_MAGIC)
+			do_error(_("bad magic # (0x%x) for directory "
+				"leaf block (bno %u fsbno %llu)\n"),
 				INT_GET(leaf->hdr.info.magic, ARCH_CONVERT),
 				da_bno, fsbno);
-			exit(1);
-		}
 
 		da_bno = INT_GET(leaf->hdr.info.forw, ARCH_CONVERT);
 
@@ -328,7 +329,8 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 			(__psint_t)next_sfe - (__psint_t)sf; i++)  {
 		tmp_sfe = NULL;
 		sf_entry = next_sfe;
-		XFS_DIR_SF_GET_DIRINO_ARCH(&sf_entry->inumber, &lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO_ARCH(&sf_entry->inumber,
+			&lino, ARCH_CONVERT);
 		bcopy(sf_entry->name, fname, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
 
@@ -345,7 +347,8 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 			 * reattached to the new orphanage.
 			 */
 			if (irec != NULL) {
-				do_warn("        - clearing existing \"%s\" inode\n",
+				do_warn(
+			_("        - clearing existing \"%s\" inode\n"),
 					ORPHANAGE);
 
 				ino_offset = agino - irec->ino_startnum;
@@ -387,8 +390,10 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 								irec->ino_startnum)),
 						len, 0);
 					if (!bp)
-						do_error("could not read %s inode "
-							"%llu\n", ORPHANAGE, lino);
+						do_error(
+					_("could not read %s inode %llu\n"),
+							ORPHANAGE, lino);
+
 					/*
 					 * get the agbno containing the first
 					 * inode in the chunk.  In multi-block
@@ -437,7 +442,7 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 				set_inode_free(irec, ino_offset);
 			}
 
-			do_warn("        - deleting existing \"%s\" entry\n",
+			do_warn(_("        - deleting existing \"%s\" entry\n"),
 				ORPHANAGE);
 
 			/*
@@ -445,7 +450,8 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 			 * process_shortform_dir()
 			 */
 			tmp_elen = XFS_DIR_SF_ENTSIZE_BYENTRY(sf_entry);
-			INT_MOD(root_dino->di_core.di_size, ARCH_CONVERT, -(tmp_elen));
+			INT_MOD(root_dino->di_core.di_size, ARCH_CONVERT,
+				-(tmp_elen));
 
 			tmp_sfe = (xfs_dir_sf_entry_t *)
 				((__psint_t) sf_entry + tmp_elen);
@@ -531,7 +537,8 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 
 	while (ptr < endptr) {
 		dup = (xfs_dir2_data_unused_t *)ptr;
-		if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG) {
+		if (INT_GET(dup->freetag, ARCH_CONVERT) ==
+		    XFS_DIR2_DATA_FREE_TAG) {
 			if (ptr + INT_GET(dup->length, ARCH_CONVERT) > endptr ||
 				INT_GET(dup->length, ARCH_CONVERT) == 0 ||
 				(INT_GET(dup->length, ARCH_CONVERT) &
@@ -598,7 +605,8 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 								irec->ino_startnum)),
 						len, 0);
 					if (!bp)
-						do_error("couldn't read %s inode %llu\n",
+						do_error(
+					_("couldn't read %s inode %llu\n"),
 							ORPHANAGE, lino);
 
 					/*
@@ -622,7 +630,8 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 							0));
 				}
 
-				do_warn("        - clearing existing \"%s\" inode\n",
+				do_warn(
+				_("        - clearing existing \"%s\" inode\n"),
 					ORPHANAGE);
 
 				ino_dirty = clear_dinode(mp, dino, lino);
@@ -655,8 +664,8 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 			dep->name[0] = '/';
 			*dirty = 1;
 			do_warn(
-			"        - marking entry \"%s\" to be deleted\n",
-						fname);
+			_("        - marking entry \"%s\" to be deleted\n"),
+				fname);
 			res++;
 		}
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
@@ -685,12 +694,10 @@ longform2_delete_orphanage(xfs_mount_t	*mp,
 	*rbuf_dirty = 0;
 	fsbno = NULLDFSBNO;
 	bmp = malloc(mp->m_dirblkfsbs * sizeof(*bmp));
-	if (!bmp) {
+	if (!bmp)
 		do_error(
-	"malloc failed (%u bytes) in longform2_delete_orphanage, ino %llu\n",
+	_("malloc failed (%u bytes) in longform2_delete_orphanage, ino %llu\n"),
 			mp->m_dirblkfsbs * sizeof(*bmp), ino);
-		exit(1);
-	}
 
 	/*
 	 * cycle through the entire directory looking to delete
@@ -721,22 +728,21 @@ longform2_delete_orphanage(xfs_mount_t	*mp,
 		if (fsbno == NULLDFSBNO)
 			continue;
 		bp = da_read_buf(mp, mp->m_dirblkfsbs, bmp);
-		if (bp == NULL) {
+		if (bp == NULL)
 			do_error(
-		"can't read block %u (fsbno %llu) for directory inode %llu\n",
-					da_bno, bmp[0].startblock, ino);
-			exit(1);
-		}
+	_("can't read block %u (fsbno %llu) for directory inode %llu\n"),
+				da_bno, bmp[0].startblock, ino);
 
 		data = (xfs_dir2_data_t *)bp->data;
 
-		if (INT_GET(data->hdr.magic, ARCH_CONVERT) != XFS_DIR2_DATA_MAGIC &&
-		    INT_GET(data->hdr.magic, ARCH_CONVERT) != XFS_DIR2_BLOCK_MAGIC)  {
+		if (INT_GET(data->hdr.magic, ARCH_CONVERT) !=
+					XFS_DIR2_DATA_MAGIC &&
+		    INT_GET(data->hdr.magic, ARCH_CONVERT) !=
+					XFS_DIR2_BLOCK_MAGIC)
 			do_error(
-	"bad magic # (0x%x) for directory data block (bno %u fsbno %llu)\n",
-				INT_GET(data->hdr.magic, ARCH_CONVERT), da_bno, bmp[0].startblock);
-			exit(1);
-		}
+	_("bad magic # (0x%x) for directory data block (bno %u fsbno %llu)\n"),
+				INT_GET(data->hdr.magic, ARCH_CONVERT),
+				da_bno, bmp[0].startblock);
 
 		res += lf2_block_delete_orphanage(mp, ino, data, &dirty,
 					rootino_bp, rbuf_dirty);
@@ -822,7 +828,8 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 			 * reattached to the new orphanage.
 			 */
 			if (irec != NULL)  {
-				do_warn("        - clearing existing \"%s\" inode\n",
+				do_warn(
+				_("        - clearing existing \"%s\" inode\n"),
 					ORPHANAGE);
 
 				ino_offset = agino - irec->ino_startnum;
@@ -864,8 +871,10 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 								irec->ino_startnum)),
 						len, 0);
 					if (!bp)
-						do_error("could not read %s inode "
-							"%llu\n", ORPHANAGE, lino);
+						do_error(
+					_("could not read %s inode %llu\n"),
+							ORPHANAGE, lino);
+
 					/*
 					 * get the agbno containing the first
 					 * inode in the chunk.  In multi-block
@@ -915,7 +924,7 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 				set_inode_free(irec, ino_offset);
 			}
 
-			do_warn("        - deleting existing \"%s\" entry\n",
+			do_warn(_("        - deleting existing \"%s\" entry\n"),
 				ORPHANAGE);
 
 			/*
@@ -923,7 +932,8 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 			 * process_shortform_dir()
 			 */
 			tmp_elen = XFS_DIR2_SF_ENTSIZE_BYENTRY(sf, sf_entry);
-			INT_MOD(root_dino->di_core.di_size, ARCH_CONVERT, -(tmp_elen));
+			INT_MOD(root_dino->di_core.di_size, ARCH_CONVERT,
+				-(tmp_elen));
 
 			tmp_sfe = (xfs_dir2_sf_entry_t *)
 				((__psint_t) sf_entry + tmp_elen);
@@ -989,12 +999,11 @@ delete_orphanage(xfs_mount_t *mp)
 			MAX(1, XFS_INODES_PER_CHUNK/inodes_per_block));
 	dbp = libxfs_readbuf(mp->m_dev,
 			XFS_FSB_TO_DADDR(mp, XFS_INO_TO_FSB(mp, ino)), len, 0);
-	if (!dbp) {
-		do_error("could not read buffer for root inode %llu "
-			"(daddr %lld, size %d)\n", ino,
+	if (!dbp)
+		do_error(_("could not read buffer for root inode %llu "
+			   "(daddr %lld, size %d)\n"), ino,
 			XFS_FSB_TO_DADDR(mp, XFS_INO_TO_FSB(mp, ino)),
 			XFS_FSB_TO_BB(mp, 1));
-	}
 
 	/*
 	 * we also know that the root inode is always the first inode
@@ -1037,7 +1046,7 @@ delete_orphanage(xfs_mount_t *mp)
 			INT_MOD(dino->di_core.di_nlink, ARCH_CONVERT, -res);
 			break;
 		default:
-			do_error("unknown version #%d in root inode\n",
+			do_error(_("unknown version #%d in root inode\n"),
 					dino->di_core.di_version);
 		}
 
@@ -1141,8 +1150,8 @@ phase4(xfs_mount_t *mp)
 	
 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
 
-	printf("Phase 4 - check for duplicate blocks...\n");
-	printf("        - setting up duplicate extent list...\n");
+	do_log(_("Phase 4 - check for duplicate blocks...\n"));
+	do_log(_("        - setting up duplicate extent list...\n"));
 
 	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
@@ -1154,9 +1163,9 @@ phase4(xfs_mount_t *mp)
 	if (is_inode_free(irec, 0) || !inode_isadir(irec, 0))  {
 		need_root_inode = 1;
 		if (no_modify)
-			do_warn("root inode would be lost\n");
+			do_warn(_("root inode would be lost\n"));
 		else
-			do_warn("root inode lost\n");
+			do_warn(_("root inode lost\n"));
 	}
 
 	/*
@@ -1164,7 +1173,7 @@ phase4(xfs_mount_t *mp)
 	 * by lost+found don't show up as used
 	 */
 	if (!no_modify)  {
-		printf("        - clear lost+found (if it exists) ...\n");
+		do_log(_("        - clear lost+found (if it exists) ...\n"));
 		if (!need_root_inode)
 			delete_orphanage(mp);
 	}
@@ -1184,8 +1193,8 @@ phase4(xfs_mount_t *mp)
 			switch (bstate)  {
 			case XR_E_BAD_STATE:
 			default:
-				do_warn("unknown block state, ag %d, \
-block %d\n",
+				do_warn(
+				_("unknown block state, ag %d, block %d\n"),
 					i, j);
 				/* fall through .. */
 			case XR_E_UNKNOWN:
@@ -1241,7 +1250,8 @@ block %d\n",
 		switch (bstate)  {
 		case XR_E_BAD_STATE:
 		default:
-			do_warn("unknown rt extent state, extent %llu\n", bno);
+			do_warn(_("unknown rt extent state, extent %llu\n"),
+				bno);
 			/* fall through .. */
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
@@ -1303,7 +1313,7 @@ block %d\n",
 	set_bmap_log(mp);
 	set_bmap_fs(mp);
 
-	printf("        - check for inodes claiming duplicate blocks...\n");
+	do_log(_("        - check for inodes claiming duplicate blocks...\n"));
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		/*
 		 * ok, now process the inodes -- signal 2-pass check per inode.
@@ -1314,7 +1324,7 @@ block %d\n",
 		 * and attribute processing is turned OFF since we did that 
 		 * already in phase 3.
 		 */
-		do_log("        - agno = %d\n", i);
+		do_log(_("        - agno = %d\n"), i);
 		process_aginodes(mp, i, 0, 1, 0);
 
 		/*

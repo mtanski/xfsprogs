@@ -75,7 +75,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 
         ba_bmap = (__uint64_t**)malloc(agno*sizeof(__uint64_t *));
         if (!ba_bmap)  {
-		do_error("couldn't allocate block map pointers\n");
+		do_error(_("couldn't allocate block map pointers\n"));
 		return;
 	}
 	for (i = 0; i < agno; i++)  {
@@ -83,7 +83,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
                 
                 ba_bmap[i] = (__uint64_t*)memalign(sizeof(__uint64_t), size);
                 if (!ba_bmap[i]) {
-			do_error("couldn't allocate block map, size = %d\n",
+			do_error(_("couldn't allocate block map, size = %d\n"),
 				numblocks);
 			return;
 		}
@@ -100,7 +100,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
         rt_ba_bmap=(__uint64_t*)memalign(sizeof(__uint64_t), size);
 	if (!rt_ba_bmap) {
 			do_error(
-			"couldn't allocate real-time block map, size = %llu\n",
+		_("couldn't allocate realtime block map, size = %llu\n"),
 				rtblocks);
 			return;
 	}

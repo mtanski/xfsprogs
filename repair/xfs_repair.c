@@ -72,39 +72,57 @@ char *o_opts[] = {
 static void
 usage(void)
 {
-	do_warn("Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n",
+	do_warn(
+_("Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"),
 		progname);
 	exit(1);
 }
 
-static char *err_message[] = {
-	"no error",
-	"bad magic number",
-	"bad blocksize field",
-	"bad blocksize log field",
-	"bad version number",
-	"filesystem mkfs-in-progress bit set",
-	"inconsistent filesystem geometry information",
-	"bad inode size or inconsistent with number of inodes/block",
-	"bad sector size",
-	"AGF geometry info conflicts with filesystem geometry",
-	"AGI geometry info conflicts with filesystem geometry",
-	"AG superblock geometry info conflicts with filesystem geometry",
-	"attempted to perform I/O beyond EOF",
-	"inconsistent filesystem geometry in realtime filesystem component",
-	"maximum indicated percentage of inodes > 100%",
-	"inconsistent inode alignment value",
-	"not enough secondary superblocks with matching geometry",
-	"bad stripe unit in superblock",
-	"bad stripe width in superblock",
-	"bad shared version number in superblock"
-};
-
 char *
 err_string(int err_code)
 {
+	static char *err_message[XR_BAD_ERR_CODE];
+	static int done;
+
+	if (!done) {
+		err_message[XR_OK] = _("no error");
+		err_message[XR_BAD_MAGIC] = _("bad magic number");
+		err_message[XR_BAD_BLOCKSIZE] = _("bad blocksize field");
+		err_message[XR_BAD_BLOCKLOG] = _("bad blocksize log field");
+		err_message[XR_BAD_VERSION] = _("bad version number");
+		err_message[XR_BAD_INPROGRESS] =
+			_("filesystem mkfs-in-progress bit set");
+		err_message[XR_BAD_FS_SIZE_DATA] =
+			_("inconsistent filesystem geometry information");
+		err_message[XR_BAD_INO_SIZE_DATA] =
+	_("bad inode size or inconsistent with number of inodes/block"),
+		err_message[XR_BAD_SECT_SIZE_DATA] = _("bad sector size");
+		err_message[XR_AGF_GEO_MISMATCH] =
+	_("AGF geometry info conflicts with filesystem geometry");
+		err_message[XR_AGI_GEO_MISMATCH] =
+	_("AGI geometry info conflicts with filesystem geometry");
+		err_message[XR_SB_GEO_MISMATCH] =
+	_("AG superblock geometry info conflicts with filesystem geometry");
+		err_message[XR_EOF] = _("attempted to perform I/O beyond EOF");
+		err_message[XR_BAD_RT_GEO_DATA] =
+	_("inconsistent filesystem geometry in realtime filesystem component");
+		err_message[XR_BAD_INO_MAX_PCT] =
+			_("maximum indicated percentage of inodes > 100%");
+		err_message[XR_BAD_INO_ALIGN] =
+			_("inconsistent inode alignment value");
+		err_message[XR_INSUFF_SEC_SB] =
+	_("not enough secondary superblocks with matching geometry");
+		err_message[XR_BAD_SB_UNIT] =
+			_("bad stripe unit in superblock");
+		err_message[XR_BAD_SB_WIDTH] =
+			_("bad stripe width in superblock");
+		err_message[XR_BAD_SVN] =
+			_("bad shared version number in superblock");
+		done = 1;
+	}
+
 	if (err_code < XR_OK || err_code >= XR_BAD_ERR_CODE)
-		do_abort("bad error code - %d\n", err_code);
+		do_abort(_("bad error code - %d\n"), err_code);
 
 	return(err_message[err_code]);
 }
@@ -112,7 +130,7 @@ err_string(int err_code)
 static void
 noval(char opt, char *tbl[], int idx)
 {
-	do_warn("-%c %s option cannot have a value\n", opt, tbl[idx]);
+	do_warn(_("-%c %s option cannot have a value\n"), opt, tbl[idx]);
 	usage();
 }
 
@@ -122,14 +140,14 @@ respec(char opt, char *tbl[], int idx)
 	do_warn("-%c ", opt);
 	if (tbl)
 		do_warn("%s ", tbl[idx]);
-	do_warn("option respecified\n");
+	do_warn(_("option respecified\n"));
 	usage();
 }
 
 static void
 unknown(char opt, char *s)
 {
-	do_warn("unknown option -%c %s\n", opt, s);
+	do_warn(_("unknown option -%c %s\n"), opt, s);
 	usage();
 }
 
@@ -223,7 +241,7 @@ process_args(int argc, char **argv)
 			verbose = 1;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case '?':
 			usage();
@@ -254,7 +272,7 @@ do_error(char const *msg, ...)
 {
 	va_list args;
 
-	fprintf(stderr, "\nfatal error -- ");
+	fprintf(stderr, _("\nfatal error -- "));
 
 	va_start(args, msg);
 	do_msg(1, msg, args);
@@ -343,18 +361,18 @@ calc_mkfs(xfs_mount_t *mp)
 	 */
 	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
 		do_warn(
-	"sb root inode value %llu %sinconsistent with calculated value %lu\n",
-		mp->m_sb.sb_rootino,
-		(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
-		first_prealloc_ino);
+_("sb root inode value %llu %sinconsistent with calculated value %lu\n"),
+			mp->m_sb.sb_rootino,
+			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
+			first_prealloc_ino);
 
 		if (!no_modify)
 			do_warn(
-			"resetting superblock root inode pointer to %lu\n",
+		_("resetting superblock root inode pointer to %lu\n"),
 				first_prealloc_ino);
 		else
 			do_warn(
-			"would reset superblock root inode pointer to %lu\n",
+		_("would reset superblock root inode pointer to %lu\n"),
 				first_prealloc_ino);
 
 		/*
@@ -366,18 +384,18 @@ calc_mkfs(xfs_mount_t *mp)
 
 	if (mp->m_sb.sb_rbmino != first_prealloc_ino + 1)  {
 		do_warn(
-"sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n",
-		mp->m_sb.sb_rbmino,
-		(mp->m_sb.sb_rbmino == NULLFSINO ? "(NULLFSINO) ":""),
-		first_prealloc_ino + 1);
+_("sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n"),
+			mp->m_sb.sb_rbmino,
+			(mp->m_sb.sb_rbmino == NULLFSINO ? "(NULLFSINO) ":""),
+			first_prealloc_ino + 1);
 
 		if (!no_modify)
 			do_warn(
-		"resetting superblock realtime bitmap ino pointer to %lu\n",
+		_("resetting superblock realtime bitmap ino pointer to %lu\n"),
 				first_prealloc_ino + 1);
 		else
 			do_warn(
-		"would reset superblock realtime bitmap ino pointer to %lu\n",
+		_("would reset superblock realtime bitmap ino pointer to %lu\n"),
 				first_prealloc_ino + 1);
 
 		/*
@@ -389,18 +407,18 @@ calc_mkfs(xfs_mount_t *mp)
 
 	if (mp->m_sb.sb_rsumino != first_prealloc_ino + 2)  {
 		do_warn(
-"sb realtime summary inode %llu %sinconsistent with calculated value %lu\n",
+_("sb realtime summary inode %llu %sinconsistent with calculated value %lu\n"),
 		mp->m_sb.sb_rsumino,
 		(mp->m_sb.sb_rsumino == NULLFSINO ? "(NULLFSINO) ":""),
 		first_prealloc_ino + 2);
 
 		if (!no_modify)
 			do_warn(
-		"resetting superblock realtime summary ino pointer to %lu\n",
+		_("resetting superblock realtime summary ino pointer to %lu\n"),
 				first_prealloc_ino + 2);
 		else
 			do_warn(
-		"would reset superblock realtime summary ino pointer to %lu\n",
+		_("would reset superblock realtime summary ino pointer to %lu\n"),
 				first_prealloc_ino + 2);
 
 		/*
@@ -422,6 +440,9 @@ main(int argc, char **argv)
 	xfs_mount_t	xfs_m;
 
 	progname = basename(argv[0]);
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
 
 	temp_mp = &xfs_m;
 	setbuf(stdout, NULL);
@@ -433,9 +454,9 @@ main(int argc, char **argv)
 	phase1(temp_mp);
 
 	if (no_modify && primary_sb_modified)  {
-		do_warn("primary superblock would have been modified.\n");
-		do_warn("cannot proceed further in no_modify mode.\n");
-		do_warn("exiting now.\n");
+		do_warn(_("Primary superblock would have been modified.\n"
+			  "Cannot proceed further in no_modify mode.\n"
+			  "Exiting now.\n"));
 		exit(1);
 	}
 
@@ -448,7 +469,8 @@ main(int argc, char **argv)
 	mp = libxfs_mount(&xfs_m, sb, x.ddev, x.logdev, x.rtdev, 0);
 
 	if (!mp)  {
-		fprintf(stderr, "%s: cannot repair this filesystem.  Sorry.\n",
+		fprintf(stderr,
+			_("%s: cannot repair this filesystem.  Sorry.\n"),
 			progname);
 		exit(1);
 	}
@@ -475,7 +497,7 @@ main(int argc, char **argv)
 
 	if (parse_sb_version(&mp->m_sb))  {
 		do_warn(
-		      "Found unsupported filesystem features.  Exiting now.\n");
+	_("Found unsupported filesystem features.  Exiting now.\n"));
 		return(1);
 	}
 
@@ -488,7 +510,7 @@ main(int argc, char **argv)
 	phase4(mp);
 
 	if (no_modify)
-		printf("No modify flag set, skipping phase 5\n");
+		printf(_("No modify flag set, skipping phase 5\n"));
 	else
 		phase5(mp);
 
@@ -498,58 +520,54 @@ main(int argc, char **argv)
 		phase7(mp);
 	} else  {
 		do_warn(
-	"Inode allocation btrees are too corrupted, skipping phases 6 and 7\n");
+_("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
 	}
 
 	if (lost_quotas && !have_uquotino && !have_gquotino)  {
 		if (!no_modify)  {
 			do_warn(
-	"Warning:  no quota inodes were found.  Quotas disabled.\n");
+_("Warning:  no quota inodes were found.  Quotas disabled.\n"));
 		} else  {
 			do_warn(
-	"Warning:  no quota inodes were found.  Quotas would be disabled.\n");
+_("Warning:  no quota inodes were found.  Quotas would be disabled.\n"));
 		}
 	} else if (lost_quotas)  {
 		if (!no_modify)  {
 			do_warn(
-	"Warning:  quota inodes were cleared.  Quotas disabled.\n");
+_("Warning:  quota inodes were cleared.  Quotas disabled.\n"));
 		} else  {
 			do_warn(
-"Warning:  quota inodes would be cleared.  Quotas would be disabled.\n");
+_("Warning:  quota inodes would be cleared.  Quotas would be disabled.\n"));
 		}
 	} else  {
 		if (lost_uquotino)  {
 			if (!no_modify)  {
 				do_warn(
-		"Warning:  user quota information was cleared.\n");
-				do_warn(
-"User quotas can not be enforced until limit information is recreated.\n");
+_("Warning:  user quota information was cleared.\n"
+  "User quotas can not be enforced until limit information is recreated.\n"));
 			} else  {
 				do_warn(
-		"Warning:  user quota information would be cleared.\n");
-				do_warn(
-"User quotas could not be enforced until limit information was recreated.\n");
+_("Warning:  user quota information would be cleared.\n"
+  "User quotas could not be enforced until limit information was recreated.\n"));
 			}
 		}
 
 		if (lost_gquotino)  {
 			if (!no_modify)  {
 				do_warn(
-		"Warning:  group quota information was cleared.\n");
-				do_warn(
-"Group quotas can not be enforced until limit information is recreated.\n");
+_("Warning:  group quota information was cleared.\n"
+  "Group quotas can not be enforced until limit information is recreated.\n"));
 			} else  {
 				do_warn(
-		"Warning:  group quota information would be cleared.\n");
-				do_warn(
-"Group quotas could not be enforced until limit information was recreated.\n");
+_("Warning:  group quota information would be cleared.\n"
+  "Group quotas could not be enforced until limit information was recreated.\n"));
 			}
 		}
 	}
 
 	if (no_modify)  {
 		do_log(
-	"No modify flag set, skipping filesystem flush and exiting.\n");
+	_("No modify flag set, skipping filesystem flush and exiting.\n"));
 		if (fs_is_dirty)
 			return(1);
 
@@ -561,20 +579,20 @@ main(int argc, char **argv)
 	 */
 	sbp = libxfs_getsb(mp, 0);
 	if (!sbp)
-		do_error("couldn't get superblock\n");
+		do_error(_("couldn't get superblock\n"));
 
 	sb = XFS_BUF_TO_SBP(sbp);
 
 	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD))  {
 		do_warn(
-		"Note - quota info will be regenerated on next quota mount.\n");
+	_("Note - quota info will be regenerated on next quota mount.\n"));
 		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD);
 	}
 
 	if (clear_sunit) {
 		do_warn(
-"Note - stripe unit (%d) and width (%d) fields have been reset.\n"
-"Please set with mount -o sunit=<value>,swidth=<value>\n", 
+_("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
+  "Please set with mount -o sunit=<value>,swidth=<value>\n"),
 			sb->sb_unit, sb->sb_width);
 		sb->sb_unit = 0;
 		sb->sb_width = 0;
@@ -589,7 +607,7 @@ main(int argc, char **argv)
 		libxfs_device_close(x.logdev);
 	libxfs_device_close(x.ddev);
 
-	do_log("done\n");
+	do_log(_("done\n"));
 
 	return(0);
 }

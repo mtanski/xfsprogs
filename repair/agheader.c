@@ -46,7 +46,8 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 
 	if (INT_GET(agf->agf_magicnum, ARCH_CONVERT) != XFS_AGF_MAGIC)  {
 		retval = XR_AG_AGF;
-		do_warn("bad magic # 0x%x for agf %d\n", INT_GET(agf->agf_magicnum, ARCH_CONVERT), i);
+		do_warn(_("bad magic # 0x%x for agf %d\n"),
+			INT_GET(agf->agf_magicnum, ARCH_CONVERT), i);
 
 		if (!no_modify)
 			INT_SET(agf->agf_magicnum, ARCH_CONVERT, XFS_AGF_MAGIC);
@@ -54,16 +55,18 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 
 	if (!XFS_AGF_GOOD_VERSION(INT_GET(agf->agf_versionnum, ARCH_CONVERT)))  {
 		retval = XR_AG_AGF;
-		do_warn("bad version # %d for agf %d\n",
+		do_warn(_("bad version # %d for agf %d\n"),
 			INT_GET(agf->agf_versionnum, ARCH_CONVERT), i);
 
 		if (!no_modify)
-			INT_SET(agf->agf_versionnum, ARCH_CONVERT, XFS_AGF_VERSION);
+			INT_SET(agf->agf_versionnum, ARCH_CONVERT,
+				XFS_AGF_VERSION);
 	}
 
 	if (INT_GET(agf->agf_seqno, ARCH_CONVERT) != i)  {
 		retval = XR_AG_AGF;
-		do_warn("bad sequence # %d for agf %d\n", INT_GET(agf->agf_seqno, ARCH_CONVERT), i);
+		do_warn(_("bad sequence # %d for agf %d\n"),
+			INT_GET(agf->agf_seqno, ARCH_CONVERT), i);
 
 		if (!no_modify)
 			INT_SET(agf->agf_seqno, ARCH_CONVERT, i);
@@ -72,10 +75,12 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	if (INT_GET(agf->agf_length, ARCH_CONVERT) != mp->m_sb.sb_agblocks)  {
 		if (i != mp->m_sb.sb_agcount - 1)  {
 			retval = XR_AG_AGF;
-			do_warn("bad length %d for agf %d, should be %d\n",
-				INT_GET(agf->agf_length, ARCH_CONVERT), i, mp->m_sb.sb_agblocks);
+			do_warn(_("bad length %d for agf %d, should be %d\n"),
+				INT_GET(agf->agf_length, ARCH_CONVERT), i,
+				mp->m_sb.sb_agblocks);
 			if (!no_modify)
-				INT_SET(agf->agf_length, ARCH_CONVERT, mp->m_sb.sb_agblocks);
+				INT_SET(agf->agf_length, ARCH_CONVERT,
+					mp->m_sb.sb_agblocks);
 		} else  {
 			agblocks = mp->m_sb.sb_dblocks -
 				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
@@ -83,10 +88,12 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 			if (INT_GET(agf->agf_length, ARCH_CONVERT) != agblocks)  {
 				retval = XR_AG_AGF;
 				do_warn(
-			"bad length %d for agf %d, should be %llu\n",
-					INT_GET(agf->agf_length, ARCH_CONVERT), i, agblocks);
+			_("bad length %d for agf %d, should be %llu\n"),
+					INT_GET(agf->agf_length, ARCH_CONVERT),
+						i, agblocks);
 				if (!no_modify)
-					INT_SET(agf->agf_length, ARCH_CONVERT, (xfs_agblock_t) agblocks);
+					INT_SET(agf->agf_length, ARCH_CONVERT,
+						(xfs_agblock_t) agblocks);
 			}
 		}
 	}
@@ -96,7 +103,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	 * space in the AGFL, we'll reclaim it later.
 	 */
 	if (INT_GET(agf->agf_flfirst, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
-		do_warn("flfirst %d in agf %d too large (max = %d)\n",
+		do_warn(_("flfirst %d in agf %d too large (max = %d)\n"),
 			INT_GET(agf->agf_flfirst, ARCH_CONVERT),
 			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
@@ -104,7 +111,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	}
 
 	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
-		do_warn("fllast %d in agf %d too large (max = %d)\n",
+		do_warn(_("fllast %d in agf %d too large (max = %d)\n"),
 			INT_GET(agf->agf_fllast, ARCH_CONVERT),
 			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
@@ -126,7 +133,8 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
 
 	if (INT_GET(agi->agi_magicnum, ARCH_CONVERT) != XFS_AGI_MAGIC)  {
 		retval = XR_AG_AGI;
-		do_warn("bad magic # 0x%x for agi %d\n", INT_GET(agi->agi_magicnum, ARCH_CONVERT), i);
+		do_warn(_("bad magic # 0x%x for agi %d\n"),
+			INT_GET(agi->agi_magicnum, ARCH_CONVERT), i);
 
 		if (!no_modify)
 			INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
@@ -134,16 +142,18 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
 
 	if (!XFS_AGI_GOOD_VERSION(INT_GET(agi->agi_versionnum, ARCH_CONVERT)))  {
 		retval = XR_AG_AGI;
-		do_warn("bad version # %d for agi %d\n",
+		do_warn(_("bad version # %d for agi %d\n"),
 			INT_GET(agi->agi_versionnum, ARCH_CONVERT), i);
 
 		if (!no_modify)
-			INT_SET(agi->agi_versionnum, ARCH_CONVERT, XFS_AGI_VERSION);
+			INT_SET(agi->agi_versionnum, ARCH_CONVERT,
+				XFS_AGI_VERSION);
 	}
 
 	if (INT_GET(agi->agi_seqno, ARCH_CONVERT) != i)  {
 		retval = XR_AG_AGI;
-		do_warn("bad sequence # %d for agi %d\n", INT_GET(agi->agi_seqno, ARCH_CONVERT), i);
+		do_warn(_("bad sequence # %d for agi %d\n"),
+			INT_GET(agi->agi_seqno, ARCH_CONVERT), i);
 
 		if (!no_modify)
 			INT_SET(agi->agi_seqno, ARCH_CONVERT, i);
@@ -152,10 +162,12 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
 	if (INT_GET(agi->agi_length, ARCH_CONVERT) != mp->m_sb.sb_agblocks)  {
 		if (i != mp->m_sb.sb_agcount - 1)  {
 			retval = XR_AG_AGI;
-			do_warn("bad length # %d for agi %d, should be %d\n",
-				INT_GET(agi->agi_length, ARCH_CONVERT), i, mp->m_sb.sb_agblocks);
+			do_warn(_("bad length # %d for agi %d, should be %d\n"),
+				INT_GET(agi->agi_length, ARCH_CONVERT), i,
+					mp->m_sb.sb_agblocks);
 			if (!no_modify)
-				INT_SET(agi->agi_length, ARCH_CONVERT, mp->m_sb.sb_agblocks);
+				INT_SET(agi->agi_length, ARCH_CONVERT,
+					mp->m_sb.sb_agblocks);
 		} else  {
 			agblocks = mp->m_sb.sb_dblocks -
 				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
@@ -163,10 +175,12 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
 			if (INT_GET(agi->agi_length, ARCH_CONVERT) != agblocks)  {
 				retval = XR_AG_AGI;
 				do_warn(
-			"bad length # %d for agi %d, should be %llu\n",
-					INT_GET(agi->agi_length, ARCH_CONVERT), i, agblocks);
+			_("bad length # %d for agi %d, should be %llu\n"),
+					INT_GET(agi->agi_length, ARCH_CONVERT),
+						i, agblocks);
 				if (!no_modify)
-					INT_SET(agi->agi_length, ARCH_CONVERT, (xfs_agblock_t) agblocks);
+					INT_SET(agi->agi_length, ARCH_CONVERT,
+						(xfs_agblock_t) agblocks);
 			}
 		}
 	}
@@ -270,14 +284,14 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 			if (!no_modify)  {
 				do_warn(
-		"zeroing unused portion of %s superblock (AG #%u)\n",
-					!i ? "primary" : "secondary", i);
+		_("zeroing unused portion of %s superblock (AG #%u)\n"),
+					!i ? _("primary") : _("secondary"), i);
 				bzero((void *)((__psint_t)sb + size),
 					mp->m_sb.sb_sectsize - size);
 			} else
 				do_warn(
-		"would zero unused portion of %s superblock (AG #%u)\n",
-					!i ? "primary" : "secondary", i);
+		_("would zero unused portion of %s superblock (AG #%u)\n"),
+					!i ? _("primary") : _("secondary"), i);
 		}
 	}
 
@@ -295,7 +309,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			sb->sb_flags = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
-			do_warn("bad flags field in superblock %d\n", i);
+			do_warn(_("bad flags field in superblock %d\n"), i);
 		} else
 			rval |= XR_AG_SB_SEC;
 	}
@@ -312,8 +326,9 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(
-			"non-null user quota inode field in superblock %d\n",
+		_("non-null user quota inode field in superblock %d\n"),
 				i);
+
 		} else
 			rval |= XR_AG_SB_SEC;
 	}
@@ -324,8 +339,9 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(
-			"non-null group quota inode field in superblock %d\n",
+		_("non-null group quota inode field in superblock %d\n"),
 				i);
+
 		} else
 			rval |= XR_AG_SB_SEC;
 	}
@@ -335,7 +351,8 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			sb->sb_qflags = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
-			do_warn("non-null quota flags in superblock %d\n", i);
+			do_warn(_("non-null quota flags in superblock %d\n"),
+				i);
 		} else
 			rval |= XR_AG_SB_SEC;
 	}
@@ -351,7 +368,8 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			sb->sb_shared_vn = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
-			do_warn("bad shared version number in superblock %d\n",
+			do_warn(
+		_("bad shared version number in superblock %d\n"),
 				i);
 		} else
 			rval |= XR_AG_SB_SEC;
@@ -362,7 +380,8 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			sb->sb_inoalignmt = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
-			do_warn("bad inode alignment field in superblock %d\n",
+			do_warn(
+		_("bad inode alignment field in superblock %d\n"),
 				i);
 		} else
 			rval |= XR_AG_SB_SEC;
@@ -375,7 +394,25 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		if (sb->sb_versionnum & XR_GOOD_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(
-			"bad stripe unit/width fields in superblock %d\n",
+		_("bad stripe unit/width fields in superblock %d\n"),
+				i);
+		} else
+			rval |= XR_AG_SB_SEC;
+	}
+
+	if (!XFS_SB_VERSION_HASSECTOR(sb) &&
+	    (sb->sb_sectsize != BBSIZE || sb->sb_sectlog != BBSHIFT ||
+	     sb->sb_logsectsize != 0 || sb->sb_logsectlog != 0))  {
+		if (!no_modify)  {
+			sb->sb_sectsize = BBSIZE;
+			sb->sb_sectlog = BBSHIFT;
+			sb->sb_logsectsize = 0;
+			sb->sb_logsectlog = 0;
+		}
+		if (sb->sb_versionnum & XR_GOOD_SECSB_VNMASK || !do_bzero)  {
+			rval |= XR_AG_SB;
+			do_warn(
+		_("bad log/data device sector size fields in superblock %d\n"),
 				i);
 		} else
 			rval |= XR_AG_SB_SEC;
@@ -406,14 +443,14 @@ verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	status = verify_sb(sb, (i == 0));
 
 	if (status != XR_OK)  {
-		do_warn("bad on-disk superblock %d - %s\n",
+		do_warn(_("bad on-disk superblock %d - %s\n"),
 			i, err_string(status));
 	}
 
 	status_sb = compare_sb(mp, sb);
 
 	if (status_sb != XR_OK)  {
-		do_warn("primary and secondary superblock %d conflict - %s\n",
+		do_warn(_("primary/secondary superblock %d conflict - %s\n"),
 			i, err_string(status_sb));
 	}
 

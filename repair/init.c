@@ -64,7 +64,7 @@ xfs_init(libxfs_init_t *args)
 		/* XXX assume data file also means rt file */
 	}
 
-	args->notvolmsg = "you should never get this message - %s";
+	args->notvolmsg = _("you should never get this message - %s");
 	args->notvolok = 1;
 	args->setblksize = 1;
 
@@ -72,5 +72,5 @@ xfs_init(libxfs_init_t *args)
 		args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
 
 	if (!libxfs_init(args))
-		do_error("couldn't initialize XFS library\n");
+		do_error(_("couldn't initialize XFS library\n"));
 }

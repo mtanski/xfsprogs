@@ -88,7 +88,7 @@ mk_ino_tree_nodes(xfs_agino_t starting_ino)
 
 		if ((new = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
 					== NULL)
-			do_error("inode map malloc failed\n");
+			do_error(_("inode map malloc failed\n"));
 
 		for (i = 0; i < ALLOC_NUM_INOS; i++)  {
 			new->avl_node.avl_nextino =
@@ -201,8 +201,8 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 
 		if (avl_insert(inode_uncertain_tree_ptrs[agno],
 				(avlnode_t *) ino_rec) == NULL)  {
-			do_error("xfs_repair: add_aginode_uncertain - "
-				"duplicate inode range\n");
+			do_error(_("add_aginode_uncertain - "
+				   "duplicate inode range\n"));
 		}
 	}
 
@@ -303,7 +303,7 @@ add_inode(xfs_agnumber_t agno, xfs_agino_t ino)
 
 	if (avl_insert(inode_tree_ptrs[agno],
 			(avlnode_t *) ino_rec) == NULL)  {
-		do_warn("xfs_repair: add_inode - duplicate inode range\n");
+		do_warn(_("add_inode - duplicate inode range\n"));
 	}
 
 	return(ino_rec);
@@ -415,23 +415,23 @@ print_inode_list_int(xfs_agnumber_t agno, int uncertain)
 	ino_tree_node_t *ino_rec;
 
 	if (!uncertain)  {
-		fprintf(stderr, "good inode list is --\n");
+		fprintf(stderr, _("good inode list is --\n"));
 		ino_rec = findfirst_inode_rec(agno);
 	} else  {
-		fprintf(stderr, "uncertain inode list is --\n");
+		fprintf(stderr, _("uncertain inode list is --\n"));
 		ino_rec = findfirst_uncertain_inode_rec(agno);
 	}
 
 	if (ino_rec == NULL)  {
-		fprintf(stderr, "agno %d -- no inodes\n", agno);
+		fprintf(stderr, _("agno %d -- no inodes\n"), agno);
 		return;
 	}
 
-	printf("agno %d\n", agno);
+	printf(_("agno %d\n"), agno);
 
 	while(ino_rec != NULL)  {
 		fprintf(stderr,
-	"\tptr = %lx, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n",
+	_("\tptr = %lx, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n"),
 			(unsigned long)ino_rec,
 			ino_rec->ino_startnum,
 			(unsigned long long)ino_rec->ir_free,
@@ -475,13 +475,13 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
                 irec->ino_un.plist = 
                         (parent_list_t*)malloc(sizeof(parent_list_t));
                 if (!irec->ino_un.plist)
-			do_error("couldn't malloc parent list table\n");
+			do_error(_("couldn't malloc parent list table\n"));
                 
 		irec->ino_un.plist->pmask = 1LL << offset;
 		irec->ino_un.plist->pentries = 
                         (xfs_ino_t*)memalign(sizeof(xfs_ino_t), sizeof(xfs_ino_t));
                 if (!irec->ino_un.plist->pentries)
-                        do_error("couldn't memalign pentries table\n");
+                        do_error(_("couldn't memalign pentries table\n"));
 #ifdef DEBUG
 		irec->ino_un.plist->cnt = 1;
 #endif
@@ -527,7 +527,7 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 
 	tmp = (xfs_ino_t*)memalign(sizeof(xfs_ino_t), (cnt + 1) * sizeof(xfs_ino_t));
         if (!tmp)
-                do_error("couldn't memalign pentries table\n");
+                do_error(_("couldn't memalign pentries table\n"));
 
 	(void) bcopy(irec->ino_un.plist->pentries, tmp,
 			target * sizeof(parent_entry_t));
@@ -674,7 +674,7 @@ get_backptr(void)
 
 		if ((bptrs = malloc(sizeof(backptrs_t[BPTR_ALLOC_NUM])))
 				== NULL)  {
-			do_error("couldn't malloc ino rec backptrs.\n");
+			do_error(_("couldn't malloc ino rec backptrs.\n"));
 		}
 
 		bptrs_index = 0;
@@ -700,7 +700,7 @@ get_backptr(void)
 	backptrs_t *ptr;
 
 	if ((ptr = malloc(sizeof(backptrs_t))) == NULL)
-		do_error("could not malloc back pointer table\n");
+		do_error(_("could not malloc back pointer table\n"));
 	
 	bzero(ptr, sizeof(backptrs_t));
 
@@ -790,19 +790,20 @@ incore_ino_init(xfs_mount_t *mp)
 
 	if ((inode_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
-		do_error("couldn't malloc inode tree descriptor table\n");
+		do_error(_("couldn't malloc inode tree descriptor table\n"));
 	if ((inode_uncertain_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
-		do_error("couldn't malloc uncertain ino tree descriptor table\n");
+		do_error(
+		_("couldn't malloc uncertain ino tree descriptor table\n"));
 
 	for (i = 0; i < agcount; i++)  {
 		if ((inode_tree_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
-			do_error("couldn't malloc inode tree descriptor\n");
+			do_error(_("couldn't malloc inode tree descriptor\n"));
 		if ((inode_uncertain_tree_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
 			do_error(
-			"couldn't malloc uncertain ino tree descriptor\n");
+			_("couldn't malloc uncertain ino tree descriptor\n"));
 	}
 	for (i = 0; i < agcount; i++)  {
 		avl_init_tree(inode_tree_ptrs[i], &avl_ino_tree_ops);
@@ -813,7 +814,7 @@ incore_ino_init(xfs_mount_t *mp)
 	ino_flist.list = NULL;
 
 	if ((last_rec = malloc(sizeof(ino_tree_node_t *) * agcount)) == NULL)
-		do_error("couldn't malloc uncertain inode cache area\n");
+		do_error(_("couldn't malloc uncertain inode cache area\n"));
 
 	bzero(last_rec, sizeof(ino_tree_node_t *) * agcount);
 

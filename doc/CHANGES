@@ -1,3 +1,14 @@
+xfsprogs-2.3.9 (31 December 2002)
+	- Additional xfs_repair check in v2 directory handling for blks
+	  with no data entries (merged from IRIX), includes several
+	  handy comments sprinkled throughout this v2 dir code.
+	- Fix an endian bug in the same area of code (v2 dirs, phase 6,
+	  longform_dir2_rebuild_setup)
+	- xfs_repair has additional checks for bad sector values now.
+	- xfs_repair I18N changes.
+	- Fix detection of readonly mounts, slightly botched in 2.3.8.
+	- Fix references to removed ioctl commands on xfs(5) man page.
+
 xfsprogs-2.3.8 (18 December 2002)
 	- Initial support for I18N (still more to do here).
 	- Initial changes for filesystems with greater than 512 byte

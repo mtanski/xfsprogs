@@ -1005,6 +1005,3238 @@ msgid "Bad log"
 msgstr ""
 
 #, c-format
+msgid "bad magic # 0x%x for agf %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad version # %d for agf %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad sequence # %d for agf %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad length %d for agf %d, should be %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad length %d for agf %d, should be %llu\n"
+msgstr ""
+
+#, c-format
+msgid "flfirst %d in agf %d too large (max = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "fllast %d in agf %d too large (max = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # 0x%x for agi %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad version # %d for agi %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad sequence # %d for agi %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad length # %d for agi %d, should be %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad length # %d for agi %d, should be %llu\n"
+msgstr ""
+
+#, c-format
+msgid "zeroing unused portion of %s superblock (AG #%u)\n"
+msgstr ""
+
+msgid "primary"
+msgstr ""
+
+msgid "secondary"
+msgstr ""
+
+#, c-format
+msgid "would zero unused portion of %s superblock (AG #%u)\n"
+msgstr ""
+
+#, c-format
+msgid "bad flags field in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "non-null user quota inode field in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "non-null group quota inode field in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "non-null quota flags in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad shared version number in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad inode alignment field in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad stripe unit/width fields in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad log/data device sector size fields in superblock %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad on-disk superblock %d - %s\n"
+msgstr ""
+
+#, c-format
+msgid "primary/secondary superblock %d conflict - %s\n"
+msgstr ""
+
+msgid ""
+"entry contains illegal value in attribute named SGI_ACL_FILE or "
+"SGI_ACL_DEFAULT\n"
+msgstr ""
+
+msgid "entry contains illegal value in attribute named SGI_MAC_LABEL\n"
+msgstr ""
+
+msgid "entry contains illegal value in attribute named SGI_CAP_FILE\n"
+msgstr ""
+
+#, c-format
+msgid "there are no attributes in the fork for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would junk the attribute fork since count is 0 for inode %llu\n"
+msgstr ""
+
+msgid "zero length name entry in attribute fork,"
+msgstr ""
+
+#, c-format
+msgid " truncating attributes for inode %llu to %d\n"
+msgstr ""
+
+#, c-format
+msgid " would truncate attributes for inode %llu to %d\n"
+msgstr ""
+
+msgid "name or value attribute lengths are too large,\n"
+msgstr ""
+
+msgid "entry contains illegal character in shortform attribute name\n"
+msgstr ""
+
+msgid "entry has INCOMPLETE flag on in shortform attribute\n"
+msgstr ""
+
+#, c-format
+msgid "removing attribute entry %d for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would remove attribute entry %d for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would have corrected attribute entry count in inode %llu from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "corrected attribute entry count in inode %llu, was %d, now %d\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected attribute totsize in inode %llu from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "corrected attribute entry totsize in inode %llu, was %d, now %d\n"
+msgstr ""
+
+#, c-format
+msgid "remote block for attributes of inode %llu is missing\n"
+msgstr ""
+
+#, c-format
+msgid "can't read remote block for attributes of inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute count %d in attr block %u, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute nameidx %d in attr block %u, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "attribute entry #%d in attr block %u, inode %llu is INCOMPLETE\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attribute entry %d in attr block %u, inode %llu claims already used space\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attribute entry %d in attr block %u, inode %llu has bad name (namelen = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "bad hashvalue for attribute entry %d in attr block %u, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad security value for attribute entry %d in attr block %u, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inconsistent remote attribute entry %d in attr block %u, ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "cannot malloc enough for remotevalue attribute for inode %llu\n"
+msgstr ""
+
+msgid "SKIPPING this remote attribute\n"
+msgstr ""
+
+#, c-format
+msgid "remote attribute get failed for entry %d, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "remote attribute value check failed for entry %d, inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "attribute entry %d in attr block %u, inode %llu claims used space\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- resetting first used heap value from %d to %d in block %u of attribute "
+"fork of inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- would reset first used value from %d to %d in block %u of attribute fork "
+"of inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- resetting usedbytes cnt from %d to %d in block %u of attribute fork of "
+"inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- would reset usedbytes cnt from %d to %d in block %u of attribute fork of "
+"%llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't map block %u for attribute fork for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"can't read file block %u (fsbno %llu) for attribute fork of inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute leaf magic %#x for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad sibling back pointer for block %u in attribute fork for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad hash path in attribute fork for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "block 0 of inode %llu attribute fork is missing\n"
+msgstr ""
+
+#, c-format
+msgid "agno of attribute fork of inode %llu out of regular partition\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block 0 of inode %llu attribute fork\n"
+msgstr ""
+
+#, c-format
+msgid "clearing forw/back pointers in block 0 for attributes in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would clear forw/back pointers in block 0 for attributes in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute leaf magic # %#x for dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "illegal attribute format %d, ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "avl_insert: Warning! duplicate range [%llu,%llu]\n"
+msgstr ""
+
+#, c-format
+msgid "realloc failed in blkent_append (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in blkent_new (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in blkent_prepend (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in blkmap_alloc (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "blkmap_getn realloc failed (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "realloc failed in blkmap_grow (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "cannot read agbno (%u/%u), disk block %lld\n"
+msgstr ""
+
+#, c-format
+msgid "uncertain inode block %d/%d already known\n"
+msgstr ""
+
+#, c-format
+msgid "inode block %d/%d multiply claimed, (state %d)\n"
+msgstr ""
+
+#, c-format
+msgid "inode block %d/%d bad state, (state %d)\n"
+msgstr ""
+
+#, c-format
+msgid "uncertain inode block overlap, agbno = %d, ino = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "uncertain inode block %llu already known\n"
+msgstr ""
+
+#, c-format
+msgid "cannot read inode %llu, disk block %lld, cnt %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't read inode %llu, disk block %lld, cnt %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad state in block map %d\n"
+msgstr ""
+
+#, c-format
+msgid "inode block %llu multiply claimed, state was %d\n"
+msgstr ""
+
+#, c-format
+msgid "imap claims in-use inode %llu is free, "
+msgstr ""
+
+msgid "correcting imap\n"
+msgstr ""
+
+msgid "would correct imap\n"
+msgstr ""
+
+#, c-format
+msgid "cleared root inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear root inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "cleared realtime bitmap inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear realtime bitmap inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "cleared realtime summary inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear realtime summary inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "cleared inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would have cleared inode %llu\n"
+msgstr ""
+
+msgid "found inodes not in the inode allocation tree\n"
+msgstr ""
+
+msgid "Unknown inode format.\n"
+msgstr ""
+
+#, c-format
+msgid "clearing inode %llu attributes\n"
+msgstr ""
+
+#, c-format
+msgid "would have cleared inode %llu attributes\n"
+msgstr ""
+
+msgid "data"
+msgstr ""
+
+msgid "attr"
+msgstr ""
+
+msgid "real-time"
+msgstr ""
+
+msgid "regular"
+msgstr ""
+
+#, c-format
+msgid ""
+"bmap rec out of order, inode %llu entry %d [o s c] [%llu %llu %llu], %d "
+"[%llu %llu %llu]\n"
+msgstr ""
+
+#, c-format
+msgid "zero length extent (off = %llu, fsbno = %llu) in ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu - bad rt extent start block number %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu - bad rt extent last block number %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"inode %llu - bad rt extent overflows - start %llu, end %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu - bad extent starting block number %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu - bad extent last block number %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu - bad extent overflows - start %llu, end %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"inode %llu - extent offset too large - start %llu, count %llu, offset %llu\n"
+msgstr ""
+
+#, c-format
+msgid "malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"data fork in rt ino %llu claims dup rt extent, off - %llu, start - %llu, "
+"count %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad state in rt block map %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s fork in rt inode %llu found metadata block %llu in %s bmap\n"
+msgstr ""
+
+#, c-format
+msgid "%s fork in rt inode %llu claims used rt block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "illegal state %d in %s block map %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s fork in ino %llu claims dup extent, off - %llu, start - %llu, cnt %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s fork in ino %llu claims free block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad state in block map %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s fork in inode %llu claims metadata block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s fork in %s inode %llu claims used block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "illegal state %d in block map %llu\n"
+msgstr ""
+
+#, c-format
+msgid "cannot read inode (%u/%u), disk block %lld\n"
+msgstr ""
+
+#, c-format
+msgid "cannot read bmap block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "# of bmap records in inode %llu exceeds max (%u, max - %u)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- # of bmap records in inode %llu less than minimum (%u, min - %u), "
+"proceeding ...\n"
+msgstr ""
+
+#, c-format
+msgid "# of bmap records in inode %llu greater than maximum (%u, max - %u)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- # of bmap records in inode %llu less than minimum (%u, min - %u), "
+"continuing...\n"
+msgstr ""
+
+#, c-format
+msgid "could not map block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "get_bmapi() called for local inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad inode format for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad level 0 in inode %llu bmap btree root block\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"indicated size of %s btree root (%d bytes) greater than space in inode %llu "
+"%s fork\n"
+msgstr ""
+
+#, c-format
+msgid "bad bmap btree ptr 0x%llx in ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting key in bmbt root (was %llu, now %llu) in inode %llu %s fork\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad key in bmbt root (is %llu, would reset to %llu) in inode %llu %s fork\n"
+msgstr ""
+
+#, c-format
+msgid "out of order bmbt root key %llu in inode %llu %s fork\n"
+msgstr ""
+
+#, c-format
+msgid "bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
+msgstr ""
+
+#, c-format
+msgid "\tin inode %u (%s fork) bmap btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "local inode %llu data fork is too large (size = %lld, max = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "local inode %llu attr fork too large (size %d, max = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "local inode %llu attr too small (size = %d, min size = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "mismatch between format (%d) and size (%lld) in symlink ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "mismatch between format (%d) and size (%lld) in symlink inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad number of extents (%d) in symlink %llu data fork\n"
+msgstr ""
+
+#, c-format
+msgid "bad extent #%d offset (%llu) in symlink %llu data fork\n"
+msgstr ""
+
+#, c-format
+msgid "bad extent #%d count (%llu) in symlink %llu data fork\n"
+msgstr ""
+
+#, c-format
+msgid "symlink in inode %llu too long (%lld chars)\n"
+msgstr ""
+
+#, c-format
+msgid "cannot read inode %llu, file block %d, disk block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "found illegal null character in symlink inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "component of symlink in inode %llu too long\n"
+msgstr ""
+
+#, c-format
+msgid "inode %llu has bad inode type (IFMNT)\n"
+msgstr ""
+
+#, c-format
+msgid "size of character device inode %llu != 0 (%lld bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "size of block device inode %llu != 0 (%lld bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "size of socket inode %llu != 0 (%lld bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "size of fifo inode %llu != 0 (%lld bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "Internal error - process_misc_ino_types, illegal type %d\n"
+msgstr ""
+
+#, c-format
+msgid "size of character device inode %llu != 0 (%llu blocks)\n"
+msgstr ""
+
+#, c-format
+msgid "size of block device inode %llu != 0 (%llu blocks)\n"
+msgstr ""
+
+#, c-format
+msgid "size of socket inode %llu != 0 (%llu blocks)\n"
+msgstr ""
+
+#, c-format
+msgid "size of fifo inode %llu != 0 (%llu blocks)\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic number 0x%x on inode %llu, "
+msgstr ""
+
+msgid "resetting magic number\n"
+msgstr ""
+
+msgid "would reset magic number\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic number 0x%x on inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad version number 0x%x on inode %llu, "
+msgstr ""
+
+msgid "resetting version number\n"
+msgstr ""
+
+msgid "would reset version number\n"
+msgstr ""
+
+#, c-format
+msgid "bad version number 0x%x on inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad (negative) size %lld on inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "imap claims a free inode %llu is in use, "
+msgstr ""
+
+msgid "correcting imap and clearing inode\n"
+msgstr ""
+
+msgid "would correct imap and clear inode\n"
+msgstr ""
+
+#, c-format
+msgid "bad inode format in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "Unexpected inode type %#o inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad inode type for root inode %llu, "
+msgstr ""
+
+msgid "resetting to directory\n"
+msgstr ""
+
+msgid "would reset to directory\n"
+msgstr ""
+
+msgid "summary"
+msgstr ""
+
+msgid "bitmap"
+msgstr ""
+
+#, c-format
+msgid "user quota inode has bad type 0x%x\n"
+msgstr ""
+
+#, c-format
+msgid "group quota inode has bad type 0x%x\n"
+msgstr ""
+
+#, c-format
+msgid "bad inode type for realtime %s inode %llu, "
+msgstr ""
+
+msgid "resetting to regular file\n"
+msgstr ""
+
+msgid "would reset to regular file\n"
+msgstr ""
+
+#, c-format
+msgid "bad non-zero extent size value %u for non-realtime inode %llu, "
+msgstr ""
+
+msgid "resetting to zero\n"
+msgstr ""
+
+msgid "would reset to zero\n"
+msgstr ""
+
+#, c-format
+msgid "bad size %llu for realtime %s inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad # of extents (%u) for realtime %s inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "mismatch between format (%d) and size (%lld) in directory ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad data fork in symlink %llu\n"
+msgstr ""
+
+#, c-format
+msgid "found inode %llu claiming to be a real-time file\n"
+msgstr ""
+
+#, c-format
+msgid "realtime bitmap inode %llu has bad size %lld (should be %lld)\n"
+msgstr ""
+
+#, c-format
+msgid "realtime summary inode %llu has bad size %lld (should be %d)\n"
+msgstr ""
+
+#, c-format
+msgid "bad attr fork offset %d in dev inode %llu, should be %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad attr fork offset %d in uuid inode %llu, should be %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad attr fork offset %d in inode %llu, should be %d\n"
+msgstr ""
+
+#, c-format
+msgid "unexpected inode format %d\n"
+msgstr ""
+
+#, c-format
+msgid "unknown format %d, ino %llu (mode = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "bad data fork in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute format %d in inode %llu, "
+msgstr ""
+
+msgid "resetting value\n"
+msgstr ""
+
+msgid "would reset value\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute fork in inode %llu"
+msgstr ""
+
+msgid ", clearing attr fork\n"
+msgstr ""
+
+msgid ", would clear attr fork\n"
+msgstr ""
+
+#, c-format
+msgid "illegal attribute fmt %d, ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "problem with attribute contents in inode %llu\n"
+msgstr ""
+
+msgid "would clear attr fork\n"
+msgstr ""
+
+#, c-format
+msgid "correcting nblocks for inode %llu, was %llu - counted %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad nblocks %llu for inode %llu, would reset to %llu\n"
+msgstr ""
+
+#, c-format
+msgid "too many data fork extents (%llu) in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "correcting nextents for inode %llu, was %d - counted %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad nextents %d for inode %llu, would reset to %llu\n"
+msgstr ""
+
+#, c-format
+msgid "too many attr fork extents (%llu) in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "correcting anextents for inode %llu, was %d - counted %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad anextents %d for inode %llu, would reset to %llu\n"
+msgstr ""
+
+#, c-format
+msgid "problem with directory contents in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "problem with symbolic link in inode %llu\n"
+msgstr ""
+
+msgid "Unexpected inode type\n"
+msgstr ""
+
+#, c-format
+msgid "version 2 inode %llu claims > %u links, "
+msgstr ""
+
+msgid "updating superblock version number\n"
+msgstr ""
+
+msgid "would update superblock version number\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING:  version 2 inode %llu claims > %u links, "
+msgstr ""
+
+#, c-format
+msgid ""
+"converting back to version 1,\n"
+"\tthis may destroy %d links\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would convert back to version 1,\n"
+"\tthis might destroy %d links\n"
+msgstr ""
+
+#, c-format
+msgid "found version 2 inode %llu, "
+msgstr ""
+
+msgid "converting back to version 1\n"
+msgstr ""
+
+msgid "would convert back to version 1\n"
+msgstr ""
+
+#, c-format
+msgid "clearing obsolete nlink field in version 2 inode %llu, was %d, now 0\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would clear obsolete nlink field in version 2 inode %llu, currently %d\n"
+msgstr ""
+
+#, c-format
+msgid "invalid inode number %llu in directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry in shortform dir %llu references rt bitmap inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry in shortform dir %llu references rt summary inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry in shortform dir %llu references user quota inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry in shortform dir %llu references group quota inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry references free inode %llu in shortform directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry references non-existent inode %llu in shortform dir %llu\n"
+msgstr ""
+
+#, c-format
+msgid "zero length entry in shortform dir %llu, resetting to %d\n"
+msgstr ""
+
+#, c-format
+msgid "zero length entry in shortform dir %llu, would set to %d\n"
+msgstr ""
+
+#, c-format
+msgid "zero length entry in shortform dir %llu, "
+msgstr ""
+
+#, c-format
+msgid "junking %d entries\n"
+msgstr ""
+
+#, c-format
+msgid "would junk %d entries\n"
+msgstr ""
+
+#, c-format
+msgid "size of last entry overflows space left in in shortform dir %llu, "
+msgstr ""
+
+#, c-format
+msgid "resetting to %d\n"
+msgstr ""
+
+#, c-format
+msgid "would reset to %d\n"
+msgstr ""
+
+#, c-format
+msgid "size of entry #%d overflows space left in in shortform dir %llu\n"
+msgstr ""
+
+#, c-format
+msgid "junking entry #%d\n"
+msgstr ""
+
+#, c-format
+msgid "would junk entry #%d\n"
+msgstr ""
+
+#, c-format
+msgid "entry contains illegal character in shortform dir %llu\n"
+msgstr ""
+
+#, c-format
+msgid "junking entry \"%s\" in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would have junked entry \"%s\" in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected entry count in directory %llu from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "corrected entry count in directory %llu, was %d, now %d\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected directory %llu size from %lld to %lld\n"
+msgstr ""
+
+#, c-format
+msgid "corrected directory %llu size, was %lld, now %lld\n"
+msgstr ""
+
+#, c-format
+msgid "bogus .. inode number (%llu) in directory inode %llu, "
+msgstr ""
+
+msgid "clearing inode number\n"
+msgstr ""
+
+msgid "would clear inode number\n"
+msgstr ""
+
+#, c-format
+msgid "corrected root directory %llu .. entry, was %llu, now %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected root directory %llu .. entry from %llu to %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad .. entry in dir ino %llu, points to self, "
+msgstr ""
+
+#, c-format
+msgid "bad range claimed [%d, %d) in da block\n"
+msgstr ""
+
+#, c-format
+msgid "byte range end [%d %d) in da block larger than blocksize %d\n"
+msgstr ""
+
+#, c-format
+msgid "multiply claimed byte %d in da block\n"
+msgstr ""
+
+#, c-format
+msgid "hole (start %d, len %d) out of range, block %d, dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "hole claims used byte %d, block %d, dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- derived hole value %d, saw %d, block %d, dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- derived hole (base %d, size %d) in block %d, dir inode %llu not found\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %u (fsbno %llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %u (fsbno %llu) for attrbute fork of inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad dir/attr magic number in inode %llu, file bno = %u, fsbno = %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad record count in inode %llu, count = %d, max = %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory btree for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad attribute fork btree for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "release_da_cursor_int got unexpected non-null bp, dabno = %u\n"
+msgstr ""
+
+#, c-format
+msgid "bmap of block #%u of inode %llu failed\n"
+msgstr ""
+
+#, c-format
+msgid "directory/attribute block used/count inconsistency - %d/%hu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"directory/attribute block hashvalue inconsistency, expected > %u / saw %u\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory/attribute forward block pointer, expected 0, saw %u\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory block in dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting bad hashval in non-leaf dir/attr block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would correct bad hashval in non-leaf dir/attr block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid "can't get map info for block %u of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %u (%llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic number %x in block %u (%llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad back pointer in block %u (%llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry count %d too large in block %u (%llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad level %d in block %u (%llu) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting bad hashval in interior dir/attr block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would correct bad hashval in interior dir/attr block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid "marking bad entry in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "deleting zero length entry in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "deleting entry in directory inode %llu\n"
+msgstr ""
+
+msgid "couldn't allocate directory block freemap\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"directory block header conflicts with used space in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"nameidx %d for entry #%d, bno %d, ino %llu > fs blocksize, deleting entry\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, marking entry bad\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, would delete entry\n"
+msgstr ""
+
+#, c-format
+msgid "invalid ino number %llu in dir ino %llu, entry #%d, bno %d\n"
+msgstr ""
+
+#, c-format
+msgid "\tclearing ino number in entry %d...\n"
+msgstr ""
+
+#, c-format
+msgid "\twould clear ino number in entry %d...\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry #%d, bno %d in directory %llu references realtime bitmap inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry #%d, bno %d in directory %llu references realtime summary inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry #%d, bno %d in directory %llu references user quota inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry #%d, bno %d in directory %llu references group quota inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry references free inode %llu in directory %llu, will clear entry\n"
+msgstr ""
+
+#, c-format
+msgid "entry references free inode %llu in directory %llu, would clear entry\n"
+msgstr ""
+
+#, c-format
+msgid "bad ino number %llu in dir ino %llu, entry #%d, bno %d\n"
+msgstr ""
+
+msgid "clearing inode number...\n"
+msgstr ""
+
+msgid "would clear inode number...\n"
+msgstr ""
+
+#, c-format
+msgid "entry #%d, dir inode %llu, has zero-len name, deleting entry\n"
+msgstr ""
+
+#, c-format
+msgid "entry #%d, dir inode %llu, has zero-len name, marking entry bad\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad size, entry #%d in dir inode %llu, block %u -- entry overflows block\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"dir entry slot %d in block %u conflicts with used space in dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "illegal name \"%s\" in directory inode %llu, entry will be cleared\n"
+msgstr ""
+
+#, c-format
+msgid "illegal name \"%s\" in directory inode %llu, entry would be cleared\n"
+msgstr ""
+
+#, c-format
+msgid "\tmismatched hash value for entry \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "\t\tin directory inode %llu.  resetting hash value.\n"
+msgstr ""
+
+#, c-format
+msgid "\t\tin directory inode %llu.  would reset hash value.\n"
+msgstr ""
+
+#, c-format
+msgid "\tbad hash ordering for entry \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "\t\tin directory inode %llu.  will clear entry\n"
+msgstr ""
+
+#, c-format
+msgid "\t\tin directory inode %llu.  would clear entry\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"name \"%s\" (block %u, slot %d) conflicts with used space in dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "will clear entry \"%s\" (#%d) in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear entry \"%s\" (#%d)in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad .. entry in dir ino %llu, points to self"
+msgstr ""
+
+msgid "will clear entry\n"
+msgstr ""
+
+msgid "would clear entry\n"
+msgstr ""
+
+#, c-format
+msgid "correcting .. entry in root inode %llu, was %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad .. entry (%llu) in root inode %llu should be %llu\n"
+msgstr ""
+
+#, c-format
+msgid "multiple .. entries in directory inode %llu, will clear second entry\n"
+msgstr ""
+
+#, c-format
+msgid "multiple .. entries in directory inode %llu, would clear second entry\n"
+msgstr ""
+
+#, c-format
+msgid ". in directory inode %llu has wrong value (%llu), fixing entry...\n"
+msgstr ""
+
+#, c-format
+msgid ". in directory inode %llu has wrong value (%llu)\n"
+msgstr ""
+
+#, c-format
+msgid "multiple . entries in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "will clear one . entry in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear one . entry in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in directory inode %llu points to self, "
+msgstr ""
+
+#, c-format
+msgid ""
+"- resetting first used heap value from %d to %d in block %u of dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- would reset first used value from %d to %d in block %u of dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- resetting namebytes cnt from %d to %d in block %u of dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"- would reset namebytes cnt from %d to %d in block %u of dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- found unexpected lost holes in block %u, dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- hole info non-optimal in block %u, dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- hole info incorrect in block %u, dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "- existing hole info for block %d, dir inode %llu (base, size) - \n"
+msgstr ""
+
+#, c-format
+msgid "- holes flag = %d\n"
+msgstr ""
+
+#, c-format
+msgid "- compacting block %u in dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "not enough space in block %u of dir inode %llu for all entries\n"
+msgstr ""
+
+#, c-format
+msgid "- would compact block %u in dir inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't map block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"can't read file block %u (fsbno %llu, daddr %lld) for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory leaf magic # %#x for dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad sibling back pointer for directory block %u in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad hash path in directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "out of range internal directory block numbers (inode %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "setting directory inode (%llu) size to %llu bytes, was %lld bytes\n"
+msgstr ""
+
+#, c-format
+msgid "block 0 for directory inode %llu is missing\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block 0 for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "clearing forw/back pointers for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would clear forw/back pointers for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "no . entry for directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "no .. entry for directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "no .. entry for root directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed (%u bytes) dir2_add_badlist:ino %llu\n"
+msgstr ""
+
+msgid "couldn't malloc dir2 buffer list\n"
+msgstr ""
+
+msgid "couldn't malloc dir2 buffer header\n"
+msgstr ""
+
+msgid "couldn't malloc dir2 buffer data\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "found non-root LEAFN node in inode %llu bno = %u\n"
+msgstr ""
+
+#, c-format
+msgid "LEAFN node level is %d inode %llu bno = %u\n"
+msgstr ""
+
+#, c-format
+msgid "bad dir magic number 0x%x in inode %llu bno = %u\n"
+msgstr ""
+
+#, c-format
+msgid "release_dir2_cursor_int got unexpected non-null bp, dabno = %u\n"
+msgstr ""
+
+#, c-format
+msgid "directory block used/count inconsistency - %d / %hu\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory block in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting bad hashval in non-leaf dir block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would correct bad hashval in non-leaf dir block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic number %x in block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad back pointer in block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry count %d too large in block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad level %d in block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting bad hashval in interior dir block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"would correct bad hashval in interior dir block\n"
+"\tin (level %d) in inode %llu.\n"
+msgstr ""
+
+msgid "couldn't malloc dir2 shortform copy\n"
+msgstr ""
+
+msgid "current"
+msgstr ""
+
+msgid "invalid"
+msgstr ""
+
+msgid "realtime bitmap"
+msgstr ""
+
+msgid "realtime summary"
+msgstr ""
+
+msgid "user quota"
+msgstr ""
+
+msgid "group quota"
+msgstr ""
+
+msgid "free"
+msgstr ""
+
+msgid "non-existent"
+msgstr ""
+
+#, c-format
+msgid "entry \"%*.*s\" in shortform directory %llu references %s inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "zero length entry in shortform dir %llu"
+msgstr ""
+
+#, c-format
+msgid ", junking %d entries\n"
+msgstr ""
+
+#, c-format
+msgid ", would junk %d entries\n"
+msgstr ""
+
+#, c-format
+msgid "entry contains offset out of order in shortform dir %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected i8 count in directory %llu from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid "corrected i8 count in directory %llu, was %d, now %d\n"
+msgstr ""
+
+#, c-format
+msgid "directory %llu offsets too high\n"
+msgstr ""
+
+#, c-format
+msgid "would have corrected entry offsets in directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "corrected entry offsets in directory %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad .. entry in directory inode %llu, points to self, "
+msgstr ""
+
+#, c-format
+msgid "corrupt block %u in directory inode %llu\n"
+msgstr ""
+
+msgid "\twill junk block\n"
+msgstr ""
+
+msgid "\twould junk block\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%*.*s\" at block %u offset %d in directory inode %llu references %s "
+"inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry at block %u offset %d in directory inode %llu has 0 namelength\n"
+msgstr ""
+
+#, c-format
+msgid "\tclearing inode number in entry at offset %d...\n"
+msgstr ""
+
+#, c-format
+msgid "\twould clear inode number in entry at offset %d...\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry at block %u offset %d in directory inode %llu has illegal name "
+"\"%*.*s\": "
+msgstr ""
+
+#, c-format
+msgid "bad .. entry in directory inode %llu, points to self: "
+msgstr ""
+
+#, c-format
+msgid "bad .. entry in root directory inode %llu, was %llu: "
+msgstr ""
+
+msgid "correcting\n"
+msgstr ""
+
+msgid "would correct\n"
+msgstr ""
+
+#, c-format
+msgid "multiple .. entries in directory inode %llu: "
+msgstr ""
+
+#, c-format
+msgid "bad . entry in directory inode %llu, was %llu: "
+msgstr ""
+
+#, c-format
+msgid "multiple . entries in directory inode %llu: "
+msgstr ""
+
+#, c-format
+msgid "entry \"%*.*s\" in directory inode %llu points to self: "
+msgstr ""
+
+msgid "clearing entry\n"
+msgstr ""
+
+#, c-format
+msgid "bad bestfree table in block %u in directory inode %llu: "
+msgstr ""
+
+msgid "repairing table\n"
+msgstr ""
+
+msgid "would repair table\n"
+msgstr ""
+
+#, c-format
+msgid "block %u for directory inode %llu is missing\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory block magic # %#x in block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad entry count in block %u of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad hash ordering in block %u of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad stale count in block %u of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't read file block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory leaf magic # %#x for directory inode %llu block %u\n"
+msgstr ""
+
+#, c-format
+msgid "bad sibling back pointer for block %u in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "block %llu for directory inode %llu is missing\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %llu for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad directory block magic # %#x in block %llu for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad size/format for directory %llu\n"
+msgstr ""
+
+msgid "couldn't malloc dir stack element, try more swap\n"
+msgstr ""
+
+msgid "couldn't allocate block map pointers\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't allocate block map, size = %d\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't allocate realtime block map, size = %llu\n"
+msgstr ""
+
+msgid "couldn't allocate new extent descriptors.\n"
+msgstr ""
+
+msgid "duplicate bno extent range\n"
+msgstr ""
+
+msgid ":  duplicate bno extent range\n"
+msgstr ""
+
+msgid "duplicate extent range\n"
+msgstr ""
+
+msgid "couldn't malloc dup extent tree descriptor table\n"
+msgstr ""
+
+msgid "couldn't malloc free by-bno extent tree descriptor table\n"
+msgstr ""
+
+msgid "couldn't malloc free by-bcnt extent tree descriptor table\n"
+msgstr ""
+
+msgid "couldn't malloc dup extent tree descriptor\n"
+msgstr ""
+
+msgid "couldn't malloc bno extent tree descriptor\n"
+msgstr ""
+
+msgid "couldn't malloc bcnt extent tree descriptor\n"
+msgstr ""
+
+msgid "couldn't malloc dup rt extent tree descriptor\n"
+msgstr ""
+
+msgid "inode map malloc failed\n"
+msgstr ""
+
+msgid "add_aginode_uncertain - duplicate inode range\n"
+msgstr ""
+
+msgid "add_inode - duplicate inode range\n"
+msgstr ""
+
+msgid "good inode list is --\n"
+msgstr ""
+
+msgid "uncertain inode list is --\n"
+msgstr ""
+
+#, c-format
+msgid "agno %d -- no inodes\n"
+msgstr ""
+
+#, c-format
+msgid "agno %d\n"
+msgstr ""
+
+#, c-format
+msgid "\tptr = %lx, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n"
+msgstr ""
+
+msgid "couldn't malloc parent list table\n"
+msgstr ""
+
+msgid "couldn't memalign pentries table\n"
+msgstr ""
+
+msgid "couldn't malloc ino rec backptrs.\n"
+msgstr ""
+
+msgid "could not malloc back pointer table\n"
+msgstr ""
+
+msgid "couldn't malloc inode tree descriptor table\n"
+msgstr ""
+
+msgid "couldn't malloc uncertain ino tree descriptor table\n"
+msgstr ""
+
+msgid "couldn't malloc inode tree descriptor\n"
+msgstr ""
+
+msgid "couldn't malloc uncertain ino tree descriptor\n"
+msgstr ""
+
+msgid "couldn't malloc uncertain inode cache area\n"
+msgstr ""
+
+#, c-format
+msgid "you should never get this message - %s"
+msgstr ""
+
+msgid "couldn't initialize XFS library\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't open filesystem \"%s\"\n"
+msgstr ""
+
+msgid "couldn't malloc io buffer\n"
+msgstr ""
+
+msgid "couldn't malloc secondary io buffer\n"
+msgstr ""
+
+msgid "couldn't malloc sb io buffers\n"
+msgstr ""
+
+msgid "Sorry, could not find valid secondary superblock\n"
+msgstr ""
+
+msgid "Exiting now.\n"
+msgstr ""
+
+#, c-format
+msgid "could not allocate ag header buffer (%d bytes)\n"
+msgstr ""
+
+msgid "Phase 1 - find and verify superblock...\n"
+msgstr ""
+
+msgid "error reading primary superblock\n"
+msgstr ""
+
+#, c-format
+msgid "bad primary superblock - %s !!!\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't verify primary superblock - %s !!!\n"
+msgstr ""
+
+msgid "writing modified primary superblock\n"
+msgstr ""
+
+msgid "would write modified primary superblock\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"zero_log: cannot find log head/tail (xlog_find_tail=%d), zeroing it anyway\n"
+msgstr ""
+
+#, c-format
+msgid "zero_log: head block %lld tail block %lld\n"
+msgstr ""
+
+msgid ""
+"ALERT: The filesystem has valuable metadata changes in a log which is being\n"
+"destroyed because the -L option was used.\n"
+msgstr ""
+
+msgid ""
+"ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
+"be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
+"re-running xfs_repair.  If you are unable to mount the filesystem, then use\n"
+"the -L option to destroy the log and attempt a repair.\n"
+"Note that destroying the log may cause corruption -- please attempt a mount\n"
+"of the filesystem before doing this.\n"
+msgstr ""
+
+msgid ""
+"This filesystem has an external log.  Specify log device with the -l "
+"option.\n"
+msgstr ""
+
+#, c-format
+msgid "Phase 2 - using external log on %s\n"
+msgstr ""
+
+msgid "Phase 2 - using internal log\n"
+msgstr ""
+
+msgid "        - zero log...\n"
+msgstr ""
+
+msgid "        - scan filesystem freespace and inode maps...\n"
+msgstr ""
+
+msgid "root inode chunk not found\n"
+msgstr ""
+
+msgid "        - found root inode chunk\n"
+msgstr ""
+
+msgid "root inode marked free, "
+msgstr ""
+
+msgid "realtime bitmap inode marked free, "
+msgstr ""
+
+msgid "realtime summary inode marked free, "
+msgstr ""
+
+#, c-format
+msgid "cannot read agi block %lld for ag %u\n"
+msgstr ""
+
+#, c-format
+msgid "error following ag %d unlinked list\n"
+msgstr ""
+
+msgid "Phase 3 - for each AG...\n"
+msgstr ""
+
+msgid "        - scan and clear agi unlinked lists...\n"
+msgstr ""
+
+msgid "        - scan (but don't clear) agi unlinked lists...\n"
+msgstr ""
+
+msgid "        - process known inodes and perform inode discovery...\n"
+msgstr ""
+
+#, c-format
+msgid "        - agno = %d\n"
+msgstr ""
+
+msgid "        - process newly discovered inodes...\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't read %s inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "        - clearing existing \"%s\" inode\n"
+msgstr ""
+
+#, c-format
+msgid "        - marking entry \"%s\" to be deleted\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't map first leaf block of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # (0x%x) for directory leaf block (bno %u fsbno %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "could not read %s inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "        - deleting existing \"%s\" entry\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed (%u bytes) in longform2_delete_orphanage, ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # (0x%x) for directory data block (bno %u fsbno %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "could not read buffer for root inode %llu (daddr %lld, size %d)\n"
+msgstr ""
+
+#, c-format
+msgid "unknown version #%d in root inode\n"
+msgstr ""
+
+msgid "Phase 4 - check for duplicate blocks...\n"
+msgstr ""
+
+msgid "        - setting up duplicate extent list...\n"
+msgstr ""
+
+msgid "root inode would be lost\n"
+msgstr ""
+
+msgid "root inode lost\n"
+msgstr ""
+
+msgid "        - clear lost+found (if it exists) ...\n"
+msgstr ""
+
+#, c-format
+msgid "unknown block state, ag %d, block %d\n"
+msgstr ""
+
+#, c-format
+msgid "unknown rt extent state, extent %llu\n"
+msgstr ""
+
+msgid "        - check for inodes claiming duplicate blocks...\n"
+msgstr ""
+
+msgid "could not set up btree block array\n"
+msgstr ""
+
+msgid "error - not enough free space in filesystem\n"
+msgstr ""
+
+#, c-format
+msgid "can't rebuild fs trees -- not enough free space on ag %u\n"
+msgstr ""
+
+#, c-format
+msgid "ag %u - not enough free space to build freespace btrees\n"
+msgstr ""
+
+#, c-format
+msgid "not enough free blocks left to describe all free blocks in AG %u\n"
+msgstr ""
+
+#, c-format
+msgid "lost %d blocks in ag %u\n"
+msgstr ""
+
+#, c-format
+msgid "thought we were going to lose %d blocks in ag %u, actually lost %d\n"
+msgstr ""
+
+msgid "couldn't get superblock\n"
+msgstr ""
+
+msgid "Phase 5 - rebuild AG headers and trees...\n"
+msgstr ""
+
+#, c-format
+msgid "unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"
+msgstr ""
+
+#, c-format
+msgid "unable to rebuild AG %u.  No free space.\n"
+msgstr ""
+
+#, c-format
+msgid "lost %d blocks in agno %d, sorry.\n"
+msgstr ""
+
+msgid "        - generate realtime summary info and bitmap...\n"
+msgstr ""
+
+msgid "        - reset superblock...\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in dir_hash_add (%u bytes)\n"
+msgstr ""
+
+msgid "ok"
+msgstr ""
+
+msgid "duplicate leaf"
+msgstr ""
+
+msgid "hash value mismatch"
+msgstr ""
+
+msgid "no data entry"
+msgstr ""
+
+msgid "no leaf entry"
+msgstr ""
+
+msgid "bad stale count"
+msgstr ""
+
+#, c-format
+msgid "bad hash table for directory inode %llu (%s): "
+msgstr ""
+
+msgid "rebuilding\n"
+msgstr ""
+
+msgid "would rebuild\n"
+msgstr ""
+
+msgid "calloc failed in dir_hash_init\n"
+msgstr ""
+
+msgid "ran out of disk space!\n"
+msgstr ""
+
+#, c-format
+msgid "xfs_trans_reserve returned %d\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't iget realtime bitmap inode -- error - %d\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't allocate realtime bitmap, error = %d\n"
+msgstr ""
+
+#, c-format
+msgid "allocation of the realtime bitmap failed, error = %d\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't map realtime bitmap block %llu, error = %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't access block %llu (fsbno %llu) of realtime bitmap inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't iget realtime summary inode -- error - %d\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't map realtime summary inode block %llu, error = %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't access block %llu (fsbno %llu) of realtime summary inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't allocate realtime summary inode, error = %d\n"
+msgstr ""
+
+msgid "dev_zero of rtbitmap failed\n"
+msgstr ""
+
+#, c-format
+msgid "allocation of the realtime summary ino failed, error = %d\n"
+msgstr ""
+
+#, c-format
+msgid "could not iget root inode -- error - %d\n"
+msgstr ""
+
+#, c-format
+msgid "%d - couldn't iget root inode to make %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s inode allocation failed %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't make %s, createname error %d, will try later\n"
+msgstr ""
+
+#, c-format
+msgid "%s directory creation failed -- bmapf error %d\n"
+msgstr ""
+
+#, c-format
+msgid "%d - couldn't iget orphanage inode\n"
+msgstr ""
+
+#, c-format
+msgid "%d - couldn't iget disconnected inode\n"
+msgstr ""
+
+#, c-format
+msgid "space reservation failed (%d), filesystem may be out of space\n"
+msgstr ""
+
+#, c-format
+msgid "name create failed in %s (%d), filesystem may be out of space\n"
+msgstr ""
+
+#, c-format
+msgid "creation of .. entry failed (%d), filesystem may be out of space\n"
+msgstr ""
+
+#, c-format
+msgid "bmap finish failed (err - %d), filesystem may be out of space\n"
+msgstr ""
+
+#, c-format
+msgid "name replace op failed (%d), filesystem may be out of space\n"
+msgstr ""
+
+#, c-format
+msgid "bmap finish failed (%d), filesystem may be out of space\n"
+msgstr ""
+
+msgid "dir"
+msgstr ""
+
+#, c-format
+msgid "can't map block %d in %s inode %llu, xfs_bmapi returns %d, nmap = %d\n"
+msgstr ""
+
+#, c-format
+msgid "block %d in %s ino %llu doesn't exist\n"
+msgstr ""
+
+#, c-format
+msgid "can't map block %d in %s ino %llu, xfs_bmapi returns %d, nmap = %d\n"
+msgstr ""
+
+#, c-format
+msgid "block %d in %s inode %llu doesn't exist\n"
+msgstr ""
+
+#, c-format
+msgid "can't read directory inode %llu (leaf) block %u (fsbno %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "can't map block %d in directory %llu, xfs_bmapi returns %d, nmap = %d\n"
+msgstr ""
+
+#, c-format
+msgid "%s ino %llu block %d doesn't exist\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"couldn't remove bogus entry \"%s\" in\n"
+"\tdirectory inode %llu, errno = %d\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in dir inode %llu points to non-existent inode, "
+msgstr ""
+
+msgid "marking entry to be junked\n"
+msgstr ""
+
+msgid "would junk entry\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in dir inode %llu points to free inode %llu"
+msgstr ""
+
+msgid ", marking entry to be junked\n"
+msgstr ""
+
+msgid ", would junk entry\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in dir %llu points to an already connected dir inode %llu,\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in dir ino %llu not consistent with .. value (%llu) in ino "
+"%llu,\n"
+msgstr ""
+
+#, c-format
+msgid "\twill clear entry \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "\twould clear entry \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "cannot map block 0 of directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # (0x%x) for dir ino %llu leaf block (bno %u fsbno %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "can't map leaf block %d in dir %llu, xfs_bmapi returns %d, nmap = %d\n"
+msgstr ""
+
+#, c-format
+msgid "shrink_inode failed inode %llu block %u\n"
+msgstr ""
+
+#, c-format
+msgid "realloc failed in longform_dir2_entry_check_data (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "empty data block %u in directory inode %llu: "
+msgstr ""
+
+#, c-format
+msgid "corrupt block %u in directory inode %llu: "
+msgstr ""
+
+msgid "junking block\n"
+msgstr ""
+
+msgid "would junk block\n"
+msgstr ""
+
+#, c-format
+msgid "bad directory block magic # %#x for directory inode %llu block %d: "
+msgstr ""
+
+#, c-format
+msgid "fixing magic # to %#x\n"
+msgstr ""
+
+#, c-format
+msgid "would fix magic # to %#x\n"
+msgstr ""
+
+#, c-format
+msgid "directory inode %llu block %u has consecutive free entries: "
+msgstr ""
+
+msgid "joining together\n"
+msgstr ""
+
+msgid "would join together\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in directory inode %llu points to non-existent inode, "
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in directory inode %llu points to free inode %llu"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in dir %llu points to an already connected directory inode "
+"%llu,\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino "
+"%llu,\n"
+msgstr ""
+
+#, c-format
+msgid "leaf block %u for directory inode %llu bad header\n"
+msgstr ""
+
+#, c-format
+msgid "leaf block %u for directory inode %llu bad tail\n"
+msgstr ""
+
+#, c-format
+msgid "unknown magic number %#x for block %u in directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "free block %u for directory inode %llu bad header\n"
+msgstr ""
+
+#, c-format
+msgid "free block %u entry %i for directory ino %llu bad\n"
+msgstr ""
+
+#, c-format
+msgid "free block %u for directory inode %llu bad nused\n"
+msgstr ""
+
+#, c-format
+msgid "missing freetab entry %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't add btree block to directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't add free block to directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in longform_dir2_rebuild_data (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "rebuilding directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't get block %u for directory inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed in longform_dir2_entry_check (%u bytes)\n"
+msgstr ""
+
+#, c-format
+msgid "shortform dir inode %llu has null data entries \n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "would junk entry \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "entry \"%s\" in dir %llu references already connected dir ino %llu,\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino "
+"%llu,\n"
+msgstr ""
+
+#, c-format
+msgid "setting size to %lld bytes to reflect junked entries\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in shortform directory %llu references non-existent inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in shortform directory inode %llu points to free inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in directory inode %llu references already connected inode "
+"%llu,\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"entry \"%s\" in directory inode %llu not consistent with .. value (%llu) in "
+"inode %llu,\n"
+msgstr ""
+
+#, c-format
+msgid "would fix i8count in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "fixing i8count in inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't map inode %llu, err = %d\n"
+msgstr ""
+
+#, c-format
+msgid "re-entering %s into root directory\n"
+msgstr ""
+
+#, c-format
+msgid "can't make %s entry in root inode %llu, createname error %d\n"
+msgstr ""
+
+msgid "recreating root directory .. entry\n"
+msgstr ""
+
+#, c-format
+msgid "can't make \"..\" entry in root inode %llu, createname error %d\n"
+msgstr ""
+
+msgid "would recreate root directory .. entry\n"
+msgstr ""
+
+#, c-format
+msgid "would create missing \".\" entry in dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "creating missing \".\" entry in dir ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't make \".\" entry in dir ino %llu, createname error %d\n"
+msgstr ""
+
+msgid "Phase 6 - check inode connectivity...\n"
+msgstr ""
+
+msgid "reinitializing root directory\n"
+msgstr ""
+
+msgid "would reinitialize root directory\n"
+msgstr ""
+
+msgid "reinitializing realtime bitmap inode\n"
+msgstr ""
+
+msgid "would reinitialize realtime bitmap inode\n"
+msgstr ""
+
+msgid "reinitializing realtime summary inode\n"
+msgstr ""
+
+msgid "would reinitialize realtime summary inode\n"
+msgstr ""
+
+msgid "        - resetting contents of realtime bitmap and summary inodes\n"
+msgstr ""
+
+msgid "Warning:  realtime bitmap may be inconsistent\n"
+msgstr ""
+
+#, c-format
+msgid "        - ensuring existence of %s directory\n"
+msgstr ""
+
+msgid "        - traversing filesystem starting at / ... \n"
+msgstr ""
+
+msgid "        - traversal finished ... \n"
+msgstr ""
+
+msgid "        - root inode lost, cannot make new one in no modify mode ... \n"
+msgstr ""
+
+msgid "        - skipping filesystem traversal from / ... \n"
+msgstr ""
+
+msgid "        - traversing all unattached subtrees ... \n"
+msgstr ""
+
+msgid "        - traversals finished ... \n"
+msgstr ""
+
+msgid "        - moving disconnected inodes to lost+found ... \n"
+msgstr ""
+
+#, c-format
+msgid "disconnected dir inode %llu, "
+msgstr ""
+
+#, c-format
+msgid "disconnected inode %llu, "
+msgstr ""
+
+#, c-format
+msgid "moving to %s\n"
+msgstr ""
+
+#, c-format
+msgid "would move to %s\n"
+msgstr ""
+
+#, c-format
+msgid "resetting inode %llu nlinks from %d to %d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"
+msgstr ""
+
+#, c-format
+msgid "would have reset inode %llu nlinks from %d to %d\n"
+msgstr ""
+
+msgid "Phase 7 - verify and correct link counts...\n"
+msgstr ""
+
+msgid "Phase 7 - verify link counts...\n"
+msgstr ""
+
+#, c-format
+msgid "couldn't map inode %llu, err = %d, can't compare link counts\n"
+msgstr ""
+
+msgid "couldn't allocate memory for incore realtime bitmap.\n"
+msgstr ""
+
+msgid "couldn't allocate memory for incore realtime summary info.\n"
+msgstr ""
+
+#, c-format
+msgid "rt summary mismatch, size %d block %llu, file: %d, computed: %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't find block %d for rtbitmap inode\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %d for rtbitmap inode\n"
+msgstr ""
+
+#, c-format
+msgid "block %d for rtsummary inode is missing\n"
+msgstr ""
+
+#, c-format
+msgid "can't read block %d for rtsummary inode\n"
+msgstr ""
+
+msgid ""
+"\n"
+"attempting to find secondary superblock...\n"
+msgstr ""
+
+msgid "error finding secondary superblock -- failed to memalign buffer\n"
+msgstr ""
+
+msgid "found candidate secondary superblock...\n"
+msgstr ""
+
+msgid "verified secondary superblock...\n"
+msgstr ""
+
+msgid "unable to verify superblock, continuing...\n"
+msgstr ""
+
+msgid "failed to malloc superblock buffer\n"
+msgstr ""
+
+msgid "couldn't seek to offset 0 in filesystem\n"
+msgstr ""
+
+msgid "primary superblock write failed!\n"
+msgstr ""
+
+#, c-format
+msgid "error reading superblock %u -- failed to malloc buffer\n"
+msgstr ""
+
+#, c-format
+msgid "error reading superblock %u -- seek to offset %lld failed\n"
+msgstr ""
+
+#, c-format
+msgid "superblock read failed, offset %lld, size %d, ag %u, rval %d\n"
+msgstr ""
+
+msgid "couldn't malloc geometry structure\n"
+msgstr ""
+
+msgid "calloc failed in verify_set_primary_sb\n"
+msgstr ""
+
+msgid "Only two AGs detected and they do not match - cannot proceed.\n"
+msgstr ""
+
+msgid "Only one AG detected - cannot proceed.\n"
+msgstr ""
+
+msgid "Not enough matching superblocks - cannot proceed.\n"
+msgstr ""
+
+msgid "could not read superblock\n"
+msgstr ""
+
+#, c-format
+msgid "can't read btree block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # %#x in inode %llu (%s fork) bmbt block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "expected level %d got %d in inode %llu, (%s fork) bmbt block %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad fwd (right) sibling pointer (saw %llu parent block says %llu)\n"
+"\tin inode %llu (%s fork) bmap btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
+"\tin inode %llu (%s fork) bmap btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
+"\tin inode %llu (%s fork) bmap btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "inode 0x%llx bmap block 0x%llx claimed, state is %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad state %d, inode 0x%llx bmap block 0x%llx\n"
+msgstr ""
+
+#, c-format
+msgid "inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"correcting bt key (was %llu, now %llu) in inode %llu\n"
+"\t\t%s fork, btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad btree key (is %llu, should be %llu) in inode %llu\n"
+"\t\t%s fork, btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
+"\tin inode %llu (%s fork) bmap btree block %llu\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # %#x in btbno block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "expected level %d got %d in btbno block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
+msgstr ""
+
+#, c-format
+msgid "block (%d,%d) multiply claimed by bno space tree, state - %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # %#x in btcnt block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "expected level %d got %d in btcnt block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
+msgstr ""
+
+#, c-format
+msgid "block (%d,%d) already used, state %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad magic # %#x in inobt block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "expected level %d got %d in inobt block %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
+msgstr ""
+
+#, c-format
+msgid "dubious inode btree block header %d/%d\n"
+msgstr ""
+
+#, c-format
+msgid "badly aligned inode rec (starting inode = %llu)\n"
+msgstr ""
+
+#, c-format
+msgid "bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"
+msgstr ""
+
+#, c-format
+msgid "bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"
+msgstr ""
+
+#, c-format
+msgid "inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"
+msgstr ""
+
+#, c-format
+msgid "ir_freecount/free mismatch, inode chunk %d/%d, freecount %d nfree %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't read agfl block for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad agbno %u in agfl, agno %d\n"
+msgstr ""
+
+#, c-format
+msgid "freeblk count %d != flcount %d in ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't get root superblock for ag %d\n"
+msgstr ""
+
+msgid "can't allocate memory for superblock\n"
+msgstr ""
+
+#, c-format
+msgid "can't read agf block for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "can't read agi block for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "reset bad sb for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "would reset bad sb for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "reset bad agf for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "would reset bad agf for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "reset bad agi for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "would reset bad agi for ag %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad uncorrected agheader %d, skipping ag...\n"
+msgstr ""
+
+#, c-format
+msgid "bad agbno %u for btbno root, agno %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad agbno %u for btbcnt root, agno %d\n"
+msgstr ""
+
+#, c-format
+msgid "bad agbno %u for inobt root, agno %d\n"
+msgstr ""
+
+#, c-format
+msgid "bogus quota flags 0x%x set in superblock"
+msgstr ""
+
+msgid ", bogus flags will be cleared\n"
+msgstr ""
+
+msgid ", bogus flags would be cleared\n"
+msgstr ""
+
+msgid "This filesystem has uninitialized extent flags.\n"
+msgstr ""
+
+msgid "This filesystem is marked shared.\n"
+msgstr ""
+
+msgid ""
+"This filesystem uses feature(s) not yet supported in this release.\n"
+"Please run a more recent version of xfs_repair.\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING:  unknown superblock version %d\n"
+msgstr ""
+
+msgid "This filesystem contains features not understood by this program.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed superblock-feature-bits-allowed\n"
+"\tbut this superblock has feature bits.  The superblock\n"
+"\twill be downgraded.  This may cause loss of filesystem meta-data\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed superblock-feature-bits-allowed\n"
+"\tbut this superblock has feature bits.  The superblock\n"
+"\twould be downgraded.  This might cause loss of filesystem\n"
+"\tmeta-data.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed attributes but this filesystem\n"
+"\thas attributes.  The filesystem will be downgraded and\n"
+"\tall attributes will be removed.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed attributes but this filesystem\n"
+"\thas attributes.  The filesystem would be downgraded and\n"
+"\tall attributes would be removed.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed version 2 inodes but this filesystem\n"
+"\thas version 2 inodes.  The filesystem will be downgraded and\n"
+"\tall version 2 inodes will be converted to version 1 inodes.\n"
+"\tThis may cause some hard links to files to be destroyed\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed version 2 inodes but this filesystem\n"
+"\thas version 2 inodes.  The filesystem would be downgraded and\n"
+"\tall version 2 inodes would be converted to version 1 inodes.\n"
+"\tThis might cause some hard links to files to be destroyed\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed quotas but this filesystem\n"
+"\thas quotas.  The filesystem will be downgraded and\n"
+"\tall quota information will be removed.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed quotas but this filesystem\n"
+"\thas quotas.  The filesystem would be downgraded and\n"
+"\tall quota information would be removed.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed aligned inodes but this filesystem\n"
+"\thas aligned inodes.  The filesystem will be downgraded.\n"
+"\tThis will permanently degrade the performance of this filesystem.\n"
+msgstr ""
+
+msgid ""
+"WARNING:  you have disallowed aligned inodes but this filesystem\n"
+"\thas aligned inodes.  The filesystem would be downgraded.\n"
+"\tThis would permanently degrade the performance of this filesystem.\n"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"
+msgstr ""
+
+msgid "no error"
+msgstr ""
+
+msgid "bad magic number"
+msgstr ""
+
+msgid "bad blocksize field"
+msgstr ""
+
+msgid "bad blocksize log field"
+msgstr ""
+
+msgid "bad version number"
+msgstr ""
+
+msgid "filesystem mkfs-in-progress bit set"
+msgstr ""
+
+msgid "inconsistent filesystem geometry information"
+msgstr ""
+
+msgid "bad inode size or inconsistent with number of inodes/block"
+msgstr ""
+
+msgid "bad sector size"
+msgstr ""
+
+msgid "AGF geometry info conflicts with filesystem geometry"
+msgstr ""
+
+msgid "AGI geometry info conflicts with filesystem geometry"
+msgstr ""
+
+msgid "AG superblock geometry info conflicts with filesystem geometry"
+msgstr ""
+
+msgid "attempted to perform I/O beyond EOF"
+msgstr ""
+
+msgid "inconsistent filesystem geometry in realtime filesystem component"
+msgstr ""
+
+#, c-format
+msgid "maximum indicated percentage of inodes > 100%"
+msgstr ""
+
+msgid "inconsistent inode alignment value"
+msgstr ""
+
+msgid "not enough secondary superblocks with matching geometry"
+msgstr ""
+
+msgid "bad stripe unit in superblock"
+msgstr ""
+
+msgid "bad stripe width in superblock"
+msgstr ""
+
+msgid "bad shared version number in superblock"
+msgstr ""
+
+#, c-format
+msgid "bad error code - %d\n"
+msgstr ""
+
+#, c-format
+msgid "-%c %s option cannot have a value\n"
+msgstr ""
+
+msgid ""
+"\n"
+"fatal error -- "
+msgstr ""
+
+#, c-format
+msgid "sb root inode value %llu %sinconsistent with calculated value %lu\n"
+msgstr ""
+
+#, c-format
+msgid "resetting superblock root inode pointer to %lu\n"
+msgstr ""
+
+#, c-format
+msgid "would reset superblock root inode pointer to %lu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n"
+msgstr ""
+
+#, c-format
+msgid "resetting superblock realtime bitmap ino pointer to %lu\n"
+msgstr ""
+
+#, c-format
+msgid "would reset superblock realtime bitmap ino pointer to %lu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"sb realtime summary inode %llu %sinconsistent with calculated value %lu\n"
+msgstr ""
+
+#, c-format
+msgid "resetting superblock realtime summary ino pointer to %lu\n"
+msgstr ""
+
+#, c-format
+msgid "would reset superblock realtime summary ino pointer to %lu\n"
+msgstr ""
+
+msgid ""
+"Primary superblock would have been modified.\n"
+"Cannot proceed further in no_modify mode.\n"
+"Exiting now.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot repair this filesystem.  Sorry.\n"
+msgstr ""
+
+msgid "Found unsupported filesystem features.  Exiting now.\n"
+msgstr ""
+
+msgid "No modify flag set, skipping phase 5\n"
+msgstr ""
+
+msgid "Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"
+msgstr ""
+
+msgid "Warning:  no quota inodes were found.  Quotas disabled.\n"
+msgstr ""
+
+msgid "Warning:  no quota inodes were found.  Quotas would be disabled.\n"
+msgstr ""
+
+msgid "Warning:  quota inodes were cleared.  Quotas disabled.\n"
+msgstr ""
+
+msgid "Warning:  quota inodes would be cleared.  Quotas would be disabled.\n"
+msgstr ""
+
+msgid ""
+"Warning:  user quota information was cleared.\n"
+"User quotas can not be enforced until limit information is recreated.\n"
+msgstr ""
+
+msgid ""
+"Warning:  user quota information would be cleared.\n"
+"User quotas could not be enforced until limit information was recreated.\n"
+msgstr ""
+
+msgid ""
+"Warning:  group quota information was cleared.\n"
+"Group quotas can not be enforced until limit information is recreated.\n"
+msgstr ""
+
+msgid ""
+"Warning:  group quota information would be cleared.\n"
+"Group quotas could not be enforced until limit information was recreated.\n"
+msgstr ""
+
+msgid "No modify flag set, skipping filesystem flush and exiting.\n"
+msgstr ""
+
+msgid "Note - quota info will be regenerated on next quota mount.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Note - stripe unit (%d) and width (%d) fields have been reset.\n"
+"Please set with mount -o sunit=<value>,swidth=<value>\n"
+msgstr ""
+
+msgid "done\n"
+msgstr ""
+
+#, c-format
 msgid "%s [-e extsize] [-p] source target\n"
 msgstr ""
 

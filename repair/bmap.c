@@ -54,7 +54,8 @@ blkent_append(
 	ent = *entp;
 	size = BLKENT_SIZE(c + ent->nblks);
 	if ((*entp = ent = realloc(ent, size)) == NULL) {
-		do_warn("realloc failed in blkent_append (%u bytes)\n", size);
+		do_warn(_("realloc failed in blkent_append (%u bytes)\n"),
+			size);
 		return;
 	}
 	for (i = 0; i < c; i++)
@@ -75,7 +76,7 @@ blkent_new(
 	int		i;
 
 	if ((ent = malloc(BLKENT_SIZE(c))) == NULL) {
-		do_warn("malloc failed in blkent_new (%u bytes)\n",
+		do_warn(_("malloc failed in blkent_new (%u bytes)\n"),
 			BLKENT_SIZE(c));
 		return ent;
 	}
@@ -101,7 +102,7 @@ blkent_prepend(
 
 	oldent = *entp;
 	if ((newent = malloc(BLKENT_SIZE(oldent->nblks + c))) == NULL) {
-		do_warn("malloc failed in blkent_prepend (%u bytes)\n",
+		do_warn(_("malloc failed in blkent_prepend (%u bytes)\n"),
 			BLKENT_SIZE(oldent->nblks + c));
 		*entp = newent;
 		return;
@@ -128,7 +129,7 @@ blkmap_alloc(
 	if (nex < 1)
 		nex = 1;
 	if ((blkmap = malloc(BLKMAP_SIZE(nex))) == NULL) {
-		do_warn("malloc failed in blkmap_alloc (%u bytes)\n",
+		do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
 			BLKMAP_SIZE(nex));
 		return blkmap;
 	}
@@ -213,8 +214,8 @@ blkmap_getn(
 			else {
 				bmp = realloc(bmp, ++nex * sizeof(*bmp));
 				if (bmp == NULL) {
-					do_warn("realloc failed in blkmap_getn"
-						" (%u bytes)\n",
+					do_warn(_("blkmap_getn realloc failed"
+						" (%u bytes)\n"),
 						nex * sizeof(*bmp));
 					continue;
 				}
@@ -249,7 +250,7 @@ blkmap_grow(
 	if (blkmap->naents == blkmap->nents) {
 		size = BLKMAP_SIZE(blkmap->nents + 1);
 		if ((*blkmapp = blkmap = realloc(blkmap, size)) == NULL) {
-			do_warn("realloc failed in blkmap_grow (%u bytes)\n",
+			do_warn(_("realloc failed in blkmap_grow (%u bytes)\n"),
 				size);
 			return;
 		}

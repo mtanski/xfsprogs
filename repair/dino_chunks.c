@@ -68,7 +68,7 @@ check_aginode_block(xfs_mount_t	*mp,
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno, agbno),
 			XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp) {
-		do_warn("cannot read agbno (%u/%u), disk block %lld\n", agno,
+		do_warn(_("cannot read agbno (%u/%u), disk block %lld\n"), agno,
 			agbno, (xfs_daddr_t)XFS_AGB_TO_DADDR(mp, agno, agbno));
 		return(0);
 	}
@@ -163,7 +163,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 
 		switch (state = get_agbno_state(mp, agno, agbno))  {
 		case XR_E_INO:
-			do_warn("uncertain inode block %d/%d already known\n",
+			do_warn(
+		_("uncertain inode block %d/%d already known\n"),
 				agno, agbno);
 			break;
 		case XR_E_UNKNOWN:
@@ -179,12 +180,13 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			 * if block is already claimed, forget it.
 			 */
 			do_warn(
-			    "inode block %d/%d multiply claimed, (state %d)\n",
+		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, agbno, state);
 			set_agbno_state(mp, agno, agbno, XR_E_MULT);
 			return(0);
 		default:
-			do_warn("inode block %d/%d bad state, (state %d)\n",
+			do_warn(
+		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, agbno, state);
 			set_agbno_state(mp, agno, agbno, XR_E_INO);
 			break;
@@ -444,14 +446,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_INUSE_FS:
 		case XR_E_FS_MAP:
 			do_warn(
-			    "inode block %d/%d multiply claimed, (state %d)\n",
+		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
 			set_agbno_state(mp, agno, cur_agbno, XR_E_MULT);
 			j = 1;
 			break;
 		case XR_E_INO:
 			do_error(
-		"uncertain inode block overlap, agbno = %d, ino = %llu\n",
+		_("uncertain inode block overlap, agbno = %d, ino = %llu\n"),
 				agbno, ino);
 			break;
 		default:
@@ -487,7 +489,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
 		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
 		case XR_E_INO:
-			do_error("uncertain inode block %llu already known\n",
+			do_error(
+		_("uncertain inode block %llu already known\n"),
 				XFS_AGB_TO_FSB(mp, agno, cur_agbno));
 			break;
 		case XR_E_UNKNOWN:
@@ -500,11 +503,12 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_INUSE_FS:
 		case XR_E_FS_MAP:
 			do_error(
-			    "inode block %d/%d multiply claimed, (state %d)\n",
+		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
 			break;
 		default:
-			do_warn("inode block %d/%d bad state, (state %d)\n",
+			do_warn(
+		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, cur_agbno, state);
 			set_agbno_state(mp, agno, cur_agbno, XR_E_INO);
 			break;
@@ -601,7 +605,7 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno, agbno),
 			XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)), 0);
 	if (!bp) {
-		do_warn("cannot read inode %llu, disk block %lld, cnt %d\n",
+		do_warn(_("cannot read inode %llu, disk block %lld, cnt %d\n"),
 			XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
 			XFS_AGB_TO_DADDR(mp, agno, agbno),
 			(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)));
@@ -698,8 +702,8 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				XFS_AGB_TO_DADDR(mp, agno, agbno),
 				XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)), 0);
 		if (!bp) {
-			do_warn("can't read inode %llu, disk block %lld, "
-				"cnt %d\n", XFS_AGINO_TO_INO(mp, agno, agino),
+			do_warn(_("can't read inode %llu, disk block %lld, "
+				"cnt %d\n"), XFS_AGINO_TO_INO(mp, agno, agino),
 				XFS_AGB_TO_DADDR(mp, agno, agbno),
 				(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)));
 			return(1);
@@ -718,11 +722,11 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 		set_agbno_state(mp, agno, agbno, XR_E_INO);
 		break;
 	case XR_E_BAD_STATE:
-		do_error("bad state in block map %d\n", state);
+		do_error(_("bad state in block map %d\n"), state);
 		break;
 	default:
 		set_agbno_state(mp, agno, agbno, XR_E_MULT);
-		do_warn("inode block %llu multiply claimed, state was %d\n",
+		do_warn(_("inode block %llu multiply claimed, state was %d\n"),
 			XFS_AGB_TO_FSB(mp, agno, agbno), state);
 		break;
 	}
@@ -759,8 +763,8 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				if (verbose || no_modify ||
 				    XFS_AGINO_TO_INO(mp, agno, agino) !=
 							old_orphanage_ino)  {
-					do_warn("imap claims in-use inode %llu"
-						" is free, ",
+					do_warn(_("imap claims in-use inode "
+						  "%llu is free, "),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				}
@@ -768,9 +772,9 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				if (verbose || (!no_modify &&
 				    XFS_AGINO_TO_INO(mp, agno, agino) !=
 						old_orphanage_ino))
-					do_warn("correcting imap\n");
+					do_warn(_("correcting imap\n"));
 				else
-					do_warn("would correct imap\n");
+					do_warn(_("would correct imap\n"));
 			}
 			set_inode_used(ino_rec, irec_offset);
 		} else  {
@@ -807,11 +811,11 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				need_root_inode = 1;
 
 				if (!no_modify)  {
-					do_warn("cleared root inode %llu\n",
+					do_warn(_("cleared root inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				} else  {
-					do_warn("would clear root inode %llu\n",
+					do_warn(_("would clear root inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				}
@@ -820,13 +824,13 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				need_rbmino = 1;
 
 				if (!no_modify)  {
-					do_warn("cleared realtime bitmap "
-						"inode %llu\n",
+					do_warn(_("cleared realtime bitmap "
+						  "inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				} else  {
-					do_warn("would clear realtime bitmap "
-						"inode %llu\n",
+					do_warn(_("would clear realtime bitmap "
+						  "inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				}
@@ -835,21 +839,21 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				need_rsumino = 1;
 
 				if (!no_modify)  {
-					do_warn("cleared realtime summary "
-						"inode %llu\n",
+					do_warn(_("cleared realtime summary "
+						  "inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				} else  {
-					do_warn("would clear realtime summary "
-						"inode %llu\n",
+					do_warn(_("would clear realtime summary"
+						  " inode %llu\n"),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				}
 			} else if (!no_modify)  {
-				do_warn("cleared inode %llu\n",
+				do_warn(_("cleared inode %llu\n"),
 					XFS_AGINO_TO_INO(mp, agno, agino));
 			} else  {
-				do_warn("would have cleared inode %llu\n",
+				do_warn(_("would have cleared inode %llu\n"),
 					XFS_AGINO_TO_INO(mp, agno, agino));
 			}
 		}
@@ -887,13 +891,13 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 				set_agbno_state(mp, agno, agbno, XR_E_INO);
 				break;
 			case XR_E_BAD_STATE:
-				do_error( "bad state in block map %d\n",
+				do_error(_("bad state in block map %d\n"),
 					state);
 				break;
 			default:
 				set_agbno_state(mp, agno, agbno, XR_E_MULT);
-				do_warn("inode block %llu multiply claimed, "
-					"state was %d\n",
+				do_warn(_("inode block %llu multiply claimed, "
+					  "state was %d\n"),
 					XFS_AGB_TO_FSB(mp, agno, agbno), state);
 				break;
 			}
@@ -1025,7 +1029,7 @@ check_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 	 * on disk to see if the referenced inodes are good
 	 */
 
-	do_warn("found inodes not in the inode allocation tree\n");
+	do_warn(_("found inodes not in the inode allocation tree\n"));
 
 	do {
 		/*
@@ -1060,7 +1064,7 @@ check_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 	} while (irec != NULL);
 
 	if (got_some)
-		do_warn("found inodes not in the inode allocation tree\n");
+		do_warn(_("found inodes not in the inode allocation tree\n"));
 
 	return;
 }
@@ -1174,7 +1178,7 @@ process_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 	} while (irec != NULL);
 
 	if (got_some)
-		do_warn("found inodes not in the inode allocation tree\n");
+		do_warn(_("found inodes not in the inode allocation tree\n"));
 
 	return(1);
 }
