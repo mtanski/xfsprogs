@@ -116,7 +116,7 @@ INSTALL_LTLIB_STATIC = \
 	../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_DEVLIB_DIR)
 
 INSTALL_MAN = \
-	@for d in $(MAN_PAGES) ""; do \
+	@for d in $(MAN_PAGES); do \
 		first=true; \
 		for m in `$(AWK) \
 			'/^\.S[h|H] NAME/ {ok=1; next} ok {print; exit}' $$d \
