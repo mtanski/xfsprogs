@@ -23,6 +23,10 @@ S: P.O. Box 770525
 S: Eagle River, AK 99577
 S: Alaska
 
+N: Nicolas Boullis
+E: nboullis@debian.org
+D: fix XFS recovery on 64-bit big-endian architectures
+
 N: Danny Cox
 E: danscox@mindspring.com
 D: ACL port to Linux
