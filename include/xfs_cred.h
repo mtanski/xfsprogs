@@ -92,14 +92,39 @@ typedef struct mac_label {
 /* Data types required by POSIX P1003.1eD15 */
 typedef struct mac_label * mac_t;
 
+
+/*
+ * Credentials
+ */
+typedef struct cred {
+	int	cr_ref;			/* reference count */
+	ushort	cr_ngroups;		/* number of groups in cr_groups */
+	uid_t	cr_uid;			/* effective user id */
+	gid_t	cr_gid;		 	/* effective group id */
+	uid_t	cr_ruid;		/* real user id */
+	gid_t	cr_rgid;		/* real group id */
+	uid_t	cr_suid;		/* "saved" user id (from exec) */
+	gid_t	cr_sgid;		/* "saved" group id (from exec) */
+	struct mac_label *cr_mac;	/* MAC label for B1 and beyond */
+	cap_set_t	  cr_cap;	/* capability (privilege) sets */
+	gid_t	cr_groups[NGROUPS];	/* supplementary group list */
+} cred_t;
+
+
 #ifdef __KERNEL__
 extern int mac_enabled;
 extern mac_label *mac_high_low_lp;
 static __inline void mac_never(void) {}
 struct xfs_inode;
-extern int mac_xfs_iaccess(struct xfs_inode *, mode_t);
-#define _MAC_XFS_IACCESS(i,m)	\
-	(mac_enabled? (mac_never(), mac_xfs_iaccess(i,m)): 0)
+extern int mac_xfs_iaccess(struct xfs_inode *, mode_t, cred_t *);
+#define _MAC_XFS_IACCESS(i,m,c)	\
+	(mac_enabled? (mac_never(), mac_xfs_iaccess(i,m,c)): 0)
+extern int mac_xfs_vaccess(vnode_t *, cred_t *, mode_t);
+#define _MAC_VACCESS(v,c,m)	\
+	(mac_enabled? (mac_never(), mac_xfs_vaccess(v,c,m)): 0)
+
+#define VREAD	01
+#define VWRITE	02
 #endif	/* __KERNEL__ */
 
 #define MACWRITE	00200
@@ -126,26 +151,18 @@ extern int mac_xfs_iaccess(struct xfs_inode *, mode_t);
 #define MINT_LOW_LABEL		'l'	/* Low Grade - always dominated */
 
 
-/*
- * Credentials
- */
-typedef struct cred {
-	int	cr_ref;			/* reference count */
-	ushort	cr_ngroups;		/* number of groups in cr_groups */
-	uid_t	cr_uid;			/* effective user id */
-	gid_t	cr_gid;		 	/* effective group id */
-	uid_t	cr_ruid;		/* real user id */
-	gid_t	cr_rgid;		/* real group id */
-	uid_t	cr_suid;		/* "saved" user id (from exec) */
-	gid_t	cr_sgid;		/* "saved" group id (from exec) */
-	struct mac_label *cr_mac;	/* MAC label for B1 and beyond */
-	cap_set_t	  cr_cap;	/* capability (privilege) sets */
-	gid_t	cr_groups[NGROUPS];	/* supplementary group list */
-} cred_t;
-
 #ifdef __KERNEL__
 extern void cred_init(void);
 static __inline cred_t *get_current_cred(void) { return NULL; }
+/* 
+ * XXX: tes
+ * This is a hack. 
+ * It assumes that if cred is not null then it is sys_cred which
+ * has all capabilities.
+ * One solution may be to implement capable_cred based on linux' capable()
+ * and initialize all credentials in our xfs linvfs layer.
+ */
+static __inline int capable_cred(cred_t *cr, int cid) { return (cr==NULL) ? capable(cid) : 1; }
 extern struct cred *sys_cred;
 #endif	/* __KERNEL__ */
 
