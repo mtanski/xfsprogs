@@ -3,8 +3,10 @@ xfsprogs (1.3.4-0) unstable; urgency=low
   * Upstream bugfix release; fixes listed below
   * Fix endian bug in xfs_db "frag" command
   * Several man pages updated to document external log usage
-  * IA64 build isses fixes (use -fno-strict-aliasing for libraries)
+  * IA64 build issues fixed (use -fno-strict-aliasing for libraries)
   * Fixed several minor compiler warnings when building on IA64
+  * Added a Suggests entry for dvhtool (for those using SGI disks)
+  * configure.in changes to allow cross compilation
 
  -- Nathan Scott <nathans@debian.org>  Sat,  4 Aug 2001 10:32:00 +1000
 
