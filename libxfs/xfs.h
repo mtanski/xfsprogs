@@ -253,6 +253,8 @@ typedef struct { dev_t dev; } buftarg_t;
 #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
 #define XFS_MOUNT_32BITINODES		0x1	/* enforce in userspace */
 #define XFS_ILOCK_EXCL			0
+#define down_read(a)			((void) 0)
+#define up_read(a)			((void) 0)
 #define mrlock(a,b,c)			((void) 0)
 #define mraccunlock(a)			((void) 0)
 #define mrunlock(a)			((void) 0)

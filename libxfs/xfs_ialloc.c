@@ -299,9 +299,9 @@ xfs_ialloc_ag_alloc(
 	}
 	INT_MOD(agi->agi_count, ARCH_CONVERT, newlen);
 	INT_MOD(agi->agi_freecount, ARCH_CONVERT, newlen);
-	mraccess(&args.mp->m_peraglock);
+	down_read(&args.mp->m_peraglock);
 	args.mp->m_perag[INT_GET(agi->agi_seqno, ARCH_CONVERT)].pagi_freecount += newlen;
-	mraccunlock(&args.mp->m_peraglock);
+	up_read(&args.mp->m_peraglock);
 	INT_SET(agi->agi_newino, ARCH_CONVERT, newino);
 	/*
 	 * Insert records describing the new inode chunk into the btree.
@@ -385,7 +385,7 @@ xfs_ialloc_ag_select(
 	 */
 	agno = pagno;
 	flags = XFS_ALLOC_FLAG_TRYLOCK;
-	mraccess(&mp->m_peraglock);
+	down_read(&mp->m_peraglock);
 	for (;;) {
 		pag = &mp->m_perag[agno];
 		if (!pag->pagi_init) {
@@ -426,7 +426,7 @@ xfs_ialloc_ag_select(
 					agbp = NULL;
 					goto nextag;
 				}
-				mraccunlock(&mp->m_peraglock);
+				up_read(&mp->m_peraglock);
 				return agbp;
 			}
 		}
@@ -439,7 +439,7 @@ nextag:
 		 * down.
 		 */
 		if (XFS_FORCED_SHUTDOWN(mp)) {
-			mraccunlock(&mp->m_peraglock);
+			up_read(&mp->m_peraglock);
 			return (xfs_buf_t *)0;
 		}
 		agno++;
@@ -447,7 +447,7 @@ nextag:
 			agno = 0;
 		if (agno == pagno) {
 			if (flags == 0) {
-				mraccunlock(&mp->m_peraglock);
+				up_read(&mp->m_peraglock);
 				return (xfs_buf_t *)0;
 			}
 			flags = 0;
@@ -614,13 +614,13 @@ nextag:
 			*inop = NULLFSINO;
 			return noroom ? ENOSPC : 0;
 		}
-		mraccess(&mp->m_peraglock);
+		down_read(&mp->m_peraglock);
 		if (mp->m_perag[tagno].pagi_inodeok == 0) {
-			mraccunlock(&mp->m_peraglock);
+			up_read(&mp->m_peraglock);
 			goto nextag;
 		}
 		error = xfs_ialloc_read_agi(mp, tp, tagno, &agbp);
-		mraccunlock(&mp->m_peraglock);
+		up_read(&mp->m_peraglock);
 		if (error)
 			goto nextag;
 		agi = XFS_BUF_TO_AGI(agbp);
@@ -868,9 +868,9 @@ nextag:
 		goto error0;
 	INT_MOD(agi->agi_freecount, ARCH_CONVERT, -1);
 	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
-	mraccess(&mp->m_peraglock);
+	down_read(&mp->m_peraglock);
 	mp->m_perag[tagno].pagi_freecount--;
-	mraccunlock(&mp->m_peraglock);
+	up_read(&mp->m_peraglock);
 #ifdef DEBUG
 	if (cur->bc_nlevels == 1) {
 		int	freecount = 0;
@@ -988,9 +988,9 @@ xfs_dilocate(
 		offset_agbno = agbno & mp->m_inoalign_mask;
 		chunk_agbno = agbno - offset_agbno;
 	} else {
-		mraccess(&mp->m_peraglock);
+		down_read(&mp->m_peraglock);
 		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-		mraccunlock(&mp->m_peraglock);
+		up_read(&mp->m_peraglock);
 		if (error) {
 #ifdef DEBUG
 			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "

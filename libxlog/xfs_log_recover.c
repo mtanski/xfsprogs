@@ -113,7 +113,7 @@ xlog_find_verify_cycle( xlog_t 		*log,
 		for (j = 0; j < bcount; j++) {
 			cycle = GET_CYCLE(buf, ARCH_CONVERT);
 			if (cycle == stop_on_cycle_no) {
-				*new_blk = i;
+				*new_blk = i+j;
 				goto out;
 			}
                 

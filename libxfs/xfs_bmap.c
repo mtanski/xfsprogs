@@ -2044,13 +2044,13 @@ xfs_bmap_alloc(
 			 */
 			startag = ag = XFS_FSB_TO_AGNO(mp, args.fsbno);
 			notinit = 0;
-			mrlock(&mp->m_peraglock, MR_ACCESS, PINOD);
+			down_read(&mp->m_peraglock);
 			while (blen < ap->alen) {
 				pag = &mp->m_perag[ag];
 				if (!pag->pagf_init &&
 				    (error = xfs_alloc_pagf_init(mp, args.tp,
 					    ag, XFS_ALLOC_FLAG_TRYLOCK))) {
-					mrunlock(&mp->m_peraglock);
+					up_read(&mp->m_peraglock);
 					return error;
 				}
 				/*
@@ -2073,7 +2073,7 @@ xfs_bmap_alloc(
 				if (ag == startag)
 					break;
 			}
-			mrunlock(&mp->m_peraglock);
+			up_read(&mp->m_peraglock);
 			/* 
 			 * Since the above loop did a BUF_TRYLOCK, it is
 			 * possible that there is space for this request.
