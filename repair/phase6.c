@@ -3066,7 +3066,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	ifp = &ip->i_df;
 	sfp = (xfs_dir2_sf_t *) ifp->if_u1.if_data;
 	*ino_dirty = 0;
-	bytes_deleted = i8 = 0;
+	bytes_deleted = 0;
 
 	max_size = ifp->if_bytes;
 	ASSERT(ip->i_d.di_size <= ifp->if_bytes);
@@ -3078,6 +3078,11 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	 * directory is moved to orphanage.
 	 */
 	add_inode_ref(current_irec, current_ino_offset);
+
+	/*
+	 * Initialise i8 counter -- the parent inode number counts as well.
+	 */
+	i8 = (XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, &sfp->hdr.parent, ARCH_CONVERT) > XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
 	 * now run through entries, stop at first bad entry, don't need
@@ -3150,12 +3155,24 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		 * to where we think lost+found should be.  if that's
 		 * the case, that's the one we created in phase 6.
 		 * just skip it.  no need to process it and its ..
-		 * link is already accounted for.  Also skip entries
-		 * with bogus inode numbers if we're in no modify mode.
+		 * link is already accounted for.
 		 */
 
-		if ((lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
-				|| (no_modify && verify_inum(mp, lino))) {
+		if (lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0) {
+			if (lino > XFS_DIR2_MAX_SHORT_INUM)
+				i8++;
+			next_sfep = (xfs_dir2_sf_entry_t *)
+				((__psint_t) sfep +
+				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep));
+			continue;
+		}
+
+		/*
+		 * Also skip entries with bogus inode numbers if we're
+		 * in no modify mode.
+		 */
+
+		if (no_modify && verify_inum(mp, lino))  {
 			next_sfep = (xfs_dir2_sf_entry_t *)
 				((__psint_t) sfep +
 				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep));
@@ -3202,14 +3219,9 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		} else if (!inode_isadir(irec, ino_offset))  {
 			/*
 			 * check easy case first, regular inode, just bump
-			 * the link count and continue
+			 * the link count
 			 */
 			add_inode_reached(irec, ino_offset);
-
-			next_sfep = (xfs_dir2_sf_entry_t *)
-				((__psint_t) sfep +
-				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep));
-			continue;
 		} else  {
 			parent = get_inode_parent(irec, ino_offset);
 

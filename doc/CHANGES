@@ -1,3 +1,7 @@
+[cvs]
+	- Fix for xfs_repair mangling i8count for dir2_sf directories
+	- Minor mkfs.xfs man page update for blocksize limits on Linux
+
 xfsprogs-2.0.6 (30 May 2002)
 	- Fix error returns from log recovery (affects xfs_repair).
 	- Fix the way mkfs.xfs round downs the device when the last 

@@ -845,9 +845,14 @@ process_sf_dir2(
 	num_entries = INT_GET(sfp->hdr.count, ARCH_CONVERT);
 	ino_dir_size = INT_GET(dip->di_core.di_size, ARCH_CONVERT);
 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
-	i8 = bad_offset = *repair = 0;
+	bad_offset = *repair = 0;
 
 	ASSERT(ino_dir_size <= max_size);
+
+	/*
+	 * Initialize i8 based on size of parent inode number.
+	 */
+	i8 = (XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, &sfp->hdr.parent, ARCH_CONVERT) > XFS_DIR2_MAX_SHORT_INUM);
 
 	/* 
 	 * check for bad entry count
