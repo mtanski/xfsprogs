@@ -3,12 +3,10 @@
 mkfs.xfs \- construct an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3mkfs.xfs\f1 [ \f3\-b\f1 subopt=value ] \c
-[ \f3\-d\f1 subopt[=value] ] [ \f3\-i\f1 subopt=value ]
-	[ \f3\-l\f1 subopt[=value] ] \c
-[ \f3\-n\f1 subopt[=value] ] \c
-[ \f3\-p\f1 protofile ] [ \f3\-q\f1 ] 
-	[ \f3\-r\f1 subopt[=value] ] [ \f3\-C\f1 ] device
+\f3mkfs.xfs\f1 [ \f3\-b\f1 subopt=value ] [ \f3\-d\f1 subopt[=value] ]
+	[ \f3\-i\f1 subopt=value ] [ \f3\-l\f1 subopt[=value] ]
+	[ \f3\-n\f1 subopt[=value] ] [ \f3\-p\f1 protofile ] [ \f3\-q\f1 ]
+	[ \f3\-r\f1 subopt[=value] ] [ \f3\-C\f1 ] [ \f3\-L\f1 label ] device
 .fi
 .SH DESCRIPTION
 .I mkfs.xfs
@@ -490,7 +488,21 @@ to the command's execution time.  For situations where command performance is
 necessary, this switch may be used to disable the safeguards.  Due to the
 potential for user-error causing corrupted filesystems or other on-disk
 data corruption, we strongly discourage use of this switch in normal operation.
+.TP
+\f3\-L\f1 \f2label\f1
+Set the filesystem label.
+XFS filesystem labels can be at most 12 characters long; if
+.I label
+is longer than 12 characters,
+.I mkfs.xfs
+will not proceed with creating the filesystem.  Refer to the
+.IR mount (8)
+and
+.IR xfs_admin (8)
+manual entries for additional information.
 .SH SEE ALSO
-mkfs(8).
+mkfs(8),
+mount(8),
+xfs_admin(8).
 .SH BUGS
 With a prototype file, it is not possible to specify hard links.

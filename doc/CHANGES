@@ -1,4 +1,7 @@
 
+xfsprogs-1.2.4 (01 May 2001)
+	- added -L option to mkfs.xfs (filesystem label)
+
 xfsprogs-1.2.3 (27 April 2001)
 	- add dquot and quotaoff log item support into xfs_logprint
 	- fix logprint core dump reporting AGI in "continue"'d transactions

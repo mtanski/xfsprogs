@@ -406,6 +406,7 @@ main(int argc, char **argv)
 	int			ipflag;
 	int			isflag;
 	int			isize;
+	char			*label = NULL;
 	int			laflag;
 	int			lalign;
 	int			ldflag;
@@ -474,7 +475,7 @@ main(int argc, char **argv)
 	force_fs_overwrite = 0;
 	worst_freelist = 0;
 
-	while ((c = getopt(argc, argv, "b:d:i:l:n:p:qr:CfV")) != EOF) {
+	while ((c = getopt(argc, argv, "b:d:i:l:L:n:p:qr:CfV")) != EOF) {
 		switch (c) {
 		case 'C':
 			do_overlap_checks = 0;
@@ -760,6 +761,11 @@ main(int argc, char **argv)
 					unknown('l', value);
 				}
 			}
+			break;
+		case 'L':
+			if (strlen(optarg) > sizeof(sbp->sb_fname))
+				illegal(optarg, "L");
+			label = optarg;
 			break;
 		case 'n':
 			p = optarg;
@@ -1502,6 +1508,8 @@ main(int argc, char **argv)
 		}
 	} else
 		logstart = 0;
+	if (label)
+		strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
 	sbp->sb_magicnum = XFS_SB_MAGIC;
 	sbp->sb_blocksize = blocksize;
 	sbp->sb_dblocks = dblocks;
@@ -1982,13 +1990,14 @@ usage(void)
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx]\n\
 /* naming */		[-n log=n|size=num|version=n]\n\
+/* label */		[-L label (maximum 12 characters)]\n\
 /* prototype file */	[-p fname]\n\
 /* quiet */		[-q]\n\
 /* version */		[-V]\n\
 /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
 			devicename\n\
 devicename is required unless -d name=xxx is given\n\
-internal 1000 block log is default unless overridden or using a volume\
+internal 1000 block log is default unless overridden or using a volume\n\
 manager with log\n\
 num is xxx (bytes), or xxxb (blocks), or xxxk (xxx KB), or xxxm (xxx MB)\n\
 value is xxx (512 blocks)\n",
