@@ -1,5 +1,9 @@
+xfsprogs-2.5.6 (19 August 2003)
+	- Fix a mkfs problem where it could exit inappropriately when
+	  a large data volume stripe unit was either specified on the
+	  command line or via querying the underlying volume manager.
+
 xfsprogs-2.5.5 (07 August 2003)
-	- XFS 1.3 release version of xfsprogs.
 	- Update xfs_io command to allow reading from non-XFS files.
 	- Sync up user/kernel source in libxfs, libxlog and headers.
 	- Update xfs_db and xfs_logprint commands to print new inode

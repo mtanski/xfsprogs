@@ -1770,11 +1770,10 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 
 	if (logversion == 2 && (lsunit * blocksize) > 256 * 1024) {
 		fprintf(stderr,
-_("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
+	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
 			(lsunit * blocksize));
 		lsunit = 32 * 1024;
-		fprintf(stderr,
-			_("log stripe unit adjusted to 256kb\n"));
+		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
 	}
 
 	protostring = setup_proto(protofile);
