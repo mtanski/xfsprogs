@@ -2047,16 +2047,13 @@ xfs_da_do_buf(
 				nmap = 1;
 			}
 		} else {
-			xfs_fsblock_t	firstblock;
-
-			firstblock = NULLFSBLOCK;
 			mapp = kmem_alloc(sizeof(*mapp) * nfsb, KM_SLEEP);
 			nmap = nfsb;
 			if ((error = xfs_bmapi(trans, dp, (xfs_fileoff_t)bno,
 					nfsb,
 					XFS_BMAPI_METADATA |
 						XFS_BMAPI_AFLAG(whichfork),
-					&firstblock, 0, mapp, &nmap, NULL)))
+					NULL, 0, mapp, &nmap, NULL)))
 				goto exit0;
 		}
 	} else {

@@ -196,9 +196,6 @@ typedef struct xfs_ihash {
 	rwlock_t		ih_lock;
 	uint			ih_version;
 } xfs_ihash_t;
-#if defined(MP)
-#pragma set type attribute xfs_ihash align=128
-#endif
 
 /*
  * Inode hashing and hash bucket locking.

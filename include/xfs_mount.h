@@ -70,7 +70,7 @@ typedef struct xfs_trans_reservations {
 struct cred;
 struct vfs;
 struct vnode;
-struct xfs_args;
+struct xfs_mount_args;
 struct xfs_ihash;
 struct xfs_chash;
 struct xfs_inode;
@@ -117,32 +117,17 @@ typedef xfs_fsize_t	(*xfs_setsize_t)(void *, xfs_off_t);
 typedef xfs_fsize_t	(*xfs_lastbyte_t)(void *);
 
 typedef struct xfs_ioops {
-	xfs_dio_write_t		xfs_dio_write_func;
-	xfs_dio_read_t		xfs_dio_read_func;
-	xfs_strat_write_t	xfs_strat_write_func;
 	xfs_bmapi_t		xfs_bmapi_func;
 	xfs_bmap_eof_t		xfs_bmap_eof_func;
-	xfs_rsync_t		xfs_rsync_func;
-	xfs_lck_map_shared_t	xfs_lck_map_shared;
 	xfs_lock_t		xfs_ilock;
 	xfs_lock_demote_t	xfs_ilock_demote;
 	xfs_lock_nowait_t	xfs_ilock_nowait;
 	xfs_unlk_t		xfs_unlock;
 	xfs_chgtime_t		xfs_chgtime;
 	xfs_size_t		xfs_size_func;
-	xfs_setsize_t		xfs_setsize_func;
 	xfs_lastbyte_t		xfs_lastbyte;
 } xfs_ioops_t;
 
-
-#define XFS_DIO_WRITE(mp, diop) \
-	(*(mp)->m_io_ops.xfs_dio_write_func)(diop)
-
-#define XFS_DIO_READ(mp, diop) \
-	(*(mp)->m_io_ops.xfs_dio_read_func)(diop)
-
-#define XFS_STRAT_WRITE(mp, io, bp) \
-	(*(mp)->m_io_ops.xfs_strat_write_func)(io, bp)
 
 #define XFS_BMAPI(mp, trans,io,bno,len,f,first,tot,mval,nmap,flist)	\
 	(*(mp)->m_io_ops.xfs_bmapi_func) \
@@ -152,20 +137,8 @@ typedef struct xfs_ioops {
 	(*(mp)->m_io_ops.xfs_bmap_eof_func) \
 		((io)->io_obj, endoff, whichfork, eof)
 
-#define XFS_RSYNC(mp, io, ioflag, start, end) \
-	(*(mp)->m_io_ops.xfs_rsync_func)((io)->io_obj, ioflag, start, end)
-
-#define XFS_LCK_MAP_SHARED(mp, io) \
-	(*(mp)->m_io_ops.xfs_lck_map_shared)((io)->io_obj)
-
-#define XFS_UNLK_MAP_SHARED(mp, io, mode) \
-	(*(mp)->m_io_ops.xfs_unlock)((io)->io_obj, mode)
-
 #define XFS_ILOCK(mp, io, mode) \
 	(*(mp)->m_io_ops.xfs_ilock)((io)->io_obj, mode)
-
-#define XFS_ILOCK_NOWAIT(mp, io, mode) \
-	(*(mp)->m_io_ops.xfs_ilock_nowait)((io)->io_obj, mode)
 
 #define XFS_IUNLOCK(mp, io, mode) \
 	(*(mp)->m_io_ops.xfs_unlock)((io)->io_obj, mode)
@@ -173,14 +146,8 @@ typedef struct xfs_ioops {
 #define XFS_ILOCK_DEMOTE(mp, io, mode) \
 	(*(mp)->m_io_ops.xfs_ilock_demote)((io)->io_obj, mode)
 
-#define XFS_CHGTIME(mp, io, flags) \
-	(*(mp)->m_io_ops.xfs_chgtime)((io)->io_obj, flags)
-
 #define XFS_SIZE(mp, io) \
 	(*(mp)->m_io_ops.xfs_size_func)((io)->io_obj)
-
-#define XFS_SETSIZE(mp, io, newsize) \
-	(*(mp)->m_io_ops.xfs_setsize_func)((io)->io_obj, newsize)
 
 #define XFS_LASTBYTE(mp, io) \
 	(*(mp)->m_io_ops.xfs_lastbyte)((io)->io_obj)
@@ -369,7 +336,7 @@ typedef struct xfs_mount {
 #define XFS_WSYNC_READIO_LOG	15	/* 32K */
 #define XFS_WSYNC_WRITEIO_LOG	14	/* 16K */
 
-#define xfs_force_shutdown(m,f) _xfs_force_shutdown(m,f,__FILE__,__LINE__);
+#define xfs_force_shutdown(m,f)	VFS_FORCE_SHUTDOWN(XFS_MTOVFS(m),f)
 /*
  * Flags sent to xfs_force_shutdown.
  */
@@ -377,9 +344,7 @@ typedef struct xfs_mount {
 #define XFS_LOG_IO_ERROR	0x2
 #define XFS_FORCE_UMOUNT	0x4
 #define XFS_CORRUPT_INCORE	0x8	/* corrupt in-memory data structures */
-#if CELL_CAPABLE
-#define XFS_SHUTDOWN_REMOTE_REQ 0x10	/* shutdown req came from remote cell */
-#endif
+#define XFS_SHUTDOWN_REMOTE_REQ 0x10	/* shutdown came from remote cell */
 
 /*
  * xflags for xfs_syncsub
@@ -459,10 +424,10 @@ typedef struct xfs_mod_sb {
 void		xfs_mod_sb(xfs_trans_t *, __int64_t);
 xfs_mount_t	*xfs_mount_init(void);
 void		xfs_mount_free(xfs_mount_t *mp, int remove_bhv);
-int		xfs_mountfs(struct vfs *, xfs_mount_t *mp, kdev_t, int);
+int		xfs_mountfs(struct vfs *, xfs_mount_t *mp, dev_t, int);
 
-int		xfs_unmountfs(xfs_mount_t *, int, struct cred *);
-void		xfs_unmountfs_close(xfs_mount_t *, int, struct cred *);
+int		xfs_unmountfs(xfs_mount_t *, struct cred *);
+void		xfs_unmountfs_close(xfs_mount_t *, struct cred *);
 int		xfs_unmountfs_writesb(xfs_mount_t *);
 int		xfs_unmount_flush(xfs_mount_t *, int);
 int		xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int, int);
@@ -470,7 +435,7 @@ int		xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *, uint, int);
 int		xfs_readsb(xfs_mount_t *mp);
 struct xfs_buf	*xfs_getsb(xfs_mount_t *, int);
 void		xfs_freesb(xfs_mount_t *);
-void		_xfs_force_shutdown(struct xfs_mount *, int, char *, int);
+void		xfs_do_force_shutdown(bhv_desc_t *, int, char *, int);
 int		xfs_syncsub(xfs_mount_t *, int, int, int *);
 void		xfs_initialize_perag(xfs_mount_t *, int);
 void		xfs_xlatesb(void *, struct xfs_sb *, int, xfs_arch_t, __int64_t);

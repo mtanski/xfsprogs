@@ -803,7 +803,7 @@ xfs_rtmount_init(
 	sbp = &mp->m_sb;
 	if (sbp->sb_rblocks == 0)
 		return 0;
-	if (kdev_none(mp->m_rtdev)) {
+	if (mp->m_rtdev != 0) {
 		printk(KERN_WARNING
 		"XFS: This FS has an RT subvol - specify -o rtdev on mount\n");
 		return XFS_ERROR(ENODEV);

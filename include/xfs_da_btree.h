@@ -221,7 +221,7 @@ typedef struct xfs_dabuf {
 	inst_t		*ra;		/* return address of caller to make */
 	struct xfs_dabuf *next;		/* next in global chain */
 	struct xfs_dabuf *prev;		/* previous in global chain */
-	kdev_t		dev;		/* device for buffer */
+	dev_t		dev;		/* device for buffer */
 	xfs_daddr_t	blkno;		/* daddr first in bps[0] */
 #endif
 	struct xfs_buf	*bps[1];	/* actually nbuf of these */
