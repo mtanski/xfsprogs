@@ -525,6 +525,7 @@ process_bmbt_reclist_int(
 	int			i;
 	int			state;
 	int			flag;		/* extent flag */
+	int			pwe;		/* partially-written extent */
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -633,9 +634,16 @@ process_bmbt_reclist_int(
 			 */
 			for (b = s; b < s + c; b += mp->m_sb.sb_rextsize)  {
 				ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;
+				if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) &&
+				    flag && (b % mp->m_sb.sb_rextsize != 0)) {
+					pwe = 1;
+				} else {
+					pwe = 0;
+				}
 
 				if (check_dups == 1)  {
-					if (search_rt_dup_extent(mp, ext))  {
+					if (search_rt_dup_extent(mp, ext) &&
+					    !pwe)  {
 						do_warn(
 	_("data fork in rt ino %llu claims dup rt extent, off - %llu, "
 	  "start - %llu, count %llu\n"),
@@ -671,6 +679,8 @@ process_bmbt_reclist_int(
 	_("%s fork in rt inode %llu found metadata block %llu in %s bmap\n"),
 						forkname, ino, ext, ftype);
 				case XR_E_INUSE:
+					if (pwe)
+						break;
 				case XR_E_MULT:
 					set_rtbno_state(mp, ext, XR_E_MULT);
 					do_warn(
