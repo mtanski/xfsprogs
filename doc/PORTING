@@ -28,12 +28,12 @@
 	environment discovered by the configure script.
 
 5. read some or all of the GNU tool chain documentation
-   gmake Table Of Contents :
+   GNU make :
        http://www.delorie.com/gnu/docs/make/make_toc.html
-   gmake Quick Reference section :
-       http://www.delorie.com/gnu/docs/make/make_120.html
-   Autoconf :
+   autoconf :
     	http://www.delorie.com/gnu/docs/autoconf/autoconf_toc.html
+   libtool :
+    	http://www.delorie.com/gnu/docs/libtool/libtool_toc.html
    gcc/g++ :
     	http://www.delorie.com/gnu/docs/gcc/gcc_toc.html
 
