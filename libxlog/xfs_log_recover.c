@@ -39,15 +39,15 @@
  * necessarily be perfect.
  */
 int
-xlog_find_cycle_start(xlog_t	*log,
-		      xfs_buf_t *bp,
+xlog_find_cycle_start(xlog_t		*log,
+		      xfs_buf_t		*bp,
 		      xfs_daddr_t	first_blk,
 		      xfs_daddr_t	*last_blk,
-		      uint	cycle)
+		      uint		cycle)
 {
-	xfs_daddr_t mid_blk;
-	uint	mid_cycle;
-	int	error;
+	xfs_daddr_t	mid_blk;
+	uint		mid_cycle;
+	int		error;
 
 	mid_blk = BLK_AVG(first_blk, *last_blk);
 	while (mid_blk != first_blk && mid_blk != *last_blk) {
@@ -104,9 +104,10 @@ xlog_find_verify_cycle( xlog_t		*log,
 			return ENOMEM;
 	}
 
+	for (i = start_blk; i < start_blk + nbblks; i += bufblks) {
+		int	bcount;
 
-	for (i = start_blk; i < start_blk + nbblks; i += bufblks)  {
-		int bcount = min(bufblks, (start_blk + nbblks - i));
+		bcount = min(bufblks, (start_blk + nbblks - i));
 
 		if ((error = xlog_bread(log, i, bcount, bp)))
 			goto out;
@@ -170,11 +171,10 @@ xlog_find_verify_log_record(xlog_t	*log,
     } else {
 	if ((error = xlog_bread(log, start_blk, num_blks, bp)))
 	    goto out;
-	buf = XFS_BUF_PTR(bp) + (num_blks - 1) * BBSIZE;
+	buf = XFS_BUF_PTR(bp) + ((num_blks - 1) << BBSHIFT);
     }
 
-
-    for (i=(*last_blk)-1; i>=0; i--) {
+    for (i = (*last_blk) - 1; i >= 0; i--) {
 	if (i < start_blk) {
 	    /* legal log record not found */
 	    xlog_warn("XFS: Log inconsistent (didn't find previous header)");
@@ -219,7 +219,8 @@ xlog_find_verify_log_record(xlog_t	*log,
      * record do we update last_blk.
      */
     if (XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb)) {
-	int h_size = INT_GET(head->h_size, ARCH_CONVERT);
+	uint	h_size = INT_GET(head->h_size, ARCH_CONVERT);
+
 	xhdrs = h_size / XLOG_HEADER_CYCLE_SIZE;
 	if (h_size % XLOG_HEADER_CYCLE_SIZE)
 		xhdrs++;
@@ -512,10 +513,10 @@ bp_err:
  * available.
  */
 int
-xlog_find_tail(xlog_t  *log,
-	       xfs_daddr_t *head_blk,
-	       xfs_daddr_t *tail_blk,
-	       int readonly)
+xlog_find_tail(xlog_t		*log,
+	       xfs_daddr_t	*head_blk,
+	       xfs_daddr_t	*tail_blk,
+	       int		readonly)
 {
 	xlog_rec_header_t	*rhead;
 	xlog_op_header_t	*op_head;
@@ -721,7 +722,6 @@ xlog_find_zeroed(struct log	*log,
 	xfs_daddr_t	num_scan_bblks;
 	int		error, log_bbnum = log->l_logBBsize;
 
-	error = 0;
 	/* check totally zeroed log */
 	bp = xlog_get_bp(1,log->l_mp);
 	if (!bp)
