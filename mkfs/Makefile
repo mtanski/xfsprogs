@@ -55,7 +55,7 @@ default: $(MAXTRRES).h $(FSTYP) $(LTCOMMAND)
 
 include $(BUILDRULES)
 
-$(MAXTRRES):
+$(MAXTRRES): $(MAXTRRES).o
 	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(MAXTRLIBS)
 
 $(MAXTRRES).h: $(MAXTRRES)

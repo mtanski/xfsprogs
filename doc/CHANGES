@@ -1,3 +1,8 @@
+xfsprogs-1.3.5 (13 August 2001)
+	- fix bug in xfs_db bit handling on big endian platforms
+	- fix mkfs bug related to too-small final allocation group
+	- fix signedness bug in DMAPI ioctl structure definition
+
 xfsprogs-1.3.4 (04 August 2001)
 	- fix endian bug in xfs_db "frag" command
 	- small configure script changes to allow cross compilation

@@ -1382,15 +1382,33 @@ main(int argc, char **argv)
 		agsize = XFS_AG_MAX_BLOCKS(blocklog);
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
 	}
+
+	/*
+	 * if user set the AG size, and if the last AG is too small,
+	 * reduce the filesystem size and drop the blocks.
+	 */
+	if (!daflag &&
+	    (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
+		dblocks -= dblocks % agsize;
+	}
+
 	/*
 	 * If agcount was not specified, and agsize is larger than
 	 * we'd like, make it the size we want.
 	 */
 	if (!daflag && !dasize &&
-	    (agsize > XFS_AG_BEST_BLOCKS(blocklog, dblocks))) {
-		agsize = XFS_AG_BEST_BLOCKS(blocklog, dblocks);
+	    (agsize > XFS_AG_BEST_BLOCKS(blocklog,dblocks))) {
+		agsize = XFS_AG_BEST_BLOCKS(blocklog,dblocks);
+		/*
+		 * If the last AG is too small, reduce the filesystem size
+		 * and drop the blocks.
+		 */
+		if (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+			dblocks -= dblocks % agsize;
+		}
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
 	}
+
 	/*
 	 * If agcount is too large, make it smaller.
 	 */
