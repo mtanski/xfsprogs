@@ -137,11 +137,11 @@ explore_mtab(char *mtab, char *mntpoint)
 	rtend = logend = NULL;
 	fname = mnt->mnt_dir;
 	datadev = mnt->mnt_fsname;
-	if (logdev = hasmntopt(mnt, "logdev=")) {
+	if ((logdev = hasmntopt(mnt, "logdev="))) {
 		logdev += 7;
 		logend = strtok(logdev, " ");
 	}
-	if (rtdev = hasmntopt(mnt, "rtdev=")) {
+	if ((rtdev = hasmntopt(mnt, "rtdev="))) {
 		rtdev += 6;
 		rtend = strtok(rtdev, " ");
 	}

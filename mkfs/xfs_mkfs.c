@@ -1078,7 +1078,7 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	if (dsunit && !dswidth || !dsunit && dswidth) {
+	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
 		fprintf(stderr,
 "both sunit and swidth options have to be specified\n");
 		usage();
@@ -1479,16 +1479,17 @@ main(int argc, char **argv)
 			 * Make sure that the log size is a multiple of the
 			 * stripe unit
 			 */
-			if ((logblocks % dsunit) != 0) 
-			   if (!lsflag) 
+			if ((logblocks % dsunit) != 0) {
+			    if (!lsflag) 
 				logblocks = ((logblocks + (dsunit - 1))
 							/dsunit) * dsunit;
-			   else {
+			    else {
 				fprintf(stderr,
 	"internal log size %lld is not a multiple of the stripe unit %d\n", 
 					(long long)logblocks, dsunit);
 				usage();
-			   }
+			    }
+			}
 
 			if (logblocks > agsize-XFS_FSB_TO_AGBNO(mp,logstart)) {
 				fprintf(stderr,
@@ -1795,7 +1796,7 @@ main(int argc, char **argv)
 		args.alignment = 1;
 		args.minalignslop = UINT_MAX;
 		args.pag = &mp->m_perag[agno];
-		if (i = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0))
+		if ((i = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
 			res_failed(i);
 		libxfs_alloc_fix_freelist(&args, 0);
 		libxfs_trans_commit(tp, 0, NULL);

@@ -344,7 +344,7 @@ mk_rbmino(xfs_mount_t *mp)
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
 
-	if (i = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0))
+	if ((i = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(i);
 
 	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
@@ -384,8 +384,8 @@ mk_rbmino(xfs_mount_t *mp)
 	 * from mkfs)
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
-	if (error = libxfs_trans_reserve(tp, mp->m_sb.sb_rbmblocks +
-			(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0, 0, 0, 0))
+	if ((error = libxfs_trans_reserve(tp, mp->m_sb.sb_rbmblocks +
+			(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0, 0, 0, 0)))
 		res_failed(error);
 
 	libxfs_trans_ijoin(tp, ip, 0);
@@ -435,7 +435,7 @@ fill_rbmino(xfs_mount_t *mp)
 
 	tp = libxfs_trans_alloc(mp, 0);
 
-	if (error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0))
+	if ((error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(error);
 
 	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
@@ -504,7 +504,7 @@ fill_rsumino(xfs_mount_t *mp)
 
 	tp = libxfs_trans_alloc(mp, 0);
 
-	if (error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0))
+	if ((error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(error);
 
 	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
@@ -574,8 +574,8 @@ mk_rsumino(xfs_mount_t *mp)
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
 
-	if (i = libxfs_trans_reserve(tp, 10, XFS_ICHANGE_LOG_RES(mp), 0,
-				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT))
+	if ((i = libxfs_trans_reserve(tp, 10, XFS_ICHANGE_LOG_RES(mp), 0,
+				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT)))
 		res_failed(i);
 
 	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
@@ -618,11 +618,11 @@ mk_rsumino(xfs_mount_t *mp)
 	XFS_BMAP_INIT(&flist, &first);
 
 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
-	if (error = libxfs_trans_reserve(tp,
+	if ((error = libxfs_trans_reserve(tp,
 				  mp->m_sb.sb_rbmblocks +
 				      (XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1),
 				  BBTOB(128), 0, XFS_TRANS_PERM_LOG_RES,
-				  XFS_DEFAULT_PERM_LOG_COUNT))
+				  XFS_DEFAULT_PERM_LOG_COUNT)))
 		res_failed(error);
 
 	libxfs_trans_ijoin(tp, ip, 0);
@@ -671,8 +671,8 @@ mk_root_dir(xfs_mount_t *mp)
 	tp = libxfs_trans_alloc(mp, 0);
 	ip = NULL;
 
-	if (i = libxfs_trans_reserve(tp, 10, XFS_ICHANGE_LOG_RES(mp), 0,
-				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT))
+	if ((i = libxfs_trans_reserve(tp, 10, XFS_ICHANGE_LOG_RES(mp), 0,
+				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT)))
 		res_failed(i);
 
 	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rootino, 0, &ip);
@@ -736,15 +736,15 @@ mk_orphanage(xfs_mount_t *mp)
 	XFS_BMAP_INIT(&flist, &first);
 
 	nres = XFS_MKDIR_SPACE_RES(mp, strlen(ORPHANAGE));
-	if (i = libxfs_trans_reserve(tp, nres, XFS_MKDIR_LOG_RES(mp), 0,
-				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT))
+	if ((i = libxfs_trans_reserve(tp, nres, XFS_MKDIR_LOG_RES(mp), 0,
+				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT)))
 		res_failed(i);
 
 	/*
 	 * use iget/ijoin instead of trans_iget because the ialloc
 	 * wrapper can commit the transaction and start a new one
 	 */
-	if (i = libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0))
+	if ((i = libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
 		do_error("%d - couldn't iget root inode to make %s\n",
 			i, ORPHANAGE);
 
@@ -769,8 +769,8 @@ mk_orphanage(xfs_mount_t *mp)
 	/*
 	 * create the actual entry
 	 */
-	if (error = dir_createname(mp, tp, pip, ORPHANAGE,
-			strlen(ORPHANAGE), ip->i_ino, &first, &flist, nres)) {
+	if ((error = dir_createname(mp, tp, pip, ORPHANAGE,
+			strlen(ORPHANAGE), ip->i_ino, &first, &flist, nres))) {
 		do_warn("can't make %s, createname error %d, will try later\n",
 			ORPHANAGE, error);
 		orphanage_entered = 0;
@@ -825,25 +825,25 @@ mv_orphanage(xfs_mount_t	*mp,
 
 	sprintf(fname, "%llu", (unsigned long long)ino);
 
-	if (err = libxfs_iget(mp, NULL, dir_ino, 0, &dir_ino_p, 0))
+	if ((err = libxfs_iget(mp, NULL, dir_ino, 0, &dir_ino_p, 0)))
 		do_error("%d - couldn't iget orphanage inode\n", err);
 
 	tp = libxfs_trans_alloc(mp, 0);
 
-	if (err = libxfs_iget(mp, NULL, ino, 0, &ino_p, 0))
+	if ((err = libxfs_iget(mp, NULL, ino, 0, &ino_p, 0)))
 		do_error("%d - couldn't iget disconnected inode\n", err);
 
 	if (isa_dir)  {
 		nres = XFS_DIRENTER_SPACE_RES(mp, strlen(fname)) +
 		       XFS_DIRENTER_SPACE_RES(mp, 2);
-		if (err = dir_lookup(mp, tp, ino_p, "..", 2,
-				&entry_ino_num))  {
+		if ((err = dir_lookup(mp, tp, ino_p, "..", 2,
+				&entry_ino_num))) {
 			ASSERT(err == ENOENT);
 
-			if (err = libxfs_trans_reserve(tp, nres,
+			if ((err = libxfs_trans_reserve(tp, nres,
 					XFS_RENAME_LOG_RES(mp), 0,
 					XFS_TRANS_PERM_LOG_RES,
-					XFS_RENAME_LOG_COUNT))
+					XFS_RENAME_LOG_COUNT)))
 				do_error(
 		"space reservation failed (%d), filesystem may be out of space\n",
 					err);
@@ -852,9 +852,9 @@ mv_orphanage(xfs_mount_t	*mp,
 			libxfs_trans_ijoin(tp, ino_p, 0);
 
 			XFS_BMAP_INIT(&flist, &first);
-			if (err = dir_createname(mp, tp, dir_ino_p, fname,
+			if ((err = dir_createname(mp, tp, dir_ino_p, fname,
 						strlen(fname), ino, &first,
-						&flist, nres))
+						&flist, nres)))
 				do_error(
 	"name create failed in %s (%d), filesystem may be out of space\n",
 					ORPHANAGE, err);
@@ -862,8 +862,8 @@ mv_orphanage(xfs_mount_t	*mp,
 			dir_ino_p->i_d.di_nlink++;
 			libxfs_trans_log_inode(tp, dir_ino_p, XFS_ILOG_CORE);
 
-			if (err = dir_createname(mp, tp, ino_p, "..", 2,
-						dir_ino, &first, &flist, nres))
+			if ((err = dir_createname(mp, tp, ino_p, "..", 2,
+						dir_ino, &first, &flist, nres)))
 				do_error(
 	"creation of .. entry failed (%d), filesystem may be out of space\n",
 					err);
@@ -871,7 +871,7 @@ mv_orphanage(xfs_mount_t	*mp,
 			ino_p->i_d.di_nlink++;
 			libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
 
-			if (err = libxfs_bmap_finish(&tp, &flist, first, &committed))
+			if ((err = libxfs_bmap_finish(&tp, &flist, first, &committed)))
 				do_error(
 	"bmap finish failed (err - %d), filesystem may be out of space\n",
 					err);
@@ -879,10 +879,10 @@ mv_orphanage(xfs_mount_t	*mp,
 			libxfs_trans_commit(tp,
 				XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
 		} else  {
-			if (err = libxfs_trans_reserve(tp, nres,
+			if ((err = libxfs_trans_reserve(tp, nres,
 					XFS_RENAME_LOG_RES(mp), 0,
 					XFS_TRANS_PERM_LOG_RES,
-					XFS_RENAME_LOG_COUNT))
+					XFS_RENAME_LOG_COUNT)))
 				do_error(
 	"space reservation failed (%d), filesystem may be out of space\n",
 					err);
@@ -892,9 +892,9 @@ mv_orphanage(xfs_mount_t	*mp,
 
 			XFS_BMAP_INIT(&flist, &first);
 
-			if (err = dir_createname(mp, tp, dir_ino_p, fname,
+			if ((err = dir_createname(mp, tp, dir_ino_p, fname,
 						strlen(fname), ino, &first,
-						&flist, nres))
+						&flist, nres)))
 				do_error(
 	"name create failed in %s (%d), filesystem may be out of space\n",
 					ORPHANAGE, err);
@@ -907,16 +907,16 @@ mv_orphanage(xfs_mount_t	*mp,
 			 * to us.  that'll pop a libxfs/kernel ASSERT.
 			 */
 			if (entry_ino_num != dir_ino)  {
-				if (err = dir_replace(mp, tp, ino_p, "..",
+				if ((err = dir_replace(mp, tp, ino_p, "..",
 							2, dir_ino, &first,
-							&flist, nres))
+							&flist, nres)))
 					do_error(
 		"name replace op failed (%d), filesystem may be out of space\n",
 						err);
 			}
 
-			if (err = libxfs_bmap_finish(&tp, &flist, first,
-							&committed))
+			if ((err = libxfs_bmap_finish(&tp, &flist, first,
+							&committed)))
 				do_error(
 		"bmap finish failed (%d), filesystem may be out of space\n",
 					err);
@@ -932,8 +932,8 @@ mv_orphanage(xfs_mount_t	*mp,
 		 * also accounted for in the create
 		 */
 		nres = XFS_DIRENTER_SPACE_RES(mp, strlen(fname));
-		if (err = libxfs_trans_reserve(tp, nres, XFS_REMOVE_LOG_RES(mp), 0,
-				XFS_TRANS_PERM_LOG_RES, XFS_REMOVE_LOG_COUNT))
+		if ((err = libxfs_trans_reserve(tp, nres, XFS_REMOVE_LOG_RES(mp), 0,
+				XFS_TRANS_PERM_LOG_RES, XFS_REMOVE_LOG_COUNT)))
 			do_error(
 	"space reservation failed (%d), filesystem may be out of space\n",
 				err);
@@ -942,8 +942,8 @@ mv_orphanage(xfs_mount_t	*mp,
 		libxfs_trans_ijoin(tp, ino_p, 0);
 
 		XFS_BMAP_INIT(&flist, &first);
-		if (err = dir_createname(mp, tp, dir_ino_p, fname,
-				strlen(fname), ino, &first, &flist, nres))
+		if ((err = dir_createname(mp, tp, dir_ino_p, fname,
+				strlen(fname), ino, &first, &flist, nres)))
 			do_error(
 	"name create failed in %s (%d), filesystem may be out of space\n",
 				ORPHANAGE, err);
@@ -952,7 +952,7 @@ mv_orphanage(xfs_mount_t	*mp,
 		ino_p->i_d.di_nlink = 1;
 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
 
-		if (err = libxfs_bmap_finish(&tp, &flist, first, &committed))
+		if ((err = libxfs_bmap_finish(&tp, &flist, first, &committed)))
 			do_error(
 		"bmap finish failed (%d), filesystem may be out of space\n",
 				err);
@@ -1589,7 +1589,7 @@ longform_dir_entry_check(xfs_mount_t	*mp,
 						num_illegal, need_dot, stack,
 						irec, ino_offset);
 
-		ASSERT(dirty == 0 || dirty && !no_modify);
+		ASSERT(dirty == 0 || (dirty && !no_modify));
 
 		if (dirty && !no_modify)
 			libxfs_writebuf(bp, 0);
@@ -2774,8 +2774,8 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 		 * with bogus inode numbers if we're in no modify mode.
 		 */
 
-		if (lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0
-				|| no_modify && verify_inum(mp, lino))  {
+		if ((lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
+				|| (no_modify && verify_inum(mp, lino))) {
 			next_sfe = (xfs_dir_sf_entry_t *)
 				((__psint_t) sf_entry +
 				XFS_DIR_SF_ENTSIZE_BYENTRY(sf_entry));
@@ -3155,8 +3155,8 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		 * with bogus inode numbers if we're in no modify mode.
 		 */
 
-		if (lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0
-				|| no_modify && verify_inum(mp, lino))  {
+		if ((lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
+				|| (no_modify && verify_inum(mp, lino))) {
 			next_sfep = (xfs_dir2_sf_entry_t *)
 				((__psint_t) sfep +
 				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep));
@@ -3374,7 +3374,7 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 
 		ASSERT(!is_inode_refchecked(ino, irec, ino_offset));
 
-		if (error = libxfs_iget(mp, NULL, ino, 0, &ip, 0))  {
+		if ((error = libxfs_iget(mp, NULL, ino, 0, &ip, 0))) {
 			if (!no_modify)
 				do_error("couldn't map inode %llu, err = %d\n",
 					ino, error);
@@ -3483,7 +3483,7 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 							stack, irec,
 							ino_offset);
 
-			ASSERT(dirty == 0 || dirty && !no_modify);
+			ASSERT(dirty == 0 || (dirty && !no_modify));
 			if (dirty)  {
 				libxfs_trans_log_inode(tp, ip,
 					XFS_ILOG_CORE | XFS_ILOG_DDATA);
@@ -3514,10 +3514,10 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 			libxfs_trans_ijoin(tp, ip, 0);
 			libxfs_trans_ihold(tp, ip);
 			XFS_BMAP_INIT(&flist, &first);
-			if (error = dir_createname(mp, tp, ip, ORPHANAGE,
+			if ((error = dir_createname(mp, tp, ip, ORPHANAGE,
 						strlen(ORPHANAGE),
 						orphanage_ino, &first, &flist,
-						nres))
+						nres)))
 				do_error("can't make %s entry in root inode "
 					 "%llu, createname error %d\n",
 					ORPHANAGE, ino, error);
@@ -3563,8 +3563,8 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 
 			XFS_BMAP_INIT(&flist, &first);
 
-			if (error = dir_createname(mp, tp, ip, "..", 2,
-					ip->i_ino, &first, &flist, nres))
+			if ((error = dir_createname(mp, tp, ip, "..", 2,
+					ip->i_ino, &first, &flist, nres)))
 				do_error(
 "can't make \"..\" entry in root inode %llu, createname error %d\n",
 					ino, error);
@@ -3686,9 +3686,9 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 
 				XFS_BMAP_INIT(&flist, &first);
 
-				if (error = dir_createname(mp, tp, ip, ".",
+				if ((error = dir_createname(mp, tp, ip, ".",
 						1, ip->i_ino, &first, &flist,
-						nres))
+						nres)))
 					do_error(
 	"can't make \".\" entry in dir ino %llu, createname error %d\n",
 						ino, error);

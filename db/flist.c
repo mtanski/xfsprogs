@@ -402,7 +402,7 @@ flist_split(
 		} else if (strchr(numchars, *s)) {
 			l = (int)strspn(s, xnumchars);
 			t = TT_NUM;
-		} else if (a = strchr(punctchars, *s)) {
+		} else if ((a = strchr(punctchars, *s))) {
 			l = 1;
 			t = puncttypes[a - punctchars];
 		} else {

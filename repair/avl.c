@@ -548,7 +548,7 @@ attach:
 	 *	      /
 	 *	     ?1
 	 */
-	while (back = forw->avl_forw)
+	while ((back = forw->avl_forw))
 		forw = back;
 
 	/*

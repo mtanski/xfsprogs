@@ -1044,7 +1044,7 @@ void xfs_log_print(xlog_t       *log,
      * are printing the entire log.  However, if the start block is given,
      * we still end at the end of the logical log.
      */
-    if (error = xlog_print_find_oldest(log, &block_end)) {
+    if ((error = xlog_print_find_oldest(log, &block_end))) {
 	    fprintf(stderr, "%s: problem finding oldest LR\n", progname);
 	    return;
     }

@@ -64,7 +64,7 @@ dir_stack_init(dir_stack_t *stack)
 static void
 dir_stack_push(dir_stack_t *stack, dir_stack_elem_t *elem)
 {
-	ASSERT(stack->cnt > 0 || stack->cnt == 0 && stack->head == NULL);
+	ASSERT(stack->cnt > 0 || (stack->cnt == 0 && stack->head == NULL));
 
 	elem->next = stack->head;
 	stack->head = elem;

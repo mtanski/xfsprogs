@@ -149,7 +149,7 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 	if (err)
 		do_warn("error following ag %d unlinked list\n", agno);
 
-	ASSERT(agi_dirty == 0 || agi_dirty && !no_modify);
+	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
 
 	if (agi_dirty && !no_modify)
 		libxfs_writebuf(bp, 0);

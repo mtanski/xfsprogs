@@ -169,7 +169,7 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 
 				if (!use_rbuf)  {
 					ASSERT(ino_dirty == 0 ||
-						ino_dirty && !no_modify);
+						(ino_dirty && !no_modify));
 
 					if (ino_dirty && !no_modify)
 						libxfs_writebuf(bp, 0);
@@ -261,7 +261,7 @@ longform_delete_orphanage(xfs_mount_t	*mp,
 		res += lf_block_delete_orphanage(mp, ino, leaf, &dirty,
 					rootino_bp, rbuf_dirty);
 
-		ASSERT(dirty == 0 || dirty && !no_modify);
+		ASSERT(dirty == 0 || (dirty && !no_modify));
 
 		if (dirty && !no_modify)
 			libxfs_writebuf(bp, 0);
@@ -411,7 +411,7 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 
 				dirty = clear_dinode(mp, dino, lino);
 
-				ASSERT(dirty == 0 || dirty && !no_modify);
+				ASSERT(dirty == 0 || (dirty && !no_modify));
 
 				/*
 				 * if we read the lost+found inode in to
@@ -628,7 +628,7 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 
 				if (!use_rbuf) {
 					ASSERT(ino_dirty == 0 ||
-						ino_dirty && !no_modify);
+						(ino_dirty && !no_modify));
 
 					if (ino_dirty && !no_modify)
 						libxfs_writebuf(bp, 0);
@@ -740,7 +740,7 @@ longform2_delete_orphanage(xfs_mount_t	*mp,
 		res += lf2_block_delete_orphanage(mp, ino, data, &dirty,
 					rootino_bp, rbuf_dirty);
 
-		ASSERT(dirty == 0 || dirty && !no_modify);
+		ASSERT(dirty == 0 || (dirty && !no_modify));
 
 		if (dirty && !no_modify)
 			da_bwrite(mp, bp);
@@ -888,7 +888,7 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 
 				dirty = clear_dinode(mp, dino, lino);
 
-				ASSERT(dirty == 0 || dirty && !no_modify);
+				ASSERT(dirty == 0 || (dirty && !no_modify));
 
 				/*
 				 * if we read the lost+found inode in to
@@ -1019,7 +1019,7 @@ delete_orphanage(xfs_mount_t *mp)
 		else
 			res = shortform_delete_orphanage(mp, ino, dino, dbp,
 				&dirty);
-		ASSERT(res == 0 && dirty == 0 || res == 1 && dirty == 1);
+		ASSERT((res == 0 && dirty == 0) || (res == 1 && dirty == 1));
 		break;
 	default:
 		break;

@@ -503,7 +503,7 @@ verify_final_dir2_path(xfs_mount_t	*mp,
 	 * release/write buffer
 	 */
 	ASSERT(cursor->level[this_level].dirty == 0 ||
-		cursor->level[this_level].dirty && !no_modify);
+		(cursor->level[this_level].dirty && !no_modify));
 
 	if (cursor->level[this_level].dirty && !no_modify)
 		da_bwrite(mp, cursor->level[this_level].bp);
@@ -677,7 +677,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 		 * required.  don't write out the descendant level
 		 */
 		ASSERT(cursor->level[this_level].dirty == 0 ||
-			cursor->level[this_level].dirty && !no_modify);
+			(cursor->level[this_level].dirty && !no_modify));
 
 		if (cursor->level[this_level].dirty && !no_modify)
 			da_bwrite(mp, cursor->level[this_level].bp);
@@ -1832,7 +1832,7 @@ process_leaf_level_dir2(
 			}
 		}
 		current_hashval = greatest_hashval;
-		ASSERT(buf_dirty == 0 || buf_dirty && !no_modify);
+		ASSERT(buf_dirty == 0 || (buf_dirty && !no_modify));
 		if (buf_dirty && !no_modify) {
 			*repair = 1;
 			da_bwrite(mp, bp);
@@ -2062,9 +2062,9 @@ process_dir2(
 		need_root_dotdot = 1;
 	}
 	
-	ASSERT(ino != mp->m_sb.sb_rootino && ino != *parent ||
-		ino == mp->m_sb.sb_rootino &&
-			(ino == *parent || need_root_dotdot == 1));
+	ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
+		(ino == mp->m_sb.sb_rootino &&
+			(ino == *parent || need_root_dotdot == 1)));
 
 	return res;
 }

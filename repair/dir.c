@@ -1121,7 +1121,7 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 * release/write buffer
 	 */
 	ASSERT(cursor->level[this_level].dirty == 0 ||
-		cursor->level[this_level].dirty && !no_modify);
+		(cursor->level[this_level].dirty && !no_modify));
 
 	if (cursor->level[this_level].dirty && !no_modify)
 		libxfs_writebuf(cursor->level[this_level].bp, 0);
@@ -1301,7 +1301,7 @@ verify_da_path(xfs_mount_t	*mp,
 		 * required.  don't write out the descendant level
 		 */
 		ASSERT(cursor->level[this_level].dirty == 0 ||
-			cursor->level[this_level].dirty && !no_modify);
+			(cursor->level[this_level].dirty && !no_modify));
 
 		if (cursor->level[this_level].dirty && !no_modify)
 			libxfs_writebuf(cursor->level[this_level].bp, 0);
@@ -2356,7 +2356,7 @@ process_leaf_dir_block(
 	 * pointing to used bytes.  we're being conservative here
 	 * since the block will get compacted anyhow by the kernel.
 	 */
-	if (leaf->hdr.holes == 0 && first_used != INT_GET(leaf->hdr.firstused, ARCH_CONVERT) ||
+	if ((leaf->hdr.holes == 0 && first_used != INT_GET(leaf->hdr.firstused, ARCH_CONVERT)) ||
 			INT_GET(leaf->hdr.firstused, ARCH_CONVERT) > first_used)  {
 		if (!no_modify)  {
 			if (verbose)
@@ -2709,7 +2709,7 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 
 		current_hashval = greatest_hashval;
 
-		ASSERT(buf_dirty == 0 || buf_dirty && !no_modify);
+		ASSERT(buf_dirty == 0 || (buf_dirty && !no_modify));
 
 		if (buf_dirty && !no_modify)  {
 			*repair = 1;
@@ -2925,7 +2925,7 @@ process_leaf_dir(
 		 * XXX - later, we should try and just lose
 		 * the block without losing the entire directory
 		 */
-		ASSERT(*dotdot == 0 || *dotdot == 1 && *parent != NULLFSINO);
+		ASSERT(*dotdot == 0 || (*dotdot == 1 && *parent != NULLFSINO));
 		libxfs_putbuf(bp);
 		return(1);
 	}
@@ -2947,7 +2947,7 @@ process_leaf_dir(
 		}
 	}
 
-	ASSERT(buf_dirty == 0 || buf_dirty && !no_modify);
+	ASSERT(buf_dirty == 0 || (buf_dirty && !no_modify));
 
 	if (buf_dirty && !no_modify)
 		libxfs_writebuf(bp, 0);

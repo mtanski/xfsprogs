@@ -1855,7 +1855,7 @@ ncheck_f(
 	if (ilist) {
 		for (ilp = ilist; ilp < &ilist[ilist_size]; ilp++) {
 			ino = *ilp;
-			if (p = inode_name(ino, &hp)) {
+			if ((p = inode_name(ino, &hp))) {
 				dbprintf("%11llu %s", ino, p);
 				if (hp->isdir)
 					dbprintf("/.");
@@ -4114,7 +4114,7 @@ scanfunc_bmap(
 	(*toti)++;
 	if (level == 0) {
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[0] ||
-		    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[0])  {
+		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[0])) {
 			if (!sflag || id->ilist || CHECK_BLIST(bno))
 				dbprintf("bad btree nrecs (%u, min=%u, max=%u) "
 					 "in inode %lld bmap block %lld\n",
@@ -4133,7 +4133,7 @@ scanfunc_bmap(
 		return;
 	}
 	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[1] ||
-	    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[1])  {
+	    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[1])) {
 		if (!sflag || id->ilist || CHECK_BLIST(bno))
 			dbprintf("bad btree nrecs (%u, min=%u, max=%u) in "
 				 "inode %lld bmap block %lld\n",
@@ -4180,7 +4180,7 @@ scanfunc_bno(
 	set_dbmap(seqno, bno, 1, DBM_BTBNO, seqno, bno);
 	if (level == 0) {
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[0] ||
-		    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[0]) {
+		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[0])) {
 			dbprintf("bad btree nrecs (%u, min=%u, max=%u) in "
 				 "btbno block %u/%u\n",
 				INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_alloc_mnr[0],
@@ -4198,7 +4198,7 @@ scanfunc_bno(
 		return;
 	}
 	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[1] ||
-	    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1]) {
+	    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1])) {
 		dbprintf("bad btree nrecs (%u, min=%u, max=%u) in btbno block "
 			 "%u/%u\n",
 			INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_alloc_mnr[1],
@@ -4243,7 +4243,7 @@ scanfunc_cnt(
 	set_dbmap(seqno, bno, 1, DBM_BTCNT, seqno, bno);
 	if (level == 0) {
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[0] ||
-		    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[0])  {
+		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[0])) {
 			dbprintf("bad btree nrecs (%u, min=%u, max=%u) in "
 				 "btbno block %u/%u\n",
 				INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_alloc_mnr[0],
@@ -4265,7 +4265,7 @@ scanfunc_cnt(
 		return;
 	}
 	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[1] ||
-	    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1])  {
+	    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1])) {
 		dbprintf("bad btree nrecs (%u, min=%u, max=%u) in btbno block "
 			 "%u/%u\n",
 			INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_alloc_mnr[1],
@@ -4314,7 +4314,7 @@ scanfunc_ino(
 	set_dbmap(seqno, bno, 1, DBM_BTINO, seqno, bno);
 	if (level == 0) {
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_inobt_mxr[0] ||
-		    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_inobt_mnr[0]) {
+		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_inobt_mnr[0])) {
 			dbprintf("bad btree nrecs (%u, min=%u, max=%u) in "
 				 "inobt block %u/%u\n",
 				INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_inobt_mnr[0],
@@ -4359,7 +4359,7 @@ scanfunc_ino(
 				continue;
 			}
 			for (j = 0, nfree = 0; j < XFS_INODES_PER_CHUNK; j++) {
-				if (isfree = XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT))
+				if ((isfree = XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT)))
 					nfree++;
 				process_inode(agf, agino + j,
 					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)),
@@ -4379,7 +4379,7 @@ scanfunc_ino(
 		return;
 	}
 	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_inobt_mxr[1] ||
-	    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_inobt_mnr[1]) {
+	    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_inobt_mnr[1])) {
 		dbprintf("bad btree nrecs (%u, min=%u, max=%u) in inobt block "
 			 "%u/%u\n",
 			INT_GET(block->bb_numrecs, ARCH_CONVERT), mp->m_inobt_mnr[1],

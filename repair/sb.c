@@ -386,8 +386,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 		 * return errors if shared vn or alignment fields
 		 * are set without their feature bits being set
 		 */
-		if (!pre_65_beta && sb->sb_versionnum & XR_PART_SECSB_VNMASK ||
-		    pre_65_beta && sb->sb_versionnum & XR_ALPHA_SECSB_VNMASK)  {
+		if ((!pre_65_beta && (sb->sb_versionnum & XR_PART_SECSB_VNMASK)) ||
+		    (pre_65_beta && (sb->sb_versionnum & XR_ALPHA_SECSB_VNMASK))) {
 			/*
 			 * shared version # and inode alignment fields
 			 * should be valid
@@ -625,12 +625,12 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 	/*
 	 * inode alignment field lives before the data alignment field
 	 */
-	if (!pre_65_beta && sbp->sb_versionnum & XR_PART_SECSB_VNMASK ||
-	    pre_65_beta && sbp->sb_versionnum & XR_ALPHA_SECSB_VNMASK)
+	if ((!pre_65_beta && (sbp->sb_versionnum & XR_PART_SECSB_VNMASK)) ||
+	    (pre_65_beta && (sbp->sb_versionnum & XR_ALPHA_SECSB_VNMASK)))
 		geo->sb_inoalignmt = sbp->sb_inoalignmt;
 
-	if (!pre_65_beta && sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK ||
-	    pre_65_beta && XFS_SB_VERSION_HASDALIGN(sbp))  {
+	if ((!pre_65_beta && (sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK)) ||
+	    (pre_65_beta && XFS_SB_VERSION_HASDALIGN(sbp))) {
 		geo->sb_unit = sbp->sb_unit;
 		geo->sb_width = sbp->sb_width;
 	}
@@ -649,8 +649,8 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 	 * from the features enabled in this superblock whether
 	 * or not the sector was bzero'd at mkfs time.
 	 */
-	if (!pre_65_beta && sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK ||
-	    pre_65_beta && sbp->sb_versionnum & XR_ALPHA_SECSB_VNMASK)  {
+	if ((!pre_65_beta && (sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK)) ||
+	    (pre_65_beta && (sbp->sb_versionnum & XR_ALPHA_SECSB_VNMASK))) {
 		geo->sb_fully_zeroed = 1;
 	}
 }

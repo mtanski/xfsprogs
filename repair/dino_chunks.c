@@ -637,10 +637,10 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 			 * chunk that they're in
 			 */
 			if (verify_dinode(mp, dino, agno, agino) == 0 ||
-					agno == 0 &&
+					(agno == 0 &&
 					(mp->m_sb.sb_rootino == agino ||
 					 mp->m_sb.sb_rsumino == agino ||
-					 mp->m_sb.sb_rbmino == agino))
+					 mp->m_sb.sb_rbmino == agino)))
 				status++;
 
 			irec_offset++;

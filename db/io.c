@@ -586,7 +586,7 @@ set_cur(
 	iocur_top->ino = ino;
 	iocur_top->dirino = dirino;
 	iocur_top->mode = mode;
-	if (iocur_top->use_bbmap = (bbmap != NULL))
+	if ((iocur_top->use_bbmap = (bbmap != NULL)))
 		iocur_top->bbmap = *bbmap;
 
 	/* store location in ring */

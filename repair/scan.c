@@ -132,7 +132,7 @@ scan_lbtree(
 			type, whichfork, root, ino, tot, nex, blkmapp,
 			bm_cursor, isroot, check_dups, &dirty);
 
-	ASSERT(dirty == 0 || dirty && !no_modify);
+	ASSERT(dirty == 0 || (dirty && !no_modify));
 
 	if (dirty && !no_modify)
 		libxfs_writebuf(bp, 0);
@@ -315,7 +315,7 @@ scanfunc_bmap(
 	(*tot)++;
 	if (level == 0) {
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[0] ||
-		    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[0])  {
+		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[0])) {
 do_warn("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n",
 				ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
 				mp->m_bmap_dmnr[0], mp->m_bmap_dmxr[0]);
@@ -366,7 +366,7 @@ do_warn("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n",
 						type, ino, tot, whichfork));
 	}
 	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[1] ||
-	    isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[1])  {
+	    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[1])) {
 do_warn("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n",
 			ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
 			mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
@@ -1253,21 +1253,21 @@ scan_ag(
 		do_warn("bad agbno %u for inobt root, agno %d\n",
 			INT_GET(agi->agi_root, ARCH_CONVERT), agno);
 
-	ASSERT(agi_dirty == 0 || agi_dirty && !no_modify);
+	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
 
 	if (agi_dirty && !no_modify)
 		libxfs_writebuf(agibuf, 0);
 	else
 		libxfs_putbuf(agibuf);
 
-	ASSERT(agf_dirty == 0 || agf_dirty && !no_modify);
+	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
 
 	if (agf_dirty && !no_modify)
 		libxfs_writebuf(agfbuf, 0);
 	else
 		libxfs_putbuf(agfbuf);
 
-	ASSERT(sb_dirty == 0 || sb_dirty && !no_modify);
+	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
 
 	if (sb_dirty && !no_modify) {
 		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, ARCH_CONVERT,
