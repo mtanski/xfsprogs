@@ -1,3 +1,5 @@
+xfsprogs-1.1.5 (12 March 2001)
+	- Upgraded LVM support to 0.9beta2 (IOP 10)
 
 xfsprogs-1.1.4 (10 March 2001)
 	- kernel now supports O_DIRECT - re-enable its use in xfs_mkfile
