@@ -53,12 +53,11 @@ do
 done
 $VERSION && $DIRNAME/xfs_io -p xfs_bmap -V
 
-set -- extra $@
-shift $OPTIND
+shift `expr $OPTIND - 1`
 
 while [ "$1" != "" ]
 do
-	eval $DIRNAME/xfs_io -r -p xfs_bmap -c \"bmap $OPTS\" $1
+	$DIRNAME/xfs_io -r -p xfs_bmap -c "bmap $OPTS" "$1"
 	status=$?
 	[ $status -ne 0 ] && exit $status
 	shift

@@ -2,6 +2,7 @@ xfsprogs-2.5.4 (23 July 2003)
 	- Update xfs_io bmap command to report unwritten extent flag
 	  if it is set on an extent (in verbose mode only).
 	- Introducing xfs_copy.
+	- Fix shell quoting problem in xfs_bmap script.
 
 xfsprogs-2.5.3 (07 July 2003)
 	- Update xfs_io commands which take user input in terms of

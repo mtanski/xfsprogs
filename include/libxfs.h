@@ -124,8 +124,13 @@ extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
+typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
+
 extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *,
 				int, int, int);
+extern int	libxfs_log_header (xfs_caddr_t, uuid_t *, int, int, int,
+				libxfs_get_block_t *, void *);
+
 
 /*
  * Define a user-level mount structure with all we need

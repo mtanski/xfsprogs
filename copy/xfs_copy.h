@@ -54,26 +54,29 @@ typedef struct ag_header  {
 
 /*
  * The position/buf_position, length/buf_length, data/buffer pairs
- * exist because of alignment constraints for direct i/o and dealing
+ * exist because of alignment constraints for direct I/O and dealing
  * with scenarios where either the source or target or both is a file
  * and the blocksize of the filesystem where file resides is different
  * from that of the filesystem image being duplicated.  You can get
- * alignment problems resulting in things like ag's starting on
+ * alignment problems resulting from things like AG's starting on
  * non-aligned points in the filesystem.  So you have to be able
  * to read from points "before" the requested starting point and
  * read in more data than requested.
  */
+struct t_args;
 typedef struct {
 	int		id;		/* buffer ID */
 	size_t		size;		/* size of buffer -- fixed */
 	size_t		min_io_size;	/* for direct I/O */
-	xfs_off_t	position;	/* requested position */
-	size_t		length;		/* length of buffer (bytes) */
+	xfs_off_t	position;	/* requested position (bytes) */
+	size_t		length;		/* requested length (bytes) */
 	char		*data;		/* pointer to data buffer */
+	struct t_args	*owner;		/* for non-parallel writes */
 } wbuf;
 
-typedef struct {
+typedef struct t_args {
 	int		id;
+	uuid_t		uuid;
 	pthread_mutex_t	wait;
 	int		fd;
 } thread_args;

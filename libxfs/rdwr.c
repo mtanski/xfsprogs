@@ -82,26 +82,48 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 	free(z);
 }
 
-int
-libxfs_log_clear(
-	dev_t	    device,
-	xfs_daddr_t start,
-	uint	    length,
-	uuid_t	    *fs_uuid,
-	int	    version,
-	int	    sunit,
-	int	    fmt)
+static void unmount_record(void *p)
 {
-	xfs_buf_t		*buf;
-	xlog_rec_header_t	*head;
-	xlog_op_header_t	*op;
-	int			i, len;
+	xlog_op_header_t	*op = (xlog_op_header_t *)p;
 	/* the data section must be 32 bit size aligned */
 	struct {
 	    __uint16_t magic;
 	    __uint16_t pad1;
 	    __uint32_t pad2; /* may as well make it 64 bits */
 	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
+
+	memset(p, 0, BBSIZE);
+	INT_SET(op->oh_tid,		ARCH_CONVERT, 1);
+	INT_SET(op->oh_len,		ARCH_CONVERT, sizeof(magic));
+	INT_SET(op->oh_clientid,	ARCH_CONVERT, XFS_LOG);
+	INT_SET(op->oh_flags,		ARCH_CONVERT, XLOG_UNMOUNT_TRANS);
+	INT_SET(op->oh_res2,		ARCH_CONVERT, 0);
+
+	/* and the data for this op */
+	memcpy(p + sizeof(xlog_op_header_t), &magic, sizeof(magic));
+}
+
+static xfs_caddr_t next(xfs_caddr_t ptr, int offset, void *private)
+{
+	xfs_buf_t	*buf = (xfs_buf_t *)private;
+
+	if (XFS_BUF_COUNT(buf) < (int)(ptr - XFS_BUF_PTR(buf)) + offset)
+		abort();
+	return ptr + offset;
+}
+
+int
+libxfs_log_clear(
+	dev_t			device,
+	xfs_daddr_t		start,
+	uint			length,
+	uuid_t			*fs_uuid,
+	int			version,
+	int			sunit,
+	int			fmt)
+{
+	xfs_buf_t		*buf;
+	int			len;
 
 	if (!device || !fs_uuid)
 		return -EINVAL;
@@ -110,22 +132,41 @@ libxfs_log_clear(
 	libxfs_device_zero(device, start, length);
 
 	/* then write a log record header */
-	if ((version == 2) && sunit)
-		len = BTOBB(sunit);
-	else
-		len = 1;
+	len = ((version == 2) && sunit) ? BTOBB(sunit) : 2;
+	len = MAX(len, 2);
 	buf = libxfs_getbuf(device, start, len);
 	if (!buf)
 		return -1;
+	libxfs_log_header(XFS_BUF_PTR(buf),
+			  fs_uuid, version, sunit, fmt, next, buf);
+	if (libxfs_writebuf(buf, 0))
+		return -1;
 
-	memset(XFS_BUF_PTR(buf), 0, BBSIZE * len);
-	head = (xlog_rec_header_t *)XFS_BUF_PTR(buf);
+	return 0;
+}
+
+int
+libxfs_log_header(
+	xfs_caddr_t		caddr,
+	uuid_t			*fs_uuid,
+	int			version,
+	int			sunit,
+	int			fmt,
+	libxfs_get_block_t	*nextfunc,
+	void			*private)
+{
+	xlog_rec_header_t	*head = (xlog_rec_header_t *)caddr;
+	xfs_caddr_t		p = caddr;
+	uint			cycle_lsn;
+	int			i, len;
+
+	len = ((version == 2) && sunit) ? BTOBB(sunit) : 1;
 
 	/* note that oh_tid actually contains the cycle number
 	 * and the tid is stored in h_cycle_data[0] - that's the
 	 * way things end up on disk.
 	 */
-
+	memset(p, 0, BBSIZE);
 	INT_SET(head->h_magicno,	ARCH_CONVERT, XLOG_HEADER_MAGIC_NUM);
 	INT_SET(head->h_cycle,		ARCH_CONVERT, 1);
 	INT_SET(head->h_version,	ARCH_CONVERT, version);
@@ -145,45 +186,20 @@ libxfs_log_clear(
 
 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
 
-	if (len > 1) {
-		xfs_caddr_t	dp;
-		uint		cycle_lsn;
+	len = MAX(len, 2);
+	p = nextfunc(p, BBSIZE, private);
+	unmount_record(p);
 
-		cycle_lsn = CYCLE_LSN_NOCONV(head->h_lsn, ARCH_CONVERT);
-		dp = XFS_BUF_PTR(buf) + BBSIZE;
-		for (i = 1; i < len; i++) {
-			*(uint *)dp = cycle_lsn;
-			dp += BBSIZE;
-		}
+	cycle_lsn = CYCLE_LSN_NOCONV(head->h_lsn, ARCH_CONVERT);
+	for (i = 2; i < len; i++) {
+		p = nextfunc(p, BBSIZE, private);
+		memset(p, 0, BBSIZE);
+		*(uint *)p = cycle_lsn;
 	}
 
-	if (libxfs_writebuf(buf, 0))
-		return -1;
-
-	buf = libxfs_getbuf(device, start + 1, 1);
-	if (!buf)
-		return -1;
-
-	/* now a log unmount op */
-	memset(XFS_BUF_PTR(buf), 0, BBSIZE);
-	op = (xlog_op_header_t *)XFS_BUF_PTR(buf);
-	INT_SET(op->oh_tid,		ARCH_CONVERT, 1);
-	INT_SET(op->oh_len,		ARCH_CONVERT, sizeof(magic));
-	INT_SET(op->oh_clientid,	ARCH_CONVERT, XFS_LOG);
-	INT_SET(op->oh_flags,		ARCH_CONVERT, XLOG_UNMOUNT_TRANS);
-	INT_SET(op->oh_res2,		ARCH_CONVERT, 0);
-
-	/* and the data for this op */
-
-	memcpy(XFS_BUF_PTR(buf) + sizeof(xlog_op_header_t),
-		&magic,
-		sizeof(magic));
-
-	if (libxfs_writebuf(buf, 0))
-		return -1;
-
-	return 0;
+	return BBTOB(len);
 }
+
 
 /*
  * Simple I/O interface

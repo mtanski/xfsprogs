@@ -1,6 +1,7 @@
 xfsprogs (2.5.4-1) unstable; urgency=low
 
-  * New upstream release, with new xfs_copy command
+  * New upstream release, includes xfs_copy command
+  * Fix shell quoting in xfs_bmap, from Kai S. Juse (closes: 202588)
 
  -- Nathan Scott <nathans@debian.org>  Wed, 23 Jul 2003 10:36:28 +1000
 
