@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -29,34 +29,58 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef LOGPRINT_H
-#define LOGPRINT_H
 
-#include <xfs/libxlog.h>
+#include "logprint.h"
 
-/* command line flags */
-extern int	print_data;
-extern int	print_only_data;
-extern int	print_inode;
-extern int	print_quota;
-extern int	print_buffer;
-extern int	print_transactions;
-extern int	print_overwrite;
-extern int	print_no_data;
-extern int	print_no_print;
+/*
+ * Extract a log and write it out to a file
+ */
 
-/* exports */
-extern char *trans_type[];
+void
+xfs_log_copy(
+	xlog_t		*log,
+	int		fd,
+	char		*filename)
+{
+	int		ofd, r;
+	xfs_daddr_t	blkno;
+	char		buf[XLOG_HEADER_SIZE];
 
-extern void xlog_print_lseek(xlog_t *, int, xfs_daddr_t, int);
+	if ((ofd = open(filename, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, 0666)) == -1) {
+		perror("open");
+		exit(1);
+	}
 
-extern void xfs_log_copy(xlog_t *, int, char *);
-extern void xfs_log_dump(xlog_t *, int, int);
-extern void xfs_log_print(xlog_t *, int, int);
-extern void xfs_log_print_trans(xlog_t *, int);
+	xlog_print_lseek(log, fd, 0, SEEK_SET);
+	for (blkno = 0; blkno < log->l_logBBsize; blkno++) {
+		r = read(fd, buf, sizeof(buf));
+		if (r < 0) {
+			fprintf(stderr, "%s: read error (%lld): %s\n",
+				__FUNCTION__, (long long)blkno,
+				strerror(errno));
+			continue;
+		} else if (r == 0) {
+			printf("%s: physical end of log at %lld\n",
+				__FUNCTION__, (long long)blkno);
+			break;
+		} else if (r != sizeof(buf)) {
+			fprintf(stderr, "%s: short read? (%lld)\n",
+					__FUNCTION__, (long long)blkno);
+			continue;
+		}
 
-extern void print_xlog_record_line(void);
-extern void print_xlog_op_line(void);
-extern void print_stars(void);
+		r = write(ofd, buf, sizeof(buf));
+		if (r < 0) {
+			fprintf(stderr, "%s: write error (%lld): %s\n",
+				__FUNCTION__, (long long)blkno,
+				strerror(errno));
+			break;
+		} else if (r != sizeof(buf)) {
+			fprintf(stderr, "%s: short write? (%lld)\n",
+				__FUNCTION__, (long long)blkno);
+			continue;
+		}
+	}
 
-#endif	/* LOGPRINT_H */
+	close(ofd);
+}

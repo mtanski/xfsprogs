@@ -45,9 +45,16 @@ Common options are:
 Extract and print buffer information.
 Only used in transactional view.
 .TP
+\f3\-C\f1 \f2filename\f1
+Copy the log from the filesystem to the file \f2filename\f1.
+The log itself is not printed.
+.TP
+\f3\-d\f1
+Dump the log from front to end, printing where each log record is located
+on disk.
+.TP
 \f3\-D\f1
-Don't decode anything;
-just print data.
+Do not decode anything; just print data.
 .TP
 \f3\-e\f1
 Exit when an error is found in the log.
@@ -73,8 +80,7 @@ Extract and print quota information.
 Only used in transactional view.
 .TP
 \f3\-n\f1
-Don't try and interpret log data;
-just interpret log header information.
+Do not try and interpret log data; just interpret log header information.
 .TP
 \f3\-o\f1
 Also print buffer data in hex.

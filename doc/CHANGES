@@ -1,5 +1,11 @@
+[cvs]
+	- Allow logprint to copy a log to a file (-C) and to dump
+	  a log from beginning to end showing ondisk log record (-d).
+	- Fix logprint handling of -f option - shouldn't be doing
+	  the UUID check in that case, since we don't have the SB.
+
 xfsprogs-2.6.13 (03 May 2004)
-	- zero out more at beginning and end of device at mkfs time
+	- Zero out more at beginning and end of device at mkfs time
 	  (get all old MD superblocks at the end, for mount by label).
 
 xfsprogs-2.6.12 (30 April 2004)

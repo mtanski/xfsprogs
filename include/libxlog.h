@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -122,18 +122,12 @@ typedef union {
 #define kmem_realloc(ptr, len, old, foo)	realloc(ptr, len)
 
 /* exports */
-extern int	print_record_header;
 extern int	print_exit;
+extern int	print_skip_uuid;
+extern int	print_record_header;
 
 /* libxfs parameters */
 extern libxfs_init_t	x;
-
-extern void xfs_log_print_trans(xlog_t          *log,
-				int		print_block_start);
-
-extern void xfs_log_print(      xlog_t          *log,
-				int             fd,
-				int		print_block_start);
 
 extern int  xlog_find_zeroed(xlog_t *log, xfs_daddr_t *blk_no);
 extern int  xlog_find_cycle_start(xlog_t *log, xfs_buf_t *bp,
@@ -147,10 +141,6 @@ extern void xlog_recover_print_data(xfs_caddr_t p, int len);
 extern void xlog_recover_print_logitem(xlog_recover_item_t *item);
 extern void xlog_recover_print_trans_head(xlog_recover_t *tr);
 extern int  xlog_print_find_oldest(xlog_t *log, xfs_daddr_t *last_blk);
-
-extern void print_xlog_op_line(void);
-extern void print_xlog_record_line(void);
-extern void print_stars(void);
 
 /* for transactional view */
 extern void xlog_recover_print_trans_head(xlog_recover_t *tr);

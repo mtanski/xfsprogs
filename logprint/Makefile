@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -36,7 +36,10 @@ include $(TOPDIR)/include/builddefs
 LTCOMMAND = xfs_logprint
 
 HFILES = logprint.h
-CFILES = log_print_trans.c log_print_all.c log_misc.c logprint.c
+CFILES = logprint.c \
+	 log_copy.c log_dump.c log_misc.c \
+	 log_print_all.c log_print_trans.c
+
 LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
 LLDFLAGS = -static

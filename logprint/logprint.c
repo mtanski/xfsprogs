@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -34,18 +34,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define OP_PRINT	0
+#define OP_PRINT_TRANS	1
+#define OP_DUMP		2
+#define OP_COPY		3
+
 int	print_data;
 int	print_only_data;
 int	print_inode;
 int	print_quota;
 int	print_buffer;
-int	print_transactions;
 int	print_overwrite;
 int     print_no_data;
 int     print_no_print;
 int     print_exit = 1; /* -e is now default. specify -c to override */
-
-xfs_mount_t	mp;
+int	print_operation = OP_PRINT;
 
 void
 usage(void)
@@ -53,6 +56,8 @@ usage(void)
 	fprintf(stderr, "Usage: %s [options...] <device>\n\n\
 Options:\n\
     -c	            try to continue if error found in log\n\
+    -C <filename>   copy the log from the filesystem to filename\n\
+    -d	            dump the log in log-record format\n\
     -f	            specified device is actually a file\n\
     -l <device>     filename of external log\n\
     -n	            don't try and interpret log data\n\
@@ -70,7 +75,7 @@ Options:\n\
 }
 
 int
-logstat(libxfs_init_t *x)
+logstat(xfs_mount_t *mp)
 {
 	int		fd;
 	char		buf[BBSIZE];
@@ -80,9 +85,9 @@ logstat(libxfs_init_t *x)
 	 * filesystem. We need this to get the length of the
 	 * log. Otherwise we end up seeking forever. -- mkp
 	 */
-	if ((fd = open(x->dname, O_RDONLY)) == -1) {
+	if ((fd = open(x.dname, O_RDONLY)) == -1) {
 		fprintf(stderr, "    Can't open device %s: %s\n",
-			x->dname, strerror(errno));
+			x.dname, strerror(errno));
 		exit(1);
 	}
 	lseek64(fd, 0, SEEK_SET);
@@ -92,17 +97,17 @@ logstat(libxfs_init_t *x)
 	}
 	close (fd);
 
-	if (!x->disfile) {
+	if (!x.disfile) {
 		/*
 		 * Conjure up a mount structure
 		 */
-		libxfs_xlate_sb(buf, &(mp.m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
-		sb = &(mp.m_sb);
-		mp.m_blkbb_log = sb->sb_blocklog - BBSHIFT;
+		libxfs_xlate_sb(buf, &(mp->m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+		sb = &(mp->m_sb);
+		mp->m_blkbb_log = sb->sb_blocklog - BBSHIFT;
 
-		x->logBBsize = XFS_FSB_TO_BB(&mp, sb->sb_logblocks);
-		x->logBBstart = XFS_FSB_TO_DADDR(&mp, sb->sb_logstart);
-		if (!x->logname && sb->sb_logstart == 0) {
+		x.logBBsize = XFS_FSB_TO_BB(mp, sb->sb_logblocks);
+		x.logBBstart = XFS_FSB_TO_DADDR(mp, sb->sb_logstart);
+		if (!x.logname && sb->sb_logstart == 0) {
 			fprintf(stderr, "    external log device not specified\n\n");
 			usage();
 			/*NOTREACHED*/
@@ -110,21 +115,21 @@ logstat(libxfs_init_t *x)
 	} else {
 		struct stat	s;
 
-		stat(x->dname, &s);
-		x->logBBsize = s.st_size >> 9;
-		x->logBBstart = 0;
+		stat(x.dname, &s);
+		x.logBBsize = s.st_size >> 9;
+		x.logBBstart = 0;
 	}
 
 
-	if (x->logname && *x->logname) {    /* External log */
-		if ((fd = open(x->logname, O_RDONLY)) == -1) {
+	if (x.logname && *x.logname) {    /* External log */
+		if ((fd = open(x.logname, O_RDONLY)) == -1) {
 			fprintf(stderr, "Can't open file %s: %s\n",
-				x->logname, strerror(errno));
+				x.logname, strerror(errno));
 			exit(1);
 		}
 		close(fd);
 	} else {                            /* Internal log */
-		x->logdev = x->ddev;
+		x.logdev = x.ddev;
 	}
 
 	return 0;
@@ -136,77 +141,72 @@ main(int argc, char **argv)
 	int		print_start = -1;
 	int		c;
 	int             logfd;
+	char		*copy_file = NULL;
 	xlog_t	        log = {0};
+	xfs_mount_t	mount;
 
 	progname = basename(argv[0]);
-	while ((c = getopt(argc, argv, "befl:iqnors:tDVvc")) != EOF) {
+	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
 		switch (c) {
-			case 'D': {
+			case 'D':
 				print_only_data++;
 				print_data++;
 				break;
-			}
-			case 'b': {
+			case 'b':
 				print_buffer++;
 				break;
-			}
-			case 'f': {
-				x.disfile = 1;
-				break;
-			}
-			case 'l': {
-				x.logname = optarg;
-				x.lisfile = 1;
-				break;
-			}
-			case 'c': {
+			case 'c':
 			    /* default is to stop on error.
 			     * -c turns this off.
 			     */
-				print_exit=0;
+				print_exit = 0;
 				break;
-			}
-			case 'e': {
+			case 'e':
 			    /* -e is now default
 			     */
 				print_exit++;
 				break;
-			}
-			case 'i': {
+			case 'C':
+				print_operation = OP_COPY;
+				copy_file = optarg;
+				break;
+			case 'd':
+				print_operation = OP_DUMP;
+				break;
+			case 'f':
+				print_skip_uuid++;
+				x.disfile = 1;
+				break;
+			case 'l':
+				x.logname = optarg;
+				x.lisfile = 1;
+				break;
+			case 'i':
 				print_inode++;
 				break;
-			}
-			case 'q': {
+			case 'q':
 				print_quota++;
 				break;
-			}
-			case 'n': {
+			case 'n':
 				print_no_data++;
 				break;
-			}
-			case 'o': {
+			case 'o':
 				print_data++;
 				break;
-			}
-			case 's': {
+			case 's':
 				print_start = atoi(optarg);
 				break;
-			}
-			case 't': {
-				print_transactions++;
+			case 't':
+				print_operation = OP_PRINT_TRANS;
 				break;
-			}
-			case 'V': {
-				printf("%s version %s\n", progname, VERSION);
-				exit(0);
-			}
-			case 'v': {
+			case 'v':
 				print_overwrite++;
 				break;
-			}
-			case '?': {
+			case 'V':
+				printf("%s version %s\n", progname, VERSION);
+				exit(0);
+			case '?':
 				usage();
-			}
 		}
 	}
 
@@ -226,9 +226,9 @@ main(int argc, char **argv)
 	if (!libxfs_init(&x))
 		exit(1);
 
-	logstat(&x);
+	logstat(&mount);
 
-	logfd=(x.logfd<0)?(x.dfd):(x.logfd);
+	logfd = (x.logfd < 0) ? x.dfd : x.logfd;
 
 	printf("    data device: 0x%llx\n", (unsigned long long)x.ddev);
 
@@ -243,17 +243,25 @@ main(int argc, char **argv)
 
 	ASSERT(x.logBBsize <= INT_MAX);
 
-	/* init log structure */
-	log.l_dev	   = x.logdev;
+	log.l_dev         = x.logdev;
 	log.l_logsize     = BBTOB(x.logBBsize);
 	log.l_logBBstart  = x.logBBstart;
 	log.l_logBBsize   = x.logBBsize;
-	log.l_mp          = &mp;
+	log.l_mp          = &mount;
 
-	if (print_transactions)
+	switch (print_operation) {
+	case OP_PRINT:
 		xfs_log_print_trans(&log, print_start);
-	else
+		break;
+	case OP_PRINT_TRANS:
 		xfs_log_print(&log, logfd, print_start);
-
+		break;
+	case OP_DUMP:
+		xfs_log_dump(&log, logfd, print_start);
+		break;
+	case OP_COPY:
+		xfs_log_copy(&log, logfd, copy_file);
+		break;
+	}
 	exit(0);
 }

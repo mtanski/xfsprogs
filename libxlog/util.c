@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -33,6 +33,7 @@
 #include <xfs/libxlog.h>
 
 int print_exit;
+int print_skip_uuid;
 int print_record_header;
 libxfs_init_t x;
 
@@ -41,6 +42,7 @@ header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
     char uu_log[64], uu_sb[64];
 
+    if (print_skip_uuid) return 0;
     if (!uuid_compare(mp->m_sb.sb_uuid, head->h_fs_uuid)) return 0;
 
     uuid_unparse(mp->m_sb.sb_uuid, uu_sb);
