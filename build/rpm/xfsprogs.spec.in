@@ -2,7 +2,6 @@ Summary: Utilities for managing the XFS filesystem.
 Name: @pkg_name@
 Version: @pkg_version@
 Release: @pkg_release@
-Distribution: @pkg_distribution@
 Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
 BuildRoot: @build_root@ 
 Provides: xfs-cmds
