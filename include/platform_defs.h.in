@@ -48,10 +48,10 @@
 #if defined(__linux__)
 
 #include <sys/vfs.h>
+#include <sys/ioctl.h>
 #include <sys/param.h>
 #include <uuid/uuid.h>
 #include <linux/types.h>
-#include <linux/ioctl.h>
 #include <malloc.h>
 #include <getopt.h>
 
