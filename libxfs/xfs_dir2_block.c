@@ -886,7 +886,8 @@ xfs_dir2_sf_to_block(
 	xfs_dir2_leaf_entry_t	*blp;		/* block leaf entries */
 	xfs_dabuf_t		*bp;		/* block buffer */
 	xfs_dir2_block_tail_t	*btp;		/* block tail pointer */
-	char			buf[XFS_DIR2_SF_MAX_SIZE];	/* sf buffer */
+	char			*buf;		/* sf buffer */
+	int			buf_len;
 	xfs_dir2_data_entry_t	*dep;		/* data entry pointer */
 	xfs_inode_t		*dp;		/* incore directory inode */
 	int			dummy;		/* trash */
@@ -924,6 +925,10 @@ xfs_dir2_sf_to_block(
 	 * Copy the directory into the stack buffer.
 	 * Then pitch the incore inode data so we can make extents.
 	 */
+
+	buf_len = dp->i_df.if_bytes;
+	buf = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
+
 	bcopy(sfp, buf, dp->i_df.if_bytes);
 	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
 	dp->i_d.di_size = 0;
@@ -937,6 +942,7 @@ xfs_dir2_sf_to_block(
 	 */
 	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, &blkno);
 	if (error) {
+		kmem_free(buf, buf_len);
 		return error;
 	}
 	/*
@@ -944,6 +950,7 @@ xfs_dir2_sf_to_block(
 	 */
 	error = xfs_dir2_data_init(args, blkno, &bp);
 	if (error) {
+		kmem_free(buf, buf_len);
 		return error;
 	}
 	block = bp->data;
@@ -1059,6 +1066,8 @@ xfs_dir2_sf_to_block(
 		else
 			sfep = XFS_DIR2_SF_NEXTENTRY(sfp, sfep);
 	}
+	/* Done with the temporary buffer */
+	kmem_free(buf, buf_len);
 	/*
 	 * Sort the leaf entries by hash value.
 	 */

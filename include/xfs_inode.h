@@ -502,6 +502,7 @@ int		xfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
 			 uint, xfs_inode_t **, xfs_daddr_t);
 int		xfs_vn_iget(vfs_t *, struct vnode *, xfs_ino_t);
 void		xfs_iput(xfs_inode_t *, uint);
+void		xfs_iput_new(xfs_inode_t *, uint);
 void		xfs_ilock(xfs_inode_t *, uint);
 int		xfs_ilock_nowait(xfs_inode_t *, uint);
 void		xfs_iunlock(xfs_inode_t *, uint);

@@ -48,16 +48,16 @@
 #define CYCLE_LSN_NOCONV(lsn,arch) (((uint *)&(lsn))[LSN_FIELD_CYCLE(arch)])
 
 #ifdef __KERNEL__
+#if (__GNUC__ == 2) && (__GNUC_MINOR__ == 95) 
+extern xfs_lsn_t _lsn_cmp(xfs_lsn_t, xfs_lsn_t, xfs_arch_t);
+#define _lsn_cmp _xfs_lsn_cmp
+#endif
+
 /*
- * By comparing each compnent, we don't have to worry about extra
+ * By comparing each component, we don't have to worry about extra
  * endian issues in treating two 32 bit numbers as one 64 bit number
  */
-static
-#ifdef __GNUC__
-# if !((__GNUC__ == 2) && (__GNUC_MINOR__ == 95))
-__inline__
-#endif
-#endif
+static inline
 xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2, xfs_arch_t arch)
 {
 	if (CYCLE_LSN(lsn1, arch) != CYCLE_LSN(lsn2, arch))

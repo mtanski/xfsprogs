@@ -406,10 +406,11 @@ typedef struct xlog_rec_header {
  * - ic_state is the state of the iclog.
  */
 typedef struct xlog_iclog_fields {
+	struct tq_struct	ic_write_sched;
 	sv_t			ic_forcesema;
 	struct xlog_in_core	*ic_next;
 	struct xlog_in_core	*ic_prev;
-	struct xfs_buf  		*ic_bp;
+	struct xfs_buf 		*ic_bp;
 	struct log		*ic_log;
 	xfs_log_callback_t	*ic_callback;
 	xfs_log_callback_t	**ic_callback_tail;
@@ -441,6 +442,7 @@ typedef struct xlog_in_core {
  * Defines to save our code from this glop.
  */
 #define	ic_forcesema	hic_fields.ic_forcesema
+#define ic_write_sched	hic_fields.ic_write_sched
 #define	ic_next		hic_fields.ic_next
 #define	ic_prev		hic_fields.ic_prev
 #define	ic_bp		hic_fields.ic_bp
