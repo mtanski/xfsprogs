@@ -39,6 +39,10 @@
 #define ACL_MASK	0x10	/* mask entry */
 #define ACL_OTHER	0x20	/* other entry */
 
+#define ACL_READ	04
+#define ACL_WRITE	02
+#define ACL_EXECUTE	01
+
 struct blkmap;
 extern int process_attributes (xfs_mount_t *, xfs_ino_t, xfs_dinode_t *,
 				struct blkmap *, int *);
