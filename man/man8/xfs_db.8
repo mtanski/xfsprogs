@@ -354,6 +354,15 @@ Print help for one or all commands.
 Set the current inode number.
 If no \f2inode#\f1 is given, print the current inode number.
 .TP
+\f3label\f1 [ \f2label\f1 ]
+Set the filesystem label.
+The filesystem label can be used by
+.IR mount (8)
+instead of using a device special file.
+The maximum length of an XFS label is 12 characters \- use of a longer
+\f2label\f1 will result in truncation and a warning will be issued.
+If no \f2label\f1 is given, the current filesystem label is printed.
+.TP
 \f3log\f1 [ \f3stop\f1 | \f3start\f1 \f2filename\f1 ]
 Start logging output to \f2filename\f1, stop logging,
 or print the current logging status.
@@ -414,7 +423,20 @@ The possible data types are:
 \f3sb\f1, and \f3symlink\f1.
 See the TYPES section below for more information on these data types.
 .TP
-\f3write\f1 [ \f2field or value\f1 ] ...
+\f3uuid\f1 [ \f2uuid\f1 or \f2generate\f1 or \f2rewrite\f1 ]
+Set the filesystem universally unique identifier (UUID).
+The filesystem UUID can be used by
+.IR mount (8)
+instead of using a device special file.
+The \f2uuid\f1 can be set directly to the desired UUID, or it can
+be automatically generated using the \f2generate\f1 option.
+These options will both write the UUID into every copy of the
+superblock in the filesystem.
+\f2rewrite\f1 copies the current UUID from the primary superblock
+to all secondary copies of the superblock.
+If no argument is given, the current filesystem UUID is printed.
+.TP
+\f3write\f1 [ \f2field\f1 or \f2value\f1 ] ...
 Write a value to disk.
 Specific fields can be set in structures (struct mode),
 or a block can be set to data values (data mode),
@@ -1190,6 +1212,7 @@ xfs_copy(8),
 xfs_logprint(8),
 xfs_ncheck(8),
 xfs_repair(8),
+mount(8),
 chmod(2),
 mknod(2),
 stat(2),
