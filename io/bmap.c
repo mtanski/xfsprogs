@@ -282,11 +282,13 @@ bmap_f(
 #define MINAG_WIDTH	2
 #define MINTOT_WIDTH	5
 #define	max(a,b)	(a > b ? a : b)
-#define	FLG_NULL	00000	/* Null flag */
-#define	FLG_BSU		01000	/* Not on begin of stripe unit  */
-#define	FLG_ESU		00100	/* Not on end   of stripe unit  */
-#define	FLG_BSW		00010	/* Not on begin of stripe width */
-#define	FLG_ESW		00001	/* Not on end   of stripe width */
+#define NFLG		5	/* count of flags */
+#define	FLG_NULL	000000	/* Null flag */
+#define	FLG_PRE		010000	/* Unwritten extent */
+#define	FLG_BSU		001000	/* Not on begin of stripe unit  */
+#define	FLG_ESU		000100	/* Not on end   of stripe unit  */
+#define	FLG_BSW		000010	/* Not on begin of stripe width */
+#define	FLG_ESW		000001	/* Not on end   of stripe width */
 		int	agno;
 		off64_t agoff, bbperag;
 		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
@@ -299,6 +301,7 @@ bmap_f(
 			  (off64_t)fsgeo.blocksize / BBSIZE;
 		sunit = fsgeo.sunit;
 		swidth = fsgeo.swidth;
+		flg = sunit;
 
 		/*
 		 * Go through the extents and figure out the width
@@ -309,6 +312,8 @@ bmap_f(
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
 				map[i + 1].bmv_length - 1LL));
+			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC)
+				flg = 1;
 			if (map[i + 1].bmv_block == -1) {
 				foff_w = max(foff_w, strlen(rbuf));
 				tot_w = max(tot_w,
@@ -331,16 +336,20 @@ bmap_f(
 			}
 		}
 		agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount));
-		printf("%4s: %-*s %-*s %*s %-*s %*s\n",
+		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
 			_("EXT"),
 			foff_w, _("FILE-OFFSET"),
 			boff_w, _("BLOCK-RANGE"),
 			agno_w, _("AG"),
 			aoff_w, _("AG-OFFSET"),
-			tot_w, _("TOTAL"));
+			tot_w, _("TOTAL"),
+			flg ? _(" FLAGS") : "");
 		for (i = 0; i < map->bmv_entries; i++) {
+			flg = FLG_NULL;
+			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC) {
+				flg |= FLG_PRE;
+			}
 			if (sunit) {
-				flg = FLG_NULL;
 				if (map[i + 1].bmv_block  % sunit != 0) {
 					flg |= FLG_BSU;
 				}
@@ -388,20 +397,22 @@ bmap_f(
 				if (flg == FLG_NULL) {
 					printf("\n");
 				} else {
-					printf(" %-4.4o\n", flg);
+					printf(" %-*.*o\n", NFLG, NFLG, flg);
 				}
 			}
 		}
-		if ( flg ) {
-			printf(_(" FLG Values:\n"));
-			printf(_("    %5.5o Doesn't begin on stripe unit\n"),
-				FLG_BSU);
-			printf(_("    %5.5o Doesn't end   on stripe unit\n"),
-				FLG_ESU);
-			printf(_("    %5.5o Doesn't begin on stripe width\n"),
-				FLG_BSW);
-			printf(_("    %5.5o Doesn't end   on stripe width\n"),
-				FLG_ESW);
+		if (flg && vflag > 1) {
+			printf(_(" FLAG Values:\n"));
+			printf(_("    %*.*o Unwritten preallocated extent\n"),
+				NFLG+1, NFLG+1, FLG_PRE);
+			printf(_("    %*.*o Doesn't begin on stripe unit\n"),
+				NFLG+1, NFLG+1, FLG_BSU);
+			printf(_("    %*.*o Doesn't end   on stripe unit\n"),
+				NFLG+1, NFLG+1, FLG_ESU);
+			printf(_("    %*.*o Doesn't begin on stripe width\n"),
+				NFLG+1, NFLG+1, FLG_BSW);
+			printf(_("    %*.*o Doesn't end   on stripe width\n"),
+				NFLG+1, NFLG+1, FLG_ESW);
 		}
 	}
 	free(map);

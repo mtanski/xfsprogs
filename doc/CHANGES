@@ -1,3 +1,7 @@
+[cvs]
+	- Update xfs_io bmap command to report unwritten extent flag
+	  if it is set on an extent (in verbose mode only).
+
 xfsprogs-2.5.3 (07 July 2003)
 	- Update xfs_io commands which take user input in terms of
 	  byte counts to now also allow unit prefixes like mkfs.xfs.
