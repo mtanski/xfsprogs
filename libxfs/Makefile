@@ -46,7 +46,7 @@ CFILES = init.c logitem.c rdwr.c trans.c util.c \
 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
 	xfs_mount.c xfs_trans.c
-LCFLAGS += -DHAVE_BLKBSZSET=1
+LCFLAGS += -DHAVE_BLKBSZSET=0
 
 # 
 # Tracing flags:
