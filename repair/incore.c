@@ -72,7 +72,7 @@ void
 setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 {
 	int i;
-	xfs_drfsbno_t size;
+	size_t size = 0;
 
         ba_bmap = (__uint64_t**)malloc(agno*sizeof(__uint64_t *));
         if (!ba_bmap)  {
@@ -80,9 +80,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 		return;
 	}
 	for (i = 0; i < agno; i++)  {
-                int size;
-                
-                size = roundup(numblocks * (NBBY/XR_BB),sizeof(__uint64_t));
+                size = roundup(numblocks / (NBBY/XR_BB),sizeof(__uint64_t));
                 
                 ba_bmap[i] = (__uint64_t*)memalign(sizeof(__uint64_t), size);
                 if (!ba_bmap[i]) {
@@ -98,7 +96,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 		return;
 	}
 
-	size = roundup(rtblocks * (NBBY/XR_BB), sizeof(__uint64_t));
+	size = roundup(rtblocks / (NBBY/XR_BB), sizeof(__uint64_t));
 
         rt_ba_bmap=(__uint64_t*)memalign(sizeof(__uint64_t), size);
 	if (!rt_ba_bmap) {
@@ -178,7 +176,7 @@ set_bmap_rt(xfs_drtbno_t num)
 	 * for now, initialize all realtime blocks to be free
 	 * (state == XR_E_FREE)
 	 */
-	size = howmany(num * (NBBY/XR_BB), sizeof(__uint64_t));
+	size = howmany(num / (NBBY/XR_BB), sizeof(__uint64_t));
 
 	for (j = 0; j < size; j++)
 		rt_ba_bmap[j] = 0x2222222222222222LL;
