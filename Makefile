@@ -44,7 +44,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libhandle libdisk \
-	bmap db freeze fsck growfs imap logprint mkfile mkfs repair rtcp \
+	db freeze fsck growfs io imap logprint mkfile mkfs repair rtcp \
 	man doc po debian build
 
 default: $(CONFIGURE)
@@ -60,7 +60,7 @@ else
 clean:	# if configure hasn't run, nothing to clean
 endif
 
-$(CONFIGURE): configure.in
+$(CONFIGURE):
 	autoconf
 	./configure \
 		--prefix=/ \

@@ -39,6 +39,11 @@
 #include "malloc.h"
 #include "init.h"
 
+#ifdef ENABLE_READLINE
+# include <readline/history.h>
+# include <readline/readline.h>
+#endif
+
 int	inputstacksize;
 FILE	**inputstack;
 FILE	*curinput;
@@ -142,8 +147,8 @@ doneline(
 	xfree(vec);
 }
 
-char *
-fetchline(void)
+static char *
+fetchline_internal(void)
 {
 	char	buf[1024];
 	int	iscont;
@@ -157,7 +162,7 @@ fetchline(void)
 			if (iscont)
 				dbprintf("... ");
 			else
-				dbprintf("%s: ", progname);
+				dbprintf("%s> ", progname);
 			fflush(stdin);
 		}
 		if (seenint() ||
@@ -214,11 +219,34 @@ fetchline(void)
 	return rval;
 }
 
-void
-input_init(void)
+#ifdef ENABLE_READLINE
+char *
+fetchline(void)
 {
-	add_command(&source_cmd);
+	static char	prompt[FILENAME_MAX + 1];
+	char		*line;
+
+	if (!prompt[0])
+		snprintf(prompt, sizeof(prompt), "%s> ", progname);
+
+	if (inputstacksize == 1) {
+		line = readline(prompt);
+		if (line && *line)
+			add_history(line);
+		else
+			logprintf("%s", line);
+	} else {
+		line = fetchline_internal();
+	}
+	return line;
 }
+#else
+char *
+fetchline(void)
+{
+	return fetchline_internal();
+}
+#endif
 
 static void
 popfile(void)
@@ -267,4 +295,10 @@ source_f(
 	else
 		pushfile(f);
 	return 0;
+}
+
+void
+input_init(void)
+{
+	add_command(&source_cmd);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -30,47 +30,85 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-/* 
- * Bmap display utility for xfs.
- */
-
 #include <libxfs.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
+#include "command.h"
+#include "init.h"
 
-int aflag = 0;	/* Attribute fork. */
-int lflag = 0;	/* list number of blocks with each extent */
-int nflag = 0;	/* number of extents specified */
-int vflag = 0;	/* Verbose output */
-int bmv_iflags = 0;	/* Input flags for XFS_IOC_GETBMAPX */
-char *progname;
+static cmdinfo_t bmap_cmd;
 
-int dofile(char *);
-off64_t file_size(int fd, char * fname);
-int numlen(off64_t);
+static int
+usage(void)
+{
+	printf("%s %s\n", bmap_cmd.name, bmap_cmd.oneline);
+	return 0;
+}
+
+static void
+bmap_help(void)
+{
+	printf(_(
+"\n"
+" prints the block mapping for an XFS file's data or attribute forks"
+"\n"
+" Example:\n"
+" 'bmap -vp' - tabular format verbose map, including unwritten extents\n"
+"\n"
+" bmap prints the map of disk blocks used by the current file.\n"
+" The map lists each extent used by the file, as well as regions in the\n"
+" file that do not have any corresponding blocks (holes).\n"
+" By default, each line of the listing takes the following form:\n"
+"     extent: [startoffset..endoffset]: startblock..endblock\n"
+" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
+" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
+" -a -- prints the attribute fork map instead of the data fork.\n"
+" -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
+" -l -- also displays the length of each extent in 512-byte blocks.\n"
+" Note: the bmap for non-regular files can be obtained provided the file\n"
+" was opened appropriately (in particular, must be opened read-only).\n"
+"\n"));
+}
+
+static int
+numlen(
+	off64_t	val)
+{
+	off64_t	tmp;
+	int	len;
+
+	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
+		len++;
+	return (len == 0 ? 1 : len);
+}
 
 int
-main(int argc, char **argv)
+bmap_f(
+	int			argc,
+	char			**argv)
 {
-	char	*fname;
-	int	i = 0;
-	int	option;
+	struct fsxattr		fsx;
+	struct getbmapx		*map;
+	struct xfs_fsop_geom_v1	fsgeo;
+	int			map_size;
+	int			loop = 0;
+	int			flg = 0;
+	int			aflag = 0;
+	int			lflag = 0;
+	int			nflag = 0;
+	int			vflag = 0;
+	int			bmv_iflags = 0;	/* flags for XFS_IOC_GETBMAPX */
+	int			i = 0;
+	int			c;
 
-	progname = basename(argv[0]);
-	setlocale(LC_ALL, "");
-	bindtextdomain(PACKAGE, LOCALEDIR);
-	textdomain(PACKAGE);
-
-	while ((option = getopt(argc, argv, "adln:pvV")) != EOF) {
-		switch (option) {
-		case 'a':
+	while ((c = getopt(argc, argv, "adln:pv")) != EOF) {
+		switch (c) {
+		case 'a':	/* Attribute fork. */
 			bmv_iflags |= BMV_IF_ATTRFORK;
 			aflag = 1;
 			break;
-		case 'l':
+		case 'l':	/* list number of blocks with each extent */
 			lflag = 1;
 			break;
-		case 'n':
+		case 'n':	/* number of extents specified */
 			nflag = atoi(optarg);
 			break;
 		case 'd':
@@ -81,104 +119,31 @@ main(int argc, char **argv)
 		/* report unwritten preallocated blocks */
 			bmv_iflags |= BMV_IF_PREALLOC;
 			break;
-		case 'v':
+		case 'v':	/* Verbose output */
 			vflag++;
 			break;
-		case 'V':
-			printf(_("%s version %s\n"), progname, VERSION);
-			exit(0);
 		default:
-			fprintf(stderr,
-				_("Usage: %s [-adlpV] [-n nx] file...\n"),
-				progname);
-			exit(1);
+			return usage();
 		}
 	}
 	if (aflag) 
-		bmv_iflags &=  ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
-	while (optind < argc) {
-		fname = argv[optind];
-		i += dofile(fname);
-		optind++;
-	}
-	return(i ? 1 : 0);
-}
-
-off64_t
-file_size(int	fd, char *fname)
-{
-	struct stat64	st;
-	int		i;
-	int		errno_save;
-
-	errno_save = errno;	/* in case fstat64 fails */
-	i = fstat64(fd, &st);
-	if (i < 0) {
-		fprintf(stderr, _("%s: fstat64 failed for %s: %s\n"),
-			progname, fname, strerror(errno));
-		errno = errno_save;
-		return -1;
-	}
-	return st.st_size;
-}
-	
-
-int
-dofile(char *fname)
-{
-	int		i;
-	int		fd;
-	struct statfs	buf;
-	struct fsxattr	fsx;
-	struct getbmapx	*map;
-	int		map_size;
-	int		loop = 0;
-	xfs_fsop_geom_v1_t fsgeo;
-	int		flg = 0;
-
-	fd = open(fname, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, _("%s: cannot open \"%s\": %s\n"),
-			progname, fname, strerror(errno));
-		return 1;
-	}
-	fstatfs(fd, &buf);
-	if (statfstype(&buf) != XFS_SUPER_MAGIC) {
-		fprintf(stderr, _("%s: specified file "
-			"[\"%s\"] is not on an XFS filesystem\n"),
-			progname, fname);
-		close(fd);
-		return 1;
-        }
+		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
 
 	if (vflag) {
-		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
+		if (ioctl(fdesc, XFS_IOC_FSGEOMETRY_V1, &fsgeo) < 0) {
 			fprintf(stderr,
 				_("%s: can't get geometry [\"%s\"]: %s\n"),
 				progname, fname, strerror(errno));
-			close(fd);
-			return 1;
+			exitcode = 1;
+			return 0;
 		}
-		
-		if (vflag > 1)
-			printf(_(
-	"xfs_bmap: fsgeo.agblocks=%u, fsgeo.blocksize=%u, fsgeo.agcount=%u\n"),
-					fsgeo.agblocks, fsgeo.blocksize,
-					fsgeo.agcount);
-
-		if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		if ((ioctl(fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
 			fprintf(stderr,
 				_("%s: cannot read attrs on \"%s\": %s\n"),
 				progname, fname, strerror(errno));
-			close(fd);
-			return 1;
+			exitcode = 1;
+			return 0;
 		}
-
-		if (vflag > 1)
-			printf(_(
-    "xfs_bmap: fsx.dsx_xflags=%u, fsx.fsx_extsize=%u, fsx.fsx_nextents=%u\n"),
-					fsx.fsx_xflags, fsx.fsx_extsize,
-					fsx.fsx_nextents);
 
 		if (fsx.fsx_xflags == XFS_XFLAG_REALTIME) {
 			/* 
@@ -189,13 +154,13 @@ dofile(char *fname)
 		}
 	}
 
-	map_size = nflag ? nflag+1 : 32;	/* initial guess - 256 for checkin KCM */
+	map_size = nflag ? nflag+1 : 32;	/* initial guess - 256 */
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
 		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
 			progname, (int)(map_size * sizeof(*map)));
-		close(fd);
-		return 1;
+		exitcode = 1;
+		return 0;
 	}
 		
 
@@ -234,28 +199,19 @@ dofile(char *fname)
 		map->bmv_count = map_size;
 		map->bmv_iflags = bmv_iflags;
 
-		i = ioctl(fd, XFS_IOC_GETBMAPX, map);
-
-		if (vflag > 1)
-			printf(_(
-		"xfs_bmap: i=%d map.bmv_offset=%lld, map.bmv_block=%lld, "
-		"map.bmv_length=%lld, map.bmv_count=%d, map.bmv_entries=%d\n"),
-					i, (long long)map->bmv_offset,
-					(long long)map->bmv_block,
-					(long long)map->bmv_length,
-					map->bmv_count, map->bmv_entries);
+		i = ioctl(fdesc, XFS_IOC_GETBMAPX, map);
 		if (i < 0) {
 			if (   errno == EINVAL
-			    && !aflag && file_size(fd, fname) == 0) {
+			    && !aflag && filesize() == 0) {
 				break;
 			} else	{
 				fprintf(stderr, _("%s: ioctl(XFS_IOC_GETBMAPX) "
 					"iflags=0x%x [\"%s\"]: %s\n"),
 					progname, map->bmv_iflags, fname,
 					strerror(errno));
-				close(fd);
 				free(map);
-				return 1;
+				exitcode = 1;
+				return 0;
 			}
 		}
 		if (nflag)
@@ -265,14 +221,15 @@ dofile(char *fname)
 		/* Get number of extents from ioctl XFS_IOC_FSGETXATTR[A]
 		 * syscall.
 		 */
-		i = ioctl(fd, aflag ? XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
+		i = ioctl(fdesc, aflag ?
+				XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
 		if (i < 0) {
 			fprintf(stderr, _("%s: ioctl(XFS_IOC_FSGETXATTR%s) "
 				"[\"%s\"]: %s\n"), progname, aflag ? "A" : "",
 				fname, strerror(errno));
-			close(fd);
 			free(map);
-			return 1;
+			exitcode = 1;
+			return 0;
 		}
 		if (fsx.fsx_nextents >= map_size-1) {
 			map_size = 2*(fsx.fsx_nextents+1);
@@ -281,20 +238,18 @@ dofile(char *fname)
 				fprintf(stderr,
 					_("%s: cannot realloc %d bytes\n"),
 					progname, (int)(map_size*sizeof(*map)));
-				close(fd);
-				return 1;
+				exitcode = 1;
+				return 0;
 			}
 		}
 	} while (++loop < 2);
 	if (!nflag) {
 		if (map->bmv_entries <= 0) {
 			printf(_("%s: no extents\n"), fname);
-			close(fd);
 			free(map);
 			return 0;
 		}
 	}
-	close(fd);
 	printf("%s:\n", fname);
 	if (!vflag) {
 		for (i = 0; i < map->bmv_entries; i++) {
@@ -341,7 +296,7 @@ dofile(char *fname)
 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
 		tot_w = MINTOT_WIDTH;
 		bbperag = (off64_t)fsgeo.agblocks * 
-		          (off64_t)fsgeo.blocksize / BBSIZE;
+			  (off64_t)fsgeo.blocksize / BBSIZE;
 		sunit = fsgeo.sunit;
 		swidth = fsgeo.swidth;
 
@@ -423,7 +378,7 @@ dofile(char *fname)
 				snprintf(abuf, sizeof(abuf), "(%lld..%lld)", 
 					(long long)agoff,  (long long)
 					(agoff + map[i + 1].bmv_length - 1LL));
-				printf("%4d: %-*s %-*s %*d %-*s %*lld\n", 
+				printf("%4d: %-*s %-*s %*d %-*s %*lld",
 					i, 
 					foff_w, rbuf, 
 					boff_w, bbuf, 
@@ -453,12 +408,16 @@ dofile(char *fname)
 	return 0;
 }
 
-int
-numlen(off64_t val)
+void
+bmap_init(void)
 {
-	off64_t tmp;
-	int len;
+	bmap_cmd.name = _("bmap");
+	bmap_cmd.cfunc = bmap_f;
+	bmap_cmd.argmin = 0;
+	bmap_cmd.argmax = -1;
+	bmap_cmd.args = _("[-adlpv] [-n nx]");
+	bmap_cmd.oneline = _("print block mapping for an XFS file");
+	bmap_cmd.help = bmap_help;
 
-	for (len=0, tmp=val; tmp > 0; tmp=tmp/10) len++;
-	return(len == 0 ? 1 : len);
+	add_command(&bmap_cmd);
 }

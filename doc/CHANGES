@@ -1,4 +1,16 @@
-xfsprogs-2.4.1 (18 March 2002)
+xfsprogs-2.4.2 (27 March 2003)
+	- Added the xfs_io(8) command, an xfs_db(8) alike command
+	  for testing and debugging the XFS file IO path.
+	- Added an optional dependency on the GNU readline library
+	  which is "off" by default and enabled with the configure
+	  option --enable-readline=yes; it affects the interactive
+	  tools only (xfs_db and now xfs_io).
+	- Implemented xfs_bmap(8) as a shell script wrapper.
+	- Documented the mkfs.xfs -f, -llogdev and -rrtdev options.
+	- Corrected size check for realtime summary inode (not the
+	  same as the realtime bitmap inode) in xfs_repair.
+
+xfsprogs-2.4.1 (18 March 2003)
 	- Fix error reporting when zeroing parts of the realtime
 	  device in phase6 of xfs_repair.
 	- Add a mkfs.xfs check for Mac partitions before writing
@@ -7,7 +19,7 @@ xfsprogs-2.4.1 (18 March 2002)
 	- Minor fix to the xfs_bmap(8) man page.
 	- Sync up user/kernel source in libxfs and headers.
 
-xfsprogs-2.4.0 (06 March 2002)
+xfsprogs-2.4.0 (06 March 2003)
 	- Enable unwritten extents by default in mkfs.xfs.
 	- Add a command to xfs_db to enable unwritten extents.
 	- Add an option to xfs_admin to use the above command.
@@ -22,10 +34,10 @@ xfsprogs-2.4.0 (06 March 2002)
 	- Update man pages, fix a typo in the xfs_admin man page
 	  relating to the UUID options.
 
-xfsprogs-2.3.11 (18 February 2002)
+xfsprogs-2.3.11 (18 February 2003)
 	- Missed a build dependency for the Debian build process.
 
-xfsprogs-2.3.10 (17 February 2002)
+xfsprogs-2.3.10 (17 February 2003)
 	- Fix a divide-by-zero error in mkfs with certain stripe unit
 	  and/or width options specified.
 	- Sync up user/kernel source in libxfs and headers.

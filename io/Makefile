@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -33,8 +33,17 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LTCOMMAND = xfs_bmap
-CFILES = xfs_bmap.c
+LTCOMMAND = xfs_io
+HFILES = command.h input.h init.h
+CFILES = command.c input.c init.c \
+	bmap.c fsync.c help.c open.c pread.c prealloc.c pwrite.c \
+	quit.c resblks.c truncate.c
+LSRCFILES = xfs_bmap.sh
+
+ifeq ($(ENABLE_READLINE),yes)
+LLDLIBS += $(LIBREADLINE)
+CFLAGS += -DENABLE_READLINE
+endif
 
 default: $(LTCOMMAND)
 
@@ -43,4 +52,5 @@ include $(BUILDRULES)
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+	$(LTINSTALL) -m 755 xfs_bmap.sh $(PKG_BIN_DIR)/xfs_bmap
 install-dev:

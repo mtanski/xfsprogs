@@ -1,5 +1,6 @@
+#!/bin/sh -f
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -30,36 +31,35 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ..
-include $(TOPDIR)/include/builddefs
+OPTS=""
+VERSION=false
+USAGE="Usage: xfs_bmap [-adlpvV] [-n nx] file..."
 
-LTCOMMAND = xfs_db
+while getopts "adln:pvV" c
+do
+	case $c in
+	a)	OPTS=$OPTS" -a";;
+	d)	OPTS=$OPTS" -d";;
+	l)	OPTS=$OPTS" -l";;
+	n)	OPTS=$OPTS" '-n "$OPTARG"'";;
+	p)	OPTS=$OPTS" -p";;
+	v)	OPTS=$OPTS" -v";;
+	V)	VERSION=true;;
+	\?)	echo $USAGE 1>&2
+		exit 2
+		;;
+	esac
+done
+$VERSION && xfs_io -p xfs_bmap -V
 
-HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
-	bmapbt.h bmroot.h bnobt.h check.h cntbt.h command.h convert.h \
-	dbread.h debug.h dir.h dir2.h dir2sf.h dirshort.h dquot.h echo.h \
-	faddr.h field.h flist.h fprint.h frag.h freesp.h hash.h help.h \
-	init.h inobt.h inode.h input.h io.h malloc.h output.h \
-	print.h quit.h sb.h sig.h strvec.h text.h type.h write.h
-CFILES = $(HFILES:.h=.c)
-LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh
-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID)
-LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
-LLDFLAGS += -static
+set -- extra $@
+shift $OPTIND
 
-ifeq ($(ENABLE_READLINE),yes)
-LLDLIBS += $(LIBREADLINE)
-CFLAGS += -DENABLE_READLINE
-endif
-
-default: $(LTCOMMAND)
-
-include $(BUILDRULES)
-
-install: default
-	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 xfs_admin.sh $(PKG_BIN_DIR)/xfs_admin
-	$(INSTALL) -m 755 xfs_check.sh $(PKG_BIN_DIR)/xfs_check
-	$(INSTALL) -m 755 xfs_ncheck.sh $(PKG_BIN_DIR)/xfs_ncheck
-install-dev:
+while [ "$1" != "" ]
+do
+	eval xfs_io -r -p xfs_bmap -c 'bmap $OPTS' $1
+	status=$?
+	[ $status -ne 0 ] && exit $status
+	shift $OPTIND
+done
+exit 0

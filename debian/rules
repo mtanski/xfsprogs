@@ -12,8 +12,8 @@ pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
 pkgbfs = DIST_ROOT=`pwd`/$(dirbfs); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
-options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
-bfsopts = OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; $(options) export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
+options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; LOCAL_CONFIGURE_OPTIONS=--enable-readline=yes; export DEBUG DISTRIBUTION LOCAL_CONFIGURE_OPTIONS;
+bfsopts = $(options); OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-shared-uuid=yes --enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
 checkdir = test -f debian/rules
 
 build: built

@@ -1,7 +1,14 @@
+xfsprogs (2.4.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 25 Mar 2003 11:25:02 +1100
+
 xfsprogs (2.4.1-1) unstable; urgency=low
 
   * New upstream release
-  * Note: unwritten extents are now enabled by default in mkfs.xfs.
+  * Updated policy version this package conforms to
+  * Note: unwritten extents are now enabled by default in mkfs.xfs
 
  -- Nathan Scott <nathans@debian.org>  Tue, 18 Mar 2003 16:16:43 +1100
 
