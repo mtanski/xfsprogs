@@ -1,3 +1,11 @@
+xfsprogs-2.6.23 (17 September 2004)
+	- Fix xfs_io pread/pwrite -b option, when used more than
+	  once we would use the largest of the previous values,
+	  instead of the (possibly smaller) value specified.
+	- Add recursive modes to lsattr/chattr xfs_io commands.
+        - Make xfs_io run any given command line commands (-c)
+          on all files specified, not just the first.
+
 xfsprogs-2.6.22 (10 September 2004)
 	- Update xfs_io to get a clean compile on IRIX with the
 	  MIPSPro compilers.
