@@ -84,6 +84,12 @@ char	*dopts[] = {
 	"swidth",
 #define D_UNWRITTEN	6
 	"unwritten",
+#define D_AGSIZE	7
+	"agsize",
+#define D_SU		8
+	"su",
+#define D_SW		9
+	"sw",
 	NULL
 };
 
@@ -352,6 +358,54 @@ get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
 }
 
 
+static void
+calc_stripe_factors(int dsu, int dsw, int *dsunit, int *dswidth)
+{
+	if (*dsunit || *dswidth) {
+		if (dsu || dsw) {
+			fprintf(stderr,
+	"su/sw should not be used in conjunction with sunit/swidth\n");
+			usage();
+		}
+
+		if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
+			fprintf(stderr,
+	"both sunit and swidth options have to be specified\n");
+			usage();
+		}
+	}
+
+	if (dsu || dsw) {
+		if (*dsunit || *dswidth) {
+			fprintf(stderr,
+	"sunit/swidth should not be used in conjunction with su/sw\n");
+			usage();
+		}
+
+		if ((dsu && !dsw) || (!dsu && dsw)) {
+			fprintf(stderr,
+	"both su and sw options have to be specified\n");
+			usage();
+		}
+
+		if (dsu % BBSIZE) {
+			fprintf(stderr, "su must be a multiple of %d\n",
+								BBSIZE);
+			usage();
+		}
+
+		*dsunit  = (int)BTOBBT(dsu);
+		*dswidth = *dsunit * dsw;
+	}
+
+	if (*dsunit && (*dswidth % *dsunit != 0)) {
+		fprintf(stderr,
+	"stripe width (%d) has to be a multiple of the stripe unit (%d)\n",
+			*dswidth, *dsunit);
+		usage();
+	}
+}
+
 static int
 get_default_blocksize(void)
 {
@@ -384,6 +438,7 @@ main(int argc, char **argv)
 	xfs_buf_t		*buf;
 	int			c;
 	int			daflag;
+	int			dasize;
 	xfs_drfsbno_t		dblocks;
 	char			*dfile;
 	int			dirblocklog;
@@ -391,6 +446,8 @@ main(int argc, char **argv)
 	int			dirversion;
 	int                     do_overlap_checks;
 	char			*dsize;
+	int			dsu;
+	int			dsw;
 	int			dsunit;
 	int			dswidth;
 	int			extent_flagging;
@@ -441,6 +498,7 @@ main(int argc, char **argv)
 	xfs_sb_t		*sbp;
 	int			sectlog;
 	__uint64_t		tmp_agsize;
+	__uint64_t		tmp_logblocks;
 	uuid_t			uuid;
 	int			worst_freelist;
 	libxfs_init_t		xi;
@@ -450,6 +508,7 @@ main(int argc, char **argv)
 	progname = basename(argv[0]);
 	agcount = 8;
 	blflag = bsflag = 0;
+	dasize = daflag = 0;
 	blocksize = get_default_blocksize();
 	blocklog = libxfs_highbit32(blocksize);
 	agsize = daflag = dblocks = 0;
@@ -468,7 +527,7 @@ main(int argc, char **argv)
 	dfile = logfile = rtfile = NULL;
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	opterr = 0;
-	dsunit = dswidth = nodsflag = lalign = 0;
+	dsu = dsw = dsunit = dswidth = nodsflag = lalign = 0;
 	do_overlap_checks = 1;
 	extent_flagging = 0;
 	force_fs_overwrite = 0;
@@ -538,6 +597,18 @@ main(int argc, char **argv)
 						illegal(value, "d agcount");
 					daflag = 1;
 					break;
+				case D_AGSIZE:
+					if (!value)
+						reqval('d', dopts, D_AGSIZE);
+					if (dasize)
+						respec('d', dopts, D_AGSIZE);
+					if (blflag || bsflag)
+						agsize = cvtnum(blocksize,
+								value);
+					else
+						agsize = cvtnum(0, value);
+					dasize = 1;
+					break;
 				case D_FILE:
 					if (!value)
 						value = "1";
@@ -566,14 +637,36 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_SUNIT);
 					if (dsunit)
 						respec('d', dopts, D_SUNIT);
-					dsunit = cvtnum(0, value);
+					if (blflag || bsflag)
+						dsunit = cvtnum(blocksize,
+								value);
+					else
+						dsunit = cvtnum(0, value);
 					break;
 				case D_SWIDTH:
 					if (!value)
 						reqval('d', dopts, D_SWIDTH);
 					if (dswidth)
 						respec('d', dopts, D_SWIDTH);
-					dswidth = cvtnum(0, value);
+					if (blflag || bsflag)
+						dswidth = cvtnum(blocksize,
+								 value);
+					else
+						dswidth = cvtnum(0, value);
+					break;
+				case D_SU:
+					if (!value)
+						reqval('d', dopts, D_SU);
+					if (dsu)
+						respec('d', dopts, D_SU);
+					dsu = cvtnum(0, value);
+					break;
+				case D_SW:
+					if (!value)
+						reqval('d', dopts, D_SW);
+					if (dsw)
+						respec('d', dopts, D_SW);
+					dsw = cvtnum(0, value);
 					break;
 				case D_UNWRITTEN:
 					if (!value)
@@ -927,6 +1020,13 @@ main(int argc, char **argv)
 		}
 		break;
 	}
+
+	if (daflag && dasize) {
+		fprintf(stderr,
+	"both -d agcount= and agsize= specified, use one or the other\n");
+		usage();
+	}
+
 	if (!daflag)
 		agcount = 8;
 
@@ -1083,18 +1183,7 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-		fprintf(stderr,
-"both sunit and swidth options have to be specified\n");
-		usage();
-	}
-
-	if (dsunit && dswidth % dsunit != 0) {
-		fprintf(stderr,
-"mount: stripe width (%d) has to be a multiple of the stripe unit (%d)\n",
-			dswidth, dsunit);
-		return 1;
-	}
+	calc_stripe_factors(dsu, dsw, &dsunit, &dswidth);
 
 	/* other global variables */
 	sectlog = 9;		/* i.e. 512 bytes */
@@ -1266,9 +1355,21 @@ main(int argc, char **argv)
 	} else if (!loginternal && !xi.logdev)
 		logblocks = 0;
 	else if (loginternal && !logsize) {
-		logblocks = MAX(XFS_DFL_LOG_SIZE, i * XFS_DFL_LOG_FACTOR);
-                logblocks = MAX(logblocks, dblocks / 8192); 
+		/*
+		 * logblocks grows from min_logblocks to XFS_MAX_LOG_BLOCKS
+		 * at 1TB
+		 *
+		 * 8192 = 1TB / MAX_LOG_BYTES
+		 */
+		logblocks = (dblocks << blocklog) / 8192;
+		logblocks = logblocks >> blocklog;
+		logblocks = MAX(min_logblocks, logblocks);
+                logblocks = MAX(logblocks,
+				MAX(XFS_DFL_LOG_SIZE, i * XFS_DFL_LOG_FACTOR));
                 logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
+		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
+			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
+		}
         } 
 	if (logblocks < min_logblocks) {
 		fprintf(stderr,
@@ -1307,16 +1408,62 @@ main(int argc, char **argv)
 		rtextents = rtblocks = 0;
 		nbmblocks = 0;
 	}
-	agsize = dblocks / agcount + (dblocks % agcount != 0);
+
+	if (dasize) {
+		/*
+		 * If the specified agsize isn't a multiple of fs blks,
+		 * complain.
+		 */
+		if (agsize % blocksize) {
+			fprintf(stderr,
+			"agsize (%lld) not a multiple of fs blk size (%d)\n",
+				(long long)agsize, blocksize);
+			usage();
+		}
+
+		agsize /= blocksize;
+
+		/*
+		 * If the specified agsize is too small, or too large,
+		 * complain.
+		 */
+		if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+			fprintf(stderr,
+			"agsize (%lldb) too small, need at least %lld blocks\n",
+				(long long)agsize,
+				(long long)XFS_AG_MIN_BLOCKS(blocklog));
+			usage();
+		}
+
+		if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+			fprintf(stderr,
+			"agsize (%lldb) too big, maximum is %lld blocks\n",
+				(long long)agsize,
+				(long long)XFS_AG_MAX_BLOCKS(blocklog));
+			usage();
+		}
+
+		if (agsize > dblocks)  {
+			fprintf(stderr,
+			"agsize (%lldb) too big, data area is %lld blocks\n",
+				(long long)agsize, (long long)dblocks);
+			usage();
+		}
+
+		agcount = dblocks / agsize + (dblocks % agsize != 0);
+	} else {
+		agsize = dblocks / agcount + (dblocks % agcount != 0);
+	}
 
 	/*
-	 * If the ag size is too small, complain if agcount was specified,
-	 * and fix it otherwise.
+	 * If the ag size is too small, complain if agcount/agsize was
+	 * specified, and fix it otherwise.
 	 */
 	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
-		if (daflag) {
+		if (daflag || dasize) {
 			fprintf(stderr,
-				"too many allocation groups for size\n");
+				"too many allocation groups for size = %lld\n",
+				(long long)agsize);
 			fprintf(stderr, "need at most %lld allocation groups\n",
 				(long long)
 				(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
@@ -1326,18 +1473,20 @@ main(int argc, char **argv)
 		agsize = XFS_AG_MIN_BLOCKS(blocklog);
 		if (dblocks < agsize)
 			agcount = 1;
-		else {
+		else
 			agcount = dblocks / agsize;
-			agsize = dblocks / agcount + (dblocks % agcount != 0);
-		}
+
+		agsize = dblocks / agcount + (dblocks % agcount != 0);
 	}
+
 	/*
-	 * If the ag size is too large, complain if agcount was specified,
-	 * and fix it otherwise.
+	 * If the ag size is too large, complain if agcount/agsize was
+	 * specified, and fix it otherwise.
 	 */
 	else if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-		if (daflag) {
-			fprintf(stderr, "too few allocation groups for size\n");
+		if (daflag || dasize) {
+			fprintf(stderr, "too few allocation groups for size = %lld\n",
+				(long long)agsize);
 			fprintf(stderr,
 				"need at least %lld allocation groups\n",
 				(long long)
@@ -1347,16 +1496,15 @@ main(int argc, char **argv)
 		}
 		agsize = XFS_AG_MAX_BLOCKS(blocklog);
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
-		agsize = dblocks / agcount + (dblocks % agcount != 0);
 	}
 	/*
 	 * If agcount was not specified, and agsize is larger than
 	 * we'd like, make it the size we want.
 	 */
-	if (!daflag && agsize > XFS_AG_BEST_BLOCKS(blocklog)) {
-		agsize = XFS_AG_BEST_BLOCKS(blocklog);
+	if (!daflag && !dasize &&
+	    (agsize > XFS_AG_BEST_BLOCKS(blocklog, dblocks))) {
+		agsize = XFS_AG_BEST_BLOCKS(blocklog, dblocks);
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
-		agsize = dblocks / agcount + (dblocks % agcount != 0);
 	}
 	/*
 	 * If agcount is too large, make it smaller.
@@ -1364,6 +1512,13 @@ main(int argc, char **argv)
 	if (agcount > XFS_MAX_AGNUMBER + 1) {
 		agcount = XFS_MAX_AGNUMBER + 1;
 		agsize = dblocks / agcount + (dblocks % agcount != 0);
+
+		if (dasize || daflag)
+			fprintf(stderr,
+		"agsize set to %lld, agcount %lld > max (%lld)\n",
+				(long long)agsize, (long long)agcount,
+				(long long)XFS_MAX_AGNUMBER+1);
+
 		if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
 			/*
 			 * We're confused.
@@ -1414,21 +1569,31 @@ main(int argc, char **argv)
 		 */
 		if ((agsize % dsunit) != 0) {
                 	/*
-                 	 * round up to stripe unit boundary. Also make sure 
+                 	 * Round up to stripe unit boundary. Also make sure 
 			 * that agsize is still larger than 
 			 * XFS_AG_MIN_BLOCKS(blocklog)
 		 	 */
                 	tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
+			/*
+			 * Round down to stripe unit boundary if rounding up
+			 * created an AG size that is larger than the AG max.
+			 */
+			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
+				tmp_agsize = ((agsize) / dsunit) * dsunit;
                 	if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
 			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
 			    !daflag) {
 				agsize = tmp_agsize;
 				agcount = dblocks/agsize + 
 						(dblocks % agsize != 0);
+				if (dasize || daflag)
+					fprintf(stderr,
+					"agsize rounded to %lld, swidth = %d\n",
+						(long long)agsize, dswidth);
                 	} else {
-				if (nodsflag)
+				if (nodsflag) {
 					dsunit = dswidth = 0;
-				else { 
+				} else { 
 					fprintf(stderr,
 "Allocation group size %lld is not a multiple of the stripe unit %d\n",
 						(long long)agsize, dsunit);
@@ -1479,16 +1644,24 @@ main(int argc, char **argv)
 		 */
 		if (dsunit && ((logstart % dsunit) != 0)) {
 			logstart = ((logstart + (dsunit - 1))/dsunit) * dsunit;
-
 			/* 
 			 * Make sure that the log size is a multiple of the
 			 * stripe unit
 			 */
 			if ((logblocks % dsunit) != 0) {
-			    if (!lsflag) 
-				logblocks = ((logblocks + (dsunit - 1))
-							/dsunit) * dsunit;
-			    else {
+			    if (!lsflag) {
+				tmp_logblocks = ((logblocks + (dsunit - 1))
+							/ dsunit) * dsunit;
+				/*
+				 * If the log is too large, round down
+				 * instead of round up
+				 */
+				if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
+				    ((tmp_logblocks << blocklog) > XFS_MAX_LOG_BYTES)) {
+					tmp_logblocks = (logblocks / dsunit) * dsunit;
+				}
+				logblocks = tmp_logblocks;
+			    } else {
 				fprintf(stderr,
 	"internal log size %lld is not a multiple of the stripe unit %d\n", 
 					(long long)logblocks, dsunit);
@@ -1507,6 +1680,7 @@ main(int argc, char **argv)
 		}
 	} else
 		logstart = 0;
+
 	if (label)
 		strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
 	sbp->sb_magicnum = XFS_SB_MAGIC;
@@ -1985,7 +2159,8 @@ usage(void)
 	fprintf(stderr, "Usage: %s\n\
 /* blocksize */		[-b log=n|size=num]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
-			    sunit=value,swidth=value,unwritten=0|1]\n\
+			    sunit=value,swidth=value,unwritten=0|1,\n\
+			    su=value,sw=value]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx]\n\
 /* naming */		[-n log=n|size=num|version=n]\n\
@@ -1995,11 +2170,13 @@ usage(void)
 /* version */		[-V]\n\
 /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
 			devicename\n\
-devicename is required unless -d name=xxx is given\n\
-internal 1000 block log is default unless overridden or using a volume\n\
-manager with log\n\
-num is xxx (bytes), or xxxb (blocks), or xxxk (xxx KB), or xxxm (xxx MB)\n\
-value is xxx (512 blocks)\n",
+<devicename> is required unless -d name=xxx is given.\n\
+Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n\
+based on the filesystem size.  Default log reaches its largest size at 1TB.\n\
+This can be overridden with the -l options or using a volume manager with a\n\
+log subvolume.\n\
+<num> is xxx (bytes), or xxxb (blocks), or xxxk (xxx KB), or xxxm (xxx MB)\n\
+<value> is xxx (512 blocks).\n",
 		progname);
 	exit(1);
 }

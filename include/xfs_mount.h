@@ -377,6 +377,7 @@ typedef struct xfs_mount {
 #define	XFS_WSYNC_READIO_LOG	15	/* 32K */
 #define	XFS_WSYNC_WRITEIO_LOG	14	/* 16K */
 
+#define xfs_force_shutdown(m,f) _xfs_force_shutdown(m,f,__FILE__,__LINE__);
 /* 
  * Flags sent to xfs_force_shutdown.
  */
@@ -478,7 +479,7 @@ int		xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *, uint, int);
 int		xfs_readsb(xfs_mount_t *mp, dev_t);
 struct xfs_buf	*xfs_getsb(xfs_mount_t *, int);
 void            xfs_freesb(xfs_mount_t *);
-void		xfs_force_shutdown(struct xfs_mount *, int);
+void		_xfs_force_shutdown(struct xfs_mount *, int, char *, int);
 int		xfs_syncsub(xfs_mount_t *, int, int, int *);
 void		xfs_xlatesb(void *, struct xfs_sb *, int, xfs_arch_t, __int64_t);
 extern	struct vfsops xfs_vfsops;

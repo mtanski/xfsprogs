@@ -54,6 +54,7 @@ If suffixed with \f3b\f1 then the size is converted by multiplying it
 by the filesystem's block size.
 If suffixed with \f3k\f1 then the size is converted by multiplying it by 1024.
 If suffixed with \f3m\f1 then the size is converted by multiplying it by
+1048576 (1024 * 1024).
 If suffixed with \f3g\f1 then the size is converted by multiplying it by
 1073741824 (1024 * 1024 * 1024).
 .TP
@@ -70,9 +71,9 @@ The block size is specified either as a base two logarithm value with
 .BR log= ,
 or in bytes with
 .BR size= .
-The default value is 4096 bytes (4 KB).  The minimum value for block
-size is 512; the maximum is 65536 (64 KB).  XFS on Linux currently
-only supports 4KB blocks.
+The default value is 4096 bytes (4 KB) on systems with a 4KB pagesize.
+The minimum value for block size is 512; the maximum is 65536 (64 KB).
+XFS on Linux currently only supports pagesize blocks.
 .TP
 .B \-d
 Data section options.
@@ -81,11 +82,14 @@ These options specify the location, size, and other parameters of the
 data section of the filesystem.
 The valid suboptions are:
 \f3agcount=\f1\f2value\f1,
+\f3agsize=\f1\f2value\f1,
 \f3file\f1[\f3=\f1\f2value\f1],
 \f3name=\f1\f2value\f1,
 \f3size=\f1\f2value\f1,
 \f3sunit=\f1\f2value\f1,
 \f3swidth=\f1\f2value\f1,
+\f3su=\f1\f2value\f1,
+\f3sw=\f1\f2value\f1,
 and
 \f3unwritten\f1[\f3=\f1\f2value\f1].
 .IP
@@ -108,6 +112,23 @@ to a very large number should be avoided, since this causes an unreasonable
 amount of CPU time to be used when the filesystem is close to full.
 .IP
 The
+.B agsize
+suboption is an alternative to using
+.B agcount.
+The argument provided to
+.B agsize
+is the desired size of the allocation group expressed in bytes
+(usually using the \f3m\f1 or \f3g\f1 suffixes).
+This value must be a multiple of the filesystem block size, and
+must be at least 16MB, and no more than 4GB, and may
+be automatically adjusted to properly align with the stripe geometry.
+The
+.B agcount
+suboption and the
+.B agsize
+suboption are mutually exclusive.
+.IP
+The
 .B name
 suboption can be used to specify the name of the special file containing
 the filesystem.
@@ -116,7 +137,6 @@ In this case, the log section must be specified as
 (with a size, see the
 .B \-l
 option below) and there can be no real-time section.
-Depending on the filesystem size, mkfs.xfs will try to 
 .IP
 The
 .B file
@@ -125,8 +145,7 @@ suboption is used to specify that the file given by the
 suboption is a regular file.
 The suboption value is either 0 or 1,
 with 1 signifying that the file is regular.
-This suboption is used only to make a filesystem image
-(for instance, a miniroot image).
+This suboption is used only to make a filesystem image.
 If the value is omitted then 1 is assumed.
 .IP
 The
@@ -141,17 +160,36 @@ less space than the size of the special file.
 The
 .B sunit
 suboption is used to specify the stripe unit for a RAID device or a
-logical volume.  The suboption value has to be specified in 512-byte
-block units.  This suboption ensures that data allocations will be
-stripe unit aligned when the current end of file is being extended and
-the file size is larger than 512KB.  Also inode allocations and the
-internal log will be stripe unit aligned.
+logical volume.
+The suboption value has to be specified in 512-byte block units.
+Use the
+.B su
+suboption to specify the stripe unit size in bytes.
+This suboption ensures that data allocations will be stripe unit aligned
+when the current end of file is being extended and the file size is larger
+than 512KB.
+Also inode allocations and the internal log will be stripe unit aligned.
+.IP
+The
+.B su
+suboption is an alternative to using
+.B sunit.
+The
+.B su
+suboption is used to specify the stripe unit for a RAID device or a
+striped logical volume.
+The suboption value has to be specified in bytes,
+(usually using the \f3m\f1 or \f3g\f1 suffixes).
+This value must be a multiple of the filesystem block size.
 .IP
 The
 .B swidth
 suboption is used to specify the stripe width for a RAID device or a
 striped logical volume.
 The suboption value has to be specified in 512-byte block units.
+Use the
+.B sw
+suboption to specify the stripe width size in bytes.
 This suboption is required if
 .B \-d sunit
 has been specified and it has to be a multiple of the 
@@ -161,8 +199,21 @@ The stripe width will be the preferred iosize returned in the
 .IR stat (2)
 system call.
 .IP
-When a filesystem is created on an LVM or an MD device, mkfs.xfs will
-automatically query the logical volume for appropriate 
+The
+.B sw
+suboption is an alternative to using
+.B swidth.
+The
+.B sw
+suboption is used to specify the stripe width for a RAID device or
+striped logical volume.
+The suboption value is expressed as a multiplier of the stripe unit,
+usually the same as the number of stripe members in the logical
+volume configuration, or data disks in a RAID device.
+.IP
+When a filesystem is created on a logical volume device,
+.I mkfs.xfs
+will automatically query the logical volume for appropriate 
 .B sunit
 and
 .B swidth
@@ -258,7 +309,9 @@ suboption is used to specify the size of the log section.
 .IP
 If the log is contained within the data section and 
 .B size
-isn't specified, mkfs will try to select a suitable log size depending
+isn't specified,
+.I mkfs.xfs
+will try to select a suitable log size depending
 on the size of the filesystem.  The actual logsize depends on the
 filesystem block size and the directory block size.
 .IP

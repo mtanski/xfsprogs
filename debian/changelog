@@ -1,3 +1,11 @@
+xfsprogs (1.2.6) unstable; urgency=low
+
+  * Merge support for -d agsize=/su=/sw= (AG, stripe unit/width size)
+  * Merge support for dynamic configuration of default log size
+  * Document these updates, and fix a couple of man page typos too
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 15 May 2001 12:34:17 +1000
+
 xfsprogs (1.2.5) unstable; urgency=low
 
   * Fix missing Makefile include entries for LVM headers
