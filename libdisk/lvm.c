@@ -37,6 +37,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <volume.h>
 
 #ifndef LVM_BLK_MAJOR
@@ -64,6 +65,7 @@ lvm_get_subvol_stripe(
 	int		lvpipe[2], stripes = 0, stripesize = 0;
 	char		*largv[3], buf[1024];
 	FILE		*stream;
+	char		tmppath[MAXPATHLEN];
 
 	if (!mnt_is_lvm_subvol(sb->st_rdev))
 		return 0;
@@ -81,7 +83,16 @@ lvm_get_subvol_stripe(
 		return 0;
 	}
 
-	largv[1] = dfile;
+	/* lvm tools want the full, real path to a logical volume.
+	 * (lvm doesn't really open the file, it just wants a
+	 * string that happens to look like a path :/ )
+	 */
+	if (dfile[0] != '/') {
+		getcwd(tmppath, MAXPATHLEN);
+		strcat(tmppath, "/");
+		dfile = strcat(tmppath, dfile);
+	}
+	largv[1] = realpath(dfile, tmppath);
 	largv[2] = NULL;
 
 	/* Open pipe */

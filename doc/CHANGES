@@ -1,3 +1,7 @@
+xfsprogs-2.2.3 (28 August 2002)
+	- Fix call to lvdisplay on LVM volumes so that lvdisplay
+	  always gets the full, real path to the volume, as required.
+
 xfsprogs-2.2.2 (19 August 2002)
 	- Fix endian bug in xfs_db, was not flipping 16-bit numbers.
 	- Make xfs_repair recognize a NULLFSINO and print that in
