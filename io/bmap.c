@@ -299,8 +299,8 @@ bmap_f(
 		tot_w = MINTOT_WIDTH;
 		bbperag = (off64_t)fsgeo.agblocks *
 			  (off64_t)fsgeo.blocksize / BBSIZE;
-		sunit = fsgeo.sunit;
-		swidth = fsgeo.swidth;
+		sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
+		swidth = (fsgeo.swidth * fsgeo.blocksize) / BBSIZE;
 		flg = sunit;
 
 		/*
@@ -349,6 +349,10 @@ bmap_f(
 			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC) {
 				flg |= FLG_PRE;
 			}
+			/*
+			 * If striping enabled, determine if extent starts/ends
+			 * on a stripe unit boundary.
+			 */
 			if (sunit) {
 				if (map[i + 1].bmv_block  % sunit != 0) {
 					flg |= FLG_BSU;
