@@ -36,8 +36,30 @@
 #include "init.h"
 #include "io.h"
 
+#define HAVE_FTW_H 1	/* TODO: configure me */
+
+#ifdef HAVE_FTW_H
+#include <ftw.h>
+#else
+static int
+nftw(
+	char	*dir,
+	int	(*fn)(const char *, const struct stat *, int, struct FTW *),
+	int	depth,
+	int	flags)
+{
+	fprintf(stderr, "%s: not implemented, no recursion available\n",
+		__FUNCTION__);
+	return 0;
+}
+#endif
+
 static cmdinfo_t chattr_cmd;
 static cmdinfo_t lsattr_cmd;
+static unsigned int orflags;
+static unsigned int andflags;
+static unsigned int recurse_all;
+static unsigned int recurse_dir;
 
 #define CHATTR_XFLAG_LIST	"riasAdtPn"
 
@@ -46,16 +68,16 @@ static struct xflags {
 	char	*shortname;
 	char	*longname;
 } xflags[] = {
-	{ XFS_XFLAG_REALTIME,	"r", "realtime" },
-	{ XFS_XFLAG_PREALLOC,	"p", "prealloc" },
-	{ XFS_XFLAG_IMMUTABLE,	"i", "immutable" },
-	{ XFS_XFLAG_APPEND,	"a", "append-only" },
-	{ XFS_XFLAG_SYNC,	"s", "sync" },
-	{ XFS_XFLAG_NOATIME,	"A", "no-atime" },
-	{ XFS_XFLAG_NODUMP,	"d", "no-dump" },
-	{ XFS_XFLAG_RTINHERIT,	"t", "rt-inherit" },
-	{ XFS_XFLAG_PROJINHERIT,"P", "proj-inherit" },
-	{ XFS_XFLAG_NOSYMLINKS,	"n", "nosymlinks" },
+	{ XFS_XFLAG_REALTIME,	"r", "realtime"		},
+	{ XFS_XFLAG_PREALLOC,	"p", "prealloc"		},
+	{ XFS_XFLAG_IMMUTABLE,	"i", "immutable"	},
+	{ XFS_XFLAG_APPEND,	"a", "append-only"	},
+	{ XFS_XFLAG_SYNC,	"s", "sync"		},
+	{ XFS_XFLAG_NOATIME,	"A", "no-atime"		},
+	{ XFS_XFLAG_NODUMP,	"d", "no-dump"		},
+	{ XFS_XFLAG_RTINHERIT,	"t", "rt-inherit"	},
+	{ XFS_XFLAG_PROJINHERIT,"P", "proj-inherit"	},
+	{ XFS_XFLAG_NOSYMLINKS,	"n", "nosymlinks"	},
 	{ 0, NULL, NULL }
 };
 
@@ -79,6 +101,8 @@ lsattr_help(void)
 " n -- symbolic links cannot be created in this directory\n"
 "\n"
 " Options:\n"
+" -R -- recursively descend (useful when current file is a directory)\n"
+" -D -- recursively descend, but only list attributes on directories\n"
 " -a -- show all flags which can be set alongside those which are set\n"
 " -v -- verbose mode; show long names of flags, not single characters\n"
 "\n"));
@@ -95,6 +119,8 @@ chattr_help(void)
 " 'chattr +a' - sets the append-only flag\n"
 " 'chattr -a' - clears the append-only flag\n"
 "\n"
+" -R -- recursively descend (useful when current file is a directory)\n"
+" -D -- recursively descend, only modifying attributes on directories\n"
 " +/-r -- set/clear the realtime flag\n"
 " +/-i -- set/clear the immutable flag\n"
 " +/-a -- set/clear the append-only flag\n"
@@ -150,6 +176,33 @@ printxattr(
 }
 
 static int
+lsattr_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	struct fsxattr		fsx;
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1)
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
+		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+			progname, path, strerror(errno));
+	else
+		printxattr(fsx.fsx_xflags, 0, 1, path, 0, 1);
+
+	if (fd != -1)
+		close(fd);
+	return 0;
+}
+
+static int
 lsattr_f(
 	int		argc,
 	char		**argv)
@@ -158,8 +211,17 @@ lsattr_f(
 	char		*name = file->name;
 	int		c, aflag = 0, vflag = 0;
 
-	while ((c = getopt(argc, argv, "av")) != EOF) {
+	recurse_all = recurse_dir = 0;
+	while ((c = getopt(argc, argv, "DRav")) != EOF) {
 		switch (c) {
+		case 'D':
+			recurse_all = 0;
+			recurse_dir = 1;
+			break;
+		case 'R':
+			recurse_all = 1;
+			recurse_dir = 0;
+			break;
 		case 'a':
 			aflag = 1;
 			vflag = 0;
@@ -169,13 +231,16 @@ lsattr_f(
 			vflag = 1;
 			break;
 		default:
-			printf(_("invalid lsattr argument -- '%c'\n"), c);
-			return 0;
+			return command_usage(&lsattr_cmd);
 		}
 	}
 
-	if ((xfsctl(name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-		perror("XFS_IOC_FSGETXATTR");
+	if (recurse_all || recurse_dir) {
+		nftw(name, lsattr_callback,
+			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+	} else if ((xfsctl(name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+			progname, name, strerror(errno));
 	} else {
 		printxattr(fsx.fsx_xflags, vflag, !aflag, name, vflag, !aflag);
 		if (aflag) {
@@ -183,6 +248,38 @@ lsattr_f(
 			printxattr(-1, 0, 1, name, 0, 1);
 		}
 	}
+	return 0;
+}
+
+static int
+chattr_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	struct fsxattr		attr;
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1) {
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	} else if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &attr) < 0) {
+		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+			progname, path, strerror(errno));
+	} else {
+		attr.fsx_xflags |= orflags;
+		attr.fsx_xflags &= ~andflags;
+		if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &attr) < 0)
+			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+				progname, path, strerror(errno));
+	}
+
+	if (fd != -1)
+		close(fd);
 	return 0;
 }
 
@@ -196,16 +293,18 @@ chattr_f(
 	unsigned int	i = 0;
 	char		*c, *name = file->name;
 
-	if (xfsctl(name, file->fd, XFS_IOC_FSGETXATTR, &attr) < 0) {
-		perror("XFS_IOC_FSGETXATTR");
-		return 0;
-	}
+	orflags = andflags = 0;
+	recurse_all = recurse_dir = 0;
 	while (++i < argc) {
-		if (argv[i][0] == '+') {
+		if (argv[i][0] == '-' && argv[i][1] == 'R') {
+			recurse_all = 1;
+		} else if (argv[i][0] == '-' && argv[i][1] == 'D') {
+			recurse_dir = 1;
+		} else if (argv[i][0] == '+') {
 			for (c = &argv[i][1]; *c; c++) {
 				for (p = xflags; p->flag; p++) {
 					if (strncmp(p->shortname, c, 1) == 0) {
-						attr.fsx_xflags |= p->flag;
+						orflags |= p->flag;
 						break;
 					}
 				}
@@ -219,7 +318,7 @@ chattr_f(
 			for (c = &argv[i][1]; *c; c++) {
 				for (p = xflags; p->flag; p++) {
 					if (strncmp(p->shortname, c, 1) == 0) {
-						attr.fsx_xflags &= ~p->flag;
+						andflags |= p->flag;
 						break;
 					}
 				}
@@ -235,8 +334,20 @@ chattr_f(
 			return 0;
 		}
 	}
-	if (xfsctl(name, file->fd, XFS_IOC_FSSETXATTR, &attr) < 0)
-		perror("XFS_IOC_FSSETXATTR");
+
+	if (recurse_all || recurse_dir) {
+		nftw(name, chattr_callback,
+			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+	} else if (xfsctl(name, file->fd, XFS_IOC_FSGETXATTR, &attr) < 0) {
+		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+			progname, name, strerror(errno));
+	} else {
+		attr.fsx_xflags |= orflags;
+		attr.fsx_xflags &= ~andflags;
+		if (xfsctl(name, file->fd, XFS_IOC_FSSETXATTR, &attr) < 0)
+			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+				progname, name, strerror(errno));
+	}
 	return 0;
 }
 
@@ -245,7 +356,7 @@ attr_init(void)
 {
 	chattr_cmd.name = _("chattr");
 	chattr_cmd.cfunc = chattr_f;
-	chattr_cmd.args = _("[+/-"CHATTR_XFLAG_LIST"]");
+	chattr_cmd.args = _("[-R|-D] [+/-"CHATTR_XFLAG_LIST"]");
 	chattr_cmd.argmin = 1;
 	chattr_cmd.argmax = -1;
 	chattr_cmd.flags = CMD_NOMAP_OK;
@@ -255,7 +366,7 @@ attr_init(void)
 
 	lsattr_cmd.name = _("lsattr");
 	lsattr_cmd.cfunc = lsattr_f;
-	lsattr_cmd.args = _("[-a|-v]");
+	lsattr_cmd.args = _("[-R|-D|-a|-v]");
 	lsattr_cmd.argmin = 0;
 	lsattr_cmd.argmax = 1;
 	lsattr_cmd.flags = CMD_NOMAP_OK;

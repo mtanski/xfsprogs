@@ -165,17 +165,20 @@ main(
 	int	argc,
 	char	**argv)
 {
-	int	c, i, done = 0;
+	int	c, i, j, done = 0;
 	char	*input;
 	char	**v;
 
 	init(argc, argv);
 
 	for (i = 0; !done && i < ncmdline; i++) {
-		v = breakline(cmdline[i], &c);
-		if (c)
-			done = command(c, v);
-		free(v);
+		for (j = 0; !done && j < filecount; j++) {
+			file = &filetable[j];
+			v = breakline(cmdline[i], &c);
+			if (c)
+				done = command(c, v);
+			free(v);
+		}
 	}
 	if (cmdline) {
 		free(cmdline);
