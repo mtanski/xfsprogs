@@ -1486,12 +1486,13 @@ main(int argc, char **argv)
 			usage();
 		}
 		agsize = XFS_AG_MIN_BLOCKS(blocklog);
-		if (dblocks < agsize)
+		if (dblocks < agsize) {
 			agcount = 1;
-		else
+			agsize = dblocks;
+		} else {
 			agcount = dblocks / agsize;
-
-		agsize = dblocks / agcount + (dblocks % agcount != 0);
+			agsize = dblocks / agcount +(dblocks % agcount != 0);
+		}
 	}
 
 	/*
@@ -1637,15 +1638,20 @@ main(int argc, char **argv)
 				}
         		}
 		}
-		if ((agsize % dswidth) == 0) {
+		if (((agsize % dswidth) == 0) && (agcount > 1)) {
 			/* This is a non-optimal configuration because all AGs
-			 * start on the same disk in the stripe.  Decreasing
+			 * start on the same disk in the stripe.  Changing 
 			 * the AG size by one sunit will guarantee that this
-			 * does not happen
+			 * does not happen.
 			 */
 			tmp_agsize = agsize - dsunit;
-			if (tmp_agsize < XFS_AG_MIN_BLOCKS(blocklog))
+			if (tmp_agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
 				tmp_agsize = agsize + dsunit;
+				if (dblocks < agsize) {
+					/* oh well, nothing to do */
+					tmp_agsize = agsize;
+				}
+			}
 			if (daflag || dasize) {
 				fprintf(stderr,
 "Warning: AG size is a multiple of stripe width.  This can cause performance\n\
