@@ -5,6 +5,8 @@
 	- Fix bug in xfs_repair da_write() routine, which affects
 	  filesystems where the data blocksize != naming blocksize
 	  (see xfs_info output).
+	- Fix a use-after-free bug in xfs_repair code for checking
+	  version 1 btree-format directories.
 
 xfsprogs-2.0.5 (02 May 2002)
 	- size AGs so that they do not always start on the same 

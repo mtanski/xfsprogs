@@ -1035,6 +1035,7 @@ verify_final_da_path(xfs_mount_t	*mp,
 		const int		p_level)
 {
 	xfs_da_intnode_t	*node;
+	xfs_dahash_t		hashval;
 	int			bad = 0;
 	int			entry;
 	int			this_level = p_level + 1;
@@ -1118,6 +1119,12 @@ verify_final_da_path(xfs_mount_t	*mp,
 	}
 
 	/*
+	 * Note: squirrel hashval away _before_ releasing the
+	 * buffer, preventing a use-after-free problem.
+	 */
+	hashval = INT_GET(node->btree[entry].hashval, ARCH_CONVERT);
+
+	/*
 	 * release/write buffer
 	 */
 	ASSERT(cursor->level[this_level].dirty == 0 ||
@@ -1140,11 +1147,10 @@ verify_final_da_path(xfs_mount_t	*mp,
 		return(0);
 	}
 	/*
-	 * set hashvalue to correctl reflect the now-validated
+	 * set hashvalue to correctly reflect the now-validated
 	 * last entry in this block and continue upwards validation
 	 */
-	cursor->level[this_level].hashval =
-			INT_GET(node->btree[entry].hashval, ARCH_CONVERT);
+	cursor->level[this_level].hashval = hashval;
 	return(verify_final_da_path(mp, cursor, this_level));
 }
 
