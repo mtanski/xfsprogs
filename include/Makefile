@@ -43,7 +43,10 @@ HFILES = arch.h handle.h jdm.h libxfs.h xqm.h \
 	xfs_ialloc_btree.h xfs_imap.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
-LSRCFILES = platform_defs.h.in builddefs.in buildrules lvm.h lvm_user.h liblvm.h
+
+LSRCFILES = platform_defs.h.in builddefs.in buildrules \
+	lvm.h lvm_user.h liblvm.h \
+	md-int.h
 
 default install :
 
