@@ -326,6 +326,12 @@ typedef struct xfs_fsop_handlereq {
 	__u32		*ohandlen;	/* user buffer length		*/
 } xfs_fsop_handlereq_t;
 
+/* 
+ * Error injection can be turned on ethier by DEBUG or by INDUCE_IO_ERROR
+ * below since relying only on DEBUG will undoubtedly be a different
+ * code path.
+ */
+/*#define INDUCE_IO_ERROR*/
 #if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
 /*
  * Error injection.
