@@ -1,6 +1,6 @@
 xfsprogs (1.1.0) unstable; urgency=low
 
-  * Initial release.
+  * Initial release (closes: #83829)
 
  -- Nathan Scott <nathans@debian.org>  Thu,  4 Jan 2001 11:15:11 -0500
 
