@@ -1,4 +1,7 @@
 
+xfsprogs-1.2.7 (22 May 2001)
+	- new xfs_freeze(8) command - volume manager snapshot helper
+
 xfsprogs-1.2.6 (15 May 2001)
 	- merge support for -d agsize=/su=/sw= (AG, stripe unit/width size)
 	- merge support for dynamic configuration of default log size

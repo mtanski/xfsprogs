@@ -3,11 +3,11 @@
 xfs_freeze \- suspend access to an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_freeze\f1 [ \f3\-fu\f1 ] [ \f3-t\f1 mtab ] mount-point
+\f3xfs_freeze\f1 [ \f3\-fu\f1 ] mount-point
 .fi
 .SH DESCRIPTION
 .I xfs_freeze
-Suspend and resume access to an XFS filesystem (see
+suspends and resumes access to an XFS filesystem (see
 .IR xfs (5)).
 The
 .I mount-point
@@ -16,8 +16,8 @@ is mounted.
 The filesystem must be mounted to be frozen (see
 .IR mount (8)).
 .I xfs_freeze
-is intended to be used with volume managers and hardware raid devices which
-support snapshotting,
+is intended to be used with volume managers and hardware raid devices
+which support the creation of snapshots,
 .I xfs_freeze
 will halt new access to the filesystem and create a stable image on disk 
 suitable for using as a snapshot.
@@ -41,15 +41,6 @@ Specifies that the filesystem should be frozen.
 .B \-u
 Specifies that the filesystem should be unfrozen and new modifications
 allowed.
-.TP
-.B \-t
-Specifies an alternate mount table file (default is
-.IR /etc/mtab ).
-This is used when working with filesystems mounted without writing to
-.I /etc/mtab
-file - refer to
-.BR mount (8)
-for further details.
 .SH SEE ALSO
 lvm(8),
 mount(8).

@@ -1,3 +1,9 @@
+xfsprogs (1.2.7) unstable; urgency=low
+
+  * New xfs_freeze(8) command - volume manager snapshot helper
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 22 May 2001 17:22:32 +1000
+
 xfsprogs (1.2.6) unstable; urgency=low
 
   * Merge support for -d agsize=/su=/sw= (AG, stripe unit/width size)
