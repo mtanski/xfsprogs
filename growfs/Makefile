@@ -37,6 +37,7 @@ LTCOMMAND = xfs_growfs
 
 CFILES = xfs_growfs.c
 LLDLIBS = $(LIBXFS) $(LIBUUID)
+LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static
 LSRCFILES = xfs_info.sh
 

@@ -39,6 +39,7 @@ CFILES = log_print_trans.c log_print_all.c log_misc.c logprint.c \
 	xfs_log_recover.c
 HFILES = logprint.h
 LLDLIBS	= $(LIBXFS) $(LIBUUID)
+LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static
 
 default: $(LTCOMMAND)
