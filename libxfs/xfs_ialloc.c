@@ -1089,6 +1089,11 @@ xfs_ialloc_read_agi(
 	if (XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
 			XFS_RANDOM_IALLOC_READ_AGI)) {
 		xfs_trans_brelse(tp, bp);
+#ifdef __KERNEL__	/* additional, temporary, debugging code */
+		cmn_err(CE_NOTE,
+			"EFSCORRUPTED returned from file %s line %d",
+			__FILE__, __LINE__);
+#endif
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 	pag = &mp->m_perag[agno];

@@ -296,7 +296,11 @@ extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
  */
 #define 	xfs_trans_reserve_blkquota(tp, ip, nblks) \
 xfs_trans_reserve_quota_nblks(tp, ip, nblks, 0, XFS_QMOPT_RES_REGBLKS)
-						  
+
+#define		xfs_trans_reserve_blkquota_force(tp, ip, nblks) \
+xfs_trans_reserve_quota_nblks(tp, ip, nblks, 0, \
+		XFS_QMOPT_RES_REGBLKS|XFS_QMOPT_FORCE_RES)
+
 #define 	xfs_trans_unreserve_blkquota(tp, ip, nblks) \
 xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), 0, XFS_QMOPT_RES_REGBLKS)
 
