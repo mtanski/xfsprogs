@@ -29,12 +29,10 @@ AC_PACKAGE_GLOBALS(xfsprogs)
 AC_PACKAGE_UTILITIES(xfsprogs)
 
 AC_PACKAGE_NEED_UUID_H
-AC_PACKAGE_NEED_UUIDCOMPARE
 AC_ARG_ENABLE(shared-uuid,
 [ --enable-shared-uuid=[yes/no]	Link shared libuuid [default=no].],
-	libuuid="/usr/lib/libuuid.a"
-	test "$enable_shared_uuid" = yes && libuuid="-luuid",
-	libuuid="/usr/lib/libuuid.a")
+	enable_shared_uuid=yes,
+	enable_shared_uuid=no)
 AC_PACKAGE_CHECK_LIBUUID
 AC_SUBST(libuuid)
 
