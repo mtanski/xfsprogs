@@ -75,7 +75,7 @@ struct fdhash {
 	char	fspath[MAXPATHLEN];
 };
 
-static struct fdhash *fdhash_head;
+static struct fdhash *fdhash_head = NULL;
 
 int
 path_to_fshandle(
@@ -87,7 +87,7 @@ path_to_fshandle(
 	int		fd;
 	comarg_t	obj;
 	struct fdhash	*fdhp;
-	struct fdhash	*tmphp=NULL;
+	char		*tmppath;
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
@@ -96,7 +96,16 @@ path_to_fshandle(
 	obj.path = path;
 	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
 				obj, fshanp, fshlen);
-	if (result >= 0) {
+	if (result < 0) {
+		close(fd);
+		return result;
+	}
+		
+	if (handle_to_fsfd(*fshanp, &tmppath) >= 0) {
+		/* this filesystem is already in the cache */
+		close(fd);
+	} else {
+		/* new filesystem. add it to the cache */
 		fdhp = malloc(sizeof(struct fdhash));
 		if (fdhp == NULL) {
 			errno = ENOMEM;
@@ -104,24 +113,11 @@ path_to_fshandle(
 		}
 
 		fdhp->fsfd = fd;
-		fdhp->fnxt = NULL;
 		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
 		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
 
-		if (fdhash_head) {
-			for( tmphp=fdhash_head; tmphp; tmphp=tmphp->fnxt ) {
-				if ( fdhp->fsfd == tmphp->fsfd ) {
-					free (fdhp);	 /* already in hash */
-					break;
-				}
-			}
-			if (tmphp == NULL) {     /* not in hash, add it now */
-				fdhp->fnxt = fdhash_head;
-				fdhash_head = fdhp;
-			}
-		} else {
-			fdhash_head = fdhp;
-		}
+		fdhp->fnxt = fdhash_head;
+		fdhash_head = fdhp;
 	}
 
 	return result;
@@ -155,11 +151,15 @@ handle_to_fshandle(
 	void		**fshanp,
 	size_t		*fshlen)
 {
-	if (hlen < FSIDSIZE)
-		return EINVAL;
+	if (hlen < FSIDSIZE) {
+		errno = EINVAL;
+		return -1;
+	}
 	*fshanp = malloc(FSIDSIZE);
-	if (*fshanp == NULL)
-		return ENOMEM;
+	if (*fshanp == NULL) {
+		errno = ENOMEM;
+		return -1;
+	}
 	*fshlen = FSIDSIZE;
 	memcpy(*fshanp, hanp, FSIDSIZE);
 	return 0;

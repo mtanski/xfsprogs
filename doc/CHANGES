@@ -1,4 +1,10 @@
-xfsprogs-2.6.10 (05 April 2003)
+xfsprogs-2.6.11 (15 April 2004)
+	- Fix file descriptor leak in path_to_fshandle. A file
+	  was being opened but never closed, regardless of
+	  whether that descriptor was being cached. Now close
+	  the file on error or if it is not being cached.
+
+xfsprogs-2.6.10 (05 April 2004)
 	- Fix botch in recent addition of new superblock field
 	  (features2) which could result in filesystems with v2
 	  logs being created with invalid superblock fields.
@@ -9,10 +15,10 @@ xfsprogs-2.6.10 (05 April 2003)
 	  duplicate filesystem (the log is duplicated too now in
 	  that case, whereas previously a fresh log was created).
 
-xfsprogs-2.6.9 (26 March 2003)
+xfsprogs-2.6.9 (26 March 2004)
 	- Update HFILES in xfsprogs/io/Makefile to package io/io.h
 
-xfsprogs-2.6.8 (25 March 2003)
+xfsprogs-2.6.8 (25 March 2004)
 	- Fix xfs_db when dumping v2 dirs larger than the fsb size.
 	- Several xfs_io additions - support for memory mapped areas,
 	  multiple open files, expert mode (freeze, shutdown, error
@@ -21,7 +27,7 @@ xfsprogs-2.6.8 (25 March 2003)
 	- Fix xfs_bmap verbose mode stripe alignment information.
 	- Fix typo on xfs(5) man page.
 
-xfsprogs-2.6.7 (19 March 2003)
+xfsprogs-2.6.7 (19 March 2004)
 	- Fix up UUID library checks again, previous fix didn't work
 	  for older versions of autconf.
 	- Allow for future extensions to the XFS ondisk structure by
@@ -35,7 +41,7 @@ xfsprogs-2.6.7 (19 March 2003)
 	  the device blocksize, this generates an error when target
 	  filesystem is mounted readonly.
 
-xfsprogs-2.6.6 (03 March 2003)
+xfsprogs-2.6.6 (03 March 2004)
 	- mkfs now opens the devices it's operating on with the
 	  O_EXCL flag set, which is used by the Linux 2.6 block
 	  layer to ensure concurrent access does not happen.
@@ -44,17 +50,17 @@ xfsprogs-2.6.6 (03 March 2003)
 	- Fix configure scripts to also search for a UUID library
 	  in /usr/lib64 which is its home on AMD64/x86_64.
 
-xfsprogs-2.6.5 (20 February 2003)
+xfsprogs-2.6.5 (20 February 2004)
 	- Fix up mkfs to ensure that the log size is a multiple of
 	  the v2 log stripe size even if the log happens to be aligned
 	  on a log stripe boundary (always check it).
 
-xfsprogs-2.6.4 (17 February 2003)
+xfsprogs-2.6.4 (17 February 2004)
 	- Fix a few more libxfs/repair leaks.
 	- Fix up some libhandle routines, add the open_by_fshandle
 	  routine required by recent versions of xfsdump.
 
-xfsprogs-2.6.3 (19 January 2003)
+xfsprogs-2.6.3 (19 January 2004)
 	- Merge Steve Langasek's work on the Debian installer
 	  support for xfsprogs.
 	- Add knowledge to xfs_db about the security namespace in
