@@ -360,7 +360,7 @@ typedef struct {
 } cred_t;
 
 extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
-				ushort, dev_t, cred_t *, xfs_inode_t **);
+				ushort, xfs_dev_t, cred_t *, xfs_inode_t **);
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
 extern void	libxfs_idata_realloc (xfs_inode_t *, int, int);

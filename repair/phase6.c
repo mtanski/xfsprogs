@@ -753,7 +753,7 @@ mk_orphanage(xfs_mount_t *mp)
 			i, ORPHANAGE);
 
 	error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
-					1, mp->m_dev, &zerocr, &ip);
+					1, 0, &zerocr, &ip);
 
 	if (error) {
 		do_error(_("%s inode allocation failed %d\n"),

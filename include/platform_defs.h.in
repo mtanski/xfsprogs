@@ -514,8 +514,7 @@ typedef unsigned long long __psunsigned_t;
 #define IRIX_DEV_MAJOR(dev)	((int)(((unsigned)(dev) >> IRIX_DEV_BITSMINOR) \
 					& IRIX_DEV_MAXMAJ))
 #define IRIX_DEV_MINOR(dev)	((int)((dev) & IRIX_DEV_MAXMIN))
-#define IRIX_MKDEV(major,minor)	((dev_t)(((major) << IRIX_DEV_BITSMINOR) \
+#define IRIX_MKDEV(major,minor)	((xfs_dev_t)(((major) << IRIX_DEV_BITSMINOR) \
 					| (minor&IRIX_DEV_MAXMIN)))
-#define IRIX_DEV_TO_KDEVT(dev)	makedev(IRIX_DEV_MAJOR(dev),IRIX_DEV_MINOR(dev))
 
 #endif	/* __XFS_PLATFORM_DEFS_H__ */

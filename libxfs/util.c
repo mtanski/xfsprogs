@@ -46,7 +46,7 @@ libxfs_inode_alloc(
 	xfs_inode_t	*pip,
 	mode_t		mode,
 	ushort		nlink,
-	dev_t		rdev,
+	xfs_dev_t	rdev,
 	cred_t		*cr,
 	xfs_inode_t	**ipp)
 {
@@ -134,7 +134,7 @@ libxfs_ialloc(
 	xfs_inode_t	*pip,
 	mode_t		mode,
 	nlink_t		nlink,
-	dev_t		rdev,
+	xfs_dev_t	rdev,
 	cred_t		*cr,
 	xfs_prid_t	prid,
 	int		okalloc,
@@ -201,11 +201,13 @@ libxfs_ialloc(
 	flags = XFS_ILOG_CORE;
 	switch (mode & S_IFMT) {
 	case S_IFIFO:
+	case S_IFSOCK:
+		/* doesn't make sense to set an rdev for these */
+		rdev = 0;
 	case S_IFCHR:
 	case S_IFBLK:
-	case S_IFSOCK:
 		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
-		ip->i_df.if_u2.if_rdev = makedev(major(rdev), minor(rdev));			ip->i_df.if_flags = 0;
+		ip->i_df.if_u2.if_rdev = rdev;
 		flags |= XFS_ILOG_DEV;
 		break;
 	case S_IFREG:

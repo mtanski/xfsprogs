@@ -245,7 +245,6 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define unlikely(x)	(x)
-#define kdev_none(x)	(!(x))
 #define INIT_LIST_HEAD(x)
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
@@ -395,7 +394,7 @@ static inline int xfs_btree_readahead (xfs_btree_cur_t *cur, int lev, int lr)
 
 
 /* xfs_inode.c */
-int  xfs_ialloc (xfs_trans_t *, xfs_inode_t *, mode_t, nlink_t, dev_t, cred_t *,
+int  xfs_ialloc (xfs_trans_t *, xfs_inode_t *, mode_t, nlink_t, xfs_dev_t, cred_t *,
 		xfs_prid_t, int, xfs_buf_t **, boolean_t *, xfs_inode_t **);
 int  xfs_iread_extents (xfs_trans_t *, xfs_inode_t *, int);
 int  xfs_imap (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_imap_t *, uint);

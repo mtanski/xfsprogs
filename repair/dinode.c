@@ -66,7 +66,7 @@ calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
 	 */
 	switch (dinoc->di_format)  {
 	case XFS_DINODE_FMT_DEV:
-		offset += sizeof(dev_t);
+		offset += sizeof(xfs_dev_t);
 		break;
 	case XFS_DINODE_FMT_LOCAL:
 		offset += INT_GET(dinoc->di_size, ARCH_CONVERT);
@@ -2290,12 +2290,12 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		switch (dinoc->di_format)  {
 		case XFS_DINODE_FMT_DEV:
 			if (dinoc->di_forkoff !=
-					(roundup(sizeof(dev_t), 8) >> 3))  {
+					(roundup(sizeof(xfs_dev_t), 8) >> 3))  {
 				do_warn(
 		_("bad attr fork offset %d in dev inode %llu, should be %d\n"),
 					(int) dinoc->di_forkoff,
 					lino,
-					(int) (roundup(sizeof(dev_t), 8) >> 3));
+					(int) (roundup(sizeof(xfs_dev_t), 8) >> 3));
 				err = 1;
 			}
 			break;

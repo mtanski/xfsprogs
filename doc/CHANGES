@@ -1,3 +1,10 @@
+xfsprogs-2.6.2 (17 December 2003)
+	- Fix dev_t sizing issues in user tools - glibc uses a 64
+	  bit number and XFS has a 32 device bit number, confusion
+	  reigns.  Not much manipulates device numbers in the XFS
+	  user tools though, hence hasn't really been seen before.
+	  Thanks to Christoph for the patch.
+
 xfsprogs-2.6.1 (27 November 2003)
 	- Human-friendly xfs_io read/write bsize specifications.
 	- Dump throughput and IOPs values after xfs_io reads/writes.

@@ -463,8 +463,8 @@ parseproto(
 	case IF_REGULAR:
 		buf = newregfile(pp, &len);
 		getres(tp, XFS_B_TO_FSB(mp, len));
-		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1,
-					mp->m_dev, &creds, &ip);
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
+					&creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		flags |= newfile(tp, ip, &flist, &first, 0, 0, buf, len);
@@ -481,8 +481,8 @@ parseproto(
 		llen = cvtnum(mp->m_sb.sb_blocksize, mp->m_sb.sb_sectsize, value);
 		getres(tp, XFS_B_TO_FSB(mp, llen));
 
-		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1,
-						mp->m_dev, &creds, &ip);
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
+						&creds, &ip);
 		if (error)
 			fail(_("Inode pre-allocation failed"), error);
 
@@ -505,7 +505,7 @@ parseproto(
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFBLK, 1,
-				makedev(majdev, mindev), &creds, &ip);
+				IRIX_MKDEV(majdev, mindev), &creds, &ip);
 		if (error) {
 			fail(_("Inode allocation failed"), error);
 		}
@@ -521,7 +521,7 @@ parseproto(
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFCHR, 1,
-				makedev(majdev, mindev), &creds, &ip);
+				IRIX_MKDEV(majdev, mindev), &creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
@@ -533,8 +533,8 @@ parseproto(
 
 	case IF_FIFO:
 		getres(tp, 0);
-		error = libxfs_inode_alloc(&tp, pip, mode|S_IFIFO, 1,
-				mp->m_dev, &creds, &ip);
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFIFO, 1, 0,
+				&creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
@@ -546,8 +546,8 @@ parseproto(
 		buf = getstr(pp);
 		len = (int)strlen(buf);
 		getres(tp, XFS_B_TO_FSB(mp, len));
-		error = libxfs_inode_alloc(&tp, pip, mode|S_IFLNK, 1,
-				mp->m_dev, &creds, &ip);
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFLNK, 1, 0,
+				&creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		flags |= newfile(tp, ip, &flist, &first, 1, 1, buf, len);
@@ -558,8 +558,8 @@ parseproto(
 		break;
 	case IF_DIRECTORY:
 		getres(tp, 0);
-		error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR, 1,
-				mp->m_dev, &creds, &ip);
+		error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR, 1, 0,
+				&creds, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		ip->i_d.di_nlink++;		/* account for . */
@@ -642,8 +642,8 @@ rtinit(
 	if ((i = libxfs_trans_reserve(tp, MKFS_BLOCKRES_INODE, 0, 0, 0, 0)))
 		res_failed(i);
 	bzero(&creds, sizeof(creds));
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1,
-				mp->m_dev, &creds, &rbmip);
+	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1, 0,
+				&creds, &rbmip);
 	if (error) {
 		fail(_("Realtime bitmap inode allocation failed"), error);
 	}
@@ -660,8 +660,8 @@ rtinit(
 	libxfs_mod_sb(tp, XFS_SB_RBMINO);
 	libxfs_trans_ihold(tp, rbmip);
 	mp->m_rbmip = rbmip;
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1,
-				mp->m_dev, &creds, &rsumip);
+	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1, 0,
+				&creds, &rsumip);
 	if (error) {
 		fail(_("Realtime summary inode allocation failed"), error);
 	}
