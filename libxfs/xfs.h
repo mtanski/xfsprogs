@@ -239,8 +239,6 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define NBPP		getpagesize()
 #define STATIC
 #define ATTR_ROOT	0x0002	/* use attrs in root namespace */
-#define ENOATTR		ENODATA	/* Attribute not found */
-#define EFSCORRUPTED	990	/* Filesystem is corrupted */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define kdev_none(x)	(!(x))
