@@ -46,9 +46,7 @@ the number of extents in the file and uses that value to compute
 the group size.
 .SH DIAGNOSTICS
 .TP 10
-\f7fcntl(F_GETBMAPX) \f1\f2filename\f1\f7: Invalid argument\f1
+\f7ioctl(XFS_IOC_GETBMAPX) \f1\f2filename\f1\f7: Invalid argument\f1
 The file \f2filename\f1 is not in an XFS filesystem.
 .SH SEE ALSO
-fcntl(2),
-lvm(8).
-
+xfs(5).

@@ -35,7 +35,6 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_bmap
 CFILES = xfs_bmap.c
-LLDFLAGS += -static
 
 default: $(LTCOMMAND)
 

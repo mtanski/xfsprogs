@@ -37,12 +37,14 @@
 #include <libxfs.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/vfs.h>
 
 int aflag = 0;	/* Attribute fork. */
 int lflag = 0;	/* list number of blocks with each extent */
 int nflag = 0;	/* number of extents specified */
 int vflag = 0;	/* Verbose output */
 int bmv_iflags = 0;	/* Input flags for XFS_IOC_GETBMAPX */
+char *progname;
 
 int dofile(char *);
 __off64_t file_size(int fd, char * fname);
@@ -55,7 +57,7 @@ main(int argc, char **argv)
 	int	i = 0;
 	int	option;
 
-	fname = basename(argv[0]);
+	progname = basename(argv[0]);
 	while ((option = getopt(argc, argv, "adln:pvV")) != EOF) {
 		switch (option) {
 		case 'a':
@@ -80,11 +82,11 @@ main(int argc, char **argv)
 			vflag++;
 			break;
 		case 'V':
-			printf("%s version %s\n", fname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			break;
 		default:
 			fprintf(stderr, "Usage: %s [-adlpV] [-n nx] file...\n",
-					fname);
+					progname);
 			exit(1);
 		}
 	}
@@ -108,8 +110,8 @@ file_size(int	fd, char *fname)
 	errno_save = errno;	/* in case fstat64 fails */
 	i = fstat64(fd, &st);
 	if (i < 0) {
-		fprintf(stderr,"fstat64 failed for %s", fname);
-		perror("fstat64");
+		fprintf(stderr, "%s: fstat64 failed for %s: %s\n",
+			progname, fname, strerror(errno));
 		errno = errno_save;
 		return -1;
 	}
@@ -120,26 +122,34 @@ file_size(int	fd, char *fname)
 int
 dofile(char *fname)
 {
-	int		fd;
-	struct fsxattr	fsx;
 	int		i;
+	int		fd;
+	struct statfs	buf;
+	struct fsxattr	fsx;
 	struct getbmapx	*map;
-	char		mbuf[1024];
 	int		map_size;
 	int		loop = 0;
 	xfs_fsop_geom_t fsgeo;
 
 	fd = open(fname, O_RDONLY);
 	if (fd < 0) {
-		sprintf(mbuf, "open %s", fname);
-		perror(mbuf);
+		fprintf(stderr, "%s: cannot open \"%s\": %s\n",
+			progname, fname, strerror(errno));
 		return 1;
 	}
+	fstatfs(fd, &buf);
+	if (buf.f_type != XFS_SUPER_MAGIC) {
+		fprintf(stderr, "%s: "
+			"specified file [\"%s\"] is not on an XFS filesystem\n",
+			progname, fname);
+		close(fd);
+		return 1;
+        }
 
 	if (vflag) {
 		if (ioctl(fd, XFS_IOC_FSGEOMETRY, &fsgeo) < 0) {
-			sprintf(mbuf, "Can't get XFS geom, %s", fname);
-			perror(mbuf);
+			fprintf(stderr, "%s: can't get geometry [\"%s\"]: %s\n",
+				progname, fname, strerror(errno));
 			close(fd);
 			return 1;
 		}
@@ -151,8 +161,8 @@ dofile(char *fname)
 					fsgeo.agcount);
 
 		if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-			sprintf(mbuf, "Can't read attrs %s", fname);
-			perror(mbuf);
+			fprintf(stderr, "%s: cannot read attrs on \"%s\": %s\n",
+				progname, fname, strerror(errno));
 			close(fd);
 			return 1;
 		}
@@ -175,8 +185,8 @@ dofile(char *fname)
 	map_size = nflag ? nflag+1 : 32;	/* initial guess - 256 for checkin KCM */
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
-		fprintf(stderr, "malloc of %d bytes failed.\n",
-				(int)(map_size * sizeof(*map)));
+		fprintf(stderr, "%s: malloc of %d bytes failed.\n",
+			progname, (int)(map_size * sizeof(*map)));
 		close(fd);
 		return 1;
 	}
@@ -232,9 +242,10 @@ dofile(char *fname)
 			    && !aflag && file_size(fd, fname) == 0) {
 				break;
 			} else	{
-				sprintf(mbuf, "ioctl(XFS_IOC_GETBMAPX (iflags 0x%x) %s",
-							map->bmv_iflags, fname);
-				perror(mbuf);
+				fprintf(stderr, "%s: ioctl(XFS_IOC_GETBMAPX) "
+					"iflags=0x%x [\"%s\"]: %s\n",
+					progname, map->bmv_iflags, fname,
+					strerror(errno));
 				close(fd);
 				free(map);
 				return 1;
@@ -249,9 +260,9 @@ dofile(char *fname)
 		 */
 		i = ioctl(fd, aflag ? XFS_IOC_FSGETXATTRA : XFS_IOC_FSGETXATTR, &fsx);
 		if (i < 0) {
-			sprintf(mbuf, "ioctl(XFS_IOC_FSGETXATTR%s) %s",
-				aflag ? "A" : "", fname);
-			perror(mbuf);
+			fprintf(stderr, "%s: ioctl(XFS_IOC_FSGETXATTR%s) "
+				"[\"%s\"]: %s\n", progname, aflag ? "A" : "",
+				fname, strerror(errno));
 			close(fd);
 			free(map);
 			return 1;
@@ -260,8 +271,8 @@ dofile(char *fname)
 			map_size = 2*(fsx.fsx_nextents+1);
 			map = realloc(map, map_size*sizeof(*map));
 			if (map == NULL) {
-				fprintf(stderr, "cannot realloc %d bytes.\n",
-						(int)(map_size * sizeof(*map)));
+				fprintf(stderr, "%s: cannot realloc %d bytes\n",
+					progname, (int)(map_size*sizeof(*map)));
 				close(fd);
 				return 1;
 			}

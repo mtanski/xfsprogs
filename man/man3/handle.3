@@ -112,20 +112,21 @@ The \f2attr_multi_by_handle\f1() function
 manipulates multiple user attributes on a 
 filesystem object.
 It is analogous and identical to
-.I attr_multif(2)
+.I attr_multif(3)
 except that a handle is specified instead of a file descriptor.
 .P
 The \f2attr_list_by_handle\f1() function returns 
 the names of the user attributes of a filesystem object.
 It is analogous and identical to
-.I attr_listf(2)
+.I attr_listf(3)
 except that a handle is specified instead of a file descriptor.
 .P
 The \f2fssetdm_by_handle\f1() function sets the
 di_dmevmask and di_dmstate fields in an XFS on-disk inode.
-It is analogous to the \f2F_FSSETDM\f1 subfunction of
-.I fcntl(2)
-except that a handle is specified instead of a file descriptor.
+It is analogous to the \f2XFS_IOC_FSSETDM\f1
+.I ioctl(2)
+command (see also
+.I xfs(5)), except that a handle is specified instead of a file descriptor.
 .P
 The \f2free_handle\f1() function
 frees the storage allocated for handles
@@ -137,10 +138,11 @@ and
 \f2handle_to_fshandle\f1().
 .SH "SEE ALSO"
 open(2),
+ioctl(2),
 readlink(2),
-attr_multi(2),
-attr_list(2),
-fcntl(2).
+attr_multi(3),
+attr_list(3),
+xfs(5).
 .SH "DIAGNOSTICS"
 .PP
 The function

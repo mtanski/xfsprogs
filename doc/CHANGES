@@ -1,6 +1,9 @@
-xfsprogs-current
+xfsprogs-1.3.9 (03 October 2001)
 	- fix xfs_repair bug in handling a corrupt root directory
 	  inode with multiple "lost+found" entries
+	- fix xfs_logprint bug in scanning for log head and tail
+	- ensure xfs_bmap doesn't issue XFS ioctls to non-XFS files
+	- numerous man page updates
 
 xfsprogs-1.3.8 (19 September 2001)
 	- rewrote the LVM support used by mkfs.xfs to call external
