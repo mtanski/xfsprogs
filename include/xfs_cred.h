@@ -42,26 +42,24 @@
 /*
  * Access Control Lists
  */
-typedef ushort  acl_perm_t;
-typedef int     acl_type_t;
-typedef int     acl_tag_t;
+typedef ushort  xfs_acl_perm_t;
+typedef int     xfs_acl_type_t;
+typedef int     xfs_acl_tag_t;
+typedef uid_t	xfs_acl_id_t;
 
-#define ACL_MAX_ENTRIES 25
-#define ACL_NOT_PRESENT -1
+#define XFS_ACL_MAX_ENTRIES 25
+#define XFS_ACL_NOT_PRESENT -1
 
-typedef struct acl_entry {
-	acl_tag_t	ae_tag;
-	uid_t		ae_id;
-	acl_perm_t	ae_perm;
-} acl_entry_s;
+typedef struct xfs_acl_entry {
+	xfs_acl_tag_t	ae_tag;
+	xfs_acl_id_t	ae_id;
+	xfs_acl_perm_t	ae_perm;
+} xfs_acl_entry_t;
 
-typedef struct acl {
+typedef struct xfs_acl {
 	int		acl_cnt;
-	acl_entry_s	acl_entry[ACL_MAX_ENTRIES];
-} acl_s;
-
-typedef struct acl_entry * acl_entry_t;
-typedef struct acl * acl_t;
+	xfs_acl_entry_t	acl_entry[XFS_ACL_MAX_ENTRIES];
+} xfs_acl_t;
 
 /*
  * Capabilities

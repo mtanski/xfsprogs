@@ -37,7 +37,7 @@
 #define ACL_GROUP_OBJ	0x04	/* group */
 #define ACL_GROUP	0x08	/* additional groups */
 #define ACL_MASK	0x10	/* mask entry */
-#define ACL_OTHER_OBJ	0x20	/* other entry */
+#define ACL_OTHER	0x20	/* other entry */
 
 struct blkmap;
 extern int process_attributes (xfs_mount_t *, xfs_ino_t, xfs_dinode_t *,

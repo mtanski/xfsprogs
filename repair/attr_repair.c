@@ -38,8 +38,8 @@
 #include "dinode.h"
 #include "bmap.h"
 
-static int acl_valid(struct acl *aclp);
-static int mac_valid(mac_t lp);
+static int xfs_acl_valid(xfs_acl_t *aclp);
+static int xfs_mac_valid(mac_t lp);
 
 
 /*
@@ -51,9 +51,9 @@ static int mac_valid(mac_t lp);
  * If that leaves the shortform down to 0 attributes, it's okay and 
  * will appear to just have a null attribute fork. Some checks are done
  * for validity of the value field based on what the security needs are.
- * Calls will be made out to mac_valid or acl_valid libc libraries if
- * the security attributes exist. They will be cleared if invalid. No
- * other values will be checked. The DMF folks do not have current
+ * Calls will be made to xfs_mac_valid or xfs_acl_valid routines if the
+ * security attributes exist. They will be cleared if invalid.
+ * No other values will be checked. The DMF folks do not have current
  * requirements, but may in the future.
  *
  * For leaf block attributes, it requires more processing. One sticky
@@ -99,7 +99,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 {
 	/* for proper alignment issues, get the structs and bcopy the values */
 	mac_label macl;
-	struct acl thisacl;
+	xfs_acl_t thisacl;
 	void *valuep;
 	int clearit = 0;
 
@@ -107,13 +107,13 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			(strncmp(namevalue, SGI_ACL_DEFAULT, 
 				SGI_ACL_DEFAULT_SIZE) == 0)) {
 		if (value == NULL) {	
-			bzero(&thisacl, sizeof(struct acl));
+			bzero(&thisacl, sizeof(xfs_acl_t));
 			bcopy(namevalue+namelen, &thisacl, valuelen);
 			valuep = &thisacl;
 		} else
 			valuep = value;
 
-		if (acl_valid((struct acl *) valuep) != 0) { /* 0 means valid */
+		if (xfs_acl_valid((xfs_acl_t *) valuep) != 0) { /* 0 is valid */
 			clearit = 1;
 			do_warn("entry contains illegal value in attribute named SGI_ACL_FILE or SGI_ACL_DEFAULT\n");
 		}
@@ -125,7 +125,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 		} else 
 			valuep = value;
 
-		if (mac_valid((mac_label *) valuep) != 1) { /* 1 means valid */
+		if (xfs_mac_valid((mac_label *) valuep) != 1) { /* 1 is valid */
 			 /*
 			 *if sysconf says MAC enabled, 
 			 *	temp = mac_from_text("msenhigh/mintlow", NULL)
@@ -883,20 +883,17 @@ process_longform_attr(
 
 
 static void
-xfs_acl_get_endian(struct acl *aclp)
+xfs_acl_get_endian(xfs_acl_t *aclp)
 {
-    struct acl_entry *ace, *end;
+	xfs_acl_entry_t *ace, *end;
 
-    /* do the endian conversion */
-    INT_SET(aclp->acl_cnt, ARCH_CONVERT, aclp->acl_cnt);
-
-    /* loop thru ACEs of ACL */
-    end = &aclp->acl_entry[0]+aclp->acl_cnt;
-    for (ace=&aclp->acl_entry[0]; ace < end; ace++) {
-        INT_SET(ace->ae_tag, ARCH_CONVERT, ace->ae_tag);
-        INT_SET(ace->ae_id, ARCH_CONVERT, ace->ae_id);
-        INT_SET(ace->ae_perm, ARCH_CONVERT, ace->ae_perm);
-    }
+	INT_SET(aclp->acl_cnt, ARCH_CONVERT, aclp->acl_cnt);
+	end = &aclp->acl_entry[0]+aclp->acl_cnt;
+	for (ace = &aclp->acl_entry[0]; ace < end; ace++) {
+		INT_SET(ace->ae_tag, ARCH_CONVERT, ace->ae_tag);
+		INT_SET(ace->ae_id, ARCH_CONVERT, ace->ae_id);
+		INT_SET(ace->ae_perm, ARCH_CONVERT, ace->ae_perm);
+	}
 }
 
 /*
@@ -940,9 +937,9 @@ process_attributes(
  * Validate an ACL
  */
 static int
-acl_valid (struct acl *aclp)
+xfs_acl_valid(xfs_acl_t *aclp)
 {
-	struct acl_entry *entry, *e;
+	xfs_acl_entry_t *entry, *e;
 	int user = 0, group = 0, other = 0, mask = 0, mask_required = 0;
 	int i, j;
 
@@ -951,16 +948,12 @@ acl_valid (struct acl *aclp)
 
 	xfs_acl_get_endian(aclp);
 
-	if (aclp->acl_cnt > ACL_MAX_ENTRIES)
+	if (aclp->acl_cnt > XFS_ACL_MAX_ENTRIES)
 		goto acl_invalid;
 
-	for (i = 0; i < aclp->acl_cnt; i++)
-	{
-
+	for (i = 0; i < aclp->acl_cnt; i++) {
 		entry = &aclp->acl_entry[i];
-
-		switch (entry->ae_tag)
-		{
+		switch (entry->ae_tag) {
 			case ACL_USER_OBJ:
 				if (user++)
 					goto acl_invalid;
@@ -969,16 +962,16 @@ acl_valid (struct acl *aclp)
 				if (group++)
 					goto acl_invalid;
 				break;
-			case ACL_OTHER_OBJ:
+			case ACL_OTHER:
 				if (other++)
 					goto acl_invalid;
 				break;
 			case ACL_USER:
 			case ACL_GROUP:
-				for (j = i + 1; j < aclp->acl_cnt; j++)
-				{
+				for (j = i + 1; j < aclp->acl_cnt; j++) {
 					e = &aclp->acl_entry[j];
-					if (e->ae_id == entry->ae_id && e->ae_tag == entry->ae_tag)
+					if (e->ae_id == entry->ae_id &&
+					    e->ae_tag == entry->ae_tag)
 						goto acl_invalid;
 				}
 				mask_required++;
@@ -1007,21 +1000,20 @@ acl_invalid:
 static int
 __check_setvalue(const unsigned short *list, unsigned short count)
 {
-        unsigned short i;
+	unsigned short i;
 
-        for (i = 1; i < count ; i++)
-                if (list[i] <= list[i-1])
-                        return -1;
-        return 0;
+	for (i = 1; i < count ; i++)
+		if (list[i] <= list[i-1])
+			return -1;
+	return 0;
 }
 
-
 /*
- * mac_valid(lp)
+ * xfs_mac_valid(lp)
  * check the validity of a mac label
  */
 static int
-mac_valid(mac_t lp)
+xfs_mac_valid(mac_t lp)
 {
 	if (lp == NULL)
 		return (0);
