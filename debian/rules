@@ -35,7 +35,7 @@ config: .census
 
 dibuild: 
 	$(checkdir)
-	@echo "== dpkg-buildpackage: bootfloppies" 1>&2
+	@echo "== dpkg-buildpackage: installer" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
 		$(diopts) $(MAKE) configure; \
 		for dir in include libxfs libdisk mkfs; do \
