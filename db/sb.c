@@ -121,6 +121,7 @@ const field_t	sb_flds[] = {
 	{ "logsectlog", FLDT_UINT8D, OI(OFF(logsectlog)), C1, 0, TYP_NONE },
 	{ "logsectsize", FLDT_UINT16D, OI(OFF(logsectsize)), C1, 0, TYP_NONE },
 	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
+	{ "features2", FLDT_UINT32X, OI(OFF(features2)), C1, 0, TYP_NONE },
 	{ NULL }
 };
 

@@ -1931,8 +1931,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_versionnum =
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2, logversion == 2,
-			(sectorsize != BBSIZE || lsectorsize != BBSIZE));
-
+			(sectorsize != BBSIZE || lsectorsize != BBSIZE), 0);
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0);
 	/*
 	 * Zero out the first 68k in on the device, to obliterate any old 
 	 * filesystem signatures out there.  This should take care of 
