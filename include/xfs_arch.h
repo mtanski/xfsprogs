@@ -60,9 +60,11 @@
 
 /* generic swapping macros */
 
+#if defined(__linux__)
 #define INT_SWAP16(type,var) ((typeof(type))(__swab16((__u16)(var))))
 #define INT_SWAP32(type,var) ((typeof(type))(__swab32((__u32)(var))))
 #define INT_SWAP64(type,var) ((typeof(type))(__swab64((__u64)(var))))
+#endif
 
 #define INT_SWAP(type, var) \
     ((sizeof(type) == 8) ? INT_SWAP64(type,var) : \

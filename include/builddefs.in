@@ -103,6 +103,10 @@ endif
 ifeq ($(PKG_PLATFORM),irix)
 PLDLIBS = -ldisk -lgen
 endif
+ifeq ($(PKG_PLATFORM),freebsd)
+PLDLIBS = -L/usr/local/lib -lintl
+CFLAGS += -I/usr/local/include
+endif
 
 GCFLAGS += $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \
 	-DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\" \

@@ -104,6 +104,48 @@ typedef unsigned char	uchar_t;
 #endif
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
 
+#elif defined(__FreeBSD__)
+#include <sys/stat.h>
+#include <libgen.h>
+#include <machine/endian.h>
+#include <sys/param.h>
+#include <paths.h>
+#include <ctype.h>
+/* FreeBSD file API is 64-bit aware */
+#define	fstat64		fstat
+#define	ftruncate64	ftruncate
+#define lseek64		lseek
+#define	stat64		stat
+#define	pwrite64	pwrite
+#define	pread64		pread
+#define memalign(a,size)	valloc(size)
+
+typedef u_int8_t	__u8;
+typedef int8_t		__s8;
+typedef u_int16_t	__u16;
+typedef int16_t		__s16;
+typedef u_int32_t	__u32;
+typedef int32_t		__s32;
+typedef u_int64_t	__u64;
+typedef int64_t		__s64;
+
+#define constpp	char * const *
+
+#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+
+typedef off_t		xfs_off_t;
+typedef __uint64_t	xfs_ino_t;
+typedef __uint32_t	xfs_dev_t;
+typedef __int64_t	xfs_daddr_t;
+typedef char*		xfs_caddr_t;
+
+
+#ifndef	_UCHAR_T_DEFINED
+typedef unsigned char	uchar_t;
+#define	_UCHAR_T_DEFINED	1
+#endif
+typedef enum { B_FALSE,B_TRUE }	boolean_t;
+#define HAVE_FID	1
 
 #elif defined(__APPLE__)	/* Darwin */
 
@@ -114,9 +156,9 @@ typedef enum { B_FALSE,B_TRUE }	boolean_t;
 #include <sys/mount.h>
 
 #include <sys/syscall.h>
-#ifndef SYS_fsctl
-#define SYS_fsctl	242
-#endif
+# ifndef SYS_fsctl
+#  define SYS_fsctl	242
+# endif
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 {
 	return syscall(SYS_fsctl, path, cmd, p, 0);
