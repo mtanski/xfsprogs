@@ -1,6 +1,8 @@
 [cvs]
 	- Update xfs_io command to allow reading from non-XFS files.
 	- Sync up user/kernel source in libxfs, libxlog and headers.
+	- Update xfs_db and xfs_logprint commands to print new inode
+	  flush iteration field.
 
 xfsprogs-2.5.4 (23 July 2003)
 	- Update xfs_io bmap command to report unwritten extent flag
