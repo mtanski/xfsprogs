@@ -165,7 +165,7 @@ pwrite_f(
 		close(fd);
 		return 0;
 	}
-	printf(_("wrote %u/%u bytes at offset %llu\n"), count, total, offset);
+	printf(_("wrote %u/%u bytes at offset %llu\n"), total, count, offset);
 	close(fd);
 	return 0;
 }
