@@ -163,6 +163,13 @@ The stripe width will be the preferred iosize returned in the
 .IR stat (2)
 system call.
 .IP
+When a filesystem is created on an LVM or an MD device, mkfs.xfs will
+automatically query the logical volume for appropriate 
+.B sunit
+and
+.B swidth
+values.
+.IP
 The
 .B unwritten
 suboption is used to specify whether unwritten extents are flagged as such,
