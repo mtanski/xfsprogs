@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2004-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -50,7 +50,7 @@ print_fileio(
 	int		index,
 	int		braces)
 {
-	printf(_("%c%d%c %-14s (%s,%s,%s,%s%s%s)\n"),
+	printf(_("%c%03d%c %-14s (%s,%s,%s,%s%s%s)\n"),
 		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
 		file->flags & IO_FOREIGN ? _("foreign") : _("xfs"),
 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
