@@ -35,6 +35,7 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_copy
 CFILES = xfs_copy.c
+HFILES = xfs_copy.h
 
 LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS)

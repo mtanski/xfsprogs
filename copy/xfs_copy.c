@@ -129,7 +129,7 @@ do_message(int flags, int code, const char *fmt, ...)
 #define do_error(e,s)		do_message(ERR|LOG|PRE, e, s)
 #define do_fatal(e,s)		do_message(ERR|LOG|PRE|LAST, e, s)
 #define do_vfatal(e,s,args...)	do_message(ERR|LOG|PRE|LAST, e, s, ## args)
-#define die_perror(void)	\
+#define die_perror() \
 		do { \
 			do_message(ERR|LOG|PRE|LAST, errno, \
 				_("Aborting XFS copy - reason")); \
