@@ -45,7 +45,7 @@ if [ $type = debian ] ; then
 	if $verbose ; then
 		dpkg-buildpackage -r$SUDO | tee $LOGDEB
 	else
-		dpkg-buildpackage -r$SUDO > $LOGDEB
+		dpkg-buildpackage -r$SUDO > $LOGDEB || exit 1
 	fi
 	exit 0
 fi
@@ -55,12 +55,7 @@ echo "== clean, log is $LOGDIR/clean"
 if $verbose ; then
 	$MAKE clean 2>&1 | tee $LOGDIR/clean
 else
-	$MAKE clean > $LOGDIR/clean 2>&1 
-fi
-if [ $? -ne 0 ] ; then
-	echo \"$MAKE clean\" failed, see log in $LOGDIR/clean
-	tail $LOGDIR/clean
-	exit 1
+	$MAKE clean > $LOGDIR/clean 2>&1  || exit 1
 fi
 
 echo
@@ -69,12 +64,7 @@ rm -f .census	# force configure to run here
 if $verbose ; then
 	$MAKE configure 2>&1 | tee $LOGDIR/configure
 else
-	$MAKE configure > $LOGDIR/configure 2>&1 
-fi
-if [ $? -ne 0 ] ; then
-	echo \"configure\" failed, see log in $LOGDIR/configure
-	tail $LOGDIR/configure
-	exit 1
+	$MAKE configure > $LOGDIR/configure 2>&1 || exit 1
 fi
 
 echo
@@ -82,12 +72,7 @@ echo "== default, log is $LOGDIR/default"
 if $verbose ; then
 	$MAKE default 2>&1 | tee $LOGDIR/default
 else
-	$MAKE default > $LOGDIR/default 2>&1 
-fi
-if [ $? -ne 0 ] ; then
-	echo \"$MAKE default\" failed, see log in $LOGDIR/default
-	tail $LOGDIR/default
-	exit 1
+	$MAKE default > $LOGDIR/default 2>&1 || exit 1
 fi
 
 echo
@@ -96,13 +81,7 @@ echo "== dist, log is $LOGDIR/dist"
 if $verbose ; then
 	$MAKE -C build dist 2>&1 | tee $LOGDIR/dist
 else
-	$MAKE -C build dist > $LOGDIR/dist 2>&1
-fi
-if [ $? -ne 0 ] ; then
-	echo $MAKE dist failed, see log in $LOGDIR/dist
-	tail $LOGDIR/dist
-	exit 1
-else
+	$MAKE -C build dist > $LOGDIR/dist 2>&1 || exit 1
 	grep '^Wrote:' $LOGDIR/dist | sed -e 's/\.\.\/\.\.\///'
 fi
 

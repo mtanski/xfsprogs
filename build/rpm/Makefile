@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -35,15 +35,15 @@ TREEROOT = $(shell cd ${TOPDIR}; pwd)
 include $(TOPDIR)/include/builddefs
 
 SPECF = $(PKG_NAME).spec
-LDIRT = $(PKG_NAME)*.rpm $(SPECF) rpmmacros rpm-*.rc $(TOPDIR)/files*.rpm
+LDIRT = *.rpm $(SPECF) rpmmacros rpmfiles* rpm-*.rc
 
 LSRCFILES = macros.template $(SPECF).in rpm-2.rc.template
 
-default install install-dev :
+default install install-dev install-lib:
 
 include $(BUILDRULES)
 
-# generate a binary rpm file
+# Generate a binary rpm file
 dist : default $(SPECF) rpm-$(RPM_VERSION).rc
 	$(RPMBUILD) -ba --rcfile ./rpm-$(RPM_VERSION).rc $(SPECF)
 
@@ -59,6 +59,25 @@ else
 rpm-2.rc: rpm-2.rc.template
 	@sed -e 's|%topdir%|$(TOPDIR)|g' < $< > $@
 endif
+
+# Generate the rpm specfile format file list from the install-sh manifest
+rpmfiles rpmfiles-dev rpmfiles-lib:
+	sort -u $$DIST_MANIFEST | $(AWK) > $@ '\
+$$1 == "d" { printf ("%%%%dir %%%%attr(%s,%s,%s) %s\n", $$2, $$3, $$4, $$5); } \
+$$1 == "f" { if (match ($$6, "$(PKG_MAN_DIR)") || \
+                match ($$6, "$(PKG_DOC_DIR)")) \
+                printf ("%%%%doc "); \
+            if (match ($$6, "$(PKG_MAN_DIR)")) \
+                printf ("%%%%attr(%s,%s,%s) %s*\n", $$2, $$3, $$4, $$6); \
+            else \
+                printf ("%%%%attr(%s,%s,%s) %s\n", $$2, $$3, $$4, $$6); } \
+$$1 == "l" { if (match ($$3, "$(PKG_MAN_DIR)") || \
+                match ($$3, "$(PKG_DOC_DIR)")) \
+                printf ("%%%%doc "); \
+            if (match ($$3, "$(PKG_MAN_DIR)")) \
+                printf ("%%%%attr(0777,root,root) %s*\n", $$3); \
+            else \
+                printf ("%%%%attr(0777,root,root) %s\n", $$3); }'
 
 .PHONY: $(SPECF)
 ${SPECF} : ${SPECF}.in
