@@ -134,7 +134,7 @@ system is administered.
    Administering the XFS Quota System
      The XFS quota system is different from that of the Linux VFS in many ways.
 
-     o   There is no need for quotas file(s) in the root of the XFS filesystem.
+     o   There is no need for quota file(s) in the root of the XFS filesystem.
 
      o   XFS distinguishes between quota accounting and limit enforcement.
          Quota accounting must be turned on at the time of mounting the XFS
@@ -161,19 +161,9 @@ system is administered.
          quotas are turned on, given an XFS filesystem.  It can also be used
          to monitor the space occupied by the quota system itself.
 
-     o   repquota also provides a -x option to output the limits of all users
-         listed in /etc/passwd to a file that can later be read in by
-         edquota(8).  This is useful in recreating the limits of a large
-         number of users.  A possible scenario would be (a) creating the
-         output file using repquota, (b) turning off quotas and deleting all
-         the quota information (including limits, etc), (c) mounting the XFS
-         filesystem back with quotas turned on, and (d) reading that file
-         containing limits of users using:
-
-         This procedure will help compact the quota information.  Keeping
-         all the limits saved in a file for later use will also help in case
-         of a disaster.  If XFS quota are in use on a filesystem, xfsdump(8)
-         will automatically create a file containing this information.
+     o   Refer to the xfsdump(8), xfsdq(8), and xfsrq(8) man pages, from the
+         xfsdump package, which describes a mechanism built into xfsdump that
+         allows quota limit information to be backed up and easily restored.
 
      o   edquota(8) and setquota(8) cannot be used to set quota limits before
          turning on quotas on the filesystem concerned.
@@ -218,14 +208,15 @@ GETTING STARTED
          (CONFIG_XFS_QUOTA, below XFS in the Filesystems menu);
      o   Userspace quota tools which are aware of XFS quota.
 
-     User tools which support XFS can be downloaded from the Linux/XFS
-     CVS repository and RPM packages are available as part of each SGI
-     ProPack release.  Currently, these are based on a patched version
-     of the 2.00 quota tools (see CAVEATS below).
+     User tools which support XFS can be downloaded from the Linux
+     quota project at:
+		http://sourceforge.net/projects/linuxquota/
+     The quota tools from version 3.01-pre2 onward have full support
+     for XFS.  They can be downloaded via cvs or as a source tarball.
 
      Building the user tools from source:
           # autoconf
-          # ./configure --prefix=/usr
+          # ./configure --prefix=/usr --mandir=/usr/share/man
           # make
           # make install
 
@@ -244,6 +235,8 @@ EXAMPLES
 >>> Report current user quota 
 
 [root@troppo]# repquota /mnt/xqm
+*** Report for user quotas on device /dev/hdb10
+Block grace time: 7days Inode grace time: 7days
                         Block limits               File limits
 user            used    soft    hard  grace    used  soft  hard  grace
 root      --    1552       0       0             11     0     0       
@@ -264,6 +257,8 @@ sh-2.04$ ^D
 >>> Report current user quota again
 
 [root@troppo]# repquota /mnt/xqm
+*** Report for user quotas on device /dev/hdb10
+Block grace time: 7days Inode grace time: 7days
                         Block limits               File limits
 user            used    soft    hard  grace    used  soft  hard  grace
 root      --    1560       0       0             11     0     0       
@@ -298,17 +293,9 @@ the way XFS operates, so should be kept in mind when assigning users block
 limits.  This additional overhead is typically in the range of tens of
 filesystem-sized blocks.
 
-The Linux VFS quota implementation has been largely rewritten as part of
-the 2.4.X-acX kernel series.  This (currently) requires a new version of
-the quota userspace to be used, which is not backward compatable with the
-2.4.X version of quota and which does not work with XFS.  This situation
-is currently being rectified, and a new version of the quota tools which
-supports all three versions will soon be available.
-
 On IRIX, XFS supports project quota.  This is not (ever) likely to be
 supported on Linux/XFS, as the concept of a project is peculiar to IRIX.
 A filesystem that has used user quota on IRIX, however, can be migrated
 to Linux, and vice-versa, as the ondisk format is shared between both
 versions of XFS (and Linux/XFS is "endian clean").
-
 
