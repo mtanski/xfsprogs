@@ -135,7 +135,7 @@ ifeq ($(ENABLE_SHARED),yes)
 INSTALL_LTLIB = \
 	cd $(TOPDIR)/$(LIBNAME)/.libs; \
 	../$(INSTALL) -m 755 -d $(PKG_SLIB_DIR); \
-	../$(INSTALL) -m 755 -T so_dot_version $(LIBNAME).lai $(PKG_SLIB_DIR); \
+	../$(INSTALL) -m 644 -T so_dot_version $(LIBNAME).lai $(PKG_SLIB_DIR); \
 	test "$(PKG_DISTRIBUTION)" = debian || \
 	../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_SLIB_DIR)
 endif
