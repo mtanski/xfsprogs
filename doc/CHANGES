@@ -1,3 +1,7 @@
+xfsprogs-2.5.2 (25 June 2003)
+	- Fix xvm stripe detection in libdisk - pass correctly
+	  sized structures to xvm ioctls.
+
 xfsprogs-2.5.1 (23 June 2003)
 	- Fix libdisk device driver (volume managers) detection code
 	  used by mkfs, so that drivers with multiple majors are not
