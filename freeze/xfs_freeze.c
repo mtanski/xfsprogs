@@ -110,4 +110,5 @@ main(int argc, char **argv)
 	}
 
 	close(ffd);
+	return 0;
 }
