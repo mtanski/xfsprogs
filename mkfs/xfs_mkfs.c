@@ -1516,6 +1516,7 @@ main(int argc, char **argv)
 		}
 	}
 
+#if 0
 	/*
 	 * Check to see if inode number will be > 32 significant bits
 	 * Note that libxfs_highbitXX returns 0 -> XX-1,
@@ -1574,6 +1575,7 @@ main(int argc, char **argv)
 			}
 		}
 	}
+#endif
 
 	protostring = setup_proto(protofile);
 	bsize = 1 << (blocklog - BBSHIFT);
