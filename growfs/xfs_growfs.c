@@ -137,11 +137,11 @@ explore_mtab(char *mtab, char *mntpoint)
 	datadev = mnt->mnt_fsname;
 	if ((logdev = hasmntopt(mnt, "logdev="))) {
 		logdev += 7;
-		logend = strtok(logdev, " ");
+		logend = strtok(logdev, " ,");
 	}
 	if ((rtdev = hasmntopt(mnt, "rtdev="))) {
 		rtdev += 6;
-		rtend = strtok(rtdev, " ");
+		rtend = strtok(rtdev, " ,");
 	}
 
 	/* Do this only after we've finished processing mount options */
