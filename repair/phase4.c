@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -1090,9 +1090,12 @@ quotino_check(xfs_mount_t *mp)
 		if (irec == NULL || is_inode_free(irec,
 				mp->m_sb.sb_gquotino - irec->ino_startnum))  {
 			mp->m_sb.sb_gquotino = NULLFSINO;
-			lost_gquotino = 1;
+			if (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT)
+				lost_gquotino = 1;
+			else
+				lost_pquotino = 1;
 		} else
-			lost_gquotino = 0;
+			lost_gquotino = lost_pquotino = 0;
 	}
 }
 

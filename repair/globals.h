@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -153,6 +153,7 @@ EXTERN int		have_uquotino;
 EXTERN int		have_gquotino;
 EXTERN int		lost_uquotino;
 EXTERN int		lost_gquotino;
+EXTERN int		lost_pquotino;
 
 EXTERN xfs_agino_t	first_prealloc_ino;
 EXTERN xfs_agino_t	last_prealloc_ino;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -565,6 +565,18 @@ _("Warning:  group quota information was cleared.\n"
 				do_warn(
 _("Warning:  group quota information would be cleared.\n"
   "Group quotas could not be enforced until limit information was recreated.\n"));
+			}
+		}
+
+		if (lost_pquotino)  {
+			if (!no_modify)  {
+				do_warn(
+_("Warning:  project quota information was cleared.\n"
+  "Project quotas can not be enforced until limit information is recreated.\n"));
+			} else  {
+				do_warn(
+_("Warning:  project quota information would be cleared.\n"
+  "Project quotas could not be enforced until limit information was recreated.\n"));
 			}
 		}
 	}

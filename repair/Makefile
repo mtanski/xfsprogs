@@ -51,6 +51,8 @@ LLDFLAGS = -static
 
 default: $(LTCOMMAND)
 
+globals.o: globals.h
+
 include $(BUILDRULES)
 
 #

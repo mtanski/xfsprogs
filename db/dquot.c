@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -48,8 +48,8 @@ static int	dquot_f(int argc, char **argv);
 static void	dquot_help(void);
 
 static const cmdinfo_t	dquot_cmd =
-	{ "dquot", NULL, dquot_f, 1, 2, 1, "[gid|uid]",
-	  "set current address to group or user quota block", dquot_help };
+	{ "dquot", NULL, dquot_f, 1, 2, 1, "[projid|gid|uid]",
+	  "set current address to project, group or user quota block", dquot_help };
 
 const field_t	dqblk_hfld[] = {
 	{ "", FLDT_DQBLK, OI(0), C1, 0, TYP_NONE },
@@ -110,6 +110,7 @@ dquot_f(
 	bmap_ext_t	bm;
 	int		c;
 	int		dogrp;
+	int		doprj;
 	xfs_dqid_t	id;
 	xfs_ino_t	ino;
 	int		nex;
@@ -119,27 +120,34 @@ dquot_f(
 	int		qoff;
 	char		*s;
 
-	dogrp = optind = 0;
-	while ((c = getopt(argc, argv, "gu")) != EOF) {
+	dogrp = doprj = optind = 0;
+	while ((c = getopt(argc, argv, "gpu")) != EOF) {
 		switch (c) {
 		case 'g':
 			dogrp = 1;
+			doprj = 0;
+			break;
+		case 'p':
+			doprj = 1;
+			dogrp = 0;
 			break;
 		case 'u':
-			dogrp = 0;
+			dogrp = doprj = 0;
 			break;
 		default:
 			dbprintf("bad option for dquot command\n");
 			return 0;
 		}
 	}
-	s = dogrp ? "group" : "user";
+	s = doprj ? "project" : dogrp ? "group" : "user";
 	if (optind != argc - 1) {
 		dbprintf("dquot command requires one %s id argument\n", s);
 		return 0;
 	}
-	ino = dogrp ? mp->m_sb.sb_gquotino : mp->m_sb.sb_uquotino;
-	if (ino == 0 || ino == NULLFSINO) {
+	ino = (dogrp || doprj) ? mp->m_sb.sb_gquotino : mp->m_sb.sb_uquotino;
+	if (ino == 0 || ino == NULLFSINO ||
+	    (dogrp && (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT)) ||
+	    (doprj && (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))) {
 		dbprintf("no %s quota inode present\n", s);
 		return 0;
 	}

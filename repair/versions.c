@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -79,7 +79,8 @@ update_sb_version(xfs_mount_t *mp)
 		 */
 		if (sb->sb_qflags & ~(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD))  {
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_PQUOTA_ACCT))  {
 			/*
 			 * update the incore superblock, if we're in
 			 * no_modify mode, it'll never get flushed out
@@ -89,12 +90,13 @@ update_sb_version(xfs_mount_t *mp)
 				sb->sb_qflags & ~(XFS_UQUOTA_ACCT|
 				XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD));
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_PQUOTA_ACCT));
 
-			sb->sb_qflags &= (XFS_UQUOTA_ACCT|
-				XFS_UQUOTA_ENFD|
+			sb->sb_qflags &= (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD);
+				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_PQUOTA_ACCT);
 
 			if (!no_modify)
 				do_warn(_(", bogus flags will be cleared\n"));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -42,6 +42,10 @@
 #include "type.h"
 #include "init.h"
 #include "malloc.h"
+
+typedef enum {
+	IS_USER_QUOTA, IS_PROJECT_QUOTA, IS_GROUP_QUOTA,
+} qtype_t;
 
 typedef enum {
 	DBM_UNKNOWN,	DBM_AGF,	DBM_AGFL,	DBM_AGI,
@@ -134,10 +138,12 @@ static inodata_t	***inomap;
 static int		nflag;
 static int		pflag;
 static int		tflag;
-static qdata_t		**qgdata;
-static int		qgdo;
+static qdata_t		**qpdata;
+static int		qpdo;
 static qdata_t		**qudata;
 static int		qudo;
+static qdata_t		**qgdata;
+static int		qgdo;
 static unsigned		sbversion;
 static int		sbver_err;
 static int		serious_error;
@@ -316,7 +322,7 @@ static void		process_leaf_node_dir_v2_int(inodata_t *id, int v,
 						     freetab_t *freetab);
 static xfs_ino_t	process_node_dir_v1(blkmap_t *blkmap, int *dot,
 					    int *dotdot, inodata_t *id);
-static void		process_quota(int isgrp, inodata_t *id,
+static void		process_quota(qtype_t qtype, inodata_t *id,
 				      blkmap_t *blkmap);
 static void		process_rtbitmap(blkmap_t *blkmap);
 static void		process_rtsummary(blkmap_t *blkmap);
@@ -324,7 +330,7 @@ static xfs_ino_t	process_sf_dir_v2(xfs_dinode_t *dip, int *dot,
 					  int *dotdot, inodata_t *id);
 static xfs_ino_t	process_shortform_dir_v1(xfs_dinode_t *dip, int *dot,
 						 int *dotdot, inodata_t *id);
-static void		quota_add(xfs_dqid_t grpid, xfs_dqid_t usrid,
+static void		quota_add(xfs_dqid_t p, xfs_dqid_t g, xfs_dqid_t u,
 				  int dq, xfs_qcnt_t bc, xfs_qcnt_t ic,
 				  xfs_qcnt_t rc);
 static void		quota_add1(qdata_t **qt, xfs_dqid_t id, int dq,
@@ -899,6 +905,8 @@ blockget_f(
 	}
 	if (qudo)
 		quota_check("user", qudata);
+	if (qpdo)
+		quota_check("project", qpdata);
 	if (qgdo)
 		quota_check("group", qgdata);
 	if (sbver_err > mp->m_sb.sb_agcount / 2)
@@ -2771,7 +2779,7 @@ process_inode(
 			break;
 		}
 	}
-	if (qgdo || qudo) {
+	if (qgdo || qpdo || qudo) {
 		switch (type) {
 		case DBM_DATA:
 		case DBM_DIR:
@@ -2792,7 +2800,8 @@ process_inode(
 			break;
 		}
 		if (ic)
-			quota_add(dic->di_gid, dic->di_uid, 0, bc, ic, rc);
+			quota_add(dic->di_projid, dic->di_gid, dic->di_uid,
+				  0, bc, ic, rc);
 	}
 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
 	if (totblocks != dic->di_nblocks) {
@@ -2829,11 +2838,15 @@ process_inode(
 		if (id->ino == mp->m_sb.sb_uquotino &&
 		    (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) &&
 		    (mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD))
-			process_quota(0, id, blkmap);
+			process_quota(IS_USER_QUOTA, id, blkmap);
 		else if (id->ino == mp->m_sb.sb_gquotino &&
 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
-			process_quota(1, id, blkmap);
+			process_quota(IS_GROUP_QUOTA, id, blkmap);
+		else if (id->ino == mp->m_sb.sb_gquotino &&
+			 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
+			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD)) /* yep, G */
+			process_quota(IS_PROJECT_QUOTA, id, blkmap);
 	}
 	if (blkmap)
 		blkmap_free(blkmap);
@@ -3329,7 +3342,7 @@ process_node_dir_v1(
 
 static void
 process_quota(
-	int		isgrp,
+	qtype_t		qtype,
 	inodata_t	*id,
 	blkmap_t	*blkmap)
 {
@@ -3345,9 +3358,24 @@ process_quota(
 	int		scicb;
 	int		t;
 
+	switch (qtype) {
+	case IS_USER_QUOTA:
+		s = "user";
+		exp_flags = XFS_DQ_USER;
+		break;
+	case IS_PROJECT_QUOTA:
+		s = "project";
+		exp_flags = XFS_DQ_PROJ;
+		break;
+	case IS_GROUP_QUOTA:
+		s = "group";
+		exp_flags = XFS_DQ_GROUP;
+		break;
+	default:
+		ASSERT(0);
+	}
+
 	perblock = (int)(mp->m_sb.sb_blocksize / sizeof(*dqb));
-	s = isgrp ? "group" : "user";
-	exp_flags = isgrp ? XFS_DQ_GROUP : XFS_DQ_USER;
 	dqid = 0;
 	qbno = NULLFILEOFF;
 	while ((qbno = blkmap_next_off(blkmap, qbno, &t)) !=
@@ -3414,7 +3442,10 @@ process_quota(
 				error++;
 				continue;
 			}
-			quota_add(isgrp ? dqid : -1, isgrp ? -1 : dqid, 1,
+			quota_add((qtype == IS_PROJECT_QUOTA) ? dqid : -1,
+				  (qtype == IS_GROUP_QUOTA) ? dqid : -1,
+				  (qtype == IS_USER_QUOTA) ? dqid : -1,
+				  1,
 				  INT_GET(dqb->dd_diskdq.d_bcount, ARCH_CONVERT),
 				  INT_GET(dqb->dd_diskdq.d_icount, ARCH_CONVERT),
 				  INT_GET(dqb->dd_diskdq.d_rtbcount, ARCH_CONVERT));
@@ -3711,6 +3742,7 @@ process_shortform_dir_v1(
 
 static void
 quota_add(
+	xfs_dqid_t	prjid,
 	xfs_dqid_t	grpid,
 	xfs_dqid_t	usrid,
 	int		dq,
@@ -3722,6 +3754,8 @@ quota_add(
 		quota_add1(qudata, usrid, dq, bc, ic, rc);
 	if (qgdo && grpid != -1)
 		quota_add1(qgdata, grpid, dq, bc, ic, rc);
+	if (qpdo && prjid != -1)
+		quota_add1(qpdata, prjid, dq, bc, ic, rc);
 }
 
 static void
@@ -3814,10 +3848,16 @@ quota_init(void)
 	       mp->m_sb.sb_gquotino != NULLFSINO &&
 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
+	qpdo = mp->m_sb.sb_gquotino != 0 &&
+	       mp->m_sb.sb_gquotino != NULLFSINO &&
+	       (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
+	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);	/* yep, G */
 	if (qudo)
 		qudata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
 	if (qgdo)
 		qgdata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
+	if (qpdo)
+		qpdata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
 }
 
 static void
