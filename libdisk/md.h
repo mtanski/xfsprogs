@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -35,6 +35,9 @@
 #endif
 
 #define GET_ARRAY_INFO          _IOR (MD_MAJOR, 0x11, struct md_array_info)
+
+#define MD_SB_CLEAN		0
+#define MD_SB_ERRORS		1
 
 struct md_array_info {
 	/*

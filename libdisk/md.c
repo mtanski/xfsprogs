@@ -70,8 +70,14 @@ md_get_subvol_stripe(
 		close(fd);
 
 		/* Check state */
-		if (md.state) {
-			fprintf(stderr, _("MD array %s not in clean state\n"),
+		if (!(md.state & (1 << MD_SB_CLEAN))) {
+			fprintf(stderr,
+				_("warning - MD array %s not in clean state\n"),
+				dfile);
+		}
+		if (md.state & (1 << MD_SB_ERRORS)) {
+			fprintf(stderr,
+				_("warning - MD array %s in error state\n"),
 				dfile);
 			exit(1);
 		}

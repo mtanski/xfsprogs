@@ -1199,7 +1199,11 @@ msgid "Error getting MD array info from %s\n"
 msgstr ""
 
 #, c-format
-msgid "MD array %s not in clean state\n"
+msgid "warning - MD array %s not in clean state\n"
+msgstr ""
+
+#, c-format
+msgid "warning - MD array %s in error state\n"
 msgstr ""
 
 #, c-format

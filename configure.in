@@ -61,32 +61,44 @@ cc=$CC
 AC_SUBST(cc)
 
 dnl check if users wants their own make
-test -z "$MAKE" && AC_PATH_PROG(MAKE, make, /usr/bin/make)
+if test -z "$MAKE"; then
+	AC_PATH_PROG(MAKE, make, /usr/bin/make)
+fi
 make=$MAKE
 AC_SUBST(make)
 
 dnl check if users wants their own linker
-test -z "$LD" && AC_PATH_PROG(LD, ld, /usr/bin/ld)
+if test -z "$LD"; then
+	AC_PATH_PROG(LD, ld, /usr/bin/ld)
+fi
 ld=$LD
 AC_SUBST(ld)
 
 dnl check if the tar program is available
-test -z "$TAR" && AC_PATH_PROG(TAR, tar)
+if test -z "$TAR"; then
+	AC_PATH_PROG(TAR, tar, /bin/tar)
+fi
 tar=$TAR
 AC_SUBST(tar)
 
 dnl check if the gzip program is available
-test -z "$ZIP" && AC_PATH_PROG(ZIP, gzip, /bin/gzip)
+if test -z "$ZIP"; then
+	AC_PATH_PROG(ZIP, gzip, /bin/gzip)
+fi
 zip=$ZIP
 AC_SUBST(zip)
 
 dnl check if the makedepend program is available
-test -z "$MAKEDEPEND" && AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)
+if test -z "$MAKEDEPEND"; then
+	AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)
+fi
 makedepend=$MAKEDEPEND
 AC_SUBST(makedepend)
 
 dnl check if the rpm program is available
-test -z "$RPM" && AC_PATH_PROG(RPM, rpm, /bin/rpm)
+if test -z "$RPM"; then
+	AC_PATH_PROG(RPM, rpm, /bin/rpm)
+fi
 rpm=$RPM
 AC_SUBST(rpm)
 
@@ -112,18 +124,26 @@ dnl check if symbolic links are supported
 AC_PROG_LN_S
 
 dnl check if user wants their own awk, sed and echo
-test -z "$AWK" && AC_PATH_PROG(AWK, awk, /bin/awk)
+if test -z "$AWK"; then
+	AC_PATH_PROG(AWK, awk, /bin/awk)
+fi
 awk=$AWK
 AC_SUBST(awk)
-test -z "$SED" && AC_PATH_PROG(SED, sed, /bin/sed)
+if test -z "$SED"; then
+	AC_PATH_PROG(SED, sed, /bin/sed)
+fi
 sed=$SED
 AC_SUBST(sed)
-test -z "$ECHO" && AC_PATH_PROG(ECHO, echo, /bin/echo)
+if test -z "$ECHO"; then
+	AC_PATH_PROG(ECHO, echo, /bin/echo)
+fi
 echo=$ECHO
 AC_SUBST(echo)
 
 dnl ensure libtool is installed
-test -z "$LIBTOOL" && AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+if test -z "$LIBTOOL"; then
+	AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+fi
 if test "$LIBTOOL" = ""; then
 	echo
 	echo 'FATAL ERROR: libtool does not seem to be installed.'
@@ -159,14 +179,19 @@ AC_SUBST(enable_gettext)
 
 dnl check if the msgfmt, msgmerge, xgettext programs are available
 if test "$enable_gettext" = yes; then
-	test -z "$MSGFMT" && AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+	if test -z "$MSGFMT"; then
+		AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+	fi
 	msgfmt=$MSGFMT
 	AC_SUBST(msgfmt)
-	test -z "$MSGMERGE" && AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
+	if test -z "$MSGMERGE"; then
+		AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
+	fi
 	msgmerge=$MSGMERGE
 	AC_SUBST(msgmerge)
-
-	test -z "$XGETTEXT" && AC_CHECK_PROG(XGETTEXT, xgettext, /usr/bin/xgettext)
+	if test -z "$XGETTEXT"; then
+		AC_CHECK_PROG(XGETTEXT, xgettext, /usr/bin/xgettext)
+	fi
 	xgettext=$XGETTEXT
 	AC_SUBST(xgettext)
 
@@ -247,8 +272,7 @@ dnl also check if man page source is gzipped
 dnl (usually on Debian, but not Redhat pre-7.0)
 have_zipped_manpages=false
 for d in ${prefix}/share/man ${prefix}/man ; do
-    if test -f $d/man1/man.1.gz
-    then
+    if test -f $d/man1/man.1.gz; then
 	have_zipped_manpages=true
 	break
     fi
