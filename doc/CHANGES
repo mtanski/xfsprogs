@@ -1,3 +1,6 @@
+[cvs]
+	- Add documentation about additional XFS inode flags.
+
 xfsprogs-2.6.21 (09 August 2004)
 	- Support realtime bit inheritance on directories.
 	- Fix xfs_io build with unusual (old) glibc versions.

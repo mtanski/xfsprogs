@@ -143,7 +143,7 @@ the cache with an access through a non-direct I/O file descriptor.
 
 .TP
 .B XFS_IOC_FSGETXATTR
-Get extended attributes associated with files in XFS file systems.
+Get additional attributes associated with files in XFS file systems.
 The final argument points to a variable of type
 .BR "struct fsxattr" ,
 whose fields include:
@@ -152,19 +152,57 @@ whose fields include:
 .B fsx_extsize
 (nominal extent size in file system blocks),
 .B fsx_nextents
-(number of data extents in the file),
-.B fsx_uuid
-(file unique id).
-Currently the only meaningful bits for the
-.B fsx_xflags
-field are bit 0 (value 1), which if set means the file is a realtime file,
-and bit 1 (value 2), which if set means the file has preallocated space.
+(number of data extents in the file).
 A
 .B fsx_extsize
 value returned indicates that a preferred extent size was previously
 set on the file, a
 .B fsx_extsize
 of zero indicates that the defaults for that filesystem will be used.
+Currently the meaningful bits for the
+.B fsx_xflags
+field are:
+.PD 0
+.RS
+.TP 1.0i
+.SM "Bit 0 (0x1) \- XFS_XFLAG_REALTIME"
+The file is a realtime file.
+.TP
+.SM "Bit 1 (0x2) \- XFS_XFLAG_PREALLOC"
+The file has preallocated space.
+.TP
+.SM "Bit 3 (0x8) \- XFS_XFLAG_IMMUTABLE"
+The file is immutable - it cannot be modified, deleted or renamed,
+no link can be created to this file and no data can be written to the
+file.
+Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
+capability can set or clear this flag.
+.TP
+.SM "Bit 4 (0x10) \- XFS_XFLAG_APPEND"
+The file is append-only - it can only be open in append mode for
+writing.
+Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
+capability can set or clear this flag.
+.TP
+.SM "Bit 5 (0x20) \- XFS_XFLAG_SYNC"
+All writes to the file are synchronous.
+.TP
+.SM "Bit 6 (0x40) \- XFS_XFLAG_NOATIME"
+When the file is accessed, its atime record is not modified.
+.TP
+.SM "Bit 7 (0x80) \- XFS_XFLAG_NODUMP"
+The file should be skipped by backup utilities.
+.TP
+.SM "Bit 8 (0x100) \- XFS_XFLAG_RTINHERIT"
+Realtime inheritance bit - new files created in the directory
+will be automatically realtime, and new directories created in
+the directory will inherit the inheritance bit.
+.TP
+.SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
+The file has extended attributes associated with it.
+.RE
+.PP
+.PD
 
 .TP
 .B XFS_IOC_FSGETXATTRA
@@ -176,7 +214,7 @@ field contains the number of attribute extents in the file.
 
 .TP
 .B XFS_IOC_FSSETXATTR
-Set extended attributes associated with files in XFS file systems.
+Set additional attributes associated with files in XFS file systems.
 The final argument points to a variable of type
 .BR "struct fsxattr" ,
 but only the following fields are used in this call:
