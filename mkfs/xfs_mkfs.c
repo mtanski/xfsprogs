@@ -422,6 +422,7 @@ main(int argc, char **argv)
 	iaflag = XFS_IFLAG_ALIGN;
 	bzero(&xi, sizeof(xi));
 	xi.notvolok = 1;
+	xi.setblksize = 1;
 	dfile = logfile = rtfile = NULL;
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	opterr = 0;

@@ -104,6 +104,7 @@ typedef struct {
         int             dfd;            /* data subvolume file descriptor */
         int             logfd;          /* log subvolume file descriptor */
         int             rtfd;           /* realtime subvolume file descriptor */
+	int		setblksize; 	/* attempt to set device block size */
 } libxfs_init_t;
 
 #define LIBXFS_ISREADONLY	0x0069	/* disallow all mounted filesystems */
@@ -112,7 +113,7 @@ typedef struct {
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
 extern int	libxfs_device_to_fd (dev_t);
-extern dev_t	libxfs_device_open (char *, int, int);
+extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
 

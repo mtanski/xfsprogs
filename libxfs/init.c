@@ -178,7 +178,7 @@ libxfs_device_to_fd(dev_t device)
  *     open a device and return its device number
  */
 dev_t
-libxfs_device_open(char *path, int creat, int readonly)
+libxfs_device_open(char *path, int creat, int readonly, int setblksize)
 {
 	int		fd;
 	dev_t		dev;
@@ -202,7 +202,7 @@ libxfs_device_open(char *path, int creat, int readonly)
 	}
 	
 	/* Set device blocksize to 512 bytes */
-	if ((statb.st_mode & S_IFMT) == S_IFBLK) {
+	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
 		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
 			fprintf(stderr, "%s: warning - cannot set blocksize on "
 				"block device %s: %s\n",
@@ -400,7 +400,8 @@ voldone:
 		if (dname[0] != '/' && needcd)
 			chdir(curdir);
 		if (a->disfile) {
-			a->ddev= libxfs_device_open(dname, a->dcreat, readonly);
+			a->ddev= libxfs_device_open(dname, a->dcreat, readonly, 
+						    a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 		} else {
 			if (stat64(dname, &stbuf) < 0) {
@@ -425,7 +426,7 @@ voldone:
 						dname, blockfile, readonly))
 				goto done;
 			a->ddev = libxfs_device_open(rawfile,
-					a->dcreat, readonly);
+					a->dcreat, readonly, a->setblksize);
 			a->dfd = libxfs_device_to_fd(a->ddev);
 			a->dsize = findsize(rawfile);
 		}
@@ -437,7 +438,7 @@ voldone:
 			chdir(curdir);
 		if (a->lisfile) {
 			a->logdev = libxfs_device_open(logname,
-					a->lcreat, readonly);
+					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 		} else {
 			if (stat64(logname, &stbuf) < 0) {
@@ -462,7 +463,7 @@ voldone:
 						logname, blockfile, readonly))
 				goto done;
 			a->logdev = libxfs_device_open(rawfile,
-					a->lcreat, readonly);
+					a->lcreat, readonly, a->setblksize);
 			a->logfd = libxfs_device_to_fd(a->logdev);
 			a->logBBsize = findsize(rawfile);
 		}
@@ -474,7 +475,7 @@ voldone:
 			chdir(curdir);
 		if (a->risfile) {
 			a->rtdev = libxfs_device_open(rtname,
-					a->rcreat, readonly);
+					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 		} else {
 			if (stat64(rtname, &stbuf) < 0) {
@@ -499,7 +500,7 @@ voldone:
 						rtname, blockfile, readonly))
 				goto done;
 			a->rtdev = libxfs_device_open(rawfile,
-					a->rcreat, readonly);
+					a->rcreat, readonly, a->setblksize);
 			a->rtfd = libxfs_device_to_fd(a->rtdev);
 			a->rtsize = findsize(rawfile);
 		}
