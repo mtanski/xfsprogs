@@ -174,9 +174,7 @@ xlog_find_verify_log_record(xlog_t	*log,
 	if (i < start_blk) {
 	    /* legal log record not found */
 	    xlog_warn("XFS: Log inconsistent (didn't find previous header)");
-#ifdef __KERNEL__
 	    ASSERT(0);
-#endif
 	    error = XFS_ERROR(EIO);
 	    goto out;
 	}
