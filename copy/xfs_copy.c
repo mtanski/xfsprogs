@@ -786,16 +786,20 @@ main(int argc, char **argv)
 					progname);
 				die_perror();
 			}
-			if (xfsctl(target[i].name, target[i].fd,
+			if (platform_test_xfs_fd(target[i].fd))  {
+				if (xfsctl(target[i].name, target[i].fd,
 						XFS_IOC_DIOINFO, &d) < 0)  {
-				do_log(_("%s:  xfsctl on \"%s\" failed.\n"),
-					progname, target[i].name);
-				die_perror();
+					do_log(
+				_("%s:  xfsctl on \"%s\" failed.\n"),
+						progname, target[i].name);
+					die_perror();
+				} else {
+					wbuf_align = MAX(wbuf_align, d.d_mem);
+					wbuf_size = MIN(d.d_maxiosz, wbuf_size);
+					wbuf_miniosize = MAX(d.d_miniosz,
+								wbuf_miniosize);
+				}
 			}
-			wbuf_align = MAX(wbuf_align, d.d_mem);
-			wbuf_size = MIN(d.d_maxiosz, wbuf_size);
-			wbuf_miniosize = MAX(d.d_miniosz, wbuf_miniosize);
-
 		} else  {
 			char	*lb[XFS_MAX_SECTORSIZE] = { 0 };
 			off64_t	off;
