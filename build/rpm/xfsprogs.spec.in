@@ -5,7 +5,7 @@ Release: @pkg_release@
 Distribution: @pkg_distribution@
 Packager: @pkg_builder@
 BuildRoot: @build_root@ 
-Conflicts: xfs-cmds
+Provides: xfs-cmds
 Obsoletes: xfs-cmds
 Prereq: /sbin/ldconfig
 Source: @pkg_name@-@pkg_version@.src.tar.gz
