@@ -66,10 +66,16 @@ $(_FORCE):
 
 depend : $(CFILES) $(HFILES)
 	$(SUBDIRS_MAKERULE)
-	touch dep
-	$(MAKEDEPEND) -fdep -- $(CFLAGS) -- $(CFILES)
+	touch .dep
+	$(MAKEDEPEND) -f - -- $(CFLAGS) -- $(CFILES) | \
+	$(SED) -e 's,`pwd`,$(TOPDIR),g' \
+	    -e 's,  */[^ ]*,,g' \
+	    -e '/^[^ ]*: *$$/d' \
+	    -e '/^#.*/d' -e '/^ *$$/d' \
+	> .dep
+	test -s .dep || rm -f .dep
 
 # Include dep, but only if it exists
-ifeq ($(shell test -f dep && echo dep), dep)
-include dep
+ifeq ($(shell test -f .dep && echo .dep), .dep)
+include .dep
 endif
