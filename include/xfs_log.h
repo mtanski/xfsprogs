@@ -52,7 +52,7 @@
  */
 static
 #ifdef __GNUC__
-# if !((__GNUC__ == 2) && (__GNUC_MINOR__ >= 95))
+# if !((__GNUC__ == 2) && (__GNUC_MINOR__ == 95))
 __inline__
 #endif
 #endif
