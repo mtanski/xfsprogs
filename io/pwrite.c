@@ -178,8 +178,8 @@ pwrite_f(
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
 
-	printf(_("wrote %ld/%ld bytes at offset %lld\n"),
-		(long)total, (long)count, (long long)offset);
+	printf(_("wrote %lld/%lld bytes at offset %lld\n"),
+		total, count, (long long)offset);
 	cvtstr((double)total, s1, sizeof(s1));
 	cvtstr(tdiv((double)total, t2), s2, sizeof(s2));
 	timestr(&t2, ts, sizeof(ts));
