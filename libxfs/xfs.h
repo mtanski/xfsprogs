@@ -240,9 +240,13 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define ATTR_ROOT	0x0002	/* use attrs in root namespace */
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
+#define unlikely(x)	(x)
 #define kdev_none(x)	(!(x))
 #define KERN_WARNING
 #define XFS_ERROR(e)	(e)
+#define XFS_ERRLEVEL_LOW		1
+#define XFS_ERROR_REPORT(e,l,mp)	((void) 0)
+#define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
 #define TRACE_FREE(s,a,b,x,f)		((void) 0)
 #define TRACE_ALLOC(s,a)		((void) 0)
@@ -271,6 +275,7 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
 # define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )
+# define cmn_err(a,msg,args...)		( fprintf(stderr, msg, ## args) )
 # define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
 #else
 # define xfs_fs_cmn_err(a,b,...)	( fprintf(stderr, __VA_ARGS__) )
@@ -426,7 +431,7 @@ void xfs_bmap_insert_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t,
 int  xfs_check_nostate_extents (xfs_bmbt_rec_t *, xfs_extnum_t);
 void xfs_bmbt_log_ptrs (xfs_btree_cur_t *, xfs_buf_t *, int, int);
 void xfs_bmbt_log_keys (xfs_btree_cur_t *, xfs_buf_t *, int, int);
-int  xfs_bmbt_killroot (xfs_btree_cur_t *, int);
+int  xfs_bmbt_killroot (xfs_btree_cur_t *);
 int  xfs_bmbt_updkey (xfs_btree_cur_t *, xfs_bmbt_key_t *, int);
 int  xfs_bmbt_lshift (xfs_btree_cur_t *, int, int *);
 int  xfs_bmbt_rshift (xfs_btree_cur_t *, int, int *);

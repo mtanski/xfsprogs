@@ -39,7 +39,6 @@ STATIC int					/* error */
 xfs_bmbt_delrec(
 	xfs_btree_cur_t		*cur,
 	int			level,
-	int			async,		/* deletion can be async */
 	int			*stat)		/* success/failure */
 {
 	xfs_bmbt_block_t	*block;		/* bmap btree block */
@@ -143,7 +142,7 @@ xfs_bmbt_delrec(
 	if (level == cur->bc_nlevels - 1) {
 		xfs_iroot_realloc(cur->bc_private.b.ip, -1,
 			cur->bc_private.b.whichfork);
-		if ((error = xfs_bmbt_killroot(cur, async))) {
+		if ((error = xfs_bmbt_killroot(cur))) {
 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
 			goto error0;
 		}
@@ -177,7 +176,7 @@ xfs_bmbt_delrec(
 	 */
 	if (lbno == NULLFSBLOCK && rbno == NULLFSBLOCK &&
 	    level == cur->bc_nlevels - 2) {
-		if ((error = xfs_bmbt_killroot(cur, async))) {
+		if ((error = xfs_bmbt_killroot(cur))) {
 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
 			goto error0;
 		}
@@ -380,8 +379,6 @@ xfs_bmbt_delrec(
 	}
 	xfs_bmap_add_free(XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(rbp)), 1,
 		cur->bc_private.b.flist, mp);
-	if (!async)
-		xfs_trans_set_sync(cur->bc_tp);
 	cur->bc_private.b.ip->i_d.di_nblocks--;
 	xfs_trans_log_inode(cur->bc_tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
 	if (XFS_IS_QUOTA_ON(mp) &&
@@ -605,8 +602,7 @@ xfs_bmbt_insrec(
 
 STATIC int
 xfs_bmbt_killroot(
-	xfs_btree_cur_t		*cur,
-	int			async)
+	xfs_btree_cur_t		*cur)
 {
 	xfs_bmbt_block_t	*block;
 	xfs_bmbt_block_t	*cblock;
@@ -685,8 +681,6 @@ xfs_bmbt_killroot(
 	memcpy(pp, cpp, INT_GET(block->bb_numrecs, ARCH_CONVERT) * sizeof(*pp));
 	xfs_bmap_add_free(XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(cbp)), 1,
 		cur->bc_private.b.flist, cur->bc_mp);
-	if (!async)
-		xfs_trans_set_sync(cur->bc_tp);
 	ip->i_d.di_nblocks--;
 	if (XFS_IS_QUOTA_ON(cur->bc_mp) &&
 	    ip->i_ino != cur->bc_mp->m_sb.sb_uquotino &&
@@ -1527,7 +1521,6 @@ xfs_bmbt_decrement(
 int					/* error */
 xfs_bmbt_delete(
 	xfs_btree_cur_t *cur,
-	int		async,		/* deletion can be async */
 	int		*stat)		/* success/failure */
 {
 	int		error;		/* error return value */
@@ -1539,7 +1532,7 @@ xfs_bmbt_delete(
 
 	XFS_BMBT_TRACE_CURSOR(cur, ENTRY);
 	for (level = 0, i = 2; i == 2; level++) {
-		if ((error = xfs_bmbt_delrec(cur, level, async, &i))) {
+		if ((error = xfs_bmbt_delrec(cur, level, &i))) {
 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
 			return error;
 		}

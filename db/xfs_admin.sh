@@ -32,11 +32,12 @@
 #
 
 OPTS=""
-USAGE="Usage: xfs_admin [-fluV] [-L label] [-U uuid] special"
+USAGE="Usage: xfs_admin [-efluV] [-L label] [-U uuid] special"
 
-while getopts "fluL:U:V" c
+while getopts "efluL:U:V" c
 do
 	case $c in
+	e)	OPTS=$OPTS" -c 'version extflg'";;
 	f)	OPTS=$OPTS" -f";;
 	l)	OPTS=$OPTS" -r -c label";;
 	L)	OPTS=$OPTS" -c 'label "$OPTARG"'";;

@@ -598,7 +598,7 @@ libxfs_mount(
 	dev_t		dev,
 	dev_t		logdev,
 	dev_t		rtdev,
-	int		rrootinos)
+	int		flags)
 {
 	xfs_daddr_t	d;
 	xfs_buf_t	*bp;
@@ -658,7 +658,8 @@ libxfs_mount(
 	d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
 		fprintf(stderr, _("%s: size check failed\n"), progname);
-		return NULL;
+		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+			return NULL;
 	}
 
 	/* Initialize the appropriate directory manager */
@@ -674,10 +675,12 @@ libxfs_mount(
 		return mp;
 
 	bp = libxfs_readbuf(mp->m_dev,
-			d - XFS_FSS_TO_BB(mp, 1), XFS_FSS_TO_BB(mp, 1), 1);
+			d - XFS_FSS_TO_BB(mp, 1), XFS_FSS_TO_BB(mp, 1),
+			!(flags & LIBXFS_MOUNT_DEBUGGER));
 	if (!bp) {
 		fprintf(stderr, _("%s: data size check failed\n"), progname);
-		return NULL;
+		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+			return NULL;
 	}
 	libxfs_putbuf(bp);
 
@@ -686,10 +689,12 @@ libxfs_mount(
 		if ( (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) ||
 		     (!(bp = libxfs_readbuf(mp->m_logdev,
 					d - XFS_FSB_TO_BB(mp, 1),
-					XFS_FSB_TO_BB(mp, 1), 1)))) {
+					XFS_FSB_TO_BB(mp, 1),
+					!(flags & LIBXFS_MOUNT_DEBUGGER)))) ) {
 			fprintf(stderr, _("%s: log size checks failed\n"),
 					progname);
-			return NULL;
+			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+				return NULL;
 		}
 		libxfs_putbuf(bp);
 	}
@@ -698,7 +703,8 @@ libxfs_mount(
 	if (rtmount_init(mp)) {
 		fprintf(stderr, _("%s: realtime device init failed\n"),
 			progname);
-		return NULL;
+		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+			return NULL;
 	}
 
 	/* Allocate and initialize the per-ag data */
@@ -714,18 +720,20 @@ libxfs_mount(
 	/*
 	 * mkfs calls mount before the root inode is allocated.
 	 */
-	if (rrootinos && sbp->sb_rootino != NULLFSINO) {
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO) {
 		error = libxfs_iread(mp, NULL, sbp->sb_rootino,
 				&mp->m_rootip, 0);
 		if (error) {
 			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
 				progname, error);
-			return NULL;
+			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+				return NULL;
 		}
 		ASSERT(mp->m_rootip != NULL);
 	}
-	if (rrootinos && rtmount_inodes(mp))
-		return NULL;
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp))
+		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+			return NULL;
 	return mp;
 }
 

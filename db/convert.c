@@ -35,7 +35,7 @@
 #include "data.h"
 #include "convert.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 #define	M(A)	(1 << CT_ ## A)
 #define	agblock_to_bytes(x)	\

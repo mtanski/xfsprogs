@@ -38,7 +38,7 @@
 #include "io.h"
 #include "inode.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 static int		bmap_f(int argc, char **argv);
 static int		bmap_one_extent(xfs_bmbt_rec_64_t *ep,

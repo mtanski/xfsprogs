@@ -186,6 +186,8 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
 } xfs_mount_t;
 
+#define LIBXFS_MOUNT_ROOTINOS	0x0001
+#define LIBXFS_MOUNT_DEBUGGER	0x0002
 
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);

@@ -1258,10 +1258,12 @@ xlog_do_recovery_pass(xlog_t	*log,
 	    ASSERT(BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT) <= INT_MAX));
 	    bblks = (int) BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT));	/* blocks in data section */
 
-	    if ((INT_GET(rhead->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) ||
+	    if (unlikely((INT_GET(rhead->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) ||
 		(BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT) > INT_MAX)) ||
 		(bblks <= 0) ||
-		(blk_no > log->l_logBBsize)) {
+		(blk_no > log->l_logBBsize))) {
+		    XFS_ERROR_REPORT("xlog_do_recovery_pass(1)",
+				     XFS_ERRLEVEL_LOW, log->l_mp);
 		    error = EFSCORRUPTED;
 		    goto bread_err2;
 	    }
@@ -1327,9 +1329,11 @@ xlog_do_recovery_pass(xlog_t	*log,
 	    ASSERT(bblks > 0);
 	    blk_no += hblks;			/* successfully read header */
 
-	    if ((INT_GET(rhead->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) ||
+	    if (unlikely((INT_GET(rhead->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) ||
 		(BTOBB(INT_GET(rhead->h_len, ARCH_CONVERT) > INT_MAX)) ||
-		(bblks <= 0)) {
+		(bblks <= 0))) {
+		    XFS_ERROR_REPORT("xlog_do_recovery_pass(2)",
+				     XFS_ERRLEVEL_LOW, log->l_mp);
 		    error = EFSCORRUPTED;
 		    goto bread_err2;
 	    }

@@ -85,6 +85,25 @@ msgstr ""
 msgid "TOTAL"
 msgstr ""
 
+msgid " FLG Values:\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't begin on stripe unit\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't end   on stripe unit\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't begin on stripe width\n"
+msgstr ""
+
+#, c-format
+msgid "    %5.5o Doesn't end   on stripe width\n"
+msgstr ""
+
 #, c-format
 msgid ""
 "Usage: %s [options] mountpoint\n"

@@ -1,3 +1,18 @@
+xfsprogs-2.4.0 (06 March 2002)
+	- Enable unwritten extents by default in mkfs.xfs.
+	- Add a command to xfs_db to enable unwritten extents.
+	- Add an option to xfs_admin to use the above command.
+	- Add command to xfs_db to print out the currently enabled
+	  feature bits and version number.
+	- Make xfs_db slightly more robust in the presense of bad
+	  ondisk data.
+	- Rationalise some xfs_db superblock-related code and the
+	  uuid command now checks for a dirty log before zeroing.
+	- Add stripe alignment information to xfs_bmap.
+	- Sync up user/kernel source in libxfs and headers.
+	- Update man pages, fix a typo in the xfs_admin man page
+	  relating to the UUID options.
+
 xfsprogs-2.3.11 (18 February 2002)
 	- Missed a build dependency for the Debian build process.
 

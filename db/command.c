@@ -57,7 +57,6 @@
 #include "print.h"
 #include "quit.h"
 #include "sb.h"
-#include "uuid.h"
 #include "write.h"
 #include "malloc.h"
 #include "dquot.h"
@@ -150,7 +149,6 @@ init_commands(void)
 	print_init();
 	quit_init();
 	sb_init();
-	uuid_init();
 	type_init();
 	write_init();
 	dquot_init();

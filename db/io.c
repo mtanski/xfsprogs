@@ -40,7 +40,7 @@
 #include "inode.h"
 #include "io.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 #include "malloc.h"
 
 static int	pop_f(int argc, char **argv);
@@ -448,13 +448,13 @@ write_bbs(
 	for (j = 0; j < count; j += bbmap ? 1 : count) {
 		if (bbmap)
 			bbno = bbmap->b[j];
-		if (lseek64(xfsargs.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
+		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
 			dbprintf("can't seek in filesystem at bb %lld\n", bbno);
 			return rval;
 		}
 		c = BBTOB(bbmap ? 1 : count);
-		i = (int)write(xfsargs.dfd, (char *)bufp + BBTOB(j), c);
+		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
 		if (i < 0) {
 			rval = errno;
 		} else if (i < c) {
@@ -480,8 +480,8 @@ read_bbs(
 	int		j;
 	int		rval = EINVAL;
         
-        if (!count)
-            return EINVAL;
+	if (count <= 0)
+		count = 1;
 
 	c = BBTOB(count);
 	if (*bufp == NULL)
@@ -491,7 +491,7 @@ read_bbs(
 	for (j = 0; j < count; j += bbmap ? 1 : count) {
 		if (bbmap)
 			bbno = bbmap->b[j];
-		if (lseek64(xfsargs.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
+		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
 			dbprintf("can't seek in filesystem at bb %lld\n", bbno);
 			if (*bufp == NULL)
@@ -499,7 +499,7 @@ read_bbs(
 			buf = NULL;
 		} else {
 			c = BBTOB(bbmap ? 1 : count);
-			i = (int)read(xfsargs.dfd, (char *)buf + BBTOB(j), c);
+			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
 			if (i < 0) {
 				rval = errno;
 				if (*bufp == NULL)

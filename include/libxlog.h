@@ -70,10 +70,13 @@ typedef struct log {
 /*
  * macros mapping kernel code to user code
  */
-#define STATIC			static
-#define EFSCORRUPTED            990
-#define XFS_ERROR(e)		(e)
-#define min(a,b)		((a) < (b) ? (a) : (b))
+#define STATIC				static
+#define EFSCORRUPTED           	 990
+#define XFS_ERROR(e)			(e)
+#define XFS_ERROR_REPORT(e,l,mp)	((void) 0)
+#define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)
+#define unlikely(x)			(x)
+#define min(a,b)			((a) < (b) ? (a) : (b))
 
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
 # define xlog_warn(fmt,args...) \

@@ -60,10 +60,11 @@ xfs_dir_ino_validate(xfs_mount_t *mp, xfs_ino_t ino)
 		agblkno != 0 &&
 		ioff < (1 << mp->m_sb.sb_inopblog) &&
 		XFS_AGINO_TO_INO(mp, agno, agino) == ino;
-	if (XFS_TEST_ERROR(!ino_ok, mp, XFS_ERRTAG_DIR_INO_VALIDATE,
-			XFS_RANDOM_DIR_INO_VALIDATE)) {
+	if (unlikely(XFS_TEST_ERROR(!ino_ok, mp, XFS_ERRTAG_DIR_INO_VALIDATE,
+			XFS_RANDOM_DIR_INO_VALIDATE))) {
 		xfs_fs_cmn_err(CE_WARN, mp, "Invalid inode number 0x%Lx",
 				(unsigned long long) ino);
+		XFS_ERROR_REPORT("xfs_dir_ino_validate", XFS_ERRLEVEL_LOW, mp);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 	return 0;
@@ -1108,7 +1109,7 @@ xfs_dir_leaf_toosmall(xfs_da_state_t *state, int *action)
 		count * ((uint)sizeof(xfs_dir_leaf_name_t)-1) +
 		INT_GET(leaf->hdr.namebytes, ARCH_CONVERT);
 	if (bytes > (state->blocksize >> 1)) {
-		*action = 0;	/* blk over 50%, dont try to join */
+		*action = 0;	/* blk over 50%, don't try to join */
 		return(0);
 	}
 

@@ -183,13 +183,15 @@ xfs_itobp(
 					(i << mp->m_sb.sb_inodelog));
 		di_ok = INT_GET(dip->di_core.di_magic, ARCH_CONVERT) == XFS_DINODE_MAGIC &&
 			    XFS_DINODE_GOOD_VERSION(INT_GET(dip->di_core.di_version, ARCH_CONVERT));
-		if (XFS_TEST_ERROR(!di_ok, mp, XFS_ERRTAG_ITOBP_INOTOBP,
-				 XFS_RANDOM_ITOBP_INOTOBP)) {
+		if (unlikely(XFS_TEST_ERROR(!di_ok, mp, XFS_ERRTAG_ITOBP_INOTOBP,
+				 XFS_RANDOM_ITOBP_INOTOBP))) {
 #ifdef DEBUG
 			prdev("bad inode magic/vsn daddr 0x%llx #%d (magic=%x)",
 				mp->m_dev, (unsigned long long)imap.im_blkno, i,
 				INT_GET(dip->di_core.di_magic, ARCH_CONVERT));
 #endif
+			XFS_CORRUPTION_ERROR("xfs_itobp", XFS_ERRLEVEL_LOW,
+					     mp, dip);
 			xfs_trans_brelse(tp, bp);
 			return XFS_ERROR(EFSCORRUPTED);
 		}
@@ -233,9 +235,10 @@ xfs_iformat(
 		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
 	error = 0;
 
-	if (INT_GET(dip->di_core.di_nextents, ARCH_CONVERT) +
+	if (unlikely(
+	    INT_GET(dip->di_core.di_nextents, ARCH_CONVERT) +
 		INT_GET(dip->di_core.di_anextents, ARCH_CONVERT) >
-	    INT_GET(dip->di_core.di_nblocks, ARCH_CONVERT)) {
+	    INT_GET(dip->di_core.di_nblocks, ARCH_CONVERT))) {
 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
 			"corrupt dinode %Lu, extent total = %d, nblocks = %Lu."
 			"  Unmount and run xfs_repair.",
@@ -244,15 +247,19 @@ xfs_iformat(
 			    + INT_GET(dip->di_core.di_anextents, ARCH_CONVERT)),
 			(unsigned long long)
 			INT_GET(dip->di_core.di_nblocks, ARCH_CONVERT));
+		XFS_CORRUPTION_ERROR("xfs_iformat(1)", XFS_ERRLEVEL_LOW,
+				     ip->i_mount, dip);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 
-	if (INT_GET(dip->di_core.di_forkoff, ARCH_CONVERT) > ip->i_mount->m_sb.sb_inodesize) {
+	if (unlikely(INT_GET(dip->di_core.di_forkoff, ARCH_CONVERT) > ip->i_mount->m_sb.sb_inodesize)) {
 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
 			"corrupt dinode %Lu, forkoff = 0x%x."
 			"  Unmount and run xfs_repair.",
 			(unsigned long long)ip->i_ino,
 			(int)(INT_GET(dip->di_core.di_forkoff, ARCH_CONVERT)));
+		XFS_CORRUPTION_ERROR("xfs_iformat(2)", XFS_ERRLEVEL_LOW,
+				     ip->i_mount, dip);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 
@@ -261,8 +268,11 @@ xfs_iformat(
 	case IFCHR:
 	case IFBLK:
 	case IFSOCK:
-		if (INT_GET(dip->di_core.di_format, ARCH_CONVERT) != XFS_DINODE_FMT_DEV)
+		if (unlikely(INT_GET(dip->di_core.di_format, ARCH_CONVERT) != XFS_DINODE_FMT_DEV)) {
+			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
+					      ip->i_mount, dip);
 			return XFS_ERROR(EFSCORRUPTED);
+		}
 		ip->i_d.di_size = 0;
 		ip->i_df.if_u2.if_rdev = INT_GET(dip->di_u.di_dev, ARCH_CONVERT);
 		break;
@@ -275,24 +285,26 @@ xfs_iformat(
 			/*
 			 * no local regular files yet
 			 */
-			if ((INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFREG) {
+			if (unlikely((INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & IFMT) == IFREG)) {
 				xfs_fs_cmn_err(CE_WARN, ip->i_mount,
-					"corrupt inode "
-					"(local format for regular file) %Lu.  "
-					"Unmount and run xfs_repair.",
+					"corrupt inode (local format for regular file) %Lu.  Unmount and run xfs_repair.",
 					(unsigned long long) ip->i_ino);
+				XFS_CORRUPTION_ERROR("xfs_iformat(4)",
+						     XFS_ERRLEVEL_LOW,
+						     ip->i_mount, dip);
 				return XFS_ERROR(EFSCORRUPTED);
 			}
 
 			di_size = INT_GET(dip->di_core.di_size, ARCH_CONVERT);
-			if (di_size >
-			    XFS_DFORK_DSIZE_ARCH(dip, ip->i_mount, ARCH_CONVERT)) {
+			if (unlikely(di_size >
+			    XFS_DFORK_DSIZE_ARCH(dip, ip->i_mount, ARCH_CONVERT))) {
 				xfs_fs_cmn_err(CE_WARN, ip->i_mount,
-					"corrupt inode %Lu "
-					"(bad size %Ld for local inode).  "
-					"Unmount and run xfs_repair.",
+					"corrupt inode %Lu (bad size %Ld for local inode).  Unmount and run xfs_repair.",
 					(unsigned long long) ip->i_ino,
 					(long long) di_size);
+				XFS_CORRUPTION_ERROR("xfs_iformat(5)",
+						     XFS_ERRLEVEL_LOW,
+						     ip->i_mount, dip);
 				return XFS_ERROR(EFSCORRUPTED);
 			}
 
@@ -306,11 +318,14 @@ xfs_iformat(
 			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
 			break;
 		default:
+			XFS_ERROR_REPORT("xfs_iformat(6)", XFS_ERRLEVEL_LOW,
+					 ip->i_mount);
 			return XFS_ERROR(EFSCORRUPTED);
 		}
 		break;
 
 	default:
+		XFS_ERROR_REPORT("xfs_iformat(7)", XFS_ERRLEVEL_LOW, ip->i_mount);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 	if (error) {
@@ -371,13 +386,13 @@ xfs_iformat_local(
 	 * is wrong and we just bail out rather than crash in
 	 * kmem_alloc() or memcpy() below.
 	 */
-	if (size > XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT)) {
+	if (unlikely(size > XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT))) {
 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
-			"corrupt inode %Lu "
-			"(bad size %d for local fork, size = %d).  "
-			"Unmount and run xfs_repair.",
+			"corrupt inode %Lu (bad size %d for local fork, size = %d).  Unmount and run xfs_repair.",
 			(unsigned long long) ip->i_ino, size,
 			XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT));
+		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
+				     ip->i_mount, dip);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 	ifp = XFS_IFORK_PTR(ip, whichfork);
@@ -433,11 +448,12 @@ xfs_iformat_extents(
 	 * is wrong and we just bail out rather than crash in
 	 * kmem_alloc() or memcpy() below.
 	 */
-	if (size < 0 || size > XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT)) {
+	if (unlikely(size < 0 || size > XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT))) {
 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
-			"corrupt inode %Lu ((a)extents = %d).  "
-			"Unmount and run xfs_repair.",
+			"corrupt inode %Lu ((a)extents = %d).  Unmount and run xfs_repair.",
 			(unsigned long long) ip->i_ino, nex);
+		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
+				     ip->i_mount, dip);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 
@@ -471,9 +487,13 @@ xfs_iformat_extents(
 			whichfork);
 		if (whichfork != XFS_DATA_FORK ||
 			XFS_EXTFMT_INODE(ip) == XFS_EXTFMT_NOSTATE)
-				if (xfs_check_nostate_extents(
-				    ifp->if_u1.if_extents, nex))
+				if (unlikely(xfs_check_nostate_extents(
+				    ifp->if_u1.if_extents, nex))) {
+					XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+							 XFS_ERRLEVEL_LOW,
+							 ip->i_mount);
 					return XFS_ERROR(EFSCORRUPTED);
+				}
 	}
 	ifp->if_flags |= XFS_IFEXTENTS;
 	return 0;
@@ -511,14 +531,15 @@ xfs_iformat_btree(
 	 * or the number of extents is greater than the number of
 	 * blocks.
 	 */
-	if (XFS_IFORK_NEXTENTS(ip, whichfork) <= ifp->if_ext_max
+	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <= ifp->if_ext_max
 	    || XFS_BMDR_SPACE_CALC(nrecs) >
 			XFS_DFORK_SIZE_ARCH(dip, ip->i_mount, whichfork, ARCH_CONVERT)
-	    || XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) {
+	    || XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
-			"corrupt inode %Lu (btree).  "
-			"Unmount and run xfs_repair.",
+			"corrupt inode %Lu (btree).  Unmount and run xfs_repair.",
 			(unsigned long long) ip->i_ino);
+		XFS_ERROR_REPORT("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
+				 ip->i_mount);
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 
@@ -789,8 +810,11 @@ xfs_iread_extents(
 	xfs_ifork_t	*ifp;
 	size_t		size;
 
-	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
+	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
+				 ip->i_mount);
 		return XFS_ERROR(EFSCORRUPTED);
+	}
 	size = XFS_IFORK_NEXTENTS(ip, whichfork) * (uint)sizeof(xfs_bmbt_rec_t);
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 	/*
@@ -1356,7 +1380,9 @@ xfs_iflush_fork(
 			memcpy(cp, ifp->if_u1.if_data, ifp->if_bytes);
 		}
 		if (whichfork == XFS_DATA_FORK) {
-			if (XFS_DIR_SHORTFORM_VALIDATE_ONDISK(mp, dip)) {
+			if (unlikely(XFS_DIR_SHORTFORM_VALIDATE_ONDISK(mp, dip))) {
+				XFS_ERROR_REPORT("xfs_iflush_fork",
+						 XFS_ERRLEVEL_LOW, mp);
 				return XFS_ERROR(EFSCORRUPTED);
 			}
 		}

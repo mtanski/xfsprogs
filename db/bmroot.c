@@ -40,7 +40,7 @@
 #include "io.h"
 #include "print.h"
 #include "bit.h"
-#include "mount.h"
+#include "init.h"
 
 static int	bmroota_key_count(void *obj, int startoff);
 static int	bmroota_key_offset(void *obj, int startoff, int idx);

@@ -35,7 +35,7 @@
 #include "data.h"
 #include "dbread.h"
 #include "io.h"
-#include "mount.h"
+#include "init.h"
 
 int
 dbread(void *buf, int nblocks, xfs_fileoff_t bno, int whichfork)

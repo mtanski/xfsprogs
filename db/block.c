@@ -42,7 +42,7 @@
 #include "inode.h"
 #include "io.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 static int	ablock_f(int argc, char **argv);
 static void     ablock_help(void);

@@ -436,6 +436,17 @@ superblock in the filesystem.
 to all secondary copies of the superblock.
 If no argument is given, the current filesystem UUID is printed.
 .TP
+\f3version\f1 [ \f2extflg\f1 ]
+Enable selected features for a filesystem (certain features can
+be enabled on an unmounted filesystem, after
+.IR mkfs.xfs (8)
+has created the filesystem).
+Support for unwritten extents can be enabled using the \f2extflg\f1
+option.
+This option will write the version number into every copy of the
+superblock in the filesystem.
+If no argument is given, the current version and feature bits are printed.
+.TP
 \f3write\f1 [ \f2field\f1 or \f2value\f1 ] ...
 Write a value to disk.
 Specific fields can be set in structures (struct mode),

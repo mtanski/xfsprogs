@@ -37,28 +37,39 @@
 #include "init.h"
 #include "input.h"
 #include "io.h"
-#include "mount.h"
+#include "init.h"
 #include "sig.h"
 #include "output.h"
 #include "malloc.h"
 
-char	*fsdevice;
-char	**cmdline;
-int	ncmdline;
+static char	**cmdline;
+static int	ncmdline;
+char		*fsdevice;
+int		blkbb;
+int		exitcode;
+int		expert_mode;
+xfs_mount_t	xmount;
+xfs_mount_t	*mp;
+libxfs_init_t	x;
+xfs_agnumber_t	cur_agno = NULLAGNUMBER;
 
 static void
 usage(void)
 {
-	dbprintf("Usage: %s [-c cmd]... [-p prog] [-l logdev] [-frxV] devname\n", progname);
+	fprintf(stderr, _(
+		"Usage: %s [-frxV] [-p prog] [-l logdev] [-c cmd]... device\n"),
+		progname);
 	exit(1);
 }
 
 void
 init(
-	int	argc,
-	char	**argv)
+	int		argc,
+	char		**argv)
 {
-	int	c;
+	xfs_sb_t	*sbp;
+	void		*bufp = NULL;
+	int		c;
 
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "c:fip:rxVl:")) != EOF) {
@@ -68,25 +79,22 @@ init(
 			cmdline[ncmdline++] = optarg;
 			break;
 		case 'f':
-			xfsargs.disfile = 1;
+			x.disfile = 1;
 			break;
 		case 'i':
-			xfsargs.isreadonly =
-				(LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
-			flag_readonly = 1;
+			x.isreadonly = (LIBXFS_ISREADONLY|LIBXFS_ISINACTIVE);
 			break;
 		case 'p':
 			progname = optarg;
 			break;
 		case 'r':
-			xfsargs.isreadonly = LIBXFS_ISREADONLY;
-			flag_readonly = 1;
+			x.isreadonly = LIBXFS_ISREADONLY;
 			break;
 		case 'l':
-			xfsargs.logname = optarg;
+			x.logname = optarg;
 			break;
 		case 'x':
-			flag_expert_mode = 1;
+			expert_mode = 1;
 			break;
 		case 'V':
 			printf("%s version %s\n", progname, VERSION);
@@ -100,26 +108,76 @@ init(
 		usage();
 		/*NOTREACHED*/
 	}
+
 	fsdevice = argv[optind];
-	if (!xfsargs.disfile)
-		xfsargs.volname = fsdevice;
+	if (!x.disfile)
+		x.volname = fsdevice;
 	else
-		xfsargs.dname = fsdevice;
-	xfsargs.notvolok = 1;
-	if (!libxfs_init(&xfsargs)) {
-		fputs("\nfatal error -- couldn't initialize XFS library\n",
+		x.dname = fsdevice;
+	x.notvolok = 1;
+
+	if (!libxfs_init(&x)) {
+		fputs(_("\nfatal error -- couldn't initialize XFS library\n"),
 			stderr);
 		exit(1);
 	}
-	mp = dbmount();
-	if (mp == NULL) {
-		dbprintf("%s: %s is not a valid filesystem\n",
+
+	if (read_bbs(XFS_SB_DADDR, 1, &bufp, NULL)) {
+		dbprintf(_("%s: %s is invalid (cannot read first 512 bytes)\n"),
 			progname, fsdevice);
 		exit(1);
-		/*NOTREACHED*/
 	}
+
+	/* copy SB from buffer to in-core, converting architecture as we go */
+	libxfs_xlate_sb(bufp, &xmount.m_sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	xfree(bufp);
+
+	sbp = &xmount.m_sb;
+	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+		dbprintf(_("%s: unexpected XFS SB magic number 0x%08x\n"),
+			progname, sbp->sb_magicnum);
+	}
+
+	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
+				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
+
 	blkbb = 1 << mp->m_blkbb_log;
+
 	push_cur();
 	init_commands();
 	init_sig();
+}
+
+int
+main(
+	int	argc,
+	char	**argv)
+{
+	int	c, i, done = 0;
+	char	*input;
+	char	**v;
+
+	pushfile(stdin);
+	init(argc, argv);
+
+	for (i = 0; !done && i < ncmdline; i++) {
+		v = breakline(cmdline[i], &c);
+		if (c)
+			done = command(c, v);
+		xfree(v);
+	}
+	if (cmdline) {
+		xfree(cmdline);
+		return exitcode;
+	}
+
+	while (!done) {
+		if ((input = fetchline()) == NULL)
+			break;
+		v = breakline(input, &c);
+		if (c)
+			done = command(c, v);
+		doneline(input, v);
+	}
+	return exitcode;
 }

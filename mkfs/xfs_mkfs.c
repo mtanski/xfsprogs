@@ -460,7 +460,7 @@ main(
 	dfile = logfile = rtfile = NULL;
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsu = lsunit = 0;
-	extent_flagging = 0;
+	extent_flagging = 1;
 	force_overwrite = 0;
 	worst_freelist = 0;
 

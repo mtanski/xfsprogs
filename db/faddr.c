@@ -39,7 +39,7 @@
 #include "bit.h"
 #include "bmap.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 void
 fa_agblock(

@@ -39,7 +39,7 @@
 #include "attr.h"
 #include "io.h"
 #include "data.h"
-#include "mount.h"
+#include "init.h"
 
 static int	attr_leaf_entries_count(void *obj, int startoff);
 static int	attr_leaf_hdr_count(void *obj, int startoff);

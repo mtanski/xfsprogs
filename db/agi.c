@@ -41,7 +41,7 @@
 #include "io.h"
 #include "bit.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 static int agi_f(int argc, char **argv);
 static void agi_help(void);

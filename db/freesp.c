@@ -37,7 +37,7 @@
 #include "io.h"
 #include "type.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 #include "malloc.h"
 
 typedef struct histent

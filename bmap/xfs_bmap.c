@@ -134,6 +134,7 @@ dofile(char *fname)
 	int		map_size;
 	int		loop = 0;
 	xfs_fsop_geom_v1_t fsgeo;
+	int		flg = 0;
 
 	fd = open(fname, O_RDONLY);
 	if (fd < 0) {
@@ -326,15 +327,23 @@ dofile(char *fname)
 #define MINAG_WIDTH	2
 #define MINTOT_WIDTH	5
 #define	max(a,b)	(a > b ? a : b)
-		int	  agno;
-		off64_t	  agoff, bbperag;
-		int 	  foff_w, boff_w, aoff_w, tot_w, agno_w;
-		char 	  rbuf[32], bbuf[32], abuf[32];
+#define	FLG_NULL	00000	/* Null flag */
+#define	FLG_BSU		01000	/* Not on begin of stripe unit  */
+#define	FLG_ESU		00100	/* Not on end   of stripe unit  */
+#define	FLG_BSW		00010	/* Not on begin of stripe width */
+#define	FLG_ESW		00001	/* Not on end   of stripe width */
+		int	agno;
+		off64_t agoff, bbperag;
+		int 	foff_w, boff_w, aoff_w, tot_w, agno_w;
+		char 	rbuf[32], bbuf[32], abuf[32];
+		int	sunit, swidth;
 
 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
 		tot_w = MINTOT_WIDTH;
 		bbperag = (off64_t)fsgeo.agblocks * 
 		          (off64_t)fsgeo.blocksize / BBSIZE;
+		sunit = fsgeo.sunit;
+		swidth = fsgeo.swidth;
 
 		/* 
 		 * Go through the extents and figure out the width
@@ -375,6 +384,23 @@ dofile(char *fname)
 			aoff_w, _("AG-OFFSET"),
 			tot_w, _("TOTAL"));
 		for (i = 0; i < map->bmv_entries; i++) {
+			if (sunit) {
+				flg = FLG_NULL;
+				if (map[i + 1].bmv_block  % sunit != 0) {
+					flg |= FLG_BSU;
+				}
+				if (((map[i + 1].bmv_block + 
+				      map[i + 1].bmv_length ) % sunit ) != 0) {
+					flg |= FLG_ESU;
+				}
+				if (map[i + 1].bmv_block % swidth != 0) {
+					flg |= FLG_BSW;
+				}
+				if (((map[i + 1].bmv_block + 
+				      map[i + 1].bmv_length ) % swidth ) != 0) {
+					flg |= FLG_ESW;
+				}
+			}
 			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:", 
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
@@ -404,7 +430,23 @@ dofile(char *fname)
 					agno_w, agno, 
 					aoff_w, abuf, 
 					tot_w, (long long)map[i+1].bmv_length);
+				if (flg == FLG_NULL) {
+					printf("\n");
+				} else {
+					printf(" %-4.4o\n", flg);
+				}
 			}
+		}
+		if ( flg ) {
+			printf(_(" FLG Values:\n"));
+			printf(_("    %5.5o Doesn't begin on stripe unit\n"),
+				FLG_BSU);
+			printf(_("    %5.5o Doesn't end   on stripe unit\n"),
+				FLG_ESU);
+			printf(_("    %5.5o Doesn't begin on stripe width\n"),
+				FLG_BSW);
+			printf(_("    %5.5o Doesn't end   on stripe width\n"),
+				FLG_ESW);
 		}
 	}
 	free(map);

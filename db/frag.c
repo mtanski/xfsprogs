@@ -39,7 +39,7 @@
 #include "io.h"
 #include "output.h"
 #include "type.h"
-#include "mount.h"
+#include "init.h"
 #include "malloc.h"
 
 typedef struct extent {

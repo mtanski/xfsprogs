@@ -43,7 +43,7 @@
 #include "block.h"
 #include "bit.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 static int	inode_a_bmbt_count(void *obj, int startoff);
 static int	inode_a_bmx_count(void *obj, int startoff);

@@ -42,7 +42,7 @@
 #include "field.h"
 #include "inode.h"
 #include "io.h"
-#include "mount.h"
+#include "init.h"
 #include "output.h"
 
 static int	dquot_f(int argc, char **argv);

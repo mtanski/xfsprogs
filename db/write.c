@@ -43,6 +43,7 @@
 #include "field.h"
 #include "flist.h"
 #include "io.h"
+#include "init.h"
 #include "output.h"
 #include "print.h"
 #include "write.h"
@@ -58,7 +59,7 @@ static const cmdinfo_t	write_cmd =
 void
 write_init(void)
 {
-	if (!flag_expert_mode)
+	if (!expert_mode)
 		return;
 
 	add_command(&write_cmd);
@@ -105,7 +106,7 @@ write_f(
 	pfunc_t	pf;
 	extern char *progname;
 
-	if (flag_readonly) {
+	if (x.isreadonly & LIBXFS_ISREADONLY) {
 		dbprintf("%s started in read only mode, writing disabled\n",
 			progname);
 		return 0;

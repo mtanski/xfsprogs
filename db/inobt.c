@@ -39,7 +39,7 @@
 #include "inobt.h"
 #include "print.h"
 #include "bit.h"
-#include "mount.h"
+#include "init.h"
 
 static int	inobt_key_count(void *obj, int startoff);
 static int	inobt_key_offset(void *obj, int startoff, int idx);

@@ -30,7 +30,10 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-extern char	*fsdevice;
-extern char	**cmdline;
-extern int	ncmdline;
-extern void	init(int argc, char **argv);
+extern char		*fsdevice;
+extern int		blkbb;
+extern int		exitcode;
+extern int		expert_mode;
+extern xfs_mount_t	*mp;
+extern libxfs_init_t	x;
+extern xfs_agnumber_t	cur_agno;

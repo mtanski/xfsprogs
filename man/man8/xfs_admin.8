@@ -3,8 +3,8 @@
 xfs_admin \- change parameters of an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_admin\f1 [ \f3-lu\f1] [ \f3\-L \f2label\f1 ] [ \f3\-U \f2uuid\f1 ] device
-\f3xfs_admin \-f\f1 [ \f3-lu\f1] [ \f3\-L \f2label\f1 ] [ \f3\-U \f2uuid\f1 ] filename
+\f3xfs_admin\f1 [ \f3-elu\f1] [ \f3\-L \f2label\f1 ] [ \f3\-U \f2uuid\f1 ] device
+\f3xfs_admin \-f\f1 [ \f3-elu\f1] [ \f3\-L \f2label\f1 ] [ \f3\-U \f2uuid\f1 ] filename
 .fi
 .SH DESCRIPTION
 .I xfs_admin
@@ -23,6 +23,10 @@ and modified using the
 .IR xfs_growfs (8)
 command.
 .SH OPTIONS
+.TP 5
+\f3\-e\f1
+Enables unwritten extent support on a filesystem that does not
+already have this enabled.
 .TP 5
 \f3\-f\f1
 Specifies that the filesystem image to be processed is stored in a
@@ -50,7 +54,7 @@ value for
 Set the UUID of the filesystem.
 A sample UUID looks like this: "c1b9d5a2-f162-11cf-9ece-0020afc76f16".
 The uuid may also be
-.IR null ,
+.IR nil ,
 which will set the filesystem UUID to the null UUID.
 The uuid may also be
 .IR generate ,

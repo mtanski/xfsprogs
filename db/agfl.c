@@ -41,7 +41,7 @@
 #include "io.h"
 #include "bit.h"
 #include "output.h"
-#include "mount.h"
+#include "init.h"
 
 static int agfl_bno_size(void *obj, int startoff);
 static int agfl_f(int argc, char **argv);

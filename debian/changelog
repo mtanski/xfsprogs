@@ -1,3 +1,10 @@
+xfsprogs (2.4.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Note: unwritten extents are now enabled by default in mkfs.xfs.
+
+ -- Nathan Scott <nathans@debian.org>  Thu,  6 Mar 2003 12:00:38 +1100
+
 xfsprogs (2.3.11-1) unstable; urgency=low
 
   * Add missing build dependency on gettext (closes: #181331)
