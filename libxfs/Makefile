@@ -39,8 +39,8 @@ LT_REVISION = 0
 LT_AGE = 0
 
 HFILES = xfs.h
-CFILES = init.c logitem.c rdwr.c trans.c util.c \
-	xfs_bit.c xfs_rtbit.c xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
+CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
+	xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
 	xfs_inode.c xfs_btree.c xfs_alloc_btree.c xfs_ialloc_btree.c \
 	xfs_bmap_btree.c xfs_da_btree.c xfs_dir.c xfs_dir_leaf.c \
 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \

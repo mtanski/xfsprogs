@@ -64,39 +64,25 @@ __uint64_t xfs_mask64lo(int n);
 #define	XFS_MASK64LO(n)		(((__uint64_t)1 << (n)) - 1)
 #endif
 
-/*
- * Index of low bit number in byte, -1 for none set, 0..7 otherwise.
- */
-extern const char xfs_lowbit[256];
-
-/*
- * Index of high bit number in byte, -1 for none set, 0..7 otherwise.
- */
-extern const char xfs_highbit[256];
-
-/*
- * Count of bits set in byte, 0..8.
- */
-extern const char xfs_countbit[256];
-
-/*
- * xfs_lowbit32: get low bit set out of 32-bit argument, -1 if none set.
- */
+/* Get low bit set out of 32-bit argument, -1 if none set */
 extern int xfs_lowbit32(__uint32_t v);
 
-/*
- * xfs_highbit32: get high bit set out of 32-bit argument, -1 if none set.
- */
+/* Get high bit set out of 32-bit argument, -1 if none set */
 extern int xfs_highbit32(__uint32_t v);
 
-/*
- * xfs_lowbit64: get low bit set out of 64-bit argument, -1 if none set.
- */
+/* Get low bit set out of 64-bit argument, -1 if none set */
 extern int xfs_lowbit64(__uint64_t v);
 
-/*
- * xfs_highbit64: get high bit set out of 64-bit argument, -1 if none set.
- */
+/* Get high bit set out of 64-bit argument, -1 if none set */
 extern int xfs_highbit64(__uint64_t);
+
+/* Count set bits in map starting with start_bit */ 
+extern int xfs_count_bits(uint *map, uint size, uint start_bit);
+
+/* Count continuous one bits in map starting with start_bit */
+extern int xfs_contig_bits(uint *map, uint size, uint start_bit);
+
+/* Find next set bit in map */
+extern int xfs_next_bit(uint *map, uint size, uint start_bit);
 
 #endif	/* __XFS_BIT_H__ */
