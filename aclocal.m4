@@ -1,15 +1,14 @@
-# aclocal.m4 generated automatically by aclocal 1.6.3 -*- Autoconf -*-
+dnl aclocal.m4 generated automatically by aclocal 1.4-p6
 
-# Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2002
-# Free Software Foundation, Inc.
-# This file is free software; the Free Software Foundation
-# gives unlimited permission to copy and/or distribute it,
-# with or without modifications, as long as this notice is preserved.
+dnl Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+dnl This file is free software; the Free Software Foundation
+dnl gives unlimited permission to copy and/or distribute it,
+dnl with or without modifications, as long as this notice is preserved.
 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE.
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+dnl PARTICULAR PURPOSE.
 
 # 
 # Generic macro, sets up all of the global packaging variables.
@@ -173,26 +172,31 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     AC_SUBST(rpmbuild)
   ])
 
-AC_DEFUN([AC_PACKAGE_NEED_UUID_UUID_H],
-  [ AC_CHECK_HEADERS(uuid/uuid.h,, [
-	AC_CHECK_HEADER(uuid.h,, [
+AC_DEFUN([AC_PACKAGE_NEED_UUID_H],
+  [ AC_CHECK_HEADERS(uuid.h)
+    if test $ac_cv_header_uuid_h = no; then
+	AC_CHECK_HEADERS(uuid/uuid.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID header.'
 	echo 'Install the Universally Unique Identifiers development package.'
 	exit 1])
-    ])
+    fi
   ])
 
-AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE_LIBUUID],
-  [ AC_CHECK_LIB(uuid, uuid_compare,, [
-	AC_CHECK_FUNCS(uuid_compare,, [
+AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE],
+  [ AC_CHECK_FUNCS(uuid_compare)
+    if test $ac_cv_func_uuid_compare = no; then
+	AC_CHECK_LIB(uuid, uuid_compare, [libuuid=/usr/lib/libuuid.a], [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID library.'
 	echo 'Install the Universally Unique Identifiers library package.'
 	exit 1])
-    ])
-    libuuid="/usr/lib/libuuid.a"
+    fi
     AC_SUBST(libuuid)
+  ])
+
+AC_DEFUN([AC_PACKAGE_CHECK_LIBUUID],
+  [ test $pkg_platform = freebsd && libuuid=""
   ])
 
 # 
