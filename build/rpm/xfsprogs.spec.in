@@ -10,7 +10,7 @@ Obsoletes: xfs-cmds
 Prereq: /sbin/ldconfig
 Conflicts: xfsdump < 2.0.0
 Source: @pkg_name@-@pkg_version@.src.tar.gz
-Copyright: Copyright (C) 2000-2002 Silicon Graphics, Inc.
+Copyright: Copyright (C) 2000 Silicon Graphics, Inc.
 Vendor: Silicon Graphics, Inc.
 URL: http://oss.sgi.com/projects/xfs/
 Group: System Environment/Base
