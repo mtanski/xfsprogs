@@ -27,6 +27,11 @@ D: XFS FAQ ( http://oss.sgi.com/projects/xfs/faq.html ) maintainer
 D: PowerPC and Alpha porting
 S: Berlin, Germany
 
+N: Juergen Hasch
+E: hasch@t-online.de
+D: libacl fixes
+S: Meisenstr. 23, 73066 Uhingen, Germany   
+
 N: Bill Jones
 E: jones@hpc.utexas.edu
 D: fsr port to Linux
