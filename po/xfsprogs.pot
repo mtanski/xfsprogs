@@ -1,29 +1,3 @@
-#: ../freeze/xfs_freeze.c:41
-#, c-format
-msgid ""
-"Usage: %s [options] mountpoint\n"
-"\n"
-"Options:\n"
-"\t-f          freeze filesystem access\n"
-"\t-u          unfreeze filesystem access\n"
-msgstr ""
-
-#: ../freeze/xfs_freeze.c:90 ../growfs/xfs_growfs.c:214 ../imap/xfs_imap.c:66
-#: ../io/open.c:83
-#, c-format
-msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
-msgstr ""
-
-#: ../freeze/xfs_freeze.c:99
-#, c-format
-msgid "%s: cannot freeze filesystem mounted at %s: %s\n"
-msgstr ""
-
-#: ../freeze/xfs_freeze.c:108
-#, c-format
-msgid "%s: cannot unfreeze filesystem mounted at %s: %s\n"
-msgstr ""
-
 #: ../growfs/explore.c:57
 #, c-format
 msgid "%s: cannot access mount list %s: %s\n"
@@ -94,14 +68,19 @@ msgstr ""
 msgid "external"
 msgstr ""
 
-#: ../growfs/xfs_growfs.c:101 ../mkfs/xfs_mkfs.c:1351
+#: ../growfs/xfs_growfs.c:101 ../mkfs/xfs_mkfs.c:1487
 msgid "none"
 msgstr ""
 
-#: ../growfs/xfs_growfs.c:191 ../io/init.c:111 ../mkfile/xfs_mkfile.c:113
-#: ../mkfs/xfs_mkfs.c:1054 ../repair/xfs_repair.c:245 ../rtcp/xfs_rtcp.c:71
+#: ../growfs/xfs_growfs.c:191 ../io/init.c:121 ../mkfile/xfs_mkfile.c:113
+#: ../mkfs/xfs_mkfs.c:1193 ../repair/xfs_repair.c:248 ../rtcp/xfs_rtcp.c:71
 #, c-format
 msgid "%s version %s\n"
+msgstr ""
+
+#: ../growfs/xfs_growfs.c:214 ../imap/xfs_imap.c:66 ../io/open.c:200
+#, c-format
+msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
 msgstr ""
 
 #: ../growfs/xfs_growfs.c:231
@@ -231,7 +210,7 @@ msgstr ""
 msgid "ino %10llu count %2d mask %016llx\n"
 msgstr ""
 
-#: ../io/bmap.c:50
+#: ../io/bmap.c:44
 msgid ""
 "\n"
 " prints the block mapping for an XFS file's data or attribute forks\n"
@@ -253,70 +232,70 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/bmap.c:135
+#: ../io/bmap.c:130
 #, c-format
 msgid "%s: can't get geometry [\"%s\"]: %s\n"
 msgstr ""
 
-#: ../io/bmap.c:142
+#: ../io/bmap.c:138
 #, c-format
 msgid "%s: cannot read attrs on \"%s\": %s\n"
 msgstr ""
 
-#: ../io/bmap.c:160
+#: ../io/bmap.c:156
 #, c-format
 msgid "%s: malloc of %d bytes failed.\n"
 msgstr ""
 
-#: ../io/bmap.c:208
+#: ../io/bmap.c:204
 #, c-format
 msgid "%s: xfsctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
 msgstr ""
 
-#: ../io/bmap.c:239
+#: ../io/bmap.c:235
 #, c-format
 msgid "%s: cannot realloc %d bytes\n"
 msgstr ""
 
-#: ../io/bmap.c:248
+#: ../io/bmap.c:244
 #, c-format
 msgid "%s: no extents\n"
 msgstr ""
 
-#: ../io/bmap.c:261 ../io/bmap.c:376
+#: ../io/bmap.c:257 ../io/bmap.c:376
 msgid "hole"
 msgstr ""
 
-#: ../io/bmap.c:270
+#: ../io/bmap.c:266
 #, c-format
 msgid " %lld blocks\n"
 msgstr ""
 
-#: ../io/bmap.c:340
+#: ../io/bmap.c:336
 msgid "EXT"
 msgstr ""
 
-#: ../io/bmap.c:341
+#: ../io/bmap.c:337
 msgid "FILE-OFFSET"
 msgstr ""
 
-#: ../io/bmap.c:342
+#: ../io/bmap.c:338
 msgid "BLOCK-RANGE"
 msgstr ""
 
-#: ../io/bmap.c:343
+#: ../io/bmap.c:339
 msgid "AG"
 msgstr ""
 
-#: ../io/bmap.c:344
+#: ../io/bmap.c:340
 msgid "AG-OFFSET"
 msgstr ""
 
-#: ../io/bmap.c:345
+#: ../io/bmap.c:341
 msgid "TOTAL"
 msgstr ""
 
-#: ../io/bmap.c:346
+#: ../io/bmap.c:342
 msgid " FLAGS"
 msgstr ""
 
@@ -353,148 +332,638 @@ msgstr ""
 msgid "bmap"
 msgstr ""
 
-#: ../io/bmap.c:429
+#: ../io/bmap.c:430
 msgid "[-adlpv] [-n nx]"
 msgstr ""
 
-#: ../io/bmap.c:430
+#: ../io/bmap.c:431
 msgid "print block mapping for an XFS file"
-msgstr ""
-
-#: ../io/command.c:66
-#, c-format
-msgid "command \"%s\" not found\n"
-msgstr ""
-
-#: ../io/command.c:72
-#, c-format
-msgid "bad argument count %d to %s, expected at least %d arguments\n"
 msgstr ""
 
 #: ../io/command.c:76
 #, c-format
+msgid "command \"%s\" not found\n"
+msgstr ""
+
+#: ../io/command.c:80 ../io/mmap.c:184 ../io/mmap.c:191 ../io/mmap.c:194
+#: ../io/open.c:310
+msgid "no files are open, try 'help open'\n"
+msgstr ""
+
+#: ../io/command.c:84 ../io/mmap.c:183 ../io/mmap.c:190
+msgid "no mapped regions, try 'help mmap'\n"
+msgstr ""
+
+#: ../io/command.c:90
+#, c-format
+msgid "foreign file active, %s command is for XFS filesystems only\n"
+msgstr ""
+
+#: ../io/command.c:97
+#, c-format
+msgid "bad argument count %d to %s, expected at least %d arguments\n"
+msgstr ""
+
+#: ../io/command.c:101
+#, c-format
 msgid "bad argument count %d to %s, expected %d arguments\n"
 msgstr ""
 
-#: ../io/command.c:80
+#: ../io/command.c:105
 #, c-format
 msgid "bad argument count %d to %s, expected between %d and %d arguments\n"
 msgstr ""
 
-#: ../io/fsync.c:67
-msgid "fsync"
+#: ../io/fadvise.c:65
+msgid ""
+"\n"
+" advise the page cache about expected I/O patterns on the current file\n"
+"\n"
+" Modifies kernel page cache behaviour when operating on the current file.\n"
+" The range arguments are required by some advise commands ([*] below).\n"
+" With no arguments, the POSIX_FADV_NORMAL advice is implied.\n"
+" -d -- don't need these pages (POSIX_FADV_DONTNEED) [*]\n"
+" -n -- data will be accessed once (POSIX_FADV_NOREUSE) [*]\n"
+" -r -- expect random page references (POSIX_FADV_RANDOM)\n"
+" -s -- expect sequential page references (POSIX_FADV_SEQUENTIAL)\n"
+" -w -- will need these pages (POSIX_FADV_WILLNEED) [*]\n"
+" Notes: these interfaces are not supported in Linux kernels before 2.6.\n"
+"   NORMAL sets the default readahead setting on the file.\n"
+"   RANDOM sets the readahead setting on the file to zero.\n"
+"   SEQUENTIAL sets double the default readahead setting on the file.\n"
+"   WILLNEED and NOREUSE are equivalent, and force the maximum readahead.\n"
+"\n"
+msgstr ""
+
+#: ../io/fadvise.c:127 ../io/mmap.c:222 ../io/mmap.c:316 ../io/mmap.c:421
+#: ../io/mmap.c:567 ../io/mmap.c:656 ../io/mmap.c:701 ../io/pread.c:180
+#: ../io/prealloc.c:57 ../io/pwrite.c:155
+#, c-format
+msgid "non-numeric offset argument -- %s\n"
+msgstr ""
+
+#: ../io/fadvise.c:134 ../io/mmap.c:228 ../io/mmap.c:323 ../io/mmap.c:428
+#: ../io/mmap.c:574 ../io/mmap.c:663 ../io/mmap.c:707 ../io/pread.c:186
+#: ../io/prealloc.c:62 ../io/pwrite.c:161
+#, c-format
+msgid "non-numeric length argument -- %s\n"
+msgstr ""
+
+#: ../io/fadvise.c:152
+msgid "fadvise"
+msgstr ""
+
+#: ../io/fadvise.c:157
+msgid "[-dnrsw] [off len]"
+msgstr ""
+
+#: ../io/fadvise.c:158
+msgid "advisory commands for sections of a file"
+msgstr ""
+
+#: ../io/file.c:53
+#, c-format
+msgid "%c%d%c %-14s (%s,%s,%s,%s%s%s)\n"
+msgstr ""
+
+#: ../io/file.c:55
+msgid "foreign"
+msgstr ""
+
+#: ../io/file.c:55
+msgid "xfs"
+msgstr ""
+
+#: ../io/file.c:56 ../io/open.c:137
+msgid "sync"
+msgstr ""
+
+#: ../io/file.c:56 ../io/open.c:137
+msgid "non-sync"
+msgstr ""
+
+#: ../io/file.c:57 ../io/open.c:138
+msgid "direct"
+msgstr ""
+
+#: ../io/file.c:57 ../io/open.c:138
+msgid "non-direct"
+msgstr ""
+
+#: ../io/file.c:58 ../io/open.c:139
+msgid "read-only"
+msgstr ""
+
+#: ../io/file.c:58 ../io/open.c:139
+msgid "read-write"
+msgstr ""
+
+#: ../io/file.c:59 ../io/open.c:140
+msgid ",real-time"
+msgstr ""
+
+#: ../io/file.c:60 ../io/open.c:141
+msgid ",append-only"
+msgstr ""
+
+#: ../io/file.c:105
+msgid "file"
+msgstr ""
+
+#: ../io/file.c:106
+msgid "f"
+msgstr ""
+
+#: ../io/file.c:107
+msgid "[N]"
+msgstr ""
+
+#: ../io/file.c:112
+msgid "set the current file"
+msgstr ""
+
+#: ../io/file.c:114
+msgid "print"
+msgstr ""
+
+#: ../io/file.c:115
+msgid "p"
+msgstr ""
+
+#: ../io/file.c:120
+msgid "list current open files and memory mappings"
+msgstr ""
+
+#: ../io/freeze.c:51
+#, c-format
+msgid "%s: cannot freeze filesystem at %s: %s\n"
+msgstr ""
+
+#: ../io/freeze.c:68
+#, c-format
+msgid "%s: cannot unfreeze filesystem mounted at %s: %s\n"
+msgstr ""
+
+#: ../io/freeze.c:79
+msgid "freeze"
+msgstr ""
+
+#: ../io/freeze.c:84
+msgid "freeze filesystem of current file"
+msgstr ""
+
+#: ../io/freeze.c:86
+msgid "thaw"
+msgstr ""
+
+#: ../io/freeze.c:91
+msgid "unfreeze filesystem of current file"
 msgstr ""
 
 #: ../io/fsync.c:68
+msgid "fsync"
+msgstr ""
+
+#: ../io/fsync.c:69
 msgid "s"
 msgstr ""
 
-#: ../io/fsync.c:71
+#: ../io/fsync.c:73
 msgid "calls fsync(2) to flush all in-core file state to disk"
 msgstr ""
 
-#: ../io/fsync.c:73
+#: ../io/fsync.c:75
 msgid "fdatasync"
 msgstr ""
 
-#: ../io/fsync.c:74
+#: ../io/fsync.c:76
 msgid "ds"
 msgstr ""
 
-#: ../io/fsync.c:77
+#: ../io/fsync.c:80
 msgid "calls fdatasync(2) to flush the files in-core data to disk"
 msgstr ""
 
-#: ../io/help.c:47
+#: ../io/help.c:48
 msgid ""
 "\n"
 "Use 'help commandname' for extended help.\n"
 msgstr ""
 
-#: ../io/help.c:63
+#: ../io/help.c:64
 #, c-format
 msgid "command %s not found\n"
 msgstr ""
 
-#: ../io/help.c:100
+#: ../io/help.c:101
 msgid "help"
 msgstr ""
 
-#: ../io/help.c:101
+#: ../io/help.c:102
 msgid "?"
 msgstr ""
 
-#: ../io/help.c:105
+#: ../io/help.c:107
 msgid "[command]"
 msgstr ""
 
-#: ../io/help.c:106
+#: ../io/help.c:108
 msgid "help for one or all commands"
 msgstr ""
 
-#: ../io/init.c:58
+#: ../io/init.c:50
 #, c-format
-msgid "Usage: %s [-r] [-p prog] [-c cmd]... file\n"
+msgid "Usage: %s [-adFfmrRstx] [-p prog] [-c cmd]... file\n"
 msgstr ""
 
-#: ../io/open.c:127
+#: ../io/init.c:97 ../io/open.c:332
+#, c-format
+msgid "non-numeric mode -- %s\n"
+msgstr ""
+
+#: ../io/inject.c:123
 msgid ""
 "\n"
-" opens a new file in the requested mode, after closing the current file\n"
+" inject errors into the filesystem of the currently open file\n"
 "\n"
 " Example:\n"
-" 'open -d /tmp/data' - opens data file read-write for direct IO\n"
+" 'inject readagf' - cause errors on allocation group freespace reads\n"
+"\n"
+" Causes the kernel to generate and react to errors within XFS, provided\n"
+" the XFS kernel code has been built with debugging features enabled.\n"
+" With no arguments, displays the list of error injection tags.\n"
+"\n"
+msgstr ""
+
+#: ../io/inject.c:149
+#, c-format
+msgid "no such tag -- %s\n"
+msgstr ""
+
+#: ../io/inject.c:165
+msgid "inject"
+msgstr ""
+
+#: ../io/inject.c:170
+msgid "[tag ...]"
+msgstr ""
+
+#: ../io/inject.c:171
+msgid "inject errors into a filesystem"
+msgstr ""
+
+#: ../io/mmap.c:92
+#, c-format
+msgid "offset (%lld) is before start of mapping (%lld)\n"
+msgstr ""
+
+#: ../io/mmap.c:98
+#, c-format
+msgid "offset (%lld) is beyond end of mapping (%lld)\n"
+msgstr ""
+
+#: ../io/mmap.c:103
+#, c-format
+msgid "range (%lld:%lld) is beyond mapping (%lld:%ld)\n"
+msgstr ""
+
+#: ../io/mmap.c:109
+#, c-format
+msgid "offset address (%p) is not page aligned\n"
+msgstr ""
+
+#: ../io/mmap.c:149
+msgid ""
+"\n"
+" maps a range within the current file into memory\n"
+"\n"
+" Example:\n"
+" 'mmap -rw 0 1m' - maps one megabyte from the start of the current file\n"
+"\n"
+" Memory maps a range of a file for subsequent use by other xfs_io commands.\n"
+" With no arguments, mmap shows the current mappings.  The current mapping\n"
+" can be set by using the single argument form (mapping number or address).\n"
+" If two arguments are specified (a range), a new mapping is created and the\n"
+" following options are available:\n"
+" -r -- map with PROT_READ protection\n"
+" -w -- map with PROT_WRITE protection\n"
+" -x -- map with PROT_EXEC protection\n"
+" If no protection mode is specified, all are used by default.\n"
+"\n"
+msgstr ""
+
+#: ../io/mmap.c:270
+msgid ""
+"\n"
+" flushes a range of bytes in the current memory mapping\n"
+"\n"
+" Writes all modified copies of pages over the specified range (or entire\n"
+" mapping if no range specified) to their backing storage locations.  Also,\n"
+" optionally invalidates so that subsequent references to the pages will be\n"
+" obtained from their backing storage locations (instead of cached copies).\n"
+" -a -- perform asynchronous writes (MS_ASYNC)\n"
+" -i -- invalidate mapped pages (MS_INVALIDATE)\n"
+" -s -- perform synchronous writes (MS_SYNC)\n"
+"\n"
+msgstr ""
+
+#: ../io/mmap.c:365
+msgid ""
+"\n"
+" reads a range of bytes in the current memory mapping\n"
+"\n"
+" Example:\n"
+" 'mread -v 512 20' - dumps 20 bytes read from 512 bytes into the mapping\n"
+"\n"
+" Accesses a range of the current memory mapping, optionally dumping it to\n"
+" the standard output stream (with -v option) for subsequent inspection.\n"
+" -f -- verbose mode, dump bytes with offsets relative to start of file.\n"
+" -r -- reverse order; start accessing fom the end of range, moving backward\n"
+" -v -- verbose mode, dump bytes with offsets relative to start of mapping.\n"
+" The accesses are performed sequentially from the start offset by default.\n"
+" Notes:\n"
+"   References to whole pages following the end of the backing file results\n"
+"   in delivery of the SIGBUS signal.  SIGBUS signals may also be delivered\n"
+"   on various filesystem conditions, including quota exceeded errors, and\n"
+"   for physical device errors (such as unreadable disk blocks).  No attempt\n"
+"   has been made to catch signals at this stage...\n"
+"\n"
+msgstr ""
+
+#: ../io/mmap.c:516
+msgid ""
+"\n"
+" dirties a range of bytes in the current memory mapping\n"
+"\n"
+" Example:\n"
+" 'mwrite 512 20 - writes 20 bytes at 512 bytes into the current mapping.\n"
+"\n"
+" Stores a byte into memory for a range within a mapping.\n"
+" The default stored value is 'X', repeated to fill the range specified.\n"
+" -S -- use an alternate seed character\n"
+" -r -- reverse order; start storing fom the end of range, moving backward\n"
+" The stores are performed sequentially from the start offset by default.\n"
+"\n"
+msgstr ""
+
+#: ../io/mmap.c:551 ../io/pwrite.c:140
+#, c-format
+msgid "non-numeric seed -- %s\n"
+msgstr ""
+
+#: ../io/mmap.c:601
+msgid ""
+"\n"
+" advise the page cache about access patterns expected for a mapping\n"
+"\n"
+" Modifies page cache behavior when operating on the current mapping.\n"
+" The range arguments are required by some advise commands ([*] below).\n"
+" With no arguments, the POSIX_MADV_NORMAL advice is implied.\n"
+" -d -- don't need these pages (POSIX_MADV_DONTNEED) [*]\n"
+" -r -- expect random page references (POSIX_MADV_RANDOM)\n"
+" -s -- expect sequential page references (POSIX_MADV_SEQUENTIAL)\n"
+" -w -- will need these pages (POSIX_MADV_WILLNEED) [*]\n"
+" Notes:\n"
+"   NORMAL sets the default readahead setting on the file.\n"
+"   RANDOM sets the readahead setting on the file to zero.\n"
+"   SEQUENTIAL sets double the default readahead setting on the file.\n"
+"   WILLNEED forces the maximum readahead.\n"
+"\n"
+msgstr ""
+
+#: ../io/mmap.c:740 ../io/mmap.c:750
+#, c-format
+msgid "0x%lx  %lu pages (%llu : %lu)\n"
+msgstr ""
+
+#: ../io/mmap.c:764
+msgid "mmap"
+msgstr ""
+
+#: ../io/mmap.c:765
+msgid "mm"
+msgstr ""
+
+#: ../io/mmap.c:770
+msgid "[N] | [-rwx] [off len]"
+msgstr ""
+
+#: ../io/mmap.c:772
+msgid "mmap a range in the current file, show mappings"
+msgstr ""
+
+#: ../io/mmap.c:775
+msgid "mread"
+msgstr ""
+
+#: ../io/mmap.c:776
+msgid "mr"
+msgstr ""
+
+#: ../io/mmap.c:781
+msgid "[-r] [off len]"
+msgstr ""
+
+#: ../io/mmap.c:783
+msgid "reads data from a region in the current memory mapping"
+msgstr ""
+
+#: ../io/mmap.c:786
+msgid "msync"
+msgstr ""
+
+#: ../io/mmap.c:787
+msgid "ms"
+msgstr ""
+
+#: ../io/mmap.c:792
+msgid "[-ais] [off len]"
+msgstr ""
+
+#: ../io/mmap.c:793
+msgid "flush a region in the current memory mapping"
+msgstr ""
+
+#: ../io/mmap.c:796
+msgid "munmap"
+msgstr ""
+
+#: ../io/mmap.c:797
+msgid "mu"
+msgstr ""
+
+#: ../io/mmap.c:802
+msgid "unmaps the current memory mapping"
+msgstr ""
+
+#: ../io/mmap.c:804
+msgid "mwrite"
+msgstr ""
+
+#: ../io/mmap.c:805
+msgid "mw"
+msgstr ""
+
+#: ../io/mmap.c:810
+msgid "[-r] [-S seed] [off len]"
+msgstr ""
+
+#: ../io/mmap.c:812
+msgid "writes data into a region in the current memory mapping"
+msgstr ""
+
+#: ../io/mmap.c:815
+msgid "madvise"
+msgstr ""
+
+#: ../io/mmap.c:816
+msgid "ma"
+msgstr ""
+
+#: ../io/mmap.c:821
+msgid "[-drsw] [off len]"
+msgstr ""
+
+#: ../io/mmap.c:822
+msgid "give advice about use of memory"
+msgstr ""
+
+#: ../io/mmap.c:825
+msgid "mincore"
+msgstr ""
+
+#: ../io/mmap.c:826
+msgid "mi"
+msgstr ""
+
+#: ../io/mmap.c:831
+msgid "[off len]"
+msgstr ""
+
+#: ../io/mmap.c:832
+msgid "find mapping pages that are memory resident"
+msgstr ""
+
+#: ../io/open.c:65
+msgid "socket"
+msgstr ""
+
+#: ../io/open.c:67
+msgid "directory"
+msgstr ""
+
+#: ../io/open.c:69
+msgid "char device"
+msgstr ""
+
+#: ../io/open.c:71
+msgid "block device"
+msgstr ""
+
+#: ../io/open.c:73
+msgid "regular file"
+msgstr ""
+
+#: ../io/open.c:75
+msgid "symbolic link"
+msgstr ""
+
+#: ../io/open.c:77
+msgid "fifo"
+msgstr ""
+
+#: ../io/open.c:135 ../io/open.c:624
+#, c-format
+msgid "fd.path = \"%s\"\n"
+msgstr ""
+
+#: ../io/open.c:136
+#, c-format
+msgid "fd.flags = %s,%s,%s%s%s\n"
+msgstr ""
+
+#: ../io/open.c:145
+#, c-format
+msgid "stat.ino = %lld\n"
+msgstr ""
+
+#: ../io/open.c:146
+#, c-format
+msgid "stat.type = %s\n"
+msgstr ""
+
+#: ../io/open.c:147
+#, c-format
+msgid "stat.size = %lld\n"
+msgstr ""
+
+#: ../io/open.c:148
+#, c-format
+msgid "stat.blocks = %lld\n"
+msgstr ""
+
+#: ../io/open.c:150
+#, c-format
+msgid "stat.atime = %s"
+msgstr ""
+
+#: ../io/open.c:151
+#, c-format
+msgid "stat.mtime = %s"
+msgstr ""
+
+#: ../io/open.c:152
+#, c-format
+msgid "stat.ctime = %s"
+msgstr ""
+
+#: ../io/open.c:160
+#, c-format
+msgid "xattr.xflags = 0x%x "
+msgstr ""
+
+#: ../io/open.c:162
+#, c-format
+msgid "xattr.extsize = %u\n"
+msgstr ""
+
+#: ../io/open.c:163
+#, c-format
+msgid "xattr.nextents = %u\n"
+msgstr ""
+
+#: ../io/open.c:273
+msgid ""
+"\n"
+" opens a new file in the requested mode\n"
+"\n"
+" Example:\n"
+" 'open -cd /tmp/data' - creates/opens data file read-write for direct IO\n"
 "\n"
 " Opens a file for subsequent use by all of the other xfs_io commands.\n"
 " With no arguments, open uses the stat command to show the current file.\n"
+" -F -- foreign filesystem file, disallow XFS-specific commands\n"
 " -a -- open with the O_APPEND flag (append-only mode)\n"
-" -c -- open with O_CREAT (create the file if it doesn't exist)\n"
 " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
+" -f -- open with O_CREAT (create the file if it doesn't exist)\n"
+" -m -- permissions to use in case a new file is created (default 0600)\n"
 " -r -- open with O_RDONLY, the default is O_RDWR\n"
 " -s -- open with O_SYNC\n"
 " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
 " -x -- mark the file as a realtime XFS file immediately after opening it\n"
-" Note1: usually read/write direct IO requests must be blocksize aligned.\n"
-" Note2: some kernels, however, allow sectorsize alignment for direct IO.\n"
-" Note3: the bmap for non-regular files can be obtained provided the file\n"
+" Note1: usually read/write direct IO requests must be blocksize aligned;\n"
+"        some kernels, however, allow sectorsize alignment for direct IO.\n"
+" Note2: the bmap for non-regular files can be obtained provided the file\n"
 "        was opened correctly (in particular, must be opened read-only).\n"
 "\n"
 msgstr ""
 
-#: ../io/open.c:248
-msgid "socket"
-msgstr ""
-
-#: ../io/open.c:250
-msgid "directory"
-msgstr ""
-
-#: ../io/open.c:252
-msgid "char device"
-msgstr ""
-
-#: ../io/open.c:254
-msgid "block device"
-msgstr ""
-
-#: ../io/open.c:256
-msgid "regular file"
-msgstr ""
-
-#: ../io/open.c:258
-msgid "symbolic link"
-msgstr ""
-
-#: ../io/open.c:260
-msgid "fifo"
-msgstr ""
-
-#: ../io/open.c:328
+#: ../io/open.c:420
 #, c-format
 msgid "invalid lsattr argument -- '%c'\n"
 msgstr ""
 
-#: ../io/open.c:349
+#: ../io/open.c:441
 msgid ""
 "\n"
 " displays the set of extended inode flags associated with the current file\n"
@@ -514,17 +983,17 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/open.c:402 ../io/open.c:416
+#: ../io/open.c:494 ../io/open.c:508
 #, c-format
 msgid "%s: unknown flag\n"
 msgstr ""
 
-#: ../io/open.c:422
+#: ../io/open.c:514
 #, c-format
 msgid "%s: bad chattr command, not +/-X\n"
 msgstr ""
 
-#: ../io/open.c:436
+#: ../io/open.c:528
 msgid ""
 "\n"
 " modifies the set of extended inode flags associated with the current file\n"
@@ -548,270 +1017,190 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/open.c:467 ../io/open.c:573
-#, c-format
-msgid "fd.path = \"%s\"\n"
-msgstr ""
-
-#: ../io/open.c:469
-#, c-format
-msgid "fd.flags = %s,%s,%s%s%s\n"
-msgstr ""
-
-#: ../io/open.c:470
-msgid "sync"
-msgstr ""
-
-#: ../io/open.c:470
-msgid "non-sync"
-msgstr ""
-
-#: ../io/open.c:471
-msgid "direct"
-msgstr ""
-
-#: ../io/open.c:471
-msgid "non-direct"
-msgstr ""
-
-#: ../io/open.c:472
-msgid "read-only"
-msgstr ""
-
-#: ../io/open.c:472
-msgid "read-write"
-msgstr ""
-
-#: ../io/open.c:473
-msgid ",real-time"
-msgstr ""
-
-#: ../io/open.c:474
-msgid ",append-only"
-msgstr ""
-
-#: ../io/open.c:478
-#, c-format
-msgid "stat.ino = %lld\n"
-msgstr ""
-
-#: ../io/open.c:479
-#, c-format
-msgid "stat.type = %s\n"
-msgstr ""
-
-#: ../io/open.c:480
-#, c-format
-msgid "stat.size = %lld\n"
-msgstr ""
-
-#: ../io/open.c:481
-#, c-format
-msgid "stat.blocks = %lld\n"
-msgstr ""
-
-#: ../io/open.c:483
-#, c-format
-msgid "stat.atime = %s"
-msgstr ""
-
-#: ../io/open.c:484
-#, c-format
-msgid "stat.mtime = %s"
-msgstr ""
-
-#: ../io/open.c:485
-#, c-format
-msgid "stat.ctime = %s"
-msgstr ""
-
-#: ../io/open.c:491
-#, c-format
-msgid "xattr.xflags = 0x%x "
-msgstr ""
-
-#: ../io/open.c:493
-#, c-format
-msgid "xattr.extsize = %u\n"
-msgstr ""
-
-#: ../io/open.c:494
-#, c-format
-msgid "xattr.nextents = %u\n"
-msgstr ""
-
-#: ../io/open.c:527
+#: ../io/open.c:577
 #, c-format
 msgid "invalid setfl argument -- '%c'\n"
 msgstr ""
 
-#: ../io/open.c:548
+#: ../io/open.c:600
 #, c-format
 msgid "non-numeric extsize argument -- %s\n"
 msgstr ""
 
-#: ../io/open.c:578
+#: ../io/open.c:628
 #, c-format
 msgid "statfs.f_bsize = %lld\n"
 msgstr ""
 
-#: ../io/open.c:579
+#: ../io/open.c:629
 #, c-format
 msgid "statfs.f_blocks = %lld\n"
 msgstr ""
 
-#: ../io/open.c:581
+#: ../io/open.c:631
 #, c-format
 msgid "statfs.f_frsize = %lld\n"
 msgstr ""
 
-#: ../io/open.c:583
+#: ../io/open.c:633
 #, c-format
 msgid "statfs.f_bavail = %lld\n"
 msgstr ""
 
-#: ../io/open.c:585
+#: ../io/open.c:635
 #, c-format
 msgid "statfs.f_files = %lld\n"
 msgstr ""
 
-#: ../io/open.c:586
+#: ../io/open.c:636
 #, c-format
 msgid "statfs.f_ffree = %lld\n"
 msgstr ""
 
-#: ../io/open.c:591
+#: ../io/open.c:643
 #, c-format
 msgid "geom.bsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:592
+#: ../io/open.c:644
 #, c-format
 msgid "geom.agcount = %u\n"
 msgstr ""
 
-#: ../io/open.c:593
+#: ../io/open.c:645
 #, c-format
 msgid "geom.agblocks = %u\n"
 msgstr ""
 
-#: ../io/open.c:594
+#: ../io/open.c:646
 #, c-format
 msgid "geom.datablocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:596
+#: ../io/open.c:648
 #, c-format
 msgid "geom.rtblocks = %llu\n"
 msgstr ""
 
-#: ../io/open.c:598
+#: ../io/open.c:650
 #, c-format
 msgid "geom.rtextents = %llu\n"
 msgstr ""
 
-#: ../io/open.c:600
+#: ../io/open.c:652
 #, c-format
 msgid "geom.rtextsize = %u\n"
 msgstr ""
 
-#: ../io/open.c:601
+#: ../io/open.c:653
 #, c-format
 msgid "geom.sunit = %u\n"
 msgstr ""
 
-#: ../io/open.c:602
+#: ../io/open.c:654
 #, c-format
 msgid "geom.swidth = %u\n"
 msgstr ""
 
-#: ../io/open.c:610
+#: ../io/open.c:662
 msgid "open"
 msgstr ""
 
-#: ../io/open.c:611
+#: ../io/open.c:663
 msgid "o"
 msgstr ""
 
-#: ../io/open.c:615
+#: ../io/open.c:668
 msgid "[-acdrstx] [path]"
 msgstr ""
 
-#: ../io/open.c:617
-msgid "close the current file, open file specified by path"
+#: ../io/open.c:669
+msgid "open the file specified by path"
 msgstr ""
 
-#: ../io/open.c:620
+#: ../io/open.c:672
 msgid "stat"
 msgstr ""
 
-#: ../io/open.c:624
+#: ../io/open.c:677
 msgid "[-v]"
 msgstr ""
 
-#: ../io/open.c:626
+#: ../io/open.c:678
 msgid "statistics on the currently open file"
 msgstr ""
 
-#: ../io/open.c:628
+#: ../io/open.c:680
+msgid "close"
+msgstr ""
+
+#: ../io/open.c:681
+msgid "c"
+msgstr ""
+
+#: ../io/open.c:686
+msgid "close the current open file"
+msgstr ""
+
+#: ../io/open.c:688
 msgid "setfl"
 msgstr ""
 
-#: ../io/open.c:630
+#: ../io/open.c:690
 msgid "[-adx]"
 msgstr ""
 
-#: ../io/open.c:632
+#: ../io/open.c:693
 msgid "set/clear append/direct flags on the open file"
 msgstr ""
 
-#: ../io/open.c:634
+#: ../io/open.c:695
 msgid "statfs"
 msgstr ""
 
-#: ../io/open.c:637
+#: ../io/open.c:699
 msgid "statistics on the filesystem of the currently open file"
 msgstr ""
 
-#: ../io/open.c:639
+#: ../io/open.c:701
 msgid "chattr"
 msgstr ""
 
-#: ../io/open.c:641
+#: ../io/open.c:703
 msgid "[+/-riasAd]"
 msgstr ""
 
-#: ../io/open.c:645
+#: ../io/open.c:708
 msgid "change extended inode flags on the currently open file"
 msgstr ""
 
-#: ../io/open.c:648
+#: ../io/open.c:711
 msgid "lsattr"
 msgstr ""
 
-#: ../io/open.c:650
+#: ../io/open.c:713
 msgid "[-a | -v]"
 msgstr ""
 
-#: ../io/open.c:654
+#: ../io/open.c:718
 msgid "list extended inode flags set on the currently open file"
 msgstr ""
 
-#: ../io/open.c:657
+#: ../io/open.c:721
 msgid "extsize"
 msgstr ""
 
-#: ../io/open.c:662
+#: ../io/open.c:727
 msgid "set prefered extent size (in bytes) for the open file"
 msgstr ""
 
-#: ../io/pread.c:45
+#: ../io/pread.c:46
 msgid ""
 "\n"
 " reads a range of bytes in a specified block size from the given offset\n"
 "\n"
 " Example:\n"
-" 'read -v 512 20' - dumps 20 bytes read from 512 bytes into the file\n"
+" 'pread -v 512 20' - dumps 20 bytes read from 512 bytes into the file\n"
 "\n"
 " Reads a segment of the currently open file, optionally dumping it to the\n"
 " standard output stream (with -v option) for subsequent inspection.\n"
@@ -820,86 +1209,81 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pread.c:153 ../io/pwrite.c:112
+#: ../io/pread.c:161 ../io/pwrite.c:119
 #, c-format
 msgid "non-numeric bsize -- %s\n"
 msgstr ""
 
-#: ../io/pread.c:171 ../io/prealloc.c:53 ../io/pwrite.c:148
+#: ../io/pread.c:199
 #, c-format
-msgid "non-numeric offset argument -- %s\n"
+msgid "read %lld/%lld bytes at offset %lld\n"
 msgstr ""
 
-#: ../io/pread.c:177 ../io/prealloc.c:58 ../io/pwrite.c:154
+#: ../io/pread.c:204 ../io/pwrite.c:186
 #, c-format
-msgid "non-numeric length argument -- %s\n"
+msgid "%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"
 msgstr ""
 
-#: ../io/pread.c:187
-#, c-format
-msgid "read %ld/%ld bytes at offset %lld\n"
-msgstr ""
-
-#: ../io/pread.c:195
+#: ../io/pread.c:212
 msgid "pread"
 msgstr ""
 
-#: ../io/pread.c:196
+#: ../io/pread.c:213
 msgid "r"
 msgstr ""
 
-#: ../io/pread.c:200
+#: ../io/pread.c:218
 msgid "[-b bs] [-v] off len"
 msgstr ""
 
-#: ../io/pread.c:201
+#: ../io/pread.c:219
 msgid "reads a number of bytes at a specified offset"
 msgstr ""
 
-#: ../io/prealloc.c:135
+#: ../io/prealloc.c:139
 msgid "allocsp"
 msgstr ""
 
-#: ../io/prealloc.c:139 ../io/prealloc.c:146 ../io/prealloc.c:153
-#: ../io/prealloc.c:161
+#: ../io/prealloc.c:144 ../io/prealloc.c:152 ../io/prealloc.c:160
+#: ../io/prealloc.c:168
 msgid "off len"
 msgstr ""
 
-#: ../io/prealloc.c:140
+#: ../io/prealloc.c:145
 msgid "allocates zeroed space for part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:142
+#: ../io/prealloc.c:147
 msgid "freesp"
 msgstr ""
 
-#: ../io/prealloc.c:147
+#: ../io/prealloc.c:153
 msgid "frees space associated with part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:149
+#: ../io/prealloc.c:155
 msgid "resvsp"
 msgstr ""
 
-#: ../io/prealloc.c:155
+#: ../io/prealloc.c:162
 msgid "reserves space associated with part of a file"
 msgstr ""
 
-#: ../io/prealloc.c:157
+#: ../io/prealloc.c:164
 msgid "unresvsp"
 msgstr ""
 
-#: ../io/prealloc.c:163
+#: ../io/prealloc.c:171
 msgid "frees reserved space associated with part of a file"
 msgstr ""
 
-#: ../io/pwrite.c:44
+#: ../io/pwrite.c:45
 msgid ""
 "\n"
 " writes a range of bytes (in block size increments) from the given offset\n"
 "\n"
 " Example:\n"
-" 'write 512 20' - writes 20 bytes at 512 bytes into the open file\n"
+" 'pwrite 512 20' - writes 20 bytes at 512 bytes into the open file\n"
 "\n"
 " Writes into a segment of the currently open file, using either a buffer\n"
 " filled with a set pattern (0xcdcdcdcd) or data read from an input file.\n"
@@ -912,34 +1296,29 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../io/pwrite.c:126
+#: ../io/pwrite.c:133
 #, c-format
 msgid "non-numeric skip -- %s\n"
 msgstr ""
 
-#: ../io/pwrite.c:133
+#: ../io/pwrite.c:181
 #, c-format
-msgid "non-numeric seed -- %s\n"
+msgid "wrote %lld/%lld bytes at offset %lld\n"
 msgstr ""
 
-#: ../io/pwrite.c:169
-#, c-format
-msgid "wrote %ld/%ld bytes at offset %lld\n"
-msgstr ""
-
-#: ../io/pwrite.c:178
+#: ../io/pwrite.c:195
 msgid "pwrite"
 msgstr ""
 
-#: ../io/pwrite.c:179
+#: ../io/pwrite.c:196
 msgid "w"
 msgstr ""
 
-#: ../io/pwrite.c:184
+#: ../io/pwrite.c:202
 msgid "[-i infile [-d] [-s skip]] [-b bs] [-S seed] off len"
 msgstr ""
 
-#: ../io/pwrite.c:186
+#: ../io/pwrite.c:204
 msgid "writes a number of bytes at a specified offset"
 msgstr ""
 
@@ -951,51 +1330,67 @@ msgstr ""
 msgid "q"
 msgstr ""
 
-#: ../io/quit.c:52
-msgid "exit xfs_io"
+#: ../io/quit.c:53
+msgid "exit the program"
 msgstr ""
 
-#: ../io/resblks.c:52
+#: ../io/resblks.c:53
 #, c-format
 msgid "non-numeric argument -- %s\n"
 msgstr ""
 
-#: ../io/resblks.c:64
+#: ../io/resblks.c:65
 #, c-format
 msgid "reserved blocks = %llu\n"
 msgstr ""
 
-#: ../io/resblks.c:66
+#: ../io/resblks.c:67
 #, c-format
 msgid "available reserved blocks = %llu\n"
 msgstr ""
 
-#: ../io/resblks.c:74
+#: ../io/resblks.c:75
 msgid "resblks"
 msgstr ""
 
-#: ../io/resblks.c:78
+#: ../io/resblks.c:80
 msgid "[blocks]"
 msgstr ""
 
-#: ../io/resblks.c:80
+#: ../io/resblks.c:82
 msgid "get and/or set count of reserved filesystem blocks"
 msgstr ""
 
-#: ../io/truncate.c:49
+#: ../io/shutdown.c:68
+msgid "shutdown"
+msgstr ""
+
+#: ../io/shutdown.c:73
+msgid "[-f]"
+msgstr ""
+
+#: ../io/shutdown.c:75
+msgid "shuts down the filesystem where the current file resides"
+msgstr ""
+
+#: ../io/truncate.c:52
 #, c-format
 msgid "non-numeric truncate argument -- %s\n"
 msgstr ""
 
-#: ../io/truncate.c:63
+#: ../io/truncate.c:66
 msgid "truncate"
 msgstr ""
 
 #: ../io/truncate.c:67
+msgid "t"
+msgstr ""
+
+#: ../io/truncate.c:72
 msgid "off"
 msgstr ""
 
-#: ../io/truncate.c:69
+#: ../io/truncate.c:74
 msgid "truncates the current file at the given offset"
 msgstr ""
 
@@ -1065,7 +1460,7 @@ msgstr ""
 msgid "%s: cannot allocate space for file\n"
 msgstr ""
 
-#: ../mkfs/proto.c:301 ../libxfs/init.c:107
+#: ../mkfs/proto.c:301 ../libxfs/init.c:110
 #, c-format
 msgid "%s: cannot open %s: %s\n"
 msgstr ""
@@ -1101,418 +1496,418 @@ msgstr ""
 msgid "Directory creation failed"
 msgstr ""
 
-#: ../mkfs/proto.c:607
+#: ../mkfs/proto.c:609
 msgid "Error encountered creating file from prototype file"
 msgstr ""
 
-#: ../mkfs/proto.c:646
+#: ../mkfs/proto.c:648
 msgid "Realtime bitmap inode allocation failed"
 msgstr ""
 
-#: ../mkfs/proto.c:664
+#: ../mkfs/proto.c:666
 msgid "Realtime summary inode allocation failed"
 msgstr ""
 
-#: ../mkfs/proto.c:690
+#: ../mkfs/proto.c:692
 msgid "Allocation of the realtime bitmap failed"
 msgstr ""
 
-#: ../mkfs/proto.c:703
+#: ../mkfs/proto.c:705
 msgid "Completion of the realtime bitmap failed"
 msgstr ""
 
-#: ../mkfs/proto.c:726
+#: ../mkfs/proto.c:728
 msgid "Allocation of the realtime summary failed"
 msgstr ""
 
-#: ../mkfs/proto.c:738
+#: ../mkfs/proto.c:740
 msgid "Completion of the realtime summary failed"
 msgstr ""
 
-#: ../mkfs/proto.c:755
+#: ../mkfs/proto.c:757
 msgid "Error initializing the realtime space"
 msgstr ""
 
-#: ../mkfs/proto.c:760
+#: ../mkfs/proto.c:762
 msgid "Error completing the realtime space"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:199
+#: ../mkfs/xfs_mkfs.c:203
 msgid "data su/sw must not be used in conjunction with data sunit/swidth\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:206
+#: ../mkfs/xfs_mkfs.c:210
 msgid "both data sunit and data swidth options must be specified\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:215
+#: ../mkfs/xfs_mkfs.c:219
 msgid "data sunit/swidth must not be used in conjunction with data su/sw\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:222
+#: ../mkfs/xfs_mkfs.c:226
 msgid "both data su and data sw options must be specified\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:229
+#: ../mkfs/xfs_mkfs.c:233
 #, c-format
 msgid "data su must be a multiple of the sector size (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:240
+#: ../mkfs/xfs_mkfs.c:244
 #, c-format
 msgid ""
 "data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:250
+#: ../mkfs/xfs_mkfs.c:254
 msgid "log su should not be used in conjunction with log sunit\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:259
+#: ../mkfs/xfs_mkfs.c:263
 msgid "log sunit should not be used in conjunction with log su\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:276
+#: ../mkfs/xfs_mkfs.c:280
 #, c-format
 msgid "%s: %s appears to contain an existing filesystem (%s).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:282
+#: ../mkfs/xfs_mkfs.c:286
 #, c-format
 msgid "%s: %s appears to contain a partition table (%s).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:322
+#: ../mkfs/xfs_mkfs.c:331
 #, c-format
 msgid "internal log size %lld is not a multiple of the log stripe unit %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:331
+#: ../mkfs/xfs_mkfs.c:340
 #, c-format
 msgid "Due to stripe alignment, the internal log size (%lld) is too large.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:333
+#: ../mkfs/xfs_mkfs.c:342
 msgid "Must fit within an allocation group.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:569
+#: ../mkfs/xfs_mkfs.c:413
+#, c-format
+msgid "agsize (%lldb) too small, need at least %lld blocks\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:421
+#, c-format
+msgid "agsize (%lldb) too big, maximum is %lld blocks\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:429
+#, c-format
+msgid "agsize (%lldb) too big, data area is %lld blocks\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:436
+#, c-format
+msgid "too many allocation groups for size = %lld\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:438
+#, c-format
+msgid "need at most %lld allocation groups\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:446
+#, c-format
+msgid "too few allocation groups for size = %lld\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:448
+#, c-format
+msgid "need at least %lld allocation groups\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:461
+#, c-format
+msgid "last AG size %lld blocks too small, minimum size is %lld blocks\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:472
+#, c-format
+msgid "%lld allocation groups is too many, maximum is %lld\n"
+msgstr ""
+
+#: ../mkfs/xfs_mkfs.c:708
 #, c-format
 msgid "%s: Specify data sunit in 512-byte blocks, no unit suffix\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:582
+#: ../mkfs/xfs_mkfs.c:721
 #, c-format
 msgid "%s: Specify data swidth in 512-byte blocks, no unit suffix\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:603
+#: ../mkfs/xfs_mkfs.c:742
 #, c-format
 msgid "%s: Specify data sw as multiple of su, no unit suffix\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:752
+#: ../mkfs/xfs_mkfs.c:891
 msgid "Must specify log device\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:817
+#: ../mkfs/xfs_mkfs.c:956
 msgid "Specify log sunit in 512-byte blocks, no size suffix\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1061
+#: ../mkfs/xfs_mkfs.c:1200
 msgid "extra arguments\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1067
+#: ../mkfs/xfs_mkfs.c:1206
 #, c-format
 msgid "cannot specify both %s and -d name=%s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1082
+#: ../mkfs/xfs_mkfs.c:1221
 #, c-format
 msgid "illegal block size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1087
+#: ../mkfs/xfs_mkfs.c:1226
 #, c-format
 msgid "illegal sector size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1092
+#: ../mkfs/xfs_mkfs.c:1231
 #, c-format
 msgid "illegal log sector size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1104 ../mkfs/xfs_mkfs.c:1114
+#: ../mkfs/xfs_mkfs.c:1243 ../mkfs/xfs_mkfs.c:1253
 #, c-format
 msgid "illegal directory block size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1130
+#: ../mkfs/xfs_mkfs.c:1269
 msgid "both -d agcount= and agsize= specified, use one or the other\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1139
+#: ../mkfs/xfs_mkfs.c:1275
 msgid "if -d file then -d name and -d size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1148
+#: ../mkfs/xfs_mkfs.c:1284
 #, c-format
 msgid "illegal data length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1154
+#: ../mkfs/xfs_mkfs.c:1290
 #, c-format
 msgid "warning: data length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1169
+#: ../mkfs/xfs_mkfs.c:1305
 msgid "if -l file then -l name and -l size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1179
+#: ../mkfs/xfs_mkfs.c:1315
 #, c-format
 msgid "illegal log length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1186
+#: ../mkfs/xfs_mkfs.c:1322
 #, c-format
 msgid "warning: log length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1193
+#: ../mkfs/xfs_mkfs.c:1329
 msgid "if -r file then -r name and -r size are required\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1203
+#: ../mkfs/xfs_mkfs.c:1339
 #, c-format
 msgid "illegal rt length %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1210
+#: ../mkfs/xfs_mkfs.c:1346
 #, c-format
 msgid "warning: rt length %lld not a multiple of %d, truncated to %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1223
+#: ../mkfs/xfs_mkfs.c:1359
 #, c-format
 msgid "illegal rt extent size %lld, not a multiple of %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1229
+#: ../mkfs/xfs_mkfs.c:1365
 #, c-format
 msgid "rt extent size %s too large, maximum %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1235
+#: ../mkfs/xfs_mkfs.c:1371
 #, c-format
 msgid "rt extent size %s too small, minimum %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1277
+#: ../mkfs/xfs_mkfs.c:1413
 #, c-format
 msgid "illegal inode size %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1282
+#: ../mkfs/xfs_mkfs.c:1418
 #, c-format
 msgid "allowable inode size with %d byte blocks is %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1286
+#: ../mkfs/xfs_mkfs.c:1422
 #, c-format
 msgid "allowable inode size with %d byte blocks is between %d and %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1294
+#: ../mkfs/xfs_mkfs.c:1430
 msgid "log stripe unit specified, using v2 logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1307
+#: ../mkfs/xfs_mkfs.c:1443
 msgid "no device name given in argument list\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1327
+#: ../mkfs/xfs_mkfs.c:1463
 #, c-format
 msgid "%s: Use the -f option to force overwrite.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1338
+#: ../mkfs/xfs_mkfs.c:1474
 msgid "internal log"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1340
+#: ../mkfs/xfs_mkfs.c:1476
 msgid "volume log"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1342
+#: ../mkfs/xfs_mkfs.c:1478
 msgid "no log subvolume or internal log\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1349
+#: ../mkfs/xfs_mkfs.c:1485
 msgid "volume rt"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1354
+#: ../mkfs/xfs_mkfs.c:1490
 #, c-format
 msgid ""
 "size %s specified for data subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1361
+#: ../mkfs/xfs_mkfs.c:1497
 msgid "can't get size of data subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1366
+#: ../mkfs/xfs_mkfs.c:1502
 #, c-format
 msgid "size %lld of data subvolume is too small, minimum %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1373
+#: ../mkfs/xfs_mkfs.c:1509
 msgid "can't have both external and internal logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1377
+#: ../mkfs/xfs_mkfs.c:1513
 msgid "data and log sector sizes must be equal for internal logs\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1383
+#: ../mkfs/xfs_mkfs.c:1519
 #, c-format
 msgid ""
 "Warning: the data subvolume sector size %u is less than the sector size \n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1389
+#: ../mkfs/xfs_mkfs.c:1525
 #, c-format
 msgid ""
 "Warning: the log subvolume sector size %u is less than the sector size\n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1395
+#: ../mkfs/xfs_mkfs.c:1531
 #, c-format
 msgid ""
 "Warning: the realtime subvolume sector size %u is less than the sector size\n"
 "reported by the device (%u).\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1415
+#: ../mkfs/xfs_mkfs.c:1551
 #, c-format
 msgid ""
 "size %s specified for log subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1422
+#: ../mkfs/xfs_mkfs.c:1558
 msgid "size specified for non-existent log subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1425
+#: ../mkfs/xfs_mkfs.c:1561
 #, c-format
 msgid "size %lld too large for internal log\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1449
+#: ../mkfs/xfs_mkfs.c:1585
 #, c-format
 msgid "log size %lld blocks too small, minimum size is %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1455
+#: ../mkfs/xfs_mkfs.c:1591
 #, c-format
 msgid "log size %lld blocks too large, maximum size is %d blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1461
+#: ../mkfs/xfs_mkfs.c:1597
 #, c-format
 msgid "log size %lld bytes too large, maximum size is %d bytes\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1467
+#: ../mkfs/xfs_mkfs.c:1603
 #, c-format
 msgid ""
 "size %s specified for rt subvolume is too large, maximum is %lld blocks\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1475
+#: ../mkfs/xfs_mkfs.c:1611
 msgid "size specified for non-existent rt subvolume\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1493
+#: ../mkfs/xfs_mkfs.c:1628
 #, c-format
 msgid "agsize (%lld) not a multiple of fs blk size (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1506
-#, c-format
-msgid "agsize (%lldb) too small, need at least %lld blocks\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1514
-#, c-format
-msgid "agsize (%lldb) too big, maximum is %lld blocks\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1522
-#, c-format
-msgid "agsize (%lldb) too big, data area is %lld blocks\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1539
-#, c-format
-msgid "too many allocation groups for size = %lld\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1542
-#, c-format
-msgid "need at most %lld allocation groups\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1565
-#, c-format
-msgid "too few allocation groups for size = %lld\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1568
-#, c-format
-msgid "need at least %lld allocation groups\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1618
-#, c-format
-msgid "agsize set to %lld, agcount %lld > max (%lld)\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1626
-#, c-format
-msgid "%s: can't compute agsize/agcount\n"
-msgstr ""
-
-#: ../mkfs/xfs_mkfs.c:1640
+#: ../mkfs/xfs_mkfs.c:1661
 #, c-format
 msgid ""
 "%s: Specified data stripe unit %d is not the same as the volume stripe unit %"
 "d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1646
+#: ../mkfs/xfs_mkfs.c:1667
 #, c-format
 msgid ""
 "%s: Specified data stripe width %d is not the same as the volume stripe "
 "width %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1691
+#: ../mkfs/xfs_mkfs.c:1712
 #, c-format
 msgid "agsize rounded to %lld, swidth = %d\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1698
+#: ../mkfs/xfs_mkfs.c:1719
 #, c-format
 msgid ""
 "Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1720
+#: ../mkfs/xfs_mkfs.c:1741
 #, c-format
 msgid ""
 "Warning: AG size is a multiple of stripe width.  This can cause performance\n"
@@ -1521,38 +1916,38 @@ msgid ""
 "an AG size that is one stripe unit smaller, for example %llu.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1745
+#: ../mkfs/xfs_mkfs.c:1766
 #, c-format
 msgid ""
 "%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%"
 "d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1760
+#: ../mkfs/xfs_mkfs.c:1781
 #, c-format
 msgid "log stripe unit (%d) must be a multiple of the block size (%d)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1773
+#: ../mkfs/xfs_mkfs.c:1794
 #, c-format
 msgid "log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1776
+#: ../mkfs/xfs_mkfs.c:1797
 msgid "log stripe unit adjusted to 32KiB\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1801
+#: ../mkfs/xfs_mkfs.c:1822
 #, c-format
 msgid "internal log size %lld too large, must fit in allocation group\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1808
+#: ../mkfs/xfs_mkfs.c:1829
 #, c-format
 msgid "log ag number %d too large, must be less than %lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1834
+#: ../mkfs/xfs_mkfs.c:1854
 #, c-format
 msgid ""
 "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
@@ -1565,55 +1960,55 @@ msgid ""
 "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1939
+#: ../mkfs/xfs_mkfs.c:1959
 #, c-format
 msgid "%s: Growing the data section failed\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1967
+#: ../mkfs/xfs_mkfs.c:1987
 #, c-format
 msgid "%s: filesystem failed to initialize\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:1975
+#: ../mkfs/xfs_mkfs.c:1995
 #, c-format
 msgid "%s: log size (%lld) is too small for transaction reservations\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2193
+#: ../mkfs/xfs_mkfs.c:2220
 #, c-format
 msgid "%s: root inode created in AG %u, not AG 0\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2269
+#: ../mkfs/xfs_mkfs.c:2296
 #, c-format
 msgid "Cannot specify both -%c %s and -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2280
+#: ../mkfs/xfs_mkfs.c:2307
 #, c-format
 msgid "Illegal value %s for -%s option\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2297
+#: ../mkfs/xfs_mkfs.c:2324
 #, c-format
 msgid "-%c %s option requires a value\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2310 ../repair/xfs_repair.c:143
+#: ../mkfs/xfs_mkfs.c:2337 ../repair/xfs_repair.c:143
 msgid "option respecified\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2319 ../repair/xfs_repair.c:150
+#: ../mkfs/xfs_mkfs.c:2346 ../repair/xfs_repair.c:150
 #, c-format
 msgid "unknown option -%c %s\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2358
+#: ../mkfs/xfs_mkfs.c:2385
 msgid "blocksize not available yet.\n"
 msgstr ""
 
-#: ../mkfs/xfs_mkfs.c:2382
+#: ../mkfs/xfs_mkfs.c:2409
 #, c-format
 msgid ""
 "Usage: %s\n"
@@ -1643,16 +2038,20 @@ msgstr ""
 msgid "Cannot stat %s: %s\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:91
+#: ../libdisk/lvm.c:73
+msgid "Warning - LVM device, but no lvdisplay(8) found\n"
+msgstr ""
+
+#: ../libdisk/lvm.c:83
 msgid "Could not open pipe\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:106
+#: ../libdisk/lvm.c:98
 #, c-format
 msgid "Failed to execute %s\n"
 msgstr ""
 
-#: ../libdisk/lvm.c:110
+#: ../libdisk/lvm.c:102
 msgid "Failed forking lvdisplay process\n"
 msgstr ""
 
@@ -1722,97 +2121,97 @@ msgstr ""
 msgid "%s: DIOCGSECTORSIZE failed on \"%s\": %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:87 ../libxfs/init.c:168
+#: ../libxfs/init.c:87 ../libxfs/init.c:171
 #, c-format
 msgid "%s: %s: device %lld is not open\n"
 msgstr ""
 
-#: ../libxfs/init.c:113
+#: ../libxfs/init.c:116
 #, c-format
 msgid "%s: cannot stat %s: %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:131
+#: ../libxfs/init.c:134
 #, c-format
 msgid "%s: device %lld is already open\n"
 msgstr ""
 
-#: ../libxfs/init.c:144
+#: ../libxfs/init.c:147
 #, c-format
 msgid "%s: %s: too many open devices\n"
 msgstr ""
 
-#: ../libxfs/init.c:186
+#: ../libxfs/init.c:189
 #, c-format
 msgid "%s: can't find a character device matching %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:192
+#: ../libxfs/init.c:195
 #, c-format
 msgid "%s: can't find a block device matching %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:262
+#: ../libxfs/init.c:261
 #, c-format
 msgid "%s: %s is not a volume device name\n"
 msgstr ""
 
-#: ../libxfs/init.c:271
+#: ../libxfs/init.c:270
 #, c-format
 msgid "%s: %s has a data subvolume, cannot specify %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:277
+#: ../libxfs/init.c:276
 #, c-format
 msgid "%s: %s has a log subvolume, cannot specify %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:283
+#: ../libxfs/init.c:282
 #, c-format
 msgid "%s: %s has a realtime subvolume, cannot specify %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:293 ../libxfs/init.c:304 ../libxfs/init.c:315
+#: ../libxfs/init.c:292 ../libxfs/init.c:303 ../libxfs/init.c:314
 #, c-format
 msgid "%s: mknod failed: %s\n"
 msgstr ""
 
-#: ../libxfs/init.c:382
+#: ../libxfs/init.c:381
 #, c-format
 msgid "%s: can't get size for data subvolume\n"
 msgstr ""
 
-#: ../libxfs/init.c:387
+#: ../libxfs/init.c:386
 #, c-format
 msgid "%s: can't get size for log subvolume\n"
 msgstr ""
 
-#: ../libxfs/init.c:392
+#: ../libxfs/init.c:391
 #, c-format
 msgid "%s: can't get size for realtime subvolume\n"
 msgstr ""
 
-#: ../libxfs/init.c:477
+#: ../libxfs/init.c:476
 #, c-format
 msgid "%s: cannot read realtime bitmap inode (%d)\n"
 msgstr ""
 
-#: ../libxfs/init.c:486
+#: ../libxfs/init.c:485
 #, c-format
 msgid "%s: cannot read realtime summary inode (%d)\n"
 msgstr ""
 
-#: ../libxfs/init.c:509
+#: ../libxfs/init.c:508
 #, c-format
 msgid "%s: filesystem has a realtime subvolume\n"
 msgstr ""
 
-#: ../libxfs/init.c:524
+#: ../libxfs/init.c:523
 #, c-format
 msgid "%s: realtime init - %llu != %llu\n"
 msgstr ""
 
-#: ../libxfs/init.c:532
+#: ../libxfs/init.c:531
 #, c-format
 msgid "%s: realtime size check failed\n"
 msgstr ""
@@ -2104,251 +2503,251 @@ msgstr ""
 msgid "primary/secondary superblock %d conflict - %s\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:122
+#: ../repair/attr_repair.c:119
 msgid ""
 "entry contains illegal value in attribute named SGI_ACL_FILE or "
 "SGI_ACL_DEFAULT\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:144
+#: ../repair/attr_repair.c:141
 msgid "entry contains illegal value in attribute named SGI_MAC_LABEL\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:150
+#: ../repair/attr_repair.c:147
 msgid "entry contains illegal value in attribute named SGI_CAP_FILE\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:189
+#: ../repair/attr_repair.c:186
 #, c-format
 msgid "there are no attributes in the fork for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:197
+#: ../repair/attr_repair.c:194
 #, c-format
 msgid "would junk the attribute fork since count is 0 for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:217
+#: ../repair/attr_repair.c:214
 msgid "zero length name entry in attribute fork,"
 msgstr ""
 
-#: ../repair/attr_repair.c:220 ../repair/attr_repair.c:242
+#: ../repair/attr_repair.c:217 ../repair/attr_repair.c:239
 #, c-format
 msgid " truncating attributes for inode %llu to %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:225 ../repair/attr_repair.c:248
+#: ../repair/attr_repair.c:222 ../repair/attr_repair.c:245
 #, c-format
 msgid " would truncate attributes for inode %llu to %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:239
+#: ../repair/attr_repair.c:236
 msgid "name or value attribute lengths are too large,\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:261
+#: ../repair/attr_repair.c:258
 msgid "entry contains illegal character in shortform attribute name\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:267
+#: ../repair/attr_repair.c:264
 msgid "entry has INCOMPLETE flag on in shortform attribute\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:285
+#: ../repair/attr_repair.c:282
 #, c-format
 msgid "removing attribute entry %d for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:297
+#: ../repair/attr_repair.c:294
 #, c-format
 msgid "would remove attribute entry %d for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:312
+#: ../repair/attr_repair.c:309
 #, c-format
 msgid ""
 "would have corrected attribute entry count in inode %llu from %d to %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:316
+#: ../repair/attr_repair.c:313
 #, c-format
 msgid "corrected attribute entry count in inode %llu, was %d, now %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:327
+#: ../repair/attr_repair.c:324
 #, c-format
 msgid "would have corrected attribute totsize in inode %llu from %d to %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:332
+#: ../repair/attr_repair.c:329
 #, c-format
 msgid "corrected attribute entry totsize in inode %llu, was %d, now %d\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:362
+#: ../repair/attr_repair.c:359
 #, c-format
 msgid "remote block for attributes of inode %llu is missing\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:370
+#: ../repair/attr_repair.c:367
 #, c-format
 msgid "can't read remote block for attributes of inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:427
+#: ../repair/attr_repair.c:424
 #, c-format
 msgid "bad attribute count %d in attr block %u, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:444
+#: ../repair/attr_repair.c:441
 #, c-format
 msgid "bad attribute nameidx %d in attr block %u, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:454
+#: ../repair/attr_repair.c:451
 #, c-format
 msgid "attribute entry #%d in attr block %u, inode %llu is INCOMPLETE\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:465
+#: ../repair/attr_repair.c:462
 #, c-format
 msgid ""
 "attribute entry %d in attr block %u, inode %llu claims already used space\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:479
+#: ../repair/attr_repair.c:476
 #, c-format
 msgid ""
 "attribute entry %d in attr block %u, inode %llu has bad name (namelen = %d)\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:502
+#: ../repair/attr_repair.c:499
 #, c-format
 msgid "bad hashvalue for attribute entry %d in attr block %u, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:515
+#: ../repair/attr_repair.c:512
 #, c-format
 msgid ""
 "bad security value for attribute entry %d in attr block %u, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:543
+#: ../repair/attr_repair.c:540
 #, c-format
 msgid "inconsistent remote attribute entry %d in attr block %u, ino %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:556
+#: ../repair/attr_repair.c:553
 #, c-format
 msgid "cannot malloc enough for remotevalue attribute for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:559
+#: ../repair/attr_repair.c:556
 msgid "SKIPPING this remote attribute\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:568
+#: ../repair/attr_repair.c:565
 #, c-format
 msgid "remote attribute get failed for entry %d, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:579
+#: ../repair/attr_repair.c:576
 #, c-format
 msgid "remote attribute value check failed for entry %d, inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:596
+#: ../repair/attr_repair.c:593
 #, c-format
 msgid "attribute entry %d in attr block %u, inode %llu claims used space\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:621
+#: ../repair/attr_repair.c:618
 #, c-format
 msgid ""
 "- resetting first used heap value from %d to %d in block %u of attribute "
 "fork of inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:631
+#: ../repair/attr_repair.c:628
 #, c-format
 msgid ""
 "- would reset first used value from %d to %d in block %u of attribute fork "
 "of inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:642
+#: ../repair/attr_repair.c:639
 #, c-format
 msgid ""
 "- resetting usedbytes cnt from %d to %d in block %u of attribute fork of "
 "inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:651
+#: ../repair/attr_repair.c:648
 #, c-format
 msgid ""
 "- would reset usedbytes cnt from %d to %d in block %u of attribute fork of %"
 "llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:700
+#: ../repair/attr_repair.c:697
 #, c-format
 msgid "can't map block %u for attribute fork for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:708
+#: ../repair/attr_repair.c:705
 #, c-format
 msgid ""
 "can't read file block %u (fsbno %llu) for attribute fork of inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:719
+#: ../repair/attr_repair.c:716
 #, c-format
 msgid "bad attribute leaf magic %#x for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:751
+#: ../repair/attr_repair.c:748
 #, c-format
 msgid ""
 "bad sibling back pointer for block %u in attribute fork for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:780
+#: ../repair/attr_repair.c:777
 #, c-format
 msgid "bad hash path in attribute fork for inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:881
+#: ../repair/attr_repair.c:878
 #, c-format
 msgid "block 0 of inode %llu attribute fork is missing\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:888
+#: ../repair/attr_repair.c:885
 #, c-format
 msgid "agno of attribute fork of inode %llu out of regular partition\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:896
+#: ../repair/attr_repair.c:893
 #, c-format
 msgid "can't read block 0 of inode %llu attribute fork\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:910
+#: ../repair/attr_repair.c:907
 #, c-format
 msgid "clearing forw/back pointers in block 0 for attributes in inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:916
+#: ../repair/attr_repair.c:913
 #, c-format
 msgid ""
 "would clear forw/back pointers in block 0 for attributes in inode %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:946
+#: ../repair/attr_repair.c:943
 #, c-format
 msgid "bad attribute leaf magic # %#x for dir ino %llu\n"
 msgstr ""
 
-#: ../repair/attr_repair.c:1006 ../repair/dinode.c:2472
+#: ../repair/attr_repair.c:1003 ../repair/dinode.c:2479
 #, c-format
 msgid "illegal attribute format %d, ino %llu\n"
 msgstr ""
@@ -2512,668 +2911,668 @@ msgstr ""
 msgid "would have cleared inode %llu attributes\n"
 msgstr ""
 
-#: ../repair/dinode.c:530 ../repair/dinode.c:1145 ../repair/scan.c:172
+#: ../repair/dinode.c:531 ../repair/dinode.c:1155 ../repair/scan.c:172
 msgid "data"
 msgstr ""
 
-#: ../repair/dinode.c:532 ../repair/dinode.c:1147 ../repair/scan.c:174
+#: ../repair/dinode.c:533 ../repair/dinode.c:1157 ../repair/scan.c:174
 msgid "attr"
 msgstr ""
 
-#: ../repair/dinode.c:535
+#: ../repair/dinode.c:536
 msgid "real-time"
 msgstr ""
 
-#: ../repair/dinode.c:537
+#: ../repair/dinode.c:538
 msgid "regular"
 msgstr ""
 
-#: ../repair/dinode.c:547
+#: ../repair/dinode.c:548
 #, c-format
 msgid ""
 "bmap rec out of order, inode %llu entry %d [o s c] [%llu %llu %llu], %d [%"
 "llu %llu %llu]\n"
 msgstr ""
 
-#: ../repair/dinode.c:561
+#: ../repair/dinode.c:562
 #, c-format
 msgid "zero length extent (off = %llu, fsbno = %llu) in ino %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:568
+#: ../repair/dinode.c:569
 #, c-format
 msgid "inode %llu - bad rt extent start block number %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:574
+#: ../repair/dinode.c:575
 #, c-format
 msgid "inode %llu - bad rt extent last block number %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:580
+#: ../repair/dinode.c:581
 #, c-format
 msgid ""
 "inode %llu - bad rt extent overflows - start %llu, end %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:588
+#: ../repair/dinode.c:589
 #, c-format
 msgid "inode %llu - bad extent starting block number %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:594
+#: ../repair/dinode.c:595
 #, c-format
 msgid "inode %llu - bad extent last block number %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:600
+#: ../repair/dinode.c:601
 #, c-format
 msgid "inode %llu - bad extent overflows - start %llu, end %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:607
+#: ../repair/dinode.c:608
 #, c-format
 msgid ""
 "inode %llu - extent offset too large - start %llu, count %llu, offset %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:626
+#: ../repair/dinode.c:627
 #, c-format
 msgid "malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"
 msgstr ""
 
-#: ../repair/dinode.c:640
+#: ../repair/dinode.c:648
 #, c-format
 msgid ""
 "data fork in rt ino %llu claims dup rt extent, off - %llu, start - %llu, "
 "count %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:664
+#: ../repair/dinode.c:672
 #, c-format
 msgid "bad state in rt block map %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:671
+#: ../repair/dinode.c:679
 #, c-format
 msgid "%s fork in rt inode %llu found metadata block %llu in %s bmap\n"
 msgstr ""
 
-#: ../repair/dinode.c:677
+#: ../repair/dinode.c:687
 #, c-format
 msgid "%s fork in rt inode %llu claims used rt block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:683
+#: ../repair/dinode.c:693
 #, c-format
 msgid "illegal state %d in %s block map %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:718
+#: ../repair/dinode.c:728
 #, c-format
 msgid ""
 "%s fork in ino %llu claims dup extent, off - %llu, start - %llu, cnt %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:740
+#: ../repair/dinode.c:750
 #, c-format
 msgid "%s fork in ino %llu claims free block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:747
+#: ../repair/dinode.c:757
 #, c-format
 msgid "bad state in block map %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:754
+#: ../repair/dinode.c:764
 #, c-format
 msgid "%s fork in inode %llu claims metadata block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:761
+#: ../repair/dinode.c:771
 #, c-format
 msgid "%s fork in %s inode %llu claims used block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:766
+#: ../repair/dinode.c:776
 #, c-format
 msgid "illegal state %d in block map %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:844
+#: ../repair/dinode.c:854
 #, c-format
 msgid "cannot read inode (%u/%u), disk block %lld\n"
 msgstr ""
 
-#: ../repair/dinode.c:960 ../repair/dinode.c:1021
+#: ../repair/dinode.c:970 ../repair/dinode.c:1031
 #, c-format
 msgid "cannot read bmap block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:977
+#: ../repair/dinode.c:987
 #, c-format
 msgid "# of bmap records in inode %llu exceeds max (%u, max - %u)\n"
 msgstr ""
 
-#: ../repair/dinode.c:986
+#: ../repair/dinode.c:996
 #, c-format
 msgid ""
 "- # of bmap records in inode %llu less than minimum (%u, min - %u), "
 "proceeding ...\n"
 msgstr ""
 
-#: ../repair/dinode.c:1032
+#: ../repair/dinode.c:1042
 #, c-format
 msgid "# of bmap records in inode %llu greater than maximum (%u, max - %u)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1041
+#: ../repair/dinode.c:1051
 #, c-format
 msgid ""
 "- # of bmap records in inode %llu less than minimum (%u, min - %u), "
 "continuing...\n"
 msgstr ""
 
-#: ../repair/dinode.c:1059
+#: ../repair/dinode.c:1069
 #, c-format
 msgid "could not map block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1091
+#: ../repair/dinode.c:1101
 #, c-format
 msgid "get_bmapi() called for local inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1099
+#: ../repair/dinode.c:1109
 #, c-format
 msgid "bad inode format for inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1163
+#: ../repair/dinode.c:1173
 #, c-format
 msgid "bad level 0 in inode %llu bmap btree root block\n"
 msgstr ""
 
-#: ../repair/dinode.c:1177
+#: ../repair/dinode.c:1187
 #, c-format
 msgid ""
 "indicated size of %s btree root (%d bytes) greater than space in inode %llu %"
 "s fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1207 ../repair/scan.c:398
+#: ../repair/dinode.c:1217 ../repair/scan.c:398
 #, c-format
 msgid "bad bmap btree ptr 0x%llx in ino %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1229
+#: ../repair/dinode.c:1239
 #, c-format
 msgid ""
 "correcting key in bmbt root (was %llu, now %llu) in inode %llu %s fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1243
+#: ../repair/dinode.c:1253
 #, c-format
 msgid ""
 "bad key in bmbt root (is %llu, would reset to %llu) in inode %llu %s fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1262
+#: ../repair/dinode.c:1272
 #, c-format
 msgid "out of order bmbt root key %llu in inode %llu %s fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1279
+#: ../repair/dinode.c:1289
 #, c-format
 msgid "bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1282
+#: ../repair/dinode.c:1292
 #, c-format
 msgid "\tin inode %u (%s fork) bmap btree block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1363
+#: ../repair/dinode.c:1373
 #, c-format
 msgid "local inode %llu data fork is too large (size = %lld, max = %d)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1373
+#: ../repair/dinode.c:1383
 #, c-format
 msgid "local inode %llu attr fork too large (size %d, max = %d)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1381
+#: ../repair/dinode.c:1391
 #, c-format
 msgid "local inode %llu attr too small (size = %d, min size = %d)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1411
+#: ../repair/dinode.c:1421
 #, c-format
 msgid "mismatch between format (%d) and size (%lld) in symlink ino %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1419
+#: ../repair/dinode.c:1429
 #, c-format
 msgid "mismatch between format (%d) and size (%lld) in symlink inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1435
+#: ../repair/dinode.c:1445
 #, c-format
 msgid "bad number of extents (%d) in symlink %llu data fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1448
+#: ../repair/dinode.c:1458
 #, c-format
 msgid "bad extent #%d offset (%llu) in symlink %llu data fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1454
+#: ../repair/dinode.c:1464
 #, c-format
 msgid "bad extent #%d count (%llu) in symlink %llu data fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:1507
+#: ../repair/dinode.c:1517
 #, c-format
 msgid "symlink in inode %llu too long (%lld chars)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1541
+#: ../repair/dinode.c:1551
 #, c-format
 msgid "cannot read inode %llu, file block %d, disk block %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1563
+#: ../repair/dinode.c:1573
 #, c-format
 msgid "found illegal null character in symlink inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1577 ../repair/dinode.c:1587
+#: ../repair/dinode.c:1587 ../repair/dinode.c:1597
 #, c-format
 msgid "component of symlink in inode %llu too long\n"
 msgstr ""
 
-#: ../repair/dinode.c:1613
+#: ../repair/dinode.c:1623
 #, c-format
 msgid "inode %llu has bad inode type (IFMNT)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1623
+#: ../repair/dinode.c:1633
 #, c-format
 msgid "size of character device inode %llu != 0 (%lld bytes)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1628
+#: ../repair/dinode.c:1638
 #, c-format
 msgid "size of block device inode %llu != 0 (%lld bytes)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1633
+#: ../repair/dinode.c:1643
 #, c-format
 msgid "size of socket inode %llu != 0 (%lld bytes)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1638
+#: ../repair/dinode.c:1648
 #, c-format
 msgid "size of fifo inode %llu != 0 (%lld bytes)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1643
+#: ../repair/dinode.c:1653
 #, c-format
 msgid "Internal error - process_misc_ino_types, illegal type %d\n"
 msgstr ""
 
-#: ../repair/dinode.c:1670
+#: ../repair/dinode.c:1680
 #, c-format
 msgid "size of character device inode %llu != 0 (%llu blocks)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1675
+#: ../repair/dinode.c:1685
 #, c-format
 msgid "size of block device inode %llu != 0 (%llu blocks)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1680
+#: ../repair/dinode.c:1690
 #, c-format
 msgid "size of socket inode %llu != 0 (%llu blocks)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1685
+#: ../repair/dinode.c:1695
 #, c-format
 msgid "size of fifo inode %llu != 0 (%llu blocks)\n"
 msgstr ""
 
-#: ../repair/dinode.c:1789
+#: ../repair/dinode.c:1799
 #, c-format
 msgid "bad magic number 0x%x on inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:1792
+#: ../repair/dinode.c:1802
 msgid "resetting magic number\n"
 msgstr ""
 
-#: ../repair/dinode.c:1797
+#: ../repair/dinode.c:1807
 msgid "would reset magic number\n"
 msgstr ""
 
-#: ../repair/dinode.c:1800
+#: ../repair/dinode.c:1810
 #, c-format
 msgid "bad magic number 0x%x on inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1809
+#: ../repair/dinode.c:1819
 #, c-format
 msgid "bad version number 0x%x on inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:1812
+#: ../repair/dinode.c:1822
 msgid "resetting version number\n"
 msgstr ""
 
-#: ../repair/dinode.c:1818
+#: ../repair/dinode.c:1828
 msgid "would reset version number\n"
 msgstr ""
 
-#: ../repair/dinode.c:1821
+#: ../repair/dinode.c:1831
 #, c-format
 msgid "bad version number 0x%x on inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1832 ../repair/dinode.c:1843
+#: ../repair/dinode.c:1842 ../repair/dinode.c:1853
 #, c-format
 msgid "bad (negative) size %lld on inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1874
+#: ../repair/dinode.c:1884
 #, c-format
 msgid "imap claims a free inode %llu is in use, "
 msgstr ""
 
-#: ../repair/dinode.c:1877
+#: ../repair/dinode.c:1887
 msgid "correcting imap and clearing inode\n"
 msgstr ""
 
-#: ../repair/dinode.c:1886
+#: ../repair/dinode.c:1896
 msgid "would correct imap and clear inode\n"
 msgstr ""
 
-#: ../repair/dinode.c:1915
+#: ../repair/dinode.c:1925
 #, c-format
 msgid "bad inode format in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1979
+#: ../repair/dinode.c:1986
 #, c-format
 msgid "Unexpected inode type %#o inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:1989
+#: ../repair/dinode.c:1996
 #, c-format
 msgid "bad inode type for root inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:1993
+#: ../repair/dinode.c:2000
 msgid "resetting to directory\n"
 msgstr ""
 
-#: ../repair/dinode.c:1999
+#: ../repair/dinode.c:2006
 msgid "would reset to directory\n"
 msgstr ""
 
-#: ../repair/dinode.c:2003
+#: ../repair/dinode.c:2010
 msgid "summary"
 msgstr ""
 
-#: ../repair/dinode.c:2007
+#: ../repair/dinode.c:2014
 msgid "bitmap"
 msgstr ""
 
-#: ../repair/dinode.c:2011
+#: ../repair/dinode.c:2018
 #, c-format
 msgid "user quota inode has bad type 0x%x\n"
 msgstr ""
 
-#: ../repair/dinode.c:2029
+#: ../repair/dinode.c:2036
 #, c-format
 msgid "group quota inode has bad type 0x%x\n"
 msgstr ""
 
-#: ../repair/dinode.c:2050
+#: ../repair/dinode.c:2057
 #, c-format
 msgid "bad inode type for realtime %s inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:2054
+#: ../repair/dinode.c:2061
 msgid "resetting to regular file\n"
 msgstr ""
 
-#: ../repair/dinode.c:2060
+#: ../repair/dinode.c:2067
 msgid "would reset to regular file\n"
 msgstr ""
 
-#: ../repair/dinode.c:2069
+#: ../repair/dinode.c:2076
 #, c-format
 msgid "bad non-zero extent size value %u for non-realtime inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:2073
+#: ../repair/dinode.c:2080
 msgid "resetting to zero\n"
 msgstr ""
 
-#: ../repair/dinode.c:2077
+#: ../repair/dinode.c:2084
 msgid "would reset to zero\n"
 msgstr ""
 
-#: ../repair/dinode.c:2095
+#: ../repair/dinode.c:2102
 #, c-format
 msgid "bad size %llu for realtime %s inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2111
+#: ../repair/dinode.c:2118
 #, c-format
 msgid "bad # of extents (%u) for realtime %s inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2153
+#: ../repair/dinode.c:2160
 #, c-format
 msgid "mismatch between format (%d) and size (%lld) in directory ino %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2175
+#: ../repair/dinode.c:2182
 #, c-format
 msgid "bad data fork in symlink %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2217
+#: ../repair/dinode.c:2224
 #, c-format
 msgid "found inode %llu claiming to be a real-time file\n"
 msgstr ""
 
-#: ../repair/dinode.c:2236
+#: ../repair/dinode.c:2243
 #, c-format
 msgid "realtime bitmap inode %llu has bad size %lld (should be %lld)\n"
 msgstr ""
 
-#: ../repair/dinode.c:2257
+#: ../repair/dinode.c:2264
 #, c-format
 msgid "realtime summary inode %llu has bad size %lld (should be %d)\n"
 msgstr ""
 
-#: ../repair/dinode.c:2288
+#: ../repair/dinode.c:2295
 #, c-format
 msgid "bad attr fork offset %d in dev inode %llu, should be %d\n"
 msgstr ""
 
-#: ../repair/dinode.c:2299
+#: ../repair/dinode.c:2306
 #, c-format
 msgid "bad attr fork offset %d in uuid inode %llu, should be %d\n"
 msgstr ""
 
-#: ../repair/dinode.c:2311
+#: ../repair/dinode.c:2318
 #, c-format
 msgid "bad attr fork offset %d in inode %llu, should be %d\n"
 msgstr ""
 
-#: ../repair/dinode.c:2319
+#: ../repair/dinode.c:2326
 #, c-format
 msgid "unexpected inode format %d\n"
 msgstr ""
 
-#: ../repair/dinode.c:2363 ../repair/dinode.c:2415
+#: ../repair/dinode.c:2370 ../repair/dinode.c:2422
 #, c-format
 msgid "unknown format %d, ino %llu (mode = %d)\n"
 msgstr ""
 
-#: ../repair/dinode.c:2373
+#: ../repair/dinode.c:2380
 #, c-format
 msgid "bad data fork in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2439
+#: ../repair/dinode.c:2446
 #, c-format
 msgid "bad attribute format %d in inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:2442
+#: ../repair/dinode.c:2449
 msgid "resetting value\n"
 msgstr ""
 
-#: ../repair/dinode.c:2446
+#: ../repair/dinode.c:2453
 msgid "would reset value\n"
 msgstr ""
 
-#: ../repair/dinode.c:2487
+#: ../repair/dinode.c:2494
 #, c-format
 msgid "bad attribute fork in inode %llu"
 msgstr ""
 
-#: ../repair/dinode.c:2491
+#: ../repair/dinode.c:2498
 msgid ", clearing attr fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:2501
+#: ../repair/dinode.c:2508
 msgid ", would clear attr fork\n"
 msgstr ""
 
-#: ../repair/dinode.c:2538
+#: ../repair/dinode.c:2545
 #, c-format
 msgid "illegal attribute fmt %d, ino %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2564
+#: ../repair/dinode.c:2571
 #, c-format
 msgid "problem with attribute contents in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2574
+#: ../repair/dinode.c:2581
 msgid "would clear attr fork\n"
-msgstr ""
-
-#: ../repair/dinode.c:2611
-#, c-format
-msgid "correcting nblocks for inode %llu, was %llu - counted %llu\n"
 msgstr ""
 
 #: ../repair/dinode.c:2618
 #, c-format
-msgid "bad nblocks %llu for inode %llu, would reset to %llu\n"
+msgid "correcting nblocks for inode %llu, was %llu - counted %llu\n"
 msgstr ""
 
 #: ../repair/dinode.c:2625
 #, c-format
+msgid "bad nblocks %llu for inode %llu, would reset to %llu\n"
+msgstr ""
+
+#: ../repair/dinode.c:2632
+#, c-format
 msgid "too many data fork extents (%llu) in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2642
+#: ../repair/dinode.c:2649
 #, c-format
 msgid "correcting nextents for inode %llu, was %d - counted %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2650
+#: ../repair/dinode.c:2657
 #, c-format
 msgid "bad nextents %d for inode %llu, would reset to %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2657
+#: ../repair/dinode.c:2664
 #, c-format
 msgid "too many attr fork extents (%llu) in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2674
+#: ../repair/dinode.c:2681
 #, c-format
 msgid "correcting anextents for inode %llu, was %d - counted %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2683
+#: ../repair/dinode.c:2690
 #, c-format
 msgid "bad anextents %d for inode %llu, would reset to %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2702
+#: ../repair/dinode.c:2709
 #, c-format
 msgid "problem with directory contents in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2715
+#: ../repair/dinode.c:2722
 #, c-format
 msgid "problem with symbolic link in inode %llu\n"
 msgstr ""
 
-#: ../repair/dinode.c:2727
+#: ../repair/dinode.c:2734
 msgid "Unexpected inode type\n"
 msgstr ""
 
-#: ../repair/dinode.c:2771
+#: ../repair/dinode.c:2778
 #, c-format
 msgid "version 2 inode %llu claims > %u links, "
 msgstr ""
 
-#: ../repair/dinode.c:2775
+#: ../repair/dinode.c:2782
 msgid "updating superblock version number\n"
 msgstr ""
 
-#: ../repair/dinode.c:2778
+#: ../repair/dinode.c:2785
 msgid "would update superblock version number\n"
 msgstr ""
 
-#: ../repair/dinode.c:2786
+#: ../repair/dinode.c:2793
 #, c-format
 msgid "WARNING:  version 2 inode %llu claims > %u links, "
 msgstr ""
 
-#: ../repair/dinode.c:2790
+#: ../repair/dinode.c:2797
 #, c-format
 msgid ""
 "converting back to version 1,\n"
 "\tthis may destroy %d links\n"
 msgstr ""
 
-#: ../repair/dinode.c:2805
+#: ../repair/dinode.c:2812
 #, c-format
 msgid ""
 "would convert back to version 1,\n"
 "\tthis might destroy %d links\n"
 msgstr ""
 
-#: ../repair/dinode.c:2820
+#: ../repair/dinode.c:2827
 #, c-format
 msgid "found version 2 inode %llu, "
 msgstr ""
 
-#: ../repair/dinode.c:2822
+#: ../repair/dinode.c:2829
 msgid "converting back to version 1\n"
 msgstr ""
 
-#: ../repair/dinode.c:2831
+#: ../repair/dinode.c:2838
 msgid "would convert back to version 1\n"
 msgstr ""
 
-#: ../repair/dinode.c:2846
+#: ../repair/dinode.c:2853
 #, c-format
 msgid "clearing obsolete nlink field in version 2 inode %llu, was %d, now 0\n"
 msgstr ""
 
-#: ../repair/dinode.c:2852
+#: ../repair/dinode.c:2859
 #, c-format
 msgid ""
 "would clear obsolete nlink field in version 2 inode %llu, currently %d\n"
@@ -3214,12 +3613,12 @@ msgstr ""
 msgid "entry references non-existent inode %llu in shortform dir %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:251 ../repair/dir2.c:983
+#: ../repair/dir.c:251 ../repair/dir2.c:984
 #, c-format
 msgid "zero length entry in shortform dir %llu, resetting to %d\n"
 msgstr ""
 
-#: ../repair/dir.c:256 ../repair/dir2.c:989
+#: ../repair/dir.c:256 ../repair/dir2.c:990
 #, c-format
 msgid "zero length entry in shortform dir %llu, would set to %d\n"
 msgstr ""
@@ -3229,103 +3628,103 @@ msgstr ""
 msgid "zero length entry in shortform dir %llu, "
 msgstr ""
 
-#: ../repair/dir.c:264 ../repair/dir.c:307 ../repair/dir2.c:1042
+#: ../repair/dir.c:264 ../repair/dir.c:307 ../repair/dir2.c:1043
 #, c-format
 msgid "junking %d entries\n"
 msgstr ""
 
-#: ../repair/dir.c:267 ../repair/dir.c:316 ../repair/dir2.c:1051
+#: ../repair/dir.c:267 ../repair/dir.c:316 ../repair/dir2.c:1052
 #, c-format
 msgid "would junk %d entries\n"
 msgstr ""
 
-#: ../repair/dir.c:285 ../repair/dir2.c:1019
+#: ../repair/dir.c:285 ../repair/dir2.c:1020
 #, c-format
 msgid "size of last entry overflows space left in in shortform dir %llu, "
 msgstr ""
 
-#: ../repair/dir.c:288 ../repair/dir2.c:1023
+#: ../repair/dir.c:288 ../repair/dir2.c:1024
 #, c-format
 msgid "resetting to %d\n"
 msgstr ""
 
-#: ../repair/dir.c:293 ../repair/dir2.c:1028
+#: ../repair/dir.c:293 ../repair/dir2.c:1029
 #, c-format
 msgid "would reset to %d\n"
 msgstr ""
 
-#: ../repair/dir.c:298 ../repair/dir2.c:1032
+#: ../repair/dir.c:298 ../repair/dir2.c:1033
 #, c-format
 msgid "size of entry #%d overflows space left in in shortform dir %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:303 ../repair/dir2.c:1038
+#: ../repair/dir.c:303 ../repair/dir2.c:1039
 #, c-format
 msgid "junking entry #%d\n"
 msgstr ""
 
-#: ../repair/dir.c:312 ../repair/dir2.c:1047
+#: ../repair/dir.c:312 ../repair/dir2.c:1048
 #, c-format
 msgid "would junk entry #%d\n"
 msgstr ""
 
-#: ../repair/dir.c:335 ../repair/dir2.c:1069
+#: ../repair/dir.c:335 ../repair/dir2.c:1070
 #, c-format
 msgid "entry contains illegal character in shortform dir %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:390 ../repair/dir2.c:1134 ../repair/phase6.c:3001
-#: ../repair/phase6.c:3396
+#: ../repair/dir.c:390 ../repair/dir2.c:1135 ../repair/phase6.c:3004
+#: ../repair/phase6.c:3399
 #, c-format
 msgid "junking entry \"%s\" in directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:394 ../repair/dir2.c:1138
+#: ../repair/dir.c:394 ../repair/dir2.c:1139
 #, c-format
 msgid "would have junked entry \"%s\" in directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:420 ../repair/dir2.c:1165
+#: ../repair/dir.c:420 ../repair/dir2.c:1166
 #, c-format
 msgid "would have corrected entry count in directory %llu from %d to %d\n"
 msgstr ""
 
-#: ../repair/dir.c:424 ../repair/dir2.c:1169
+#: ../repair/dir.c:424 ../repair/dir2.c:1170
 #, c-format
 msgid "corrected entry count in directory %llu, was %d, now %d\n"
 msgstr ""
 
-#: ../repair/dir.c:435 ../repair/dir2.c:1198
+#: ../repair/dir.c:435 ../repair/dir2.c:1199
 #, c-format
 msgid "would have corrected directory %llu size from %lld to %lld\n"
 msgstr ""
 
-#: ../repair/dir.c:440 ../repair/dir2.c:1204
+#: ../repair/dir.c:440 ../repair/dir2.c:1205
 #, c-format
 msgid "corrected directory %llu size, was %lld, now %lld\n"
 msgstr ""
 
-#: ../repair/dir.c:463 ../repair/dir2.c:1250
+#: ../repair/dir.c:463 ../repair/dir2.c:1251
 #, c-format
 msgid "bogus .. inode number (%llu) in directory inode %llu, "
 msgstr ""
 
-#: ../repair/dir.c:466 ../repair/dir.c:502 ../repair/dir2.c:1255
-#: ../repair/dir2.c:1292
+#: ../repair/dir.c:466 ../repair/dir.c:502 ../repair/dir2.c:1256
+#: ../repair/dir2.c:1293
 msgid "clearing inode number\n"
 msgstr ""
 
-#: ../repair/dir.c:473 ../repair/dir.c:509 ../repair/dir2.c:1262
-#: ../repair/dir2.c:1299
+#: ../repair/dir.c:473 ../repair/dir.c:509 ../repair/dir2.c:1263
+#: ../repair/dir2.c:1300
 msgid "would clear inode number\n"
 msgstr ""
 
-#: ../repair/dir.c:481 ../repair/dir2.c:1269
+#: ../repair/dir.c:481 ../repair/dir2.c:1270
 #, c-format
 msgid "corrected root directory %llu .. entry, was %llu, now %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:490 ../repair/dir2.c:1278
+#: ../repair/dir.c:490 ../repair/dir2.c:1279
 #, c-format
 msgid "would have corrected root directory %llu .. entry from %llu to %llu\n"
 msgstr ""
@@ -3387,12 +3786,12 @@ msgstr ""
 msgid "bad dir/attr magic number in inode %llu, file bno = %u, fsbno = %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:849 ../repair/dir2.c:325
+#: ../repair/dir.c:849 ../repair/dir2.c:326
 #, c-format
 msgid "bad record count in inode %llu, count = %d, max = %d\n"
 msgstr ""
 
-#: ../repair/dir.c:868 ../repair/dir2.c:342
+#: ../repair/dir.c:868 ../repair/dir2.c:343
 #, c-format
 msgid "bad directory btree for directory inode %llu\n"
 msgstr ""
@@ -3417,13 +3816,13 @@ msgstr ""
 msgid "directory/attribute block used/count inconsistency - %d/%hu\n"
 msgstr ""
 
-#: ../repair/dir.c:1088 ../repair/dir2.c:465
+#: ../repair/dir.c:1088 ../repair/dir2.c:466
 #, c-format
 msgid ""
 "directory/attribute block hashvalue inconsistency, expected > %u / saw %u\n"
 msgstr ""
 
-#: ../repair/dir.c:1095 ../repair/dir2.c:472
+#: ../repair/dir.c:1095 ../repair/dir2.c:473
 #, c-format
 msgid "bad directory/attribute forward block pointer, expected 0, saw %u\n"
 msgstr ""
@@ -3447,7 +3846,7 @@ msgid ""
 "\tin (level %d) in inode %llu.\n"
 msgstr ""
 
-#: ../repair/dir.c:1277 ../repair/dir2.c:637
+#: ../repair/dir.c:1277 ../repair/dir2.c:638
 #, c-format
 msgid "can't get map info for block %u of directory inode %llu\n"
 msgstr ""
@@ -3683,7 +4082,7 @@ msgstr ""
 msgid "will clear entry\n"
 msgstr ""
 
-#: ../repair/dir.c:2322 ../repair/dir.c:2420 ../repair/dir2.c:1647
+#: ../repair/dir.c:2322 ../repair/dir.c:2420 ../repair/dir2.c:1648
 msgid "would clear entry\n"
 msgstr ""
 
@@ -3800,7 +4199,7 @@ msgstr ""
 msgid "- would compact block %u in dir inode %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:2714 ../repair/dir2.c:1829
+#: ../repair/dir.c:2714 ../repair/dir2.c:1830
 #, c-format
 msgid "can't map block %u for directory inode %llu\n"
 msgstr ""
@@ -3822,7 +4221,7 @@ msgid ""
 "bad sibling back pointer for directory block %u in directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:2810 ../repair/dir2.c:1905
+#: ../repair/dir.c:2810 ../repair/dir2.c:1906
 #, c-format
 msgid "bad hash path in directory %llu\n"
 msgstr ""
@@ -3857,17 +4256,17 @@ msgstr ""
 msgid "would clear forw/back pointers for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:3101 ../repair/dir2.c:2111
+#: ../repair/dir.c:3101 ../repair/dir2.c:2112
 #, c-format
 msgid "no . entry for directory %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:3111 ../repair/dir2.c:2121
+#: ../repair/dir.c:3111 ../repair/dir2.c:2122
 #, c-format
 msgid "no .. entry for directory %llu\n"
 msgstr ""
 
-#: ../repair/dir.c:3113 ../repair/dir2.c:2123
+#: ../repair/dir.c:3113 ../repair/dir2.c:2124
 #, c-format
 msgid "no .. entry for root directory %llu\n"
 msgstr ""
@@ -3877,7 +4276,7 @@ msgstr ""
 msgid "malloc failed (%u bytes) dir2_add_badlist:ino %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:107 ../repair/dir2.c:200 ../repair/dir2.c:236
+#: ../repair/dir2.c:107 ../repair/dir2.c:201 ../repair/dir2.c:237
 msgid "couldn't malloc dir2 buffer list\n"
 msgstr ""
 
@@ -3889,7 +4288,7 @@ msgstr ""
 msgid "couldn't malloc dir2 buffer data\n"
 msgstr ""
 
-#: ../repair/dir2.c:289 ../repair/dir2.c:646 ../repair/dir2.c:1710
+#: ../repair/dir2.c:290 ../repair/dir2.c:647 ../repair/dir2.c:1711
 #: ../repair/phase6.c:2114 ../repair/phase6.c:2189 ../repair/phase6.c:2234
 #: ../repair/phase6.c:2332 ../repair/phase6.c:2464 ../repair/phase6.c:2478
 #: ../repair/phase6.c:2723
@@ -3897,331 +4296,331 @@ msgstr ""
 msgid "can't read block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:300
+#: ../repair/dir2.c:301
 #, c-format
 msgid "found non-root LEAFN node in inode %llu bno = %u\n"
 msgstr ""
 
-#: ../repair/dir2.c:305
+#: ../repair/dir2.c:306
 #, c-format
 msgid "LEAFN node level is %d inode %llu bno = %u\n"
 msgstr ""
 
-#: ../repair/dir2.c:316
+#: ../repair/dir2.c:317
 #, c-format
 msgid "bad dir magic number 0x%x in inode %llu bno = %u\n"
 msgstr ""
 
-#: ../repair/dir2.c:393
+#: ../repair/dir2.c:394
 #, c-format
 msgid "release_dir2_cursor_int got unexpected non-null bp, dabno = %u\n"
 msgstr ""
 
-#: ../repair/dir2.c:456
+#: ../repair/dir2.c:457
 #, c-format
 msgid "directory block used/count inconsistency - %d / %hu\n"
 msgstr ""
 
-#: ../repair/dir2.c:478
+#: ../repair/dir2.c:479
 #, c-format
 msgid "bad directory block in inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:499
+#: ../repair/dir2.c:500
 #, c-format
 msgid ""
 "correcting bad hashval in non-leaf dir block\n"
 "\tin (level %d) in inode %llu.\n"
 msgstr ""
 
-#: ../repair/dir2.c:506
+#: ../repair/dir2.c:507
 #, c-format
 msgid ""
 "would correct bad hashval in non-leaf dir block\n"
 "\tin (level %d) in inode %llu.\n"
 msgstr ""
 
-#: ../repair/dir2.c:660
+#: ../repair/dir2.c:661
 #, c-format
 msgid "bad magic number %x in block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:668
+#: ../repair/dir2.c:669
 #, c-format
 msgid "bad back pointer in block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:675
+#: ../repair/dir2.c:676
 #, c-format
 msgid "entry count %d too large in block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:682
+#: ../repair/dir2.c:683
 #, c-format
 msgid "bad level %d in block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:726
+#: ../repair/dir2.c:727
 #, c-format
 msgid ""
 "correcting bad hashval in interior dir block\n"
 "\tin (level %d) in inode %llu.\n"
 msgstr ""
 
-#: ../repair/dir2.c:733
+#: ../repair/dir2.c:734
 #, c-format
 msgid ""
 "would correct bad hashval in interior dir block\n"
 "\tin (level %d) in inode %llu.\n"
 msgstr ""
 
-#: ../repair/dir2.c:767
+#: ../repair/dir2.c:768
 msgid "couldn't malloc dir2 shortform copy\n"
 msgstr ""
 
-#: ../repair/dir2.c:910
+#: ../repair/dir2.c:911
 msgid "current"
 msgstr ""
 
-#: ../repair/dir2.c:913 ../repair/dir2.c:1441
+#: ../repair/dir2.c:914 ../repair/dir2.c:1442
 msgid "invalid"
 msgstr ""
 
-#: ../repair/dir2.c:916 ../repair/dir2.c:1444
+#: ../repair/dir2.c:917 ../repair/dir2.c:1445
 msgid "realtime bitmap"
 msgstr ""
 
-#: ../repair/dir2.c:919 ../repair/dir2.c:1447
+#: ../repair/dir2.c:920 ../repair/dir2.c:1448
 msgid "realtime summary"
 msgstr ""
 
-#: ../repair/dir2.c:922 ../repair/dir2.c:1450
+#: ../repair/dir2.c:923 ../repair/dir2.c:1451
 msgid "user quota"
 msgstr ""
 
-#: ../repair/dir2.c:925 ../repair/dir2.c:1453
+#: ../repair/dir2.c:926 ../repair/dir2.c:1454
 msgid "group quota"
 msgstr ""
 
-#: ../repair/dir2.c:942 ../repair/dir2.c:1482
+#: ../repair/dir2.c:943 ../repair/dir2.c:1483
 msgid "free"
 msgstr ""
 
-#: ../repair/dir2.c:959 ../repair/dir2.c:1490
+#: ../repair/dir2.c:960 ../repair/dir2.c:1491
 msgid "non-existent"
 msgstr ""
 
-#: ../repair/dir2.c:963
+#: ../repair/dir2.c:964
 #, c-format
 msgid "entry \"%*.*s\" in shortform directory %llu references %s inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:995
+#: ../repair/dir2.c:996
 #, c-format
 msgid "zero length entry in shortform dir %llu"
 msgstr ""
 
-#: ../repair/dir2.c:999
+#: ../repair/dir2.c:1000
 #, c-format
 msgid ", junking %d entries\n"
 msgstr ""
 
-#: ../repair/dir2.c:1002
+#: ../repair/dir2.c:1003
 #, c-format
 msgid ", would junk %d entries\n"
 msgstr ""
 
-#: ../repair/dir2.c:1076
+#: ../repair/dir2.c:1077
 #, c-format
 msgid "entry contains offset out of order in shortform dir %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1180
+#: ../repair/dir2.c:1181
 #, c-format
 msgid "would have corrected i8 count in directory %llu from %d to %d\n"
 msgstr ""
 
-#: ../repair/dir2.c:1184
+#: ../repair/dir2.c:1185
 #, c-format
 msgid "corrected i8 count in directory %llu, was %d, now %d\n"
 msgstr ""
 
-#: ../repair/dir2.c:1221
+#: ../repair/dir2.c:1222
 #, c-format
 msgid "directory %llu offsets too high\n"
 msgstr ""
 
-#: ../repair/dir2.c:1226
+#: ../repair/dir2.c:1227
 #, c-format
 msgid "would have corrected entry offsets in directory %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1230
+#: ../repair/dir2.c:1231
 #, c-format
 msgid "corrected entry offsets in directory %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1288
+#: ../repair/dir2.c:1289
 #, c-format
 msgid "bad .. entry in directory inode %llu, points to self, "
 msgstr ""
 
-#: ../repair/dir2.c:1402
+#: ../repair/dir2.c:1403
 #, c-format
 msgid "corrupt block %u in directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1405
+#: ../repair/dir2.c:1406
 msgid "\twill junk block\n"
 msgstr ""
 
-#: ../repair/dir2.c:1407
+#: ../repair/dir2.c:1408
 msgid "\twould junk block\n"
 msgstr ""
 
-#: ../repair/dir2.c:1493
+#: ../repair/dir2.c:1494
 #, c-format
 msgid ""
 "entry \"%*.*s\" at block %u offset %d in directory inode %llu references %s "
 "inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1505
+#: ../repair/dir2.c:1506
 #, c-format
 msgid "entry at block %u offset %d in directory inode %llu has 0 namelength\n"
 msgstr ""
 
-#: ../repair/dir2.c:1517
+#: ../repair/dir2.c:1518
 #, c-format
 msgid "\tclearing inode number in entry at offset %d...\n"
 msgstr ""
 
-#: ../repair/dir2.c:1523
+#: ../repair/dir2.c:1524
 #, c-format
 msgid "\twould clear inode number in entry at offset %d...\n"
 msgstr ""
 
-#: ../repair/dir2.c:1536
+#: ../repair/dir2.c:1537
 #, c-format
 msgid ""
 "entry at block %u offset %d in directory inode %llu has illegal name \"%*.*s"
 "\": "
 msgstr ""
 
-#: ../repair/dir2.c:1567
+#: ../repair/dir2.c:1568
 #, c-format
 msgid "bad .. entry in directory inode %llu, points to self: "
 msgstr ""
 
-#: ../repair/dir2.c:1578
+#: ../repair/dir2.c:1579
 #, c-format
 msgid "bad .. entry in root directory inode %llu, was %llu: "
 msgstr ""
 
-#: ../repair/dir2.c:1583 ../repair/dir2.c:1615 ../repair/phase2.c:192
+#: ../repair/dir2.c:1584 ../repair/dir2.c:1616 ../repair/phase2.c:192
 #: ../repair/phase2.c:201 ../repair/phase2.c:210
 msgid "correcting\n"
 msgstr ""
 
-#: ../repair/dir2.c:1587 ../repair/dir2.c:1619 ../repair/phase2.c:194
+#: ../repair/dir2.c:1588 ../repair/dir2.c:1620 ../repair/phase2.c:194
 #: ../repair/phase2.c:203 ../repair/phase2.c:212
 msgid "would correct\n"
 msgstr ""
 
-#: ../repair/dir2.c:1598
+#: ../repair/dir2.c:1599
 #, c-format
 msgid "multiple .. entries in directory inode %llu: "
 msgstr ""
 
-#: ../repair/dir2.c:1611
+#: ../repair/dir2.c:1612
 #, c-format
 msgid "bad . entry in directory inode %llu, was %llu: "
 msgstr ""
 
-#: ../repair/dir2.c:1623
+#: ../repair/dir2.c:1624
 #, c-format
 msgid "multiple . entries in directory inode %llu: "
 msgstr ""
 
-#: ../repair/dir2.c:1633
+#: ../repair/dir2.c:1634
 #, c-format
 msgid "entry \"%*.*s\" in directory inode %llu points to self: "
 msgstr ""
 
-#: ../repair/dir2.c:1645
+#: ../repair/dir2.c:1646
 msgid "clearing entry\n"
 msgstr ""
 
-#: ../repair/dir2.c:1659
+#: ../repair/dir2.c:1660
 #, c-format
 msgid "bad bestfree table in block %u in directory inode %llu: "
 msgstr ""
 
-#: ../repair/dir2.c:1663
+#: ../repair/dir2.c:1664
 msgid "repairing table\n"
 msgstr ""
 
-#: ../repair/dir2.c:1667
+#: ../repair/dir2.c:1668
 msgid "would repair table\n"
 msgstr ""
 
-#: ../repair/dir2.c:1703
+#: ../repair/dir2.c:1704
 #, c-format
 msgid "block %u for directory inode %llu is missing\n"
 msgstr ""
 
-#: ../repair/dir2.c:1719
+#: ../repair/dir2.c:1720
 #, c-format
 msgid "bad directory block magic # %#x in block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1764
+#: ../repair/dir2.c:1765
 #, c-format
 msgid "bad entry count in block %u of directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1774
+#: ../repair/dir2.c:1775
 #, c-format
 msgid "bad hash ordering in block %u of directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1783
+#: ../repair/dir2.c:1784
 #, c-format
 msgid "bad stale count in block %u of directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1838
+#: ../repair/dir2.c:1839
 #, c-format
 msgid "can't read file block %u for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:1849
+#: ../repair/dir2.c:1850
 #, c-format
 msgid "bad directory leaf magic # %#x for directory inode %llu block %u\n"
 msgstr ""
 
-#: ../repair/dir2.c:1879
+#: ../repair/dir2.c:1880
 #, c-format
 msgid "bad sibling back pointer for block %u in directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:2008
+#: ../repair/dir2.c:2009
 #, c-format
 msgid "block %llu for directory inode %llu is missing\n"
 msgstr ""
 
-#: ../repair/dir2.c:2016
+#: ../repair/dir2.c:2017
 #, c-format
 msgid "can't read block %llu for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:2024
+#: ../repair/dir2.c:2025
 #, c-format
 msgid ""
 "bad directory block magic # %#x in block %llu for directory inode %llu\n"
 msgstr ""
 
-#: ../repair/dir2.c:2104
+#: ../repair/dir2.c:2105
 #, c-format
 msgid "bad size/format for directory %llu\n"
 msgstr ""
@@ -4365,25 +4764,13 @@ msgstr ""
 msgid "you should never get this message - %s"
 msgstr ""
 
-#: ../repair/init.c:79
+#: ../repair/init.c:77
 msgid "couldn't initialize XFS library\n"
 msgstr ""
 
-#: ../repair/io.c:49
+#: ../repair/io.c:47
 #, c-format
 msgid "couldn't open filesystem \"%s\"\n"
-msgstr ""
-
-#: ../repair/io.c:65
-msgid "couldn't malloc io buffer\n"
-msgstr ""
-
-#: ../repair/io.c:68
-msgid "couldn't malloc secondary io buffer\n"
-msgstr ""
-
-#: ../repair/io.c:72
-msgid "couldn't malloc sb io buffers\n"
 msgstr ""
 
 #: ../repair/phase1.c:42
@@ -4910,8 +5297,8 @@ msgstr ""
 msgid "marking entry to be junked\n"
 msgstr ""
 
-#: ../repair/phase6.c:1424 ../repair/phase6.c:1986 ../repair/phase6.c:2899
-#: ../repair/phase6.c:3297
+#: ../repair/phase6.c:1424 ../repair/phase6.c:1986 ../repair/phase6.c:2902
+#: ../repair/phase6.c:3300
 msgid "would junk entry\n"
 msgstr ""
 
@@ -5111,208 +5498,208 @@ msgstr ""
 msgid "malloc failed in longform_dir2_entry_check (%u bytes)\n"
 msgstr ""
 
-#: ../repair/phase6.c:2811
+#: ../repair/phase6.c:2814
 #, c-format
 msgid "shortform dir inode %llu has null data entries \n"
 msgstr ""
 
-#: ../repair/phase6.c:2897
+#: ../repair/phase6.c:2900
 #, c-format
 msgid "entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:2919
+#: ../repair/phase6.c:2922
 #, c-format
 msgid "entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:2925 ../repair/phase6.c:3004 ../repair/phase6.c:3324
-#: ../repair/phase6.c:3400
+#: ../repair/phase6.c:2928 ../repair/phase6.c:3007 ../repair/phase6.c:3327
+#: ../repair/phase6.c:3403
 #, c-format
 msgid "would junk entry \"%s\"\n"
 msgstr ""
 
-#: ../repair/phase6.c:2950
+#: ../repair/phase6.c:2953
 #, c-format
 msgid "entry \"%s\" in dir %llu references already connected dir ino %llu,\n"
 msgstr ""
 
-#: ../repair/phase6.c:2962
+#: ../repair/phase6.c:2965
 #, c-format
 msgid ""
 "entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino %"
 "llu,\n"
 msgstr ""
 
-#: ../repair/phase6.c:3043 ../repair/phase6.c:3138 ../repair/phase6.c:3455
+#: ../repair/phase6.c:3046 ../repair/phase6.c:3141 ../repair/phase6.c:3458
 #, c-format
 msgid "setting size to %lld bytes to reflect junked entries\n"
 msgstr ""
 
-#: ../repair/phase6.c:3294
+#: ../repair/phase6.c:3297
 #, c-format
 msgid ""
 "entry \"%s\" in shortform directory %llu references non-existent inode %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3316
+#: ../repair/phase6.c:3319
 #, c-format
 msgid ""
 "entry \"%s\" in shortform directory inode %llu points to free inode %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3343
+#: ../repair/phase6.c:3346
 #, c-format
 msgid ""
 "entry \"%s\" in directory inode %llu references already connected inode %"
 "llu,\n"
 msgstr ""
 
-#: ../repair/phase6.c:3356
+#: ../repair/phase6.c:3359
 #, c-format
 msgid ""
 "entry \"%s\" in directory inode %llu not consistent with .. value (%llu) in "
 "inode %llu,\n"
 msgstr ""
 
-#: ../repair/phase6.c:3424
+#: ../repair/phase6.c:3427
 #, c-format
 msgid "would fix i8count in inode %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3436
+#: ../repair/phase6.c:3439
 #, c-format
 msgid "fixing i8count in inode %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3499 ../repair/phase6.c:3503 ../repair/phase7.c:132
+#: ../repair/phase6.c:3502 ../repair/phase6.c:3506 ../repair/phase7.c:132
 #, c-format
 msgid "couldn't map inode %llu, err = %d\n"
 msgstr ""
 
-#: ../repair/phase6.c:3625
+#: ../repair/phase6.c:3628
 #, c-format
 msgid "re-entering %s into root directory\n"
 msgstr ""
 
-#: ../repair/phase6.c:3642
+#: ../repair/phase6.c:3645
 #, c-format
 msgid "can't make %s entry in root inode %llu, createname error %d\n"
 msgstr ""
 
-#: ../repair/phase6.c:3667
+#: ../repair/phase6.c:3670
 msgid "recreating root directory .. entry\n"
 msgstr ""
 
-#: ../repair/phase6.c:3690
+#: ../repair/phase6.c:3693
 #, c-format
 msgid "can't make \"..\" entry in root inode %llu, createname error %d\n"
 msgstr ""
 
-#: ../repair/phase6.c:3703
+#: ../repair/phase6.c:3706
 msgid "would recreate root directory .. entry\n"
 msgstr ""
 
-#: ../repair/phase6.c:3782
+#: ../repair/phase6.c:3785
 #, c-format
 msgid "would create missing \".\" entry in dir ino %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3789
+#: ../repair/phase6.c:3792
 #, c-format
 msgid "creating missing \".\" entry in dir ino %llu\n"
 msgstr ""
 
-#: ../repair/phase6.c:3814
+#: ../repair/phase6.c:3817
 #, c-format
 msgid "can't make \".\" entry in dir ino %llu, createname error %d\n"
 msgstr ""
 
-#: ../repair/phase6.c:3894
+#: ../repair/phase6.c:3897
 msgid "Phase 6 - check inode connectivity...\n"
 msgstr ""
 
-#: ../repair/phase6.c:3913
+#: ../repair/phase6.c:3916
 msgid "reinitializing root directory\n"
 msgstr ""
 
-#: ../repair/phase6.c:3918
+#: ../repair/phase6.c:3921
 msgid "would reinitialize root directory\n"
 msgstr ""
 
-#: ../repair/phase6.c:3924
+#: ../repair/phase6.c:3927
 msgid "reinitializing realtime bitmap inode\n"
 msgstr ""
 
-#: ../repair/phase6.c:3928
+#: ../repair/phase6.c:3931
 msgid "would reinitialize realtime bitmap inode\n"
 msgstr ""
 
-#: ../repair/phase6.c:3934
+#: ../repair/phase6.c:3937
 msgid "reinitializing realtime summary inode\n"
 msgstr ""
 
-#: ../repair/phase6.c:3938
+#: ../repair/phase6.c:3941
 msgid "would reinitialize realtime summary inode\n"
 msgstr ""
 
-#: ../repair/phase6.c:3944
+#: ../repair/phase6.c:3947
 msgid "        - resetting contents of realtime bitmap and summary inodes\n"
 msgstr ""
 
-#: ../repair/phase6.c:3947 ../repair/phase6.c:3952
+#: ../repair/phase6.c:3950 ../repair/phase6.c:3955
 msgid "Warning:  realtime bitmap may be inconsistent\n"
 msgstr ""
 
-#: ../repair/phase6.c:3960
+#: ../repair/phase6.c:3963
 #, c-format
 msgid "        - ensuring existence of %s directory\n"
 msgstr ""
 
-#: ../repair/phase6.c:3973
+#: ../repair/phase6.c:3976
 msgid "        - traversing filesystem starting at / ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:3978
+#: ../repair/phase6.c:3981
 msgid "        - traversal finished ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:3983
+#: ../repair/phase6.c:3986
 msgid "        - root inode lost, cannot make new one in no modify mode ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:3985
+#: ../repair/phase6.c:3988
 msgid "        - skipping filesystem traversal from / ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:3988
+#: ../repair/phase6.c:3991
 msgid "        - traversing all unattached subtrees ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:4039
+#: ../repair/phase6.c:4042
 msgid "        - traversals finished ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:4040
+#: ../repair/phase6.c:4043
 msgid "        - moving disconnected inodes to lost+found ... \n"
 msgstr ""
 
-#: ../repair/phase6.c:4064
+#: ../repair/phase6.c:4067
 #, c-format
 msgid "disconnected dir inode %llu, "
 msgstr ""
 
-#: ../repair/phase6.c:4068
+#: ../repair/phase6.c:4071
 #, c-format
 msgid "disconnected inode %llu, "
 msgstr ""
 
-#: ../repair/phase6.c:4071
+#: ../repair/phase6.c:4074
 #, c-format
 msgid "moving to %s\n"
 msgstr ""
 
-#: ../repair/phase6.c:4077
+#: ../repair/phase6.c:4080
 #, c-format
 msgid "would move to %s\n"
 msgstr ""
@@ -5379,76 +5766,76 @@ msgstr ""
 msgid "can't read block %d for rtsummary inode\n"
 msgstr ""
 
-#: ../repair/sb.c:111
+#: ../repair/sb.c:113
 msgid ""
 "\n"
 "attempting to find secondary superblock...\n"
 msgstr ""
 
-#: ../repair/sb.c:116
+#: ../repair/sb.c:118
 msgid "error finding secondary superblock -- failed to memalign buffer\n"
 msgstr ""
 
-#: ../repair/sb.c:154
+#: ../repair/sb.c:156
 msgid "found candidate secondary superblock...\n"
 msgstr ""
 
-#: ../repair/sb.c:166
+#: ../repair/sb.c:168
 msgid "verified secondary superblock...\n"
 msgstr ""
 
-#: ../repair/sb.c:171
+#: ../repair/sb.c:173
 msgid "unable to verify superblock, continuing...\n"
 msgstr ""
 
-#: ../repair/sb.c:468
+#: ../repair/sb.c:470
 msgid "failed to malloc superblock buffer\n"
 msgstr ""
 
-#: ../repair/sb.c:474
+#: ../repair/sb.c:476
 msgid "couldn't seek to offset 0 in filesystem\n"
 msgstr ""
 
-#: ../repair/sb.c:481
+#: ../repair/sb.c:483
 msgid "primary superblock write failed!\n"
 msgstr ""
 
-#: ../repair/sb.c:498
+#: ../repair/sb.c:500
 #, c-format
 msgid "error reading superblock %u -- failed to malloc buffer\n"
 msgstr ""
 
-#: ../repair/sb.c:507
+#: ../repair/sb.c:509
 #, c-format
 msgid "error reading superblock %u -- seek to offset %lld failed\n"
 msgstr ""
 
-#: ../repair/sb.c:515
+#: ../repair/sb.c:517
 #, c-format
 msgid "superblock read failed, offset %lld, size %d, ag %u, rval %d\n"
 msgstr ""
 
-#: ../repair/sb.c:588
+#: ../repair/sb.c:565
 msgid "couldn't malloc geometry structure\n"
 msgstr ""
 
-#: ../repair/sb.c:733
+#: ../repair/sb.c:710
 msgid "calloc failed in verify_set_primary_sb\n"
 msgstr ""
 
-#: ../repair/sb.c:801
+#: ../repair/sb.c:778
 msgid "Only two AGs detected and they do not match - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:813
+#: ../repair/sb.c:790
 msgid "Only one AG detected - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:825
+#: ../repair/sb.c:802
 msgid "Not enough matching superblocks - cannot proceed.\n"
 msgstr ""
 
-#: ../repair/sb.c:840
+#: ../repair/sb.c:817
 msgid "could not read superblock\n"
 msgstr ""
 

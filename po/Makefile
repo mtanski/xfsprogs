@@ -39,21 +39,27 @@ LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
 
 # TODO: db/ logprint/
 XGETTEXTFILES =	\
-		$(TOPDIR)/freeze/xfs_freeze.c \
 		$(TOPDIR)/growfs/explore.c \
 		$(TOPDIR)/growfs/xfs_growfs.c \
 		$(TOPDIR)/imap/xfs_imap.c \
 		$(TOPDIR)/io/bmap.c \
 		$(TOPDIR)/io/command.c \
+		$(TOPDIR)/io/fadvise.c \
+		$(TOPDIR)/io/file.c \
+		$(TOPDIR)/io/freeze.c \
 		$(TOPDIR)/io/fsync.c \
 		$(TOPDIR)/io/help.c \
 		$(TOPDIR)/io/init.c \
+		$(TOPDIR)/io/inject.c \
+		$(TOPDIR)/io/input.c \
+		$(TOPDIR)/io/mmap.c \
 		$(TOPDIR)/io/open.c \
 		$(TOPDIR)/io/pread.c \
 		$(TOPDIR)/io/prealloc.c \
 		$(TOPDIR)/io/pwrite.c \
 		$(TOPDIR)/io/quit.c \
 		$(TOPDIR)/io/resblks.c \
+		$(TOPDIR)/io/shutdown.c \
 		$(TOPDIR)/io/truncate.c \
 		$(TOPDIR)/mkfile/xfs_mkfile.c \
 		$(TOPDIR)/mkfs/proto.c \
