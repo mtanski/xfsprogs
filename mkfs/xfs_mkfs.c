@@ -1763,16 +1763,18 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		}
 		/* convert from 512 byte blocks to fs blocks */
 		lsunit = DTOBT(lsunit);
-	} else if (dsunit) {
+	} else if (logversion == 2 && loginternal && dsunit) {
 		/* lsunit and dsunit now in fs blocks */
 		lsunit = dsunit;
 	}
 
-	if ((lsunit * blocksize) > 256 * 1024) {
+	if (logversion == 2 && (lsunit * blocksize) > 256 * 1024) {
 		fprintf(stderr,
 _("log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n"),
 			(lsunit * blocksize));
-		exit(1);
+		lsunit = 32 * 1024;
+		fprintf(stderr,
+			_("log stripe unit adjusted to 256kb\n"));
 	}
 
 	protostring = setup_proto(protofile);
