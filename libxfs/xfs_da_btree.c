@@ -2091,9 +2091,9 @@ xfs_da_do_buf(
 					cmn_err(CE_ALERT,
 						"[%02d] br_startoff %lld br_startblock %lld br_blockcount %lld br_state %d\n",
 						i,
-						mapp[i].br_startoff,
-						mapp[i].br_startblock,
-						mapp[i].br_blockcount,
+						(long long)mapp[i].br_startoff,
+						(long long)mapp[i].br_startblock,
+						(long long)mapp[i].br_blockcount,
 						mapp[i].br_state);
 				}
 			}

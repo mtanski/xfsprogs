@@ -1437,7 +1437,9 @@ loop:
 	if (blkno >= logBBsize) {
 	    if (cleared) {
 		printf("%s: skipped %d cleared blocks in range: %lld - %lld\n",
-			progname, cleared, cleared_blkno, cleared + cleared_blkno - 1);
+			progname, cleared,
+			(long long)(cleared_blkno),
+			(long long)(cleared + cleared_blkno - 1));
 		if (cleared == logBBsize)
 		    printf("%s: totally cleared log\n", progname);
 
@@ -1445,7 +1447,9 @@ loop:
 	    }
 	    if (zeroed) {
 		printf("%s: skipped %d zeroed blocks in range: %lld - %lld\n",
-			progname, zeroed, zeroed_blkno, zeroed + zeroed_blkno - 1);
+			progname, zeroed,
+			(long long)(zeroed_blkno),
+			(long long)(zeroed + zeroed_blkno - 1));
 		if (zeroed == logBBsize)
 		    printf("%s: totally zeroed log\n", progname);
 

@@ -737,19 +737,21 @@ mincore_f(
 				previous = start + (i * pagesize);
 			}
 		} else if (previous) {		/* print end and page count */
-			printf(_("0x%lx  %u pages (%llu : %lu)\n"),
+			printf(_("0x%lx  %lu pages (%llu : %lu)\n"),
 				(unsigned long)current,
-				(current - previous) / pagesize,
-				(unsigned long long)offset + (previous - start),
+				(unsigned long)(current - previous) / pagesize,
+				(unsigned long long)offset +
+					(unsigned long long)(previous - start),
 				(unsigned long)(current - previous));
 			previous = NULL;
 		}
 	}
 	if (previous)
-		printf(_("0x%lx  %u pages (%llu : %lu)\n"),
+		printf(_("0x%lx  %lu pages (%llu : %lu)\n"),
 			(unsigned long)current,
-			(current - previous) / pagesize,
-			(unsigned long long)offset + (previous - start),
+			(unsigned long)(current - previous) / pagesize,
+			(unsigned long long)offset +
+				(unsigned long long)(previous - start),
 			(unsigned long)(current - previous));
 
 	free(vec);
