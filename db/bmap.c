@@ -298,7 +298,7 @@ convert_extent(
 	xfs_bmbt_rec_t rpcopy, *p = &rpcopy;
 
 	memmove(&rpcopy, rp, sizeof(rpcopy));
-	libxfs_bmbt_get_all(p, s);
+	libxfs_bmbt_disk_get_all(p, s);
 
 	if (s->br_state == XFS_EXT_UNWRITTEN) {
 		*fp = 1;

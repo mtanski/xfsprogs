@@ -447,7 +447,7 @@ convert_extent(
 
 	memcpy(&rpcopy, rp, sizeof(rpcopy));
 	/* Just use the extent parsing routine from the kernel */
-	libxfs_bmbt_get_all(p, s);
+	libxfs_bmbt_disk_get_all(p, s);
 
 	if (fs_has_extflgbit)  {
 		if (s->br_state == XFS_EXT_UNWRITTEN) {

@@ -437,9 +437,12 @@ extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (xfs_da_args_t *, int, int *);
 
-extern xfs_filblks_t	libxfs_bmbt_get_blockcount (xfs_bmbt_rec_t *);
-extern xfs_fileoff_t	libxfs_bmbt_get_startoff (xfs_bmbt_rec_t *);
 extern void	libxfs_bmbt_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
+#if ARCH_CONVERT != ARCH_NOCONVERT
+extern void	libxfs_bmbt_disk_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
+#else
+# define libxfs_bmbt_disk_get_all(r,s)	libxfs_bmbt_get_all(r,s)
+#endif
 
 extern int	libxfs_free_extent (xfs_trans_t *, xfs_fsblock_t, xfs_extlen_t);
 extern int	libxfs_rtfree_extent (xfs_trans_t *, xfs_rtblock_t,

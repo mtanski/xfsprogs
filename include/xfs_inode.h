@@ -416,11 +416,9 @@ void xfs_ifork_next_set(xfs_inode_t *ip, int w, int n);
  * max file offset is 2^(31+PAGE_SHIFT) - 1 (due to linux page cache)
  *
  * NOTE: XFS itself can handle 2^63 - 1 (largest positive value of xfs_fsize_t)
- * but Linux can't go above 2^(31+PAGE_SHIFT)-1: the Linux VM uses a 32 bit
- * signed variable to index cache data, so 2^31 * PAGE_SIZE is as big as
- * you can go.
+ * but this is the Linux limit.
  */
-#define XFS_MAX_FILE_OFFSET	((long long)((1ULL<<(31+PAGE_SHIFT))-1ULL))
+#define XFS_MAX_FILE_OFFSET	MAX_LFS_FILESIZE
 
 #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ITOV)
 struct vnode *xfs_itov(xfs_inode_t *ip);
@@ -520,7 +518,7 @@ void		xfs_iext_realloc(xfs_inode_t *, int, int);
 void		xfs_iroot_realloc(xfs_inode_t *, int, int);
 void		xfs_ipin(xfs_inode_t *);
 void		xfs_iunpin(xfs_inode_t *);
-int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_32_t *, int);
+int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_t *, int);
 int		xfs_iflush(xfs_inode_t *, uint);
 int		xfs_iflush_all(struct xfs_mount *, int);
 int		xfs_ibusy_check(xfs_inode_t *, int);
@@ -531,8 +529,6 @@ xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
 void		xfs_lock_inodes(xfs_inode_t **, int, int, uint);
 
 #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
-
-void xfs_revalidate_inode(struct xfs_mount *, vnode_t *vp, xfs_inode_t *);
 
 #ifdef DEBUG
 void		xfs_isize_check(struct xfs_mount *, xfs_inode_t *, xfs_fsize_t);

@@ -67,22 +67,21 @@
 
 #define xfs_xlatesb			libxfs_xlate_sb
 #define xfs_xlate_dinode_core		libxfs_xlate_dinode_core
-#define xfs_bmbt_get_all                libxfs_bmbt_get_all
-#define xfs_bmbt_get_blockcount         libxfs_bmbt_get_blockcount
-#define xfs_bmbt_get_startoff           libxfs_bmbt_get_startoff
-#define xfs_da_hashname                 libxfs_da_hashname
-#define xfs_da_log2_roundup             libxfs_da_log2_roundup
-#define xfs_highbit32                   libxfs_highbit32
-#define xfs_highbit64                   libxfs_highbit64
-#define xfs_attr_leaf_newentsize        libxfs_attr_leaf_newentsize
-#define xfs_alloc_compute_maxlevels     libxfs_alloc_compute_maxlevels
-#define xfs_bmap_compute_maxlevels      libxfs_bmap_compute_maxlevels
-#define xfs_ialloc_compute_maxlevels    libxfs_ialloc_compute_maxlevels
+#define xfs_bmbt_get_all		libxfs_bmbt_get_all
+#define xfs_bmbt_disk_get_all		libxfs_bmbt_disk_get_all
+#define xfs_da_hashname			libxfs_da_hashname
+#define xfs_da_log2_roundup		libxfs_da_log2_roundup
+#define xfs_highbit32			libxfs_highbit32
+#define xfs_highbit64			libxfs_highbit64
+#define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+#define xfs_alloc_compute_maxlevels	libxfs_alloc_compute_maxlevels
+#define xfs_bmap_compute_maxlevels	libxfs_bmap_compute_maxlevels
+#define xfs_ialloc_compute_maxlevels	libxfs_ialloc_compute_maxlevels
 
 #define xfs_dir_init			libxfs_dir_init
 #define xfs_dir2_init			libxfs_dir2_init
-#define xfs_dir_mount                   libxfs_dir_mount
-#define xfs_dir2_mount                  libxfs_dir2_mount
+#define xfs_dir_mount			libxfs_dir_mount
+#define xfs_dir2_mount			libxfs_dir2_mount
 #define xfs_dir_createname		libxfs_dir_createname
 #define xfs_dir2_createname		libxfs_dir2_createname
 #define xfs_dir_lookup			libxfs_dir_lookup
@@ -94,9 +93,9 @@
 #define xfs_dir_bogus_removename	libxfs_dir_bogus_removename
 #define xfs_dir2_bogus_removename	libxfs_dir2_bogus_removename
 
-#define xfs_mount_common                libxfs_mount_common
-#define xfs_initialize_perag            libxfs_initialize_perag
-#define xfs_rtmount_init                libxfs_rtmount_init
+#define xfs_mount_common		libxfs_mount_common
+#define xfs_initialize_perag		libxfs_initialize_perag
+#define xfs_rtmount_init		libxfs_rtmount_init
 #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
 #define xfs_iread			libxfs_iread
 #define xfs_ialloc			libxfs_ialloc
@@ -112,7 +111,7 @@
 #define xfs_mod_sb			libxfs_mod_sb
 #define xfs_mod_incore_sb		libxfs_mod_incore_sb
 
-#define xfs_trans_init                  libxfs_trans_init
+#define xfs_trans_init			libxfs_trans_init
 #define xfs_trans_dup			libxfs_trans_dup
 #define xfs_trans_iget			libxfs_trans_iget
 #define xfs_trans_ijoin			libxfs_trans_ijoin
@@ -168,7 +167,7 @@
 #define xfs_baread(a,b,c)		((void) 0)	/* no readahead */
 #define xfs_buftrace(x,y)		((void) 0)	/* debug only */
 #define xfs_buf_item_log_debug(bip,a,b)	((void) 0)	/* debug only */
-#define xfs_validate_extents(e,n,f)	((void) 0)	/* debug only */
+#define xfs_validate_extents(e,n,d,f)	((void) 0)	/* debug only */
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
 #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
 	( *(bpp) = libxfs_readbuf( *(dev_t*)devp, (blkno), (len), 1), 0 )
@@ -373,7 +372,7 @@ int  xfs_ialloc (xfs_trans_t *, xfs_inode_t *, mode_t, nlink_t, dev_t, cred_t *,
 		xfs_prid_t, int, xfs_buf_t **, boolean_t *, xfs_inode_t **);
 int  xfs_iread_extents (xfs_trans_t *, xfs_inode_t *, int);
 int  xfs_imap (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_imap_t *, uint);
-int  xfs_iextents_copy (xfs_inode_t *, xfs_bmbt_rec_32_t *, int);
+int  xfs_iextents_copy (xfs_inode_t *, xfs_bmbt_rec_t *, int);
 int  xfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 int  xfs_iflush_fork (xfs_inode_t *, xfs_dinode_t *, xfs_inode_log_item_t *,
 		int, xfs_buf_t *);
