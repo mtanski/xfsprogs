@@ -31,46 +31,65 @@
  */
 
 #include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <volume.h>
 
-/*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
- */
+#if HAVE_LIBLVM
+  #include "lvm_user.h"
+
+  char *cmd;		/* Not used. liblvm is broken */
+  int opt_d;		/* Same thing */
+#endif
+
 
 int
-main(int argc, char *argv[])
+lvm_get_subvol_stripe(
+	char		*dfile,
+	sv_type_t	type,
+	int		*sunit,
+	int		*swidth,
+	struct stat64	*sb)
 {
-	char	*type;
+#if HAVE_LIBLVM
+	if (sb->st_rdev >> 8 == LVM_BLK_MAJOR) {
+		lv_t	*lv;
+		char	*vgname;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
+		/* Find volume group */
+		if (! (vgname = vg_name_of_lv(dfile))) {
+			fprintf(stderr, "Can't find volume group for %s\n", 
+				dfile);
+			exit(1);
+		}
+		
+		/* Logical volume */
+		if (! lvm_tab_lv_check_exist(dfile)) {
+			fprintf(stderr, "Logical volume %s doesn't exist!\n",
+				dfile);
+			exit(1);
+		}
+		
+		/* Get status */
+		if (lv_status_byname(vgname, dfile, &lv) < 0 || lv == NULL) {
+			fprintf(stderr, "Could not get status info from %s\n",
+				dfile);
+			exit(1);
+		}
+		
+		/* Check that data is consistent */
+		if (lv_check_consistency(lv) < 0) {
+			fprintf(stderr, "Logical volume %s is inconsistent\n",
+				dfile);
+			exit(1);
+		}
+		
+		/* Update sizes */
+		*sunit = lv->lv_stripesize;
+		*swidth = lv->lv_stripes * lv->lv_stripesize;
+		
+		return 1;
 	}
-
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
+#endif /* HAVE_LIBLVM */
+	return 0;
 }

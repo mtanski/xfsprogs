@@ -3,6 +3,12 @@ AC_INIT(include/libxfs.h)
 pkg_name="xfsprogs"
 AC_SUBST(pkg_name)
 
+# For libtool
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
+AC_SUBST(enable_shared)
+
+
 #
 # Note: the following environment variables may be set to override the
 # defaults (to change paths and/or executables, build parameters, etc):
@@ -35,7 +41,7 @@ pkg_release=$PKG_BUILD
 AC_SUBST(pkg_version)
 AC_SUBST(pkg_release)
 
-pkg_distribution="SGI ProPack"
+pkg_distribution="SGI XFS"
 test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
 AC_SUBST(pkg_distribution)
 
@@ -233,6 +239,8 @@ AC_SUBST(pkg_sbin_dir)
 dnl include files
 pkg_inc_dir=${prefix}/include/xfs
 AC_SUBST(pkg_inc_dir)
+dk_inc_dir=${prefix}/include/disk
+AC_SUBST(dk_inc_dir)
 
 dnl doc directory
 pkg_doc_dir=${prefix}/share/doc/${pkg_name}
@@ -242,6 +250,14 @@ AC_SUBST(pkg_doc_dir)
 dnl
 dnl output files
 dnl
+
+#For libtool, from section 5.4.2 of the libtool manual.  Just in
+# case we ever need them.
+LTLIBOBJS=`echo "$LIBOBJS" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
+AC_SUBST(LTLIBOBJS)
+LTALLOCA=`echo "$ALLOCA" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
+AC_SUBST(LTALLOCA)
+
 
 AC_OUTPUT( \
 dnl  Build definitions for use in Makefiles

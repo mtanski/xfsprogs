@@ -40,15 +40,14 @@ OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
 LIBUUID = @libuuid@
-LIBXFS = -lxfs
-LIBHANDLE = -lhandle
+LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+LIBDISK = $(TOPDIR)/libdisk/libdisk.la
+LIBHANDLE = $(TOPDIR)/libhandle/libhandle.la
 
 LIBLVM = @liblvm@
 USELVM = -DHAVE_LIBLVM=@have_liblvm@
+DK_INC_DIR = @dk_inc_dir@
 
-BUILDRULES = $(TOPDIR)/include/buildrules
-
-# General package information
 PKG_NAME = @pkg_name@
 PKG_RELEASE = @pkg_release@
 PKG_VERSION = @pkg_version@
@@ -61,6 +60,31 @@ PKG_SLIB_DIR = @pkg_slib_dir@
 PKG_INC_DIR = @pkg_inc_dir@
 PKG_MAN_DIR = @pkg_man_dir@
 PKG_DOC_DIR = @pkg_doc_dir@
+
+CC	= @cc@
+LD	= @ld@
+AWK	= @awk@
+SED	= @sed@
+MAKE	= @make@
+ECHO	= @echo@
+LN_S	= @LN_S@
+ZIP	= @zip@
+TAR	= @tar@
+RPM	= @rpm@
+
+RPM_VERSION = @rpm_version@
+HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+MAKEDEPEND = @makedepend@
+
+LIBTOOL	= @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+ENABLE_SHARED = @enable_shared@
+
+#
+# end configure'd section
+
+
+BUILDRULES = $(TOPDIR)/include/buildrules
 
 # LCFLAGS, LLDFLAGS, LLDLIBS, LSRCFILES and LDIRT may be specified in
 # user Makefiles. Note: LSRCFILES is anything other than Makefile, $(CFILES)
@@ -76,54 +100,61 @@ LDLIBS = $(LLDLIBS) $(MALLOCLIB)
 
 MAKEOPTS = --no-print-directory
 SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
-DIRT = $(LDIRT) dep dep.bak $(OBJECTS) $(CMDTARGET) $(LIBTARGET) \
-	$(STATICLIBTARGET) *.[1-9].gz
+DIRT = $(LDIRT) dep dep.bak $(OBJECTS) $(LTCOMMAND) $(LTLIBRARY) *.[1-9].gz
 
 OBJECTS = $(ASFILES:.s=.o) \
           $(CFILES:.c=.o) \
           $(LFILES:.l=.o) \
           $(YFILES:%.y=%.tab.o)
 
-MAKE	= @make@
-CC	= @cc@
-LD	= @ld@
-AWK	= @awk@
-SED	= @sed@
 INSTALL	= $(TOPDIR)/install-sh -o root -g root
-ECHO	= @echo@
-LN_S	= @LN_S@
-
-CCF	= $(CC) $(CFLAGS)
-MAKEF	= $(MAKE) $(MAKEOPTS)
-CXXF	= $(CXX) $(CXXFLAGS)
-LDF	= $(LD) $(LDFLAGS)
-MAKEDEPEND  = @makedepend@
-
-ZIP	= @zip@
-TAR	= @tar@
-RPM	= @rpm@
-RPM_VERSION = @rpm_version@
-
-HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 
 SHELL = /bin/sh
 IMAGES_DIR = $(TOPDIR)/all-images
 DIST_DIR = $(TOPDIR)/dist
 
-SUBDIRS_MAKERULE = \
-	@for d in $(SUBDIRS) ""; do \
-	    if test -d "$$d" -a ! -z "$$d"; then \
-		$(ECHO) === $$d ===; \
-		$(MAKEF) -C $$d $@ || exit $$?; \
-	    fi; \
-	done
+CCF	= $(CC) $(CFLAGS)
+MAKEF	= $(MAKE) $(MAKEOPTS)
+CXXF	= $(CXX) $(CXXFLAGS)
+LDF	= $(LD) $(LDFLAGS)
 
-MAN_MAKERULE = \
-    @for f in *.[12345678] ""; do \
-	if test ! -z "$$f"; then \
-	    $(ZIP) --best -c < $$f > $$f.gz; \
-	fi; \
-    done
+# For libtool.  Pieces from Automake, slightly modified.
+top_builddir = $(TOPDIR)
+DIRT += $(LTOBJECTS) $(LTLIBRARY)
+LTLINK = $(LIBTOOL) --mode=link $(CC)
+LTEXEC = $(LIBTOOL) --mode=execute
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF) -D_REENTRANT
+LTVERSION = $(LT_CURRENT).$(LT_REVISION).$(LT_AGE)
+LTOBJECTS = $(OBJECTS:.o=.lo)
+ifeq ($(ENABLE_SHARED),yes)
+LTLDFLAGS += -rpath $(PKG_LIB_DIR) 
+LTLDFLAGS += -version-info $(subst .,:,$(LTVERSION))
+endif
+LIBNAME = $(basename $(LTLIBRARY))
+
+ifeq ($(ENABLE_SHARED),yes)
+INSTALL_LTLIB = \
+	cd $(TOPDIR)/$(LIBNAME)/.libs; \
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).so.$(LTVERSION) $(PKG_LIB_DIR); \
+	test "$(PKG_DISTRIBUTION)" = debian || \
+	../$(INSTALL) -S $(LIBNAME).so.$(LTVERSION) $(PKG_LIB_DIR)/$(LIBNAME).so.$(LT_CURRENT)
+endif
+
+ifeq ($(ENABLE_SHARED),yes)
+INSTALL_LTLIB_DEV = \
+	cd $(TOPDIR)/$(LIBNAME)/.libs; \
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR); \
+	../$(INSTALL) -S $(LIBNAME).so.$(LT_CURRENT) $(PKG_LIB_DIR)/$(LIBNAME).so
+else
+INSTALL_LTLIB_DEV = $(INSTALL_LTLIB_STATIC)
+endif
+
+INSTALL_LTLIB_STATIC = \
+	cd $(TOPDIR)/$(LIBNAME)/.libs; \
+	../$(INSTALL) -m 755 -d $(PKG_LIB_DIR); \
+	../$(INSTALL) -m 644 $(LIBNAME).a $(PKG_LIB_DIR)
 
 INSTALL_MAN = \
     @for d in $(MAN_PAGES); do \
@@ -146,6 +177,21 @@ INSTALL_MAN = \
 	    fi; \
 	    first=false; \
 	done; \
+    done
+
+SUBDIRS_MAKERULE = \
+	@for d in $(SUBDIRS) ""; do \
+	    if test -d "$$d" -a ! -z "$$d"; then \
+		$(ECHO) === $$d ===; \
+		$(MAKEF) -C $$d $@ || exit $$?; \
+	    fi; \
+	done
+
+MAN_MAKERULE = \
+    @for f in *.[12345678] ""; do \
+	if test ! -z "$$f"; then \
+	    $(ZIP) --best -c < $$f > $$f.gz; \
+	fi; \
     done
 
 DIST_MAKERULE = \

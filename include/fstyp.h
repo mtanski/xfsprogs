@@ -29,48 +29,39 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
+#ifndef __FSTYP_H__
+#define __FSTYP_H__
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
+ * Compatibility macros for IRIX fstyp.h, in case anyone needs them.
  */
+#define FSTYPSZ		16	/* max size of fs identifier */
+/* Opcodes for the sysfs() system call. */
+#define GETFSIND	1	/* translate fs identifier to fstype index */
+#define GETFSTYP	2	/* translate fstype index to fs identifier */
+#define GETNFSTYP	3	/* return the number of fstypes */
+extern int sysfs (int, ...);
 
-int
-main(int argc, char *argv[])
-{
-	char	*type;
+/*
+ * fstype allows the user to determine the filesystem identifier of
+ * mounted or unmounted filesystems, using heuristics.
+ * The filesystem type is required by mount(2) and sometimes by mount(8)
+ * to mount filesystems of different types.
+ */
+extern char *fstype (const char * __device);
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
+/*
+ * ptabtype allows one to determine the type of partition table in
+ * use on a given volume, using heuristics.
+ */
+extern char *pttype (const char *__device);
 
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
+#ifdef __cplusplus
 }
+#endif
+
+#endif	/* __FSTYP_H__ */

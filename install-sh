@@ -187,9 +187,9 @@ then
     #
     if [ $# -ne 1 ]
     then
-    	_usage
+	_usage
     else
-    	target=$DIST_ROOT/$1
+	target=$DIST_ROOT/$1
     fi
     $LN -s -f $symlink $target
     status=$?
@@ -211,7 +211,7 @@ else
 	$CP $f $dir
 	status=$?
 	if [ $status -eq 0 ]
-	then 
+	then
 	    if [ -f $dir/$f ]
 	    then
 		$CHMOD $FILEMODE $dir/$f
@@ -222,7 +222,8 @@ else
 		    status=$?
 		fi
 		$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$f ${dir#$DIST_ROOT}/$f
-	    else
+	    elif [ -f $dir ]
+	    then
 		$CHMOD $FILEMODE $dir
 		status=$?
 		if [ $status -eq 0 ]

@@ -29,48 +29,37 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
+#ifndef __VOLUME_H__
+#define __VOLUME_H__
 
 /*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
+ * Subvolume Types for all volume managers.
  * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
+ * There is a maximum of 255 subvolumes. 0 is reserved.
+ *	Note:  SVTYPE_LOG, SVTYPE_DATA, SVTYPE_RT values matches XLV.
+ *	       Do not change - Colin Ngam
  */
+typedef enum sv_type_e {
+	SVTYPE_ALL		=0,	 /* special: denotes all sv's */
+	SVTYPE_LOG	 	=1,	 /* XVM Log subvol type */
+	SVTYPE_DATA,			 /* XVM Data subvol type */
+	SVTYPE_RT,			 /* XVM Real Time subvol type */
+	SVTYPE_SWAP,			 /* swap area */
+	SVTYPE_RSVD5,			 /* reserved 5 */
+	SVTYPE_RSVD6,			 /* reserved 6 */
+	SVTYPE_RSVD7,			 /* reserved 7 */
+	SVTYPE_RSVD8,			 /* reserved 8 */
+	SVTYPE_RSVD9,			 /* reserved 9 */
+	SVTYPE_RSVD10,			 /* reserved 10 */
+	SVTYPE_RSVD11,			 /* reserved 11 */
+	SVTYPE_RSVD12,			 /* reserved 12 */
+	SVTYPE_RSVD13,			 /* reserved 13 */
+	SVTYPE_RSVD14,			 /* reserved 14 */
+	SVTYPE_RSVD15,			 /* reserved 15 */
+	SVTYPE_USER1,			 /* First User Defined Subvol Type */
+	SVTYPE_LAST		=255
+} sv_type_t;
 
-int
-main(int argc, char *argv[])
-{
-	char	*type;
+extern void get_subvol_stripe_wrapper (char *, sv_type_t, int *, int *);
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
-
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
-}
+#endif /* __VOLUME_H__ */

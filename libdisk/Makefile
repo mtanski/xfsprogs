@@ -33,21 +33,20 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-README = README.LVM README.quota
-LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS $(README)
-LDIRT = *.gz
+LTLIBRARY = libdisk.la
+LT_CURRENT = 0
+LT_REVISION = 0
+LT_AGE = 0
 
-default: CHANGES.gz
+LCFLAGS = $(USELVM)
+CFILES = fstype.c pttype.c md.c xvm.c lvm.c drivers.c mountinfo.c
+HFILES = fstype.h pttype.h md.h xvm.h lvm.h lvm_user.h liblvm.h
+
+default: $(LTLIBRARY)
 
 include $(BUILDRULES)
 
-CHANGES.gz:
-	$(ZIP) --best -c < CHANGES > $@
-
 install: default
-	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-ifneq ($(PKG_DISTRIBUTION), debian)
-	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
-endif
-	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS $(README) $(PKG_DOC_DIR)
-install-dev:
+
+install-dev: default
+	$(INSTALL_LTLIB_STATIC)

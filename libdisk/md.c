@@ -32,45 +32,50 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
-
-/*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
- */
+#include <volume.h>
+#include <sys/stat.h>
+#include "md.h"
 
 int
-main(int argc, char *argv[])
+md_get_subvol_stripe(
+	char		*dfile,
+	sv_type_t	type,
+	int		*sunit,
+	int		*swidth,
+	struct stat64	*sb)
 {
-	char	*type;
+	if (sb->st_rdev >> 8 == MD_MAJOR) {
+		struct md_array_info_s	md;
+		int  fd;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
+		/* Open device */
+		fd = open(dfile, O_RDONLY);
+		if (fd == -1)
+			return 0;
 
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
+		/* Is this thing on... */
+		if (ioctl(fd, GET_ARRAY_INFO, &md)) {
+			fprintf(stderr, "Error getting MD array info from %s\n",
+				dfile);
+			exit(1);
+		}
 
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
+		/* Check state */
+		if (md.state) {
+			fprintf(stderr, "MD array %s not in clean state\n",
+				dfile);
+			exit(1);
+		}
+
+		/* Deduct a disk from stripe width on RAID4/5 */
+		if (md.level == 4 || md.level == 5)
+			md.nr_disks--;
+
+		/* Update sizes */
+		*sunit = md.chunk_size >> 9;
+		*swidth = *sunit * md.nr_disks;
+
+		return 1;
 	}
-	printf("%s\n", type);
-	exit(0);
+	return 0;
 }

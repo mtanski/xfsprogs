@@ -33,15 +33,16 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = fsck.xfs
+LTCOMMAND = fsck.xfs
 CFILES = xfs_fsck.c
 LCFLAGS = -s -O3
+LLDFLAGS += -static
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_SBIN_DIR)
+	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:

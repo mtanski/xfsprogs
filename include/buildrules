@@ -26,28 +26,9 @@ _BUILDRULES_INCLUDED_ = 1
 
 include $(TOPDIR)/include/builddefs
 
-#
-# Standard targets
-#
-ifdef CMDTARGET
-$(CMDTARGET) : $(SUBDIRS) $(OBJECTS)
-	$(CCF) -o $(CMDTARGET) $(LDFLAGS) $(OBJECTS) $(LDLIBS) 
-$(CMDTARGET).static : $(SUBDIRS) $(OBJECTS)
-	$(CCF) -static -o $(CMDTARGET).static $(LDFLAGS) $(OBJECTS) $(LDLIBS) 
-endif
-
-ifdef LIBTARGET
-$(LIBTARGET) : $(SUBDIRS) $(OBJECTS)
-	$(CC) $(LDFLAGS) -fPIC -shared -Wl,-soname,$(LIBTARGET) -o $(LIBTARGET) $(OBJECTS) $(LDLIBS)
-endif
-
-ifdef STATICLIBTARGET
-$(STATICLIBTARGET) : $(SUBDIRS) $(OBJECTS)
-	$(AR) crf $(STATICLIBTARGET) $?
-endif
-
 clean clobber : $(SUBDIRS)
 	rm -f $(DIRT)
+	@rm -fr .libs
 	$(SUBDIRS_MAKERULE)
 
 # Never blow away subdirs
@@ -57,10 +38,27 @@ $(SUBDIRS):
 	$(SUBDIRS_MAKERULE)
 endif
 
+#
+# Standard targets
+#
+
+ifdef LTCOMMAND
+$(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+	$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
+endif
+
+ifdef LTLIBRARY
+$(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+	$(LTLINK) $(LDFLAGS) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LDLIBS)
+
+%.lo: %.c
+	$(LTCOMPILE) -c $<
+endif
+
 source :
 	$(SOURCE_MAKERULE)
 
-endif
+endif # _BUILDRULES_INCLUDED_
 
 $(_FORCE):
 

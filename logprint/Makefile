@@ -33,19 +33,19 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = xfs_logprint
+LTCOMMAND = xfs_logprint
 
 CFILES = log_print_trans.c log_print_all.c log_misc.c logprint.c \
 	xfs_log_recover.c
 HFILES = logprint.h
 LLDLIBS	= $(LIBXFS) $(LIBUUID)
-LLDFLAGS = -L$(TOPDIR)/libxfs
+LLDFLAGS = -static
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 install-dev:

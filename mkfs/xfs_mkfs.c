@@ -30,22 +30,15 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
+#include <fstyp.h>
+#include <stdio.h>
+#include <volume.h>
+#include <mountinfo.h>
 #include <libxfs.h>
 
 #include "xfs_mkfs.h"
-#include "proto.h"
-#include "volume.h"
 #include "maxtrres.h"
-#include "mountinfo.h"
-
-#if HAVE_LIBLVM
-  #include "lvm_user.h"
-
-  char *cmd;		/* Not used. liblvm is broken */
-  int opt_d;		/* Same thing */
-#endif
-
-#include "md-int.h"
+#include "proto.h"
 
 /*
  * Prototypes for internal functions.
@@ -265,100 +258,6 @@ static const int max_trres_v2[DFL_B][DFL_I][DFL_D] = {
 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
 
 static void
-get_subvol_stripe_wrapper(char *dfile, int type, int *sunit, int *swidth)
-{
-	struct stat64 sb;
-	struct md_array_info_s md;
-#if HAVE_LIBLVM
-        lv_t *lv;
-	char *vgname;
-#endif
-
-        if (!dfile)
-                return;
-        
-        if (stat64 (dfile, &sb)) {
-                fprintf (stderr, "Could not stat %s\n", dfile);
-		usage();
-        }
-
-	/* MD volume */
-	if (sb.st_rdev >> 8 == MD_MAJOR) {
-		int fd;
-
-		/* Open device */
-		fd = open (dfile, O_RDONLY);
-		if (fd == -1)
-			return;
-		
-		/* Is this thing on... */
-		if (ioctl (fd, GET_ARRAY_INFO, &md)) {
-			fprintf (stderr, "Error getting array info from %s\n",
-				 dfile);
-			usage();
-		}
-
-		/* Check state */
-		if (md.state) {
-			fprintf (stderr, "MD array %s not in clean state\n",
-				 dfile);
-			usage();
-		}
-
-		/* Deduct a disk from stripe width on RAID4/5 */
-		if (md.level == 4 || md.level == 5)
-			md.nr_disks--;
-			
-		/* Update sizes */
-		*sunit = md.chunk_size >> 9;
-		*swidth = *sunit * md.nr_disks;
-
-		return;
-	}
-
-#if HAVE_LIBLVM
-	/* LVM volume */
-	if (sb.st_rdev >> 8 == LVM_BLK_MAJOR) {
-
-		/* Find volume group */
-		if (! (vgname = vg_name_of_lv (dfile))) {
-			fprintf (stderr, "Can't find volume group for %s\n", 
-				 dfile);
-			usage();
-		}
-		
-		/* Logical volume */
-		if (! lvm_tab_lv_check_exist (dfile)) {
-			fprintf (stderr, "Logical volume %s doesn't exist!\n",
-				 dfile);
-			usage();
-		}
-		
-		/* Get status */
-		if (lv_status_byname (vgname, dfile, &lv) < 0 || lv == NULL) {
-			fprintf (stderr, "Could not get status info from %s\n",
-				 dfile);
-			usage();
-		}
-		
-		/* Check that data is consistent */
-		if (lv_check_consistency (lv) < 0) {
-			fprintf (stderr, "Logical volume %s is inconsistent\n",
-				 dfile);
-			usage();
-		}
-		
-		/* Update sizes */
-		*sunit = lv->lv_stripesize;
-		*swidth = lv->lv_stripes * lv->lv_stripesize;
-		
-		return;
-	}
-#endif /* HAVE_LIBLVM */
-}
-
-
-static void
 calc_stripe_factors(int dsu, int dsw, int *dsunit, int *dswidth)
 {
 	if (*dsunit || *dswidth) {
@@ -419,6 +318,28 @@ get_default_blocksize(void)
 	return (1 << XFS_DFL_BLOCKSIZE_LOG);
 }
 
+static int
+check_overwrite(char *device)
+{
+	char *type;
+
+	if (device && *device) {
+		if ((type = fstype(device)) != NULL) {
+			fprintf(stderr,
+		"%s: %s appears to contain an existing filesystem (%s).\n",
+				progname, device, type);
+			return 1;
+		}
+		if ((type = pttype(device)) != NULL) {
+			fprintf(stderr,
+		"%s: %s appears to contain a partition table (%s).\n",
+				progname, device, type);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 
 int
 main(int argc, char **argv)
@@ -451,7 +372,7 @@ main(int argc, char **argv)
 	int			dsunit;
 	int			dswidth;
 	int			extent_flagging;
-	int			force_fs_overwrite;
+	int			force_overwrite;
 	int			i;
 	int			iaflag;
 	int			ilflag;
@@ -530,7 +451,7 @@ main(int argc, char **argv)
 	dsu = dsw = dsunit = dswidth = nodsflag = lalign = 0;
 	do_overlap_checks = 1;
 	extent_flagging = 0;
-	force_fs_overwrite = 0;
+	force_overwrite = 0;
 	worst_freelist = 0;
 
 	while ((c = getopt(argc, argv, "b:d:i:l:L:n:p:qr:CfV")) != EOF) {
@@ -539,7 +460,7 @@ main(int argc, char **argv)
 			do_overlap_checks = 0;
 			break;
 		case 'f':
-			force_fs_overwrite = 1;
+			force_overwrite = 1;
 			break;
 		case 'b':
 			p = optarg;
@@ -1198,48 +1119,12 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	/*
-	 * Check whether this partition contains a known filesystem.
-	 */
-
-	if (force_fs_overwrite == 0) {
-		char *fstyp;
-		int fsfound = 0;
-
-		fstyp = (char *) mnt_known_fs_type (dfile);
-		
-		if (fstyp != NULL) {
+	if (!force_overwrite) {
+		if (check_overwrite(dfile) ||
+		    check_overwrite(logfile) ||
+		    check_overwrite(xi.rtname)) {
 			fprintf(stderr, "%s: "
-			"%s appears to contain an existing filesystem (%s).\n",
-				progname, dfile, fstyp);
-			fsfound = 1;
-		}
-
-		if (logfile && *logfile) {
-			fstyp = (char *) mnt_known_fs_type (logfile);
-			
-			if (fstyp != NULL) {
-				fprintf(stderr, "%s: "
-			"%s appears to contain an existing filesystem (%s).\n",
-					progname, logfile, fstyp);
-				fsfound = 1;
-			}
-		}
-
-		if (xi.rtname && *xi.rtname) {
-			fstyp = (char *) mnt_known_fs_type (xi.rtname);
-			
-			if (fstyp != NULL) {
-				fprintf(stderr, "%s: "
-			"%s appears to contain an existing filesystem (%s).\n",
-					progname, xi.rtname, fstyp);
-				fsfound = 1;
-			}
-		}
-
-		if (fsfound) {
-			fprintf(stderr, "%s: "
-				"Use the -f option to force overwrite\n",
+				"Use the -f option to force overwrite.\n",
 				progname);
 			exit(1);
 		}

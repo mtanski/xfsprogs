@@ -29,48 +29,36 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
+#ifndef __MOUNTINFO_H__
+#define __MOUNTINFO_H__
 
 /*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
+ * mountinfo.h
+ * Header for disk volume/partition check routines
  */
 
-int
-main(int argc, char *argv[])
-{
-	char	*type;
+#define MNT_CAUSE_NONE       0x00
+#define MNT_CAUSE_MOUNTED    0x01  /* partition already mounted */
+#define MNT_CAUSE_OVERLAP    0x02  /* partitions overlap */
+#define MNT_CAUSE_NODEV      0x04  /* no /dev/rdsk /dev/dsk entry */
+#define MNT_CAUSE_UNUSED     0x08  /* unallocated partition */
+#define MNT_CAUSE_MULTIMOUNT 0x10  /* multiple owners */
+#define MNT_CAUSE_LVOL_OWNED 0x20  /* owned by logical vol */
+#define MNT_CAUSE_XVM_MNT    0x40  /* mounted xvm subvolume */
+#define MNT_CAUSE_XVM_PART   0x80  /* xvm-owned partition */
+#define MNT_CAUSE__END       0x100 /* last entry */
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
+typedef struct mnt_check_state_s {
+	/* currently unused, remains from IRIX */
+} mnt_check_state_t;
 
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
+/* prototypes */
+extern int  mnt_check_init (mnt_check_state_t **);
+extern int  mnt_find_mount_conflicts (mnt_check_state_t *, char *);
+extern int  mnt_find_mounted_partitions (mnt_check_state_t *, char *);
+extern int  mnt_causes_test (mnt_check_state_t *, int);
+extern void mnt_causes_show (mnt_check_state_t *, FILE *, char *);
+extern void mnt_plist_show (mnt_check_state_t *, FILE *, char *);
+extern int  mnt_check_end (mnt_check_state_t *);
 
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
-}
+#endif	/* __MOUNTINFO_H__ */

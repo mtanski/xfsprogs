@@ -1,3 +1,13 @@
+xfsprogs (1.3.0) unstable; urgency=low
+
+  * Reworked Makefiles to use libtool
+  * New libdisk to allow sharing of generic mount/disk code and
+  * Also abstracts individual driver support (LVM, MD, XVM..)
+  * Partition table detection so mkfs.xfs doesn't blindly overwrite
+  * Small xfs_repair bug fix from Steve
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 19 Jul 2001 10:12:03 +1000
+
 xfsprogs (1.2.8) unstable; urgency=low
 
   * Fixed a bug in libxfs /etc/mtab read-only mount detection

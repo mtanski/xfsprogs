@@ -32,45 +32,36 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
-#include <fstyp.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <volume.h>
+#include "xvm.h"
+
+static int
+mnt_is_xvm_subvol(dev_t dev)
+{
+	/* TODO - DeanJ? - for now, always return false */
+	return 0;
+}
 
 /*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
+ * If the logical device is a xvm striped volume, then it returns the
+ * stripe unit and stripe width information.
+ * Input parameters:	the logical volume
+ *			the subvolume type - (SVTYPE_RT or
+ *					      SVTYPE_DATA)
+ * Output parameters:	the stripe unit and width in 512 byte blocks
+ *                      true/false - was this device an XVM volume?
  */
-
 int
-main(int argc, char *argv[])
+xvm_get_subvol_stripe(
+	char		*dev,
+	sv_type_t	type,
+	int		*sunit,
+	int		*swidth,
+	struct stat64	*sb)
 {
-	char	*type;
-
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
-		exit(1);
-	}
-
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
+	/* TODO - DeanJ? - for now, always return false */
+	return 1;
 }

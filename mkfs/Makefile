@@ -33,35 +33,34 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = mkfs.xfs
+LTCOMMAND = mkfs.xfs
 MAXTRRES = maxtrres
 FSTYP = fstyp
 
-CFILES = xfs_mkfs.c mountinfo.c proto.c
-HFILES = xfs_mkfs.h mountinfo.h proto.h volume.h
-LCFLAGS = $(USELVM)
-LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBLVM)
-LLDFLAGS = -L$(TOPDIR)/libxfs
+HFILES = xfs_mkfs.h proto.h
+CFILES = $(HFILES:.h=.c)
+LLDLIBS = $(LIBXFS) $(LIBDISK) $(LIBUUID) $(LIBLVM)
+LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
+LLDFLAGS = -static
 
 MAXTRLIBS = $(LIBXFS) $(LIBUUID)
 LSRCFILES = $(MAXTRRES).c $(FSTYP).c
 LDIRT = $(MAXTRRES) $(MAXTRRES).h $(FSTYP)
 
-default: $(MAXTRRES).h $(CMDTARGET)
+default: $(MAXTRRES).h $(FSTYP) $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 $(MAXTRRES):
-	$(CCF) $@.c -o $@ $(LDFLAGS) $(MAXTRLIBS)
+	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(MAXTRLIBS)
 
 $(MAXTRRES).h: $(MAXTRRES)
-	LD_LIBRARY_PATH=../libxfs; export LD_LIBRARY_PATH; \
-	./$(MAXTRRES) > $@ || ( rm -f $@ && exit 1 )
+	$(LTEXEC) ./$(MAXTRRES) > $@ || ( rm -f $@ && exit 1 )
 
-$(FSTYP): $(CMDTARGET)
-	$(CCF) $@.c -o $@ $(LDFLAGS) mountinfo.o
+$(FSTYP):
+	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_SBIN_DIR)
+	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:

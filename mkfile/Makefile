@@ -33,14 +33,15 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = xfs_mkfile
+LTCOMMAND = xfs_mkfile
 CFILES = xfs_mkfile.c
+LLDFLAGS += -static
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 install-dev:

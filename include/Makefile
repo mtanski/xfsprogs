@@ -44,9 +44,8 @@ HFILES = arch.h handle.h jdm.h libxfs.h xqm.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
-LSRCFILES = platform_defs.h.in builddefs.in buildrules \
-	lvm.h lvm_config.h lvm_log.h lvm_user.h liblvm.h \
-	md-int.h
+DK_HFILES = mountinfo.h volume.h fstyp.h dvh.h
+LSRCFILES = platform_defs.h.in builddefs.in buildrules $(DK_HFILES)
 
 default install :
 
@@ -56,3 +55,5 @@ install-dev: default
 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
 	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
 	$(INSTALL) -m 644 platform_defs.h $(PKG_INC_DIR)
+	$(INSTALL) -m 755 -d $(DK_INC_DIR)
+	$(INSTALL) -m 644 $(DK_HFILES) $(DK_INC_DIR)

@@ -15,18 +15,23 @@ options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
 checkdir = test -f debian/rules
 
 build: built
-built:
+built: config
 	@echo "== dpkg-buildpackage: build" 1>&2
+	$(MAKE) default
+	touch built
+
+config: .census
+.census:
+	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
 	autoconf
 	$(options) ./configure
-	$(MAKE) default
-	touch built
+	touch .census
 
 clean:
 	@echo "== dpkg-buildpackage: clean" 1>&2
 	$(checkdir)
-	-rm -f built
+	-rm -f built .census
 	$(MAKE) distclean
 	-rm -rf $(dirtmp) $(dirdev) debian/*substvars debian/files*
 
@@ -44,7 +49,8 @@ binary-arch: checkroot built
 	$(pkgdev) ./install-sh -m 644 debian/copyright $(docdev)
 	$(pkgdev) ./install-sh -m 644 debian/changelog $(docdev)
 	@echo "== dpkg-buildpackage: debstd" 1>&2
-	$(stdenv) debstd -m
+	# dev pkg with .so symlinks to base pkg confuses debstd...
+	$(stdenv) debstd -m | grep -v 'Dangling symlink'
 	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
 	dpkg-gencontrol -isp -p$(develop) -P$(dirdev)
 	chown -R root.root $(dirtmp) $(dirdev)

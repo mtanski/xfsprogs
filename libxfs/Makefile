@@ -33,8 +33,10 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LIB = libxfs
-STATICLIBTARGET = $(LIB).a
+LTLIBRARY = libxfs.la
+LT_CURRENT = 0
+LT_REVISION = 0
+LT_AGE = 0
 
 HFILES = xfs.h
 CFILES = init.c logitem.c rdwr.c trans.c util.c \
@@ -57,26 +59,11 @@ LCFLAGS += -I.
 # don't try linking xfs_repair with a debug libxfs.
 DEBUG = -DNDEBUG
 
-default:  $(STATICLIBTARGET)
+default:  $(LTLIBRARY)
 
 include $(BUILDRULES)
 
 install: default
 
 install-dev: default
-	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)
-	$(INSTALL) -m 644 $(STATICLIBTARGET) $(PKG_LIB_DIR)
-
-#MODE = $(shell test -f /etc/debian_version && echo 644 || echo 755)
-#MAJOR = 1
-#MINOR = 0
-#LIBTARGET = $(LIB).so.$(MAJOR)
-#LDIRT = $(LIB).so
-#default:
-#	[ -L $(LIB).so ] || $(LN_S) $(LIBTARGET) $(LIB).so
-#install: default
-#	$(INSTALL) -m 755 -d $(PKG_SLIB_DIR)
-#	$(INSTALL) -m $(MODE) $(LIBTARGET) $(PKG_SLIB_DIR)/$(LIBTARGET).$(MINOR)
-#	#$(INSTALL) -S $(LIBTARGET).$(MINOR) $(PKG_SLIB_DIR)/$(LIBTARGET)
-#install-dev: default
-#	$(INSTALL) -S $(PKG_SLIB_DIR)/$(LIBTARGET) $(PKG_LIB_DIR)/$(LIB).so
+	$(INSTALL_LTLIB_STATIC)

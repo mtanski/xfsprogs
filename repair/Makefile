@@ -33,7 +33,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = xfs_repair
+LTCOMMAND = xfs_repair
 
 HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
 	dir2.h dir_stack.h err_protos.h globals.h incore.h protos.h rt.h \
@@ -46,9 +46,10 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
 	scan.c versions.c xfs_repair.c
 
 LLDLIBS = $(LIBXFS) $(LIBUUID)
-LLDFLAGS = -L$(TOPDIR)/libxfs
+LTDEPENDENCIES = $(LIBXFS)
+LLDFLAGS = -static
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -69,5 +70,5 @@ CFLAGS += -DAVL_USER_MODE -DAVL_FUTURE_ENHANCEMENTS
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_SBIN_DIR)
+	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:

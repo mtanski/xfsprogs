@@ -33,29 +33,19 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LIB = libhandle
-STATICLIBTARGET = $(LIB).a
-#MAJOR = 1
-#MINOR = 0
-#LIBTARGET = $(LIB).so.$(MAJOR)
+LTLIBRARY = libhandle.la
+LT_CURRENT = 0
+LT_REVISION = 0
+LT_AGE = 0
 
 CFILES = handle.c jdm.c
-LCFLAGS = -D_REENTRANT
 
-default:  $(STATICLIBTARGET)
+default:  $(LTLIBRARY)
 
 include $(BUILDRULES)
 
 install: default
-
-#MODE = $(shell test -f /etc/debian_version && echo 644 || echo 755)
-#install: default
-#	$(INSTALL) -m 755 -d $(PKG_SLIB_DIR)
-#	$(INSTALL) -m $(MODE) $(LIBTARGET) $(PKG_SLIB_DIR)/$(LIBTARGET).$(MINOR)
-#	$(INSTALL) -S $(LIBTARGET).$(MINOR) $(PKG_SLIB_DIR)/$(LIBTARGET)
-#install-dev: default
-#	$(INSTALL) -S $(PKG_SLIB_DIR)/$(LIBTARGET) $(PKG_LIB_DIR)/$(LIB).so
+	$(INSTALL_LTLIB)
 
 install-dev: default
-	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)
-	$(INSTALL) -m 644 $(STATICLIBTARGET) $(PKG_LIB_DIR)
+	$(INSTALL_LTLIB_DEV)

@@ -31,46 +31,33 @@
  */
 
 #include <stdio.h>
-#include <fcntl.h>
+#include <errno.h>
 #include <string.h>
-#include <unistd.h>
-#include <fstyp.h>
+#include <sys/stat.h>
+#include <volume.h>
 
-/*
- * fstyp allows the user to determine the filesystem identifier of
- * mounted or unmounted filesystems using heuristics.
- * 
- * The filesystem type is required by mount(2) and sometimes by mount(8)
- * to mount filesystems of different types.  fstyp uses exactly the same
- * heuristics that mount does to determine whether the supplied device
- * special file is of a known filesystem type.  If it is, fstyp prints
- * on standard output the usual filesystem identifier for that type and
- * exits with a zero return code.  If no filesystem is identified, fstyp
- * prints "Unknown" to indicate failure and exits with a non-zero status.
- *
- * WARNING: The use of heuristics implies that the result of fstyp is not
- * guaranteed to be accurate.
- */
+extern int  md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
 
-int
-main(int argc, char *argv[])
+void
+get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 {
-	char	*type;
+	struct stat64 sb;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <device>\n", basename(argv[0]));
+	if (dev == NULL)
+		return;
+		
+	if (stat64(dev, &sb)) {
+		fprintf(stderr, "Cannot stat %s: %s\n", dev, strerror(errno));
 		exit(1);
 	}
 
-	if (access(argv[1], R_OK) < 0) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	if ((type = fstype(argv[1])) == NULL) {
-		printf("Unknown\n");
-		exit(1);
-	}
-	printf("%s\n", type);
-	exit(0);
+	if ( md_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+		return;
+	if (lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+		return;
+	if (xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb));
+		return;
+	/* ... add new device drivers here */
 }
