@@ -1667,10 +1667,10 @@ main(int argc, char **argv)
 				tmp_agsize = agsize + dsunit;
 			if (daflag || dasize) {
 				fprintf(stderr,
-"Warning: AG size is a multiple of stripe width.  This can cause performance\n"
-"problems by aligning all AGs on the same disk.  To avoid this, rerun mkfs with\n"
-"an AG size that is one stripe unit smaller, for example %lld\n",
-					tmp_agsize);
+"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
+problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
+an AG size that is one stripe unit smaller, for example %llu\n",
+					(unsigned long long)tmp_agsize);
 			} else {
 				agsize = tmp_agsize;
 				agcount = dblocks/agsize + (dblocks % agsize != 0);
