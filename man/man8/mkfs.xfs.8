@@ -236,6 +236,13 @@ This suboption should be disabled if the filesystem
 needs to be used on operating system versions which do not support the
 flagging capability.
 .TP
+.B \-f
+Force overwrite when an existing filesystem is detected on the device.
+By default, 
+.I mkfs.xfs
+will not write to the device if it suspects that there is a filesystem
+or partition table on the device already.
+.TP
 .B \-i
 Inode options.
 .IP
