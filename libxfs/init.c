@@ -586,6 +586,14 @@ libxfs_mount(
 	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
 
 	/*
+	 * Set whether we're using stripe alignment.
+	 */
+	if (XFS_SB_VERSION_HASDALIGN(&mp->m_sb)) {
+		mp->m_dalign = sbp->sb_unit;
+		mp->m_swidth = sbp->sb_width;
+	}
+
+	/*
 	 * Set whether we're using inode alignment.
 	 */
 	if (XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&

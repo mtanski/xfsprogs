@@ -1,14 +1,15 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4-p6
+# aclocal.m4 generated automatically by aclocal 1.6.3 -*- Autoconf -*-
 
-dnl Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
-dnl This file is free software; the Free Software Foundation
-dnl gives unlimited permission to copy and/or distribute it,
-dnl with or without modifications, as long as this notice is preserved.
+# Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2002
+# Free Software Foundation, Inc.
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-dnl PARTICULAR PURPOSE.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
 
 # 
 # Generic macro, sets up all of the global packaging variables.
@@ -197,6 +198,26 @@ AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE],
 
 AC_DEFUN([AC_PACKAGE_CHECK_LIBUUID],
   [ test $pkg_platform = freebsd && libuuid=""
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_PTHREAD_H],
+  [ AC_CHECK_HEADERS(pthread.h)
+    if test $ac_cv_header_pthread_h = no; then
+	AC_CHECK_HEADERS(pthread.h,, [
+	echo
+	echo 'FATAL ERROR: could not find a valid pthread header.'
+	exit 1])
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_PTHREADMUTEXINIT],
+  [ AC_CHECK_LIB(pthread, pthread_mutex_init,, [
+	echo
+	echo 'FATAL ERROR: could not find a valid pthread library.'
+	exit 1
+    ])
+    libpthread=-lpthread
+    AC_SUBST(libpthread)
   ])
 
 # 

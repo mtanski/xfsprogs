@@ -1,6 +1,10 @@
 xfsprogs-2.5.2 (25 June 2003)
 	- Fix xvm stripe detection in libdisk - pass correctly
 	  sized structures to xvm ioctls.
+	- Add pthread library checks into configure and build scripts
+	  for work-in-progress on xfs_repair and xfs_copy.
+	- Fix missing initialisation of stripe unit/width alignment
+	  information during libxfs_mount.
 
 xfsprogs-2.5.1 (23 June 2003)
 	- Fix libdisk device driver (volume managers) detection code
