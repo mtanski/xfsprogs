@@ -39,7 +39,7 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
-LIBUUID = /usr/lib/libuuid.a
+LIBUUID = @libuuid@
 LIBXFS = -lxfs
 LIBHANDLE = -lhandle
 

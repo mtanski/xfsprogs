@@ -102,13 +102,21 @@ test -z "$ECHO" && AC_PATH_PROG(ECHO, echo, /bin/echo)
 echo=$ECHO
 AC_SUBST(echo)
 
-dnl Checks for libraries.
-AC_CHECK_LIB(uuid, uuid_generate,,[
+dnl Checks for UUID header and library.
+AC_CHECK_HEADER(uuid/uuid.h,, [
 	echo
-	echo "FATAL ERROR: could not find a valid UUID library."
-	echo "Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package."
+	echo 'FATAL ERROR: could not find a valid UUID header.'
+	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
 	exit 1
 ])
+AC_CHECK_LIB(uuid, uuid_generate,, [
+	echo
+	echo 'FATAL ERROR: could not find a valid UUID library.'
+	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
+	exit 1
+])
+libuuid="/usr/lib/libuuid.a"
+AC_SUBST(libuuid)
 
 dnl Checks for LVM library
 AC_MSG_CHECKING([for liblvm.a])
