@@ -1,9 +1,11 @@
-[cvs]
+xfsprogs-2.4.11 (30 May 2003)
 	- Extract device sector size at mkfs time and issue warnings
 	  if the requested filesystem sector size is too small.
 	- Sync up user/kernel source in libxfs, libxlog and headers.
 	- Skip realtime initialisation in libxfs mount path if the
 	  caller is xfs_db, otherwise we get nonsense warnings.
+	- Update xfs_io with a couple of additional commands.
+	- Fix xfs_logprint handling of corrupt v2 log devices.
 
 xfsprogs-2.4.10 (12 May 2003)
 	- Fix a bug in mkfs - creating version 2 logs, an incorrect

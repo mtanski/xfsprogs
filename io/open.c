@@ -36,7 +36,9 @@
 
 static cmdinfo_t open_cmd;
 static cmdinfo_t stat_cmd;
+static cmdinfo_t setfl_cmd;
 static cmdinfo_t statfs_cmd;
+static cmdinfo_t extsize_cmd;
 static int stat_f(int, char **);
 
 int
@@ -278,8 +280,75 @@ stat_f(
 		perror("xfsctl(XFS_IOC_FSGETXATTR)");
 	} else {
 		printf(_("xattr.xflags = 0x%x\n"), fsx.fsx_xflags);
+		printf(_("xattr.extsize = %u\n"), fsx.fsx_extsize);
 		printf(_("xattr.nextents = %u\n"), fsx.fsx_nextents);
 	}
+	return 0;
+}
+
+static int
+setfl_f(
+	int			argc,
+	char			**argv)
+{
+	int			c, flags;
+
+	flags = fcntl(fdesc, F_GETFL, 0);
+	if (flags < 0) {
+		perror("fcntl(F_GETFL)");
+		return 0;
+	}
+
+	while ((c = getopt(argc, argv, "ad")) != EOF) {
+		switch (c) {
+		case 'a':
+			if (flags & O_APPEND)
+				flags |= O_APPEND;
+			else
+				flags &= ~O_APPEND;
+			break;
+		case 'd':
+			if (flags & O_DIRECT)
+				flags |= O_DIRECT;
+			else
+				flags &= ~O_DIRECT;
+			break;
+		default:
+			printf(_("invalid setfl argument -- '%c'\n"), c);
+			return 0;
+		}
+	}
+
+	if (fcntl(fdesc, F_SETFL, flags)  < 0)
+		perror("fcntl(F_SETFL)");
+
+	return 0;
+}
+
+static int
+extsize_f(
+	int			argc,
+	char			**argv)
+{
+	struct fsxattr		fsx;
+	unsigned int		extsize;
+	char                    *sp;
+
+	extsize = strtoul(argv[1], &sp, 10);
+	if (!sp || sp == argv[1]) {
+		printf(_("non-numeric extsize argument -- %s\n"), argv[1]);
+		return 0;
+	}
+	if ((xfsctl(fname, fdesc, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		perror("xfsctl(XFS_IOC_FSGETXATTR)");
+		return 0;
+	}
+	fsx.fsx_extsize = extsize;
+	if ((xfsctl(fname, fdesc, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
+		perror("xfsctl(XFS_IOC_FSSETXATTR)");
+		return 0;
+	}
+
 	return 0;
 }
 
@@ -343,12 +412,27 @@ open_init(void)
 	stat_cmd.oneline =
 		_("statistics on the currently open file");
 
+	setfl_cmd.name = _("setfl");
+	setfl_cmd.cfunc = setfl_f;
+	setfl_cmd.args = _("[-adx]");
+	setfl_cmd.oneline =
+		_("set/clear append/direct flags on the open file");
+
 	statfs_cmd.name = _("statfs");
 	statfs_cmd.cfunc = statfs_f;
 	statfs_cmd.oneline =
 		_("statistics on the filesystem of the currently open file");
 
+	extsize_cmd.name = _("extsize");
+	extsize_cmd.cfunc = extsize_f;
+	extsize_cmd.argmin = 1;
+	extsize_cmd.argmax = 1;
+	extsize_cmd.oneline =
+		_("set prefered extent size (in bytes) for the open file");
+
 	add_command(&open_cmd);
 	add_command(&stat_cmd);
+	add_command(&setfl_cmd);
 	add_command(&statfs_cmd);
+	add_command(&extsize_cmd);
 }
