@@ -1,3 +1,6 @@
+xfsprogs-2.6.9 (26 March 2003)
+	- Update HFILES in xfsprogs/io/Makefile to package io/io.h
+
 xfsprogs-2.6.8 (25 March 2003)
 	- Fix xfs_db when dumping v2 dirs larger than the fsb size.
 	- Several xfs_io additions - support for memory mapped areas,

@@ -35,7 +35,7 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_io
 LSRCFILES = xfs_bmap.sh xfs_freeze.sh
-HFILES = command.h input.h init.h
+HFILES = command.h input.h init.h io.h
 CFILES = command.c input.c init.c \
 	bmap.c file.c freeze.c fsync.c help.c inject.c \
 	mmap.c open.c pread.c prealloc.c pwrite.c quit.c \
