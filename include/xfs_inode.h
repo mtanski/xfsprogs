@@ -145,18 +145,9 @@ typedef struct xfs_iocore {
 	mrlock_t		*io_lock;	/* inode lock */
 	mrlock_t		*io_iolock;	/* inode IO lock */
 	sema_t			*io_flock;	/* inode flush lock */
-	mutex_t			io_rlock;	/* inode readahead mutex */
 
 	/* I/O state */
-	xfs_off_t		io_offset;	/* last buf offset */
-	xfs_off_t		io_next_offset;	/* seq read detector */
-	unsigned int		io_last_req_sz;	/* last read size */
-	unsigned int		io_size;	/* file io buffer len */
 	xfs_fsize_t		io_new_size;	/* sz when write completes */
-	xfs_off_t		io_write_offset;
-						/* start off of curr write */
-	xfs_fileoff_t		io_reada_blkno;	/* next blk to start ra */
-	xfs_gap_t		*io_gap_list;	/* hole list in write range */
 	unsigned int		io_readio_blocks;	/* read buffer size */
 	unsigned int		io_writeio_blocks;	/* write buffer size */
 	uchar_t			io_readio_log;	/* log2 of read buffer size */
@@ -192,16 +183,7 @@ typedef struct xfs_iocore {
  * i_last_req_sz to get the effect of making all the
  * read ahead state unusable.
  */
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_INODE_CLEAR_READ_AHEAD)
-void xfs_inode_clear_read_ahead(xfs_iocore_t *io);
-#define XFS_INODE_CLEAR_READ_AHEAD(io)          xfs_inode_clear_read_ahead(io)
-#else
-#define XFS_INODE_CLEAR_READ_AHEAD(io)  {       \
-		mutex_lock(&((io)->io_rlock), PINOD);    \
-		(io)->io_next_offset = 0;          \
-		(io)->io_last_req_sz = 0;          \
-		mutex_unlock(&((io)->io_rlock)); }
-#endif
+#define XFS_INODE_CLEAR_READ_AHEAD(io) 
 
 
 /*
@@ -211,7 +193,6 @@ void xfs_inode_clear_read_ahead(xfs_iocore_t *io);
 extern void xfs_iocore_inode_init(struct xfs_inode *);
 extern void xfs_iocore_inode_reinit(struct xfs_inode *);
 extern void xfs_iocore_reset(xfs_iocore_t *);
-extern void xfs_iocore_destroy(xfs_iocore_t *);
 
 
 /*

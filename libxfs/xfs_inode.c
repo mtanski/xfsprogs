@@ -206,7 +206,8 @@ xfs_itobp(
 STATIC int
 xfs_iformat(
 	xfs_inode_t		*ip,
-	xfs_dinode_t		*dip)
+	xfs_dinode_t		*dip,
+	int			alloc_mode)
 {
 	xfs_attr_shortform_t	*atp;
 	int			size;
@@ -270,13 +271,16 @@ xfs_iformat(
 			}
 
 			size = (int)di_size;
-			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK, size);
+			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK,
+						size, alloc_mode);
 			break;
 		case XFS_DINODE_FMT_EXTENTS:
-			error = xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
+			error = xfs_iformat_extents(ip, dip, XFS_DATA_FORK,
+						alloc_mode);
 			break;
 		case XFS_DINODE_FMT_BTREE:
-			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
+			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK,
+						alloc_mode);
 			break;
 		default:
 			return XFS_ERROR(EFSCORRUPTED);
@@ -292,20 +296,23 @@ xfs_iformat(
 	if (!XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT))
 		return 0;
 	ASSERT(ip->i_afp == NULL);
-	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, alloc_mode);
 	ip->i_afp->if_ext_max =
 		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
 	switch (INT_GET(dip->di_core.di_aformat, ARCH_CONVERT)) {
 	case XFS_DINODE_FMT_LOCAL:
 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
 		size = (int)INT_GET(atp->hdr.totsize, ARCH_CONVERT);
-		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size,
+						alloc_mode);
 		break;
 	case XFS_DINODE_FMT_EXTENTS:
-		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK);
+		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK,
+						alloc_mode);
 		break;
 	case XFS_DINODE_FMT_BTREE:
-		error = xfs_iformat_btree(ip, dip, XFS_ATTR_FORK);
+		error = xfs_iformat_btree(ip, dip, XFS_ATTR_FORK,
+						alloc_mode);
 		break;
 	default:
 		error = XFS_ERROR(EFSCORRUPTED);
@@ -334,7 +341,8 @@ xfs_iformat_local(
 	xfs_inode_t	*ip,
 	xfs_dinode_t	*dip,
 	int		whichfork,
-	int		size)
+	int		size,
+	int		alloc_mode)
 {
 	xfs_ifork_t	*ifp;
 	int		real_size;
@@ -359,7 +367,7 @@ xfs_iformat_local(
 		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
 	else {
 		real_size = roundup(size, 4);
-		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP);
+		ifp->if_u1.if_data = kmem_alloc(real_size, alloc_mode);
 	}
 	ifp->if_bytes = size;
 	ifp->if_real_bytes = real_size;
@@ -383,7 +391,8 @@ STATIC int
 xfs_iformat_extents(
 	xfs_inode_t	*ip,
 	xfs_dinode_t	*dip,
-	int		whichfork)
+	int		whichfork,
+	int		alloc_mode)
 {
 	xfs_ifork_t	*ifp;
 	int		nex;
@@ -412,7 +421,7 @@ xfs_iformat_extents(
 	else if (nex <= XFS_INLINE_EXTS)
 		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
 	else {
-		ifp->if_u1.if_extents = kmem_alloc(size, KM_SLEEP);
+		ifp->if_u1.if_extents = kmem_alloc(size, alloc_mode);
 		ASSERT(ifp->if_u1.if_extents != NULL);
 		real_size = size;
 	}
@@ -448,7 +457,8 @@ STATIC int
 xfs_iformat_btree(
 	xfs_inode_t		*ip,
 	xfs_dinode_t		*dip,
-	int			whichfork)
+	int			whichfork,
+	int			alloc_mode)
 {
 	xfs_bmdr_block_t	*dfp;
 	xfs_ifork_t		*ifp;
@@ -479,7 +489,7 @@ xfs_iformat_btree(
 	}
 
 	ifp->if_broot_bytes = size;
-	ifp->if_broot = kmem_alloc(size, KM_SLEEP);
+	ifp->if_broot = kmem_alloc(size, alloc_mode);
 	ASSERT(ifp->if_broot != NULL);
 	/*
 	 * Copy and convert from the on-disk structure
@@ -585,10 +595,11 @@ xfs_iread(
 	xfs_dinode_t	*dip;
 	xfs_inode_t	*ip;
 	int		error;
+	int		alloc_mode = tp ? KM_SLEEP : KM_SLEEP_IO;
 
 	ASSERT(xfs_inode_zone != NULL);
 
-	ip = kmem_zone_zalloc(xfs_inode_zone, KM_SLEEP);
+	ip = kmem_zone_zalloc(xfs_inode_zone, alloc_mode);
 	ip->i_ino = ino;
 	ip->i_dev = mp->m_dev;
 	ip->i_mount = mp;
@@ -612,22 +623,22 @@ xfs_iread(
 	 * Do this before xfs_iformat in case it adds entries.
 	 */
 #ifdef XFS_BMAP_TRACE
-	ip->i_xtrace = ktrace_alloc(XFS_BMAP_KTRACE_SIZE, KM_SLEEP);
+	ip->i_xtrace = ktrace_alloc(XFS_BMAP_KTRACE_SIZE, alloc_mode);
 #endif
 #ifdef XFS_BMBT_TRACE
-	ip->i_btrace = ktrace_alloc(XFS_BMBT_KTRACE_SIZE, KM_SLEEP);
+	ip->i_btrace = ktrace_alloc(XFS_BMBT_KTRACE_SIZE, alloc_mode);
 #endif
 #ifdef XFS_RW_TRACE
-	ip->i_rwtrace = ktrace_alloc(XFS_RW_KTRACE_SIZE, KM_SLEEP);
+	ip->i_rwtrace = ktrace_alloc(XFS_RW_KTRACE_SIZE, alloc_mode);
 #endif
 #ifdef XFS_STRAT_TRACE
-	ip->i_strat_trace = ktrace_alloc(XFS_STRAT_KTRACE_SIZE, KM_SLEEP);
+	ip->i_strat_trace = ktrace_alloc(XFS_STRAT_KTRACE_SIZE, alloc_mode);
 #endif
 #ifdef XFS_ILOCK_TRACE
-	ip->i_lock_trace = ktrace_alloc(XFS_ILOCK_KTRACE_SIZE, KM_SLEEP);
+	ip->i_lock_trace = ktrace_alloc(XFS_ILOCK_KTRACE_SIZE, alloc_mode);
 #endif
 #ifdef XFS_DIR2_TRACE
-	ip->i_dir_trace = ktrace_alloc(XFS_DIR2_KTRACE_SIZE, KM_SLEEP);
+	ip->i_dir_trace = ktrace_alloc(XFS_DIR2_KTRACE_SIZE, alloc_mode);
 #endif
 
 	/*
@@ -650,7 +661,7 @@ xfs_iread(
 	if (!INT_ISZERO(dip->di_core.di_mode, ARCH_CONVERT)) {
                 xfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core, 
                      &(ip->i_d), 1, ARCH_CONVERT);
-		error = xfs_iformat(ip, dip);
+		error = xfs_iformat(ip, dip, alloc_mode);
 		if (error)  {
 			kmem_zone_free(xfs_inode_zone, ip);
 			xfs_trans_brelse(tp, bp);
@@ -741,7 +752,7 @@ xfs_iread_extents(
 	/*
 	 * We know that the size is legal (it's checked in iformat_btree)
 	 */
-	ifp->if_u1.if_extents = kmem_alloc(size, KM_SLEEP);
+	ifp->if_u1.if_extents = kmem_alloc(size, tp ? KM_SLEEP : KM_SLEEP_IO);
 	ASSERT(ifp->if_u1.if_extents != NULL);
 	ifp->if_lastex = NULLEXTNUM;
 	ifp->if_bytes = ifp->if_real_bytes = (int)size;

@@ -2050,7 +2050,8 @@ xfs_da_do_buf(
 			xfs_fsblock_t	firstblock;
 
 			firstblock = NULLFSBLOCK;
-			mapp = kmem_alloc(sizeof(*mapp) * nfsb, KM_SLEEP);
+			mapp = kmem_alloc(sizeof(*mapp) * nfsb,
+				trans ? KM_SLEEP : KM_SLEEP_IO);
 			nmap = nfsb;
 			if ((error = xfs_bmapi(trans, dp, (xfs_fileoff_t)bno,
 					nfsb,

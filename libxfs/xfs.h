@@ -186,6 +186,8 @@
 
 
 /* memory management */
+#define KM_SLEEP	1
+#define KM_SLEEP_IO	2
 #define kmem_zone_init(a, b)	libxfs_zone_init(a, b)
 #define kmem_zone_alloc(z, f)	libxfs_zone_zalloc(z)
 #define kmem_zone_zalloc(z, f)	libxfs_zone_zalloc(z)
@@ -367,9 +369,9 @@ int  xfs_iextents_copy (xfs_inode_t *, xfs_bmbt_rec_32_t *, int);
 int  xfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 int  xfs_iflush_fork (xfs_inode_t *, xfs_dinode_t *, xfs_inode_log_item_t *,
 		int, xfs_buf_t *);
-int  xfs_iformat_local (xfs_inode_t *, xfs_dinode_t *, int, int);
-int  xfs_iformat_extents (xfs_inode_t *, xfs_dinode_t *, int);
-int  xfs_iformat_btree (xfs_inode_t *, xfs_dinode_t *, int);
+int  xfs_iformat_local (xfs_inode_t *, xfs_dinode_t *, int, int, int);
+int  xfs_iformat_extents (xfs_inode_t *, xfs_dinode_t *, int, int);
+int  xfs_iformat_btree (xfs_inode_t *, xfs_dinode_t *, int, int);
 void xfs_iroot_realloc (xfs_inode_t *, int, int);
 void xfs_idata_realloc (xfs_inode_t *, int, int);
 void xfs_iext_realloc (xfs_inode_t *, int, int);
