@@ -158,9 +158,4 @@ typedef struct fs_quota_stat {
 	__u16		qs_iwarnlimit;	/* limit for num warnings */
 } fs_quota_stat_t;
 
-
-#ifdef __KERNEL__
-extern int xqm_quotactl(int, const char *, int, caddr_t);
-#endif
-
 #endif	/* __XQM_H__ */
