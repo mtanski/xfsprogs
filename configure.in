@@ -39,7 +39,7 @@ pkg_distribution="SGI XFS"
 test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
 AC_SUBST(pkg_distribution)
 
-pkg_builder=`id -u -n`@`hostname -f`
+pkg_builder=`id -u -n`@`hostname`
 test -z "$PACKAGE_BUILDER" || pkg_builder="$PACKAGE_BUILDER"
 AC_SUBST(pkg_builder)
 
@@ -178,36 +178,16 @@ AC_TRY_COMPILE(
     __psunsigned_t  psuint;
 ], AC_DEFINE(HAVE___PSUNSIGNED_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
 
-
-dnl check sizeof long
-AC_MSG_CHECKING([sizeof long])
-cat <<End-of-File >conftest.c
-#include <stdio.h>
-main() { printf("%d\n", sizeof(long)); }
-End-of-File
-(eval $ac_compile) 2>&5
-(eval $ac_link) 2>&5
-ans=`./conftest`
-echo "./conftest -> \"$ans\"" >&5
-AC_MSG_RESULT($ans)
-test $ans -eq 4 && AC_DEFINE(HAVE_32BIT_LONG)
-test $ans -eq 8 && AC_DEFINE(HAVE_64BIT_LONG)
-rm -f conftest conftest.*
-
-dnl check sizeof pointer
-AC_MSG_CHECKING([sizeof pointer])
-cat <<End-of-File >conftest.c
-#include <stdio.h>
-main() { printf("%d\n", sizeof(char *)); }
-End-of-File
-(eval $ac_compile) 2>&5
-(eval $ac_link) 2>&5
-ans=`./conftest`
-echo "./conftest -> \"$ans\"" >&5
-AC_MSG_RESULT($ans)
-test $ans -eq 4 && AC_DEFINE(HAVE_32BIT_PTR)
-test $ans -eq 8 && AC_DEFINE(HAVE_64BIT_PTR)
-rm -f conftest conftest.*
+dnl Check type sizes
+if test "$cross_compiling" = yes -a "$ac_cv_sizeof_long" = ""; then
+	AC_MSG_WARN([Cross compiling; assuming 32bit long and 32bit pointers])
+fi
+AC_CHECK_SIZEOF(long, 4)
+AC_CHECK_SIZEOF(char *, 4)
+test $ac_cv_sizeof_long -eq 4 && AC_DEFINE(HAVE_32BIT_LONG)
+test $ac_cv_sizeof_long -eq 8 && AC_DEFINE(HAVE_64BIT_LONG)
+test $ac_cv_sizeof_char_p -eq 4 && AC_DEFINE(HAVE_32BIT_PTR)
+test $ac_cv_sizeof_char_p -eq 8 && AC_DEFINE(HAVE_64BIT_PTR)
 
 
 dnl alternate root and usr prefixes

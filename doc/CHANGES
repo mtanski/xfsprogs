@@ -1,6 +1,8 @@
-xfsprogs-current
+xfsprogs-1.3.4 (04 August 2001)
+	- fix endian bug in xfs_db "frag" command
+	- small configure script changes to allow cross compilation
 	- several man pages updated to document external log usage
-	- install yet another shared library symlink for ld to find
+	- install another shared library symlink for ld to find
 	- switched on -fno-strict-aliasing for library object builds
 	- fix several minor compiler warnings when building on IA64
 
@@ -11,7 +13,7 @@ xfsprogs-1.3.2 (23 July 2001)
 	- install static libs and libtool archives into /usr/lib
 	- shared libraries are unchanged, however
 
-xfsprogs-1.3.1 (15 Jul 2001)
+xfsprogs-1.3.1 (15 July 2001)
 	- updated xfs_types.h file from the kernel changes needed for
 	  an xfsdump fix.
 	- tidy up various aspects of the libtool rework
@@ -24,14 +26,14 @@ xfsprogs-1.3.1 (15 Jul 2001)
 	- fix sign of BLKGETSIZE ioctl argument in libxfs
 	- updated xfs_fs.h with DMAPI setdm details for dump/restore
 
-xfsprogs-1.3.0 (11 Jul 2001)
+xfsprogs-1.3.0 (11 July 2001)
 	- reworked Makefiles to use libtool
 	- new libdisk to allow sharing of generic mount/disk code and
 	- also abstracts individual driver support (LVM, MD, XVM..)
 	- partition table detection so mkfs.xfs doesn't blindly overwrite
 	- small xfs_repair bug fix from Steve
 
-xfsprogs-1.2.8 (02 Jul 2001)
+xfsprogs-1.2.8 (02 July 2001)
 	- fixed a bug in libxfs /etc/mtab read-only mount detection
 	- first try procfs, fall back to /etc/mtab, for read-only mounts
 	- sync with recent mount code changes for reiserfs and ext3 probes
