@@ -33,7 +33,6 @@
 #define _LINUX_XQM_H
 
 #include <linux/types.h>
-#include <linux/quota.h>
 
 /*
  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
