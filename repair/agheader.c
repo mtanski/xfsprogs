@@ -218,7 +218,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 {
 	int do_bzero;
 	int size;
-	int *ip;
+	char *ip;
 	int rval;
 
 	rval = do_bzero = 0;
@@ -247,8 +247,8 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		else
 			size = (__psint_t)&sb->sb_width
 				+ sizeof(sb->sb_width) - (__psint_t)sb;
-		for (ip = (int *)((__psint_t)sb + size);
-		     ip < (int *)((__psint_t)sb + mp->m_sb.sb_sectsize);
+		for (ip = (char *)((__psint_t)sb + size);
+		     ip < (char *)((__psint_t)sb + mp->m_sb.sb_sectsize);
 		     ip++)  {
 			if (*ip)  {
 				do_bzero = 1;
