@@ -46,10 +46,12 @@ and
 .B \-l internal \-l size=10000b
 are equivalent.
 .PP
-In the descriptions below, sizes are given in bytes, blocks, kilobytes,
-or megabytes.
+In the descriptions below, sizes are given in sectors, bytes, blocks, 
+kilobytes, megabytes, or gigabytes.
 Sizes are treated as hexadecimal if prefixed by 0x or 0X,
 octal if prefixed by 0, or decimal otherwise.
+If suffixed with \f3s\f1 then the size is converted by multiplying it
+by 512 (sector size).
 If suffixed with \f3b\f1 then the size is converted by multiplying it
 by the filesystem's block size.
 If suffixed with \f3k\f1 then the size is converted by multiplying it by 1024.
@@ -308,8 +310,9 @@ log section of the filesystem.
 The valid suboptions are:
 .BI internal[= value ],
 \f3size=\f1\f2value\f1,
-\f3version=\f1\f2[1|2]\f1 and
-\f3sunit=\f1\f2value\f1.
+\f3version=\f1\f2[1|2]\f1,
+\f3sunit=\f1\f2value\f1, and
+\f3su=\f1\f2value\f1.
 .IP
 The
 .B internal
@@ -333,7 +336,7 @@ filesystem block size and the directory block size.
 .IP
 Otherwise, the
 .B size
-option is only needed if the log section of the filesystem
+suboption is only needed if the log section of the filesystem
 should occupy less space than the size of the special file.
 The size is specified in bytes or blocks, with a \f3b\f1 suffix 
 meaning multiplication by the filesystem block size, as described above.
@@ -343,18 +346,35 @@ and directory block size, the minimum log size is larger than 512 blocks.
 .IP
 Using the
 .B version
-option to set a version 2 log enables the
+suboption to specify a version 2 log enables the
 .B sunit
-option, and allows the logbsize to be increased beyond 32K.
+suboption, and allows the logbsize to be increased beyond 32K.
+.IP
 The
 .B sunit 
-option specifies the alignment to be used for log writes,
-it can be in bytes or filesystem blocks.
+suboption specifies the alignment to be used for log writes.
+The suboption value has to be specified in 512-byte block units.
+Use the
+.B su
+suboption to specify the log stripe unit size in bytes.
 Log writes will be aligned on this boundary,
 and rounded up to this boundary.
 This gives major improvements in performance on some configurations
 such as software raid5 when the sunit is specified as the filesystem
 block size.
+The equivalent byte value must be a multiple of the filesystem block
+size.
+.IP
+The
+.B su
+suboption is an alternative to using
+.B sunit.
+The
+.B su
+suboption is used to specify the log stripe.
+The suboption value has to be specified in bytes,
+(usually using the \f3s\f1 or \f3b\f1 suffixes).
+This value must be a multiple of the filesystem block size.
 .TP
 .B \-n
 Naming options.

@@ -49,6 +49,7 @@
 						 * accept w/o warnings
 						 */
 extern void  usage (void);
+extern int isdigits (char *str);
 extern long long  cvtnum (int blocksize, char *s);
 
 #endif	/* __XFS_MKFS_H__ */

@@ -35,6 +35,7 @@
 #include <volume.h>
 #include <mountinfo.h>
 #include <libxfs.h>
+#include <ctype.h>
 
 #include "xfs_mkfs.h"
 #include "maxtrres.h"
@@ -109,14 +110,16 @@ char	*lopts[] = {
 	"size",
 #define L_VERSION	3
 	"version",
-#define L_LSUNIT	4
+#define L_SUNIT		4
 	"sunit",
-#define L_DEV		5
+#define L_SU		5
+	"su",
+#define L_DEV		6
 	"logdev",
 #ifdef MKFS_SIMULATION
-#define	L_FILE		6
+#define	L_FILE		7
 	"file",
-#define	L_NAME		7
+#define	L_NAME		8
 	"name",
 #endif
 	NULL
@@ -262,18 +265,19 @@ static const int max_trres_v2[DFL_B][DFL_I][DFL_D] = {
 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
 
 static void
-calc_stripe_factors(int dsu, int dsw, int *dsunit, int *dswidth)
+calc_stripe_factors(int dsu, int dsw, int lsu, int *dsunit, int *dswidth, int *lsunit)
 {
+	/* Handle data sunit/swidth options */
 	if (*dsunit || *dswidth) {
 		if (dsu || dsw) {
 			fprintf(stderr,
-	"su/sw should not be used in conjunction with sunit/swidth\n");
+	"data su/sw should not be used in conjunction with data sunit/swidth\n");
 			usage();
 		}
 
 		if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
 			fprintf(stderr,
-	"both sunit and swidth options have to be specified\n");
+	"both data sunit and data swidth options must be specified\n");
 			usage();
 		}
 	}
@@ -281,18 +285,18 @@ calc_stripe_factors(int dsu, int dsw, int *dsunit, int *dswidth)
 	if (dsu || dsw) {
 		if (*dsunit || *dswidth) {
 			fprintf(stderr,
-	"sunit/swidth should not be used in conjunction with su/sw\n");
+	"data sunit/swidth should not be used in conjunction with data su/sw\n");
 			usage();
 		}
 
 		if ((dsu && !dsw) || (!dsu && dsw)) {
 			fprintf(stderr,
-	"both su and sw options have to be specified\n");
+	"both data su and data sw options must be specified\n");
 			usage();
 		}
 
 		if (dsu % BBSIZE) {
-			fprintf(stderr, "su must be a multiple of %d\n",
+			fprintf(stderr, "data su must be a multiple of %d\n",
 								BBSIZE);
 			usage();
 		}
@@ -303,9 +307,35 @@ calc_stripe_factors(int dsu, int dsw, int *dsunit, int *dswidth)
 
 	if (*dsunit && (*dswidth % *dsunit != 0)) {
 		fprintf(stderr,
-	"stripe width (%d) has to be a multiple of the stripe unit (%d)\n",
+	"data stripe width (%d) must be a multiple of the data stripe unit (%d)\n",
 			*dswidth, *dsunit);
 		usage();
+	}
+
+	/* Handle log sunit options */
+
+	if (*lsunit) {
+		if (lsu) {
+			fprintf(stderr,
+	"log su should not be used in conjunction with log sunit\n");
+			usage();
+		}
+	}
+
+	if (lsu) {
+		if (*lsunit) {
+			fprintf(stderr,
+	"log sunit should not be used in conjunction with log su\n");
+			usage();
+		}
+
+		if (lsu % BBSIZE) {
+			fprintf(stderr, "log su must be a multiple of %d\n",
+							BBSIZE);
+			usage();
+		}
+
+		*lsunit  = (int)BTOBBT(lsu);
 	}
 }
 
@@ -448,8 +478,8 @@ main(int argc, char **argv)
 	int			logversion;
 	int			lvflag;
 	int			lsflag;
+	int			lsu;
 	int			lsunit;
-	char			*logstripe;
 	int			min_logblocks;
 	mnt_check_state_t       *mnt_check_state;
 	int                     mnt_partition_count;
@@ -501,9 +531,9 @@ main(int argc, char **argv)
 	xi.notvolok = 1;
 	xi.setblksize = 1;
 	dfile = logfile = rtfile = NULL;
-	dsize = logsize = logstripe = rtsize = rtextsize = protofile = NULL;
+	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	opterr = 0;
-	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsunit = 0;
+	dsu = dsw = dsunit = dswidth = nodsflag = lalign = lsu = lsunit = 0;
 	do_overlap_checks = 1;
 	extent_flagging = 0;
 	force_overwrite = 0;
@@ -613,35 +643,49 @@ main(int argc, char **argv)
 						reqval('d', dopts, D_SUNIT);
 					if (dsunit)
 						respec('d', dopts, D_SUNIT);
-					if (blflag || bsflag)
-						dsunit = cvtnum(blocksize,
-								value);
-					else
-						dsunit = cvtnum(0, value);
+					if (!isdigits(value)) {
+						fprintf(stderr,
+		"%s: Specify data sunit in 512-byte blocks, no unit suffix\n",
+							progname);
+						exit(1);
+					}
+					dsunit = cvtnum(0, value);
 					break;
 				case D_SWIDTH:
 					if (!value)
 						reqval('d', dopts, D_SWIDTH);
 					if (dswidth)
 						respec('d', dopts, D_SWIDTH);
-					if (blflag || bsflag)
-						dswidth = cvtnum(blocksize,
-								 value);
-					else
-						dswidth = cvtnum(0, value);
+					if (!isdigits(value)) {
+						fprintf(stderr,
+		"%s: Specify data swidth in 512-byte blocks, no unit suffix\n",
+							progname);
+						exit(1);
+					}
+					dswidth = cvtnum(0, value);
 					break;
 				case D_SU:
 					if (!value)
 						reqval('d', dopts, D_SU);
 					if (dsu)
 						respec('d', dopts, D_SU);
-					dsu = cvtnum(0, value);
+					if (blflag || bsflag)
+						dsu = cvtnum(blocksize,
+								value);
+					else
+						dsu = cvtnum(0, value);
 					break;
 				case D_SW:
 					if (!value)
 						reqval('d', dopts, D_SW);
 					if (dsw)
 						respec('d', dopts, D_SW);
+					if (!isdigits(value)) {
+						fprintf(stderr,
+		"%s: Specify data sw as multiple of su, no unit suffix\n",
+							progname);
+						exit(1);
+					}
 					dsw = cvtnum(0, value);
 					break;
 				case D_UNWRITTEN:
@@ -805,12 +849,28 @@ main(int argc, char **argv)
 						illegal(value, "l internal");
 					liflag = 1;
 					break;
-				case L_LSUNIT:
+				case L_SU:
 					if (!value)
-						reqval('l', lopts, L_LSUNIT);
-					if (logstripe)
-						respec('l', lopts, L_LSUNIT);
-					logstripe = value;
+						reqval('l', lopts, L_SU);
+					if (lsu)
+						respec('l', lopts, L_SU);
+					if (blflag || bsflag)
+						lsu = cvtnum(blocksize,
+								value);
+					else
+						lsu = cvtnum(0, value);
+					break;
+				case L_SUNIT:
+					if (!value)
+						reqval('l', lopts, L_SUNIT);
+					if (lsunit)
+						respec('l', lopts, L_SUNIT);
+					if (!isdigits(value)) {
+						fprintf(stderr,
+		"Specify log sunit in 512-byte blocks, no size suffix\n");
+						usage();
+					}
+					lsunit = cvtnum(0, value);
 					break;
 #ifdef HAVE_VOLUME_MANAGER
 				case L_NAME:
@@ -1076,9 +1136,6 @@ main(int argc, char **argv)
 				(long long)logbytes, blocksize,
 				(long long)(logblocks << blocklog));
 	}
-	if (logstripe) {
-		lsunit = cvtnum(blocksize, logstripe);
-	}
 #ifdef HAVE_VOLUME_MANAGER
 	if (xi.risfile && (!rtsize || !xi.rtname)) {
 		fprintf(stderr,
@@ -1179,7 +1236,7 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	calc_stripe_factors(dsu, dsw, &dsunit, &dswidth);
+	calc_stripe_factors(dsu, dsw, lsu, &dsunit, &dswidth, &lsunit);
 
 	/* other global variables */
 	sectlog = 9;		/* i.e. 512 bytes */
@@ -1630,7 +1687,8 @@ main(int argc, char **argv)
 		else { 
 			fprintf(stderr, "%s: "
 "Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n",
-				progname, dsunit, dswidth, blocksize); 	
+				progname, BBTOB(dsunit), BBTOB(dswidth), 
+				blocksize); 	
 			exit(1);
 		}
 	}
@@ -1640,20 +1698,23 @@ main(int argc, char **argv)
 	 */
 
 	if (lsunit) {
-		if (lsunit % blocksize != 0) {
+		if ((BBTOB(lsunit) % blocksize != 0)) {
 			fprintf(stderr,
-"log stripe unit (%d) is not a multiple of the block size (%d)\n",
-			lsunit, blocksize);
+"log stripe unit (%d) must be a multiple of the block size (%d)\n",
+			BBTOB(lsunit), blocksize);
 			exit(1);
 		}
+		/* convert from 512 byte blocks to fs blocks */
+		lsunit = DTOBT(lsunit);
 	} else if (dsunit) {
-		/* lsunit is in bytes here, dsunit is fs blocks */
-		lsunit = dsunit << blocklog;
+		/* lsunit and dsunit now in fs blocks */
+		lsunit = dsunit;
 	}
 
-	if (lsunit > 256 * 1024) {
+	if ((lsunit * blocksize) > 256 * 1024) {
 		fprintf(stderr,
-"log stripe unit (%d) is too large for kernel to handle\n", lsunit);
+"log stripe unit (%d bytes) is too large for kernel to handle (max 256k)\n", 
+			(lsunit * blocksize));
 		exit(1);
 	}
 
@@ -1695,10 +1756,9 @@ main(int argc, char **argv)
 		 * Align the logstart at stripe unit boundary.
 		 */
 
-		if (lsunit && ((logstart % XFS_B_TO_FSB(mp, lsunit)) != 0)) {
+		if (lsunit && ((logstart % lsunit) != 0)) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
-					agsize, XFS_B_TO_FSB(mp, lsunit),
-					&logblocks, blocklog);
+					agsize, lsunit, &logblocks, blocklog);
 			lalign = 1;
 		} else if (dsunit && ((logstart % dsunit) != 0)) {
 			logstart = fixup_log_stripe(mp, lsflag, logstart,
@@ -1747,8 +1807,8 @@ main(int argc, char **argv)
 	sbp->sb_width = dswidth;
 	if (dirversion == 2)
 		sbp->sb_dirblklog = dirblocklog - blocklog;
-	if (logversion == 2)
-		sbp->sb_logsunit = (lsunit == 0) ? 1 : lsunit;
+	if (logversion == 2)	/* This is stored in bytes */
+		sbp->sb_logsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
 	else
 		sbp->sb_logsunit = 0;
 	if (iaflag) {
@@ -1785,7 +1845,7 @@ main(int argc, char **argv)
 		   "         =%-22s sunit=%-6d swidth=%d blks, unwritten=%d\n"
 		   "naming   =version %-14d bsize=%-6d\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-		   "         =%-22s sunit=%d\n"
+		   "         =%-22s sunit=%d blks\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n",
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", blocksize, (long long)dblocks, sbp->sb_imax_pct,
@@ -2180,6 +2240,21 @@ max_trans_res(
 	return rval;
 }
 
+/* returns 1 if string contains nothing but [0-9], 0 otherwise */
+
+int
+isdigits(char *str)
+{
+	int	i;
+	int	n = strlen(str);
+
+	for (i = 0; i < n; i++) {
+		if (!isdigit(str[i]))
+			return 0;
+	}
+	return 1;
+}
+
 long long
 cvtnum(
 	int		blocksize,
@@ -2203,6 +2278,8 @@ cvtnum(
 		usage();
 	}
 
+	if (*sp == 's' && sp[1] == '\0')
+		return 512LL * i;
 	if (*sp == 'k' && sp[1] == '\0')
 		return 1024LL * i;
 	if (*sp == 'm' && sp[1] == '\0')
@@ -2218,12 +2295,12 @@ usage(void)
 	fprintf(stderr, "Usage: %s\n\
 /* blocksize */		[-b log=n|size=num]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
-			    sunit=value,swidth=value,unwritten=0|1,\n\
-			    su=value,sw=value]\n\
+			    (sunit=value,swidth=value|su=num,sw=num),\n\
+			    unwritten=0|1]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
-/* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx]\n\
-			    version=n,sunit=value]\n\
-/* naming */		[-n log=n|size=num|version=n]\n\
+/* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx\n\
+			    version=n,sunit=value|su=num]\n\
+/* naming */		[-n log=n|size=num,version=n]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
 /* prototype file */	[-p fname]\n\
 /* quiet */		[-q]\n\
@@ -2235,7 +2312,8 @@ Internal log by default, size is scaled from 1,000 blocks to 32,768 blocks\n\
 based on the filesystem size.  Default log reaches its largest size at 1TB.\n\
 This can be overridden with the -l options or using a volume manager with a\n\
 log subvolume.\n\
-<num> is xxx (bytes), or xxxb (blocks), or xxxk (xxx KB), or xxxm (xxx MB)\n\
+<num> is xxx (bytes), xxxs (512 blocks), xxxb (fs blocks), xxxk (xxx KB),\n\
+      or xxxm (xxx MB)\n\
 <value> is xxx (512 blocks).\n",
 		progname);
 	exit(1);
