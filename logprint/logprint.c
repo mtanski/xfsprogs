@@ -251,10 +251,10 @@ main(int argc, char **argv)
 
 	switch (print_operation) {
 	case OP_PRINT:
-		xfs_log_print_trans(&log, print_start);
+		xfs_log_print(&log, logfd, print_start);
 		break;
 	case OP_PRINT_TRANS:
-		xfs_log_print(&log, logfd, print_start);
+		xfs_log_print_trans(&log, print_start);
 		break;
 	case OP_DUMP:
 		xfs_log_dump(&log, logfd, print_start);

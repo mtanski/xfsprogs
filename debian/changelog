@@ -1,8 +1,10 @@
-xfsprogs (2.6.12-1) unstable; urgency=low
+xfsprogs (2.6.14-1) unstable; urgency=low
 
   * New upstream release.
+  * Add a Provides: fsck-backend clause as requested in the context
+    of bug number 111651.
 
- -- Nathan Scott <nathans@debian.org>  Fri, 30 Apr 2004 05:13:20 +1000
+ -- Nathan Scott <nathans@debian.org>  Thu, 13 May 2004 09:56:19 +1000
 
 xfsprogs (2.6.11-1) unstable; urgency=low
 
