@@ -6,6 +6,7 @@ Distribution: @pkg_distribution@
 Packager: @pkg_builder@
 BuildRoot: @build_root@ 
 Conflicts: xfs-cmds
+Obsoletes: xfs-cmds
 Prereq: /sbin/ldconfig
 Source: @pkg_name@-@pkg_version@.src.tar.gz
 Copyright: Copyright (C) 2000 Silicon Graphics, Inc.
