@@ -69,14 +69,13 @@ uuid_help(void)
 " 'uuid 01234567-0123-0123-0123-0123456789ab' - write UUID\n"
 " 'uuid generate'                             - generate and write\n"
 " 'uuid rewrite'                              - copy UUID from SB 0\n"
-" 'uuid null'                                 - write a null uuid\n"
 "\n"
 "The print function checks the UUID in each SB and will warn if the UUIDs\n"
 "differ between AGs (the log is not checked). The write commands will\n"
 "set the uuid in all AGs to either a specified value, a newly generated\n"
-"value, the value found in the first superblock (SB 0) or a null value\n"
-"respectively. As a side effect of writing the UUID, the log is cleared\n"
-"(which is fine on a CLEANLY unmounted FS).\n"
+"value or the value found in the first superblock (SB 0) respectively.\n"
+"As a side effect of writing the UUID, the log is cleared (which is fine\n"
+"on a CLEANLY unmounted FS).\n"
 "\n"
 );
 }
@@ -175,8 +174,9 @@ do_label(xfs_agnumber_t agno, char *label)
 	/* set label */
 	if ((len = strlen(label)) > sizeof(tsb.sb_fname)) {
 		if (!warned++)
-			dbprintf("warning: truncating label from %d to %d "
-				"characters\n", len, sizeof(tsb.sb_fname));
+			dbprintf("warning: truncating label from %lld to %lld "
+				"characters\n", 
+                                    (long long)len, (long long)sizeof(tsb.sb_fname));
 		len = sizeof(tsb.sb_fname);
 	}
 	if ( len == 2 &&
@@ -218,7 +218,7 @@ uuid_f(
             
             if (!strcasecmp(argv[1], "generate")) {
                 uuid_generate(uu);
-            } else if (!strcasecmp(argv[1], "null")) {
+            } else if (!strcasecmp(argv[1], "nil")) {
                 uuid_clear(uu);
             } else if (!strcasecmp(argv[1], "rewrite")) {
                 uup=do_uuid(0, NULL);
@@ -348,7 +348,7 @@ label_f(
 			if (!ag)
 				memcpy(&sb.sb_fname, p, sizeof(sb.sb_fname));
 			else if (memcmp(&sb.sb_fname, p, sizeof(sb.sb_fname)))
-				dbprintf("warning: label in AG %d differs\n");
+				dbprintf("warning: label in AG %d differs\n", ag);
 		}
 		dbprintf("label = \"%s\"\n", p);
         }
