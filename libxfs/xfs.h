@@ -284,6 +284,15 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define XFS_TRANS_UNRESERVE_BLKQUOTA(mp,tp,ip,nblks)
 #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)
 
+/* These are lifted from the kernel */
+#define get_unaligned(ptr) \
+  ({ __typeof__(*(ptr)) __tmp; memmove(&__tmp, (ptr), sizeof(*(ptr))); __tmp; })
+
+#define put_unaligned(val, ptr)			\
+  ({ __typeof__(*(ptr)) __tmp = (val);		\
+     memmove((ptr), &__tmp, sizeof(*(ptr)));	\
+     (void)0; })
+
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
 # define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )
 # define cmn_err(a,msg,args...)		( fprintf(stderr, msg, ## args) )

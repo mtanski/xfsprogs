@@ -1,3 +1,7 @@
+xfsprogs-2.4.5 (03 April 2003)
+	- Sync up xfs_inode.c in libxfs
+	- Implement get_unaligned/put_unaligned in libxfs
+
 xfsprogs-2.4.4 (30 March 2003)
 	- Correct display of imaxpct in mkfs.xfs output.
 	- Portability changes; including some code to support use

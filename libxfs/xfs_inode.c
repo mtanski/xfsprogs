@@ -477,8 +477,10 @@ xfs_iformat_extents(
 		ep = ifp->if_u1.if_extents;
 #if ARCH_CONVERT != ARCH_NOCONVERT
 		for (i = 0; i < nex; i++, ep++, dp++) {
-			ep->l0 = INT_GET(dp->l0, ARCH_CONVERT);
-			ep->l1 = INT_GET(dp->l1, ARCH_CONVERT);
+			ep->l0 = INT_GET(get_unaligned((__uint64_t*)&dp->l0),
+ 								ARCH_CONVERT);
+			ep->l1 = INT_GET(get_unaligned((__uint64_t*)&dp->l1),
+ 								ARCH_CONVERT);
 		}
 #else
 		memcpy(ep, dp, size);
@@ -1312,8 +1314,10 @@ xfs_iextents_copy(
 
 #if ARCH_CONVERT != ARCH_NOCONVERT
 		/* Translate to on disk format */
-		dest_ep->l0 = INT_GET(ep->l0, ARCH_CONVERT);
-		dest_ep->l1 = INT_GET(ep->l1, ARCH_CONVERT);
+		put_unaligned(INT_GET(ep->l0, ARCH_CONVERT),
+ 			      (__uint64_t*)&dest_ep->l0);
+		put_unaligned(INT_GET(ep->l1, ARCH_CONVERT),
+ 			      (__uint64_t*)&dest_ep->l1);
 #else
 		*dest_ep = *ep;
 #endif
