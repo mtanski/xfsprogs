@@ -660,7 +660,7 @@ libxfs_mount(
 
 	/* Allocate and initialize the per-ag data */
 	size = sbp->sb_agcount * sizeof(xfs_perag_t);
-	if ((mp->m_perag = calloc(size, 1)) == NULL) {
+	if (size && (mp->m_perag = calloc(size, 1)) == NULL) {
 		fprintf(stderr, _("%s: failed to alloc %ld bytes: %s\n"),
 			progname, (long)size, strerror(errno));
 		exit(1);

@@ -5,7 +5,8 @@ xfsprogs-2.4.10 (12 May 2003)
 	  because xfs_repair uses the correct stripe unit value.
 	- Fix a bug in xfs_logprint, when dumping a corrupt log.
 	- FreeBSD updates from Alexander Kabaev.
-	- Sector size updates for mkfs (disabled at the moment).
+	- Large sector size updates for mkfs (disabled at the moment).
+	- Large sector size fixes for xfs_repair.
 	- Sync up with aeb's mount source for filesystem detection.
 
 xfsprogs-2.4.9 (03 May 2003)

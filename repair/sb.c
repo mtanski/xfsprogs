@@ -157,7 +157,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			 * found one.  now verify it by looking
 			 * for other secondaries.
 			 */
-			bcopy(&bufsb, rsb, bufsb.sb_sectsize);
+			bcopy(&bufsb, rsb, sizeof(xfs_sb_t));
 			rsb->sb_inprogress = 0;
 			clear_sunit = 1;
 
