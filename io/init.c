@@ -62,6 +62,7 @@ init(
 	int		argc,
 	char		**argv)
 {
+	int		fflag = 0;
 	int		c;
 
 	progname = basename(argv[0]);
@@ -86,7 +87,8 @@ init(
 		case 'd':	/* directIO */
 			directio = 1;
 			break;
-		case 'f':	/* ignore */
+		case 'f':	/* create */
+			fflag = 1;
 			break;
 		case 'p':	/* progname */
 			progname = optarg;
@@ -115,7 +117,7 @@ init(
 		usage();
 
 	fname = strdup(argv[optind]);
-	if ((fdesc = openfile(fname, append, 0, directio,
+	if ((fdesc = openfile(fname, append, fflag, directio,
 				readonly, osync, trunc, realtime)) < 0)
 		exit(1);
 

@@ -470,21 +470,16 @@ xfs_iformat_extents(
 	ifp->if_bytes = size;
 	ifp->if_real_bytes = real_size;
 	if (size) {
-		xfs_validate_extents(
-			(xfs_bmbt_rec_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT),
-			nex, 1, XFS_EXTFMT_INODE(ip));
-		dp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+		dp = (xfs_bmbt_rec_t *)
+			XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+		xfs_validate_extents(dp, nex, 1, XFS_EXTFMT_INODE(ip));
 		ep = ifp->if_u1.if_extents;
-#if ARCH_CONVERT != ARCH_NOCONVERT
 		for (i = 0; i < nex; i++, ep++, dp++) {
 			ep->l0 = INT_GET(get_unaligned((__uint64_t*)&dp->l0),
- 								ARCH_CONVERT);
+								ARCH_CONVERT);
 			ep->l1 = INT_GET(get_unaligned((__uint64_t*)&dp->l1),
- 								ARCH_CONVERT);
+								ARCH_CONVERT);
 		}
-#else
-		memcpy(ep, dp, size);
-#endif
 		xfs_bmap_trace_exlist("xfs_iformat_extents", ip, nex,
 			whichfork);
 		if (whichfork != XFS_DATA_FORK ||
@@ -1312,15 +1307,11 @@ xfs_iextents_copy(
 			continue;
 		}
 
-#if ARCH_CONVERT != ARCH_NOCONVERT
 		/* Translate to on disk format */
 		put_unaligned(INT_GET(ep->l0, ARCH_CONVERT),
- 			      (__uint64_t*)&dest_ep->l0);
+			      (__uint64_t*)&dest_ep->l0);
 		put_unaligned(INT_GET(ep->l1, ARCH_CONVERT),
- 			      (__uint64_t*)&dest_ep->l1);
-#else
-		*dest_ep = *ep;
-#endif
+			      (__uint64_t*)&dest_ep->l1);
 		dest_ep++;
 		ep++;
 		copied++;
