@@ -659,7 +659,7 @@ rtmount_init(
 	sbp = &mp->m_sb;
 	if (sbp->sb_rblocks == 0)
 		return 0;
-	if (mp->m_rtdev != 0) {
+	if (mp->m_rtdev == 0) {
 		fprintf(stderr, "%s: filesystem has a realtime subvolume\n",
 			progname);
 		return -1;
