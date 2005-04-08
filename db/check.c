@@ -1355,18 +1355,49 @@ check_linkcounts(
 
 static int
 check_range(
-	xfs_agnumber_t	agno,
-	xfs_agblock_t	agbno,
-	xfs_extlen_t	len)
+	xfs_agnumber_t  agno,
+	xfs_agblock_t   agbno,
+	xfs_extlen_t    len)
 {
-	xfs_extlen_t	i;
+	xfs_extlen_t    i;
+	xfs_agblock_t   low = 0;
+	xfs_agblock_t   high = 0;
+	int             valid_range = 0;
+	int             cur, prev = 0;
 
 	if (agno >= mp->m_sb.sb_agcount ||
 	    agbno + len - 1 >= mp->m_sb.sb_agblocks) {
 		for (i = 0; i < len; i++) {
-			if (!sflag || CHECK_BLISTA(agno, agbno + i))
-				dbprintf("block %u/%u out of range\n",
-					agno, agbno + i);
+			cur = !sflag || CHECK_BLISTA(agno, agbno + i) ? 1 : 0;
+			if (cur == 1 && prev == 0) {
+				low = high = agbno + i;
+				valid_range = 1;
+			} else if (cur == 0 && prev == 0) {
+				/* Do nothing */
+			} else if (cur == 0 && prev == 1) {
+				if (low == high) {
+					dbprintf("block %u/%u out of range\n",
+						agno, low);
+				} else {
+					dbprintf("blocks %u/%u..%u "
+						"out of range\n",
+						agno, low, high);
+				}
+				valid_range = 0;
+			} else if (cur == 1 && prev == 1) {
+				high = agbno + i;
+			}
+			prev = cur;
+		}
+		if (valid_range) {
+        		if (low == high) {
+               			dbprintf("block %u/%u out of range\n",
+                       		agno, low);
+			} else {
+               			dbprintf("blocks %u/%u..%u "
+               				"out of range\n",
+               				agno, low, high);
+      		 	}
 		}
 		error++;
 		return 0;
