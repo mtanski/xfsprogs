@@ -1442,7 +1442,7 @@ main(
 
 		dummy1 = rswidth = 0;
 
-		if (!norsflag && !xi.risfile)
+		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
 			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1, 
 						  &rswidth);
 
