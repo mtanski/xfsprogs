@@ -1,6 +1,6 @@
-# aclocal.m4 generated automatically by aclocal 1.6.3 -*- Autoconf -*-
+# generated automatically by aclocal 1.7.9 -*- Autoconf -*-
 
-# Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2002
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002
 # Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -170,7 +170,7 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
 
     dnl .. and what version is rpm
     rpm_version=0
-    test -x "$RPM" && rpm_version=`$RPM --version \
+    test -n "$RPM" && test -x "$RPM" && rpm_version=`$RPM --version \
                         | awk '{print $NF}' | awk -F. '{V=1; print $V}'`
     AC_SUBST(rpm_version)
     dnl At some point in rpm 4.0, rpm can no longer build rpms, and
