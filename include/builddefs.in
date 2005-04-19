@@ -45,6 +45,7 @@ LIBTERMCAP = @libtermcap@
 LIBEDITLINE = @libeditline@
 LIBREADLINE = @libreadline@
 LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
 LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
 LIBDISK = $(TOPDIR)/libdisk/libdisk.la
 LIBHANDLE = $(TOPDIR)/libhandle/libhandle.la

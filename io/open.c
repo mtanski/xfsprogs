@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -44,6 +44,7 @@ static cmdinfo_t statfs_cmd;
 static cmdinfo_t chproj_cmd;
 static cmdinfo_t lsproj_cmd;
 static cmdinfo_t extsize_cmd;
+static prid_t prid;
 
 off64_t
 filesize(void)
@@ -354,24 +355,111 @@ close_f(
 	return 0;
 }
 
+static void
+lsproj_help(void)
+{
+	printf(_(
+"\n"
+" displays the project identifier associated with the current path\n"
+"\n"
+" Options:\n"
+" -R -- recursively descend (useful when current path is a directory)\n"
+" -D -- recursively descend, but only list projects on directories\n"
+"\n"));
+}
+
+static int
+lsproj_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	prid_t			projid;
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1) {
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	} else {
+		if (getprojid(path, fd, &projid) == 0)
+			printf("[%u] %s\n", projid, path);
+		close(fd);
+	}
+	return 0;
+}
+
 static int
 lsproj_f(
 	int		argc,
 	char		**argv)
 {
-	__uint32_t	id;
+	prid_t		projid;
+	int		c;
 
-#if defined(__sgi__)
-	struct stat64	st;
-	if (fstat64(file->fd, &st) < 0) {
-		perror("fstat64");
-		return 0;
+	while ((c = getopt(argc, argv, "DR")) != EOF) {
+		switch (c) {
+		case 'D':
+			recurse_all = 0;
+			recurse_dir = 1;
+			break;
+		case 'R':
+			recurse_all = 1;
+			recurse_dir = 0;
+			break;
+		default:
+			return command_usage(&lsproj_cmd);
+		}
 	}
-	id = st.st_projid;
-#else
-	id = 0;
-#endif
-	printf("projid = %u\n", (unsigned int)id);
+
+	if (argc != optind)
+		return command_usage(&lsproj_cmd);
+
+	if (recurse_all || recurse_dir)
+		nftw(file->name, lsproj_callback,
+			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+	else if (getprojid(file->name, file->fd, &projid) < 0)
+		perror("getprojid");
+	else
+		printf(_("projid = %u\n"), projid);
+	return 0;
+}
+
+static void
+chproj_help(void)
+{
+	printf(_(
+"\n"
+" modifies the project identifier associated with the current path\n"
+"\n"
+" -R -- recursively descend (useful when current path is a directory)\n"
+" -D -- recursively descend, only modifying projects on directories\n"
+"\n"));
+}
+
+static int
+chproj_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1) {
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	} else {
+		if (setprojid(path, fd, prid) < 0)
+			perror("setprojid");
+		close(fd);
+	}
 	return 0;
 }
 
@@ -380,20 +468,37 @@ chproj_f(
 	int		argc,
 	char		**argv)
 {
-	__uint32_t	id;
-	char		*sp;
+	int		c;
 
-	id = (__uint32_t) strtoul(argv[1], &sp, 0);
-	if (!sp || sp == argv[1]) {
-		printf(_("non-numeric project ID -- %s\n"), argv[1]);
+	while ((c = getopt(argc, argv, "DR")) != EOF) {
+		switch (c) {
+		case 'D':
+			recurse_all = 0;
+			recurse_dir = 1;
+			break;
+		case 'R':
+			recurse_all = 1;
+			recurse_dir = 0;
+			break;
+		default:
+			return command_usage(&chproj_cmd);
+		}
+	}
+
+	if (argc != optind + 1)
+		return command_usage(&chproj_cmd);
+
+	prid = prid_from_string(argv[optind]);
+	if (prid == -1) {
+		printf(_("invalid project ID -- %s\n"), argv[optind]);
 		return 0;
 	}
-#if defined(__sgi__)
-	if (fchproj(file->fd, id) < 0)
-		perror("fchproj");
-#else
-	printf(_("Not yet implemented\n"));
-#endif
+
+	if (recurse_all || recurse_dir)
+		nftw(file->name, chproj_callback,
+			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+	else if (setprojid(file->name, file->fd, prid) < 0)
+		perror("setprojid");
 	return 0;
 }
 
@@ -564,20 +669,23 @@ open_init(void)
 
 	chproj_cmd.name = _("chproj");
 	chproj_cmd.cfunc = chproj_f;
-	chproj_cmd.args = _("projid");
+	chproj_cmd.args = _("[-D | -R] projid");
 	chproj_cmd.argmin = 1;
-	chproj_cmd.argmax = 1;
+	chproj_cmd.argmax = -1;
 	chproj_cmd.flags = CMD_NOMAP_OK;
 	chproj_cmd.oneline =
 		_("change project identifier on the currently open file");
+	chproj_cmd.help = chproj_help;
 
 	lsproj_cmd.name = _("lsproj");
 	lsproj_cmd.cfunc = lsproj_f;
+	lsproj_cmd.args = _("[-D | -R]");
 	lsproj_cmd.argmin = 0;
-	lsproj_cmd.argmax = 0;
+	lsproj_cmd.argmax = -1;
 	lsproj_cmd.flags = CMD_NOMAP_OK;
 	lsproj_cmd.oneline =
 		_("list project identifier set on the currently open file");
+	lsproj_cmd.help = lsproj_help;
 
 	extsize_cmd.name = _("extsize");
 	extsize_cmd.cfunc = extsize_f;

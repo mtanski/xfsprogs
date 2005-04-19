@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -30,20 +30,29 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-extern char	**breakline(char *input, int *count);
-extern void	doneline(char *input, char **vec);
-extern char	*fetchline(void);
-extern void	init_cvtnum(int *blocksize, int *sectorsize);
-extern long long cvtnum(int blocksize, int sectorsize, char *s);
-extern void	cvtstr(double value, char *str, size_t sz);
-extern struct timeval tsub(struct timeval t1, struct timeval t2);
-extern double	tdiv(double value, struct timeval tv);
+#include <xfs/libxfs.h>
+#include <xfs/command.h>
 
-enum {
-	DEFAULT_TIME		= 0x0,
-	TERSE_FIXED_TIME	= 0x1,
-	VERBOSE_FIXED_TIME	= 0x2,
-};
+static cmdinfo_t quit_cmd;
 
-extern void	timestr(struct timeval *tv, char *str, size_t sz, int flags);
+static int
+quit_f(
+	int	argc,
+	char	**argv)
+{
+	return 1;
+}
 
+void
+quit_init(void)
+{
+	quit_cmd.name = _("quit");
+	quit_cmd.altname = _("q");
+	quit_cmd.cfunc = quit_f;
+	quit_cmd.argmin = -1;
+	quit_cmd.argmax = -1;
+	quit_cmd.flags = -1;
+	quit_cmd.oneline = _("exit the program");
+
+	add_command(&quit_cmd);
+}

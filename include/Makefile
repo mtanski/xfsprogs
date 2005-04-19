@@ -49,6 +49,7 @@ PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
 LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
+LSRCFILES += path.h project.h command.h input.h
 LDIRT = xfs disk
 
 default install :

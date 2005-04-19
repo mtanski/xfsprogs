@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -31,7 +31,7 @@
  */
 
 #include <xfs/libxfs.h>
-#include "explore.h"
+#include <xfs/path.h>
 
 /*
  * When growing a filesystem, this is the most significant
@@ -40,11 +40,6 @@
  */
 
 #define XFS_MAX_INODE_SIG_BITS 32
-
-char	*fname;		/* mount point name */
-char	*datadev;	/* data device name */
-char	*logdev;	/*  log device name */
-char	*rtdev;		/*   RT device name */
 
 static void
 usage(void)
@@ -125,13 +120,17 @@ main(int argc, char **argv)
 	long long		lsize;	/* new log size in fs blocks */
 	int			maxpct;	/* -m flag value */
 	int			mflag;	/* -m flag */
-	char			*mtab;	/* mount table file (/etc/mtab) */
 	int			nflag;	/* -n flag */
 	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
 	int			rflag;	/* -r flag */
 	long long		rsize;	/* new rt size in fs blocks */
 	int			unwritten; /* unwritten extent flag */
 	int			xflag;	/* -x flag */
+	char			*fname;	/* mount point name */
+	char			*datadev; /* data device name */
+	char			*logdev;  /*  log device name */
+	char			*rtdev;	/*   RT device name */
+	fs_path_t		*fs;	/* mount point information */
 	libxfs_init_t		xi;	/* libxfs structure */
 
 	progname = basename(argv[0]);
@@ -139,7 +138,6 @@ main(int argc, char **argv)
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	mtab = NULL;
 	maxpct = esize = 0;
 	dsize = lsize = rsize = 0LL;
 	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
@@ -182,7 +180,7 @@ main(int argc, char **argv)
 			rflag = 1;
 			break;
 		case 't':
-			mtab = optarg;
+			mtab_file = optarg;
 			break;
 		case 'x':
 			lflag = xflag = 1;
@@ -202,7 +200,18 @@ main(int argc, char **argv)
 	if (dflag + lflag + rflag == 0)
 		aflag = 1;
 
-	explore_mtab(mtab, argv[optind]);
+	fs_table_initialise();
+	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
+	if (!fs) {
+		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
+			progname, argv[optind]);
+		return 1;
+	}
+
+	fname = fs->fs_dir;
+	datadev = fs->fs_name;
+	logdev = fs->fs_log;
+	rtdev = fs->fs_rt;
 
 	ffd = open(fname, O_RDONLY);
 	if (ffd < 0) {

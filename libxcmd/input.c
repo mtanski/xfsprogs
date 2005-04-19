@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -31,9 +31,7 @@
  */
 
 #include <xfs/libxfs.h>
-#include "input.h"
-#include "init.h"
-#include "io.h"
+#include <xfs/input.h>
 
 #if defined(ENABLE_READLINE)
 # include <readline/history.h>
@@ -45,7 +43,7 @@
 static char *
 get_prompt(void)
 {
-	static char	prompt[FILENAME_MAX + 1];
+	static char	prompt[FILENAME_MAX + 2 /*"> "*/ + 1 /*"\0"*/ ];
 
 	if (!prompt[0])
 		snprintf(prompt, sizeof(prompt), "%s> ", progname);
@@ -123,11 +121,15 @@ breakline(
 	char	*p;
 	char	**rval = calloc(sizeof(char *), 1);
 
-	while ((p = strsep(&input, " ")) != NULL) {
+	while (rval && (p = strsep(&input, " ")) != NULL) {
 		if (!*p)
 			continue;
 		c++;
 		rval = realloc(rval, sizeof(*rval) * (c + 1));
+		if (!rval) {
+			c = 0;
+			break;
+		}
 		rval[c - 1] = p;
 		rval[c] = NULL;
 	}
@@ -142,20 +144,6 @@ doneline(
 {
 	free(input);
 	free(vec);
-}
-
-void
-init_cvtnum(
-	int		*blocksize,
-	int		*sectsize)
-{
-	if (!file || (file->flags & IO_FOREIGN)) {
-		*blocksize = 4096;
-		*sectsize = 512;
-	} else {
-		*blocksize = file->geom.blocksize;
-		*sectsize = file->geom.sectsize;
-	}
 }
 
 #define EXABYTES(x)	((long long)(x) << 60)
@@ -240,6 +228,54 @@ cvtstr(
 	}
 }
 
+#define MINUTES_TO_SECONDS(m)	((m) * 60)
+#define HOURS_TO_SECONDS(h)	((h) * MINUTES_TO_SECONDS(60))
+#define DAYS_TO_SECONDS(d)	((d) * HOURS_TO_SECONDS(24))
+#define WEEKS_TO_SECONDS(w)	((w) * DAYS_TO_SECONDS(7))
+
+unsigned long
+cvttime(
+	char		*s)
+{
+	unsigned long	i;
+	char		*sp;
+
+	i = strtoul(s, &sp, 0);
+	if (i == 0 && sp == s)
+		return 0;
+	if (*sp == '\0')
+		return i;
+	if ((*sp == 'm' && sp[1] == '\0') ||
+	    (strcmp(sp, "minutes") == 0) ||
+	    (strcmp(sp, "minute") == 0))
+		return MINUTES_TO_SECONDS(i);
+	if ((*sp == 'h' && sp[1] == '\0') ||
+	    (strcmp(sp, "hours") == 0) ||
+	    (strcmp(sp, "hour") == 0))
+		return HOURS_TO_SECONDS(i);
+	if ((*sp == 'd' && sp[1] == '\0') ||
+	    (strcmp(sp, "days") == 0) ||
+	    (strcmp(sp, "day") == 0))
+		return DAYS_TO_SECONDS(i);
+	if ((*sp == 'w' && sp[1] == '\0') ||
+	    (strcmp(sp, "weeks") == 0) ||
+	    (strcmp(sp, "week") == 0))
+		return WEEKS_TO_SECONDS(i);
+	return 0;
+}
+
+struct timeval
+tadd(struct timeval t1, struct timeval t2)
+{
+	t1.tv_usec += t2.tv_usec;
+	if (t1.tv_usec > 1000000) {
+		t1.tv_usec -= 1000000;
+		t1.tv_sec++;
+	}
+	t1.tv_sec += t2.tv_sec;
+	return t1;
+}
+
 struct timeval
 tsub(struct timeval t1, struct timeval t2)
 {
@@ -292,3 +328,76 @@ timestr(
 		snprintf(ts, size, "0.%04u sec", (unsigned int) usec * 10000);
 	}
 }
+
+/*
+ * Convert from arbitrary user strings into a numeric ID.
+ * If its all numeric, we convert that inplace, else we do
+ * the name lookup, and return the found identifier.
+ */
+
+prid_t
+prid_from_string(
+	char		*project)
+{
+	fs_project_t	*prj;
+	prid_t		prid;
+	char		*sp;
+
+	prid = strtoul(project, &sp, 10);
+	if (sp != project)
+		return prid;
+	prj = getprnam(project);
+	if (prj)
+		return prj->pr_prid;
+	return -1;
+}
+
+uid_t
+uid_from_string(
+	char		*user)
+{
+	struct passwd	*pwd;
+	uid_t		uid;
+	char		*sp;
+
+	uid = strtoul(user, &sp, 10);
+	if (sp != user)
+		return uid;
+	pwd = getpwnam(user);
+	if (pwd)
+		return pwd->pw_uid;
+	return -1;
+}
+
+gid_t
+gid_from_string(
+	char		*group)
+{
+	struct group	*grp;
+	gid_t		gid;
+	char		*sp;
+
+	gid = strtoul(group, &sp, 10);
+	if (sp != group)
+		return gid;
+	grp = getgrnam(group);
+	if (grp)
+		return grp->gr_gid;
+	return -1;
+}
+
+#define HAVE_FTW_H 1	/* TODO: configure me */
+
+#ifndef HAVE_FTW_H
+int
+nftw(
+	char	*dir,
+	int	(*fn)(const char *, const struct stat *, int, struct FTW *),
+	int	depth,
+	int	flags)
+{
+	fprintf(stderr, "%s: not implemented, no recursion available\n",
+		__FUNCTION__);
+	return 0;
+}
+#endif

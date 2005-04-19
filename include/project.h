@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -29,28 +29,37 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
+#ifndef __PROJECT_H__
+#define __PROJECT_H__
 
-#include <xfs/libxfs.h>
-#include "command.h"
+#include <xfs/xfs.h>
 
-static cmdinfo_t quit_cmd;
+typedef __uint32_t	prid_t;
+extern int setprojid(const char *__name, int __fd, prid_t __id);
+extern int getprojid(const char *__name, int __fd, prid_t *__id);
 
-static int
-quit_f(
-	int	argc,
-	char	**argv)
-{
-	return 1;
-}
+typedef struct fs_project {
+	prid_t		pr_prid;	/* project identifier */
+	char		*pr_name;	/* project name */
+} fs_project_t;
 
-void
-quit_init(void)
-{
-	quit_cmd.name = _("quit");
-	quit_cmd.altname = _("q");
-	quit_cmd.cfunc = quit_f;
-	quit_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
-	quit_cmd.oneline = _("exit the program");
+extern void setprent(void);
+extern void endprent(void);
+extern fs_project_t *getprent(void);
+extern fs_project_t *getprnam(char *__name);
+extern fs_project_t *getprprid(prid_t __id);
 
-	add_command(&quit_cmd);
-}
+typedef struct fs_project_path {
+	prid_t		pp_prid;	/* project identifier */
+	char		*pp_pathname;	/* pathname to root of project tree */
+} fs_project_path_t;
+
+extern void setprpathent(void);
+extern void endprpathent(void);
+extern fs_project_path_t *getprpathent(void);
+
+extern void setprfiles(void);
+extern char *projid_file;
+extern char *projects_file;
+
+#endif	/* __PROJECT_H__ */

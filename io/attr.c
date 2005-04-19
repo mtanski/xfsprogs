@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -36,30 +36,12 @@
 #include "init.h"
 #include "io.h"
 
-#define HAVE_FTW_H 1	/* TODO: configure me */
-
-#ifdef HAVE_FTW_H
-#include <ftw.h>
-#else
-static int
-nftw(
-	char	*dir,
-	int	(*fn)(const char *, const struct stat *, int, struct FTW *),
-	int	depth,
-	int	flags)
-{
-	fprintf(stderr, "%s: not implemented, no recursion available\n",
-		__FUNCTION__);
-	return 0;
-}
-#endif
-
 static cmdinfo_t chattr_cmd;
 static cmdinfo_t lsattr_cmd;
 static unsigned int orflags;
 static unsigned int andflags;
-static unsigned int recurse_all;
-static unsigned int recurse_dir;
+unsigned int recurse_all;
+unsigned int recurse_dir;
 
 #define CHATTR_XFLAG_LIST	"riasAdtPn"
 

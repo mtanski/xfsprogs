@@ -33,6 +33,7 @@
 #include <xfs/libxfs.h>
 #include "command.h"
 #include "input.h"
+#include "init.h"
 #include "io.h"
 
 char	*progname;
@@ -40,9 +41,6 @@ int	exitcode;
 int	expert;
 size_t	pagesize;
 struct timeval stopwatch;
-
-static int	ncmdline;
-static char	**cmdline;
 
 void
 usage(void)
@@ -54,6 +52,20 @@ usage(void)
 }
 
 void
+init_cvtnum(
+	int		*blocksize,
+	int		*sectsize)
+{
+	if (!file || (file->flags & IO_FOREIGN)) {
+		*blocksize = 4096;
+		*sectsize = 512;
+	} else {
+		*blocksize = file->geom.blocksize;
+		*sectsize = file->geom.sectsize;
+	}
+}
+
+static void
 init_commands(void)
 {
 	attr_init();
@@ -76,6 +88,38 @@ init_commands(void)
 	sendfile_init();
 	shutdown_init();
 	truncate_init();
+}
+
+static int
+init_args_command(
+	int	index)
+{
+	if (index >= filecount)
+		return 0;
+	file = &filetable[index++];
+	return index;
+}
+
+static int
+init_check_command(
+	const cmdinfo_t	*ct)
+{
+	if (!file && !(ct->flags & CMD_NOFILE_OK)) {
+		fprintf(stderr, _("no files are open, try 'help open'\n"));
+		return 0;
+	}
+	if (!mapping && !(ct->flags & CMD_NOMAP_OK)) {
+		fprintf(stderr, _("no mapped regions, try 'help mmap'\n"));
+		return 0;
+	}
+	if (file && !(ct->flags & CMD_FOREIGN_OK) &&
+					(file->flags & IO_FOREIGN)) {
+		fprintf(stderr,
+	_("foreign file active, %s command is for XFS filesystems only\n"),
+			ct->name);
+		return 0;
+	}
+	return 1;
 }
 
 void
@@ -102,13 +146,7 @@ init(
 			flags |= IO_APPEND;
 			break;
 		case 'c':	/* commands */
-			ncmdline++;
-			cmdline = realloc(cmdline, sizeof(char*) * (ncmdline));
-			if (!cmdline) {
-				perror("realloc");
-				exit(1);
-			}
-			cmdline[ncmdline-1] = optarg;
+			add_user_command(optarg);
 			break;
 		case 'd':
 			flags |= IO_DIRECT;
@@ -163,6 +201,8 @@ init(
 	}
 
 	init_commands();
+	add_args_command(init_args_command);
+	add_check_command(init_check_command);
 }
 
 int
@@ -170,32 +210,7 @@ main(
 	int	argc,
 	char	**argv)
 {
-	int	c, i, j, done = 0;
-	char	*input;
-	char	**v;
-
 	init(argc, argv);
-
-	for (i = 0; !done && i < ncmdline; i++) {
-		for (j = 0; !done && j < filecount; j++) {
-			file = &filetable[j];
-			v = breakline(cmdline[i], &c);
-			if (c)
-				done = command(c, v);
-			free(v);
-		}
-	}
-	if (cmdline) {
-		free(cmdline);
-		return exitcode;
-	}
-	while (!done) {
-		if ((input = fetchline()) == NULL)
-			break;
-		v = breakline(input, &c);
-		if (c)
-			done = command(c, v);
-		doneline(input, v);
-	}
+	command_loop();
 	return exitcode;
 }

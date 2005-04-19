@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2001,2004-2005 Silicon Graphics, Inc.  All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -36,15 +36,9 @@ include $(TOPDIR)/include/builddefs
 LTCOMMAND = xfs_growfs
 
 CFILES = xfs_growfs.c
-ifeq ($(PKG_PLATFORM),linux)
-CFILES += explore.c
-else
-LSRCFILES = explore.c
-endif
-HFILES = explore.h
 
-LLDLIBS = $(LIBXFS) $(LIBUUID)
-LTDEPENDENCIES = $(LIBXFS)
+LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBUUID)
+LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
 LLDFLAGS = -static
 LSRCFILES = xfs_info.sh
 

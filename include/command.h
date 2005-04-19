@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -29,20 +29,43 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef XFS_GROWFS_EXPLORE_H
-#define XFS_GROWFS_EXPLORE_H
+#ifndef __COMMAND_H__
+#define __COMMAND_H__
 
-/*
- * This was written as part of the Linux port.  On IRIX,
- * the volume managers have knowledge of log and realtime
- * subvolumes, and the equivalent functionality is built
- * into the kernel - XFS/XLV/XVM talk amongst themselves
- * and there are no rtdev/logdev mount parameters at all.
- */
-#ifdef __linux__
-extern void explore_mtab(char *mtab, char *mntpoint);
-#else
-# define explore_mtab(mtab, mpoint)	do { } while (0)
-#endif
+typedef int (*cfunc_t)(int argc, char **argv);
+typedef void (*helpfunc_t)(void);
 
-#endif	/* XFS_GROWFS_EXPLORE_H */
+typedef struct cmdinfo {
+	const char	*name;
+	const char	*altname;
+	cfunc_t		cfunc;
+	int		argmin;
+	int		argmax;
+	int		canpush;
+	int		flags;
+	const char	*args;
+	const char	*oneline;
+	helpfunc_t      help;
+} cmdinfo_t;
+
+extern cmdinfo_t	*cmdtab;
+extern int		ncmds;
+
+extern void		help_init(void);
+extern void		quit_init(void);
+
+typedef int (*argsfunc_t)(int index);
+typedef int (*checkfunc_t)(const cmdinfo_t *ci);
+
+extern void		add_command(const cmdinfo_t *ci);
+extern void		add_user_command(char *optarg);
+extern void		add_args_command(argsfunc_t af);
+extern void		add_check_command(checkfunc_t cf);
+
+extern const cmdinfo_t	*find_command(const char *cmd);
+
+extern void		command_loop(void);
+extern int		command_usage(const cmdinfo_t *ci);
+extern int		command(int argc, char **argv);
+
+#endif	/* __COMMAND_H__ */

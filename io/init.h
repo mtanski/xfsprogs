@@ -30,8 +30,16 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
+#define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
+#define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
+
 extern char	*progname;
 extern int	exitcode;
 extern int	expert;
 extern size_t	pagesize;
 extern struct timeval stopwatch;
+
+#define min(a,b)	(((a)<(b))?(a):(b))
+
+extern void init_cvtnum(int *blocksize, int *sectsize);

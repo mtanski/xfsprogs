@@ -35,10 +35,14 @@ include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_io
 LSRCFILES = xfs_bmap.sh xfs_freeze.sh
-HFILES = command.h input.h init.h io.h
-CFILES = command.c input.c init.c help.c quit.c \
+HFILES = init.h io.h
+CFILES = init.c \
 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c \
 	mmap.c open.c pread.c prealloc.c pwrite.c truncate.c
+
+LLDLIBS = $(LIBXCMD)
+LTDEPENDENCIES = $(LIBXCMD)
+LLDFLAGS = -static
 
 ifeq ($(HAVE_FADVISE),yes)
 CFILES += fadvise.c

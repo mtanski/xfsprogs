@@ -43,7 +43,7 @@ LSRCFILES = configure configure.in Makepkgs aclocal.m4 install-sh README VERSION
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
-SUBDIRS = include libxfs libxlog libhandle libdisk \
+SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
 	copy db fsck growfs io logprint mkfile mkfs repair rtcp \
 	m4 man doc po debian build
 

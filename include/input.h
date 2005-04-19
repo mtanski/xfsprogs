@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -29,34 +29,50 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
+#ifndef __INPUT_H__
+#define __INPUT_H__
 
-#define min(a,b)	(((a)<(b))?(a):(b))
+#include <pwd.h>
+#include <grp.h>
+#include <sys/types.h>
+#include <xfs/project.h>
 
-typedef int (*cfunc_t)(int argc, char **argv);
-typedef void (*helpfunc_t)(void);
+extern char	**breakline(char *input, int *count);
+extern void	doneline(char *input, char **vec);
+extern char	*fetchline(void);
 
-#define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
-#define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
-#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
+extern long long cvtnum(int blocksize, int sectorsize, char *s);
+extern void	cvtstr(double value, char *str, size_t sz);
+extern unsigned long cvttime(char *s);
 
-typedef struct cmdinfo {
-	const char	*name;
-	const char	*altname;
-	cfunc_t		cfunc;
-	int		argmin;
-	int		argmax;
-	int		canpush;
-	int		flags;
-	const char	*args;
-	const char	*oneline;
-	helpfunc_t      help;
-} cmdinfo_t;
+extern struct timeval tadd(struct timeval t1, struct timeval t2);
+extern struct timeval tsub(struct timeval t1, struct timeval t2);
+extern double	tdiv(double value, struct timeval tv);
 
-extern cmdinfo_t	*cmdtab;
-extern int		ncmds;
+enum {
+	DEFAULT_TIME		= 0x0,
+	TERSE_FIXED_TIME	= 0x1,
+	VERBOSE_FIXED_TIME	= 0x2,
+};
 
-extern void		add_command(const cmdinfo_t *ci);
-extern int		command_usage(const cmdinfo_t *ci);
-extern int		command(int argc, char **argv);
-extern const cmdinfo_t	*find_command(const char *cmd);
+extern void	timestr(struct timeval *tv, char *str, size_t sz, int flags);
 
+extern uid_t	uid_from_string(char *user);
+extern gid_t	gid_from_string(char *group);
+extern prid_t	prid_from_string(char *project);
+
+#define HAVE_FTW_H 1	/* TODO: configure me */
+
+#ifdef HAVE_FTW_H
+#include <ftw.h>
+#else
+struct FTW;
+struct stat;
+extern int nftw(
+	char	*dir,
+	int	(*fn)(const char *, const struct stat *, int, struct FTW *),
+	int	depth,
+	int	flags);
+#endif
+
+#endif	/* __INPUT_H__ */

@@ -80,6 +80,9 @@ extern int		openfile(char *, xfs_fsop_geom_t *, int, mode_t);
 extern int		addfile(char *, int , xfs_fsop_geom_t *, int);
 extern void		printxattr(uint, int, int, const char *, int, int);
 
+extern unsigned int	recurse_all;
+extern unsigned int	recurse_dir;
+
 extern void		*buffer;
 extern ssize_t		buffersize;
 extern int		alloc_buffer(ssize_t, int, unsigned int);
