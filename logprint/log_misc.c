@@ -82,6 +82,7 @@ char *trans_type[] = {
 	"GROWFSRT_ZERO",
 	"GROWFSRT_FREE",
 	"SWAPEXT",
+	"SB_COUNT",
 };
 
 typedef struct xlog_split_item {
@@ -882,7 +883,7 @@ print_lsn(xfs_caddr_t	string,
 	  xfs_arch_t    arch)
 {
     printf("%s: %u,%u", string,
-	    CYCLE_LSN(*lsn, arch), BLOCK_LSN(*lsn, arch));
+	    CYCLE_LSN(INT_GET(*lsn, arch)), BLOCK_LSN(INT_GET(*lsn, arch)));
 }
 
 
@@ -927,8 +928,9 @@ xlog_print_record(int			  fd,
     }
     /* Did we overflow the end? */
     if (*read_type == FULL_READ &&
-	BLOCK_LSN(rhead->h_lsn, ARCH_CONVERT)+BTOBB(read_len) >= logBBsize) {
-	*read_type = BBTOB(logBBsize-BLOCK_LSN(rhead->h_lsn, ARCH_CONVERT)-1);
+	BLOCK_LSN(INT_GET(rhead->h_lsn, ARCH_CONVERT)) + BTOBB(read_len) >=
+		logBBsize) {
+	*read_type = BBTOB(logBBsize - BLOCK_LSN(INT_GET(rhead->h_lsn, ARCH_CONVERT))-1);
 	*partial_buf = buf;
 	return PARTIAL_READ;
     }
@@ -946,7 +948,7 @@ xlog_print_record(int			  fd,
      * Unpack the data, by putting the saved cycle-data back
      * into the first word of each BB.
      * Do some checks.
-     */	
+     */
     buf = ptr;
     for (i = 0; ptr < buf + read_len; ptr += BBSIZE, i++) {
 	xlog_rec_header_t *rechead = (xlog_rec_header_t *)ptr;
@@ -1094,7 +1096,7 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
     if (print_no_print)
 	    return INT_GET(head->h_num_logops, ARCH_CONVERT);
 
-    if (INT_ISZERO(head->h_magicno, ARCH_CONVERT))
+    if (!head->h_magicno)
 	return ZEROED_LOG;
 
     if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
@@ -1105,11 +1107,8 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
     }
 
     /* check for cleared blocks written by xlog_clear_stale_blocks() */
-    if (INT_ISZERO(head->h_len, ARCH_CONVERT) &&
-	INT_ISZERO(head->h_chksum, ARCH_CONVERT) &&
-	INT_ISZERO(head->h_prev_block, ARCH_CONVERT) &&
-	INT_ISZERO(head->h_num_logops, ARCH_CONVERT) &&
-	INT_ISZERO(head->h_size, ARCH_CONVERT))
+    if (!head->h_len && !head->h_chksum && !head->h_prev_block &&
+	!head->h_num_logops && !head->h_size)
 	return CLEARED_BLKS;
 
     datalen=INT_GET(head->h_len, ARCH_CONVERT);

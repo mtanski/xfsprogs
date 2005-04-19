@@ -101,7 +101,7 @@ logstat(xfs_mount_t *mp)
 		/*
 		 * Conjure up a mount structure
 		 */
-		libxfs_xlate_sb(buf, &(mp->m_sb), 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+		libxfs_xlate_sb(buf, &(mp->m_sb), 1, XFS_SB_ALL_BITS);
 		sb = &(mp->m_sb);
 		mp->m_blkbb_log = sb->sb_blocklog - BBSHIFT;
 

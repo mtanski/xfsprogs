@@ -605,7 +605,7 @@ xlog_find_tail(
 
 	/* find blk_no of tail of log */
 	rhead = (xlog_rec_header_t *)offset;
-	*tail_blk = BLOCK_LSN(rhead->h_tail_lsn, ARCH_CONVERT);
+	*tail_blk = BLOCK_LSN(INT_GET(rhead->h_tail_lsn, ARCH_CONVERT));
 
 	/*
 	 * Reset log values according to the state of the log when we
@@ -672,11 +672,19 @@ xlog_find_tail(
 			 * log records will point recovery to after the
 			 * current unmount record.
 			 */
-			ASSIGN_ANY_LSN(log->l_tail_lsn, log->l_curr_cycle,
-					after_umount_blk, ARCH_NOCONVERT);
-			ASSIGN_ANY_LSN(log->l_last_sync_lsn, log->l_curr_cycle,
-					after_umount_blk, ARCH_NOCONVERT);
+			ASSIGN_ANY_LSN_HOST(log->l_tail_lsn, log->l_curr_cycle,
+					after_umount_blk);
+			ASSIGN_ANY_LSN_HOST(log->l_last_sync_lsn, log->l_curr_cycle,
+					after_umount_blk);
 			*tail_blk = after_umount_blk;
+
+			/*
+			 * Note that the unmount was clean. If the unmount
+			 * was not clean, we need to know this to rebuild the
+			 * superblock counters from the perag headers if we
+			 * have a filesystem using non-persistent counters.
+			 */
+			log->l_mp->m_flags |= XFS_MOUNT_WAS_CLEAN;
 		}
 	}
 
@@ -1203,7 +1211,7 @@ xlog_valid_rec_header(
 		return XFS_ERROR(EFSCORRUPTED);
 	}
 	if (unlikely(
-	    (INT_ISZERO(rhead->h_version, ARCH_CONVERT) ||
+	    (!rhead->h_version ||
 	    (INT_GET(rhead->h_version, ARCH_CONVERT) &
 			(~XLOG_VERSION_OKBITS)) != 0))) {
 		xlog_warn("XFS: %s: unrecognised log version (%d).",

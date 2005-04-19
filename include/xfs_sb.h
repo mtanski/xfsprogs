@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -72,7 +72,8 @@ struct xfs_mount;
 	 XFS_SB_VERSION_DALIGNBIT | \
 	 XFS_SB_VERSION_SHAREDBIT | \
 	 XFS_SB_VERSION_LOGV2BIT | \
-	 XFS_SB_VERSION_SECTORBIT)
+	 XFS_SB_VERSION_SECTORBIT | \
+	 XFS_SB_VERSION_MOREBITSBIT)
 #define	XFS_SB_VERSION_OKSASHBITS	\
 	(XFS_SB_VERSION_NUMBITS | \
 	 XFS_SB_VERSION_REALFBITS | \
@@ -103,12 +104,13 @@ struct xfs_mount;
  */
 #define XFS_SB_VERSION2_REALFBITS	0x00ffffff	/* Mask: features */
 #define XFS_SB_VERSION2_RESERVED1BIT	0x00000001
+#define XFS_SB_VERSION2_LAZYSBCOUNTBIT	0x00000002	/* Superblk counters */
 #define XFS_SB_VERSION2_SASHFBITS	0xff000000	/* Mask: features that
 							   require changing
 							   PROM and SASH */
 
 #define	XFS_SB_VERSION2_OKREALFBITS	\
-	(0)
+	(XFS_SB_VERSION2_LAZYSBCOUNTBIT)
 #define	XFS_SB_VERSION2_OKSASHFBITS	\
 	(0)
 #define XFS_SB_VERSION2_OKREALBITS	\
@@ -118,8 +120,8 @@ struct xfs_mount;
 /*
  * mkfs macro to set up sb_features2 word
  */
-#define	XFS_SB_VERSION2_MKFS(xyz)	\
-	((xyz) ? 0 : 0)
+#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr)	\
+	((sbcntr) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0)
 
 typedef struct xfs_sb
 {
@@ -216,6 +218,9 @@ typedef enum {
 #define XFS_SB_SHARED_VN	XFS_SB_MVAL(SHARED_VN)
 #define XFS_SB_UNIT		XFS_SB_MVAL(UNIT)
 #define XFS_SB_WIDTH		XFS_SB_MVAL(WIDTH)
+#define XFS_SB_ICOUNT		XFS_SB_MVAL(ICOUNT)
+#define XFS_SB_IFREE		XFS_SB_MVAL(IFREE)
+#define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
 #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
 #define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
 #define	XFS_SB_MOD_BITS		\
@@ -502,11 +507,18 @@ int xfs_sb_version_hasmorebits(xfs_sb_t *sbp);
  *
  * For example, for a bit defined as XFS_SB_VERSION2_YBIT, has a macro:
  *
- * SB_VERSION_HASYBIT(xfs_sb_t *sbp)
+ * SB_VERSION_HASFUNBIT(xfs_sb_t *sbp)
  *	((XFS_SB_VERSION_HASMOREBITS(sbp) &&
- *	 ((sbp)->sb_versionnum & XFS_SB_VERSION2_YBIT)
+ *	 ((sbp)->sb_features2 & XFS_SB_VERSION2_FUNBIT)
  */
-
+#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_SB_VERSION_LAZYSBCOUNTBIT)
+int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp);
+#define XFS_SB_VERSION_LAZYSBCOUNT(sbp)	xfs_sb_version_haslazysbcount(sbp)
+#else
+#define XFS_SB_VERSION_LAZYSBCOUNT(sbp)	\
+	((XFS_SB_VERSION_HASMOREBITS(sbp)) &&	\
+	  ((sbp)->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT))
+#endif
 /*
  * end of superblock version macros
  */

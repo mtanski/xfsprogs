@@ -92,6 +92,7 @@ typedef struct xfs_agf
 	__uint32_t	agf_flcount;	/* count of blocks in freelist */
 	xfs_extlen_t	agf_freeblks;	/* total free blocks */
 	xfs_extlen_t	agf_longest;	/* longest free space */
+	__uint32_t	agf_btreeblks;	/* # of blocks held in AGF btrees */
 } xfs_agf_t;
 
 #define	XFS_AGF_MAGICNUM	0x00000001
@@ -105,7 +106,8 @@ typedef struct xfs_agf
 #define	XFS_AGF_FLCOUNT		0x00000100
 #define	XFS_AGF_FREEBLKS	0x00000200
 #define	XFS_AGF_LONGEST		0x00000400
-#define	XFS_AGF_NUM_BITS	11
+#define	XFS_AGF_BTREEBLKS	0x00000800
+#define	XFS_AGF_NUM_BITS	12
 #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
 
 /* disk block (xfs_daddr_t) in the AG */
@@ -222,11 +224,13 @@ typedef struct xfs_perag
 	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
 	xfs_extlen_t	pagf_longest;	/* longest free space */
+	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
+	int		pagb_count;	/* pagb slots in use */
+	xfs_agino_t	pagi_count;	/* number of allocated inodes */
 #ifdef __KERNEL__
 	lock_t		pagb_lock;	/* lock for pagb_list */
 #endif
-	int		pagb_count;	/* pagb slots in use */
 	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
 } xfs_perag_t;
 

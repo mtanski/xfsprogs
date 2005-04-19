@@ -1,32 +1,32 @@
 /*
  * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -1970,12 +1970,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_versionnum =
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2, logversion == 2,
-			(sectorsize != BBSIZE || lsectorsize != BBSIZE), 0);
-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0);
+			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
+			(0 /*mmr*/ || 0 /*lazy_sb_counters*/));
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0 /*mmr*/, 0);
+
 	/*
-	 * Zero out the beginning of the device, to obliterate any old 
-	 * filesystem signatures out there.  This should take care of 
-	 * swap (somewhere around the page size), jfs (32k), 
+	 * Zero out the beginning of the device, to obliterate any old
+	 * filesystem signatures out there.  This should take care of
+	 * swap (somewhere around the page size), jfs (32k),
 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
 	 */
 	buf = libxfs_getbuf(xi.ddev, 0, BTOBB(WHACK_SIZE));
@@ -1985,8 +1987,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	/* OK, now write the superblock */
 	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
 	bzero(XFS_BUF_PTR(buf), sectorsize);
-	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
-			XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/*
@@ -2037,8 +2038,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1));
 		bzero(XFS_BUF_PTR(buf), sectorsize);
-		libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, ARCH_CONVERT,
-				XFS_SB_ALL_BITS);
+		libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*

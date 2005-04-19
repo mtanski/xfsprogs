@@ -64,14 +64,14 @@ xfs_log_dump(
 			break;
 		}
 
-		if (CYCLE_LSN(buf, ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM &&
-		    !print_no_data) {
+		if (CYCLE_LSN(INT_GET(*(xfs_lsn_t *)buf, ARCH_CONVERT)) ==
+				XLOG_HEADER_MAGIC_NUM && !print_no_data) {
 			printf(
 		"%6lld HEADER Cycle %d tail %d:%06d len %6d ops %d\n",
 				(long long)blkno,
 				INT_GET(hdr->h_cycle, ARCH_CONVERT),
-				CYCLE_LSN(hdr->h_tail_lsn, ARCH_CONVERT),
-				BLOCK_LSN(hdr->h_tail_lsn, ARCH_CONVERT),
+				CYCLE_LSN(INT_GET(hdr->h_tail_lsn, ARCH_CONVERT)),
+				BLOCK_LSN(INT_GET(hdr->h_tail_lsn, ARCH_CONVERT)),
 				INT_GET(hdr->h_len, ARCH_CONVERT),
 				INT_GET(hdr->h_num_logops, ARCH_CONVERT));
 		}

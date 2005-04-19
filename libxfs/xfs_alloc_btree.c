@@ -173,7 +173,7 @@ xfs_alloc_delrec(
 		 * No free extents left.
 		 */
 		else
-			INT_ZERO(agf->agf_longest, ARCH_CONVERT);
+			agf->agf_longest = 0;
 		mp->m_perag[INT_GET(agf->agf_seqno, ARCH_CONVERT)].pagf_longest =
 			INT_GET(agf->agf_longest, ARCH_CONVERT);
 		xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp,
@@ -202,7 +202,7 @@ xfs_alloc_delrec(
 			 * Put this buffer/block on the ag's freelist.
 			 */
 			if ((error = xfs_alloc_put_freelist(cur->bc_tp,
-					cur->bc_private.a.agbp, NULL, bno)))
+					cur->bc_private.a.agbp, NULL, bno, 1)))
 				return error;
 			/*
 			 * Since blocks move to the free list without the
@@ -524,7 +524,7 @@ xfs_alloc_delrec(
 	 * Free the deleting block by putting it on the freelist.
 	 */
 	if ((error = xfs_alloc_put_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			NULL, rbno)))
+			NULL, rbno, 1)))
 		return error;
 	/*
 	 * Since blocks move to the free list without the coordination
@@ -1282,7 +1282,7 @@ xfs_alloc_newroot(
 	 * Get a buffer from the freelist blocks, for the new root.
 	 */
 	if ((error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			&nbno)))
+			&nbno, 1)))
 		return error;
 	/*
 	 * None available, we fail.
@@ -1566,7 +1566,7 @@ xfs_alloc_split(
 	 * If we can't do it, we're toast.  Give up.
 	 */
 	if ((error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			&rbno)))
+			&rbno, 1)))
 		return error;
 	if (rbno == NULLAGBLOCK) {
 		*stat = 0;

@@ -198,7 +198,7 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 		return 0;
 	}
 
-	libxfs_xlate_sb(iocur_top->data, sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(iocur_top->data, sb, 1, XFS_SB_ALL_BITS);
 
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
 		dbprintf("bad sb magic # %#x in AG %u\n",
@@ -330,7 +330,7 @@ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
 	}
 	/* set uuid */
 	memcpy(&tsb.sb_uuid, uuid, sizeof(uuid_t));
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, ARCH_CONVERT, XFS_SB_UUID);
+	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_UUID);
 	write_cur();
 	return uuid;
 }
@@ -483,7 +483,7 @@ do_label(xfs_agnumber_t agno, char *label)
 	memset(&tsb.sb_fname, 0, sizeof(tsb.sb_fname));
 	memcpy(&tsb.sb_fname, label, len);
 	memcpy(&lbl[0], &tsb.sb_fname, sizeof(tsb.sb_fname));
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, ARCH_CONVERT, XFS_SB_FNAME);
+	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_FNAME);
 	write_cur();
 	return &lbl[0];
 }
@@ -566,8 +566,7 @@ do_version(xfs_agnumber_t agno, __uint16_t versionnum)
 		return 0;
 
 	tsb.sb_versionnum = versionnum;
-	libxfs_xlate_sb(iocur_top->data, &tsb,
-			-1, ARCH_CONVERT, XFS_SB_VERSIONNUM);
+	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_VERSIONNUM);
 	write_cur();
 	return 1;
 }

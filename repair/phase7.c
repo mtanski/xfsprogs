@@ -124,7 +124,7 @@ phase7(xfs_mount_t *mp)
 				ino = XFS_AGINO_TO_INO(mp, i,
 					irec->ino_startnum + j);
 
-				error = libxfs_trans_iget(mp, tp, ino, 0, &ip);
+				error = libxfs_trans_iget(mp, tp, ino, 0, 0, &ip);
 
 				if (error)  {
 					if (!no_modify)

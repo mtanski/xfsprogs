@@ -81,7 +81,7 @@ lf_block_delete_orphanage(xfs_mount_t		*mp,
 	for (i = 0; i < INT_GET(leaf->hdr.count, ARCH_CONVERT); entry++, i++) {
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf,
 			INT_GET(entry->nameidx, ARCH_CONVERT));
-		XFS_DIR_SF_GET_DIRINO_ARCH(&namest->inumber, &lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO(&namest->inumber, &lino);
 		bcopy(namest->name, fname, entry->namelen);
 		fname[entry->namelen] = '\0';
 
@@ -316,7 +316,7 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 	res = 0;
 	irec = NULL;
 	ino_dir_size = INT_GET(root_dino->di_core.di_size, ARCH_CONVERT);
-	max_size = XFS_DFORK_DSIZE_ARCH(root_dino, mp, ARCH_CONVERT);
+	max_size = XFS_DFORK_DSIZE(root_dino, mp);
 	use_rbuf = 0;
 	root_agno = XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino);
 	root_agino = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino);
@@ -329,8 +329,7 @@ shortform_delete_orphanage(xfs_mount_t	*mp,
 			(__psint_t)next_sfe - (__psint_t)sf; i++)  {
 		tmp_sfe = NULL;
 		sf_entry = next_sfe;
-		XFS_DIR_SF_GET_DIRINO_ARCH(&sf_entry->inumber,
-			&lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO(&sf_entry->inumber, &lino);
 		bcopy(sf_entry->name, fname, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
 
@@ -526,7 +525,7 @@ lf2_block_delete_orphanage(xfs_mount_t		*mp,
 	ptr = (char *)data->u;
 	if (INT_GET(data->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC) {
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, (xfs_dir2_block_t *)data);
-		endptr = (char *)XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		endptr = (char *)XFS_DIR2_BLOCK_LEAF_P(btp);
 	} else
 		endptr = (char *)data + mp->m_dirblksize;
 	*dirty = 0;
@@ -796,7 +795,7 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 	*ino_dirty = 0;
 	irec = NULL;
 	ino_dir_size = INT_GET(root_dino->di_core.di_size, ARCH_CONVERT);
-	max_size = XFS_DFORK_DSIZE_ARCH(root_dino, mp, ARCH_CONVERT);
+	max_size = XFS_DFORK_DSIZE(root_dino, mp);
 	use_rbuf = 0;
 	res = 0;
 	root_agno = XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino);
@@ -810,8 +809,8 @@ shortform2_delete_orphanage(xfs_mount_t	*mp,
 			(__psint_t)next_sfe - (__psint_t)sf; i++)  {
 		tmp_sfe = NULL;
 		sf_entry = next_sfe;
-		lino = XFS_DIR2_SF_GET_INUMBER_ARCH(sf,
-			XFS_DIR2_SF_INUMBERP(sf_entry), ARCH_CONVERT);
+		lino = XFS_DIR2_SF_GET_INUMBER(sf,
+			XFS_DIR2_SF_INUMBERP(sf_entry));
 		bcopy(sf_entry->name, fname, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
 

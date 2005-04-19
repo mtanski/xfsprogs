@@ -172,7 +172,7 @@ process_shortform_attr(
 
 	*repair = 0;
 
-	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
+	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
 
 	/* Assumption: hdr.totsize is less than a leaf block and was checked
 	 * by lclinode for valid sizes. Check the count though.
@@ -987,11 +987,11 @@ process_attributes(
 	xfs_attr_shortform_t *asf;
 
 	dinoc = &dip->di_core;
-	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
+	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
 
 	if (dinoc->di_aformat == XFS_DINODE_FMT_LOCAL) {
 		ASSERT(INT_GET(asf->hdr.totsize, ARCH_CONVERT) <=
-			XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT));
+			XFS_DFORK_ASIZE(dip, mp));
 		err = process_shortform_attr(ino, dip, repair);
 	} else if (dinoc->di_aformat == XFS_DINODE_FMT_EXTENTS ||
 		   dinoc->di_aformat == XFS_DINODE_FMT_BTREE)  {

@@ -398,7 +398,7 @@ xfs_dir_leaf_replace(xfs_da_args_t *args)
 		entry = &leaf->entries[index];
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
 		/* XXX - replace assert? */
-		XFS_DIR_SF_PUT_DIRINO_ARCH(&inum, &namest->inumber, ARCH_CONVERT);
+		XFS_DIR_SF_PUT_DIRINO(&inum, &namest->inumber);
 		xfs_da_log_buf(args->trans, bp,
 		    XFS_DA_LOGRANGE(leaf, namest, sizeof(namest->inumber)));
 		xfs_da_buf_done(bp);
@@ -600,7 +600,7 @@ xfs_dir_node_replace(xfs_da_args_t *args)
 		entry = &leaf->entries[blk->index];
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
 		/* XXX - replace assert ? */
-		XFS_DIR_SF_PUT_DIRINO_ARCH(&inum, &namest->inumber, ARCH_CONVERT);
+		XFS_DIR_SF_PUT_DIRINO(&inum, &namest->inumber);
 		xfs_da_log_buf(args->trans, bp,
 		    XFS_DA_LOGRANGE(leaf, namest, sizeof(namest->inumber)));
 		xfs_da_buf_done(bp);

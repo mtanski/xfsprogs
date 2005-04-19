@@ -225,9 +225,9 @@ inode_a_bmbt_count(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
-	if (!XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT))
+	if (!XFS_DFORK_Q(dip))
 		return 0;
-	ASSERT((char *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT) - (char *)dip == byteize(startoff));
+	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_BTREE;
 }
 
@@ -241,9 +241,9 @@ inode_a_bmx_count(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
-	if (!XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT))
+	if (!XFS_DFORK_Q(dip))
 		return 0;
-	ASSERT((char *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT) - (char *)dip == byteize(startoff));
+	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_EXTENTS ?
 		INT_GET(dip->di_core.di_anextents, ARCH_CONVERT) : 0;
 }
@@ -257,7 +257,7 @@ inode_a_count(
 
 	ASSERT(startoff == 0);
 	dip = obj;
-	return XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT);
+	return XFS_DFORK_Q(dip);
 }
 
 static int
@@ -271,8 +271,8 @@ inode_a_offset(
 	ASSERT(startoff == 0);
 	ASSERT(idx == 0);
 	dip = obj;
-	ASSERT(XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT));
-	return bitize((int)((char *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT) - (char *)dip));
+	ASSERT(XFS_DFORK_Q(dip));
+	return bitize((int)((char *)XFS_DFORK_APTR(dip) - (char *)dip));
 }
 
 static int
@@ -285,9 +285,9 @@ inode_a_sfattr_count(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
-	if (!XFS_DFORK_Q_ARCH(dip, ARCH_CONVERT))
+	if (!XFS_DFORK_Q(dip))
 		return 0;
-	ASSERT((char *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT) - (char *)dip == byteize(startoff));
+	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
 	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL;
 }
 
@@ -305,12 +305,12 @@ inode_a_size(
 	dip = obj;
 	switch (INT_GET(dip->di_core.di_aformat, ARCH_CONVERT)) {
 	case XFS_DINODE_FMT_LOCAL:
-		asf = (xfs_attr_shortform_t *)XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
+		asf = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
 		return bitize((int)asf->hdr.totsize);
 	case XFS_DINODE_FMT_EXTENTS:
 		return (int)(INT_GET(dip->di_core.di_anextents, ARCH_CONVERT) * bitsz(xfs_bmbt_rec_t));
 	case XFS_DINODE_FMT_BTREE:
-		return bitize((int)XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT));
+		return bitize((int)XFS_DFORK_ASIZE(dip, mp));
 	default:
 		return 0;
 	}
@@ -552,7 +552,7 @@ inode_u_size(
 	case XFS_DINODE_FMT_EXTENTS:
 		return (int)(INT_GET(dip->di_core.di_nextents, ARCH_CONVERT) * bitsz(xfs_bmbt_rec_t));
 	case XFS_DINODE_FMT_BTREE:
-		return bitize((int)XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT));
+		return bitize((int)XFS_DFORK_DSIZE(dip, mp));
 	case XFS_DINODE_FMT_UUID:
 		return bitsz(uuid_t);
 	default:

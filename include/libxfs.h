@@ -303,7 +303,7 @@ extern void	libxfs_trans_cancel (xfs_trans_t *, int);
 extern void	libxfs_mod_sb (xfs_trans_t *, __int64_t);
 
 extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
-				uint, struct xfs_inode **);
+				uint, uint, struct xfs_inode **);
 extern void	libxfs_trans_iput(xfs_trans_t *, struct xfs_inode *, uint);
 extern void	libxfs_trans_ijoin (xfs_trans_t *, struct xfs_inode *, uint);
 extern void	libxfs_trans_ihold (xfs_trans_t *, struct xfs_inode *);
@@ -443,10 +443,9 @@ extern int	libxfs_highbit32 (__uint32_t);
 extern int	libxfs_highbit64 (__uint64_t);
 extern uint	libxfs_da_log2_roundup (uint);
 
-extern void	libxfs_xlate_sb (void *, xfs_sb_t *, int, xfs_arch_t,
-				__int64_t);
+extern void	libxfs_xlate_sb (void *, xfs_sb_t *, int, __int64_t);
 extern void	libxfs_xlate_dinode_core (xfs_caddr_t buf,
-				xfs_dinode_core_t *, int, xfs_arch_t);
+				xfs_dinode_core_t *, int);
 
 extern int	libxfs_alloc_fix_freelist (xfs_alloc_arg_t *, int);
 extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,

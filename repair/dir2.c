@@ -772,22 +772,19 @@ process_sf_dir2_fixi8(
 	INT_SET(newsfp->hdr.count, ARCH_CONVERT,
 			INT_GET(oldsfp->hdr.count, ARCH_CONVERT));
 	newsfp->hdr.i8count = 0;
-	ino = XFS_DIR2_SF_GET_INUMBER_ARCH(oldsfp,
-			&oldsfp->hdr.parent, ARCH_CONVERT);
-	XFS_DIR2_SF_PUT_INUMBER_ARCH(newsfp, &ino,
-			&newsfp->hdr.parent, ARCH_CONVERT);
+	ino = XFS_DIR2_SF_GET_INUMBER(oldsfp, &oldsfp->hdr.parent);
+	XFS_DIR2_SF_PUT_INUMBER(newsfp, &ino, &newsfp->hdr.parent);
 	oldsfep = XFS_DIR2_SF_FIRSTENTRY(oldsfp);
 	newsfep = XFS_DIR2_SF_FIRSTENTRY(newsfp);
 	while ((int)((char *)oldsfep - (char *)oldsfp) < oldsize) {
 		newsfep->namelen = oldsfep->namelen;
-		XFS_DIR2_SF_PUT_OFFSET_ARCH(newsfep,
-			XFS_DIR2_SF_GET_OFFSET_ARCH(oldsfep, ARCH_CONVERT),
-				ARCH_CONVERT);
+		XFS_DIR2_SF_PUT_OFFSET(newsfep,
+			XFS_DIR2_SF_GET_OFFSET(oldsfep));
 		memmove(newsfep->name, oldsfep->name, newsfep->namelen);
-		ino = XFS_DIR2_SF_GET_INUMBER_ARCH(oldsfp,
-			XFS_DIR2_SF_INUMBERP(oldsfep), ARCH_CONVERT);
-		XFS_DIR2_SF_PUT_INUMBER_ARCH(newsfp, &ino,
-			XFS_DIR2_SF_INUMBERP(newsfep), ARCH_CONVERT);
+		ino = XFS_DIR2_SF_GET_INUMBER(oldsfp,
+			XFS_DIR2_SF_INUMBERP(oldsfep));
+		XFS_DIR2_SF_PUT_INUMBER(newsfp, &ino,
+			XFS_DIR2_SF_INUMBERP(newsfep));
 		oldsfep = XFS_DIR2_SF_NEXTENTRY(oldsfp, oldsfep);
 		newsfep = XFS_DIR2_SF_NEXTENTRY(newsfp, newsfep);
 	}
@@ -812,7 +809,7 @@ process_sf_dir2_fixoff(
 		offset = XFS_DIR2_DATA_FIRST_OFFSET;
 	     i < INT_GET(sfp->hdr.count, ARCH_CONVERT);
 	     i++, sfep = XFS_DIR2_SF_NEXTENTRY(sfp, sfep)) {
-		XFS_DIR2_SF_PUT_OFFSET_ARCH(sfep, offset, ARCH_CONVERT);
+		XFS_DIR2_SF_PUT_OFFSET(sfep, offset);
 		offset += XFS_DIR2_DATA_ENTSIZE(sfep->namelen);
 	}
 }
@@ -859,7 +856,7 @@ process_sf_dir2(
 	xfs_ino_t		zero = 0;
 
 	sfp = &dip->di_u.di_dir2sf;
-	max_size = XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT);
+	max_size = XFS_DFORK_DSIZE(dip, mp);
 	num_entries = INT_GET(sfp->hdr.count, ARCH_CONVERT);
 	ino_dir_size = INT_GET(dip->di_core.di_size, ARCH_CONVERT);
 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
@@ -870,7 +867,7 @@ process_sf_dir2(
 	/*
 	 * Initialize i8 based on size of parent inode number.
 	 */
-	i8 = (XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, &sfp->hdr.parent, ARCH_CONVERT)
+	i8 = (XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent)
 		> XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
@@ -893,8 +890,8 @@ process_sf_dir2(
 		sfep = next_sfep;
 		junkit = 0;
 		bad_sfnamelen = 0;
-		lino = XFS_DIR2_SF_GET_INUMBER_ARCH(sfp,
-				XFS_DIR2_SF_INUMBERP(sfep), ARCH_CONVERT);
+		lino = XFS_DIR2_SF_GET_INUMBER(sfp,
+				XFS_DIR2_SF_INUMBERP(sfep));
 		/*
 		 * if entry points to self, junk it since only '.' or '..'
 		 * should do that and shortform dirs don't contain either
@@ -1073,13 +1070,13 @@ process_sf_dir2(
 			junkit = 1;
 		}
 
-		if (XFS_DIR2_SF_GET_OFFSET_ARCH(sfep, ARCH_CONVERT) < offset) {
+		if (XFS_DIR2_SF_GET_OFFSET(sfep) < offset) {
 			do_warn(_("entry contains offset out of order in "
 				  "shortform dir %llu\n"),
 				ino);
 			bad_offset = 1;
 		}
-		offset = XFS_DIR2_SF_GET_OFFSET_ARCH(sfep, ARCH_CONVERT) +
+		offset = XFS_DIR2_SF_GET_OFFSET(sfep) +
 			 XFS_DIR2_DATA_ENTSIZE(namelen);
 
 		/*
@@ -1240,8 +1237,7 @@ process_sf_dir2(
 	/*
 	 * check parent (..) entry
 	 */
-	*parent = XFS_DIR2_SF_GET_INUMBER_ARCH(sfp,
-				&sfp->hdr.parent, ARCH_CONVERT);
+	*parent = XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent);
 
 	/*
 	 * if parent entry is bogus, null it out.  we'll fix it later .
@@ -1255,8 +1251,7 @@ process_sf_dir2(
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR2_SF_PUT_INUMBER_ARCH(sfp, &zero,
-				&sfp->hdr.parent, ARCH_CONVERT);
+			XFS_DIR2_SF_PUT_INUMBER(sfp, &zero, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1271,8 +1266,7 @@ process_sf_dir2(
 				  "was %llu, now %llu\n"),
 				ino, *parent, ino);
 			*parent = ino;
-			XFS_DIR2_SF_PUT_INUMBER_ARCH(sfp, parent,
-				&sfp->hdr.parent, ARCH_CONVERT);
+			XFS_DIR2_SF_PUT_INUMBER(sfp, parent, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1292,8 +1286,7 @@ process_sf_dir2(
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR2_SF_PUT_INUMBER_ARCH(sfp, &zero,
-				&sfp->hdr.parent, ARCH_CONVERT);
+			XFS_DIR2_SF_PUT_INUMBER(sfp, &zero, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1369,9 +1362,8 @@ process_dir2_data(
 			    INT_GET(dup->length, ARCH_CONVERT) == 0 ||
 			    (INT_GET(dup->length, ARCH_CONVERT) & (XFS_DIR2_DATA_ALIGN - 1)))
 				break;
-			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup,
-					ARCH_CONVERT), ARCH_CONVERT) !=
-			    (char *)dup - (char *)d)
+			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P(dup),
+				    ARCH_CONVERT) != (char *)dup - (char *)d)
 				break;
 			badbest |= lastfree != 0;
 			dfp = xfs_dir2_data_freefind(d, dup);
@@ -1726,7 +1718,7 @@ process_block_dir2(
 	 * this also checks & fixes the bestfree
 	 */
 	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-	blp = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+	blp = XFS_DIR2_BLOCK_LEAF_P(btp);
 	/*
 	 * Don't let this go past the end of the block.
 	 */
@@ -2084,7 +2076,7 @@ process_dir2(
 	if (blkmap)
 		last = blkmap_last_off(blkmap);
 	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <=
-		XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT) &&
+		XFS_DFORK_DSIZE(dip, mp) &&
 	    dip->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
 		dot = dotdot = 1;
 		res = process_sf_dir2(mp, ino, dip, ino_discovery, dino_dirty,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -1375,7 +1375,8 @@ xfs_alloc_ag_vextent_small(
 	else if (args->minlen == 1 && args->alignment == 1 && !args->isfl &&
 		 (INT_GET(XFS_BUF_TO_AGF(args->agbp)->agf_flcount,
 			ARCH_CONVERT) > args->minleft)) {
-		if ((error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno)))
+		error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno, 0);
+		if (error)
 			goto error0;
 		if (fbno != NULLAGBLOCK) {
 			if (args->userdata) {
@@ -1840,7 +1841,7 @@ xfs_alloc_fix_freelist(
 	while (INT_GET(agf->agf_flcount, ARCH_CONVERT) > need) {
 		xfs_buf_t	*bp;
 
-		if ((error = xfs_alloc_get_freelist(tp, agbp, &bno)))
+		if ((error = xfs_alloc_get_freelist(tp, agbp, &bno, 0)))
 			return error;
 		if ((error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1, 1)))
 			return error;
@@ -1884,7 +1885,7 @@ xfs_alloc_fix_freelist(
 		 */
 		for (bno = targs.agbno; bno < targs.agbno + targs.len; bno++) {
 			if ((error = xfs_alloc_put_freelist(tp, agbp, agflbp,
-					bno)))
+					bno, 0)))
 				return error;
 		}
 	}
@@ -1900,13 +1901,15 @@ int				/* error */
 xfs_alloc_get_freelist(
 	xfs_trans_t	*tp,	/* transaction pointer */
 	xfs_buf_t	*agbp,	/* buffer containing the agf structure */
-	xfs_agblock_t	*bnop)	/* block address retrieved from freelist */
+	xfs_agblock_t	*bnop,	/* block address retrieved from freelist */
+	int		btreeblk) /* destination is a AGF btree */
 {
 	xfs_agf_t	*agf;	/* a.g. freespace structure */
 	xfs_agfl_t	*agfl;	/* a.g. freelist structure */
 	xfs_buf_t	*agflbp;/* buffer for a.g. freelist structure */
 	xfs_agblock_t	bno;	/* block number returned */
 	int		error;
+	int		logflags;
 #ifdef XFS_ALLOC_TRACE
 	static char	fname[] = "xfs_alloc_get_freelist";
 #endif
@@ -1917,7 +1920,7 @@ xfs_alloc_get_freelist(
 	/*
 	 * Freelist is empty, give up.
 	 */
-	if (INT_ISZERO(agf->agf_flcount, ARCH_CONVERT)) {
+	if (!agf->agf_flcount) {
 		*bnop = NULLAGBLOCK;
 		return 0;
 	}
@@ -1936,13 +1939,21 @@ xfs_alloc_get_freelist(
 	INT_MOD(agf->agf_flfirst, ARCH_CONVERT, 1);
 	xfs_trans_brelse(tp, agflbp);
 	if (INT_GET(agf->agf_flfirst, ARCH_CONVERT) == XFS_AGFL_SIZE(mp))
-		INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
+		agf->agf_flfirst = 0;
 	pag = &mp->m_perag[INT_GET(agf->agf_seqno, ARCH_CONVERT)];
 	INT_MOD(agf->agf_flcount, ARCH_CONVERT, -1);
 	xfs_trans_agflist_delta(tp, -1);
 	pag->pagf_flcount--;
-	TRACE_MODAGF(NULL, agf, XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT);
-	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT);
+
+	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
+	if (btreeblk) {
+		INT_MOD(agf->agf_btreeblks, ARCH_CONVERT, 1);
+		pag->pagf_btreeblks++;
+		logflags |= XFS_AGF_BTREEBLKS;
+	}
+
+	TRACE_MODAGF(NULL, agf, logflags);
+	xfs_alloc_log_agf(tp, agbp, logflags);
 	*bnop = bno;
 
 	/*
@@ -1980,6 +1991,7 @@ xfs_alloc_log_agf(
 		offsetof(xfs_agf_t, agf_flcount),
 		offsetof(xfs_agf_t, agf_freeblks),
 		offsetof(xfs_agf_t, agf_longest),
+		offsetof(xfs_agf_t, agf_btreeblks),
 		sizeof(xfs_agf_t)
 	};
 
@@ -2015,12 +2027,14 @@ xfs_alloc_put_freelist(
 	xfs_trans_t		*tp,	/* transaction pointer */
 	xfs_buf_t		*agbp,	/* buffer for a.g. freelist header */
 	xfs_buf_t		*agflbp,/* buffer for a.g. free block array */
-	xfs_agblock_t		bno)	/* block being freed */
+	xfs_agblock_t		bno,	/* block being freed */
+	int			btreeblk) /* block came from a AGF btree */
 {
 	xfs_agf_t		*agf;	/* a.g. freespace structure */
 	xfs_agfl_t		*agfl;	/* a.g. free block array */
 	xfs_agblock_t		*blockp;/* pointer to array entry */
 	int			error;
+	int			logflags;
 #ifdef XFS_ALLOC_TRACE
 	static char		fname[] = "xfs_alloc_put_freelist";
 #endif
@@ -2036,16 +2050,26 @@ xfs_alloc_put_freelist(
 	agfl = XFS_BUF_TO_AGFL(agflbp);
 	INT_MOD(agf->agf_fllast, ARCH_CONVERT, 1);
 	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) == XFS_AGFL_SIZE(mp))
-		INT_ZERO(agf->agf_fllast, ARCH_CONVERT);
+		agf->agf_fllast = 0;
 	pag = &mp->m_perag[INT_GET(agf->agf_seqno, ARCH_CONVERT)];
 	INT_MOD(agf->agf_flcount, ARCH_CONVERT, 1);
 	xfs_trans_agflist_delta(tp, 1);
 	pag->pagf_flcount++;
+
+	logflags = XFS_AGF_FLLAST | XFS_AGF_FLCOUNT;
+	if (btreeblk) {
+		INT_MOD(agf->agf_btreeblks, ARCH_CONVERT, -1);
+		pag->pagf_btreeblks--;
+		logflags |= XFS_AGF_BTREEBLKS;
+	}
+
+	TRACE_MODAGF(NULL, agf, logflags);
+	xfs_alloc_log_agf(tp, agbp, logflags);
 	ASSERT(INT_GET(agf->agf_flcount, ARCH_CONVERT) <= XFS_AGFL_SIZE(mp));
 	blockp = &agfl->agfl_bno[INT_GET(agf->agf_fllast, ARCH_CONVERT)];
 	INT_SET(*blockp, ARCH_CONVERT, bno);
-	TRACE_MODAGF(NULL, agf, XFS_AGF_FLLAST | XFS_AGF_FLCOUNT);
-	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLLAST | XFS_AGF_FLCOUNT);
+	TRACE_MODAGF(NULL, agf, logflags);
+	xfs_alloc_log_agf(tp, agbp, logflags);
 	xfs_trans_log_buf(tp, agflbp,
 		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl),
 		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl +
@@ -2107,6 +2131,7 @@ xfs_alloc_read_agf(
 	pag = &mp->m_perag[agno];
 	if (!pag->pagf_init) {
 		pag->pagf_freeblks = INT_GET(agf->agf_freeblks, ARCH_CONVERT);
+		pag->pagf_btreeblks = INT_GET(agf->agf_btreeblks, ARCH_CONVERT);
 		pag->pagf_flcount = INT_GET(agf->agf_flcount, ARCH_CONVERT);
 		pag->pagf_longest = INT_GET(agf->agf_longest, ARCH_CONVERT);
 		pag->pagf_levels[XFS_BTNUM_BNOi] =
@@ -2155,6 +2180,7 @@ xfs_alloc_vextent(
 	xfs_alloctype_t	type;	/* input allocation type */
 	int		bump_rotor = 0;
 	int		no_min = 0;
+	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
 
 	mp = args->mp;
 	type = args->otype = args->type;
@@ -2218,7 +2244,9 @@ xfs_alloc_vextent(
 		 */
 		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
 		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
-			args->fsbno = XFS_AGB_TO_FSB(mp, mp->m_agfrotor, 0);
+			args->fsbno = XFS_AGB_TO_FSB(mp,
+					((mp->m_agfrotor / rotorstep) %
+					mp->m_sb.sb_agcount), 0);
 			bump_rotor = 1;
 		}
 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
@@ -2234,7 +2262,8 @@ xfs_alloc_vextent(
 			/*
 			 * Start with the last place we left off.
 			 */
-			args->agno = sagno = mp->m_agfrotor;
+			args->agno = sagno = (mp->m_agfrotor / rotorstep) %
+					mp->m_sb.sb_agcount;
 			args->type = XFS_ALLOCTYPE_THIS_AG;
 			flags = XFS_ALLOC_FLAG_TRYLOCK;
 		} else if (type == XFS_ALLOCTYPE_FIRST_AG) {
@@ -2308,8 +2337,14 @@ xfs_alloc_vextent(
 			}
 		}
 		up_read(&mp->m_peraglock);
-		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG))
-			mp->m_agfrotor = (args->agno + 1) % mp->m_sb.sb_agcount;
+		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
+			if (args->agno == sagno)
+				mp->m_agfrotor = (mp->m_agfrotor + 1) %
+					(mp->m_sb.sb_agcount * rotorstep);
+			else
+				mp->m_agfrotor = (args->agno * rotorstep + 1) %
+					(mp->m_sb.sb_agcount * rotorstep);
+		}
 		break;
 	default:
 		ASSERT(0);

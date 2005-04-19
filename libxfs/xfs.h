@@ -232,6 +232,7 @@
 /* space allocation */
 #define xfs_alloc_search_busy(tp,ag,b,len)		((void) 0)
 #define xfs_alloc_mark_busy(tp,ag,b,len)		((void) 0)
+#define xfs_rotorstep					1
 
 /* anything else */
 #if !defined(__sgi__)
@@ -327,10 +328,10 @@ static inline int atomicIncWithWrap(int *a, int b)
  */
 
 /* xfs_alloc.c */
-int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *);
+int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *, int);
 void xfs_alloc_log_agf (xfs_trans_t *, xfs_buf_t *, int);
 int  xfs_alloc_put_freelist (xfs_trans_t *, xfs_buf_t *, xfs_buf_t *,
-			xfs_agblock_t);
+			xfs_agblock_t, int);
 int  xfs_alloc_read_agf (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t,
 			int, xfs_buf_t **);
 int  xfs_alloc_vextent (xfs_alloc_arg_t *);

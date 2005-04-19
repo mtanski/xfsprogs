@@ -515,7 +515,7 @@ scanfunc_ino(
 
 				/* convert the core, then copy it back into the inode */
 				libxfs_xlate_dinode_core( (xfs_caddr_t)
-					&dip->di_core, &tdic, 1, ARCH_CONVERT );
+					&dip->di_core, &tdic, 1);
 				memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
 
 				if (XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT))

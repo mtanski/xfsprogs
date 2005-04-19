@@ -112,6 +112,7 @@ typedef struct xfs_trans_header {
 #define	XFS_TRANS_GROWFSRT_ZERO		38
 #define	XFS_TRANS_GROWFSRT_FREE		39
 #define	XFS_TRANS_SWAPEXT		40
+#define XFS_TRANS_SB_COUNT		41
 /* new transaction types need to be reflected in xfs_logprint(8) */
 
 
@@ -1007,7 +1008,7 @@ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
 void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
 void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
 int		xfs_trans_iget(struct xfs_mount *, xfs_trans_t *,
-			       xfs_ino_t , uint, struct xfs_inode **);
+			       xfs_ino_t , uint, uint, struct xfs_inode **);
 void		xfs_trans_ijoin(xfs_trans_t *, struct xfs_inode *, uint);
 void		xfs_trans_ihold(xfs_trans_t *, struct xfs_inode *);
 void		xfs_trans_ihold_release(xfs_trans_t *, struct xfs_inode *);

@@ -468,7 +468,7 @@ main(int argc, char **argv)
 	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR, 1, 0);
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
 	sb = &xfs_m.m_sb;
-	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, XFS_SB_ALL_BITS);
 
 	mp = libxfs_mount(&xfs_m, sb, x.ddev, x.logdev, x.rtdev, 0);
 
@@ -599,10 +599,10 @@ _("Warning:  project quota information would be cleared.\n"
 
 	sb = XFS_BUF_TO_SBP(sbp);
 
-	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD))  {
+	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_OQUOTA_CHKD))  {
 		do_warn(
 	_("Note - quota info will be regenerated on next quota mount.\n"));
-		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_GQUOTA_CHKD);
+		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_OQUOTA_CHKD);
 	}
 
 	if (clear_sunit) {

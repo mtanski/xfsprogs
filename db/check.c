@@ -38,9 +38,9 @@
 #include "command.h"
 #include "io.h"
 #include "type.h"
-#include "fprint.h"    
-#include "faddr.h"     
-#include "field.h"     
+#include "fprint.h"
+#include "faddr.h"
+#include "field.h"
 #include "sb.h"
 #include "output.h"
 #include "init.h"
@@ -2117,7 +2117,7 @@ process_btinode(
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmbt_rec_32_t	*rp;
 
-	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_NOCONVERT);
+	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 	if (INT_GET(dib->bb_level, ARCH_CONVERT) >= XFS_BM_MAXLEVELS(mp, whichfork)) {
 		if (!sflag || id->ilist)
 			dbprintf("level for ino %lld %s fork bmap root too "
@@ -2129,7 +2129,7 @@ process_btinode(
 		return;
 	}
 	if (INT_GET(dib->bb_numrecs, ARCH_CONVERT) >
-	    XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_NOCONVERT),
+	    XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE_HOST(dip, mp, whichfork),
 		    xfs_bmdr, INT_GET(dib->bb_level, ARCH_CONVERT) == 0)) {
 		if (!sflag || id->ilist)
 			dbprintf("numrecs for ino %lld %s fork bmap root too "
@@ -2142,7 +2142,7 @@ process_btinode(
 	}
 	if (INT_GET(dib->bb_level, ARCH_CONVERT) == 0) {
 		rp = (xfs_bmbt_rec_32_t *)XFS_BTREE_REC_ADDR(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_NOCONVERT),
+			XFS_DFORK_SIZE_HOST(dip, mp, whichfork),
 			xfs_bmdr, dib, 1,
 			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp,
 					whichfork),
@@ -2152,7 +2152,7 @@ process_btinode(
 		*nex += INT_GET(dib->bb_numrecs, ARCH_CONVERT);
 		return;
 	} else {
-		pp = XFS_BTREE_PTR_ADDR(XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_NOCONVERT),
+		pp = XFS_BTREE_PTR_ADDR(XFS_DFORK_SIZE_HOST(dip, mp, whichfork),
 			xfs_bmdr, dib, 1,
 			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp,
 							       whichfork),
@@ -2165,7 +2165,7 @@ process_btinode(
 					TYP_BMAPBTD : TYP_BMAPBTA);
 	}
 	if (*nex <=
-	    XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_NOCONVERT) / sizeof(xfs_bmbt_rec_t)) {
+	    XFS_DFORK_SIZE_HOST(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_t)) {
 		if (!sflag || id->ilist)
 			dbprintf("extent count for ino %lld %s fork too low "
 				 "(%d) for file format\n",
@@ -2228,7 +2228,7 @@ process_data_dir_v2(
 	ptr = (char *)data->u;
 	if (INT_GET(block->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC) {
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-		lep = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		lep = XFS_DIR2_BLOCK_LEAF_P(btp);
 		endptr = (char *)lep;
 		if (endptr <= ptr || endptr > (char *)btp) {
 			endptr = (char *)data + mp->m_dirblksize;
@@ -2276,7 +2276,7 @@ process_data_dir_v2(
 			lastfree_err += lastfree != 0;
 			if ((INT_GET(dup->length, ARCH_CONVERT) & (XFS_DIR2_DATA_ALIGN - 1)) ||
 			    INT_GET(dup->length, ARCH_CONVERT) == 0 ||
-			    (char *)(tagp = XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup, ARCH_CONVERT)) >=
+			    (char *)(tagp = XFS_DIR2_DATA_UNUSED_TAG_P(dup)) >=
 			    endptr) {
 				if (!sflag || v)
 					dbprintf("dir %lld block %d bad free "
@@ -2505,7 +2505,7 @@ process_dir_v1(
 	inodata_t	*id,
 	xfs_ino_t	*parent)
 {
-	if (dip->di_core.di_size <= XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_NOCONVERT) &&
+	if (dip->di_core.di_size <= XFS_DFORK_DSIZE_HOST(dip, mp) &&
 	    dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
 		*parent =
 			process_shortform_dir_v1(dip, dot, dotdot, id);
@@ -2541,7 +2541,7 @@ process_dir_v2(
 
 	if (blkmap)
 		last = blkmap_last_off(blkmap);
-	if (dip->di_core.di_size <= XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_NOCONVERT) &&
+	if (dip->di_core.di_size <= XFS_DFORK_DSIZE_HOST(dip, mp) &&
 	    dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
 		*parent = process_sf_dir_v2(dip, dot, dotdot, id);
 	else if (last == mp->m_dirblkfsbs &&
@@ -2578,11 +2578,11 @@ process_exinode(
 {
 	xfs_bmbt_rec_32_t	*rp;
 
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_NOCONVERT);
-	*nex = XFS_DFORK_NEXTENTS_ARCH(dip, whichfork, ARCH_NOCONVERT);
+	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
+	*nex = XFS_DFORK_NEXTENTS_HOST(dip, whichfork);
 	if (*nex < 0 ||
 	    *nex >
-	    XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_NOCONVERT) / sizeof(xfs_bmbt_rec_32_t)) {
+	    XFS_DFORK_SIZE_HOST(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_32_t)) {
 		if (!sflag || id->ilist)
 			dbprintf("bad number of extents %d for inode %lld\n",
 				*nex, id->ino);
@@ -2645,8 +2645,7 @@ process_inode(
 	};
 
 	/* convert the core, then copy it back into the inode */
-	libxfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core, &tdic, 1,
-				 ARCH_CONVERT);
+	libxfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core, &tdic, 1);
 	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
 	dic=&dip->di_core;
 
@@ -2707,7 +2706,7 @@ process_inode(
 		error++;
 		return;
 	}
-	if ((unsigned int)XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_NOCONVERT) >= XFS_LITINO(mp))  {
+	if ((unsigned int)XFS_DFORK_ASIZE_HOST(dip, mp) >= XFS_LITINO(mp))  {
 		if (!sflag || id->ilist)
 			dbprintf("bad fork offset %d for inode %lld\n",
 				dic->di_forkoff, id->ino);
@@ -2796,7 +2795,7 @@ process_inode(
 			&nextents, &blkmap, XFS_DATA_FORK);
 		break;
 	}
-	if (XFS_DFORK_Q_ARCH(dip, ARCH_NOCONVERT)) {
+	if (XFS_DFORK_Q(dip)) {
 		sbversion |= XFS_SB_VERSION_ATTRBIT;
 		switch (dic->di_aformat) {
 		case XFS_DINODE_FMT_LOCAL:
@@ -2875,11 +2874,11 @@ process_inode(
 			process_quota(IS_USER_QUOTA, id, blkmap);
 		else if (id->ino == mp->m_sb.sb_gquotino &&
 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
-			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
+			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
 			process_quota(IS_GROUP_QUOTA, id, blkmap);
 		else if (id->ino == mp->m_sb.sb_gquotino &&
 			 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
-			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD)) /* yep, G */
+			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
 			process_quota(IS_PROJECT_QUOTA, id, blkmap);
 	}
 	if (blkmap)
@@ -2905,7 +2904,7 @@ process_lclinode(
 	dic = &dip->di_core;
 	bno = XFS_INO_TO_FSB(mp, id->ino);
 	if (whichfork == XFS_DATA_FORK &&
-	    dic->di_size > XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_NOCONVERT)) {
+	    dic->di_size > XFS_DFORK_DSIZE_HOST(dip, mp)) {
 		if (!sflag || id->ilist || CHECK_BLIST(bno))
 			dbprintf("local inode %lld data is too large (size "
 				 "%lld)\n",
@@ -2913,8 +2912,8 @@ process_lclinode(
 		error++;
 	}
 	else if (whichfork == XFS_ATTR_FORK) {
-		asf = (xfs_attr_shortform_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_NOCONVERT);
-		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) > XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_NOCONVERT)) {
+		asf = (xfs_attr_shortform_t *)XFS_DFORK_PTR(dip, whichfork);
+		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) > XFS_DFORK_ASIZE_HOST(dip, mp)) {
 			if (!sflag || id->ilist || CHECK_BLIST(bno))
 				dbprintf("local inode %lld attr is too large "
 					 "(size %d)\n",
@@ -2989,7 +2988,7 @@ process_leaf_dir_v1_int(
 	entry = &leaf->entries[0];
 	for (i = 0; i < INT_GET(leaf->hdr.count, ARCH_CONVERT); entry++, i++) {
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
-		lino=DIRINO_GET_ARCH(&namest->inumber, ARCH_CONVERT);
+		lino = XFS_GET_DIR_INO8(namest->inumber);
 		cid = find_inode(lino, 1);
 		if (v)
 			dbprintf("dir %lld entry %*.*s %lld\n", id->ino,
@@ -3240,7 +3239,7 @@ process_leaf_node_dir_v2_int(
 			error++;
 		}
 		ltp = XFS_DIR2_LEAF_TAIL_P(mp, leaf);
-		lbp = XFS_DIR2_LEAF_BESTS_P_ARCH(ltp, ARCH_CONVERT);
+		lbp = XFS_DIR2_LEAF_BESTS_P(ltp);
 		for (i = 0; i < INT_GET(ltp->bestcount, ARCH_CONVERT); i++) {
 			if (freetab->nents <= i || freetab->ents[i] != INT_GET(lbp[i], ARCH_CONVERT)) {
 				if (!sflag || v)
@@ -3641,7 +3640,7 @@ process_sf_dir_v2(
 			error++;
 			break;
 		}
-		lino = XFS_DIR2_SF_GET_INUMBER_ARCH(sf, XFS_DIR2_SF_INUMBERP(sfe), ARCH_CONVERT);
+		lino = XFS_DIR2_SF_GET_INUMBER(sf, XFS_DIR2_SF_INUMBERP(sfe));
 		if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
 		cid = find_inode(lino, 1);
@@ -3661,16 +3660,16 @@ process_sf_dir_v2(
 		if (v)
 			dbprintf("dir %lld entry %*.*s offset %d %lld\n",
 				id->ino, sfe->namelen, sfe->namelen, sfe->name,
-				XFS_DIR2_SF_GET_OFFSET_ARCH(sfe, ARCH_CONVERT), lino);
-		if (XFS_DIR2_SF_GET_OFFSET_ARCH(sfe, ARCH_CONVERT) < offset) {
+				XFS_DIR2_SF_GET_OFFSET(sfe), lino);
+		if (XFS_DIR2_SF_GET_OFFSET(sfe) < offset) {
 			if (!sflag)
 				dbprintf("dir %lld entry %*.*s bad offset %d\n",
 					id->ino, sfe->namelen, sfe->namelen,
-					sfe->name, XFS_DIR2_SF_GET_OFFSET_ARCH(sfe, ARCH_CONVERT));
+					sfe->name, XFS_DIR2_SF_GET_OFFSET(sfe));
 			error++;
 		}
 		offset =
-			XFS_DIR2_SF_GET_OFFSET_ARCH(sfe, ARCH_CONVERT) +
+			XFS_DIR2_SF_GET_OFFSET(sfe) +
 			XFS_DIR2_DATA_ENTSIZE(sfe->namelen);
 		sfe = XFS_DIR2_SF_NEXTENTRY(sf, sfe);
 	}
@@ -3687,7 +3686,7 @@ process_sf_dir_v2(
 			dbprintf("dir %llu offsets too high\n", id->ino);
 		error++;
 	}
-	lino = XFS_DIR2_SF_GET_INUMBER_ARCH(sf, &sf->hdr.parent, ARCH_CONVERT);
+	lino = XFS_DIR2_SF_GET_INUMBER(sf, &sf->hdr.parent);
 	if (lino > XFS_DIR2_MAX_SHORT_INUM)
 		i8++;
 	cid = find_inode(lino, 1);
@@ -3734,7 +3733,7 @@ process_shortform_dir_v1(
 	(*dot)++;
 	sfe = &sf->list[0];
 	for (i = INT_GET(sf->hdr.count, ARCH_CONVERT) - 1; i >= 0; i--) {
-		lino = DIRINO_GET_ARCH(&sfe->inumber, ARCH_CONVERT);
+		lino = XFS_GET_DIR_INO8(sfe->inumber);
 		cid = find_inode(lino, 1);
 		if (cid == NULL) {
 			if (!sflag)
@@ -3758,7 +3757,7 @@ process_shortform_dir_v1(
 		dbprintf("dir %llu size is %lld, should be %d\n",
 			id->ino, dip->di_core.di_size,
 			(int)((char *)sfe - (char *)sf));
-	lino=DIRINO_GET_ARCH(&sf->hdr.parent, ARCH_CONVERT);
+	lino = XFS_GET_DIR_INO8(sf->hdr.parent);
 	cid = find_inode(lino, 1);
 	if (cid)
 		addlink_inode(cid);
@@ -3881,11 +3880,11 @@ quota_init(void)
 	qgdo = mp->m_sb.sb_gquotino != 0 &&
 	       mp->m_sb.sb_gquotino != NULLFSINO &&
 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
-	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
+	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
 	qpdo = mp->m_sb.sb_gquotino != 0 &&
 	       mp->m_sb.sb_gquotino != NULLFSINO &&
 	       (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
-	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);	/* yep, G */
+	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
 	if (qudo)
 		qudata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
 	if (qgdo)
@@ -3918,7 +3917,7 @@ scan_ag(
 		return;
 	}
 
-	libxfs_xlate_sb(iocur_top->data, sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(iocur_top->data, sb, 1, XFS_SB_ALL_BITS);
 
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
 		if (!sflag)

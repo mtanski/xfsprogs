@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -105,5 +105,12 @@ extern int
 extern int
 	xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
 			      struct xfs_dabuf *bp);
+
+extern xfs_dahash_t
+	xfs_dir2_hashname(struct xfs_mount *mp, char *name, int namelen);
+
+extern int
+	xfs_dir2_compare(struct xfs_mount *mp, const char *a, const char *b,
+			 size_t length, int ci);
 
 #endif	/* __XFS_DIR2_H__ */

@@ -347,7 +347,7 @@ mk_rbmino(xfs_mount_t *mp)
 	if ((i = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(i);
 
-	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
+	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, 0, &ip);
 	if (error) {
 		do_error(
 		_("couldn't iget realtime bitmap inode -- error - %d\n"),
@@ -440,7 +440,7 @@ fill_rbmino(xfs_mount_t *mp)
 	if ((error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(error);
 
-	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
+	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, 0, &ip);
 	if (error) {
 		do_error(
 		_("couldn't iget realtime bitmap inode -- error - %d\n"),
@@ -510,7 +510,7 @@ fill_rsumino(xfs_mount_t *mp)
 	if ((error = libxfs_trans_reserve(tp, 10, 0, 0, 0, 0)))
 		res_failed(error);
 
-	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
+	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, 0, &ip);
 	if (error) {
 		do_error(
 		_("couldn't iget realtime summary inode -- error - %d\n"),
@@ -582,7 +582,7 @@ mk_rsumino(xfs_mount_t *mp)
 				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT)))
 		res_failed(i);
 
-	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
+	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, 0, &ip);
 	if (error) {
 		do_error(
 		_("couldn't iget realtime summary inode -- error - %d\n"),
@@ -679,7 +679,7 @@ mk_root_dir(xfs_mount_t *mp)
 				XFS_TRANS_PERM_LOG_RES, XFS_MKDIR_LOG_COUNT)))
 		res_failed(i);
 
-	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rootino, 0, &ip);
+	error = libxfs_trans_iget(mp, tp, mp->m_sb.sb_rootino, 0, 0, &ip);
 	if (error) {
 		do_error(_("could not iget root inode -- error - %d\n"), error);
 	}
@@ -1353,7 +1353,7 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 
 		junkit = 0;
 
-		XFS_DIR_SF_GET_DIRINO_ARCH(&namest->inumber, &lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO(&namest->inumber, &lino);
 		bcopy(namest->name, fname, entry->namelen);
 		fname[entry->namelen] = '\0';
 
@@ -1745,7 +1745,7 @@ longform_dir2_entry_check_data(
 	freetab = *freetabp;
 	if (isblock) {
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, d);
-		blp = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
 		endptr = (char *)blp;
 		if (endptr > (char *)btp)
 			endptr = (char *)btp;
@@ -1789,9 +1789,8 @@ longform_dir2_entry_check_data(
 				break;
 
 			/* check for invalid tag */
-			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(
-				    dup, ARCH_CONVERT), ARCH_CONVERT) !=
-			    (char *)dup - (char *)d)
+			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P(dup),
+				    ARCH_CONVERT) != (char *)dup - (char *)d)
 				break;
 
 			/* check for block with no data entries */
@@ -2117,7 +2116,7 @@ longform_dir2_check_leaf(
 	}
 	leaf = bp->data;
 	ltp = XFS_DIR2_LEAF_TAIL_P(mp, leaf);
-	bestsp = XFS_DIR2_LEAF_BESTS_P_ARCH(ltp, ARCH_CONVERT);
+	bestsp = XFS_DIR2_LEAF_BESTS_P(ltp);
 	if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) !=
 			XFS_DIR2_LEAF1_MAGIC ||
 	    INT_GET(leaf->hdr.info.forw, ARCH_CONVERT) ||
@@ -2352,7 +2351,7 @@ longform_dir2_rebuild_setup(
 		/* construct freelist */
 		block = (xfs_dir2_block_t *)data;
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-		blp = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
 		needlog = needscan = 0;
 		libxfs_dir2_data_make_free(tp, dbp, (char *)blp - (char *)block,
 			(char *)block + mp->m_dirblksize - (char *)blp,
@@ -2490,7 +2489,7 @@ longform_dir2_rebuild_data(
 	ptr = (char *)data->u;
 	if (INT_GET(data->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC) {
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, (xfs_dir2_block_t *)data);
-		endptr = (char *)XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		endptr = (char *)XFS_DIR2_BLOCK_LEAF_P(btp);
 	} else
 		endptr = (char *)data + mp->m_dirblksize;
 	fblock = fbp->data;
@@ -2740,7 +2739,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		ASSERT(bp);
 		block = bp->data;
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-		blp = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
 		seeval = dir_hash_see_all(hashtab, blp, INT_GET(btp->count, ARCH_CONVERT), INT_GET(btp->stale, ARCH_CONVERT));
 		if (dir_hash_check(hashtab, ip, seeval))
 			fixit |= 1;
@@ -2823,7 +2822,7 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 		bad_sfnamelen = 0;
 		tmp_sfe = NULL;
 
-		XFS_DIR_SF_GET_DIRINO_ARCH(&sf_entry->inumber, &lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO(&sf_entry->inumber, &lino);
 
 		namelen = sf_entry->namelen;
 
@@ -3082,7 +3081,7 @@ prune_sf_dir_entry(xfs_mount_t *mp, xfs_ino_t ino, xfs_inode_t *ip)
 			sf_entry = next_sfe, i++)  {
 		tmp_sfe = NULL;
 
-		XFS_DIR_SF_GET_DIRINO_ARCH(&sf_entry->inumber, &lino, ARCH_CONVERT);
+		XFS_DIR_SF_GET_DIRINO(&sf_entry->inumber, &lino);
 
 		bcopy(sf_entry->name, fname, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
@@ -3193,7 +3192,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	/*
 	 * Initialise i8 counter -- the parent inode number counts as well.
 	 */
-	i8 = (XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, &sfp->hdr.parent, ARCH_CONVERT) > XFS_DIR2_MAX_SHORT_INUM);
+	i8 = (XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent) > XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
 	 * now run through entries, stop at first bad entry, don't need
@@ -3209,7 +3208,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		bad_sfnamelen = 0;
 		tmp_sfep = NULL;
 
-		lino = XFS_DIR2_SF_GET_INUMBER_ARCH(sfp, XFS_DIR2_SF_INUMBERP(sfep), ARCH_CONVERT);
+		lino = XFS_DIR2_SF_GET_INUMBER(sfp, XFS_DIR2_SF_INUMBERP(sfep));
 
 		namelen = sfep->namelen;
 

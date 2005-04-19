@@ -107,7 +107,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 			INT_GET(agf->agf_flfirst, ARCH_CONVERT),
 			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
-			INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
+			agf->agf_flfirst = 0;
 	}
 
 	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
@@ -115,7 +115,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 			INT_GET(agf->agf_fllast, ARCH_CONVERT),
 			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
-			INT_ZERO(agf->agf_fllast, ARCH_CONVERT);
+			agf->agf_fllast = 0;
 	}
 
 	/* don't check freespace btrees -- will be checked by caller */

@@ -128,7 +128,7 @@ init(
 	}
 
 	/* copy SB from buffer to in-core, converting architecture as we go */
-	libxfs_xlate_sb(bufp, &xmount.m_sb, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(bufp, &xmount.m_sb, 1, XFS_SB_ALL_BITS);
 	xfree(bufp);
 
 	sbp = &xmount.m_sb;

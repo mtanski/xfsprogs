@@ -170,7 +170,6 @@ xfs_xlatesb(
 	void		*data,
 	xfs_sb_t	*sb,
 	int		dir,
-	xfs_arch_t	arch,
 	__int64_t	fields)
 {
 	xfs_caddr_t	buf_ptr;
@@ -195,9 +194,7 @@ xfs_xlatesb(
 
 		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
 
-		if (arch == ARCH_NOCONVERT ||
-		    size == 1 ||
-		    xfs_sb_info[f].type == 1) {
+		if (size == 1 || xfs_sb_info[f].type == 1) {
 			if (dir > 0) {
 				memcpy(mem_ptr + first, buf_ptr + first, size);
 			} else {
@@ -208,16 +205,16 @@ xfs_xlatesb(
 			case 2:
 				INT_XLATE(*(__uint16_t*)(buf_ptr+first),
 					  *(__uint16_t*)(mem_ptr+first),
-					  dir, arch);
+					  dir, ARCH_CONVERT);
 				break;
 			case 4:
 				INT_XLATE(*(__uint32_t*)(buf_ptr+first),
 					  *(__uint32_t*)(mem_ptr+first),
-					  dir, arch);
+					  dir, ARCH_CONVERT);
 				break;
 			case 8:
 				INT_XLATE(*(__uint64_t*)(buf_ptr+first),
-					  *(__uint64_t*)(mem_ptr+first), dir, arch);
+					  *(__uint64_t*)(mem_ptr+first), dir, ARCH_CONVERT);
 				break;
 			default:
 				ASSERT(0);

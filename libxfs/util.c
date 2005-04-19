@@ -161,7 +161,7 @@ libxfs_ialloc(
 	}
 	ASSERT(*ialloc_context == NULL);
 
-	error = xfs_trans_iget(tp->t_mountp, tp, ino, 0, &ip);
+	error = xfs_trans_iget(tp->t_mountp, tp, ino, 0, 0, &ip);
 	if (error != 0)
 		return error;
 	ASSERT(ip != NULL);
@@ -339,8 +339,8 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 	 * because if the inode is dirty at all the core must
 	 * be.
 	 */
-	xfs_xlate_dinode_core((xfs_caddr_t)&(dip->di_core), &(ip->i_d), -1,
-				ARCH_CONVERT);
+	xfs_xlate_dinode_core((xfs_caddr_t)&(dip->di_core), &(ip->i_d), -1);
+
 	/*
 	 * If this is really an old format inode and the superblock version
 	 * has not been updated to support only new format inodes, then
@@ -367,7 +367,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 			INT_SET(dip->di_core.di_version, ARCH_CONVERT,
 				XFS_DINODE_VERSION_2);
 			ip->i_d.di_onlink = 0;
-			INT_ZERO(dip->di_core.di_onlink, ARCH_CONVERT);
+			dip->di_core.di_onlink = 0;
 			memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 			memset(&(dip->di_core.di_pad[0]), 0,
 				sizeof(dip->di_core.di_pad));

@@ -181,8 +181,8 @@ libxfs_log_header(
 	INT_SET(head->h_fmt,		ARCH_CONVERT, fmt);
 	INT_SET(head->h_size,		ARCH_CONVERT, XLOG_HEADER_CYCLE_SIZE);
 
-	ASSIGN_ANY_LSN(head->h_lsn,	    1, 0, ARCH_CONVERT);
-	ASSIGN_ANY_LSN(head->h_tail_lsn,    1, 0, ARCH_CONVERT);
+	ASSIGN_ANY_LSN_DISK(head->h_lsn, 1, 0);
+	ASSIGN_ANY_LSN_DISK(head->h_tail_lsn, 1, 0);
 
 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
 
@@ -190,7 +190,7 @@ libxfs_log_header(
 	p = nextfunc(p, BBSIZE, private);
 	unmount_record(p);
 
-	cycle_lsn = CYCLE_LSN_NOCONV(head->h_lsn, ARCH_CONVERT);
+	cycle_lsn = CYCLE_LSN_DISK(head->h_lsn);
 	for (i = 2; i < len; i++) {
 		p = nextfunc(p, BBSIZE, private);
 		memset(p, 0, BBSIZE);
@@ -501,7 +501,6 @@ libxfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
 
 	mp = tp->t_mountp;
 	bp = libxfs_getbuf(mp->m_dev, XFS_SB_DADDR, 1);
-	libxfs_xlate_sb(XFS_BUF_PTR(bp), &mp->m_sb, -1, ARCH_CONVERT,
-			XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(XFS_BUF_PTR(bp), &mp->m_sb, -1, XFS_SB_ALL_BITS);
 	libxfs_writebuf(bp, LIBXFS_EXIT_ON_FAILURE);
 }

@@ -88,13 +88,13 @@ bmap(
 	n = 0;
 	eoffset = offset + len - 1;
 	curoffset = offset;
-	fmt = (xfs_dinode_fmt_t)XFS_DFORK_FORMAT_ARCH(dip, whichfork, ARCH_CONVERT);
+	fmt = (xfs_dinode_fmt_t)XFS_DFORK_FORMAT(dip, whichfork);
 	typ = whichfork == XFS_DATA_FORK ? TYP_BMAPBTD : TYP_BMAPBTA;
 	ASSERT(typtab[typ].typnm == typ);
 	ASSERT(fmt == XFS_DINODE_FMT_EXTENTS || fmt == XFS_DINODE_FMT_BTREE);
 	if (fmt == XFS_DINODE_FMT_EXTENTS) {
-		nextents = XFS_DFORK_NEXTENTS_ARCH(dip, whichfork, ARCH_CONVERT);
-		xp = (xfs_bmbt_rec_64_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+		nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+		xp = (xfs_bmbt_rec_64_t *)XFS_DFORK_PTR(dip, whichfork);
 		for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
 			if (!bmap_one_extent(ep, &curoffset, eoffset, &n, bep))
 				break;
@@ -102,8 +102,8 @@ bmap(
 	} else {
 		push_cur();
 		bno = NULLFSBLOCK;
-		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
-		fsize = XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT);
+		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
 		pp = XFS_BTREE_PTR_ADDR(fsize, xfs_bmdr, rblock, 1,
 			XFS_BTREE_BLOCK_MAXRECS(fsize, xfs_bmdr, 0));
 		kp = XFS_BTREE_KEY_ADDR(fsize, xfs_bmdr, rblock, 1,

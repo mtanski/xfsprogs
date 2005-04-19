@@ -62,10 +62,10 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
     if (print_record_header)
 	printf(_("\nLOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n"),
-	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT),
-	       BLOCK_LSN(head->h_lsn, ARCH_CONVERT),
-	       CYCLE_LSN(head->h_lsn, ARCH_CONVERT),
-	       BLOCK_LSN(head->h_lsn, ARCH_CONVERT));
+	       CYCLE_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
+	       BLOCK_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
+	       CYCLE_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
+	       BLOCK_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)));
 
     if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
 

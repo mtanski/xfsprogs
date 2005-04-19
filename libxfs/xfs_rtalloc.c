@@ -745,7 +745,7 @@ xfs_rtfree_extent(
 	/*
 	 * Synchronize by locking the bitmap inode.
 	 */
-	error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, XFS_ILOCK_EXCL, &ip);
+	error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, XFS_ILOCK_EXCL, &ip);
 	if (error) {
 		return error;
 	}

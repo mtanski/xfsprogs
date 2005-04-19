@@ -118,6 +118,7 @@ libxfs_trans_iget(
 	xfs_mount_t		*mp,
 	xfs_trans_t		*tp,
 	xfs_ino_t		ino,
+	uint			flags,
 	uint			lock_flags,
 	xfs_inode_t		**ipp)
 {

@@ -478,17 +478,17 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
  */
 #define set_inode_free(ino_rec, ino_offset) \
 	XFS_INOCF_SET_CF((ino_rec), (ino_offset)), \
-	XFS_INOBT_SET_FREE((ino_rec), (ino_offset),(ARCH_NOCONVERT))
+	XFS_INOBT_SET_FREE((ino_rec), (ino_offset), ARCH_NOCONVERT)
 
 #define set_inode_used(ino_rec, ino_offset) \
 	XFS_INOCF_SET_CF((ino_rec), (ino_offset)), \
-	XFS_INOBT_CLR_FREE((ino_rec), (ino_offset),(ARCH_NOCONVERT))
+	XFS_INOBT_CLR_FREE((ino_rec), (ino_offset), ARCH_NOCONVERT)
 
 #define is_inode_used(ino_rec, ino_offset)	\
-	!XFS_INOBT_IS_FREE((ino_rec), (ino_offset),(ARCH_NOCONVERT))
+	!XFS_INOBT_IS_FREE((ino_rec), (ino_offset), ARCH_NOCONVERT)
 
 #define is_inode_free(ino_rec, ino_offset)	\
-	XFS_INOBT_IS_FREE((ino_rec), (ino_offset),(ARCH_NOCONVERT))
+	XFS_INOBT_IS_FREE((ino_rec), (ino_offset), ARCH_NOCONVERT)
 
 /*
  * add_inode_reached() is set on inode I only if I has been reached

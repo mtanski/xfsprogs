@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -684,7 +684,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, level);
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT, lptr->prev_agbno);
 		INT_SET(bt_hdr->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
-		INT_ZERO(bt_hdr->bb_numrecs, ARCH_CONVERT);
+		bt_hdr->bb_numrecs = 0;
 
 		/*
 		 * propagate extent record for first extent in new block up
@@ -761,7 +761,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, i);
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT,
 				bt_hdr->bb_rightsib = NULLAGBLOCK);
-		INT_ZERO(bt_hdr->bb_numrecs, ARCH_CONVERT);
+		bt_hdr->bb_numrecs = 0;
 	}
 	/*
 	 * run along leaf, setting up records.  as we have to switch
@@ -789,7 +789,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		bzero(bt_hdr, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, magic);
-		INT_ZERO(bt_hdr->bb_level, ARCH_CONVERT);
+		bt_hdr->bb_level = 0;
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT, lptr->prev_agbno);
 		INT_SET(bt_hdr->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
 		INT_SET(bt_hdr->bb_numrecs, ARCH_CONVERT,
@@ -1041,7 +1041,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, level);
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT, lptr->prev_agbno);
 		INT_SET(bt_hdr->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
-		INT_ZERO(bt_hdr->bb_numrecs, ARCH_CONVERT);
+		bt_hdr->bb_numrecs = 0;
 		/*
 		 * propagate extent record for first extent in new block up
 		 */
@@ -1144,7 +1144,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, i);
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT,
 				bt_hdr->bb_rightsib = NULLAGBLOCK);
-		INT_ZERO(bt_hdr->bb_numrecs, ARCH_CONVERT);
+		bt_hdr->bb_numrecs = 0;
 	}
 	/*
 	 * run along leaf, setting up records.  as we have to switch
@@ -1169,7 +1169,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		bzero(bt_hdr, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
-		INT_ZERO(bt_hdr->bb_level, ARCH_CONVERT);
+		bt_hdr->bb_level = 0;
 		INT_SET(bt_hdr->bb_leftsib, ARCH_CONVERT, lptr->prev_agbno);
 		INT_SET(bt_hdr->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
 		INT_SET(bt_hdr->bb_numrecs, ARCH_CONVERT,
@@ -1340,7 +1340,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 					lostblocks, j, agno);
 		}
 
-		INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
+		agf->agf_flfirst = 0;
 		INT_SET(agf->agf_fllast, ARCH_CONVERT, i - 1);
 		INT_SET(agf->agf_flcount, ARCH_CONVERT, i);
 
@@ -1350,9 +1350,9 @@ build_agf_agfl(xfs_mount_t	*mp,
 
 		libxfs_writebuf(agfl_buf, 0);
 	} else  {
-		INT_ZERO(agf->agf_flfirst, ARCH_CONVERT);
+		agf->agf_flfirst = 0;
 		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE(mp) - 1);
-		INT_ZERO(agf->agf_flcount, ARCH_CONVERT);
+		agf->agf_flcount = 0;
 	}
 
 	ext_ptr = findbiggest_bcnt_extent(agno);
@@ -1394,8 +1394,7 @@ sync_sb(xfs_mount_t *mp)
 	update_sb_version(mp);
 
 	*sbp = mp->m_sb;
-	libxfs_xlate_sb(XFS_BUF_PTR(bp), sbp, -1, ARCH_CONVERT,
-			XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(XFS_BUF_PTR(bp), sbp, -1, XFS_SB_ALL_BITS);
 	libxfs_writebuf(bp, 0);
 }
 
@@ -1568,18 +1567,19 @@ phase5(xfs_mount_t *mp)
 		fprintf(stderr, "# of bcnt extents is %d\n",
 				count_bcnt_extents(agno));
 #endif
+
 		/*
 		 * now rebuild the freespace trees
 		 */
-		freeblks1 = build_freespace_tree(mp, agno, &bno_btree_curs,
-					XFS_ABTB_MAGIC);
+		freeblks1 = build_freespace_tree(mp, agno,
+					&bno_btree_curs, XFS_ABTB_MAGIC);
 #ifdef XR_BLD_FREE_TRACE
 		fprintf(stderr, "# of free blocks == %d\n", freeblks1);
 #endif
 		write_cursor(&bno_btree_curs);
 
-		freeblks2 = build_freespace_tree(mp, agno, &bcnt_btree_curs,
-					XFS_ABTC_MAGIC);
+		freeblks2 = build_freespace_tree(mp, agno,
+					&bcnt_btree_curs, XFS_ABTC_MAGIC);
 		write_cursor(&bcnt_btree_curs);
 
 		ASSERT(freeblks1 == freeblks2);

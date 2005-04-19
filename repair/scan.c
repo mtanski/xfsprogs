@@ -1196,8 +1196,7 @@ scan_ag(
 		libxfs_putbuf(sbbuf);
 		return;
 	}
-	libxfs_xlate_sb(XFS_BUF_TO_SBP(sbbuf), sb, 1, ARCH_CONVERT,
-			XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(XFS_BUF_TO_SBP(sbbuf), sb, 1, XFS_SB_ALL_BITS);
 
 	agfbuf = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
@@ -1326,8 +1325,7 @@ scan_ag(
 	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
 
 	if (sb_dirty && !no_modify) {
-		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, ARCH_CONVERT,
-				XFS_SB_ALL_BITS);
+		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, XFS_SB_ALL_BITS);
 		libxfs_writebuf(sbbuf, 0);
 	} else
 		libxfs_putbuf(sbbuf);

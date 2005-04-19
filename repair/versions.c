@@ -79,7 +79,7 @@ update_sb_version(xfs_mount_t *mp)
 		 */
 		if (sb->sb_qflags & ~(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
 				XFS_PQUOTA_ACCT))  {
 			/*
 			 * update the incore superblock, if we're in
@@ -90,12 +90,12 @@ update_sb_version(xfs_mount_t *mp)
 				sb->sb_qflags & ~(XFS_UQUOTA_ACCT|
 				XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
 				XFS_PQUOTA_ACCT));
 
 			sb->sb_qflags &= (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
 				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
-				XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|
+				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
 				XFS_PQUOTA_ACCT);
 
 			if (!no_modify)

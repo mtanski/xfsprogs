@@ -225,7 +225,7 @@ dir2_block_leaf_offset(
 	block = obj;
 	ASSERT(INT_GET(block->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC);
 	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-	lep = XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT) + idx;
+	lep = XFS_DIR2_BLOCK_LEAF_P(btp) + idx;
 	return bitize((int)((char *)lep - (char *)block));
 }
 
@@ -280,7 +280,7 @@ dir2_block_u_count(
 		return 0;
 	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
 	ptr = (char *)block->u;
-	endptr = (char *)XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+	endptr = (char *)XFS_DIR2_BLOCK_LEAF_P(btp);
 	for (i = 0; ptr < endptr; i++) {
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG)
@@ -314,7 +314,7 @@ dir2_block_u_offset(
 	ASSERT(INT_GET(block->hdr.magic, ARCH_CONVERT) == XFS_DIR2_BLOCK_MAGIC);
 	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
 	ptr = (char *)block->u;
-	endptr = (char *)XFS_DIR2_BLOCK_LEAF_P_ARCH(btp, ARCH_CONVERT);
+	endptr = (char *)XFS_DIR2_BLOCK_LEAF_P(btp);
 	for (i = 0; i < idx; i++) {
 		ASSERT(ptr < endptr);
 		dup = (xfs_dir2_data_unused_t *)ptr;
@@ -432,7 +432,7 @@ dir2_data_union_tag_count(
 		end = (char *)&dup->length + sizeof(dup->length);
 		if (end > (char *)obj + mp->m_dirblksize)
 			return 0;
-		tagp = XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup, ARCH_CONVERT);
+		tagp = XFS_DIR2_DATA_UNUSED_TAG_P(dup);
 	} else {
 		end = (char *)&dep->namelen + sizeof(dep->namelen);
 		if (end > (char *)obj + mp->m_dirblksize)
@@ -457,7 +457,7 @@ dir2_data_union_tag_offset(
 	ASSERT(idx == 0);
 	dup = (xfs_dir2_data_unused_t *)((char *)obj + byteize(startoff));
 	if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG)
-		return bitize((int)((char *)XFS_DIR2_DATA_UNUSED_TAG_P_ARCH(dup, ARCH_CONVERT) -
+		return bitize((int)((char *)XFS_DIR2_DATA_UNUSED_TAG_P(dup) -
 				    (char *)dup));
 	dep = (xfs_dir2_data_entry_t *)dup;
 	return bitize((int)((char *)XFS_DIR2_DATA_ENTRY_TAG_P(dep) -
@@ -622,7 +622,7 @@ dir2_leaf_bests_offset(
 	leaf = obj;
 	ASSERT(INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) == XFS_DIR2_LEAF1_MAGIC);
 	ltp = XFS_DIR2_LEAF_TAIL_P(mp, leaf);
-	lbp = XFS_DIR2_LEAF_BESTS_P_ARCH(ltp, ARCH_CONVERT) + idx;
+	lbp = XFS_DIR2_LEAF_BESTS_P(ltp) + idx;
 	return bitize((int)((char *)lbp - (char *)leaf));
 }
 

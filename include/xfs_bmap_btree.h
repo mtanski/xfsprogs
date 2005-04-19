@@ -478,7 +478,7 @@ xfs_bmbt_delete(
 	struct xfs_btree_cur *,
 	int *);
 
-void
+int
 xfs_bmbt_get_all(
 	xfs_bmbt_rec_t	*r,
 	xfs_bmbt_irec_t *s);
@@ -505,7 +505,7 @@ xfs_exntst_t
 xfs_bmbt_get_state(
 	xfs_bmbt_rec_t	*r);
 
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 void
 xfs_bmbt_disk_get_all(
 	xfs_bmbt_rec_t	*r,
@@ -549,13 +549,6 @@ xfs_bmbt_increment(
 int
 xfs_bmbt_insert(
 	struct xfs_btree_cur *,
-	int *);
-
-int
-xfs_bmbt_insert_many(
-	struct xfs_btree_cur *,
-	int,
-	xfs_bmbt_rec_t *,
 	int *);
 
 void
@@ -638,7 +631,7 @@ xfs_bmbt_set_state(
 	xfs_bmbt_rec_t	*r,
 	xfs_exntst_t	v);
 
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 void
 xfs_bmbt_disk_set_all(
 	xfs_bmbt_rec_t	*r,

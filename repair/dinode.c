@@ -107,7 +107,7 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	if (INT_GET(dinoc->di_anextents, ARCH_CONVERT) != 0)  {
 		if (no_modify)
 			return(1);
-		INT_ZERO(dinoc->di_anextents, ARCH_CONVERT);
+		dinoc->di_anextents = 0;
 	}
 
 	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
@@ -129,7 +129,7 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 
 	if (!no_modify) {
 		xfs_attr_shortform_t *asf = (xfs_attr_shortform_t *)
-				XFS_DFORK_APTR_ARCH(dino, ARCH_CONVERT);
+				XFS_DFORK_APTR(dino);
 		INT_SET(asf->hdr.totsize, ARCH_CONVERT,
 			sizeof(xfs_attr_sf_hdr_t));
 		INT_SET(asf->hdr.count, ARCH_CONVERT, 0);
@@ -174,7 +174,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_mode, ARCH_CONVERT);
+		dinoc->di_mode = 0;
 	}
 
 	if (INT_GET(dinoc->di_flags, ARCH_CONVERT) != 0)  {
@@ -183,7 +183,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_flags, ARCH_CONVERT);
+		dinoc->di_flags = 0;
 	}
 
 	if (INT_GET(dinoc->di_dmevmask, ARCH_CONVERT) != 0)  {
@@ -192,7 +192,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_dmevmask, ARCH_CONVERT);
+		dinoc->di_dmevmask = 0;
 	}
 
 	if (dinoc->di_forkoff != 0)  {
@@ -228,7 +228,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_size, ARCH_CONVERT);
+		dinoc->di_size = 0;
 	}
 
 	if (INT_GET(dinoc->di_nblocks, ARCH_CONVERT) != 0)  {
@@ -237,7 +237,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_nblocks, ARCH_CONVERT);
+		dinoc->di_nblocks = 0;
 	}
 
 	if (INT_GET(dinoc->di_onlink, ARCH_CONVERT) != 0)  {
@@ -246,7 +246,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_onlink, ARCH_CONVERT);
+		dinoc->di_onlink = 0;
 	}
 
 	if (INT_GET(dinoc->di_nextents, ARCH_CONVERT) != 0)  {
@@ -255,7 +255,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_nextents, ARCH_CONVERT);
+		dinoc->di_nextents = 0;
 	}
 
 	if (INT_GET(dinoc->di_anextents, ARCH_CONVERT) != 0)  {
@@ -264,7 +264,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_anextents, ARCH_CONVERT);
+		dinoc->di_anextents = 0;
 	}
 
 	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
@@ -274,7 +274,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		if (no_modify)
 			return(1);
 
-		INT_ZERO(dinoc->di_nlink, ARCH_CONVERT);
+		dinoc->di_nlink = 0;
 	}
 
 	return(dirty);
@@ -887,8 +887,8 @@ getfunc_extlist(xfs_mount_t		*mp,
 	xfs_dfsbno_t		fsbno;
 	xfs_dfsbno_t		final_fsbno = NULLDFSBNO;
 	xfs_bmbt_rec_32_t	*rootblock = (xfs_bmbt_rec_32_t *)
-						XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
-	xfs_extnum_t		nextents = XFS_DFORK_NEXTENTS_ARCH(dip, whichfork, ARCH_CONVERT);
+						XFS_DFORK_PTR(dip, whichfork);
+	xfs_extnum_t		nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
 	int			i;
 	int			flag;
 
@@ -927,7 +927,7 @@ getfunc_btree(xfs_mount_t		*mp,
 	xfs_dfsbno_t		final_fsbno = NULLDFSBNO;
 	xfs_bmbt_block_t	*block;
 	xfs_bmdr_block_t	*rootblock = (xfs_bmdr_block_t *)
-			XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+			XFS_DFORK_PTR(dip, whichfork);
 
 	ASSERT(rootblock->bb_level != 0);
 	/*
@@ -937,16 +937,16 @@ getfunc_btree(xfs_mount_t		*mp,
 	 * would be an extent list.
 	 */
 	rkey = XFS_BTREE_KEY_ADDR(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 			xfs_bmdr, rootblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE_ARCH(dip,
-						mp, whichfork, ARCH_CONVERT),
+			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip,
+						mp, whichfork),
 			xfs_bmdr, 1));
 	rp = XFS_BTREE_PTR_ADDR(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 			xfs_bmdr, rootblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE_ARCH(dip,
-						mp, whichfork, ARCH_CONVERT),
+			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip,
+						mp, whichfork),
 			xfs_bmdr, 1));
 	for (found = -1, i = 0; i < rootblock->bb_numrecs - 1; i++)  {
 		if (rkey[i].br_startoff <= bno
@@ -1090,7 +1090,7 @@ get_bmapi(xfs_mount_t *mp, xfs_dinode_t *dino_p,
 {
 	xfs_dfsbno_t		fsbno;
 
-	switch (XFS_DFORK_FORMAT_ARCH(dino_p, whichfork, ARCH_CONVERT)) {
+	switch (XFS_DFORK_FORMAT(dino_p, whichfork)) {
 	case XFS_DINODE_FMT_EXTENTS:
 		fsbno = getfunc_extlist(mp, ino_num, dino_p, bno, whichfork);
 		break;
@@ -1146,7 +1146,7 @@ process_btinode(
 	int			i;
 	bmap_cursor_t		cursor;
 
-	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	*tot = 0;
 	*nex = 0;
@@ -1181,8 +1181,8 @@ process_btinode(
 
 	if (XFS_BMDR_SPACE_CALC(INT_GET(dib->bb_numrecs, ARCH_CONVERT)) >
 			((whichfork == XFS_DATA_FORK) ?
-			XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT) :
-			XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT)))  {
+			XFS_DFORK_DSIZE(dip, mp) :
+			XFS_DFORK_ASIZE(dip, mp)))  {
 		do_warn(
 	_("indicated size of %s btree root (%d bytes) greater than space in "
 	  "inode %llu %s fork\n"),
@@ -1193,16 +1193,16 @@ process_btinode(
 	}
 
 	pp = XFS_BTREE_PTR_ADDR(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 		xfs_bmdr, dib, 1,
 		XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 		xfs_bmdr, 0));
 	pkey = XFS_BTREE_KEY_ADDR(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 		xfs_bmdr, dib, 1,
 		XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE_ARCH(dip, mp, whichfork, ARCH_CONVERT),
+			XFS_DFORK_SIZE(dip, mp, whichfork),
 		xfs_bmdr, 0));
 
 	last_key = NULLDFILOFF;
@@ -1322,9 +1322,9 @@ process_exinode(
 	xfs_dfiloff_t		last_key;
 
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR_ARCH(dip, whichfork, ARCH_CONVERT);
+	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
 	*tot = 0;
-	*nex = XFS_DFORK_NEXTENTS_ARCH(dip, whichfork, ARCH_CONVERT);
+	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
 	/*
 	 * XXX - if we were going to fix up the btree record,
 	 * we'd do it right here.  For now, if there's a problem,
@@ -1368,21 +1368,21 @@ process_lclinode(
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	if (whichfork == XFS_DATA_FORK &&
 	    INT_GET(dic->di_size, ARCH_CONVERT) >
-	    XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT)) {
+	    XFS_DFORK_DSIZE(dip, mp)) {
 		do_warn(
 	_("local inode %llu data fork is too large (size = %lld, max = %d)\n"),
 			lino, INT_GET(dic->di_size, ARCH_CONVERT),
-			XFS_DFORK_DSIZE_ARCH(dip, mp, ARCH_CONVERT));
+			XFS_DFORK_DSIZE(dip, mp));
 		return(1);
 	} else if (whichfork == XFS_ATTR_FORK) {
 		asf = (xfs_attr_shortform_t *)
-			XFS_DFORK_APTR_ARCH(dip, ARCH_CONVERT);
+			XFS_DFORK_APTR(dip);
 		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) >
-		    XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT)) {
+		    XFS_DFORK_ASIZE(dip, mp)) {
 			do_warn(
 	_("local inode %llu attr fork too large (size %d, max = %d)\n"),
 				lino, INT_GET(asf->hdr.totsize, ARCH_CONVERT),
-				XFS_DFORK_ASIZE_ARCH(dip, mp, ARCH_CONVERT));
+				XFS_DFORK_ASIZE(dip, mp));
 			return(1);
 		}
 		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) <
@@ -1413,7 +1413,7 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 	int			flag;
 
 	if (INT_GET(dino->di_core.di_size, ARCH_CONVERT) <=
-	    XFS_DFORK_SIZE_ARCH(dino, mp, whichfork, ARCH_CONVERT))  {
+	    XFS_DFORK_SIZE(dino, mp, whichfork))  {
 		if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  {
 			return(0);
 		} else  {
@@ -1433,8 +1433,8 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 		return(1);
 	}
 
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR_ARCH(dino, whichfork, ARCH_CONVERT);
-	numrecs = XFS_DFORK_NEXTENTS_ARCH(dino, whichfork, ARCH_CONVERT);
+	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dino, whichfork);
+	numrecs = XFS_DFORK_NEXTENTS(dino, whichfork);
 
 	/*
 	 * the max # of extents in a symlink inode is equal to the
@@ -1525,12 +1525,12 @@ process_symlink(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino,
 	 */
 	symlink = &data[0];
 	if (INT_GET(dinoc->di_size, ARCH_CONVERT)
-			<= XFS_DFORK_DSIZE_ARCH(dino, mp, ARCH_CONVERT))  {
+			<= XFS_DFORK_DSIZE(dino, mp))  {
 		/*
 		 * local symlink, just copy the symlink out of the
 		 * inode into the data area
 		 */
-		bcopy((char *)XFS_DFORK_DPTR_ARCH(dino, ARCH_CONVERT),
+		bcopy((char *)XFS_DFORK_DPTR(dino),
 			symlink, INT_GET(dinoc->di_size, ARCH_CONVERT));
 	} else {
 		/*
@@ -2078,7 +2078,7 @@ process_dinode_int(xfs_mount_t *mp,
 
 		if (!no_modify)  {
 			do_warn(_("resetting to zero\n"));
-			INT_ZERO(dinoc->di_extsize, ARCH_CONVERT);
+			dinoc->di_extsize = 0;
 			*dirty = 1;
 		} else  {
 			do_warn(_("would reset to zero\n"));
@@ -2154,7 +2154,7 @@ process_dinode_int(xfs_mount_t *mp,
 	switch (type)  {
 	case XR_INO_DIR:
 		if (INT_GET(dinoc->di_size, ARCH_CONVERT) <=
-			XFS_DFORK_DSIZE_ARCH(dino, mp, ARCH_CONVERT) &&
+			XFS_DFORK_DSIZE(dino, mp) &&
 		    (dinoc->di_format != XFS_DINODE_FMT_LOCAL))  {
 			do_warn(
 _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
@@ -2441,7 +2441,7 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 	 * always stored in the regular filesystem.
 	 */
 
-	if (!XFS_DFORK_Q_ARCH(dino, ARCH_CONVERT) &&
+	if (!XFS_DFORK_Q(dino) &&
 	    dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS) {
 		do_warn(_("bad attribute format %d in inode %llu, "),
 			dinoc->di_aformat, lino);
@@ -2452,7 +2452,7 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		} else
 			do_warn(_("would reset value\n"));
 		anextents = 0;
-	} else if (XFS_DFORK_Q_ARCH(dino, ARCH_CONVERT)) {
+	} else if (XFS_DFORK_Q(dino)) {
 		switch (dinoc->di_aformat) {
 		case XFS_DINODE_FMT_LOCAL:
 			anextents = 0;
@@ -2852,7 +2852,7 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 			do_warn(
 _("clearing obsolete nlink field in version 2 inode %llu, was %d, now 0\n"),
 				lino, INT_GET(dinoc->di_onlink, ARCH_CONVERT));
-			INT_ZERO(dinoc->di_onlink, ARCH_CONVERT);
+			dinoc->di_onlink = 0;
 			*dirty = 1;
 		} else  {
 			do_warn(

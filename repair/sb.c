@@ -147,8 +147,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 		 */
 		for (i = 0; !done && i < bsize; i += BBSIZE)  {
 			c_bufsb = (char *) sb + i;
-			libxfs_xlate_sb(c_bufsb, &bufsb, 1, ARCH_CONVERT,
-				XFS_SB_ALL_BITS);
+			libxfs_xlate_sb(c_bufsb, &bufsb, 1, XFS_SB_ALL_BITS);
 
 			if (verify_sb(&bufsb, 0) != XR_OK)
 				continue;
@@ -476,7 +475,7 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
 	}
 
-	libxfs_xlate_sb(buf, sbp, -1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(buf, sbp, -1, XFS_SB_ALL_BITS);
 
 	if (write(fs_fd, buf, size) != size) {
 		free(buf);
@@ -518,7 +517,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 			off, size, rval, agno);
 		do_error("%s\n", strerror(error));
 	}
-	libxfs_xlate_sb(buf, sbp, 1, ARCH_CONVERT, XFS_SB_ALL_BITS);
+	libxfs_xlate_sb(buf, sbp, 1, XFS_SB_ALL_BITS);
 	free(buf);
 
 	return (verify_sb(sbp, 0));

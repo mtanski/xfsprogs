@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -133,7 +133,7 @@ struct xfs_dqtrxops;
 struct xfs_quotainfo;
 
 typedef int	(*xfs_qminit_t)(struct xfs_mount *, uint *, uint *);
-typedef int	(*xfs_qmmount_t)(struct xfs_mount *, uint, uint);
+typedef int	(*xfs_qmmount_t)(struct xfs_mount *, uint, uint, int);
 typedef int	(*xfs_qmunmount_t)(struct xfs_mount *);
 typedef void	(*xfs_qmdone_t)(struct xfs_mount *);
 typedef void	(*xfs_dqrele_t)(struct xfs_dquot *);
@@ -141,7 +141,7 @@ typedef int	(*xfs_dqattach_t)(struct xfs_inode *, uint);
 typedef void	(*xfs_dqdetach_t)(struct xfs_inode *);
 typedef int	(*xfs_dqpurgeall_t)(struct xfs_mount *, uint);
 typedef int	(*xfs_dqvopalloc_t)(struct xfs_mount *,
-			struct xfs_inode *, uid_t, gid_t, uint,
+			struct xfs_inode *, uid_t, gid_t, prid_t, uint,
 			struct xfs_dquot **, struct xfs_dquot **);
 typedef void	(*xfs_dqvopcreate_t)(struct xfs_trans *, struct xfs_inode *,
 			struct xfs_dquot *, struct xfs_dquot *);
@@ -171,8 +171,8 @@ typedef struct xfs_qmops {
 
 #define XFS_QM_INIT(mp, mnt, fl) \
 	(*(mp)->m_qm_ops.xfs_qminit)(mp, mnt, fl)
-#define XFS_QM_MOUNT(mp, mnt, fl) \
-	(*(mp)->m_qm_ops.xfs_qmmount)(mp, mnt, fl)
+#define XFS_QM_MOUNT(mp, mnt, fl, mfsi_flags) \
+	(*(mp)->m_qm_ops.xfs_qmmount)(mp, mnt, fl, mfsi_flags)
 #define XFS_QM_UNMOUNT(mp) \
 	(*(mp)->m_qm_ops.xfs_qmunmount)(mp)
 #define XFS_QM_DONE(mp) \
@@ -185,8 +185,8 @@ typedef struct xfs_qmops {
 	(*(mp)->m_qm_ops.xfs_dqdetach)(ip)
 #define XFS_QM_DQPURGEALL(mp, fl) \
 	(*(mp)->m_qm_ops.xfs_dqpurgeall)(mp, fl)
-#define XFS_QM_DQVOPALLOC(mp, ip, uid, gid, fl, dq1, dq2) \
-	(*(mp)->m_qm_ops.xfs_dqvopalloc)(mp, ip, uid, gid, fl, dq1, dq2)
+#define XFS_QM_DQVOPALLOC(mp, ip, uid, gid, prid, fl, dq1, dq2) \
+	(*(mp)->m_qm_ops.xfs_dqvopalloc)(mp, ip, uid, gid, prid, fl, dq1, dq2)
 #define XFS_QM_DQVOPCREATE(mp, tp, ip, dq1, dq2) \
 	(*(mp)->m_qm_ops.xfs_dqvopcreate)(tp, ip, dq1, dq2)
 #define XFS_QM_DQVOPRENAME(mp, ip) \
@@ -296,7 +296,7 @@ typedef struct xfs_mount {
 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
 	lock_t			m_agirotor_lock;/* .. and lock protecting it */
 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
-	int			m_ihsize;	/* size of next field */
+	uint			m_ihsize;	/* size of next field */
 	struct xfs_ihash	*m_ihash;	/* fs private inode hash table*/
 	struct xfs_inode	*m_inodes;	/* active inode list */
 	struct list_head	m_del_inodes;	/* inodes to reclaim */
@@ -376,13 +376,15 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
-	int			m_chsize;	/* size of next field */
+	uint			m_chsize;	/* size of next field */
 	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
 						 * hash table */
 	struct xfs_dmops	m_dm_ops;	/* vector of DMI ops */
 	struct xfs_qmops	m_qm_ops;	/* vector of XQM ops */
 	struct xfs_ioops	m_io_ops;	/* vector of I/O ops */
 	atomic_t		m_active_trans;	/* number trans frozen */
+	unsigned long		m_ail_push_time;/* last time an ail push
+						   occurred for rate limiting */
 } xfs_mount_t;
 
 /*
@@ -393,7 +395,7 @@ typedef struct xfs_mount {
 						   for space allocations */
 #define	XFS_MOUNT_INO64		0x00000002
 			     /* 0x00000004	-- currently unused */
-			     /* 0x00000008	-- currently unused */
+#define XFS_MOUNT_WAS_CLEAN	0x00000008
 #define XFS_MOUNT_FS_SHUTDOWN	0x00000010	/* atomic stop of all filesystem
 						   operations, typically for
 						   disk errors in metadata */
@@ -418,6 +420,8 @@ typedef struct xfs_mount {
 #define XFS_MOUNT_IDELETE	0x00040000	/* delete empty inode clusters*/
 #define XFS_MOUNT_SWALLOC	0x00080000	/* turn on stripe width
 						 * allocation */
+#define XFS_MOUNT_IHASHSIZE	0x00100000	/* inode hash table size */
+#define XFS_MOUNT_DIRSYNC	0x00200000	/* synchronous directory ops */
 
 /*
  * Default minimum read and write sizes.
@@ -426,10 +430,10 @@ typedef struct xfs_mount {
 #define XFS_WRITEIO_LOG_LARGE	16
 
 /*
- * Max and min values for UIO and mount-option defined I/O sizes;
- * min value can't be less than a page.  Currently unused.
+ * Max and min values for mount-option defined I/O
+ * preallocation sizes.
  */
-#define XFS_MAX_IO_LOG		16	/* 64K */
+#define XFS_MAX_IO_LOG		30	/* 1G */
 #define XFS_MIN_IO_LOG		PAGE_SHIFT
 
 /*
@@ -441,6 +445,8 @@ typedef struct xfs_mount {
 
 #define XFS_MAXIOFFSET(mp)	((mp)->m_maxioffset)
 
+#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
+				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
 #define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
 #define xfs_force_shutdown(m,f)	\
 	VFS_FORCE_SHUTDOWN((XFS_MTOVFS(m)), f, __FILE__, __LINE__)
@@ -466,6 +472,7 @@ typedef struct xfs_mount {
 #define XFS_MFSI_CLIENT		0x02	/* Is a client -- skip lots of stuff */
 #define XFS_MFSI_NOUNLINK	0x08	/* Skip unlinked inode processing in */
 					/* log recovery */
+#define XFS_MFSI_NO_QUOTACHECK	0x10	/* Skip quotacheck processing */
 
 /*
  * Macros for getting from mount to vfs and back.
@@ -536,10 +543,12 @@ typedef struct xfs_mod_sb {
 
 extern xfs_mount_t *xfs_mount_init(void);
 extern void	xfs_mod_sb(xfs_trans_t *, __int64_t);
+extern int	xfs_log_sbcount(xfs_mount_t *, uint);
 extern void	xfs_mount_free(xfs_mount_t *mp, int remove_bhv);
 extern int	xfs_mountfs(struct vfs *, xfs_mount_t *mp, int);
 
 extern int	xfs_unmountfs(xfs_mount_t *, struct cred *);
+extern void	xfs_unmountfs_wait(xfs_mount_t *);
 extern void	xfs_unmountfs_close(xfs_mount_t *, struct cred *);
 extern int	xfs_unmountfs_writesb(xfs_mount_t *);
 extern int	xfs_unmount_flush(xfs_mount_t *, int);
@@ -552,8 +561,7 @@ extern void	xfs_freesb(xfs_mount_t *);
 extern void	xfs_do_force_shutdown(bhv_desc_t *, int, char *, int);
 extern int	xfs_syncsub(xfs_mount_t *, int, int, int *);
 extern xfs_agnumber_t	xfs_initialize_perag(xfs_mount_t *, xfs_agnumber_t);
-extern void	xfs_xlatesb(void *, struct xfs_sb *, int, xfs_arch_t,
-			__int64_t);
+extern void	xfs_xlatesb(void *, struct xfs_sb *, int, __int64_t);
 
 extern struct vfsops xfs_vfsops;
 extern struct vnodeops xfs_vnodeops;

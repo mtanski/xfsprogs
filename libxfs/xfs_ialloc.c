@@ -118,6 +118,7 @@ xfs_ialloc_ag_alloc(
 	int		blks_per_cluster;  /* fs blocks per inode cluster */
 	xfs_btree_cur_t	*cur;		/* inode btree cursor */
 	xfs_daddr_t	d;		/* disk addr of buffer */
+	xfs_agnumber_t	agno;
 	int		error;
 	xfs_buf_t	*fbuf;		/* new free inodes' buffer */
 	xfs_dinode_t	*free;		/* new free inode structure */
@@ -273,15 +274,16 @@ xfs_ialloc_ag_alloc(
 	}
 	INT_MOD(agi->agi_count, ARCH_CONVERT, newlen);
 	INT_MOD(agi->agi_freecount, ARCH_CONVERT, newlen);
+	agno = INT_GET(agi->agi_seqno, ARCH_CONVERT);
 	down_read(&args.mp->m_peraglock);
-	args.mp->m_perag[INT_GET(agi->agi_seqno, ARCH_CONVERT)].pagi_freecount += newlen;
+	args.mp->m_perag[agno].pagi_count += newlen;
+	args.mp->m_perag[agno].pagi_freecount += newlen;
 	up_read(&args.mp->m_peraglock);
 	INT_SET(agi->agi_newino, ARCH_CONVERT, newino);
 	/*
 	 * Insert records describing the new inode chunk into the btree.
 	 */
-	cur = xfs_btree_init_cursor(args.mp, tp, agbp,
-			INT_GET(agi->agi_seqno, ARCH_CONVERT),
+	cur = xfs_btree_init_cursor(args.mp, tp, agbp, agno,
 			XFS_BTNUM_INO, (xfs_inode_t *)0, 0);
 	for (thisino = newino;
 	     thisino < newino + newlen;
@@ -557,7 +559,7 @@ xfs_dialloc(
 	 * allocation groups upward, wrapping at the end.
 	 */
 	*alloc_done = B_FALSE;
-	while (INT_ISZERO(agi->agi_freecount, ARCH_CONVERT)) {
+	while (!agi->agi_freecount) {
 		/*
 		 * Don't do anything if we're not supposed to allocate
 		 * any blocks, just go on to the next ag.
@@ -639,7 +641,7 @@ nextag:
 		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
 		do {
 			if ((error = xfs_inobt_get_rec(cur, &rec.ir_startino,
-					&rec.ir_freecount, &rec.ir_free, &i, ARCH_NOCONVERT)))
+					&rec.ir_freecount, &rec.ir_free, &i)))
 				goto error0;
 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
 			freecount += rec.ir_freecount;
@@ -659,7 +661,7 @@ nextag:
 			goto error0;
 		if (i != 0 &&
 		    (error = xfs_inobt_get_rec(cur, &rec.ir_startino,
-			    &rec.ir_freecount, &rec.ir_free, &j, ARCH_NOCONVERT)) == 0 &&
+			    &rec.ir_freecount, &rec.ir_free, &j)) == 0 &&
 		    j == 1 &&
 		    rec.ir_freecount > 0) {
 			/*
@@ -694,7 +696,7 @@ nextag:
 				if ((error = xfs_inobt_get_rec(tcur,
 						&trec.ir_startino,
 						&trec.ir_freecount,
-						&trec.ir_free, &i, ARCH_NOCONVERT)))
+						&trec.ir_free, &i)))
 					goto error1;
 				XFS_WANT_CORRUPTED_GOTO(i == 1, error1);
 			}
@@ -708,7 +710,7 @@ nextag:
 				if ((error = xfs_inobt_get_rec(cur,
 						&rec.ir_startino,
 						&rec.ir_freecount,
-						&rec.ir_free, &i, ARCH_NOCONVERT)))
+						&rec.ir_free, &i)))
 					goto error1;
 				XFS_WANT_CORRUPTED_GOTO(i == 1, error1);
 			}
@@ -772,7 +774,7 @@ nextag:
 							    tcur,
 							    &trec.ir_startino,
 							    &trec.ir_freecount,
-							    &trec.ir_free, &i, ARCH_NOCONVERT)))
+							    &trec.ir_free, &i)))
 							goto error1;
 						XFS_WANT_CORRUPTED_GOTO(i == 1,
 							error1);
@@ -792,7 +794,7 @@ nextag:
 							    cur,
 							    &rec.ir_startino,
 							    &rec.ir_freecount,
-							    &rec.ir_free, &i, ARCH_NOCONVERT)))
+							    &rec.ir_free, &i)))
 							goto error1;
 						XFS_WANT_CORRUPTED_GOTO(i == 1,
 							error1);
@@ -812,7 +814,7 @@ nextag:
 			goto error0;
 		if (i == 1 &&
 		    (error = xfs_inobt_get_rec(cur, &rec.ir_startino,
-			    &rec.ir_freecount, &rec.ir_free, &j, ARCH_NOCONVERT)) == 0 &&
+			    &rec.ir_freecount, &rec.ir_free, &j)) == 0 &&
 		    j == 1 &&
 		    rec.ir_freecount > 0) {
 			/*
@@ -833,7 +835,7 @@ nextag:
 				if ((error = xfs_inobt_get_rec(cur,
 						&rec.ir_startino,
 						&rec.ir_freecount, &rec.ir_free,
-						&i, ARCH_NOCONVERT)))
+						&i)))
 					goto error0;
 				XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
 				if (rec.ir_freecount > 0)
@@ -868,7 +870,7 @@ nextag:
 			goto error0;
 		do {
 			if ((error = xfs_inobt_get_rec(cur, &rec.ir_startino,
-					&rec.ir_freecount, &rec.ir_free, &i, ARCH_NOCONVERT)))
+					&rec.ir_freecount, &rec.ir_free, &i)))
 				goto error0;
 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
 			freecount += rec.ir_freecount;
@@ -999,7 +1001,7 @@ xfs_dilocate(
 			goto error0;
 		}
 		if ((error = xfs_inobt_get_rec(cur, &chunk_agino, &chunk_cnt,
-				&chunk_free, &i, ARCH_NOCONVERT))) {
+				&chunk_free, &i))) {
 #ifdef DEBUG
 			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
 					"xfs_inobt_get_rec() failed");
@@ -1143,6 +1145,7 @@ xfs_ialloc_read_agi(
 	pag = &mp->m_perag[agno];
 	if (!pag->pagi_init) {
 		pag->pagi_freecount = INT_GET(agi->agi_freecount, ARCH_CONVERT);
+		pag->pagi_count = INT_GET(agi->agi_count, ARCH_CONVERT);
 		pag->pagi_init = 1;
 	} else {
 		/*
@@ -1159,7 +1162,7 @@ xfs_ialloc_read_agi(
 		int	i;
 
 		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-			ASSERT(!INT_ISZERO(agi->agi_unlinked[i], ARCH_CONVERT));
+			ASSERT(agi->agi_unlinked[i]);
 	}
 #endif
 
