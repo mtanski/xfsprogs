@@ -191,6 +191,7 @@ obj_to_handle(
 {
 	char		hbuf [MAXHANSIZ];
 	int		ret;
+	__uint32_t	handlen;
 	xfs_fsop_handlereq_t hreq;
 
 	if (opcode == XFS_IOC_FD_TO_HANDLE) {
@@ -205,24 +206,20 @@ obj_to_handle(
 	hreq.ihandle  = NULL;
 	hreq.ihandlen = 0;
 	hreq.ohandle  = hbuf;
-	hreq.ohandlen = (__u32 *)hlen;
-
-	/* the xfsctl call will only modify the low 32 bits of *hlen,
-	 * but *hlen (size_t) could be a 64 bit value on some systems.
-	 * zero it out beforehand in case any upper bits are set. */
-	*hlen = 0;
+	hreq.ohandlen = &handlen;
 
 	ret = xfsctl(fspath, fsfd, opcode, &hreq);
 	if (ret)
 		return ret;
 
-	*hanp = malloc(*hlen);
+	*hanp = malloc(handlen);
 	if (*hanp == NULL) {
 		errno = ENOMEM;
 		return -1;
 	}
 
-	memcpy(*hanp, hbuf, (int) *hlen);
+	memcpy(*hanp, hbuf, handlen);
+	*hlen = handlen;
 	return 0;
 }
 

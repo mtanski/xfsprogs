@@ -1,3 +1,7 @@
+xfsprogs-2.6.29 (19 April 2005)
+	- Fix mkfs.xfs -dfile.
+	- Fix libhandle on 64bit, Big Endian systems.
+
 xfsprogs-2.6.28 (30 March 2005)
 	- Fix compiler warning in repair/dir.c size checks.
 	- Fix more compilation problem with version 4 of gcc
