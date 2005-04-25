@@ -43,4 +43,4 @@ extern void	quota_init(void);
 extern void	report_init(void);
 extern void	state_init(void);
 
-extern void init_cvtnum(int *, int *);
+extern void init_cvtnum(unsigned int *, unsigned int *);

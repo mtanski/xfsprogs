@@ -47,7 +47,7 @@ offset_length(
 	char		*length,
 	xfs_flock64_t	*segment)
 {
-	int		blocksize, sectsize;
+	unsigned int	blocksize, sectsize;
 
 	init_cvtnum(&blocksize, &sectsize);
 	memset(segment, 0, sizeof(*segment));

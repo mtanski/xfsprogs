@@ -42,4 +42,4 @@ extern struct timeval stopwatch;
 
 #define min(a,b)	(((a)<(b))?(a):(b))
 
-extern void init_cvtnum(int *blocksize, int *sectsize);
+extern void init_cvtnum(unsigned int *blocksize, unsigned int *sectsize);

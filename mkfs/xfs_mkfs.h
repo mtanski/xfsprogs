@@ -60,7 +60,8 @@
 /* xfs_mkfs.c */
 extern void usage (void);
 extern int isdigits (char *str);
-extern long long cvtnum (int blocksize, int sectorsize, char *s);
+extern long long cvtnum (unsigned int blocksize,
+			 unsigned int sectorsize, char *s);
 
 /* proto.c */
 extern char *setup_proto (char *fname);

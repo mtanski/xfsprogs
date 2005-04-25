@@ -41,7 +41,8 @@ extern char	**breakline(char *input, int *count);
 extern void	doneline(char *input, char **vec);
 extern char	*fetchline(void);
 
-extern long long cvtnum(int blocksize, int sectorsize, char *s);
+extern long long cvtnum(unsigned int blocksize,
+			unsigned int sectorsize, char *s);
 extern void	cvtstr(double value, char *str, size_t sz);
 extern unsigned long cvttime(char *s);
 

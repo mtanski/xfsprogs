@@ -548,7 +548,7 @@ extsize_f(
 {
 	struct fsxattr		fsx;
 	long			extsize;
-	int			blocksize, sectsize;
+	unsigned int		blocksize, sectsize;
 
 	init_cvtnum(&blocksize, &sectsize);
 	extsize = (long)cvtnum(blocksize, sectsize, argv[1]);

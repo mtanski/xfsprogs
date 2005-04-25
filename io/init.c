@@ -53,8 +53,8 @@ usage(void)
 
 void
 init_cvtnum(
-	int		*blocksize,
-	int		*sectsize)
+	unsigned int	*blocksize,
+	unsigned int	*sectsize)
 {
 	if (!file || (file->flags & IO_FOREIGN)) {
 		*blocksize = 4096;

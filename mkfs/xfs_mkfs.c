@@ -516,7 +516,7 @@ main(
 	xfs_btree_sblock_t	*block;
 	int			blflag;
 	int			blocklog;
-	int			blocksize;
+	unsigned int		blocksize;
 	int			bsflag;
 	int			bsize;
 	xfs_buf_t		*buf;
@@ -588,7 +588,7 @@ main(
 	char			*rtsize;
 	xfs_sb_t		*sbp;
 	int			sectorlog;
-	int			sectorsize;
+	unsigned int		sectorsize;
 	int			slflag;
 	int			ssflag;
 	__uint64_t		tmp_agsize;
@@ -2381,8 +2381,8 @@ isdigits(
 
 long long
 cvtnum(
-	int		blocksize,
-	int		sectorsize,
+	unsigned int	blocksize,
+	unsigned int	sectorsize,
 	char		*s)
 {
 	long long	i;

@@ -49,7 +49,8 @@ mincore_f(
 	void		*start;
 	void		*current, *previous;
 	unsigned char	*vec;
-	int		i, blocksize, sectsize;
+	int		i;
+	unsigned int	blocksize, sectsize;
 
 	if (argc == 1) {
 		offset = mapping->offset;

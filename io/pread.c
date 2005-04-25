@@ -149,7 +149,7 @@ pread_f(
 {
 	off64_t		offset;
 	long long	count, total;
-	int		blocksize, sectsize;
+	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	int		Cflag, uflag, vflag;

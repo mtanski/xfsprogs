@@ -106,7 +106,7 @@ pwrite_f(
 	off64_t		offset, skip = 0;
 	long long	count, total;
 	unsigned int	seed = 0xcdcdcdcd;
-	int		blocksize, sectsize;
+	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;

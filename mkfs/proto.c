@@ -37,7 +37,6 @@
 /*
  * Prototypes for internal functions.
  */
-extern long long cvtnum(int blocksize, int sectorsize, char *s);
 extern void parseproto(xfs_mount_t *mp, xfs_inode_t *pip, char **pp,
 	char *name); 
 static long getnum(char **pp);

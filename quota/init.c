@@ -66,8 +66,8 @@ usage(void)
 
 void
 init_cvtnum(
-	int		*blocksize,
-	int		*sectsize)
+	unsigned int	*blocksize,
+	unsigned int	*sectsize)
 {
 	*blocksize = 4096;
 	*sectsize = 512;
