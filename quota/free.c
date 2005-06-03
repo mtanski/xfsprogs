@@ -51,7 +51,7 @@ free_help(void)
 " -i -- report the inode count values\n"
 " -r -- report the realtime block count values\n"
 " -h -- report in a human-readable format\n"
-" -n -- suppress the header from the output\n"
+" -N -- suppress the header from the output\n"
 "\n"));
 }
 
@@ -318,7 +318,7 @@ free_f(
 	char		*fname = NULL;
 	int		c, flags = 0, form = 0, type = 0;
 
-	while ((c = getopt(argc, argv, "bf:hnir")) != EOF) {
+	while ((c = getopt(argc, argv, "bf:hNir")) != EOF) {
 		switch (c) {
 		case 'f':
 			fname = optarg;
@@ -335,7 +335,7 @@ free_f(
 		case 'h':
 			flags |= HUMAN_FLAG;
 			break;
-		case 'n':
+		case 'N':
 			flags |= NO_HEADER_FLAG;
 			break;
 		default:

@@ -70,7 +70,8 @@ report_help(void)
 " or all filesystems.\n"
 " -a -- report for all mounted filesystems with quota enabled\n"
 " -h -- report in a human-readable format\n"
-" -n -- suppress the header from the output\n"
+" -n -- skip identifier-to-name translations, just report IDs\n"
+" -N -- suppress the header from the output\n"
 " -t -- terse output format, hides rows which are all zero\n"
 " -g -- report group usage and quota information\n"
 " -p -- report project usage and quota information\n"
@@ -92,27 +93,48 @@ dump_file(
 
 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
 		return;
+	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
+		return;
 	fprintf(fp, "fs = %s\n", dev);
-	fprintf(fp, "%-10d %7llu %7llu %7llu %7llu %7llu %7llu\n", id,
-		(unsigned long long)d.d_blk_softlimit,
-		(unsigned long long)d.d_blk_hardlimit,
-		(unsigned long long)d.d_ino_softlimit,
-		(unsigned long long)d.d_ino_hardlimit,
-		(unsigned long long)d.d_rtb_softlimit,
-		(unsigned long long)d.d_rtb_hardlimit);
+	/* this branch is for backward compatibility reasons */
+	if (d.d_rtb_softlimit || d.d_rtb_hardlimit)
+		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu %7llu %7llu\n", id,
+			(unsigned long long)d.d_blk_softlimit,
+			(unsigned long long)d.d_blk_hardlimit,
+			(unsigned long long)d.d_ino_softlimit,
+			(unsigned long long)d.d_ino_hardlimit,
+			(unsigned long long)d.d_rtb_softlimit,
+			(unsigned long long)d.d_rtb_hardlimit);
+	else
+		fprintf(fp, "%-10d %7llu %7llu %7llu %7llu\n", id,
+			(unsigned long long)d.d_blk_softlimit,
+			(unsigned long long)d.d_blk_hardlimit,
+			(unsigned long long)d.d_ino_softlimit,
+			(unsigned long long)d.d_ino_hardlimit);
 }
 
 static void
 dump_limits_any_type(
 	FILE		*fp,
 	uint		type,
-	char		*dir)
+	char		*dir,
+	uint		lower,
+	uint		upper)
 {
 	fs_path_t	*mount;
+	uint		id;
 
 	if ((mount = fs_table_lookup(dir, FS_MOUNT_POINT)) == NULL) {
 		fprintf(stderr, "%s: cannot find mount point %s\n",
 			progname, dir);
+		return;
+	}
+
+	if (upper) {
+		for (id = lower; id < upper; id++)
+			dump_file(fp, id, type, mount->fs_name);
 		return;
 	}
 
@@ -151,9 +173,10 @@ dump_f(
 {
 	FILE		*fp;
 	char		*fname = NULL;
+	uint		lower = 0, upper = 0;
 	int		c, type = XFS_USER_QUOTA;
 
-	while ((c = getopt(argc, argv, "f:gpu")) != EOF) {
+	while ((c = getopt(argc, argv, "f:gpuL:U:")) != EOF) {
 		switch(c) {
 		case 'f':
 			fname = optarg;
@@ -167,6 +190,12 @@ dump_f(
 		case 'u':
 			type = XFS_USER_QUOTA;
 			break;
+		case 'L':
+			lower = (uint)atoi(optarg);
+			break;
+		case 'U':
+			upper = (uint)atoi(optarg);
+			break;
 		default:
 			return command_usage(&dump_cmd);
 		}
@@ -178,7 +207,7 @@ dump_f(
 	if ((fp = fopen_write_secure(fname)) == NULL)
 		return 0;
 
-	dump_limits_any_type(fp, type, fs_path->fs_dir);
+	dump_limits_any_type(fp, type, fs_path->fs_dir, lower, upper);
 
 	if (fname)
 		fclose(fp);
@@ -369,18 +398,37 @@ report_user_mount(
 	FILE		*fp,
 	uint		form,
 	fs_path_t	*mount,
+	uint		lower,
+	uint		upper,
 	uint		flags)
 {
-	struct passwd *u;
+	struct passwd	*u;
+	char		n[MAXNAMELEN];
+	uint		id;
 
-	setpwent();
-	while ((u = getpwent()) != NULL)
-		if (report_mount(fp, u->pw_uid, u->pw_name,
-				form, XFS_USER_QUOTA, mount, flags))
-			flags |= NO_HEADER_FLAG;
+	if (upper) {	/* identifier range specified */
+		for (id = lower; id < upper; id++) {
+			snprintf(n, sizeof(n)-1, "#%u", id);
+			if (report_mount(fp, id, n,
+					form, XFS_USER_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+	} else {
+		setpwent();
+		while ((u = getpwent()) != NULL) {
+			if (flags & NO_LOOKUP_FLAG)
+				snprintf(n, sizeof(n)-1, "#%u", u->pw_uid);
+			else
+				strncpy(n, u->pw_name, sizeof(n)-1);
+			if (report_mount(fp, u->pw_uid, n,
+					form, XFS_USER_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+		endpwent();
+	}
+
 	if (flags & NO_HEADER_FLAG)
 		fputc('\n', fp);
-	endpwent();
 }
 
 static void
@@ -388,15 +436,33 @@ report_group_mount(
 	FILE		*fp,
 	uint		form,
 	fs_path_t	*mount,
+	uint		lower,
+	uint		upper,
 	uint		flags)
 {
-	struct group *g;
+	struct group	*g;
+	char		n[MAXNAMELEN];
+	uint		id;
 
-	setgrent();
-	while ((g = getgrent()) != NULL)
-		if (report_mount(fp, g->gr_gid, g->gr_name,
-				form, XFS_GROUP_QUOTA, mount, flags))
-			flags |= NO_HEADER_FLAG;
+	if (upper) {	/* identifier range specified */
+		for (id = lower; id < upper; id++) {
+			snprintf(n, sizeof(n)-1, "#%u", id);
+			if (report_mount(fp, id, n,
+					form, XFS_GROUP_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+	} else {
+		setgrent();
+		while ((g = getgrent()) != NULL) {
+			if (flags & NO_LOOKUP_FLAG)
+				snprintf(n, sizeof(n)-1, "#%u", g->gr_gid);
+		else
+			strncpy(n, g->gr_name, sizeof(n)-1);
+			if (report_mount(fp, g->gr_gid, n,
+					form, XFS_GROUP_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+	}
 	if (flags & NO_HEADER_FLAG)
 		fputc('\n', fp);
 	endgrent();
@@ -407,18 +473,37 @@ report_project_mount(
 	FILE		*fp,
 	uint		form,
 	fs_path_t	*mount,
+	uint		lower,
+	uint		upper,
 	uint		flags)
 {
 	fs_project_t	*p;
+	char		n[MAXNAMELEN];
+	uint		id;
 
-	setprent();
-	while ((p = getprent()) != NULL)
-		if (report_mount(fp, p->pr_prid, p->pr_name,
-				form, XFS_PROJ_QUOTA, mount, flags))
-			flags |= NO_HEADER_FLAG;
+	if (upper) {	/* identifier range specified */
+		for (id = lower; id < upper; id++) {
+			snprintf(n, sizeof(n)-1, "#%u", id);
+			if (report_mount(fp, id, n,
+					form, XFS_PROJ_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+	} else {
+		setprent();
+		while ((p = getprent()) != NULL) {
+			if (flags & NO_LOOKUP_FLAG)
+				snprintf(n, sizeof(n)-1, "#%u", p->pr_prid);
+			else
+				strncpy(n, p->pr_name, sizeof(n)-1);
+			if (report_mount(fp, p->pr_prid, n,
+					form, XFS_PROJ_QUOTA, mount, flags))
+				flags |= NO_HEADER_FLAG;
+		}
+		endprent();
+	}
+
 	if (flags & NO_HEADER_FLAG)
 		fputc('\n', fp);
-	endprent();
 }
 
 static void
@@ -427,6 +512,8 @@ report_any_type(
 	uint		form,
 	uint		type,
 	char		*dir,
+	uint		lower,
+	uint		upper,
 	uint		flags)
 {
 	fs_cursor_t	cursor;
@@ -435,17 +522,20 @@ report_any_type(
 	if (type & XFS_USER_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor)))
-			report_user_mount(fp, form, mount, flags);
+			report_user_mount(fp, form, mount,
+						lower, upper, flags);
 	}
 	if (type & XFS_GROUP_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor)))
-			report_group_mount(fp, form, mount, flags);
+			report_group_mount(fp, form, mount,
+						lower, upper, flags);
 	}
 	if (type & XFS_PROJ_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor)))
-			report_project_mount(fp, form, mount, flags);
+			report_project_mount(fp, form, mount,
+						lower, upper, flags);
 	}
 }
 
@@ -455,10 +545,11 @@ report_f(
 	char		**argv)
 {
 	FILE		*fp = NULL;
-	char		*fname = NULL;
+	char		*dir, *fname = NULL;
+	uint		lower = 0, upper = 0;
 	int		c, flags = 0, type = 0, form = 0;
 
-	while ((c = getopt(argc, argv, "abf:hgniprtu")) != EOF) {
+	while ((c = getopt(argc, argv, "abf:ghiL:NnprtuU:")) != EOF) {
 		switch (c) {
 		case 'f':
 			fname = optarg;
@@ -488,10 +579,19 @@ report_f(
 			flags |= HUMAN_FLAG;
 			break;
 		case 'n':
+			flags |= NO_LOOKUP_FLAG;
+			break;
+		case 'N':
 			flags |= NO_HEADER_FLAG;
 			break;
 		case 't':
 			flags |= TERSE_FLAG;
+			break;
+		case 'L':
+			lower = (uint)atoi(optarg);
+			break;
+		case 'U':
+			upper = (uint)atoi(optarg);
 			break;
 		default:
 			return command_usage(&report_cmd);
@@ -509,9 +609,11 @@ report_f(
 
 	if (argc == optind)
 		report_any_type(fp, form, type, (flags & ALL_MOUNTS_FLAG) ?
-				NULL : fs_path->fs_dir, flags);
-	else while (argc > optind)
-		report_any_type(fp, form, type, argv[optind++], flags);
+				NULL : fs_path->fs_dir, lower, upper, flags);
+	else while (argc > optind) {
+		dir = argv[optind++];
+		report_any_type(fp, form, type, dir, lower, upper, flags);
+	}
 
 	if (fname)
 		fclose(fp);

@@ -71,14 +71,15 @@ timer_help(void)
 {
 	printf(_(
 "\n"
-" modify quota enforcement timeout for the specified user\n"
+" modify quota enforcement timeout for the current filesystem\n"
 "\n"
 " Example:\n"
-" 'timer -i 3days sam'\n"
-" (soft inode limit timer for user 'sam' is changed to 3 days)\n"
+" 'timer -i 3days'\n"
+" (soft inode limit timer is changed to 3 days)\n"
 "\n"
 " Changes the timeout value associated with the block limits, inode limits\n"
-" and/or realtime block limits for the specified user, group, or project.\n"
+" and/or realtime block limits for all users, groups, or projects on the\n"
+" current filesystem.\n"
 " As soon as a user consumes the amount of space or number of inodes set as\n"
 " the soft limit, a timer is started.  If the timer expires and the user is\n"
 " still over the soft limit, the soft limit is enforced as the hard limit.\n"
@@ -94,7 +95,6 @@ timer_help(void)
 " However, a suffix may be used to alternatively specify minutes (m),\n"
 " hours (h), days (d), or weeks (w) - either the full word or the first\n"
 " letter of the word can be used.\n"
-" The user/group/project can be specified either by name or by number.\n"
 "\n"));
 }
 
@@ -225,8 +225,9 @@ set_project_limits(
 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
 }
 
+/* extract number of blocks from an ascii string */
 static int
-extract(
+extractb(
 	char		*string,
 	const char	*prefix,
 	int		length,
@@ -241,6 +242,24 @@ extract(
 		s = string + length + 1;
 		v = (__uint64_t)cvtnum(blocksize, sectorsize, s);
 		*value = v >> 9;	/* syscalls use basic blocks */
+		return 1;
+	}
+	return 0;
+}
+
+/* extract number of inodes from an ascii string */
+static int
+extracti(
+	char		*string,
+	const char	*prefix,
+	int		length,
+	__uint64_t	*value)
+{
+	char		*sp, *s = string;
+
+	if (strncmp(string, prefix, length) == 0) {
+		s = string + length + 1;
+		*value = strtoll(s, &sp, 0);
 		return 1;
 	}
 	return 0;
@@ -297,17 +316,17 @@ limit_f(
 	 */
 	while (argc > optind + endoptions - 1) {
 		char *s = argv[optind++];
-		if (extract(s, "bsoft=", 5, bsize, ssize, &bsoft))
+		if (extractb(s, "bsoft=", 5, bsize, ssize, &bsoft))
 			mask |= FS_DQ_BSOFT;
-		else if (extract(s, "bhard=", 5, bsize, ssize, &bhard))
+		else if (extractb(s, "bhard=", 5, bsize, ssize, &bhard))
 			mask |= FS_DQ_BHARD;
-		else if (extract(s, "isoft=", 5, bsize, ssize, &isoft))
+		else if (extracti(s, "isoft=", 5, &isoft))
 			mask |= FS_DQ_ISOFT;
-		else if (extract(s, "ihard=", 5, bsize, ssize, &ihard))
+		else if (extracti(s, "ihard=", 5, &ihard))
 			mask |= FS_DQ_IHARD;
-		else if (extract(s, "rtbsoft=", 7, bsize, ssize, &rtbsoft))
+		else if (extractb(s, "rtbsoft=", 7, bsize, ssize, &rtbsoft))
 			mask |= FS_DQ_RTBSOFT;
-		else if (extract(s, "rtbhard=", 7, bsize, ssize, &rtbhard))
+		else if (extractb(s, "rtbhard=", 7, bsize, ssize, &rtbhard))
 			mask |= FS_DQ_RTBHARD;
 		else {
 			fprintf(stderr, _("%s: unrecognised argument %s\n"),
@@ -435,7 +454,6 @@ restore_f(
 
 static void
 set_timer(
-	__uint32_t	id,
 	uint		type,
 	uint		mask,
 	char		*dev,
@@ -445,64 +463,15 @@ set_timer(
 
 	memset(&d, 0, sizeof(d));
 	d.d_version = FS_DQUOT_VERSION;
-	d.d_id = id;
 	d.d_flags = type;
 	d.d_fieldmask = mask;
 	d.d_itimer = value;
 	d.d_btimer = value;
 	d.d_rtbtimer = value;
 
-	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0)
+	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0)
 		fprintf(stderr, _("%s: cannot set timer: %s\n"),
 				progname, strerror(errno));
-}
-
-static void
-set_user_timer(
-	char		*name,
-	uint		type,
-	uint		mask,
-	uint		value)
-{
-	uid_t		uid = uid_from_string(name);
-
-	if (uid == -1)
-		fprintf(stderr, _("%s: invalid user name: %s\n"),
-				progname, name);
-	else
-		set_timer(uid, type, mask, fs_path->fs_name, value);
-}
-
-static void
-set_group_timer(
-	char		*name,
-	uint		type,
-	uint		mask,
-	uint		value)
-{
-	gid_t		gid = gid_from_string(name);
-
-	if (gid == -1)
-		fprintf(stderr, _("%s: invalid group name: %s\n"),
-				progname, name);
-	else
-		set_timer(gid, type, mask, fs_path->fs_name, value);
-}
-
-static void
-set_project_timer(
-	char		*name,
-	uint		type,
-	uint		mask,
-	uint		value)
-{
-	prid_t		prid = prid_from_string(name);
-
-	if (prid == -1)
-		fprintf(stderr, _("%s: invalid project name: %s\n"),
-				progname, name);
-	else
-		set_timer(prid, type, mask, fs_path->fs_name, value);
 }
 
 static int
@@ -510,15 +479,11 @@ timer_f(
 	int		argc,
 	char		**argv)
 {
-	char		*name;
 	uint		value;
-	int		c, flags = 0, type = 0, mask = 0;
+	int		c, type = 0, mask = 0;
 
-	while ((c = getopt(argc, argv, "bdgipru")) != EOF) {
+	while ((c = getopt(argc, argv, "bgipru")) != EOF) {
 		switch (c) {
-		case 'd':
-			flags |= DEFAULTS_FLAG;
-			break;
 		case 'b':
 			mask |= FS_DQ_BTIMER;
 			break;
@@ -542,20 +507,10 @@ timer_f(
 		}
 	}
 
-	/*
-	 * In the usual case, we need at least 2 more arguments -
-	 * one (or more) value and a user name/id.
-	 * For setting defaults (-d) we don't want a user name/id.
-	 */
-	if (flags & DEFAULTS_FLAG) {
-		if (argc != optind + 1)
-			return command_usage(&timer_cmd);
-	} else if (argc != optind + 2) {
+	if (argc != optind + 1)
 		return command_usage(&timer_cmd);
-	}
 
 	value = cvttime(argv[optind++]);
-	name = (flags & DEFAULTS_FLAG) ? "0" : argv[optind++];
 
 	if (!mask)
 		mask = FS_DQ_TIMER_MASK;
@@ -563,17 +518,7 @@ timer_f(
 	if (!type)
 		type = XFS_USER_QUOTA;
 
-	switch (type) {
-	case XFS_USER_QUOTA:
-		set_user_timer(name, type, mask, value);
-		break;
-	case XFS_GROUP_QUOTA:
-		set_group_timer(name, type, mask, value);
-		break;
-	case XFS_PROJ_QUOTA:
-		set_project_timer(name, type, mask, value);
-		break;
-	}
+	set_timer(type, mask, fs_path->fs_name, value);
 	return 0;
 }
 

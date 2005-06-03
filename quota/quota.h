@@ -83,6 +83,7 @@ enum {
 	HISTOGRAM_FLAG =	0x0080,	/* histogram format output */
 	DEFAULTS_FLAG =		0x0100,	/* use value as a default */
 	ABSOLUTE_FLAG =		0x0200, /* absolute time, not related to now */
+	NO_LOOKUP_FLAG =	0x0400, /* skip name lookups, just report ID */
 };
 
 /*

@@ -82,7 +82,8 @@ quot_help(void)
 " -b -- display number of blocks used\n"
 " -i -- display number of inodes used\n"
 " -r -- display number of realtime blocks used\n"
-" -n -- suppress the initial header\n"
+" -n -- skip identifier-to-name translations, just report IDs\n"
+" -N -- suppress the initial header\n"
 " -f -- send output to a file\n"
 " The (optional) user/group/project can be specified either by name or by\n"
 " number (i.e. uid/gid/projid).\n"
@@ -240,7 +241,8 @@ quot_report_mount_any_type(
 		if (form & XFS_INODE_QUOTA)
 			fprintf(fp, "%8llu    ",
 				(unsigned long long) dp->nfiles);
-		if ((cp = (names)(dp->id)) != NULL)
+		if (!(flags & NO_LOOKUP_FLAG) &&
+		    ((cp = (names)(dp->id)) != NULL))
 			fprintf(fp, "%-8.8s", cp);
 		else
 			fprintf(fp, "#%-7d", dp->id);
@@ -357,7 +359,7 @@ quot_f(
 	char		*fname = NULL;
 	int		c, flags = 0, type = 0, form = 0;
 
-	while ((c = getopt(argc, argv, "abcf:hgipruv")) != EOF) {
+	while ((c = getopt(argc, argv, "abcf:ghinpruv")) != EOF) {
 		switch (c) {
 		case 'f':
 			fname = optarg;
@@ -385,6 +387,9 @@ quot_f(
 			break;
 		case 'c':
 			flags |= HISTOGRAM_FLAG;
+			break;
+		case 'n':
+			flags |= NO_LOOKUP_FLAG;
 			break;
 		case 'v':
 			flags |= VERBOSE_FLAG;

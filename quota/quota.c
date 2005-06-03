@@ -53,7 +53,8 @@ quota_help(void)
 " -i -- display number of inodes used\n"
 " -r -- display number of realtime blocks used\n"
 " -h -- report in a human-readable format\n"
-" -n -- suppress the initial header\n"
+" -n -- skip identifier-to-name translations, just report IDs\n"
+" -N -- suppress the initial header\n"
 " -v -- increase verbosity in reporting (also dumps zero values)\n"
 " -f -- send output to a file\n"
 " The (optional) user/group/project can be specified either by name or by\n"
@@ -210,12 +211,13 @@ quota(
 
 static char *
 getusername(
-	uid_t		uid)
+	uid_t		uid,
+	int		numeric)
 {
 	static char	buffer[32];
 	struct passwd	*u;
 
-	if ((u = getpwuid(uid)))
+	if (!numeric && (u = getpwuid(uid)))
 		return u->pw_name;
 	snprintf(buffer, sizeof(buffer), "#%u", uid);
 	return &buffer[0];
@@ -235,7 +237,7 @@ quota_user_type(
 	if (name) {
 		if (isdigit(name[0])) {
 			id = atoi(name);
-			name = getusername(id);
+			name = getusername(id, flags & NO_LOOKUP_FLAG);
 		} else if ((u = getpwnam(name))) {
 			id = u->pw_uid;
 			name = u->pw_name;
@@ -246,7 +248,7 @@ quota_user_type(
 		}
 	} else {
 		id = getuid();
-		name = getusername(id);
+		name = getusername(id, flags & NO_LOOKUP_FLAG);
 	}
 
 	quota(fp, id, name, form, type, flags);
@@ -254,12 +256,13 @@ quota_user_type(
 
 static char *
 getgroupname(
-	gid_t		gid)
+	gid_t		gid,
+	int		numeric)
 {
 	static char	buffer[32];
 	struct group	*g;
 
-	if ((g = getgrgid(gid)))
+	if (!numeric && (g = getgrgid(gid)))
 		return g->gr_name;
 	snprintf(buffer, sizeof(buffer), "#%u", gid);
 	return &buffer[0];
@@ -280,7 +283,7 @@ quota_group_type(
 	if (name) {
 		if (isdigit(name[0])) {
 			gid = atoi(name);
-			name = getgroupname(gid);
+			name = getgroupname(gid, flags & NO_LOOKUP_FLAG);
 		} else {
 			if ((g = getgrnam(name))) {
 				gid = g->gr_gid;
@@ -306,7 +309,7 @@ quota_group_type(
 
 	for (i = 0; i < ngroups; i++, name = NULL) {
 		if (!name)
-			name = getgroupname(gids[i]);
+			name = getgroupname(gids[i], flags & NO_LOOKUP_FLAG);
 		quota(fp, gids[i], name, form, type, flags);
 	}
 
@@ -316,7 +319,8 @@ quota_group_type(
 
 static char *
 getprojectname(
-	prid_t		prid)
+	prid_t		prid,
+	int		numeric)
 {
 	static char	buffer[32];
 	fs_project_t	*p;
@@ -346,7 +350,7 @@ quota_proj_type(
 
 	if (isdigit(name[0])) {
 		id = atoi(name);
-		name = getprojectname(id);
+		name = getprojectname(id, flags & NO_LOOKUP_FLAG);
 	} else if ((p = getprnam(name))) {
 		id = p->pr_prid;
 		name = p->pr_name;
@@ -389,7 +393,7 @@ quota_f(
 	char		*fname = NULL;
 	int		c, flags = 0, type = 0, form = 0;
 
-	while ((c = getopt(argc, argv, "bf:hgnipruv")) != EOF) {
+	while ((c = getopt(argc, argv, "bf:ghnNipruv")) != EOF) {
 		switch (c) {
 		case 'f':
 			fname = optarg;
@@ -416,6 +420,9 @@ quota_f(
 			flags |= HUMAN_FLAG;
 			break;
 		case 'n':
+			flags |= NO_LOOKUP_FLAG;
+			break;
+		case 'N':
 			flags |= NO_HEADER_FLAG;
 			break;
 		case 'v':
