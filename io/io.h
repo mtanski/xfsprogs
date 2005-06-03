@@ -38,6 +38,7 @@
 #define IO_CREAT	(1<<5)
 #define IO_TRUNC	(1<<6)
 #define IO_FOREIGN	(1<<7)
+#define IO_NONBLOCK	(1<<8)
 
 /*
  * Regular file I/O control

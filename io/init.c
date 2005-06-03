@@ -140,12 +140,12 @@ init(
 	pagesize = getpagesize();
 	gettimeofday(&stopwatch, NULL);
 
-	while ((c = getopt(argc, argv, "ac:dFfmp:rRstVx")) != EOF) {
+	while ((c = getopt(argc, argv, "ac:dFfmp:nrRstVx")) != EOF) {
 		switch (c) {
-		case 'a':	/* append */
+		case 'a':
 			flags |= IO_APPEND;
 			break;
-		case 'c':	/* commands */
+		case 'c':
 			add_user_command(optarg);
 			break;
 		case 'd':
@@ -164,6 +164,9 @@ init(
 					optarg);
 				exit(1);
 			}
+			break;
+		case 'n':
+			flags |= IO_NONBLOCK;
 			break;
 		case 'p':
 			progname = optarg;

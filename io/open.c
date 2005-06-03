@@ -90,12 +90,13 @@ stat_f(
 	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
 
 	printf(_("fd.path = \"%s\"\n"), file->name);
-	printf(_("fd.flags = %s,%s,%s%s%s\n"),
+	printf(_("fd.flags = %s,%s,%s%s%s%s\n"),
 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
 		file->flags & IO_DIRECT ? _("direct") : _("non-direct"),
 		file->flags & IO_READONLY ? _("read-only") : _("read-write"),
 		file->flags & IO_REALTIME ? _(",real-time") : "",
-		file->flags & IO_APPEND ? _(",append-only") : "");
+		file->flags & IO_APPEND ? _(",append-only") : "",
+		file->flags & IO_NONBLOCK ? _(",non-block") : "");
 	if (fstat64(file->fd, &st) < 0) {
 		perror("fstat64");
 	} else {
@@ -143,6 +144,8 @@ openfile(
 		oflags |= O_SYNC;
 	if (flags & IO_TRUNC)
 		oflags |= O_TRUNC;
+	if (flags & IO_NONBLOCK)
+		oflags |= O_NONBLOCK;
 
 	fd = open(path, oflags, mode);
 	if (fd < 0) {
@@ -240,10 +243,11 @@ open_help(void)
 " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
 " -f -- open with O_CREAT (create the file if it doesn't exist)\n"
 " -m -- permissions to use in case a new file is created (default 0600)\n"
+" -n -- open with O_NONBLOCK\n"
 " -r -- open with O_RDONLY, the default is O_RDWR\n"
 " -s -- open with O_SYNC\n"
 " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
-" -x -- mark the file as a realtime XFS file immediately after opening it\n"
+" -R -- mark the file as a realtime XFS file immediately after opening it\n"
 " Note1: usually read/write direct IO requests must be blocksize aligned;\n"
 "        some kernels, however, allow sectorsize alignment for direct IO.\n"
 " Note2: the bmap for non-regular files can be obtained provided the file\n"
@@ -268,7 +272,7 @@ open_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "Facdfm:rstx")) != EOF) {
+	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
 		switch (c) {
 		case 'F':
 			flags |= IO_FOREIGN;
@@ -290,6 +294,9 @@ open_f(
 				return 0;
 			}
 			break;
+		case 'n':
+			flags |= IO_NONBLOCK;
+			break;
 		case 'r':
 			flags |= IO_READONLY;
 			break;
@@ -299,7 +306,8 @@ open_f(
 		case 't':
 			flags |= IO_TRUNC;
 			break;
-		case 'x':
+		case 'R':
+		case 'x':	/* backwards compatibility */
 			flags |= IO_REALTIME;
 			break;
 		default:

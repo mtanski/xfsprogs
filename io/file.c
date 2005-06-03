@@ -50,14 +50,15 @@ print_fileio(
 	int		index,
 	int		braces)
 {
-	printf(_("%c%03d%c %-14s (%s,%s,%s,%s%s%s)\n"),
+	printf(_("%c%03d%c %-14s (%s,%s,%s,%s%s%s%s)\n"),
 		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
 		file->flags & IO_FOREIGN ? _("foreign") : _("xfs"),
 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
 		file->flags & IO_DIRECT ? _("direct") : _("non-direct"),
 		file->flags & IO_READONLY ? _("read-only") : _("read-write"),
 		file->flags & IO_REALTIME ? _(",real-time") : "",
-		file->flags & IO_APPEND ? _(",append-only") : "");
+		file->flags & IO_APPEND ? _(",append-only") : "",
+		file->flags & IO_NONBLOCK ? _(",non-block") : "");
 }
 
 int
