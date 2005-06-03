@@ -44,7 +44,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
-	copy db fsck growfs io logprint mkfile mkfs repair rtcp \
+	copy db fsck growfs io logprint mkfile mkfs quota repair rtcp \
 	m4 man doc po debian build
 
 default: $(CONFIGURE)

@@ -1,3 +1,17 @@
+xfsprogs-2.6.30 (03 June 2005)
+	- Add xfs_quota(8) command which knows how to do all things
+	  quota related, and can also do the XFS specific extensions
+	  like project quota, realtime device quota, etc.
+	- Created a library of common code (libxcmd.a) shared by
+	  xfs_growfs, xfs_io and xfs_quota.
+	- Fix use of regular files for realtime subvolumes (debugging
+	  only, really).
+	- Fix bug in xfs_io command line option handling when commands
+	  where specified for multiple files at once.
+	- Allow xfs_io to specify O_NONBLOCK for regular file IO.
+	- Fix MD driver-specific code to not attempt stripe alignment
+	  for volumes that are not stripes (e.g. concat/mirror).
+
 xfsprogs-2.6.29 (19 April 2005)
 	- Fix mkfs.xfs -dfile.
 	- Fix libhandle on 64bit, Big Endian systems.
