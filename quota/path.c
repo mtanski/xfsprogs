@@ -111,11 +111,12 @@ path_f(
 	int		argc,
 	char		**argv)
 {
+	int	i;
+
 	if (argc <= 1)
 		return pathlist_f();
 
-	int	i = atoi(argv[1]);
-
+	i = atoi(argv[1]);
 	if (i < 0 || i >= fs_count) {
 		printf(_("value %d is out of range (0-%d)\n"),
 			i, fs_count-1);

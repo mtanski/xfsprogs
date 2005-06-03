@@ -155,8 +155,7 @@ projects_free_space_data(
 		return 0;
 	}
 
-	if ((xfsctl(path->fs_dir, fd, XFS_IOC_GETPROJID, &projid)) < 0) {
-		perror("XFS_IOC_GETPROJID");
+	if ((getprojid(path->fs_dir, fd, &projid)) < 0) {
 		close(fd);
 		return 0;
 	}

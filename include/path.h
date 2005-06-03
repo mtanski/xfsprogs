@@ -29,8 +29,8 @@
  *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ifndef __PATHS_H__
-#define __PATHS_H__
+#ifndef __PATH_H__
+#define __PATH_H__
 
 #include <xfs/libxfs.h>
 
@@ -80,4 +80,4 @@ typedef struct fs_cursor {
 extern void fs_cursor_initialise(char *__dir, uint __flags, fs_cursor_t *__cp);
 extern fs_path_t *fs_cursor_next_entry(fs_cursor_t *__cp);
 
-#endif	/* __PATHS_H__ */
+#endif	/* __PATH_H__ */

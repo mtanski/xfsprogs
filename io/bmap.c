@@ -31,7 +31,7 @@
  */
 
 #include <xfs/libxfs.h>
-#include "command.h"
+#include <xfs/command.h>
 #include "init.h"
 #include "io.h"
 

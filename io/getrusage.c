@@ -31,10 +31,10 @@
  */
 
 #include <xfs/libxfs.h>
+#include <xfs/command.h>
+#include <xfs/input.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include "command.h"
-#include "input.h"
 #include "init.h"
 
 static cmdinfo_t getrusage_cmd;

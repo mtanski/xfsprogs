@@ -44,15 +44,15 @@ xcommand_to_qcommand(
 	case XFS_QUOTAOFF:
 		return Q_XQUOTAOFF;
 	case XFS_GETQUOTA:
-		if (type == XFS_GRPQUOTA)
+		if (type == XFS_GROUP_QUOTA)
 			return Q_XGETGQUOTA;
-		if (type == XFS_PRJQUOTA)
+		if (type == XFS_PROJ_QUOTA)
 			return Q_XGETPQUOTA;
 		return Q_XGETQUOTA;
 	case XFS_SETQLIM:
-		if (type == XFS_GRPQUOTA)
+		if (type == XFS_GROUP_QUOTA)
 			return Q_XSETGQLIM;
-		if (type == XFS_PRJQUOTA)
+		if (type == XFS_PROJ_QUOTA)
 			return Q_XSETPQLIM;
 		return Q_XSETQLIM;
 	case XFS_GETQSTAT:
@@ -74,5 +74,5 @@ xfsquotactl(
 	int		qcommand;
 
 	qcommand = xcommand_to_qcommand(command, type);
-	return quotactl(qcommand, device, id, addr);
+	return quotactl(qcommand, (char *)device, id, addr);
 }

@@ -262,8 +262,10 @@ enable_enforcement(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat =
-		{ .qs_version = FS_QSTAT_VERSION, .qs_flags = qflags };
+	fs_quota_stat_t	qstat = { 0 };
+
+	qstat.qs_version = FS_QSTAT_VERSION;
+	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -285,8 +287,10 @@ disable_enforcement(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat =
-		{ .qs_version = FS_QSTAT_VERSION, .qs_flags = qflags };
+	fs_quota_stat_t	qstat = { 0 };
+
+	qstat.qs_version = FS_QSTAT_VERSION;
+	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -308,8 +312,10 @@ quotaoff(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat =
-		{ .qs_version = FS_QSTAT_VERSION, .qs_flags = qflags };
+	fs_quota_stat_t	qstat = { 0 };
+
+	qstat.qs_version = FS_QSTAT_VERSION;
+	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -331,8 +337,10 @@ remove_extents(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat =
-		{ .qs_version = FS_QSTAT_VERSION, .qs_flags = qflags };
+	fs_quota_stat_t	qstat = { 0 };
+
+	qstat.qs_version = FS_QSTAT_VERSION;
+	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {

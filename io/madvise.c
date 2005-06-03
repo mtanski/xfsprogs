@@ -31,9 +31,9 @@
  */
 
 #include <xfs/libxfs.h>
+#include <xfs/command.h>
+#include <xfs/input.h>
 #include <sys/mman.h>
-#include "command.h"
-#include "input.h"
 #include "init.h"
 #include "io.h"
 

@@ -34,7 +34,10 @@
 
 #include <xfs/xfs.h>
 
+#if !defined(__sgi__)
 typedef __uint32_t	prid_t;
+#endif
+
 extern int setprojid(const char *__name, int __fd, prid_t __id);
 extern int getprojid(const char *__name, int __fd, prid_t *__id);
 

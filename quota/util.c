@@ -231,12 +231,18 @@ type_to_string(
  * Identifier caches - user/group/project names/IDs
  */
 
+#ifndef UT_NAMESIZE
+struct utmp utmp;
+#define NMAX		(sizeof(utmp.ut_name))
+#else
+#define NMAX		UT_NAMESIZE
+#endif
 #define NID		4096
 #define IDMASK		(NID-1)
 
 typedef struct {
 	__uint32_t	id;
-	char		name[UT_NAMESIZE + 1];
+	char		name[NMAX+1];
 } idcache_t;
 
 static idcache_t	uidnc[NID];
@@ -258,7 +264,7 @@ getnextpwent(
 	if ((pw = byid? getpwuid(id) : getpwent()) == NULL)
 		return NULL;
 	idc.id = pw->pw_uid;
-	strncpy(idc.name, pw->pw_name, UT_NAMESIZE);
+	strncpy(idc.name, pw->pw_name, NMAX);
 	return &idc;
 }
 
@@ -273,7 +279,7 @@ getnextgrent(
 	if ((gr = byid? getgrgid(id) : getgrent()) == NULL)
 		return NULL;
 	idc.id = gr->gr_gid;
-	strncpy(idc.name, gr->gr_name, UT_NAMESIZE);
+	strncpy(idc.name, gr->gr_name, NMAX);
 	return &idc;
 }
 
@@ -288,7 +294,7 @@ getnextprent(
 	if ((pr = byid? getprprid(id) : getprent()) == NULL)
 		return NULL;
 	idc.id = pr->pr_prid;
-	strncpy(idc.name, pr->pr_name, UT_NAMESIZE);
+	strncpy(idc.name, pr->pr_name, NMAX);
 	return &idc;
 }
 
