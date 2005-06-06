@@ -1,3 +1,13 @@
+xfsprogs-2.6.31 (06 June 2005)
+	- Fix previous MD driver-specific change to correctly handle
+	  (i.e. not "stripe align") linear arrays.
+	- Add MD RAID level 4, 6, and 10 support.
+	- Make mkfs.xfs automatically adjiust the geometry to use
+	  a sector size that matches the block size when MD RAID
+	  level 4/5/6 are in use.
+	- Couple of minor man page fixups, including patch botch on
+	  initial revision of xfs_quota(8).
+
 xfsprogs-2.6.30 (03 June 2005)
 	- Add xfs_quota(8) command which knows how to do all things
 	  quota related, and can also do the XFS specific extensions
