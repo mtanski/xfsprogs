@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -33,9 +33,14 @@
 #include "drivers.h"
 
 void
-get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
+get_subvol_stripe_wrapper(
+	char		*dev,
+	sv_type_t	type,
+	int		*sunit,
+	int		*swidth,
+	int		*sectalign)
 {
-	struct stat64 sb;
+	struct stat64	sb;
 
 	if (dev == NULL)
 		return;
@@ -46,15 +51,15 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
 		exit(1);
 	}
 
-	if (  dm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+	if (  dm_get_subvol_stripe(dev, type, sunit, swidth, sectalign, &sb))
 		return;
-	if (  md_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+	if (  md_get_subvol_stripe(dev, type, sunit, swidth, sectalign, &sb))
 		return;
-	if ( lvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+	if ( lvm_get_subvol_stripe(dev, type, sunit, swidth, sectalign, &sb))
 		return;
-	if ( xvm_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+	if ( xvm_get_subvol_stripe(dev, type, sunit, swidth, sectalign, &sb))
 		return;
-	if (evms_get_subvol_stripe(dev, type, sunit, swidth, &sb))
+	if (evms_get_subvol_stripe(dev, type, sunit, swidth, sectalign, &sb))
 		return;
 
 	/* ... add new device drivers here */
@@ -68,11 +73,13 @@ get_subvol_stripe_wrapper(char *dev, sv_type_t type, int *sunit, int *swidth)
  * being used in the running kernel.
  */
 int
-get_driver_block_major(const char *driver, int major)
+get_driver_block_major(
+	const char	*driver,
+	int		major)
 {
-	FILE	*f;
-	char	buf[64], puf[64];
-	int	dmajor, match = 0;
+	FILE		*f;
+	char		buf[64], puf[64];
+	int		dmajor, match = 0;
 
 	if ((f = fopen(DEVICES, "r")) == NULL)
 		return match;

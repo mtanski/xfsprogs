@@ -40,6 +40,7 @@ evms_get_subvol_stripe(
 	sv_type_t	type,
 	int		*sunit,
 	int		*swidth,
+	int		*sectalign,
 	struct stat64	*sb)
 {
 	if (mnt_is_evms_subvol(sb->st_rdev)) {
@@ -58,6 +59,7 @@ evms_get_subvol_stripe(
 		/* Update sizes */
 		*sunit = info.size;
 		*swidth = *sunit * info.width;
+		*sectalign = 0;
 
 		close(fd);
 		return 1;

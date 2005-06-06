@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -39,16 +39,21 @@
  */
 
 #ifdef __linux__
-extern int   dm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int   md_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int  lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int  xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
-extern int evms_get_subvol_stripe(char*, sv_type_t, int*, int*, struct stat64*);
+extern int   dm_get_subvol_stripe(char*, sv_type_t, int*, int*, int*,
+					struct stat64*);
+extern int   md_get_subvol_stripe(char*, sv_type_t, int*, int*, int*,
+					struct stat64*);
+extern int  lvm_get_subvol_stripe(char*, sv_type_t, int*, int*, int*,
+					struct stat64*);
+extern int  xvm_get_subvol_stripe(char*, sv_type_t, int*, int*, int*,
+					struct stat64*);
+extern int evms_get_subvol_stripe(char*, sv_type_t, int*, int*, int*,
+					struct stat64*);
 #else
 #define stat64 stat
-#define   dm_get_subvol_stripe(dev, type, a, b, stat)  (-1)
-#define   md_get_subvol_stripe(dev, type, a, b, stat)  (-1)
-#define  lvm_get_subvol_stripe(dev, type, a, b, stat)  (-1)
-#define  xvm_get_subvol_stripe(dev, type, a, b, stat)  (-1)
-#define evms_get_subvol_stripe(dev, type, a, b, stat)  (-1)
+#define   dm_get_subvol_stripe(dev, type, a, b, c, stat)  (-1)
+#define   md_get_subvol_stripe(dev, type, a, b, c, stat)  (-1)
+#define  lvm_get_subvol_stripe(dev, type, a, b, c, stat)  (-1)
+#define  xvm_get_subvol_stripe(dev, type, a, b, c, stat)  (-1)
+#define evms_get_subvol_stripe(dev, type, a, b, c, stat)  (-1)
 #endif

@@ -587,6 +587,7 @@ main(
 	char			*rtfile;
 	char			*rtsize;
 	xfs_sb_t		*sbp;
+	int			sectoralign;
 	int			sectorlog;
 	unsigned int		sectorsize;
 	int			slflag;
@@ -1270,6 +1271,8 @@ main(
 
 	/*
 	 * Blocksize and sectorsize first, other things depend on them
+	 * For RAID4/5/6 we want to align sector size and block size,
+	 * so we need to start with the device geometry extraction too.
 	 */
 	if (!blflag && !bsflag) {
 		blocklog = XFS_DFL_BLOCKSIZE_LOG;
@@ -1278,6 +1281,20 @@ main(
 	if (blocksize < XFS_MIN_BLOCKSIZE || blocksize > XFS_MAX_BLOCKSIZE) {
 		fprintf(stderr, _("illegal block size %d\n"), blocksize);
 		usage();
+	}
+
+	sectoralign = 0;
+	xlv_dsunit = xlv_dswidth = 0;
+	if (!nodsflag && !xi.disfile)
+		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
+				&xlv_dsunit, &xlv_dswidth, &sectoralign);
+	if (sectoralign) {
+		sectorsize = blocksize;
+		sectorlog = libxfs_highbit32(sectorsize);
+		if (loginternal) {
+			lsectorsize = sectorsize;
+			lsectorlog = sectorlog;
+		}
 	}
 	if (sectorsize < XFS_MIN_SECTORSIZE ||
 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
@@ -1443,8 +1460,8 @@ main(
 		dummy1 = rswidth = 0;
 
 		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
-			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1, 
-						  &rswidth);
+			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1,
+						  &rswidth, &dummy1);
 
 		/* check that rswidth is a multiple of fs blocksize */
 		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
@@ -1687,10 +1704,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 
 	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
 
-	xlv_dsunit = xlv_dswidth = 0;
-	if (!nodsflag && !xi.disfile)
-		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
-						&xlv_dsunit, &xlv_dswidth);
 	if (!nodsflag && dsunit) {
 		if (xlv_dsunit && xlv_dsunit != dsunit) {
 			fprintf(stderr,

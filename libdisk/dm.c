@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2004-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -45,6 +45,7 @@ dm_get_subvol_stripe(
 	sv_type_t	type,
 	int		*sunit,
 	int		*swidth,
+	int		*sectalign,
 	struct stat64	*sb)
 {
 	int		count, stripes = 0, stripesize = 0;
@@ -120,5 +121,6 @@ dm_get_subvol_stripe(
 	/* Update sizes */
 	*sunit = stripesize;
 	*swidth = (stripes * stripesize);
+	*sectalign = 0;
 	return 1;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -61,6 +61,7 @@ xvm_get_subvol_stripe(
 	sv_type_t	type,
 	int		*sunit,
 	int		*swidth,
+	int		*sectalign,
 	struct stat64	*sb)
 {
 	int fd;
@@ -100,6 +101,7 @@ xvm_get_subvol_stripe(
 
 	*sunit = subvol_stripe.unit_size;
 	*swidth = *sunit * subvol_stripe.width_size;
+	*sectalign = 0;
 	close(fd);
 	return 1;
 }
