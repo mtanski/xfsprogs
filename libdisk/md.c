@@ -68,13 +68,25 @@ md_get_subvol_stripe(
 		}
 		close(fd);
 
-		/* Ignore concat and mirror volumes */
-		if (md.level == 0 || md.level == 1)
-			return 0;
-
-		/* Deduct a disk from stripe width on RAID4/5 */
-		if (md.level == 4 || md.level == 5)
+		/*
+		 * Ignore levels we don't want aligned (e.g. linear)
+		 * and deduct disk(s) from stripe width on RAID4/5/6
+		 */
+		switch (md.level) {
+		case 6:
 			md.nr_disks--;
+			/* fallthrough */
+		case 5:
+		case 4:
+			md.nr_disks--;
+			/* fallthrough */
+		case 1:
+		case 0:
+		case 10:
+			break;
+		default:
+			return 0;
+		}
 
 		/* Update sizes */
 		*sunit = md.chunk_size >> 9;
