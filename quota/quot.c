@@ -408,11 +408,14 @@ quot_f(
 	if ((fp = fopen_write_secure(fname)) == NULL)
 		return 0;
 
-	if (argc == optind)
-		quot_any_type(fp, form, type, (flags & ALL_MOUNTS_FLAG) ?
-				NULL : fs_path->fs_dir, flags);
-	else while (argc > optind)
+	if (argc == optind) {
+		if (flags & ALL_MOUNTS_FLAG)
+			quot_any_type(fp, form, type, NULL, flags);
+		else if (fs_path->fs_flags & FS_MOUNT_POINT)
+			quot_any_type(fp, form, type, fs_path->fs_dir, flags);
+	} else while (argc > optind) {
 		quot_any_type(fp, form, type, argv[optind++], flags);
+	}
 
 	if (fname)
 		fclose(fp);

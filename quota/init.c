@@ -99,6 +99,8 @@ init_args_command(
 		fs_path = &fs_table[index++];
 	} while ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count);
 
+	if (fs_path->fs_flags & FS_PROJECT_PATH)
+		return 0;
 	if (index > fs_count)
 		return 0;
 	return index;
@@ -147,10 +149,11 @@ init(
 		}
 	}
 
-	if (optind == argc)
+	if (optind == argc) {
 		fs_table_initialise();
-	else while (optind < argc) {
-		fs_table_insert_mount(argv[optind++]);
+	} else {
+		while (optind < argc)
+			fs_table_insert_mount(argv[optind++]);
 		if (!nprojopts)
 			fs_table_insert_project(NULL);
 		else

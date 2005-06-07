@@ -545,7 +545,7 @@ report_f(
 	char		**argv)
 {
 	FILE		*fp = NULL;
-	char		*dir, *fname = NULL;
+	char		*fname = NULL;
 	uint		lower = 0, upper = 0;
 	int		c, flags = 0, type = 0, form = 0;
 
@@ -607,12 +607,16 @@ report_f(
 	if ((fp = fopen_write_secure(fname)) == NULL)
 		return 0;
 
-	if (argc == optind)
-		report_any_type(fp, form, type, (flags & ALL_MOUNTS_FLAG) ?
-				NULL : fs_path->fs_dir, lower, upper, flags);
-	else while (argc > optind) {
-		dir = argv[optind++];
-		report_any_type(fp, form, type, dir, lower, upper, flags);
+	if (argc == optind) {
+		if (flags & ALL_MOUNTS_FLAG)
+			report_any_type(fp, form, type, NULL,
+					lower, upper, flags);
+		else if (fs_path->fs_flags & FS_MOUNT_POINT)
+			report_any_type(fp, form, type, fs_path->fs_dir,
+					lower, upper, flags);
+	} else while (argc > optind) {
+		report_any_type(fp, form, type, argv[optind++],
+				lower, upper, flags);
 	}
 
 	if (fname)

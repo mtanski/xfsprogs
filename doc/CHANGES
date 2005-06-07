@@ -1,3 +1,8 @@
+xfsprogs-2.6.32 (08 June 2005)
+	- Minor endian cleanups in some tools.
+	- Fix a couple of xfs_quota double-reporting issues when
+	  issuing commands via the -c (command line) 0option.
+
 xfsprogs-2.6.31 (06 June 2005)
 	- Fix previous MD driver-specific change to correctly handle
 	  (i.e. not "stripe align") linear arrays.

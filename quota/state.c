@@ -246,8 +246,10 @@ state_f(
 	if (!type)
 		type = XFS_USER_QUOTA | XFS_GROUP_QUOTA | XFS_PROJ_QUOTA;
 
-	state_quotafile(fp, type, (flags & ALL_MOUNTS_FLAG) ?
-			NULL : fs_path->fs_dir, flags);
+	if (flags & ALL_MOUNTS_FLAG)
+		state_quotafile(fp, type, NULL, flags);
+	else if (fs_path->fs_flags & FS_MOUNT_POINT)
+		state_quotafile(fp, type, fs_path->fs_dir, flags);
 
 	if (fname)
 		fclose(fp);
@@ -391,7 +393,8 @@ enable_f(
 		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
 
-	enable_enforcement(fs_path->fs_dir, type, qflags, flags);
+	if (fs_path->fs_flags & FS_MOUNT_POINT)
+		enable_enforcement(fs_path->fs_dir, type, qflags, flags);
 	return 0;
 }
 
@@ -432,7 +435,8 @@ disable_f(
 		qflags |= XFS_QUOTA_UDQ_ACCT;
 	}
 
-	disable_enforcement(fs_path->fs_dir, type, qflags, flags);
+	if (fs_path->fs_flags & FS_MOUNT_POINT)
+		disable_enforcement(fs_path->fs_dir, type, qflags, flags);
 	return 0;
 }
 
@@ -473,7 +477,8 @@ off_f(
 		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
 
-	quotaoff(fs_path->fs_dir, type, qflags, flags);
+	if (fs_path->fs_flags & FS_MOUNT_POINT)
+		quotaoff(fs_path->fs_dir, type, qflags, flags);
 	return 0;
 }
 
@@ -514,7 +519,8 @@ remove_f(
 		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
 
-	remove_extents(fs_path->fs_dir, type, qflags, flags);
+	if (fs_path->fs_flags & FS_MOUNT_POINT)
+		remove_extents(fs_path->fs_dir, type, qflags, flags);
 	return 0;
 }
 
