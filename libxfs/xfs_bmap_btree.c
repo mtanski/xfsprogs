@@ -1625,7 +1625,7 @@ xfs_bmbt_get_block(
 }
 
 /*
- * Extract the blockcount field from a bmap extent record.
+ * Extract the blockcount field from an in memory bmap extent record.
  */
 xfs_filblks_t
 xfs_bmbt_get_blockcount(
@@ -1635,7 +1635,7 @@ xfs_bmbt_get_blockcount(
 }
 
 /*
- * Extract the startblock field from a bmap extent record.
+ * Extract the startblock field from an in memory bmap extent record.
  */
 xfs_fsblock_t
 xfs_bmbt_get_startblock(
@@ -1659,7 +1659,7 @@ xfs_bmbt_get_startblock(
 }
 
 /*
- * Extract the startoff field from a bmap extent record.
+ * Extract the startoff field from an in memory bmap extent record.
  */
 xfs_fileoff_t
 xfs_bmbt_get_startoff(
@@ -1680,7 +1680,7 @@ xfs_bmbt_get_state(
 				ext_flag);
 }
 
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 /* Endian flipping versions of the bmbt extraction functions */
 void
 xfs_bmbt_disk_get_all(
@@ -2208,7 +2208,7 @@ xfs_bmbt_set_allf(
 #endif	/* XFS_BIG_BLKNOS */
 }
 
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 /*
  * Set all the fields in a bmap extent record from the uncompressed form.
  */

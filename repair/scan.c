@@ -1028,7 +1028,7 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 			 * inode tree.
 			 */
 			if (!suspect)  {
-				if (XFS_INOBT_IS_FREE(&rp[i], 0, ARCH_CONVERT)) {
+				if (XFS_INOBT_IS_FREE_DISK(&rp[i], 0)) {
 					nfree++;
 					ino_rec = set_inode_free_alloc(agno,
 									ino);
@@ -1037,7 +1037,7 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 									ino);
 				}
 				for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-					if (XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT)) {
+					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
 						nfree++;
 						set_inode_free(ino_rec, j);
 					} else  {
@@ -1046,7 +1046,7 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 				}
 			} else  {
 				for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-					if (XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT)) {
+					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
 						nfree++;
 						add_aginode_uncertain(agno,
 								ino + j, 1);

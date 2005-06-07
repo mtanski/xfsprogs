@@ -48,12 +48,11 @@ set_nlinks(xfs_dinode_core_t	*dinoc,
 		int		*dirty)
 {
 	if (!no_modify)  {
-		if (INT_GET(dinoc->di_nlink, ARCH_NOCONVERT) != nrefs)  {
+		if (dinoc->di_nlink != nrefs)  {
 			*dirty = 1;
 			do_warn(
 		_("resetting inode %llu nlinks from %d to %d\n"),
-				ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT),
-				nrefs);
+				ino, dinoc->di_nlink, nrefs);
 
 			if (nrefs > XFS_MAXLINK_1)  {
 				ASSERT(fs_inode_nlink);
@@ -62,14 +61,13 @@ _("nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"),
 					nrefs, ino);
 
 			}
-			INT_SET(dinoc->di_nlink, ARCH_NOCONVERT, nrefs);
+			dinoc->di_nlink = nrefs;
 		}
 	} else  {
-		if (INT_GET(dinoc->di_nlink, ARCH_NOCONVERT) != nrefs)
+		if (dinoc->di_nlink != nrefs)
 			do_warn(
 			_("would have reset inode %llu nlinks from %d to %d\n"),
-				ino, INT_GET(dinoc->di_nlink, ARCH_NOCONVERT),
-				nrefs);
+				ino, dinoc->di_nlink, nrefs);
 	}
 }
 

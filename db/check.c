@@ -4448,7 +4448,7 @@ scanfunc_ino(
 				continue;
 			}
 			for (j = 0, nfree = 0; j < XFS_INODES_PER_CHUNK; j++) {
-				if ((isfree = XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT)))
+				if ((isfree = XFS_INOBT_IS_FREE_DISK(&rp[i], j)))
 					nfree++;
 				process_inode(agf, agino + j,
 					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)),

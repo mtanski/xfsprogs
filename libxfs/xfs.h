@@ -64,11 +64,10 @@
 
 #define xfs_xlatesb			libxfs_xlate_sb
 #define xfs_xlate_dinode_core		libxfs_xlate_dinode_core
-#if ARCH_CONVERT != ARCH_NOCONVERT
 #define xfs_bmbt_get_all		libxfs_bmbt_get_all
+#if __BYTE_ORDER != __BIG_ENDIAN
 #define xfs_bmbt_disk_get_all		libxfs_bmbt_disk_get_all
 #else
-#define xfs_bmbt_get_all		libxfs_bmbt_get_all
 #define xfs_bmbt_disk_get_all		libxfs_bmbt_get_all
 #endif
 #define xfs_da_hashname			libxfs_da_hashname
@@ -487,7 +486,7 @@ int  xfs_bmbt_update (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
 			xfs_filblks_t, xfs_exntst_t);
 void xfs_bmbt_to_bmdr (xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
 void xfs_bmdr_to_bmbt (xfs_bmdr_block_t *, int, xfs_bmbt_block_t *, int);
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 xfs_fileoff_t xfs_bmbt_disk_get_startoff (xfs_bmbt_rec_t *);
 void xfs_bmbt_disk_set_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
 void xfs_bmbt_disk_set_allf (xfs_bmbt_rec_t *, xfs_fileoff_t, xfs_fsblock_t,

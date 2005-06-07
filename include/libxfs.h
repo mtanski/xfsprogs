@@ -455,7 +455,7 @@ extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (xfs_da_args_t *, int, int *);
 
 extern void	libxfs_bmbt_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
-#if ARCH_CONVERT != ARCH_NOCONVERT
+#if __BYTE_ORDER != __BIG_ENDIAN
 extern void	libxfs_bmbt_disk_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
 #else
 # define libxfs_bmbt_disk_get_all(r,s)	libxfs_bmbt_get_all(r,s)

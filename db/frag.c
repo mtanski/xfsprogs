@@ -518,7 +518,7 @@ scanfunc_ino(
 					&dip->di_core, &tdic, 1);
 				memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
 
-				if (XFS_INOBT_IS_FREE(&rp[i], j, ARCH_CONVERT))
+				if (XFS_INOBT_IS_FREE_DISK(&rp[i], j))
 					continue;
 				process_inode(agf, agino + j,
 					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)));
