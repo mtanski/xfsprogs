@@ -284,6 +284,7 @@ readlink_by_handle(
 	size_t		bufsiz)
 {
 	int		fd;
+	__u32		buflen = (__u32)bufsiz;
 	char		*path;
 	xfs_fsop_handlereq_t hreq;
 
@@ -296,7 +297,7 @@ readlink_by_handle(
 	hreq.ihandle  = hanp;
 	hreq.ihandlen = hlen;
 	hreq.ohandle  = buf;
-	hreq.ohandlen = (__u32 *)&bufsiz;
+	hreq.ohandlen = &buflen;
 
 	return xfsctl(path, fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
 }

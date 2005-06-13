@@ -1,3 +1,6 @@
+xfsprogs-2.6.33 (13 June 2005)
+	- Another libhandle fix on 64bit, Big Endian systems.
+
 xfsprogs-2.6.32 (08 June 2005)
 	- Minor endian cleanups in some tools.
 	- Fix a couple of xfs_quota double-reporting issues when
