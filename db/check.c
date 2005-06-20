@@ -232,9 +232,7 @@ static void		blkmap_set_ext(blkmap_t **blkmapp, xfs_fileoff_t o,
 static void		blkmap_shrink(blkmap_t *blkmap, blkent_t **entp);
 static int		blockfree_f(int argc, char **argv);
 static int		blockget_f(int argc, char **argv);
-#ifdef DEBUG
 static int		blocktrash_f(int argc, char **argv);
-#endif
 static int		blockuse_f(int argc, char **argv);
 static int		check_blist(xfs_fsblock_t bno);
 static void		check_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
@@ -386,12 +384,10 @@ static const cmdinfo_t	blockget_cmd =
 	{ "blockget", "check", blockget_f, 0, -1, 0,
 	  "[-s|-v] [-n] [-t] [-b bno]... [-i ino] ...",
 	  "get block usage and check consistency", NULL };
-#ifdef DEBUG
 static const cmdinfo_t	blocktrash_cmd =
 	{ "blocktrash", NULL, blocktrash_f, 0, -1, 0,
 	  "[-n count] [-x minlen] [-y maxlen] [-s seed] [-0123] [-t type] ...",
 	  "trash randomly selected block(s)", NULL };
-#endif
 static const cmdinfo_t	blockuse_cmd =
 	{ "blockuse", NULL, blockuse_f, 0, 3, 0,
 	  "[-n] [-c blockcount]",
@@ -920,7 +916,6 @@ blockget_f(
 	return 0;
 }
 
-#ifdef DEBUG
 typedef struct ltab {
 	int	min;
 	int	max;
@@ -1155,7 +1150,6 @@ blocktrash_f(
 	xfree(lentab);
 	return 0;
 }
-#endif
 
 int
 blockuse_f(
@@ -1264,9 +1258,8 @@ check_init(void)
 {
 	add_command(&blockfree_cmd);
 	add_command(&blockget_cmd);
-#ifdef DEBUG
-	add_command(&blocktrash_cmd);
-#endif
+	if (expert_mode)
+		add_command(&blocktrash_cmd);
 	add_command(&blockuse_cmd);
 	add_command(&ncheck_cmd);
 }
