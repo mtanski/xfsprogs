@@ -181,6 +181,7 @@ command_loop(void)
 			free(v);
 			free(input);
 		}
+		j = 0;	/* reset */
 	}
 	if (cmdline) {
 		free(cmdline);
