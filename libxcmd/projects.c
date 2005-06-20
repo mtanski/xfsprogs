@@ -196,10 +196,12 @@ getprojid(
 	}
 	*projid = st.st_projid;
 #else
-	if (xfsctl(name, fd, XFS_IOC_GETPROJID, projid)) {
-		perror("XFS_IOC_GETPROJID");
+	struct fsxattr	fsx;
+	if (xfsctl(name, fd, XFS_IOC_FSGETXATTR, &fsx)) {
+		perror("XFS_IOC_FSGETXATTR");
 		return -1;
 	}
+	*projid = fsx.fsx_projid;
 #endif
 	return 0;
 }
@@ -213,6 +215,13 @@ setprojid(
 #if defined(__sgi__)
 	return fchproj(fd, projid);
 #else
-	return xfsctl(name, fd, XFS_IOC_SETPROJID, &projid);
+	struct fsxattr	fsx;
+	int		error;
+
+	if ((error = xfsctl(name, fd, XFS_IOC_FSGETXATTR, &fsx)) == 0) {
+		fsx.fsx_projid = projid;
+		error = xfsctl(name, fd, XFS_IOC_FSSETXATTR, &fsx);
+	}
+	return error;
 #endif
 }
