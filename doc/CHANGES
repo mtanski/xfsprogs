@@ -1,3 +1,10 @@
+xfsprogs-2.6.34 (20 June 2005)
+	- Switch to the fsxattr xfsctl for getting/setting project
+	  identifiers on inodes, remove the short-lived specialised
+	  ioctls for doing this.
+	- Make the "blocktrash" xfs_db command available in expert-
+	  mode only.
+
 xfsprogs-2.6.33 (13 June 2005)
 	- Another libhandle fix on 64bit, Big Endian systems.
 
