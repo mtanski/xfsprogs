@@ -52,7 +52,7 @@ typedef struct fs_path {
 	char		*fs_rt;		/* Realtime device, if any	*/
 	dev_t		fs_rtdev;
 	char		*fs_dir;	/* Directory / mount point	*/
-	uint		fs_flags;	/* FS_MOUNT_POINT/FS_MOUNT_TREE */
+	uint		fs_flags;	/* FS_{MOUNT_POINT,PROJECT_PATH}*/
 	uint		fs_prid;	/* Project ID for tree root	*/
 } fs_path_t;
 
