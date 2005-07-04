@@ -144,6 +144,20 @@ path_to_handle(
 	return result;
 }
 
+
+int
+fd_to_handle (
+	int		fd,		/* input,  file descriptor */
+	void		**hanp,		/* output, pointer to data */
+	size_t		*hlen)		/* output, size of returned data */
+{
+	comarg_t	obj;
+
+	obj.fd = fd;
+	return obj_to_handle(NULL, fd, XFS_IOC_FD_TO_HANDLE, obj, hanp, hlen);
+}
+
+
 int
 handle_to_fshandle(
 	void		*hanp,
@@ -170,6 +184,12 @@ handle_to_fsfd(void *hanp, char **path)
 {
 	struct fdhash	*fdhp;
 
+	/*
+	 * Look in cache for matching fsid field in the handle
+	 * (which is at the start of the handle).
+	 * When found return the file descriptor and path that
+	 * we have in the cache.
+	 */
 	for (fdhp = fdhash_head; fdhp != NULL; fdhp = fdhp->fnxt) {
 		if (memcmp(fdhp->fsh, hanp, FSIDSIZE) == 0) {
 			*path = fdhp->fspath;
@@ -302,6 +322,7 @@ readlink_by_handle(
 	return xfsctl(path, fd, XFS_IOC_READLINK_BY_HANDLE, &hreq);
 }
 
+/*ARGSUSED4*/
 int
 attr_multi_by_handle(
 	void		*hanp,
@@ -389,6 +410,7 @@ fssetdm_by_handle(
 	return xfsctl(path, fd, XFS_IOC_FSSETDM_BY_HANDLE, &dmhreq);
 }
 
+/*ARGSUSED1*/
 void
 free_handle(
 	void		*hanp,

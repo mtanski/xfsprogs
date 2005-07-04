@@ -1,6 +1,6 @@
 .TH HANDLE 3 
 .SH NAME
-path_to_handle, path_to_fshandle, handle_to_fshandle, open_by_handle, readlink_by_handle, attr_multi_by_handle, attr_list_by_handle, fssetdm_by_handle, free_handle \- file handle operations
+path_to_handle, path_to_fshandle, fd_to_handle, handle_to_fshandle, open_by_handle, readlink_by_handle, attr_multi_by_handle, attr_list_by_handle, fssetdm_by_handle, free_handle \- file handle operations
 .SH C SYNOPSIS
 .nf
 .B #include <sys/types.h>
@@ -11,6 +11,8 @@ path_to_handle, path_to_fshandle, handle_to_fshandle, open_by_handle, readlink_b
 .PP
 .B "int path_to_fshandle (char *path, void **hanp,"
 .B "                      size_t *hlen);"
+.PP
+.B "int fd_to_handle (int fd, void **hanp, size_t *hlen);
 .PP
 .B "int handle_to_fshandle (void *hanp, size_t hlen,"
 .B "                        void **fshanp, size_t *fshlen);
@@ -80,6 +82,12 @@ in which the object given by the
 .I path
 argument resides.
 .P
+The \f2fd_to_handle\f1() function
+returns the handle for the object referenced by the
+.I fd
+argument,
+which must be a valid file descriptor.
+.P
 The \f2handle_to_fshandle\f1() function
 returns the handle for the filesystem
 in which the object referenced by the
@@ -124,6 +132,7 @@ frees the storage allocated for handles
 returned by the following functions:
 \f2path_to_handle\f1(),
 \f2path_to_fshandle\f1(),
+\f2fd_to_handle\f1(),
 and
 \f2handle_to_fshandle\f1().
 .SH "SEE ALSO"

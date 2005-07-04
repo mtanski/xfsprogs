@@ -59,8 +59,8 @@
 #define __s64		__int64_t
 #define __u8		unsigned char
 #define __u16		unsigned short
-#define __u32		__int32_t
-#define __u64		__int64_t
+#define __u32		__uint32_t
+#define __u64		__uint64_t
 #define __int8_t	char
 #define __int16_t	short
 #define __uint8_t	unsigned char
@@ -76,17 +76,61 @@ typedef char*		xfs_caddr_t;
 #define xfs_flock64_t	struct flock64
 
 typedef struct xfs_error_injection {
-        __int32_t           fd;
-        __int32_t           errtag;
+	__int32_t	fd;
+	__int32_t	errtag;
 } xfs_error_injection_t;
 
+/* --- xfs_fsop_*req - request data structures --- */
 
 typedef struct xfs_fsop_bulkreq {
-        ino64_t             *lastip;      
-        __int32_t           icount;   
-        xfs_bstat_t         *ubuffer;      
-        __int32_t           *ocount;       
+	ino64_t	*lastip;
+	__int32_t	icount;
+	xfs_bstat_t	*ubuffer;
+	__int32_t	*ocount;
 } xfs_fsop_bulkreq_t;
+
+typedef struct xfs_fsop_handlereq {
+	__u32		fd;		/* fd for FD_TO_HANDLE		*/
+	void		*path;		/* user pathname		*/
+	__u32		oflags;		/* open flags			*/
+	void		*ihandle;	/* user supplied handle		*/
+	__u32		ihandlen;	/* user supplied length		*/
+	void		*ohandle;	/* user buffer for handle	*/
+	__u32		*ohandlen;	/* user buffer length		*/
+} xfs_fsop_handlereq_t;
+
+typedef struct xfs_fsop_setdm_handlereq {
+	struct xfs_fsop_handlereq	hreq;	/* handle information	*/
+	struct fsdmidata		*data;	/* DMAPI data	*/
+} xfs_fsop_setdm_handlereq_t;
+
+typedef struct xfs_attrlist_cursor {
+	__u32		opaque[4];
+} xfs_attrlist_cursor_t;
+
+typedef struct xfs_fsop_attrlist_handlereq {
+	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
+	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
+	__u32				flags;	/* which namespace to use */
+	__u32				buflen;	/* length of buffer supplied */
+	void				*buffer;	/* returned names */
+} xfs_fsop_attrlist_handlereq_t;
+
+typedef struct xfs_attr_multiop {
+	__u32		am_opcode;
+	__s32		am_error;
+	void		*am_attrname;
+	void		*am_attrvalue;
+	__u32		am_length;
+	__u32		am_flags;
+} xfs_attr_multiop_t;
+
+typedef struct xfs_fsop_attrmulti_handlereq {
+	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
+	__u32				opcount;/* count of following multiop */
+	struct xfs_attr_multiop		*ops; /* attr_multi data */
+} xfs_fsop_attrmulti_handlereq_t;
+
 
 #include <sys/endian.h>
 #define __BYTE_ORDER	BYTE_ORDER
@@ -104,6 +148,7 @@ typedef struct xfs_fsop_bulkreq {
 
 #define constpp		char * const *
 
+/*ARGSUSED*/
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
 {
 	if (cmd >= 0 && cmd < XFS_FSOPS_COUNT) {
@@ -120,13 +165,13 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
 	switch (cmd) {
 		case SGI_FS_INUMBERS:
 		case SGI_FS_BULKSTAT:
-			return syssgi(cmd, fd, 
+			return syssgi(cmd, fd,
 					((xfs_fsop_bulkreq_t*)arg)->lastip,
 					((xfs_fsop_bulkreq_t*)arg)->icount,
 					((xfs_fsop_bulkreq_t*)arg)->ubuffer,
 					((xfs_fsop_bulkreq_t*)arg)->ocount);
 		case SGI_FS_BULKSTAT_SINGLE:
-			return syssgi(SGI_FS_BULKSTAT_SINGLE, fd, 
+			return syssgi(SGI_FS_BULKSTAT_SINGLE, fd,
 					((xfs_fsop_bulkreq_t*)arg)->lastip,
 					((xfs_fsop_bulkreq_t*)arg)->ubuffer);
 		case SGI_XFS_INJECT_ERROR:
@@ -135,6 +180,48 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
 					fd);
 		case SGI_XFS_CLEARALL_ERROR:
 			return syssgi(SGI_XFS_CLEARALL_ERROR, fd);
+		case SGI_PATH_TO_HANDLE:
+		case SGI_PATH_TO_FSHANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_handlereq_t*)arg)->path,
+					((xfs_fsop_handlereq_t*)arg)->ohandle,
+					((xfs_fsop_handlereq_t*)arg)->ohandlen);
+		case SGI_FD_TO_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_handlereq_t*)arg)->fd,
+					((xfs_fsop_handlereq_t*)arg)->ohandle,
+					((xfs_fsop_handlereq_t*)arg)->ohandlen);
+		case SGI_OPEN_BY_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_handlereq_t*)arg)->ihandle,
+					((xfs_fsop_handlereq_t*)arg)->ihandlen,
+					((xfs_fsop_handlereq_t*)arg)->oflags);
+		case SGI_READLINK_BY_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_handlereq_t*)arg)->ihandle,
+					((xfs_fsop_handlereq_t*)arg)->ihandlen,
+					((xfs_fsop_handlereq_t*)arg)->ohandle,
+					((xfs_fsop_handlereq_t*)arg)->ohandlen);
+		case SGI_ATTR_LIST_BY_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_attrlist_handlereq_t*)arg)->hreq.ihandle,
+					((xfs_fsop_attrlist_handlereq_t*)arg)->hreq.ihandlen,
+					((xfs_fsop_attrlist_handlereq_t*)arg)->buffer,
+					((xfs_fsop_attrlist_handlereq_t*)arg)->buflen,
+					((xfs_fsop_attrlist_handlereq_t*)arg)->flags,
+					&(((xfs_fsop_attrlist_handlereq_t*)arg)->pos));
+		case SGI_ATTR_MULTI_BY_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.ihandle,
+					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.ihandlen,
+					((xfs_fsop_attrmulti_handlereq_t*)arg)->ops,
+					((xfs_fsop_attrmulti_handlereq_t*)arg)->opcount,
+					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.oflags);
+		case SGI_FSSETDM_BY_HANDLE:
+			return syssgi(cmd,
+					((xfs_fsop_setdm_handlereq_t*)arg)->hreq.ihandle,
+					((xfs_fsop_setdm_handlereq_t*)arg)->hreq.ihandlen,
+					((xfs_fsop_setdm_handlereq_t*)arg)->data);
 	}
 	return fcntl(fd, cmd, arg);
 }
@@ -196,23 +283,23 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_FREESP64		F_FREESP64
 #define XFS_IOC_GETBMAP			F_GETBMAP
 #define XFS_IOC_FSSETDM			F_FSSETDM
-#define XFS_IOC_RESVSP			F_RESVSP                 
+#define XFS_IOC_RESVSP			F_RESVSP
 #define XFS_IOC_RESVSP64		F_RESVSP64
-#define XFS_IOC_UNRESVSP		F_UNRESVSP                 
+#define XFS_IOC_UNRESVSP		F_UNRESVSP
 #define XFS_IOC_UNRESVSP64		F_UNRESVSP64
 #define XFS_IOC_GETBMAPA		F_GETBMAPA
 #define XFS_IOC_FSGETXATTRA		F_FSGETXATTRA
 #define XFS_IOC_GETBMAPX		F_GETBMAPX
 
 #define XFS_IOC_FSGEOMETRY_V1		XFS_FS_GEOMETRY
-#define XFS_IOC_FSBULKSTAT		SGI_FS_BULKSTAT     
+#define XFS_IOC_FSBULKSTAT		SGI_FS_BULKSTAT
 #define XFS_IOC_FSBULKSTAT_SINGLE	SGI_FS_BULKSTAT_SINGLE
 #define XFS_IOC_FSINUMBERS		SGI_FS_INUMBERS
-#define XFS_IOC_PATH_TO_FSHANDLE	/* TODO */
-#define XFS_IOC_PATH_TO_HANDLE		/* TODO */
-#define XFS_IOC_FD_TO_HANDLE		/* TODO */
-#define XFS_IOC_OPEN_BY_HANDLE		/* TODO */
-#define XFS_IOC_READLINK_BY_HANDLE	/* TODO */
+#define XFS_IOC_PATH_TO_FSHANDLE	SGI_PATH_TO_FSHANDLE
+#define XFS_IOC_PATH_TO_HANDLE		SGI_PATH_TO_HANDLE
+#define XFS_IOC_FD_TO_HANDLE		SGI_FD_TO_HANDLE
+#define XFS_IOC_OPEN_BY_HANDLE		SGI_OPEN_BY_HANDLE
+#define XFS_IOC_READLINK_BY_HANDLE	SGI_READLINK_BY_HANDLE
 #define XFS_IOC_SWAPEXT			/* TODO */
 #define XFS_IOC_FSGROWFSDATA		XFS_GROWFS_DATA
 #define XFS_IOC_FSGROWFSLOG		XFS_GROWFS_LOG
@@ -224,9 +311,9 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_ERROR_CLEARALL		SGI_XFS_CLEARALL_ERROR
 #define XFS_IOC_FREEZE			XFS_FS_FREEZE
 #define XFS_IOC_THAW			XFS_FS_THAW
-#define XFS_IOC_FSSETDM_BY_HANDLE	/* TODO */
-#define XFS_IOC_ATTRLIST_BY_HANDLE	/* TODO */
-#define XFS_IOC_ATTRMULTI_BY_HANDLE	/* TODO */
+#define XFS_IOC_FSSETDM_BY_HANDLE	SGI_FSSETDM_BY_HANDLE
+#define XFS_IOC_ATTRLIST_BY_HANDLE	SGI_ATTR_LIST_BY_HANDLE
+#define XFS_IOC_ATTRMULTI_BY_HANDLE	SGI_ATTR_MULTI_BY_HANDLE
 #define XFS_IOC_FSGEOMETRY		XFS_FS_GEOMETRY
 #define XFS_IOC_GOINGDOWN		XFS_FS_GOINGDOWN
 
