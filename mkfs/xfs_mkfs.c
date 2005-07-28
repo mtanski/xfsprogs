@@ -295,27 +295,17 @@ check_overwrite(
 	return 0;
 }
 
-static xfs_dfsbno_t
-fixup_log_stripe(
-	xfs_mount_t	*mp,
+static void
+fixup_log_stripe_unit(
 	int		lsflag,
-	xfs_dfsbno_t	logstart,
-	__uint64_t	agsize,
 	int		sunit,
 	xfs_drfsbno_t	*logblocks,
-	int		blocklog,
-	int		*lalign)
+	int		blocklog)
 {
 	__uint64_t	tmp_logblocks;
 
-	if ((logstart % sunit) != 0) {
-		logstart = ((logstart + (sunit - 1))/sunit) * sunit;
-		*lalign = 1;
-	}
-
-	/* 
-	 * Make sure that the log size is a multiple of the
-	 * stripe unit
+	/*
+	 * Make sure that the log size is a multiple of the stripe unit
 	 */
 	if ((*logblocks % sunit) != 0) {
 		if (!lsflag) {
@@ -331,13 +321,31 @@ fixup_log_stripe(
 			}
 			*logblocks = tmp_logblocks;
 		} else {
-			fprintf(stderr,
-				_("internal log size %lld is not a multiple "
-				"of the log stripe unit %d\n"),
+			fprintf(stderr, _("log size %lld is not a multiple "
+					  "of the log stripe unit %d\n"),
 				(long long) *logblocks, sunit);
 			usage();
 		}
 	}
+}
+
+static xfs_dfsbno_t
+fixup_internal_log_stripe(
+	xfs_mount_t	*mp,
+	int		lsflag,
+	xfs_dfsbno_t	logstart,
+	__uint64_t	agsize,
+	int		sunit,
+	xfs_drfsbno_t	*logblocks,
+	int		blocklog,
+	int		*lalign)
+{
+	if ((logstart % sunit) != 0) {
+		logstart = ((logstart + (sunit - 1))/sunit) * sunit;
+		*lalign = 1;
+	}
+
+	fixup_log_stripe_unit(lsflag, sunit, logblocks, blocklog);
 
 	if (*logblocks > agsize - XFS_FSB_TO_AGBNO(mp, logstart)) {
 		fprintf(stderr,
@@ -1887,19 +1895,21 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		 * Align the logstart at stripe unit boundary.
 		 */
 		if (lsunit) {
-			logstart = fixup_log_stripe(mp, lsflag, logstart,
-					agsize, lsunit, &logblocks, blocklog,
-					&lalign);
+			logstart = fixup_internal_log_stripe(mp,
+					lsflag, logstart, agsize, lsunit,
+					&logblocks, blocklog, &lalign);
 		} else if (dsunit) {
-			logstart = fixup_log_stripe(mp, lsflag, logstart,
-					agsize, dsunit, &logblocks, blocklog,
-					&lalign);
+			logstart = fixup_internal_log_stripe(mp,
+					lsflag, logstart, agsize, dsunit,
+					&logblocks, blocklog, &lalign);
 		}
-		min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
-		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BLOCKS);
-		validate_log_size(logblocks, blocklog, min_logblocks);
-	} else
+	} else {
 		logstart = 0;
+		if (lsunit)
+			fixup_log_stripe_unit(lsflag, lsunit,
+					&logblocks, blocklog);
+	}
+	validate_log_size(logblocks, blocklog, min_logblocks);
 
 	if (!qflag || Nflag) {
 		printf(_(
