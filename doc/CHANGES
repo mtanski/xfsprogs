@@ -1,4 +1,10 @@
-xfsprogs-2.6.35 (1 July 2005)
+xfsprogs-2.6.36 (28 July 2005)
+	- Fix mkfs stripe unit alignment checks for external logs
+	- Fix running xfs_db on non-XFS devices (was segfaulting)
+	- Fix a 32 bit wrap in xfs_repair searching for secondary
+	  superblocks.
+
+xfsprogs-2.6.35 (01 July 2005)
 	- Add back fd_to_handle() to libhandle.
 	- Add handle call mappings to xfsctl() for IRIX.
 

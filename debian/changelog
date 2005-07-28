@@ -1,8 +1,9 @@
-xfsprogs (2.6.34-1) unstable; urgency=low
+xfsprogs (2.6.36-1) unstable; urgency=low
 
   * New upstream release.
+  * Fix xfs_repair secondary SB search 32 bit wrap (closes: #320081)
 
- -- Nathan Scott <nathans@debian.org>  Mon, 20 Jun 2005 10:32:24 +1000
+ -- Nathan Scott <nathans@debian.org>  Thu, 28 Jul 2005 14:01:50 +1000
 
 xfsprogs (2.6.28-1) unstable; urgency=low
 
