@@ -809,7 +809,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 
 	if (current->index != sb_index)  {
 		*sb_modified = 1;
-		off = current->index * current->geo.sb_agblocks
+		off = (xfs_off_t)current->index * current->geo.sb_agblocks
 			* current->geo.sb_blocksize;
 		if (get_sb(sb, off, current->geo.sb_sectsize,
 				current->index) != XR_OK)
