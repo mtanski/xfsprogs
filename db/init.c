@@ -139,7 +139,11 @@ init(
 
 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
 				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
-
+	if (!mp) {
+		dbprintf(_("%s: device %s unusable (not an XFS filesystem?)\n"),
+			progname, fsdevice);
+		exit(1);
+	}
 	blkbb = 1 << mp->m_blkbb_log;
 
 	push_cur();
