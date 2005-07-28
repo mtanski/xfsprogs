@@ -104,13 +104,12 @@ struct xfs_mount;
  */
 #define XFS_SB_VERSION2_REALFBITS	0x00ffffff	/* Mask: features */
 #define XFS_SB_VERSION2_RESERVED1BIT	0x00000001
-#define XFS_SB_VERSION2_LAZYSBCOUNTBIT	0x00000002	/* Superblk counters */
 #define XFS_SB_VERSION2_SASHFBITS	0xff000000	/* Mask: features that
 							   require changing
 							   PROM and SASH */
 
 #define	XFS_SB_VERSION2_OKREALFBITS	\
-	(XFS_SB_VERSION2_LAZYSBCOUNTBIT)
+	(0)
 #define	XFS_SB_VERSION2_OKSASHFBITS	\
 	(0)
 #define XFS_SB_VERSION2_OKREALBITS	\
@@ -120,8 +119,7 @@ struct xfs_mount;
 /*
  * mkfs macro to set up sb_features2 word
  */
-#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr)	\
-	((sbcntr) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0)
+#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr)	0
 
 typedef struct xfs_sb
 {
@@ -505,20 +503,12 @@ int xfs_sb_version_hasmorebits(xfs_sb_t *sbp);
 /*
  * sb_features2 bit version macros.
  *
- * For example, for a bit defined as XFS_SB_VERSION2_YBIT, has a macro:
+ * For example, for a bit defined as XFS_SB_VERSION2_FUNBIT, has a macro:
  *
  * SB_VERSION_HASFUNBIT(xfs_sb_t *sbp)
  *	((XFS_SB_VERSION_HASMOREBITS(sbp) &&
  *	 ((sbp)->sb_features2 & XFS_SB_VERSION2_FUNBIT)
  */
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_SB_VERSION_LAZYSBCOUNTBIT)
-int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp);
-#define XFS_SB_VERSION_LAZYSBCOUNT(sbp)	xfs_sb_version_haslazysbcount(sbp)
-#else
-#define XFS_SB_VERSION_LAZYSBCOUNT(sbp)	\
-	((XFS_SB_VERSION_HASMOREBITS(sbp)) &&	\
-	  ((sbp)->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT))
-#endif
 /*
  * end of superblock version macros
  */
