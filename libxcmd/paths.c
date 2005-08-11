@@ -42,8 +42,6 @@
 #include <xfs/input.h>
 #include <xfs/project.h>
 
-#define HAVE_MNTENT_H	1	/* TODO - configure me (+HAVE_GETMNTINFO) */
-
 int fs_count;
 struct fs_path *fs_table;
 struct fs_path *fs_path;
@@ -141,7 +139,7 @@ fs_table_destroy(void)
 }
 
 
-#if defined(HAVE_MNTENT_H)
+#if defined(HAVE_GETMNTENT)
 #include <mntent.h>
 
 static void
@@ -256,7 +254,7 @@ fs_table_initialise_mounts(
 		}
 		/* TODO: external log and realtime device? */
 		if ((error = fs_table_insert(dir, 0, FS_MOUNT_POINT,
-						fsname, fslog, fsrt);
+						fsname, fslog, fsrt)))
 			break;
 	}
 	if (!error && path && !found)

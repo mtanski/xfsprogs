@@ -1,3 +1,6 @@
+xfsprogs-2.6.37 (11 August 2005)
+	- Fix FreeBSD builds (getmntinfo), thanks to Craig Rodrigues.
+
 xfsprogs-2.6.36 (28 July 2005)
 	- Fix mkfs stripe unit alignment checks for external logs
 	- Fix running xfs_db on non-XFS devices (was segfaulting)

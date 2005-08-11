@@ -100,6 +100,8 @@ HAVE_FADVISE = @have_fadvise@
 HAVE_MADVISE = @have_madvise@
 HAVE_MINCORE = @have_mincore@
 HAVE_SENDFILE = @have_sendfile@
+HAVE_GETMNTENT = @have_getmntent@
+HAVE_GETMNTINFO = @have_getmntinfo@
 
 ifeq ($(PKG_PLATFORM),linux)
 PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64

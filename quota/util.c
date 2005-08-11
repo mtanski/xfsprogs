@@ -30,6 +30,7 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
+#include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
 #include <utmp.h>

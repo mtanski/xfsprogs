@@ -31,7 +31,6 @@
  */
 
 #include "quota.h"
-#include <sys/quota.h>
 
 int
 xfsquotactl(
