@@ -1,3 +1,11 @@
+xfsprogs-2.7.0 (16 Septempber 2005)
+	- Support for updated extended attributes format (attr2)
+	- Make xfs_quota tool issue a quota sync in all the needed
+	  places, before reporting, to counter affects of delayed
+	  allocation.
+	- Quota-related ID signedness issue fixes.
+	- Expert mode xfs_db commands to set/remove attributes.
+
 xfsprogs-2.6.37 (11 August 2005)
 	- Fix FreeBSD builds (getmntinfo), thanks to Craig Rodrigues.
 
