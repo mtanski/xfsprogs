@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -594,6 +594,7 @@ libxfs_bmap_finish(
 			return error;
 		xfs_bmap_del_free(flist, NULL, free);
 	}
+	*committed = 0;
 	return 0;
 }
 

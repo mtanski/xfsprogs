@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -635,6 +635,9 @@ libxfs_mount(
 		libxfs_dir2_mount(mp);
 	else
 		libxfs_dir_mount(mp);
+
+	/* Initialize cached values for the attribute manager */
+	mp->m_attr_magicpct = (mp->m_sb.sb_blocksize * 37) / 100;
 
 	/* Initialize the precomputed transaction reservations values */
 	libxfs_trans_init(mp);

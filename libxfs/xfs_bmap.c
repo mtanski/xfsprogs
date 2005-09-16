@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,7 +32,108 @@
 
 #include <xfs.h>
 
+extern xfs_zone_t	*xfs_ifork_zone;
 xfs_zone_t		*xfs_bmap_free_item_zone;
+
+STATIC int					/* error */
+xfs_bmap_add_attrfork_btree(
+	xfs_trans_t		*tp,		/* transaction pointer */
+	xfs_inode_t		*ip,		/* incore inode pointer */
+	xfs_fsblock_t		*firstblock,	/* first block allocated */
+	xfs_bmap_free_t		*flist,		/* blocks to free at commit */
+	int			*flags)		/* inode logging flags */
+{
+	xfs_btree_cur_t		*cur;		/* btree cursor */
+	int			error;		/* error return value */
+	xfs_mount_t		*mp;		/* file system mount struct */
+	int			stat;		/* newroot status */
+
+	mp = ip->i_mount;
+	if (ip->i_df.if_broot_bytes <= XFS_IFORK_DSIZE(ip))
+		*flags |= XFS_ILOG_DBROOT;
+	else {
+		cur = xfs_btree_init_cursor(mp, tp, NULL, 0, XFS_BTNUM_BMAP, ip,
+			XFS_DATA_FORK);
+		cur->bc_private.b.flist = flist;
+		cur->bc_private.b.firstblock = *firstblock;
+		if ((error = xfs_bmbt_lookup_ge(cur, 0, 0, 0, &stat)))
+			goto error0;
+		ASSERT(stat == 1);	/* must be at least one entry */
+		if ((error = xfs_bmbt_newroot(cur, flags, &stat)))
+			goto error0;
+		if (stat == 0) {
+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+			return XFS_ERROR(ENOSPC);
+		}
+		*firstblock = cur->bc_private.b.firstblock;
+		cur->bc_private.b.allocated = 0;
+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+	}
+	return 0;
+error0:
+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+	return error;
+}
+
+/*
+ * Called from xfs_bmap_add_attrfork to handle extents format files.
+ */
+STATIC int					/* error */
+xfs_bmap_add_attrfork_extents(
+	xfs_trans_t		*tp,		/* transaction pointer */
+	xfs_inode_t		*ip,		/* incore inode pointer */
+	xfs_fsblock_t		*firstblock,	/* first block allocated */
+	xfs_bmap_free_t		*flist,		/* blocks to free at commit */
+	int			*flags)		/* inode logging flags */
+{
+	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+	int			error;		/* error return value */
+
+	if (ip->i_d.di_nextents * sizeof(xfs_bmbt_rec_t) <= XFS_IFORK_DSIZE(ip))
+		return 0;
+	cur = NULL;
+	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, flist, &cur, 0,
+		flags, XFS_DATA_FORK);
+	if (cur) {
+		cur->bc_private.b.allocated = 0;
+		xfs_btree_del_cursor(cur,
+			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+	}
+	return error;
+}
+
+/*
+ * Called from xfs_bmap_add_attrfork to handle local format files.
+ */
+STATIC int					/* error */
+xfs_bmap_add_attrfork_local(
+	xfs_trans_t		*tp,		/* transaction pointer */
+	xfs_inode_t		*ip,		/* incore inode pointer */
+	xfs_fsblock_t		*firstblock,	/* first block allocated */
+	xfs_bmap_free_t		*flist,		/* blocks to free at commit */
+	int			*flags)		/* inode logging flags */
+{
+	xfs_da_args_t		dargs;		/* args for dir/attr code */
+	int			error;		/* error return value */
+	xfs_mount_t		*mp;		/* mount structure pointer */
+
+	if (ip->i_df.if_bytes <= XFS_IFORK_DSIZE(ip))
+		return 0;
+	if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR) {
+		mp = ip->i_mount;
+		memset(&dargs, 0, sizeof(dargs));
+		dargs.dp = ip;
+		dargs.firstblock = firstblock;
+		dargs.flist = flist;
+		dargs.total = mp->m_dirblkfsbs;
+		dargs.whichfork = XFS_DATA_FORK;
+		dargs.trans = tp;
+		error = XFS_DIR_SHORTFORM_TO_SINGLE(mp, &dargs);
+	} else
+		error = xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
+			XFS_DATA_FORK);
+	return error;
+}
 
 /*
  * Called by xfs_bmapi to update extent list structure and the btree
@@ -3096,6 +3197,134 @@ xfs_bmap_worst_indlen(
 }
 
 /*
+ * Convert inode from non-attributed to attributed.
+ * Must not be in a transaction, ip must not be locked.
+ */
+int						/* error code */
+xfs_bmap_add_attrfork(
+	xfs_inode_t		*ip,		/* incore inode pointer */
+	int			rsvd)		/* OK to allocated reserved blocks in trans */
+{
+	int			blks;		/* space reservation */
+	int			committed;	/* xaction was committed */
+	int			error;		/* error return value */
+	xfs_fsblock_t		firstblock;	/* 1st block/ag allocated */
+	xfs_bmap_free_t		flist;		/* freed extent list */
+	int			logflags;	/* logging flags */
+	xfs_mount_t		*mp;		/* mount structure */
+	unsigned long		s;		/* spinlock spl value */
+	xfs_trans_t		*tp;		/* transaction pointer */
+
+	ASSERT(ip->i_df.if_ext_max ==
+	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+	if (XFS_IFORK_Q(ip))
+		return 0;
+	mp = ip->i_mount;
+	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
+	blks = XFS_ADDAFORK_SPACE_RES(mp);
+	if (rsvd)
+		tp->t_flags |= XFS_TRANS_RESERVE;
+	if ((error = xfs_trans_reserve(tp, blks, XFS_ADDAFORK_LOG_RES(mp), 0,
+			XFS_TRANS_PERM_LOG_RES, XFS_ADDAFORK_LOG_COUNT)))
+		goto error0;
+	xfs_ilock(ip, XFS_ILOCK_EXCL);
+	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, tp, ip, blks, 0, rsvd ?
+			XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
+			XFS_QMOPT_RES_REGBLKS);
+	if (error) {
+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
+		return error;
+	}
+	if (XFS_IFORK_Q(ip))
+		goto error1;
+	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
+		/*
+		 * For inodes coming from pre-6.2 filesystems.
+		 */
+		ASSERT(ip->i_d.di_aformat == 0);
+		ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+	}
+	ASSERT(ip->i_d.di_anextents == 0);
+	VN_HOLD(XFS_ITOV(ip));
+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+	switch (ip->i_d.di_format) {
+	case XFS_DINODE_FMT_DEV:
+		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
+		break;
+	case XFS_DINODE_FMT_UUID:
+		ip->i_d.di_forkoff = roundup(sizeof(uuid_t), 8) >> 3;
+		break;
+	case XFS_DINODE_FMT_LOCAL:
+	case XFS_DINODE_FMT_EXTENTS:
+	case XFS_DINODE_FMT_BTREE:
+		ip->i_d.di_forkoff = mp->m_attroffset >> 3;
+		break;
+	default:
+		ASSERT(0);
+		error = XFS_ERROR(EINVAL);
+		goto error1;
+	}
+	ip->i_df.if_ext_max =
+		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+	ASSERT(ip->i_afp == NULL);
+	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+	ip->i_afp->if_ext_max =
+		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+	ip->i_afp->if_flags = XFS_IFEXTENTS;
+	logflags = 0;
+	XFS_BMAP_INIT(&flist, &firstblock);
+	switch (ip->i_d.di_format) {
+	case XFS_DINODE_FMT_LOCAL:
+		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &flist,
+			&logflags);
+		break;
+	case XFS_DINODE_FMT_EXTENTS:
+		error = xfs_bmap_add_attrfork_extents(tp, ip, &firstblock,
+			&flist, &logflags);
+		break;
+	case XFS_DINODE_FMT_BTREE:
+		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock, &flist,
+			&logflags);
+		break;
+	default:
+		error = 0;
+		break;
+	}
+	if (logflags)
+		xfs_trans_log_inode(tp, ip, logflags);
+	if (error)
+		goto error2;
+	if (!XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
+		s = XFS_SB_LOCK(mp);
+		if (!XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
+			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
+			XFS_SB_UNLOCK(mp, s);
+			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
+		} else
+			XFS_SB_UNLOCK(mp, s);
+	}
+	if ((error = xfs_bmap_finish(&tp, &flist, firstblock, &committed)))
+		goto error2;
+	error = xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES, NULL);
+	ASSERT(ip->i_df.if_ext_max ==
+	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+	return error;
+error2:
+	xfs_bmap_cancel(&flist);
+error1:
+	ASSERT(ismrlocked(&ip->i_lock,MR_UPDATE));
+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+error0:
+	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+	ASSERT(ip->i_df.if_ext_max ==
+	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+	return error;
+}
+
+/*
  * Add the extent to the list of extents to be free at transaction end.
  * The list is maintained sorted (by block number).
  */
@@ -3181,6 +3410,26 @@ xfs_bmap_compute_maxlevels(
 			maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
 	}
 	mp->m_bm_maxlevels[whichfork] = level;
+}
+
+/*
+ * Free up any items left in the list.
+ */
+void
+xfs_bmap_cancel(
+	xfs_bmap_free_t		*flist)	/* list of bmap_free_items */
+{
+	xfs_bmap_free_item_t	*free;	/* free list item */
+	xfs_bmap_free_item_t	*next;
+
+	if (flist->xbf_count == 0)
+		return;
+	ASSERT(flist->xbf_first != NULL);
+	for (free = flist->xbf_first; free; free = next) {
+		next = free->xbfi_next;
+		xfs_bmap_del_free(flist, NULL, free);
+	}
+	ASSERT(flist->xbf_count == 0);
 }
 
 /*
@@ -3739,7 +3988,7 @@ xfs_bmapi(
 						XFS_SBS_FREXTENTS,
 						-(ralen), rsvd)) {
 						if (XFS_IS_QUOTA_ON(ip->i_mount))
-							XFS_TRANS_UNRESERVE_BLKQUOTA(
+							(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
 						     		mp, NULL, ip,
 								(long)alen);
 						break;
@@ -3749,7 +3998,7 @@ xfs_bmapi(
 							      XFS_SBS_FDBLOCKS,
 							      -(alen), rsvd)) {
 						if (XFS_IS_QUOTA_ON(ip->i_mount))
-							XFS_TRANS_UNRESERVE_BLKQUOTA(
+							(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
 								mp, NULL, ip,
 								(long)alen);
 						break;
@@ -3758,7 +4007,7 @@ xfs_bmapi(
 
 				if (xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
 						-(indlen), rsvd)) {
-					XFS_TRANS_UNRESERVE_BLKQUOTA(
+					(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
 						mp, NULL, ip, (long)alen);
 					break;
 				}
@@ -4389,7 +4638,7 @@ xfs_bunmapi(
 			xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
 				(int)del.br_blockcount, rsvd);
 			/* Unreserve our quota space */
-			XFS_TRANS_RESERVE_QUOTA_NBLKS(
+			(void)XFS_TRANS_RESERVE_QUOTA_NBLKS(
 				mp, NULL, ip, -((long)del.br_blockcount), 0,
 				isrt ?	XFS_QMOPT_RES_RTBLKS :
 					XFS_QMOPT_RES_REGBLKS);

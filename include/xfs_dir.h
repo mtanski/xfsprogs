@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -42,6 +42,8 @@
  * Small directories use a different format and are packed as tightly
  * as possible so as to fit into the literal area of the inode.
  */
+
+#ifdef __KERNEL__
 
 /*========================================================================
  * Function prototypes for the kernel.
@@ -148,7 +150,10 @@ void	xfs_dir_startup(void);	/* called exactly once */
 #define	XFS_DIR_SHORTFORM_TO_SINGLE(mp,args)	\
 	((mp)->m_dirops.xd_shortform_to_single(args))
 
-#define	XFS_DIR_IS_V1(mp)	((mp)->m_dirversion == 1)
 extern xfs_dirops_t xfsv1_dirops;
+
+#endif	/* __KERNEL__*/
+
+#define	XFS_DIR_IS_V1(mp)	((mp)->m_dirversion == 1)
 
 #endif	/* __XFS_DIR_H__ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -309,6 +309,25 @@ libxfs_writebuf(xfs_buf_t *buf, int flags)
 	int error = libxfs_writebuf_int(buf, flags);
 	libxfs_putbuf(buf);
 	return error;
+}
+
+void
+libxfs_iomove(xfs_buf_t *buf, uint boff, int len, void *data, int flags)
+{
+	if (boff + len > buf->b_bcount)
+		abort();
+
+	switch (flags) {
+	case LIBXFS_BZERO:
+		memset(buf->b_addr + boff, 0, len);
+		break;
+	case LIBXFS_BREAD:
+		memcpy(data, buf->b_addr + boff, len);
+		break;
+	case LIBXFS_BWRITE:
+		memcpy(buf->b_addr + boff, data, len);
+		break;
+	}
 }
 
 void

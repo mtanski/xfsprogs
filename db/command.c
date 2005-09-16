@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -32,6 +32,7 @@
 
 #include <xfs/libxfs.h>
 #include "addr.h"
+#include "attrset.h"
 #include "block.h"
 #include "bmap.h"
 #include "check.h"
@@ -130,6 +131,7 @@ init_commands(void)
 	agf_init();
 	agfl_init();
 	agi_init();
+	attrset_init();
 	block_init();
 	bmap_init();
 	check_init();

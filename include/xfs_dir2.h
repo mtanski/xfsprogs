@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -87,7 +87,10 @@ typedef struct xfs_dir2_put_args {
 } xfs_dir2_put_args_t;
 
 #define	XFS_DIR_IS_V2(mp)	((mp)->m_dirversion == 2)
+
+#ifdef __KERNEL__
 extern xfs_dirops_t	xfsv2_dirops;
+#endif	/* __KERNEL__ */
 
 /*
  * Other interfaces used by the rest of the dir v2 code.

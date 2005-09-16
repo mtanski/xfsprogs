@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -52,7 +52,6 @@
 #include <xfs/xfs_ialloc.h>
 #include <xfs/xfs_rtalloc.h>
 #include <xfs/xfs_btree.h>
-#include <xfs/xfs_dir.h>
 #include <xfs/xfs_dir_sf.h>
 #include <xfs/xfs_dir_leaf.h>
 #include <xfs/xfs_dir2.h>
@@ -192,6 +191,7 @@ typedef struct xfs_mount {
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */
 	int			m_sinoalign;	/* stripe unit inode alignmnt */
+	int			m_attr_magicpct;/* 37% of the blocksize */
 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
 	__uint8_t		m_dirversion;	/* 1 or 2 */
 	int			m_dirblksize;	/* directory block sz--bytes */
@@ -200,6 +200,7 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
 } xfs_mount_t;
+#define	XFS_DIR_IS_V1(mp)	((mp)->m_dirversion == 1)
 
 #define LIBXFS_MOUNT_ROOTINOS	0x0001
 #define LIBXFS_MOUNT_DEBUGGER	0x0002
@@ -232,6 +233,7 @@ typedef struct xfs_buf {
 #define XFS_BUF_PTR(bp)			((bp)->b_addr)
 #define xfs_buf_offset(bp, offset)	(XFS_BUF_PTR(bp) + (offset))
 #define XFS_BUF_ADDR(bp)		((bp)->b_blkno)
+#define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
 #define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
 #define XFS_BUF_TARGET(bp)		((bp)->b_dev)
 #define XFS_BUF_SET_PTR(bp,p,cnt)	((bp)->b_addr = (char *)(p)); \
@@ -253,6 +255,12 @@ extern int	libxfs_readbufr (dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
 extern int	libxfs_writebuf (xfs_buf_t *, int);
 extern int	libxfs_writebuf_int (xfs_buf_t *, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
+
+#define LIBXFS_BREAD	0x1
+#define LIBXFS_BWRITE	0x2
+#define LIBXFS_BZERO	0x4
+
+extern void	libxfs_iomove (xfs_buf_t *, uint, int, void *, int);
 
 
 /*
@@ -358,6 +366,11 @@ typedef struct xfs_inode {
 	xfs_dinode_core_t	i_d;		/* most of ondisk inode */
 } xfs_inode_t;
 
+#define LIBXFS_ATTR_ROOT	0x0002	/* use attrs in root namespace */
+#define LIBXFS_ATTR_SECURE	0x0008	/* use attrs in security namespace */
+#define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
+#define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
+
 typedef struct {
 	uid_t	cr_uid;
 	gid_t	cr_gid;
@@ -453,6 +466,9 @@ extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 
 extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (xfs_da_args_t *, int, int *);
+extern int	libxfs_attr_set_int (xfs_inode_t*, char*, int, char*, int, int);
+extern int	libxfs_attr_remove_int (xfs_inode_t *, char *, int, int);
+
 
 extern void	libxfs_bmbt_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
 #if __BYTE_ORDER != __BIG_ENDIAN

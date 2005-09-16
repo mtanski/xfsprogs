@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -74,7 +74,6 @@
 #define xfs_da_log2_roundup		libxfs_da_log2_roundup
 #define xfs_highbit32			libxfs_highbit32
 #define xfs_highbit64			libxfs_highbit64
-#define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
 #define xfs_alloc_compute_maxlevels	libxfs_alloc_compute_maxlevels
 #define xfs_bmap_compute_maxlevels	libxfs_bmap_compute_maxlevels
 #define xfs_ialloc_compute_maxlevels	libxfs_ialloc_compute_maxlevels
@@ -93,6 +92,11 @@
 #define xfs_dir2_removename		libxfs_dir2_removename
 #define xfs_dir_bogus_removename	libxfs_dir_bogus_removename
 #define xfs_dir2_bogus_removename	libxfs_dir2_bogus_removename
+#define xfs_dir_shortform_to_leaf	libxfs_dir_shortform_to_leaf
+#define xfs_dir2_sf_to_block		libxfs_dir2_sf_to_block
+#define XFS_DIR_SHORTFORM_TO_SINGLE(mp, daargs)	XFS_DIR_IS_V2(mp) ? \
+					libxfs_dir2_sf_to_block(daargs) : \
+					libxfs_dir_shortform_to_leaf(daargs);
 
 #define xfs_mount_common		libxfs_mount_common
 #define xfs_initialize_perag		libxfs_initialize_perag
@@ -122,6 +126,7 @@
 #define xfs_trans_bhold			libxfs_trans_bhold
 #define xfs_trans_alloc			libxfs_trans_alloc
 #define xfs_trans_commit		libxfs_trans_commit
+#define xfs_trans_cancel		libxfs_trans_cancel
 #define xfs_trans_mod_sb		libxfs_trans_mod_sb
 #define xfs_trans_reserve		libxfs_trans_reserve
 #define xfs_trans_get_buf		libxfs_trans_get_buf
@@ -150,6 +155,10 @@
 #define xfs_dir2_data_freescan		libxfs_dir2_data_freescan
 #define xfs_dir2_free_log_bests		libxfs_dir2_free_log_bests
 
+#define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+#define xfs_attr_set_int		libxfs_attr_set_int
+#define xfs_attr_remove_int		libxfs_attr_remove_int
+
 
 /*
  * Infrastructure to support building kernel XFS code in user space
@@ -162,10 +171,13 @@
 #define XFS_BUF_ISDONE(bp)		0
 #define XFS_BUF_GETERROR(bp)		0
 #define XFS_BUF_DONE(bp)		((void) 0)
+#define XFS_BUF_STALE(bp)		((void) 0)
+#define XFS_BUF_UNDELAYWRITE(bp)	((void) 0)
 #define XFS_BUF_SET_REF(a,b)		((void) 0)
 #define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
 #define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
 #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+#define xfs_incore(bt,blkno,len,lockit)	0
 #define xfs_baread(a,b,c)		((void) 0)	/* no readahead */
 #define xfs_buftrace(x,y)		((void) 0)	/* debug only */
 #define xfs_buf_item_log_debug(bip,a,b)	((void) 0)	/* debug only */
@@ -173,6 +185,14 @@
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
 #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
 	( *(bpp) = libxfs_readbuf( *(dev_t*)devp, (blkno), (len), 1), 0 )
+#define xfs_buf_get_flags(devp,blkno,len,f)	\
+	( libxfs_getbuf( devp, (blkno), (len) ) )
+#define xfs_bwrite(mp,bp)		libxfs_writebuf((bp), 0)
+
+#define XFS_B_READ			LIBXFS_BREAD
+#define XFS_B_WRITE			LIBXFS_BWRITE
+#define xfs_biomove(bp,off,len,data,f)	libxfs_iomove(bp,off,len,data,f)
+#define xfs_biozero(bp,off,len)		libxfs_iomove(bp,off,len,0,LIBXFS_BZERO)
 
 /* transaction management */
 #define xfs_trans_set_sync(tp)			((void) 0)
@@ -233,6 +253,9 @@
 #define xfs_alloc_mark_busy(tp,ag,b,len)		((void) 0)
 #define xfs_rotorstep					1
 
+#define xfs_ilock(ip, mode)		((void)0)
+#define xfs_iunlock(ip, mode)		((void)0)
+
 /* anything else */
 #if !defined(__sgi__)
 typedef __uint32_t uint_t;
@@ -242,8 +265,12 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #undef MASK
 #define NBPP		getpagesize()
 #define STATIC
-#define ATTR_ROOT	0x0002	/* use attrs in root namespace */
-#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
+#define VN_HOLD(vp)
+#define ATTR_ROOT	LIBXFS_ATTR_ROOT
+#define ATTR_SECURE	LIBXFS_ATTR_SECURE
+#define ATTR_CREATE	LIBXFS_ATTR_CREATE
+#define ATTR_REPLACE	LIBXFS_ATTR_REPLACE
+#define ATTR_KERNOTIME	0
 #define ktrace_t	void
 #define m_ddev_targp	m_dev
 #define unlikely(x)	(x)
@@ -279,12 +306,16 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define __return_address		__builtin_return_address(0)
 #define xfs_btree_reada_bufl(m,fsb,c)	((void) 0)
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)
+#define XFS_SB_LOCK(mp)			0
+#define XFS_SB_UNLOCK(mp,s)		((void) 0)
 #undef  XFS_DIR_SHORTFORM_VALIDATE_ONDISK
 #define XFS_DIR_SHORTFORM_VALIDATE_ONDISK(mp,dip) 0
-#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)
+#define XFS_QM_DQATTACH(mp,ip,flags)	0
+#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
 #define XFS_TRANS_RESERVE_BLKQUOTA(mp,tp,ip,nblks)	0
-#define XFS_TRANS_UNRESERVE_BLKQUOTA(mp,tp,ip,nblks)
-#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)
+#define XFS_TRANS_UNRESERVE_BLKQUOTA(mp,tp,ip,nblks)	0
+#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+#define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
 
 /* These are lifted from the kernel */
 #define get_unaligned(ptr) \
@@ -414,10 +445,13 @@ void xfs_idestroy_fork (xfs_inode_t *, int);
 uint xfs_iroundup (uint);
 
 /* xfs_bmap.c */
-xfs_bmbt_rec_t *xfs_bmap_search_extents (xfs_inode_t *ip,
+int  xfs_bmap_local_to_extents (xfs_trans_t *, xfs_inode_t *,
+			xfs_fsblock_t *, xfs_extlen_t, int *, int);
+xfs_bmbt_rec_t *xfs_bmap_search_extents (xfs_inode_t *,
 			xfs_fileoff_t, int, int *, xfs_extnum_t *,
 			xfs_bmbt_irec_t *, xfs_bmbt_irec_t *);
 int  xfs_bmap_read_extents (xfs_trans_t *, xfs_inode_t *, int);
+int  xfs_bmap_add_attrfork (xfs_inode_t *, int);
 void xfs_bmap_add_free (xfs_fsblock_t, xfs_filblks_t, xfs_bmap_free_t *,
 			xfs_mount_t *);
 int  xfs_bmap_first_unused (xfs_trans_t *, xfs_inode_t *, xfs_extlen_t,
@@ -446,6 +480,7 @@ int  xfs_bmap_extents_to_btree (xfs_trans_t *, xfs_inode_t *, xfs_fsblock_t *,
 			xfs_bmap_free_t *, xfs_btree_cur_t **, int, int *, int);
 void xfs_bmap_delete_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t, int);
 xfs_filblks_t xfs_bmap_worst_indlen (xfs_inode_t *, xfs_filblks_t);
+void xfs_bmap_cancel (xfs_bmap_free_t *);
 int  xfs_bmap_isaeof (xfs_inode_t *, xfs_fileoff_t, int, char *);
 void xfs_bmap_insert_exlist (xfs_inode_t *, xfs_extnum_t, xfs_extnum_t,
 			xfs_bmbt_irec_t *, int);
@@ -471,6 +506,8 @@ void xfs_bmbt_set_state (xfs_bmbt_rec_t *, xfs_exntst_t);
 void xfs_bmbt_log_block (struct xfs_btree_cur *, struct xfs_buf *, int);
 void xfs_bmbt_log_recs (struct xfs_btree_cur *, struct xfs_buf *, int, int);
 int  xfs_bmbt_lookup_eq (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
+			xfs_filblks_t, int *);
+int  xfs_bmbt_lookup_ge (struct xfs_btree_cur *, xfs_fileoff_t, xfs_fsblock_t,
 			xfs_filblks_t, int *);
 xfs_fsblock_t xfs_bmbt_get_startblock (xfs_bmbt_rec_t *);
 xfs_filblks_t xfs_bmbt_get_blockcount (xfs_bmbt_rec_t *);
@@ -557,6 +594,7 @@ int  xfs_da_blk_link (xfs_da_state_t *, xfs_da_state_blk_t *,
 xfs_da_state_t *xfs_da_state_alloc (void);
 void xfs_da_state_free (xfs_da_state_t *);
 void xfs_da_state_kill_altpath (xfs_da_state_t *);
+xfs_daddr_t xfs_da_blkno(xfs_dabuf_t *);
 
 /* xfs_dir.c */
 int  xfs_dir_node_addname (xfs_da_args_t *);
@@ -576,6 +614,7 @@ int  xfs_dir_leaf_figure_balance (xfs_da_state_t *, xfs_da_state_blk_t *,
 			xfs_da_state_blk_t *, int *, int *);
 void xfs_dir_leaf_moveents (xfs_dir_leafblock_t *, int,
 			xfs_dir_leafblock_t *, int, int, xfs_mount_t *);
+int  xfs_dir_shortform_to_leaf (xfs_da_args_t *);
 
 /* xfs_dir2_leaf.c */
 void xfs_dir2_leaf_check (xfs_inode_t *, xfs_dabuf_t *);
@@ -592,6 +631,7 @@ void xfs_dir2_leafn_check (xfs_inode_t *, xfs_dabuf_t *);
 int  xfs_dir2_leafn_remove (xfs_da_args_t *, xfs_dabuf_t *, int,
 			xfs_da_state_blk_t *, int *);
 int  xfs_dir2_node_addname_int (xfs_da_args_t *, xfs_da_state_blk_t *);
+int  xfs_dir2_sf_to_block (xfs_da_args_t *);
 
 /* xfs_dir2_sf.c */
 void xfs_dir2_sf_check (xfs_da_args_t *);
