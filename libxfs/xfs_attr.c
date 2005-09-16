@@ -78,14 +78,9 @@ STATIC int xfs_attr_rmtval_remove(xfs_da_args_t *args);
  * Overall external interface routines.
  *========================================================================*/
 
-int								/* error */
-xfs_attr_set_int(
-	xfs_inode_t	*dp,
-	char		*name,
-	int		namelen,
-	char		*value,
-	int		valuelen,
-	int		flags)
+int
+xfs_attr_set_int(xfs_inode_t *dp, char *name, int namelen,
+		 char *value, int valuelen, int flags)
 {
 	xfs_da_args_t	args;
 	xfs_fsblock_t	firstblock;
@@ -97,12 +92,24 @@ xfs_attr_set_int(
 	int             rsvd = (flags & ATTR_ROOT) != 0;
 
 	/*
+	 * Attach the dquots to the inode.
+	 */
+	if ((error = XFS_QM_DQATTACH(mp, dp, 0)))
+		return (error);
+
+	/*
+	 * Determine space new attribute will use, and if it would be
+	 * "local" or "remote" (note: local != inline).
+	 */
+	size = xfs_attr_leaf_newentsize(namelen, valuelen,
+					mp->m_sb.sb_blocksize, &local);
+
+	/*
 	 * If the inode doesn't have an attribute fork, add one.
 	 * (inode must not be locked when we call this routine)
 	 */
 	if (XFS_IFORK_Q(dp) == 0) {
-		error = xfs_bmap_add_attrfork(dp, rsvd);
-		if (error)
+		if ((error = xfs_bmap_add_attrfork(dp, size, rsvd)))
 			return(error);
 	}
 
@@ -120,12 +127,8 @@ xfs_attr_set_int(
 	args.firstblock = &firstblock;
 	args.flist = &flist;
 	args.whichfork = XFS_ATTR_FORK;
+	args.addname = 1;
 	args.oknoent = 1;
-
-	/* Determine space new attribute will use, and if it will be inline
-	 * or out of line.
-	 */
-	size = xfs_attr_leaf_newentsize(&args, mp->m_sb.sb_blocksize, &local);
 
 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
 	if (local) {
@@ -198,7 +201,7 @@ xfs_attr_set_int(
 		 * Build initial attribute list (if required).
 		 */
 		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
-			(void)xfs_attr_shortform_create(&args);
+			xfs_attr_shortform_create(&args);
 
 		/*
 		 * Try to add the attr to the attribute list in
@@ -311,18 +314,14 @@ out:
 	return(error);
 }
 
-int								/* error */
-xfs_attr_remove_int(
-	xfs_inode_t	*dp,
-	char		*name,
-	int		namelen,
-	int		flags)
+STATIC int
+xfs_attr_remove_int(xfs_inode_t *dp, char *name, int namelen, int flags)
 {
 	xfs_da_args_t	args;
 	xfs_fsblock_t	firstblock;
 	xfs_bmap_free_t	flist;
-	xfs_mount_t	*mp = dp->i_mount;
 	int		error;
+	xfs_mount_t	*mp = dp->i_mount;
 
 	/*
 	 * Fill in the arg structure for this request.
@@ -371,7 +370,6 @@ xfs_attr_remove_int(
 				      XFS_ATTRRM_LOG_COUNT))) {
 		xfs_trans_cancel(args.trans, 0);
 		return(error);
-
 	}
 
 	xfs_ilock(dp, XFS_ILOCK_EXCL);
@@ -451,7 +449,7 @@ out:
 STATIC int
 xfs_attr_shortform_addname(xfs_da_args_t *args)
 {
-	int newsize, retval;
+	int newsize, forkoff, retval;
 
 	retval = xfs_attr_shortform_lookup(args);
 	if ((args->flags & ATTR_REPLACE) && (retval == ENOATTR)) {
@@ -463,16 +461,18 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
 		ASSERT(retval == 0);
 	}
 
+	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
+	    args->valuelen >= XFS_ATTR_SF_ENTSIZE_MAX)
+		return(XFS_ERROR(ENOSPC));
+
 	newsize = XFS_ATTR_SF_TOTSIZE(args->dp);
 	newsize += XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-	if ((newsize <= XFS_IFORK_ASIZE(args->dp)) &&
-	    (args->namelen < XFS_ATTR_SF_ENTSIZE_MAX) &&
-	    (args->valuelen < XFS_ATTR_SF_ENTSIZE_MAX)) {
-		retval = xfs_attr_shortform_add(args);
-		ASSERT(retval == 0);
-	} else {
+
+	forkoff = xfs_attr_shortform_bytesfit(args->dp, newsize);
+	if (!forkoff)
 		return(XFS_ERROR(ENOSPC));
-	}
+
+	xfs_attr_shortform_add(args, forkoff);
 	return(0);
 }
 
@@ -492,7 +492,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 {
 	xfs_inode_t *dp;
 	xfs_dabuf_t *bp;
-	int retval, error, committed;
+	int retval, error, committed, forkoff;
 
 	/*
 	 * Read the (only) block in the attribute list in.
@@ -635,9 +635,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 		/*
 		 * If the result is small enough, shrink it all into the inode.
 		 */
-		if (xfs_attr_shortform_allfit(bp, dp)) {
+		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 			XFS_BMAP_INIT(args->flist, args->firstblock);
-			error = xfs_attr_leaf_to_shortform(bp, args);
+			error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
 			/* bp is gone due to xfs_da_shrink_inode */
 			if (!error) {
 				error = xfs_bmap_finish(&args->trans,
@@ -689,8 +689,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 {
 	xfs_inode_t *dp;
 	xfs_dabuf_t *bp;
-	int committed;
-	int error;
+	int error, committed, forkoff;
 
 	/*
 	 * Remove the attribute.
@@ -715,9 +714,9 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 	/*
 	 * If the result is small enough, shrink it all into the inode.
 	 */
-	if (xfs_attr_shortform_allfit(bp, dp)) {
+	if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 		XFS_BMAP_INIT(args->flist, args->firstblock);
-		error = xfs_attr_leaf_to_shortform(bp, args);
+		error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
 		/* bp is gone due to xfs_da_shrink_inode */
 		if (!error) {
 			error = xfs_bmap_finish(&args->trans, args->flist,
@@ -1026,7 +1025,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
 	xfs_da_state_blk_t *blk;
 	xfs_inode_t *dp;
 	xfs_dabuf_t *bp;
-	int retval, error, committed;
+	int retval, error, committed, forkoff;
 
 	/*
 	 * Tie a string around our finger to remind us where we are.
@@ -1147,9 +1146,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
 				      bp->data)->hdr.info.magic, ARCH_CONVERT)
 						       == XFS_ATTR_LEAF_MAGIC);
 
-		if (xfs_attr_shortform_allfit(bp, dp)) {
+		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 			XFS_BMAP_INIT(args->flist, args->firstblock);
-			error = xfs_attr_leaf_to_shortform(bp, args);
+			error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
 			/* bp is gone due to xfs_da_shrink_inode */
 			if (!error) {
 				error = xfs_bmap_finish(&args->trans,

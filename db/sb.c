@@ -606,6 +606,10 @@ version_string(
 		strcat(s, ",EXTFLG");
 	if (XFS_SB_VERSION_HASSECTOR(sbp))
 		strcat(s, ",SECTOR");
+	if (XFS_SB_VERSION_HASMOREBITS(sbp))
+		strcat(s, ",MOREBITS");
+	if (XFS_SB_VERSION_HASATTR2(sbp))
+		strcat(s, ",ATTR2");
 	return s;
 }
 
@@ -663,7 +667,7 @@ version_f(
 			mp->m_sb.sb_versionnum = version;
 		}
 	}
-	dbprintf("versionnum [0x%x] = %s\n", mp->m_sb.sb_versionnum,
-			version_string(&mp->m_sb));
+	dbprintf("versionnum [0x%x+0x%x] = %s\n", mp->m_sb.sb_versionnum,
+			mp->m_sb.sb_features2, version_string(&mp->m_sb));
 	return 0;
 }

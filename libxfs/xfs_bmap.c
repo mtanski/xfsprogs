@@ -2927,6 +2927,29 @@ xfs_bmap_insert_exlist(
 }
 
 /*
+ * Helper routine to reset inode di_forkoff field when switching
+ * attributes from local to extents.  This can increase the space
+ * we have available for inline extents.
+ */
+STATIC void
+xfs_bmap_forkoff_reset(
+	xfs_mount_t	*mp,
+	xfs_inode_t	*ip,
+	int		whichfork)
+{
+	if (whichfork == XFS_ATTR_FORK &&
+	    (ip->i_d.di_format != XFS_DINODE_FMT_DEV) &&
+	    (ip->i_d.di_format != XFS_DINODE_FMT_UUID) &&
+	    ((mp->m_attroffset >> 3) > ip->i_d.di_forkoff)) {
+		ip->i_d.di_forkoff = mp->m_attroffset >> 3;
+		ip->i_df.if_ext_max = XFS_IFORK_DSIZE(ip) /
+					(uint)sizeof(xfs_bmbt_rec_t);
+		ip->i_afp->if_ext_max = XFS_IFORK_ASIZE(ip) /
+					(uint)sizeof(xfs_bmbt_rec_t);
+	}
+}
+
+/*
  * Convert a local file to an extents file.
  * This code is out of bounds for data forks of regular files,
  * since the file data needs to get logged so things will stay consistent.
@@ -2993,6 +3016,7 @@ xfs_bmap_local_to_extents(
 		memcpy((char *)XFS_BUF_PTR(bp), ifp->if_u1.if_data,
 			ifp->if_bytes);
 		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
+		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
 		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
 		xfs_iext_realloc(ip, 1, whichfork);
 		ep = ifp->if_u1.if_extents;
@@ -3003,8 +3027,10 @@ xfs_bmap_local_to_extents(
 		XFS_TRANS_MOD_DQUOT_BYINO(args.mp, tp, ip,
 			XFS_TRANS_DQ_BCOUNT, 1L);
 		flags |= XFS_ILOG_FEXT(whichfork);
-	} else
+	} else {
 		ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
+		xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
+	}
 	ifp->if_flags &= ~XFS_IFINLINE;
 	ifp->if_flags |= XFS_IFEXTENTS;
 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
@@ -3203,22 +3229,24 @@ xfs_bmap_worst_indlen(
 int						/* error code */
 xfs_bmap_add_attrfork(
 	xfs_inode_t		*ip,		/* incore inode pointer */
-	int			rsvd)		/* OK to allocated reserved blocks in trans */
+	int			size,		/* space new attribute needs */
+	int			rsvd)		/* xact may use reserved blks */
 {
-	int			blks;		/* space reservation */
-	int			committed;	/* xaction was committed */
-	int			error;		/* error return value */
 	xfs_fsblock_t		firstblock;	/* 1st block/ag allocated */
 	xfs_bmap_free_t		flist;		/* freed extent list */
-	int			logflags;	/* logging flags */
 	xfs_mount_t		*mp;		/* mount structure */
-	unsigned long		s;		/* spinlock spl value */
 	xfs_trans_t		*tp;		/* transaction pointer */
+	unsigned long		s;		/* spinlock spl value */
+	int			blks;		/* space reservation */
+	int			version = 1;	/* superblock attr version */
+	int			committed;	/* xaction was committed */
+	int			logflags;	/* logging flags */
+	int			error;		/* error return value */
 
+	ASSERT(XFS_IFORK_Q(ip) == 0);
 	ASSERT(ip->i_df.if_ext_max ==
 	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
-	if (XFS_IFORK_Q(ip))
-		return 0;
+
 	mp = ip->i_mount;
 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
 	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
@@ -3260,7 +3288,11 @@ xfs_bmap_add_attrfork(
 	case XFS_DINODE_FMT_LOCAL:
 	case XFS_DINODE_FMT_EXTENTS:
 	case XFS_DINODE_FMT_BTREE:
-		ip->i_d.di_forkoff = mp->m_attroffset >> 3;
+		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
+		if (ip->i_d.di_forkoff)
+			version = 2;
+		else
+			ip->i_d.di_forkoff = mp->m_attroffset >> 3;
 		break;
 	default:
 		ASSERT(0);
@@ -3297,12 +3329,21 @@ xfs_bmap_add_attrfork(
 		xfs_trans_log_inode(tp, ip, logflags);
 	if (error)
 		goto error2;
-	if (!XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
+	if (!XFS_SB_VERSION_HASATTR(&mp->m_sb) ||
+	   (!XFS_SB_VERSION_HASATTR2(&mp->m_sb) && version == 2)) {
+		logflags = 0;
 		s = XFS_SB_LOCK(mp);
 		if (!XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
 			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
+			logflags |= XFS_SB_VERSIONNUM;
+		}
+		if (!XFS_SB_VERSION_HASATTR2(&mp->m_sb) && version == 2) {
+			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
+			logflags |= (XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
+		}
+		if (logflags) {
 			XFS_SB_UNLOCK(mp, s);
-			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
+			xfs_mod_sb(tp, logflags);
 		} else
 			XFS_SB_UNLOCK(mp, s);
 	}
@@ -3395,13 +3436,16 @@ xfs_bmap_compute_maxlevels(
 	 * (a signed 32-bit number, xfs_extnum_t), or by di_anextents
 	 * (a signed 16-bit number, xfs_aextnum_t).
 	 */
-	maxleafents = (whichfork == XFS_DATA_FORK) ? MAXEXTNUM : MAXAEXTNUM;
+	if (whichfork == XFS_DATA_FORK) {
+		maxleafents = MAXEXTNUM;
+		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+	} else {
+		maxleafents = MAXAEXTNUM;
+		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
+	}
+	maxrootrecs = (int)XFS_BTREE_BLOCK_MAXRECS(sz, xfs_bmdr, 0);
 	minleafrecs = mp->m_bmap_dmnr[0];
 	minnoderecs = mp->m_bmap_dmnr[1];
-	sz = (whichfork == XFS_DATA_FORK) ?
-		mp->m_attroffset :
-		mp->m_sb.sb_inodesize - mp->m_attroffset;
-	maxrootrecs = (int)XFS_BTREE_BLOCK_MAXRECS(sz, xfs_bmdr, 0);
 	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
 	for (level = 1; maxblocks > 1; level++) {
 		if (maxblocks <= maxrootrecs)

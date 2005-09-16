@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -104,12 +104,15 @@ struct xfs_mount;
  */
 #define XFS_SB_VERSION2_REALFBITS	0x00ffffff	/* Mask: features */
 #define XFS_SB_VERSION2_RESERVED1BIT	0x00000001
+#define XFS_SB_VERSION2_RESERVED2BIT	0x00000002
+#define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
+#define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
 #define XFS_SB_VERSION2_SASHFBITS	0xff000000	/* Mask: features that
 							   require changing
 							   PROM and SASH */
 
 #define	XFS_SB_VERSION2_OKREALFBITS	\
-	(0)
+	(XFS_SB_VERSION2_ATTR2BIT)
 #define	XFS_SB_VERSION2_OKSASHFBITS	\
 	(0)
 #define XFS_SB_VERSION2_OKREALBITS	\
@@ -176,7 +179,7 @@ typedef struct xfs_sb
 	__uint8_t	sb_logsectlog;	/* log2 of the log sector size */
 	__uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
 	__uint32_t	sb_logsunit;	/* stripe unit size for the log */
-	__uint32_t	sb_features2;	/* additonal feature bits */
+	__uint32_t	sb_features2;	/* additional feature bits */
 } xfs_sb_t;
 
 /*
@@ -216,15 +219,15 @@ typedef enum {
 #define XFS_SB_SHARED_VN	XFS_SB_MVAL(SHARED_VN)
 #define XFS_SB_UNIT		XFS_SB_MVAL(UNIT)
 #define XFS_SB_WIDTH		XFS_SB_MVAL(WIDTH)
-#define XFS_SB_ICOUNT		XFS_SB_MVAL(ICOUNT)
-#define XFS_SB_IFREE		XFS_SB_MVAL(IFREE)
-#define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
+#define XFS_SB_FEATURES2	XFS_SB_MVAL(FEATURES2)
 #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
 #define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
 #define	XFS_SB_MOD_BITS		\
 	(XFS_SB_UUID | XFS_SB_ROOTINO | XFS_SB_RBMINO | XFS_SB_RSUMINO | \
 	 XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO | XFS_SB_GQUOTINO | \
-	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH)
+	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH | \
+	 XFS_SB_FEATURES2)
+
 
 /*
  * Misc. Flags - warning - these will be cleared by xfs_repair unless
@@ -509,6 +512,25 @@ int xfs_sb_version_hasmorebits(xfs_sb_t *sbp);
  *	((XFS_SB_VERSION_HASMOREBITS(sbp) &&
  *	 ((sbp)->sb_features2 & XFS_SB_VERSION2_FUNBIT)
  */
+#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_SB_VERSION_HASATTR2)
+int xfs_sb_version_hasattr2(xfs_sb_t *sbp);
+#define XFS_SB_VERSION_HASATTR2(sbp)	xfs_sb_version_hasattr2(sbp)
+#else
+#define XFS_SB_VERSION_HASATTR2(sbp)	\
+	((XFS_SB_VERSION_HASMOREBITS(sbp)) &&	\
+	 ((sbp)->sb_features2 & XFS_SB_VERSION2_ATTR2BIT))
+#endif
+
+#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_SB_VERSION_ADDATTR2)
+void xfs_sb_version_addattr2(xfs_sb_t *sbp);
+#define XFS_SB_VERSION_ADDATTR2(sbp)	xfs_sb_version_addattr2(sbp)
+#else
+#define XFS_SB_VERSION_ADDATTR2(sbp)	\
+	((sbp)->sb_versionnum =	\
+		((sbp)->sb_versionnum | XFS_SB_VERSION_MOREBITSBIT),	\
+	((sbp)->sb_features2 =	\
+		((sbp)->sb_features2 | XFS_SB_VERSION2_ATTR2BIT)))
+#endif
 /*
  * end of superblock version macros
  */

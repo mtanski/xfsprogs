@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -2312,16 +2312,16 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 			break;
 		case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
 		case XFS_DINODE_FMT_EXTENTS:	/* fall through ... */
-		case XFS_DINODE_FMT_BTREE:
-			if (dinoc->di_forkoff != mp->m_attroffset >> 3)  {
+		case XFS_DINODE_FMT_BTREE: {
+			if (dinoc->di_forkoff >= (XFS_LITINO(mp) >> 3))  {
 				do_warn(
-		_("bad attr fork offset %d in inode %llu, should be %d\n"),
+		_("bad attr fork offset %d in inode %llu, max=%d\n"),
 					(int) dinoc->di_forkoff,
-					lino,
-					(int) (mp->m_attroffset >> 3));
+					lino, XFS_LITINO(mp) >> 3);
 				err = 1;
 			}
 			break;
+		    }
 		default:
 			do_error(_("unexpected inode format %d\n"),
 				(int) dinoc->di_format);

@@ -293,6 +293,8 @@ typedef struct xfs_buf_log_item {
 
 typedef struct xfs_trans {
 	unsigned int	t_type;			/* transaction type */
+	unsigned int	t_log_res;		/* amt of log space resvd */
+	unsigned int	t_log_count;		/* count for perm log res */
 	xfs_mount_t	*t_mountp;		/* ptr to fs mount struct */
 	unsigned int	t_flags;		/* misc flags */
 	long		t_icount_delta;		/* superblock icount change */
@@ -465,7 +467,7 @@ extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 				xfs_off_t, int, int);
 
 extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
-extern int	libxfs_attr_leaf_newentsize (xfs_da_args_t *, int, int *);
+extern int	libxfs_attr_leaf_newentsize (int, int, int, int *);
 extern int	libxfs_attr_set_int (xfs_inode_t*, char*, int, char*, int, int);
 extern int	libxfs_attr_remove_int (xfs_inode_t *, char *, int, int);
 

@@ -1,38 +1,39 @@
 /*
- * Copyright (c) 2000-2001,2004 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ * Copyright (c) 2000-2001,2004-2005 Silicon Graphics, Inc.
+ * All Rights Reserved.
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
 /*
  * maxtrres.c
- * 
+ *
  * Compute the maximum transaction reservation for a legal combination
  * of sector size, block size, inode size, directory version, and
  * directory block size.
@@ -45,30 +46,17 @@ static void
 max_attrset_trans_res_adjust(
 	xfs_mount_t			*mp)
 {
-	xfs_da_args_t 			args;
 	int				local;
 	int				size;
 	int				nblks;
 	int				res;
 
 	/*
-	 * Fill in the arg structure for this request.
-	 * This is the maximal sized extended attribute name
-	 * and value (64k) combination, to calculate the
-	 * largest reservation size needed.
+	 * Determine space the maximal sized attribute will use,
+	 * to calculate the largest reservation size needed.
 	 */
-	memset(&args, 0, sizeof(args));
-	args.namelen = MAXNAMELEN;
-	args.valuelen = 65536;
-	args.whichfork = XFS_ATTR_FORK;
-	args.oknoent = 1;
-
-	/*
-	 * Determine space new attribute will use, and if it will be
-	 * inline or out of line.
-	 */
-	size = libxfs_attr_leaf_newentsize(
-			&args, mp->m_sb.sb_blocksize, &local);
+	size = libxfs_attr_leaf_newentsize(MAXNAMELEN, 64 * 1024,
+						mp->m_sb.sb_blocksize, &local);
 	ASSERT(!local);
 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
 	nblks += XFS_B_TO_FSB(mp, size);

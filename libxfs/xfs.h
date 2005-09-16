@@ -451,7 +451,7 @@ xfs_bmbt_rec_t *xfs_bmap_search_extents (xfs_inode_t *,
 			xfs_fileoff_t, int, int *, xfs_extnum_t *,
 			xfs_bmbt_irec_t *, xfs_bmbt_irec_t *);
 int  xfs_bmap_read_extents (xfs_trans_t *, xfs_inode_t *, int);
-int  xfs_bmap_add_attrfork (xfs_inode_t *, int);
+int  xfs_bmap_add_attrfork (xfs_inode_t *, int, int);
 void xfs_bmap_add_free (xfs_fsblock_t, xfs_filblks_t, xfs_bmap_free_t *,
 			xfs_mount_t *);
 int  xfs_bmap_first_unused (xfs_trans_t *, xfs_inode_t *, xfs_extlen_t,
