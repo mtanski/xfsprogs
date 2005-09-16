@@ -78,6 +78,7 @@ quota_mount(
 	uint		qflags;
 	int		count;
 
+	xfsquotactl(XFS_QSYNC, dev, type, 0, NULL);
 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
 		return 0;
 

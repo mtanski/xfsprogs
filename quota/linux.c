@@ -69,6 +69,8 @@ xcommand_to_qcommand(
 		return Q_XGETQSTAT;
 	case XFS_QUOTARM:
 		return Q_XQUOTARM;
+	case XFS_QSYNC:
+		return Q_XQUOTASYNC;
 	}
 	return 0;
 }

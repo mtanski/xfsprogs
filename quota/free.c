@@ -168,6 +168,7 @@ projects_free_space_data(
 		return 0;
 	}
 
+	xfsquotactl(XFS_QSYNC, dev, type, projid, NULL);
 	if (xfsquotactl(XFS_GETQUOTA, dev, type, projid, (void *)&d) < 0) {
 		perror("XFS_GETQUOTA");
 		close(fd);

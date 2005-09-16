@@ -521,21 +521,30 @@ report_any_type(
 
 	if (type & XFS_USER_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
-		while ((mount = fs_cursor_next_entry(&cursor)))
+		while ((mount = fs_cursor_next_entry(&cursor))) {
+			xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_USER_QUOTA, 0, NULL);
 			report_user_mount(fp, form, mount,
 						lower, upper, flags);
+		}
 	}
 	if (type & XFS_GROUP_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
-		while ((mount = fs_cursor_next_entry(&cursor)))
+		while ((mount = fs_cursor_next_entry(&cursor))) {
+			xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_GROUP_QUOTA, 0, NULL);
 			report_group_mount(fp, form, mount,
 						lower, upper, flags);
+		}
 	}
 	if (type & XFS_PROJ_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
-		while ((mount = fs_cursor_next_entry(&cursor)))
+		while ((mount = fs_cursor_next_entry(&cursor))) {
+			xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_PROJ_QUOTA, 0, NULL);
 			report_project_mount(fp, form, mount,
 						lower, upper, flags);
+		}
 	}
 }
 

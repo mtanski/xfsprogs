@@ -55,6 +55,7 @@ enum {
 	XFS_SETQLIM,	/* set disk limits */
 	XFS_GETQSTAT,	/* get quota subsystem status */
 	XFS_QUOTARM,	/* free disk space used by dquots */
+	XFS_QSYNC,	/* flush delayed allocate space */
 };
 
 /*
