@@ -331,7 +331,7 @@ static xfs_ino_t	process_sf_dir_v2(xfs_dinode_t *dip, int *dot,
 					  int *dotdot, inodata_t *id);
 static xfs_ino_t	process_shortform_dir_v1(xfs_dinode_t *dip, int *dot,
 						 int *dotdot, inodata_t *id);
-static void		quota_add(xfs_dqid_t p, xfs_dqid_t g, xfs_dqid_t u,
+static void		quota_add(xfs_dqid_t *p, xfs_dqid_t *g, xfs_dqid_t *u,
 				  int dq, xfs_qcnt_t bc, xfs_qcnt_t ic,
 				  xfs_qcnt_t rc);
 static void		quota_add1(qdata_t **qt, xfs_dqid_t id, int dq,
@@ -2611,6 +2611,7 @@ process_inode(
 	xfs_qcnt_t		bc = 0;
 	xfs_qcnt_t		ic = 0;
 	xfs_qcnt_t		rc = 0;
+	xfs_dqid_t		dqprid;
 	static char		okfmts[] = {
 		0,				/* type 0 unused */
 		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
@@ -2825,9 +2826,11 @@ process_inode(
 		default:
 			break;
 		}
-		if (ic)
-			quota_add(dic->di_projid, dic->di_gid, dic->di_uid,
+		if (ic) {
+			dqprid = dic->di_projid;	/* dquot ID is u32 */
+			quota_add(&dqprid, &dic->di_gid, &dic->di_uid,
 				  0, bc, ic, rc);
+		}
 	}
 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
 	if (totblocks != dic->di_nblocks) {
@@ -3377,8 +3380,8 @@ process_quota(
 	xfs_dqblk_t	*dqb;
 	xfs_dqid_t	dqid;
 	u_int8_t	exp_flags = 0;
-	int		i;
-	int		perblock;
+	uint		i;
+	uint		perblock;
 	xfs_fileoff_t	qbno;
 	char		*s = NULL;
 	int		scicb;
@@ -3401,7 +3404,7 @@ process_quota(
 		ASSERT(0);
 	}
 
-	perblock = (int)(mp->m_sb.sb_blocksize / sizeof(*dqb));
+	perblock = (uint)(mp->m_sb.sb_blocksize / sizeof(*dqb));
 	dqid = 0;
 	qbno = NULLFILEOFF;
 	while ((qbno = blkmap_next_off(blkmap, qbno, &t)) !=
@@ -3425,7 +3428,7 @@ process_quota(
 		}
 		for (i = 0; i < perblock; i++, dqid++, dqb++) {
 			if (verbose || id->ilist || cb)
-				dbprintf("%s dqblk %lld entry %d id %d bc "
+				dbprintf("%s dqblk %lld entry %d id %u bc "
 					 "%lld ic %lld rc %lld\n",
 					s, (xfs_dfiloff_t)qbno, i, dqid,
 					INT_GET(dqb->dd_diskdq.d_bcount, ARCH_CONVERT),
@@ -3434,7 +3437,7 @@ process_quota(
 			if (INT_GET(dqb->dd_diskdq.d_magic, ARCH_CONVERT) != XFS_DQUOT_MAGIC) {
 				if (scicb)
 					dbprintf("bad magic number %#x for %s "
-						 "dqblk %lld entry %d id %d\n",
+						 "dqblk %lld entry %d id %u\n",
 						INT_GET(dqb->dd_diskdq.d_magic, ARCH_CONVERT), s,
 						(xfs_dfiloff_t)qbno, i, dqid);
 				error++;
@@ -3444,7 +3447,7 @@ process_quota(
 				if (scicb)
 					dbprintf("bad version number %#x for "
 						 "%s dqblk %lld entry %d id "
-						 "%d\n",
+						 "%u\n",
 						INT_GET(dqb->dd_diskdq.d_version, ARCH_CONVERT), s,
 						(xfs_dfiloff_t)qbno, i, dqid);
 				error++;
@@ -3453,7 +3456,7 @@ process_quota(
 			if (INT_GET(dqb->dd_diskdq.d_flags, ARCH_CONVERT) != exp_flags) {
 				if (scicb)
 					dbprintf("bad flags %#x for %s dqblk "
-						 "%lld entry %d id %d\n",
+						 "%lld entry %d id %u\n",
 						INT_GET(dqb->dd_diskdq.d_flags, ARCH_CONVERT), s,
 						(xfs_dfiloff_t)qbno, i, dqid);
 				error++;
@@ -3461,16 +3464,16 @@ process_quota(
 			}
 			if (INT_GET(dqb->dd_diskdq.d_id, ARCH_CONVERT) != dqid) {
 				if (scicb)
-					dbprintf("bad id %d for %s dqblk %lld "
-						 "entry %d id %d\n",
+					dbprintf("bad id %u for %s dqblk %lld "
+						 "entry %d id %u\n",
 						INT_GET(dqb->dd_diskdq.d_id, ARCH_CONVERT), s,
 						(xfs_dfiloff_t)qbno, i, dqid);
 				error++;
 				continue;
 			}
-			quota_add((qtype == IS_PROJECT_QUOTA) ? dqid : -1,
-				  (qtype == IS_GROUP_QUOTA) ? dqid : -1,
-				  (qtype == IS_USER_QUOTA) ? dqid : -1,
+			quota_add((qtype == IS_PROJECT_QUOTA) ? &dqid : NULL,
+				  (qtype == IS_GROUP_QUOTA) ? &dqid : NULL,
+				  (qtype == IS_USER_QUOTA) ? &dqid : NULL,
 				  1,
 				  INT_GET(dqb->dd_diskdq.d_bcount, ARCH_CONVERT),
 				  INT_GET(dqb->dd_diskdq.d_icount, ARCH_CONVERT),
@@ -3768,20 +3771,20 @@ process_shortform_dir_v1(
 
 static void
 quota_add(
-	xfs_dqid_t	prjid,
-	xfs_dqid_t	grpid,
-	xfs_dqid_t	usrid,
+	xfs_dqid_t	*prjid,
+	xfs_dqid_t	*grpid,
+	xfs_dqid_t	*usrid,
 	int		dq,
 	xfs_qcnt_t	bc,
 	xfs_qcnt_t	ic,
 	xfs_qcnt_t	rc)
 {
-	if (qudo && usrid != -1)
-		quota_add1(qudata, usrid, dq, bc, ic, rc);
-	if (qgdo && grpid != -1)
-		quota_add1(qgdata, grpid, dq, bc, ic, rc);
-	if (qpdo && prjid != -1)
-		quota_add1(qpdata, prjid, dq, bc, ic, rc);
+	if (qudo && usrid != NULL)
+		quota_add1(qudata, *usrid, dq, bc, ic, rc);
+	if (qgdo && grpid != NULL)
+		quota_add1(qgdata, *grpid, dq, bc, ic, rc);
+	if (qpdo && prjid != NULL)
+		quota_add1(qpdata, *prjid, dq, bc, ic, rc);
 }
 
 static void
@@ -3797,7 +3800,7 @@ quota_add1(
 	int		qh;
 	qinfo_t		*qi;
 
-	qh = (int)((__uint32_t)id % QDATA_HASH_SIZE);
+	qh = (int)(id % QDATA_HASH_SIZE);
 	qe = qt[qh];
 	while (qe) {
 		if (qe->id == id) {
@@ -3838,7 +3841,7 @@ quota_check(
 			    qp->count.ic != qp->dq.ic ||
 			    qp->count.rc != qp->dq.rc) {
 				if (!sflag) {
-					dbprintf("%s quota id %d, have/exp",
+					dbprintf("%s quota id %u, have/exp",
 						s, qp->id);
 					if (qp->count.bc != qp->dq.bc)
 						dbprintf(" bc %lld/%lld",

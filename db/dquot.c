@@ -157,7 +157,7 @@ dquot_f(
 		return 0;
 	}
 	perblock = (int)(mp->m_sb.sb_blocksize / sizeof(xfs_dqblk_t));
-	qbno = (xfs_fileoff_t)(id / perblock);
+	qbno = (xfs_fileoff_t)id / perblock;
 	qoff = (int)(id % perblock);
 	push_cur();
 	set_cur_inode(ino);
