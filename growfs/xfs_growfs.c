@@ -69,10 +69,12 @@ void
 report_info(
 	xfs_fsop_geom_t	geo,
 	char		*mntpoint,
+	int		isint,
+	char		*logname,
+	char		*rtname,
 	int		unwritten,
 	int		dirversion,
-	int		logversion,
-	int		isint)
+	int		logversion)
 {
 	printf(_(
 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
@@ -89,11 +91,11 @@ report_info(
 		"", geo.blocksize, (unsigned long long)geo.datablocks,
 			geo.imaxpct,
 		"", geo.sunit, geo.swidth, unwritten,
-		dirversion, geo.dirblocksize,
-		isint ? _("internal") : _("external"), geo.blocksize,
-			geo.logblocks, logversion,
+  		dirversion, geo.dirblocksize,
+		isint ? _("internal") : logname ? logname : _("external"),
+			geo.blocksize, geo.logblocks, logversion,
 		"", geo.logsectsize, geo.logsunit / geo.blocksize,
-		geo.rtblocks ? _("external") : _("none"),
+		!geo.rtblocks ? _("none") : rtname ? rtname : _("external"),
 		geo.rtextsize * geo.blocksize, (unsigned long long)geo.rtblocks,
 			(unsigned long long)geo.rtextents);
 }
@@ -249,8 +251,8 @@ main(int argc, char **argv)
 	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
 
 	if (nflag) {
-		report_info(geo, fname, unwritten, dirversion, logversion,
-				isint);
+		report_info(geo, datadev, isint, logdev, rtdev,
+				unwritten, dirversion, logversion);
 		exit(0);
 	}
 
@@ -286,7 +288,8 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	report_info(geo, fname, unwritten, dirversion, logversion, isint);
+	report_info(geo, datadev, isint, logdev, rtdev,
+				unwritten, dirversion, logversion);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :

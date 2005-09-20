@@ -45,7 +45,9 @@
 int fs_count;
 struct fs_path *fs_table;
 struct fs_path *fs_path;
+
 char *mtab_file;
+#define PROC_MOUNTS	"/proc/self/mounts"
 
 struct fs_path *
 fs_table_lookup(
@@ -187,8 +189,11 @@ fs_table_initialise_mounts(
 	char		*dir = NULL, *fsname = NULL, *fslog, *fsrt;
 	int		error = 0, found = 0;
 
-	if (!mtab_file)
-		mtab_file = MOUNTED;
+	if (!mtab_file) {
+		mtab_file = PROC_MOUNTS;
+		if (access(mtab_file, R_OK) != 0)
+			mtab_file = MOUNTED;
+	}
 
 	if ((mtp = setmntent(mtab_file, "r")) == NULL)
 		return ENOENT;
