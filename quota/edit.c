@@ -390,9 +390,12 @@ restore_file(
 		rtbsoft = rtbhard = 0;
 		cnt = sscanf(buffer, "%u %llu %llu %llu %llu %llu %llu\n",
 				&id,
-				&bsoft, &bhard,
-				&isoft, &ihard,
-				&rtbsoft, &rtbhard);
+				(unsigned long long *)&bsoft,
+				(unsigned long long *)&bhard,
+				(unsigned long long *)&isoft,
+				(unsigned long long *)&ihard,
+				(unsigned long long *)&rtbsoft,
+				(unsigned long long *)&rtbhard);
 		if (cnt == 5 || cnt == 7) {
 			mask = FS_DQ_ISOFT|FS_DQ_IHARD|FS_DQ_BSOFT|FS_DQ_BHARD;
 			if (cnt == 7)
