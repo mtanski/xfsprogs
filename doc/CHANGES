@@ -1,3 +1,9 @@
+xfsprogs-2.7.1 (20 Septempber 2005)
+	- Fix up reporting of devices in xfs_growfs - now uses
+	  /proc/mounts in preference to /etc/mtab.
+	- Fix a strtok-related bug in the extraction of device names,
+	  also only affecting xfs_growfs.
+
 xfsprogs-2.7.0 (16 Septempber 2005)
 	- Support for updated extended attributes format (attr2)
 	- Make xfs_quota tool issue a quota sync in all the needed
