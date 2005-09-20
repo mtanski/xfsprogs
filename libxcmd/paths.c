@@ -155,24 +155,18 @@ fs_extract_mount_options(
 	fslog = fsrt = fslogend = fsrtend = NULL;
 
 	/* Extract log device and realtime device from mount options */
-	if ((fslog = hasmntopt(mnt, "logdev="))) {
+	if ((fslog = hasmntopt(mnt, "logdev=")))
 		fslog += 7;
-		fslogend = strtok(fslog, " ,");
-	}
-	if ((fsrt = hasmntopt(mnt, "rtdev="))) {
+	if ((fsrt = hasmntopt(mnt, "rtdev=")))
 		fsrt += 6;
-		fsrtend = strtok(fsrt, " ,");
-	}
 
 	/* Do this only after we've finished processing mount options */
 	if (fslog) {
-		if (fslogend != fslog)
-			*fslogend = '\0'; /* terminate end of logdev name */
+		fslogend = strtok(fslog, " ,");
 		fslog = strdup(fslog);
 	}
 	if (fsrt) {
-		if (fsrtend != fsrt)
-			*fsrtend = '\0';  /* terminate end of rtdev name */
+		fsrtend = strtok(fsrt, " ,");
 		fsrt = strdup(fsrt);
 	}
 
