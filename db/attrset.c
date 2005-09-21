@@ -37,6 +37,9 @@
 #include "output.h"
 #include "type.h"
 #include "init.h"
+#include "fprint.h"
+#include "faddr.h"
+#include "field.h"
 #include "inode.h"
 #include "malloc.h"
 
