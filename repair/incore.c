@@ -79,7 +79,8 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 		return;
 	}
 	for (i = 0; i < agno; i++)  {
-		size = roundup(numblocks / (NBBY/XR_BB),sizeof(__uint64_t));
+		size = roundup((numblocks+(NBBY/XR_BB)-1) / (NBBY/XR_BB),
+		       		sizeof(__uint64_t));
 
 		ba_bmap[i] = (__uint64_t*)memalign(sizeof(__uint64_t), size);
 		if (!ba_bmap[i]) {
