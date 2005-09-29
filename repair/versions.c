@@ -54,6 +54,14 @@ update_sb_version(xfs_mount_t *mp)
 		}
 	}
 
+	if (fs_attributes2)  {
+		if (!XFS_SB_VERSION_HASATTR2(sb))  {
+			ASSERT(fs_attributes2_allowed);
+
+			XFS_SB_VERSION_ADDATTR2(sb);
+		}
+	}
+
 	if (fs_inode_nlink)  {
 		if (!XFS_SB_VERSION_HASNLINK(sb))  {
 			ASSERT(fs_inode_nlink_allowed);
@@ -138,6 +146,7 @@ parse_sb_version(xfs_sb_t *sb)
 	int issue_warning;
 
 	fs_attributes = 0;
+	fs_attributes2 = 0;
 	fs_inode_nlink = 0;
 	fs_quotas = 0;
 	fs_aligned_inodes = 0;
@@ -218,6 +227,24 @@ _("WARNING:  you have disallowed attributes but this filesystem\n"
 			}
 		} else   {
 			fs_attributes = 1;
+		}
+	}
+
+	if (XFS_SB_VERSION_HASATTR2(sb))  {
+		if (!fs_attributes2_allowed)  {
+			if (!no_modify)  {
+				do_warn(
+_("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
+  "\thas attributes.  The filesystem will be downgraded and\n"
+  "\tall attr2 attributes will be removed.\n"));
+			} else  {
+				do_warn(
+_("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
+  "\thas attributes.  The filesystem would be downgraded and\n"
+  "\tall attr2 attributes would be removed.\n"));
+			}
+		} else   {
+			fs_attributes2 = 1;
 		}
 	}
 

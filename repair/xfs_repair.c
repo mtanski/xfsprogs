@@ -177,6 +177,7 @@ process_args(int argc, char **argv)
 	sb_unit = 0;
 	sb_width = 0;
 	fs_attributes_allowed = 1;
+	fs_attributes2_allowed = 1;
 	fs_inode_nlink_allowed = 1;
 	fs_quotas_allowed = 1;
 	fs_aligned_inodes_allowed = 1;

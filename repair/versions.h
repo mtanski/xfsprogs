@@ -55,6 +55,7 @@
  */
 
 EXTERN int		fs_attributes_allowed;
+EXTERN int		fs_attributes2_allowed;
 EXTERN int		fs_inode_nlink_allowed;
 EXTERN int		fs_quotas_allowed;
 EXTERN int		fs_aligned_inodes_allowed;
@@ -68,6 +69,7 @@ EXTERN int		fs_shared_allowed;
  */
 
 EXTERN int		fs_attributes;
+EXTERN int		fs_attributes2;
 EXTERN int		fs_inode_nlink;
 EXTERN int		fs_quotas;
 EXTERN int		fs_aligned_inodes;
