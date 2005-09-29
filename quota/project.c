@@ -95,7 +95,6 @@ check_project(
 	struct FTW		*data)
 {
 	struct fsxattr		fsx;
-	prid_t			prj;
 	int			fd;
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
@@ -104,14 +103,11 @@ check_project(
 	else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
 			progname, path, strerror(errno));
-	else if (getprojid(path, fd, &prj) < 0)
-		fprintf(stderr, _("%s: cannot get project ID on %s: %s\n"),
-			progname, path, strerror(errno));
 	else {
-		if (prj != prid)
+		if (fsx.fsx_projid != prid)
 			printf(_("%s - project identifier is not set"
 				 " (inode=%u, tree=%u)\n"),
-				path, prj, prid);
+				path, fsx.fsx_projid, prid);
 		if (!(fsx.fsx_xflags & XFS_XFLAG_PROJINHERIT))
 			printf(_("%s - project inheritance flag is not set\n"),
 				path);
@@ -142,13 +138,10 @@ clear_project(
 		return 0;
 	}
 
+	fsx.fsx_projid = 0;
 	fsx.fsx_xflags &= ~XFS_XFLAG_PROJINHERIT;
-
-	if (setprojid(path, fd, 0) < 0)
-		fprintf(stderr, _("%s: cannot clear project ID on %s: %s\n"),
-			progname, path, strerror(errno));
-	else if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
-		fprintf(stderr, _("%s: cannot clear flags on %s: %s\n"),
+	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
+		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
 			progname, path, strerror(errno));
 	close(fd);
 	return 0;
@@ -175,13 +168,10 @@ setup_project(
 		return 0;
 	}
 
+	fsx.fsx_projid = prid;
 	fsx.fsx_xflags |= XFS_XFLAG_PROJINHERIT;
-
 	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
-		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-			progname, path, strerror(errno));
-	else if (setprojid(path, fd, prid) < 0)
-		fprintf(stderr, _("%s: cannot set project ID on %s: %s\n"),
+		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
 			progname, path, strerror(errno));
 	close(fd);
 	return 0;

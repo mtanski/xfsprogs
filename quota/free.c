@@ -132,7 +132,6 @@ projects_free_space_data(
 {
 	fs_disk_quota_t		d;
 	struct fsxattr		fsx;
-	__uint32_t		projid;
 	uint			type = XFS_PROJ_QUOTA;
 	char			*dev = path->fs_name;
 	int			fd;
@@ -155,21 +154,17 @@ projects_free_space_data(
 		return 0;
 	}
 
-	if ((getprojid(path->fs_dir, fd, &projid)) < 0) {
-		close(fd);
-		return 0;
-	}
-	if (path->fs_prid != projid) {
+	if (path->fs_prid != fsx.fsx_projid) {
 		fprintf(stderr,
 			_("%s: project ID %u (%s) doesn't match ID %u (%s)\n"),
 			progname, path->fs_prid, projects_file,
-			projid, path->fs_dir);
+			fsx.fsx_projid, path->fs_dir);
 		close(fd);
 		return 0;
 	}
 
-	xfsquotactl(XFS_QSYNC, dev, type, projid, NULL);
-	if (xfsquotactl(XFS_GETQUOTA, dev, type, projid, (void *)&d) < 0) {
+	xfsquotactl(XFS_QSYNC, dev, type, fsx.fsx_projid, NULL);
+	if (xfsquotactl(XFS_GETQUOTA, dev, type, fsx.fsx_projid, &d) < 0) {
 		perror("XFS_GETQUOTA");
 		close(fd);
 		return 0;
