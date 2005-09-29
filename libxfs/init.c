@@ -544,8 +544,6 @@ rtmount_init(
 	return 0;
 }
 
-#define XFS_MOUNT_32BITINODES	0x1
-#define XFS_MOUNT_32BITINOOPT	0x2
 /*
  * Mount structure initialization, provides a filled-in xfs_mount_t
  * such that the numerous XFS_* macros can be used.  If dev is zero,
@@ -569,7 +567,7 @@ libxfs_mount(
 	mp->m_dev = dev;
 	mp->m_rtdev = rtdev;
 	mp->m_logdev = logdev;
-	mp->m_flags = (XFS_MOUNT_32BITINODES|XFS_MOUNT_32BITINOOPT);
+	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
 	mp->m_sb = *sb;
 	sbp = &(mp->m_sb);
 	manage_zones(0);

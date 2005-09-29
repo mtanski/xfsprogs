@@ -61,7 +61,6 @@ xfs_dir2_block_sfsize(
 	int			isdotdot;	/* entry is ".." */
 	xfs_mount_t		*mp;		/* mount structure pointer */
 	int			namelen;	/* total name bytes */
-	int			inode_size;	/* inode number bytes */
 	xfs_ino_t		parent;		/* parent inode number */
 	int			size=0;		/* total computed size */
 
@@ -103,10 +102,13 @@ xfs_dir2_block_sfsize(
 		/*
 		 * Calculate the new size, see if we should give up yet.
 		 */
-		inode_size = i8count ?	sizeof(xfs_dir2_ino8_t) :
-					sizeof(xfs_dir2_ino4_t);
-		size = XFS_DIR2_SF_HDR_SIZE(i8count) + namelen +
-			count * (sizeof(xfs_dir2_sf_off_t) + 1 + inode_size);
+		size = XFS_DIR2_SF_HDR_SIZE(i8count) +		/* header */
+		       count +					/* namelen */
+		       count * (uint)sizeof(xfs_dir2_sf_off_t) + /* offset */
+		       namelen +				/* name */
+		       (i8count ?				/* inumber */
+				(uint)sizeof(xfs_dir2_ino8_t) * count :
+				(uint)sizeof(xfs_dir2_ino4_t) * count);
 		if (size > XFS_IFORK_DSIZE(dp))
 			return size;		/* size value is a failure */
 	}

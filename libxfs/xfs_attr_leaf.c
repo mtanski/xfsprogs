@@ -43,17 +43,23 @@
  *========================================================================*/
 
 /*
- * Query whether additional requested number of bytes of extended attribute
- * space will be able to fit inline.
+ * Query whether the requested number of additional bytes of extended
+ * attribute space will be able to fit inline.
  * Returns zero if not, else the di_forkoff fork offset to be used in the
  * literal area for attribute data once the new bytes have been added.
+ *
+ * di_forkoff must be 8 byte aligned, hence is stored as a >>3 value;
+ * special case for dev/uuid inodes, they have fixed size data forks.
  */
 int
 xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
 {
-	int offset, minforkoff, maxforkoff;
+	int offset;
+	int minforkoff;	/* lower limit on valid forkoff locations */
+	int maxforkoff;	/* upper limit on valid forkoff locations */
+	xfs_mount_t *mp = dp->i_mount;
 
-	offset = (XFS_LITINO(dp->i_mount) - bytes) >> 3; /* rounded down */
+	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
 
 	switch (dp->i_d.di_format) {
 	case XFS_DINODE_FMT_DEV:
@@ -64,12 +70,18 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
 		return (offset >= minforkoff) ? minforkoff : 0;
 	}
 
+	if (unlikely(mp->m_flags & XFS_MOUNT_COMPAT_ATTR)) {
+		if (bytes <= XFS_IFORK_ASIZE(dp))
+			return mp->m_attroffset >> 3;
+		return 0;
+	}
+
 	/* data fork btree root can have at least this many key/ptr pairs */
 	minforkoff = MAX(dp->i_df.if_bytes, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
 	minforkoff = roundup(minforkoff, 8) >> 3;
 
 	/* attr fork btree root can have at least this many key/ptr pairs */
-	maxforkoff = XFS_LITINO(dp->i_mount) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
 	maxforkoff = maxforkoff >> 3;	/* rounded down */
 
 	if (offset >= minforkoff && offset < maxforkoff)
@@ -77,6 +89,26 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
 	if (offset >= maxforkoff)
 		return maxforkoff;
 	return 0;
+}
+
+/*
+ * Switch on the ATTR2 superblock bit (implies also FEATURES2)
+ */
+STATIC void
+xfs_sbversion_add_attr2(xfs_mount_t *mp, xfs_trans_t *tp)
+{
+	unsigned long s;
+
+	if (!(mp->m_flags & XFS_MOUNT_COMPAT_ATTR) &&
+	    !(XFS_SB_VERSION_HASATTR2(&mp->m_sb))) {
+		s = XFS_SB_LOCK(mp);
+		if (!XFS_SB_VERSION_HASATTR2(&mp->m_sb)) {
+			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
+			XFS_SB_UNLOCK(mp, s);
+			xfs_mod_sb(tp, XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
+		} else
+			XFS_SB_UNLOCK(mp, s);
+	}
 }
 
 /*
@@ -118,7 +150,6 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
 	xfs_attr_shortform_t *sf;
 	xfs_attr_sf_entry_t *sfe;
 	int i, offset, size;
-	unsigned long s;
 	xfs_mount_t *mp;
 	xfs_inode_t *dp;
 	xfs_ifork_t *ifp;
@@ -168,16 +199,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
 	INT_MOD(sf->hdr.totsize, ARCH_CONVERT, size);
 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_ADATA);
 
-	if (unlikely(!XFS_SB_VERSION_HASATTR2(&mp->m_sb))) {
-		s = XFS_SB_LOCK(mp);
-		if (!XFS_SB_VERSION_HASATTR2(&mp->m_sb)) {
-			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
-			XFS_SB_UNLOCK(mp, s);
-			xfs_mod_sb(args->trans,
-				   XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
-		} else
-			XFS_SB_UNLOCK(mp, s);
-	}
+	xfs_sbversion_add_attr2(mp, args->trans);
 }
 
 /*
@@ -189,7 +211,6 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
 	xfs_attr_shortform_t *sf;
 	xfs_attr_sf_entry_t *sfe;
 	int base, size=0, end, totsize, i;
-	unsigned long s;
 	xfs_mount_t *mp;
 	xfs_inode_t *dp;
 
@@ -258,16 +279,7 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
 					XFS_ILOG_CORE | XFS_ILOG_ADATA);
 	}
 
-	if (unlikely(!XFS_SB_VERSION_HASATTR2(&mp->m_sb))) {
-		s = XFS_SB_LOCK(mp);
-		if (!XFS_SB_VERSION_HASATTR2(&mp->m_sb)) {
-			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
-			XFS_SB_UNLOCK(mp, s);
-			xfs_mod_sb(args->trans,
-				   XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
-		} else
-			XFS_SB_UNLOCK(mp, s);
-	}
+	xfs_sbversion_add_attr2(mp, args->trans);
 
 	return(0);
 }

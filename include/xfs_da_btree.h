@@ -168,7 +168,7 @@ int xfs_da_cookie_entry(struct xfs_mount *mp, xfs_off_t cookie);
  * Structure to ease passing around component names.
  */
 typedef struct xfs_da_args {
-	uchar_t		*name;		/* string (maybe not NULL terminated) */
+	const uchar_t	*name;		/* string (maybe not NULL terminated) */
 	int		namelen;	/* length of string (maybe no NULL) */
 	uchar_t		*value;		/* set of bytes (maybe contain NULLs) */
 	int		valuelen;	/* length of value */

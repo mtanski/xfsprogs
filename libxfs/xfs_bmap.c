@@ -3289,10 +3289,10 @@ xfs_bmap_add_attrfork(
 	case XFS_DINODE_FMT_EXTENTS:
 	case XFS_DINODE_FMT_BTREE:
 		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
-		if (ip->i_d.di_forkoff)
-			version = 2;
-		else
+		if (!ip->i_d.di_forkoff)
 			ip->i_d.di_forkoff = mp->m_attroffset >> 3;
+		else if (!(mp->m_flags & XFS_MOUNT_COMPAT_ATTR))
+			version = 2;
 		break;
 	default:
 		ASSERT(0);
@@ -3439,10 +3439,13 @@ xfs_bmap_compute_maxlevels(
 	 */
 	if (whichfork == XFS_DATA_FORK) {
 		maxleafents = MAXEXTNUM;
-		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+		sz = (mp->m_flags & XFS_MOUNT_COMPAT_ATTR) ?
+			mp->m_attroffset : XFS_BMDR_SPACE_CALC(MINDBTPTRS);
 	} else {
 		maxleafents = MAXAEXTNUM;
-		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
+		sz = (mp->m_flags & XFS_MOUNT_COMPAT_ATTR) ?
+			mp->m_sb.sb_inodesize - mp->m_attroffset :
+			XFS_BMDR_SPACE_CALC(MINABTPTRS);
 	}
 	maxrootrecs = (int)XFS_BTREE_BLOCK_MAXRECS(sz, xfs_bmdr, 0);
 	minleafrecs = mp->m_bmap_dmnr[0];

@@ -290,9 +290,11 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define XFS_STATS_ADD(count, x)		do { } while (0)
 #define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
 #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
-#define XFS_MOUNT_32BITINODES		0x1	/* enforce in userspace */
-#define XFS_MOUNT_32BITINOOPT		0x2	/* enforce in userspace */
+#define XFS_MOUNT_32BITINODES		LIBXFS_MOUNT_32BITINODES
+#define XFS_MOUNT_32BITINOOPT		LIBXFS_MOUNT_32BITINOOPT
+#define XFS_MOUNT_COMPAT_ATTR		LIBXFS_MOUNT_COMPAT_ATTR
 #define XFS_ILOCK_EXCL			0
+#define xfs_sort			qsort
 #define down_read(a)			((void) 0)
 #define up_read(a)			((void) 0)
 #define mrlock(a,b,c)			((void) 0)

@@ -79,7 +79,7 @@ STATIC int xfs_attr_rmtval_remove(xfs_da_args_t *args);
  *========================================================================*/
 
 int
-xfs_attr_set_int(xfs_inode_t *dp, char *name, int namelen,
+xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
 		 char *value, int valuelen, int flags)
 {
 	xfs_da_args_t	args;
@@ -315,7 +315,7 @@ out:
 }
 
 STATIC int
-xfs_attr_remove_int(xfs_inode_t *dp, char *name, int namelen, int flags)
+xfs_attr_remove_int(xfs_inode_t *dp, const char *name, int namelen, int flags)
 {
 	xfs_da_args_t	args;
 	xfs_fsblock_t	firstblock;

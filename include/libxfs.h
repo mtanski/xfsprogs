@@ -202,8 +202,11 @@ typedef struct xfs_mount {
 } xfs_mount_t;
 #define	XFS_DIR_IS_V1(mp)	((mp)->m_dirversion == 1)
 
-#define LIBXFS_MOUNT_ROOTINOS	0x0001
-#define LIBXFS_MOUNT_DEBUGGER	0x0002
+#define LIBXFS_MOUNT_ROOTINOS		0x0001
+#define LIBXFS_MOUNT_DEBUGGER		0x0002
+#define LIBXFS_MOUNT_32BITINODES	0x0004
+#define LIBXFS_MOUNT_32BITINOOPT	0x0008
+#define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
 
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
@@ -468,8 +471,9 @@ extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 
 extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (int, int, int, int *);
-extern int	libxfs_attr_set_int (xfs_inode_t*, char*, int, char*, int, int);
-extern int	libxfs_attr_remove_int (xfs_inode_t *, char *, int, int);
+extern int	libxfs_attr_set_int (xfs_inode_t*, const char *, int, char *,
+				int, int);
+extern int	libxfs_attr_remove_int (xfs_inode_t *, const char *, int, int);
 
 
 extern void	libxfs_bmbt_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);

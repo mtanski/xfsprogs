@@ -49,11 +49,11 @@ static void		attrset_help(void);
 
 static const cmdinfo_t	attr_set_cmd =
 	{ "attr_set", "aset", attr_set_f, 1, -1, 0,
-	  "[-r|-s|-p|-u] [-R|-C] [-v n] name",
+	  "[-r|-s|-p|-u] [-n] [-R|-C] [-v n] name",
 	  "set the named attribute on the current inode", attrset_help };
 static const cmdinfo_t	attr_remove_cmd =
 	{ "attr_remove", "aremove", attr_remove_f, 1, -1, 0,
-	  "[-r|-s|-p|-u] name",
+	  "[-r|-s|-p|-u] [-n] name",
 	  "remove the named attribute from the current inode", attrset_help };
 
 static void
@@ -70,9 +70,10 @@ attrset_help(void)
 "  -u -- 'user'		(default)\n"
 "  -s -- 'secure'\n"
 "\n"
-" For attr_set, these options further define the type of set:\n"
+" For attr_set, these options further define the type of set operation:\n"
 "  -C -- 'create'    - create attribute, fail if it already exists\n"
 "  -R -- 'replace'   - replace attribute, fail if it does not exist\n"
+" The backward compatibility mode 'noattr2' can be emulated (-n) also.\n"
 "\n");
 }
 
@@ -104,7 +105,7 @@ attr_set_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "rusCRv:")) != EOF) {
+	while ((c = getopt(argc, argv, "rusCRnv:")) != EOF) {
 		switch (c) {
 		/* namespaces */
 		case 'r':
@@ -125,6 +126,10 @@ attr_set_f(
 			break;
 		case 'R':
 			flags |= LIBXFS_ATTR_REPLACE;
+			break;
+
+		case 'n':
+			mp->m_flags |= LIBXFS_MOUNT_COMPAT_ATTR;
 			break;
 
 		/* value length */
@@ -177,6 +182,7 @@ attr_set_f(
 	set_cur_inode(iocur_top->ino);
 
 out:
+	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
 	if (ip)
 		libxfs_iput(ip, 0);
 	if (value)
@@ -202,7 +208,7 @@ attr_remove_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "rus")) != EOF) {
+	while ((c = getopt(argc, argv, "rusn")) != EOF) {
 		switch (c) {
 		/* namespaces */
 		case 'r':
@@ -215,6 +221,10 @@ attr_remove_f(
 		case 's':
 			flags |= LIBXFS_ATTR_SECURE;
 			flags &= ~LIBXFS_ATTR_ROOT;
+			break;
+
+		case 'n':
+			mp->m_flags |= LIBXFS_MOUNT_COMPAT_ATTR;
 			break;
 
 		default:
@@ -247,6 +257,7 @@ attr_remove_f(
 	set_cur_inode(iocur_top->ino);
 
 out:
+	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
 	if (ip)
 		libxfs_iput(ip, 0);
 	return 0;
