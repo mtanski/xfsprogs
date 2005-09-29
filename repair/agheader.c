@@ -259,7 +259,10 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		 * work against older filesystems when the superblock
 		 * gets rev'ed again with new fields appended.
 		 */
-		if (XFS_SB_VERSION_HASLOGV2(sb))
+		if (XFS_SB_VERSION_HASMOREBITS(sb))
+			size = (__psint_t)&sb->sb_features2
+				+ sizeof(sb->sb_features2) - (__psint_t)sb;
+		else if (XFS_SB_VERSION_HASLOGV2(sb))
 			size = (__psint_t)&sb->sb_logsunit
 				+ sizeof(sb->sb_logsunit) - (__psint_t)sb;
 		else if (XFS_SB_VERSION_HASSECTOR(sb))
