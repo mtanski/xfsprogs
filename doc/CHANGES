@@ -1,6 +1,14 @@
+xfsprogs-2.7.3 (29 September 2005)
+	- Fix xfs_repair handling of the morebits bit.
+	- Merge back several kernel changes related to attr2.
+	- Extended xfs_db expert mode commands 
+	- Clean up some fsxattr uses to reduce number of syscalls,
+	  now that IRIX also supports project identifiers via this
+	  interface.
+
 xfsprogs-2.7.2 (28 September 2005)
-        - Fix up xfs_repair segmentation fault due to wrong allocation
-	   size.
+	- Fix up xfs_repair segmentation fault due to wrong allocation
+	  size.
 
 xfsprogs-2.7.1 (20 September 2005)
 	- Fix up reporting of devices in xfs_growfs - now uses
