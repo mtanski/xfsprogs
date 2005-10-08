@@ -469,7 +469,7 @@ extern int	libxfs_alloc_fix_freelist (xfs_alloc_arg_t *, int);
 extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 				xfs_off_t, int, int);
 
-extern xfs_dahash_t	libxfs_da_hashname (uchar_t *, int);
+extern xfs_dahash_t	libxfs_da_hashname (const uchar_t *, int);
 extern int	libxfs_attr_leaf_newentsize (int, int, int, int *);
 extern int	libxfs_attr_set_int (xfs_inode_t*, const char *, int, char *,
 				int, int);
