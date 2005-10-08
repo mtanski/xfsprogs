@@ -1,3 +1,9 @@
+xfsprogs-2.7.4 (08 October 2005)
+	- Fix read and write calls in xfs_io to allow buffers larger
+	  than 4GiB on 64 bit platforms.
+	- FreeBSD build tweaks from Craig Rodrigues.
+	- Fixed a few minor compiler warnings.
+
 xfsprogs-2.7.3 (29 September 2005)
 	- Fix xfs_repair handling of the morebits bit.
 	- Merge back several kernel changes related to attr2.
