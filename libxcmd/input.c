@@ -155,8 +155,8 @@ doneline(
 
 long long
 cvtnum(
-	unsigned int	blocksize,
-	unsigned int	sectorsize,
+	size_t		blocksize,
+	size_t		sectorsize,
 	char		*s)
 {
 	long long	i;

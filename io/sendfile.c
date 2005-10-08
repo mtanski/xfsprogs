@@ -94,7 +94,7 @@ sendfile_f(
 {
 	off64_t		offset = 0;
 	long long	count, total;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*infile = NULL;

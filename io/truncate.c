@@ -44,7 +44,7 @@ truncate_f(
 	char		**argv)
 {
 	off64_t		offset;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 
 	init_cvtnum(&blocksize, &sectsize);
 	offset = cvtnum(blocksize, sectsize, argv[1]);

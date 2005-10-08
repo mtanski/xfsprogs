@@ -171,7 +171,7 @@ mmap_f(
 	ssize_t		length;
 	void		*address;
 	char		*filename;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 	int		c, prot = 0;
 
 	if (argc == 1) {
@@ -287,7 +287,7 @@ msync_f(
 	ssize_t		length;
 	void		*start;
 	int		c, flags = 0;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 
 	while ((c = getopt(argc, argv, "ais")) != EOF) {
 		switch (c) {
@@ -393,7 +393,7 @@ mread_f(
 	char		*bp;
 	void		*start;
 	int		dump = 0, rflag = 0, c;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 
 	while ((c = getopt(argc, argv, "frv")) != EOF) {
 		switch (c) {
@@ -539,7 +539,7 @@ mwrite_f(
 	int		seed = 'X';
 	int		rflag = 0;
 	int		c;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 
 	while ((c = getopt(argc, argv, "rS:")) != EOF) {
 		switch (c) {

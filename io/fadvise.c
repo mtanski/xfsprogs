@@ -97,7 +97,7 @@ fadvise_f(
 		}
 	}
 	if (range) {
-		unsigned int	blocksize, sectsize;
+		size_t	blocksize, sectsize;
 
 		if (optind != argc - 2)
 			return command_usage(&fadvise_cmd);

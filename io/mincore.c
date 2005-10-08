@@ -46,11 +46,11 @@ mincore_f(
 {
 	off64_t		offset;
 	size_t		length;
+	size_t		blocksize, sectsize;
 	void		*start;
 	void		*current, *previous;
 	unsigned char	*vec;
 	int		i;
-	unsigned int	blocksize, sectsize;
 
 	if (argc == 1) {
 		offset = mapping->offset;

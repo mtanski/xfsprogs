@@ -65,12 +65,13 @@ static int
 write_buffer(
 	off64_t		offset,
 	long long	count,
-	ssize_t		bs,
+	size_t		bs,
 	int		fd,
 	off64_t		skip,
 	long long	*total)
 {
-	ssize_t		bytes, bytes_requested;
+	size_t		bytes_requested;
+	ssize_t		bytes;
 	long long	bar = min(bs, count);
 	int		ops = 0;
 
@@ -103,10 +104,10 @@ pwrite_f(
 	int		argc,
 	char		**argv)
 {
+	size_t		blocksize, sectsize;
 	off64_t		offset, skip = 0;
-	long long	count, total;
+	long long	count, total, tmp;
 	unsigned int	seed = 0xcdcdcdcd;
-	unsigned int	blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
@@ -118,11 +119,12 @@ pwrite_f(
 	while ((c = getopt(argc, argv, "b:Cdf:i:s:S:uwW")) != EOF) {
 		switch (c) {
 		case 'b':
-			blocksize = cvtnum(blocksize, sectsize, optarg);
-			if (blocksize < 0) {
+			tmp = cvtnum(blocksize, sectsize, optarg);
+			if (tmp < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
+			blocksize = tmp;
 			break;
 		case 'C':
 			Cflag = 1;

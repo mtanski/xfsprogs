@@ -57,12 +57,12 @@ pread_help(void)
 }
 
 void	*buffer;
-ssize_t	highwater;
-ssize_t	buffersize;
+size_t	highwater;
+size_t	buffersize;
 
 int
 alloc_buffer(
-	ssize_t		bsize,
+	size_t		bsize,
 	int		uflag,
 	unsigned int	seed)
 {
@@ -117,7 +117,8 @@ read_buffer(
 	int		verbose,
 	int		onlyone)
 {
-	ssize_t		bytes, bytes_requested;
+	size_t		bytes_requested;
+	ssize_t		bytes;
 	int		ops = 0;
 
 	*total = 0;
@@ -148,8 +149,8 @@ pread_f(
 	char		**argv)
 {
 	off64_t		offset;
-	long long	count, total;
-	unsigned int	blocksize, sectsize;
+	long long	count, total, tmp;
+	size_t		blocksize, sectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	int		Cflag, uflag, vflag;
@@ -160,11 +161,12 @@ pread_f(
 	while ((c = getopt(argc, argv, "b:Cuv")) != EOF) {
 		switch (c) {
 		case 'b':
-			blocksize = cvtnum(blocksize, sectsize, optarg);
-			if (blocksize < 0) {
+			tmp = cvtnum(blocksize, sectsize, optarg);
+			if (tmp < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
+			blocksize = tmp;
 			break;
 		case 'C':
 			Cflag = 1;

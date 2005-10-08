@@ -70,7 +70,7 @@ madvise_f(
 	size_t		length;
 	void		*start;
 	int		advise = MADV_NORMAL, c;
-	unsigned int	blocksize, sectsize;
+	size_t		blocksize, sectsize;
 
 	while ((c = getopt(argc, argv, "drsw")) != EOF) {
 		switch (c) {
