@@ -117,7 +117,7 @@ PLDLIBS = -L/usr/local/lib -lintl
 PCFLAGS = -I/usr/local/include
 endif
 
-GCFLAGS = -O1 $(OPTIMIZER) $(DEBUG) -funsigned-char -fno-strict-aliasing -Wall \
+GCFLAGS = $(OPTIMIZER) $(DEBUG) -funsigned-char -fno-strict-aliasing -Wall \
 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include
 
