@@ -397,7 +397,7 @@ to a set amount of space).
 .sp .8v
 .in +5
 # mount \-o uquota /dev/xvm/home /home
-# xfs_quota \-c 'edit bsoft=500m bhard=550m tanya' /home
+# xfs_quota \-x \-c 'limit bsoft=500m bhard=550m tanya' /home
 # xfs_quota \-c report /home
 .in -5
 .fi
@@ -410,8 +410,8 @@ log file directories to only using 1 gigabyte of space).
 # mount \-o pquota /dev/xvm/var /var
 # echo 42:/var/log >> /etc/projects
 # echo logfiles:42 >> /etc/projid
-# xfs_quota \-c 'projects \-c logfiles' /home
-# xfs_quota \-c 'edit \-p bhard=1g logfiles' /home
+# xfs_quota \-x \-c 'projects \-c logfiles' /home
+# xfs_quota \-x \-c 'limit \-p bhard=1g logfiles' /home
 .in -5
 .fi
 .SH CAVEATS
