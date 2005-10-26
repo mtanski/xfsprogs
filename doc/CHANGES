@@ -1,3 +1,7 @@
+xfsprogs-2.7.5 (26 October 2005)
+	- Fix an endian bug in xfs_db "frag" command.
+	- Fix some errors on the xfs_quota(8) man page.
+
 xfsprogs-2.7.4 (08 October 2005)
 	- Fix read and write calls in xfs_io to allow buffers larger
 	  than 4GiB on 64 bit platforms.
