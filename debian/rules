@@ -16,8 +16,11 @@ pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
 pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
-options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; LOCAL_CONFIGURE_OPTIONS=--enable-readline=yes; export DEBUG DISTRIBUTION LOCAL_CONFIGURE_OPTIONS;
-diopts = $(options) OPTIMIZER=-Os; LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no"; export OPTIMIZER LOCAL_CONFIGURE_OPTIONS;
+options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+	  INSTALL_USER=root INSTALL_GROUP=root \
+	  LOCAL_CONFIGURE_OPTIONS=--enable-readline=yes ;
+diopts  = $(options) \
+	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no" ;
 checkdir = test -f debian/rules
 
 build: built
@@ -33,7 +36,7 @@ config: .census
 	$(options) $(MAKE) configure
 	touch .census
 
-dibuild: 
+dibuild:
 	$(checkdir)
 	@echo "== dpkg-buildpackage: installer" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
