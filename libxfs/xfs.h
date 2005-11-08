@@ -342,6 +342,7 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 # define printk(...)			( fprintf(stderr, __VA_ARGS__) )
 #endif
 
+#define rol32(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
 #define do_mod(a, b)	((a) % (b))
 #define do_div(n,base)	({ \
 	int __res; \

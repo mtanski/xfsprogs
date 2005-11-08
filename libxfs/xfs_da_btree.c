@@ -367,7 +367,8 @@ xfs_da_node_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
 	/*
 	 * With V2 the extra block is data or freespace.
 	 */
-	useextra = state->extravalid && XFS_DIR_IS_V1(state->mp);
+	useextra = state->extravalid && (XFS_DIR_IS_V1(state->mp) ||
+			state->args->whichfork == XFS_ATTR_FORK);
 	newcount = 1 + useextra;
 	/*
 	 * Do we have to split the node?
@@ -1530,41 +1531,27 @@ xfs_da_hashname(const uchar_t *name, int namelen)
 {
 	xfs_dahash_t hash;
 
-#define	ROTL(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
-#ifdef SLOWVERSION
-	/*
-	 * This is the old one-byte-at-a-time version.
-	 */
-	for (hash = 0; namelen > 0; namelen--) {
-		hash = *name++ ^ ROTL(hash, 7);
-	}
-	return(hash);
-#else
 	/*
 	 * Do four characters at a time as long as we can.
 	 */
-	for (hash = 0; namelen >= 4; namelen -= 4, name += 4) {
+	for (hash = 0; namelen >= 4; namelen -= 4, name += 4)
 		hash = (name[0] << 21) ^ (name[1] << 14) ^ (name[2] << 7) ^
-		       (name[3] << 0) ^ ROTL(hash, 7 * 4);
-	}
+		       (name[3] << 0) ^ rol32(hash, 7 * 4);
+
 	/*
 	 * Now do the rest of the characters.
 	 */
 	switch (namelen) {
 	case 3:
 		return (name[0] << 14) ^ (name[1] << 7) ^ (name[2] << 0) ^
-		       ROTL(hash, 7 * 3);
+		       rol32(hash, 7 * 3);
 	case 2:
-		return (name[0] << 7) ^ (name[1] << 0) ^ ROTL(hash, 7 * 2);
+		return (name[0] << 7) ^ (name[1] << 0) ^ rol32(hash, 7 * 2);
 	case 1:
-		return (name[0] << 0) ^ ROTL(hash, 7 * 1);
-	case 0:
+		return (name[0] << 0) ^ rol32(hash, 7 * 1);
+	default: /* case 0: */
 		return hash;
 	}
-	/* NOTREACHED */
-#endif
-#undef ROTL
-	return 0; /* keep gcc happy */
 }
 
 /*
