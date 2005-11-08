@@ -1,33 +1,19 @@
 /*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
+ * All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it would be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Further, this software is distributed without any warranty that it is
- * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
- * otherwise, applies only to this software file.  Patent licenses, if
- * any, provided herein do not apply to combinations of this program with
- * other software, or any other product whatsoever.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write the Free Software Foundation, Inc., 59
- * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- *
- * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
- * Mountain View, CA  94043, or:
- *
- * http://www.sgi.com
- *
- * For further information regarding this notice, see:
- *
- * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef __XFS_ATTR_LEAF_H__
 #define	__XFS_ATTR_LEAF_H__
@@ -146,65 +132,58 @@ typedef struct xfs_attr_leaf_name_remote xfs_attr_leaf_name_remote_t;
 /*
  * Cast typed pointers for "local" and "remote" name/value structs.
  */
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_NAME_REMOTE)
-xfs_attr_leaf_name_remote_t *
-xfs_attr_leaf_name_remote(xfs_attr_leafblock_t *leafp, int idx);
 #define XFS_ATTR_LEAF_NAME_REMOTE(leafp,idx)	\
 	xfs_attr_leaf_name_remote(leafp,idx)
-#else
-#define XFS_ATTR_LEAF_NAME_REMOTE(leafp,idx)	/* remote name struct ptr */ \
-	((xfs_attr_leaf_name_remote_t *)		\
-	 &((char *)(leafp))[ INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT) ])
-#endif
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_NAME_LOCAL)
-xfs_attr_leaf_name_local_t *
-xfs_attr_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx);
+static inline xfs_attr_leaf_name_remote_t *
+xfs_attr_leaf_name_remote(xfs_attr_leafblock_t *leafp, int idx)
+{
+	return (xfs_attr_leaf_name_remote_t *) &((char *)
+		(leafp))[INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT)];
+}
+
 #define XFS_ATTR_LEAF_NAME_LOCAL(leafp,idx)	\
 	xfs_attr_leaf_name_local(leafp,idx)
-#else
-#define XFS_ATTR_LEAF_NAME_LOCAL(leafp,idx)	/* local name struct ptr */ \
-	((xfs_attr_leaf_name_local_t *)		\
-	 &((char *)(leafp))[ INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT) ])
-#endif
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_NAME)
-char *xfs_attr_leaf_name(xfs_attr_leafblock_t *leafp, int idx);
+static inline xfs_attr_leaf_name_local_t *
+xfs_attr_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
+{
+	return (xfs_attr_leaf_name_local_t *) &((char *)
+		(leafp))[INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT)];
+}
+
 #define XFS_ATTR_LEAF_NAME(leafp,idx)		xfs_attr_leaf_name(leafp,idx)
-#else
-#define XFS_ATTR_LEAF_NAME(leafp,idx)		/* generic name struct ptr */ \
-	(&((char *)(leafp))[ INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT) ])
-#endif
+static inline char *xfs_attr_leaf_name(xfs_attr_leafblock_t *leafp, int idx)
+{
+	return (&((char *)
+		(leafp))[INT_GET((leafp)->entries[idx].nameidx, ARCH_CONVERT)]);
+}
 
 /*
  * Calculate total bytes used (including trailing pad for alignment) for
  * a "local" name/value structure, a "remote" name/value structure, and
  * a pointer which might be either.
  */
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_ENTSIZE_REMOTE)
-int xfs_attr_leaf_entsize_remote(int nlen);
 #define XFS_ATTR_LEAF_ENTSIZE_REMOTE(nlen)	\
 	xfs_attr_leaf_entsize_remote(nlen)
-#else
-#define XFS_ATTR_LEAF_ENTSIZE_REMOTE(nlen)	/* space for remote struct */ \
-	(((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) + \
-	  XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1))
-#endif
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_ENTSIZE_LOCAL)
-int xfs_attr_leaf_entsize_local(int nlen, int vlen);
+static inline int xfs_attr_leaf_entsize_remote(int nlen)
+{
+	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) + \
+		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
+}
+
 #define XFS_ATTR_LEAF_ENTSIZE_LOCAL(nlen,vlen)	\
 	xfs_attr_leaf_entsize_local(nlen,vlen)
-#else
-#define XFS_ATTR_LEAF_ENTSIZE_LOCAL(nlen,vlen)	/* space for local struct */ \
-	(((uint)sizeof(xfs_attr_leaf_name_local_t) - 1 + (nlen) + (vlen) + \
-	  XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1))
-#endif
-#if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_ATTR_LEAF_ENTSIZE_LOCAL_MAX)
-int xfs_attr_leaf_entsize_local_max(int bsize);
+static inline int xfs_attr_leaf_entsize_local(int nlen, int vlen)
+{
+	return ((uint)sizeof(xfs_attr_leaf_name_local_t) - 1 + (nlen) + (vlen) +
+		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
+}
+
 #define XFS_ATTR_LEAF_ENTSIZE_LOCAL_MAX(bsize)	\
 	xfs_attr_leaf_entsize_local_max(bsize)
-#else
-#define XFS_ATTR_LEAF_ENTSIZE_LOCAL_MAX(bsize)	/* max local struct size */ \
-	(((bsize) >> 1) + ((bsize) >> 2))
-#endif
+static inline int xfs_attr_leaf_entsize_local_max(int bsize)
+{
+	return (((bsize) >> 1) + ((bsize) >> 2));
+}
 
 
 /*========================================================================
@@ -247,7 +226,8 @@ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
 int	xfs_attr_shortform_remove(struct xfs_da_args *args);
 int	xfs_attr_shortform_list(struct xfs_attr_list_context *context);
 int	xfs_attr_shortform_allfit(struct xfs_dabuf *bp, struct xfs_inode *dp);
-int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+
 
 /*
  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
@@ -262,8 +242,6 @@ int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
 /*
  * Routines used for growing the Btree.
  */
-int	xfs_attr_leaf_create(struct xfs_da_args *args, xfs_dablk_t which_block,
-				    struct xfs_dabuf **bpp);
 int	xfs_attr_leaf_split(struct xfs_da_state *state,
 				   struct xfs_da_state_blk *oldblk,
 				   struct xfs_da_state_blk *newblk);
@@ -285,12 +263,6 @@ void	xfs_attr_leaf_unbalance(struct xfs_da_state *state,
 				       struct xfs_da_state_blk *drop_blk,
 				       struct xfs_da_state_blk *save_blk);
 int	xfs_attr_root_inactive(struct xfs_trans **trans, struct xfs_inode *dp);
-int	xfs_attr_node_inactive(struct xfs_trans **trans, struct xfs_inode *dp,
-				      struct xfs_dabuf *bp, int level);
-int	xfs_attr_leaf_inactive(struct xfs_trans **trans, struct xfs_inode *dp,
-				      struct xfs_dabuf *bp);
-int	xfs_attr_leaf_freextent(struct xfs_trans **trans, struct xfs_inode *dp,
-				       xfs_dablk_t blkno, int blkcnt);
 
 /*
  * Utility routines.
@@ -300,10 +272,6 @@ int	xfs_attr_leaf_order(struct xfs_dabuf *leaf1_bp,
 				   struct xfs_dabuf *leaf2_bp);
 int	xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize,
 					int *local);
-int	xfs_attr_leaf_entsize(struct xfs_attr_leafblock *leaf, int index);
-int	xfs_attr_put_listent(struct xfs_attr_list_context *context,
-			     struct attrnames *, char *name, int namelen,
-			     int valuelen);
 int	xfs_attr_rolltrans(struct xfs_trans **transp, struct xfs_inode *dp);
 
 #endif	/* __XFS_ATTR_LEAF_H__ */

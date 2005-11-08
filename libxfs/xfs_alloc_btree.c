@@ -202,7 +202,7 @@ xfs_alloc_delrec(
 			 * Put this buffer/block on the ag's freelist.
 			 */
 			if ((error = xfs_alloc_put_freelist(cur->bc_tp,
-					cur->bc_private.a.agbp, NULL, bno, 1)))
+					cur->bc_private.a.agbp, NULL, bno)))
 				return error;
 			/*
 			 * Since blocks move to the free list without the
@@ -524,7 +524,7 @@ xfs_alloc_delrec(
 	 * Free the deleting block by putting it on the freelist.
 	 */
 	if ((error = xfs_alloc_put_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			NULL, rbno, 1)))
+			NULL, rbno)))
 		return error;
 	/*
 	 * Since blocks move to the free list without the coordination
@@ -1282,7 +1282,7 @@ xfs_alloc_newroot(
 	 * Get a buffer from the freelist blocks, for the new root.
 	 */
 	if ((error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			&nbno, 1)))
+			&nbno)))
 		return error;
 	/*
 	 * None available, we fail.
@@ -1566,7 +1566,7 @@ xfs_alloc_split(
 	 * If we can't do it, we're toast.  Give up.
 	 */
 	if ((error = xfs_alloc_get_freelist(cur->bc_tp, cur->bc_private.a.agbp,
-			&rbno, 1)))
+			&rbno)))
 		return error;
 	if (rbno == NULLAGBLOCK) {
 		*stat = 0;

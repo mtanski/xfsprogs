@@ -40,6 +40,8 @@
 
 #include <xfs.h>
 
+static void xfs_dir2_leaf_log_bests(xfs_trans_t *, xfs_dabuf_t *, int, int);
+static void xfs_dir2_leaf_log_tail(xfs_trans_t *, xfs_dabuf_t *);
 
 /*
  * Convert a block form directory to a leaf form directory.
@@ -852,7 +854,7 @@ xfs_dir2_leaf_log_header(
 /*
  * Log the tail of the leaf1 block.
  */
-void
+static void
 xfs_dir2_leaf_log_tail(
 	xfs_trans_t		*tp,		/* transaction pointer */
 	xfs_dabuf_t		*bp)		/* leaf buffer */

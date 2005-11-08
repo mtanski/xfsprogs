@@ -281,6 +281,10 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define XFS_ERROR_REPORT(e,l,mp)	((void) 0)
 #define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)
 #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
+#define XFS_WANT_CORRUPTED_GOTO(expr,l)	\
+		{ if (!(expr)) { error = EFSCORRUPTED; goto l; } }
+#define XFS_WANT_CORRUPTED_RETURN(expr)	\
+		{ if (!(expr)) { return EFSCORRUPTED; } }
 #define TRACE_FREE(s,a,b,x,f)		((void) 0)
 #define TRACE_ALLOC(s,a)		((void) 0)
 #define TRACE_MODAGF(a,b,c)		((void) 0)
@@ -360,10 +364,10 @@ static inline int atomicIncWithWrap(int *a, int b)
  */
 
 /* xfs_alloc.c */
-int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *, int);
+int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *);
 void xfs_alloc_log_agf (xfs_trans_t *, xfs_buf_t *, int);
 int  xfs_alloc_put_freelist (xfs_trans_t *, xfs_buf_t *, xfs_buf_t *,
-			xfs_agblock_t, int);
+			xfs_agblock_t);
 int  xfs_alloc_read_agf (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t,
 			int, xfs_buf_t **);
 int  xfs_alloc_vextent (xfs_alloc_arg_t *);
@@ -600,6 +604,7 @@ xfs_daddr_t xfs_da_blkno(xfs_dabuf_t *);
 
 /* xfs_dir.c */
 int  xfs_dir_node_addname (xfs_da_args_t *);
+int  xfs_dir_leaf_create (xfs_da_args_t *, xfs_dablk_t, xfs_dabuf_t **);
 int  xfs_dir_leaf_lookup (xfs_da_args_t *);
 int  xfs_dir_node_lookup (xfs_da_args_t *);
 int  xfs_dir_leaf_replace (xfs_da_args_t *);

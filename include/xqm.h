@@ -1,35 +1,19 @@
 /*
- * Copyright (c) 1995, 2001, 2004, 2005 Silicon Graphics, Inc.
+ * Copyright (c) 1995, 2001, 2004-2005 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2.1 of the GNU Lesser General Public License
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it would be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Further, this software is distributed without any warranty that it is
- * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
- * otherwise, applies only to this software file.  Patent licenses, if
- * any, provided herein do not apply to combinations of this program with
- * other software, or any other product whatsoever.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
- * USA.
- *
- * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
- * Mountain View, CA  94043, or:
- *
- * http://www.sgi.com
- *
- * For further information regarding this notice, see:
- *
- * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef __XQM_H__
 #define __XQM_H__
@@ -79,7 +63,7 @@ typedef struct fs_disk_quota {
 	__u64		d_rtbcount;	/* # realtime blocks owned */
 	__s32		d_rtbtimer;	/* similar to above; for RT disk blks */
 	__u16	  	d_rtbwarns;     /* # warnings issued wrt RT disk blks */
-	__s16		d_padding3;	/* padding3 - for future use */	
+	__s16		d_padding3;	/* padding3 - for future use */
 	char		d_padding4[8];	/* yet more padding */
 } fs_disk_quota_t;
 
@@ -98,7 +82,7 @@ typedef struct fs_disk_quota {
  * These timers can only be set in super user's dquot. For others, timers are
  * automatically started and stopped. Superusers timer values set the limits
  * for the rest.  In case these values are zero, the DQ_{F,B}TIMELIMIT values
- * defined below are used. 
+ * defined below are used.
  * These values also apply only to the d_fieldmask field for Q_XSETQLIM.
  */
 #define FS_DQ_BTIMER	(1<<6)
@@ -111,7 +95,7 @@ typedef struct fs_disk_quota {
  * warnings are set/cleared by the administrators (or automatically by going
  * below the soft limit).  Superusers warning values set the warning limits
  * for the rest.  In case these values are zero, the DQ_{F,B}WARNLIMIT values
- * defined below are used. 
+ * defined below are used.
  * These values also apply only to the d_fieldmask field for Q_XSETQLIM.
  */
 #define FS_DQ_BWARNS	(1<<9)
@@ -157,9 +141,9 @@ typedef struct fs_quota_stat {
 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
 	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
 	__u32		qs_incoredqs;	/* number of dquots incore */
-	__s32		qs_btimelimit;  /* limit for blks timer */	
-	__s32		qs_itimelimit;  /* limit for inodes timer */	
-	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
+	__s32		qs_btimelimit;  /* limit for blks timer */
+	__s32		qs_itimelimit;  /* limit for inodes timer */
+	__s32		qs_rtbtimelimit;/* limit for rt blks timer */
 	__u16		qs_bwarnlimit;	/* limit for num warnings */
 	__u16		qs_iwarnlimit;	/* limit for num warnings */
 } fs_quota_stat_t;

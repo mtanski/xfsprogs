@@ -1744,7 +1744,7 @@ longform_dir2_entry_check_data(
 	junkit = 0;
 	freetab = *freetabp;
 	if (isblock) {
-		btp = XFS_DIR2_BLOCK_TAIL_P(mp, d);
+		btp = XFS_DIR2_BLOCK_TAIL_P(mp, (xfs_dir2_block_t *)d);
 		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
 		endptr = (char *)blp;
 		if (endptr > (char *)btp)

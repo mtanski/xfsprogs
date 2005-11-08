@@ -276,7 +276,6 @@ xfs_ialloc_ag_alloc(
 	INT_MOD(agi->agi_freecount, ARCH_CONVERT, newlen);
 	agno = INT_GET(agi->agi_seqno, ARCH_CONVERT);
 	down_read(&args.mp->m_peraglock);
-	args.mp->m_perag[agno].pagi_count += newlen;
 	args.mp->m_perag[agno].pagi_freecount += newlen;
 	up_read(&args.mp->m_peraglock);
 	INT_SET(agi->agi_newino, ARCH_CONVERT, newino);
@@ -1145,7 +1144,6 @@ xfs_ialloc_read_agi(
 	pag = &mp->m_perag[agno];
 	if (!pag->pagi_init) {
 		pag->pagi_freecount = INT_GET(agi->agi_freecount, ARCH_CONVERT);
-		pag->pagi_count = INT_GET(agi->agi_count, ARCH_CONVERT);
 		pag->pagi_init = 1;
 	} else {
 		/*

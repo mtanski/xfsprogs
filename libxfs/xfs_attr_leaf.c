@@ -38,6 +38,10 @@
  * Routines to implement leaf blocks of attributes as Btrees of hashed names.
  */
 
+STATIC int xfs_attr_leaf_create(xfs_da_args_t *args, xfs_dablk_t which_block,
+				xfs_dabuf_t **bpp);
+STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
+
 /*========================================================================
  * External routines when attributes < XFS_LITINO(mp).
  *========================================================================*/

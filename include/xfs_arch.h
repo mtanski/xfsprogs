@@ -1,33 +1,19 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+ * All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it would be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Further, this software is distributed without any warranty that it is
- * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
- * otherwise, applies only to this software file.  Patent licenses, if
- * any, provided herein do not apply to combinations of this program with
- * other software, or any other product whatsoever.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write the Free Software Foundation, Inc., 59
- * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- *
- * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
- * Mountain View, CA  94043, or:
- *
- * http://www.sgi.com
- *
- * For further information regarding this notice, see:
- *
- * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef __XFS_ARCH_H__
 #define __XFS_ARCH_H__
@@ -40,22 +26,28 @@
 
 #include <asm/byteorder.h>
 
-#ifdef __LITTLE_ENDIAN
-# define __BYTE_ORDER	__LITTLE_ENDIAN
-#endif
 #ifdef __BIG_ENDIAN
-# define __BYTE_ORDER	__BIG_ENDIAN
+#define	XFS_NATIVE_HOST	1
+#else
+#undef XFS_NATIVE_HOST
+#endif
+
+#else /* __KERNEL__ */
+
+#if __BYTE_ORDER == __BIG_ENDIAN
+#define	XFS_NATIVE_HOST	1
+#else
+#undef XFS_NATIVE_HOST
 #endif
 
 #endif	/* __KERNEL__ */
 
 /* do we need conversion? */
-
 #define ARCH_NOCONVERT 1
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-# define ARCH_CONVERT	0
-#else
+#ifdef XFS_NATIVE_HOST
 # define ARCH_CONVERT	ARCH_NOCONVERT
+#else
+# define ARCH_CONVERT	0
 #endif
 
 /* generic swapping macros */
@@ -176,7 +168,7 @@
  * into 32bits a four-member array is used:
  *
  *  |24-31|16-23| 8-15| 0- 7|
- */ 
+ */
 
 #define XFS_GET_DIR_INO4(di) \
 	(((__u32)(di).i[0] << 24) | ((di).i[1] << 16) | ((di).i[2] << 8) | ((di).i[3]))
