@@ -207,6 +207,20 @@ directories also inherit the project inheritance bit.
 Can only be set on a directory and disallows creation of 
 symbolic links in that directory.
 .TP
+.SM "Bit 11 (0x800) \- XFS_XFLAG_EXTSIZE"
+Extent size bit - if a basic extent size value is set on the file
+then the allocator will allocate in multiples of the set size for
+this file (see
+.B XFS_IOC_FSSETXATTR
+below).
+.TP
+.SM "Bit 12 (0x1000) \- XFS_XFLAG_EXTSZINHERIT"
+Extent size inheritance bit - new files and directories created in
+the directory will inherit the parents basic extent size value (see
+.B XFS_IOC_FSSETXATTR
+below).
+Can only be set on a directory.
+.TP
 .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
 The file has extended attributes associated with it.
 .RE
@@ -232,8 +246,11 @@ and
 .BR fsx_extsize .
 The
 .B fsx_xflags
-realtime file bit, and the file's extent size, may be changed only
-when the file is empty.
+realtime file bit and the file's extent size may be changed only
+when the file is empty, except in the case of a directory where
+the extent size can be set at any time (this value is only used
+for regular file allocations, so should only be set on a directory
+in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
 
 .TP
 .B XFS_IOC_GETBMAP

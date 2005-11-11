@@ -555,8 +555,9 @@ extsize_f(
 	char			**argv)
 {
 	struct fsxattr		fsx;
+	struct stat64		stat;
 	long			extsize;
-	unsigned int		blocksize, sectsize;
+	size_t			blocksize, sectsize;
 
 	init_cvtnum(&blocksize, &sectsize);
 	extsize = (long)cvtnum(blocksize, sectsize, argv[1]);
@@ -564,11 +565,25 @@ extsize_f(
 		printf(_("non-numeric extsize argument -- %s\n"), argv[1]);
 		return 0;
 	}
+	if (fstat64(file->fd, &stat) < 0) {
+		perror("fstat64");
+		return 0;
+	}
 	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
 		perror("XFS_IOC_FSGETXATTR");
 		return 0;
 	}
+
+	if (S_ISREG(stat.st_mode)) {
+		fsx.fsx_xflags |= XFS_XFLAG_EXTSIZE;
+	} else if (S_ISDIR(stat.st_mode)) {
+		fsx.fsx_xflags |= XFS_XFLAG_EXTSZINHERIT;
+	} else {
+		printf(_("invalid target file type - file %s\n"), file->name);
+		return 0;
+	}
 	fsx.fsx_extsize = extsize;
+
 	if ((xfsctl(file->name, file->fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
 		perror("XFS_IOC_FSSETXATTR");
 		return 0;
@@ -710,7 +725,5 @@ open_init(void)
 	add_command(&statfs_cmd);
 	add_command(&chproj_cmd);
 	add_command(&lsproj_cmd);
-
-	if (expert)
-		add_command(&extsize_cmd);
+	add_command(&extsize_cmd);
 }

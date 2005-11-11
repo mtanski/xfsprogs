@@ -43,25 +43,26 @@ static unsigned int andflags;
 unsigned int recurse_all;
 unsigned int recurse_dir;
 
-#define CHATTR_XFLAG_LIST	"riasAdtPn"
-
 static struct xflags {
 	uint	flag;
 	char	*shortname;
 	char	*longname;
 } xflags[] = {
-	{ XFS_XFLAG_REALTIME,	"r", "realtime"		},
-	{ XFS_XFLAG_PREALLOC,	"p", "prealloc"		},
-	{ XFS_XFLAG_IMMUTABLE,	"i", "immutable"	},
-	{ XFS_XFLAG_APPEND,	"a", "append-only"	},
-	{ XFS_XFLAG_SYNC,	"s", "sync"		},
-	{ XFS_XFLAG_NOATIME,	"A", "no-atime"		},
-	{ XFS_XFLAG_NODUMP,	"d", "no-dump"		},
-	{ XFS_XFLAG_RTINHERIT,	"t", "rt-inherit"	},
-	{ XFS_XFLAG_PROJINHERIT,"P", "proj-inherit"	},
-	{ XFS_XFLAG_NOSYMLINKS,	"n", "nosymlinks"	},
+	{ XFS_XFLAG_REALTIME,		"r", "realtime"		},
+	{ XFS_XFLAG_PREALLOC,		"p", "prealloc"		},
+	{ XFS_XFLAG_IMMUTABLE,		"i", "immutable"	},
+	{ XFS_XFLAG_APPEND,		"a", "append-only"	},
+	{ XFS_XFLAG_SYNC,		"s", "sync"		},
+	{ XFS_XFLAG_NOATIME,		"A", "no-atime"		},
+	{ XFS_XFLAG_NODUMP,		"d", "no-dump"		},
+	{ XFS_XFLAG_RTINHERIT,		"t", "rt-inherit"	},
+	{ XFS_XFLAG_PROJINHERIT,	"P", "proj-inherit"	},
+	{ XFS_XFLAG_NOSYMLINKS,		"n", "nosymlinks"	},
+	{ XFS_XFLAG_EXTSIZE,		"e", "extsize"		},
+	{ XFS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
 	{ 0, NULL, NULL }
 };
+#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneE"
 
 static void
 lsattr_help(void)
@@ -81,6 +82,8 @@ lsattr_help(void)
 " t -- child created in this directory has realtime bit set by default\n"
 " P -- child created in this directory has parents project ID by default\n"
 " n -- symbolic links cannot be created in this directory\n"
+" e -- for non-realtime files, observe the inode extent size value\n"
+" E -- children created in this directory inherit the extent size value\n"
 "\n"
 " Options:\n"
 " -R -- recursively descend (useful when current file is a directory)\n"
@@ -112,6 +115,8 @@ chattr_help(void)
 " +/-t -- set/clear the realtime inheritance flag\n"
 " +/-P -- set/clear the project ID inheritance flag\n"
 " +/-n -- set/clear the no-symbolic-links flag\n"
+" +/-e -- set/clear the extent-size flag\n"
+" +/-E -- set/clear the extent-size inheritance flag\n"
 " Note1: user must have certain capabilities to modify immutable/append-only.\n"
 " Note2: immutable/append-only files cannot be deleted; removing these files\n"
 "        requires the immutable/append-only flag to be cleared first.\n"

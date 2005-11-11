@@ -2069,19 +2069,30 @@ process_dinode_int(xfs_mount_t *mp,
 	}
 
 	/*
-	 * only realtime inodes should have extsize set
+	 * only regular files with REALTIME or EXTSIZE flags set can have
+	 * extsize set, or directories with EXTSZINHERIT.
 	 */
-	if (type != XR_INO_RTDATA && INT_GET(dinoc->di_extsize, ARCH_CONVERT) != 0)  {
-		do_warn(
-	_("bad non-zero extent size value %u for non-realtime inode %llu, "),
-			INT_GET(dinoc->di_extsize, ARCH_CONVERT), lino);
+	if (INT_GET(dinoc->di_extsize, ARCH_CONVERT) != 0)  {
+		if ((type == XR_INO_RTDATA) ||
+		    (type == XR_INO_DIR &&
+				(INT_GET(dinoc->di_flags, ARCH_CONVERT) &
+				 XFS_DIFLAG_EXTSZINHERIT)) ||
+		    (type == XR_INO_DATA &&
+				(INT_GET(dinoc->di_flags, ARCH_CONVERT) &
+				 XFS_DIFLAG_EXTSIZE)))  {
+			/* s'okay */ ;
+		} else {
+			do_warn(
+	_("bad non-zero extent size %u for non-realtime/extsize inode %llu, "),
+				INT_GET(dinoc->di_extsize, ARCH_CONVERT), lino);
 
-		if (!no_modify)  {
-			do_warn(_("resetting to zero\n"));
-			dinoc->di_extsize = 0;
-			*dirty = 1;
-		} else  {
-			do_warn(_("would reset to zero\n"));
+			if (!no_modify)  {
+				do_warn(_("resetting to zero\n"));
+				dinoc->di_extsize = 0;
+				*dirty = 1;
+			} else  {
+				do_warn(_("would reset to zero\n"));
+			}
 		}
 	}
 
