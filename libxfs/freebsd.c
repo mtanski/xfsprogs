@@ -1,34 +1,19 @@
 /*
- *  Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2003,2005 Silicon Graphics, Inc.
+ * All Rights Reserved.
  *
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it would be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Further, this software is distributed without any warranty that it is
- * free of the rightful claim of any third person regarding infringement
- * or the like.	 Any license provided herein, whether implied or
- * otherwise, applies only to this software file.  Patent licenses, if
- * any, provided herein do not apply to combinations of this program with
- * other software, or any other product whatsoever.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write the Free Software Foundation, Inc., 59
- * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- *
- * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
- * Mountain View, CA  94043, or:
- *
- * http://www.sgi.com
- *
- * For further information regarding this notice, see:
- *
- * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <xfs/libxfs.h>
@@ -54,7 +39,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 
 	/* Remember, FreeBSD can now mount char devices! -- adrian */
 	if (((st.st_mode & S_IFMT) != S_IFBLK) &&
-	    ((st.st_mode & S_IFMT) != S_IFCHR)) 
+	    ((st.st_mode & S_IFMT) != S_IFCHR))
 		return 0;
 
 	if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
@@ -67,7 +52,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
         for (i = 0; i < cnt; i++) {
                 if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
 			continue;
-		
+
 		if (verbose)
 			fprintf(stderr,
 			    _("%s: %s contains a mounted filesystem\n"),
@@ -93,7 +78,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
         for (i = 0; i < cnt; i++) {
                 if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
 			continue;
-		
+
 		if (fsinfo[i].f_flags &= MNT_RDONLY)
 			break;
 	}
@@ -144,14 +129,14 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 			progname, path);
 		exit(1);
 	}
-	
+
 	if (ioctl(fd, DIOCGMEDIASIZE, &size) != 0) {
 		fprintf(stderr, _("%s: "
 			"DIOCGMEDIASIZE failed on \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}
-	
+
 	if (ioctl(fd, DIOCGSECTORSIZE, &ssize) != 0) {
 		fprintf(stderr, _("%s: "
 			"DIOCGSECTORSIZE failed on \"%s\": %s\n"),
