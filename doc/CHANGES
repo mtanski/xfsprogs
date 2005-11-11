@@ -1,3 +1,16 @@
+xfsprogs-2.7.6 (31 October 2005)
+	- Add support for the inode extent size hint for the regular
+	  data device (previously was realtime only), and allow the
+	  optional inheritance of this property.
+	- Add support for additional read/write patterns in xfs_io
+	  (reverse and random, in addition to sequential forwards).
+	- Add some mkfs debugging options to aid testing inheritance
+	  of realtime, project ID, and extsize inode attributes.
+	- Add mkfs option for forcing use of ATTR2, and make growfs
+	  report its use.
+	- Fix use of cursor in attr_list_by_handle() libhandle code.
+	- Fix several compiler warnings when building on IRIX.
+
 xfsprogs-2.7.5 (26 October 2005)
 	- Fix an endian bug in xfs_db "frag" command.
 	- Fix some errors on the xfs_quota(8) man page.
@@ -11,7 +24,7 @@ xfsprogs-2.7.4 (08 October 2005)
 xfsprogs-2.7.3 (29 September 2005)
 	- Fix xfs_repair handling of the morebits bit.
 	- Merge back several kernel changes related to attr2.
-	- Extended xfs_db expert mode commands 
+	- Extended xfs_db expert mode commands
 	- Clean up some fsxattr uses to reduce number of syscalls,
 	  now that IRIX also supports project identifiers via this
 	  interface.

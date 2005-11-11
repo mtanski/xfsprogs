@@ -1,8 +1,11 @@
-xfsprogs (2.7.5-1) unstable; urgency=low
+xfsprogs (2.7.6-1) unstable; urgency=low
 
   * New upstream release.
+  * Add support for (optional) ATTR2 format extension (closes: #336350)
+  * Allow gcc -pedantic option for C++ <xfs.h> users (closes: #249429)
+  * Fix segv in xfs_db frag command (closes: #338207)
 
- -- Nathan Scott <nathans@debian.org>  Wed, 26 Oct 2005 11:49:59 +1000
+ -- Nathan Scott <nathans@debian.org>  Mon, 31 Oct 2005 08:49:46 +1100
 
 xfsprogs (2.7.4-1) unstable; urgency=low
 
