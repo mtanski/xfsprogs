@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/command.h>
 #include <xfs/input.h>
 #include "init.h"
@@ -380,7 +380,7 @@ lsproj_callback(
 			progname, path, strerror(errno));
 	} else {
 		if (getprojid(path, fd, &projid) == 0)
-			printf("[%u] %s\n", projid, path);
+			printf("[%u] %s\n", (unsigned int)projid, path);
 		close(fd);
 	}
 	return 0;
@@ -418,7 +418,7 @@ lsproj_f(
 	else if (getprojid(file->name, file->fd, &projid) < 0)
 		perror("getprojid");
 	else
-		printf(_("projid = %u\n"), projid);
+		printf(_("projid = %u\n"), (unsigned int)projid);
 	return 0;
 }
 

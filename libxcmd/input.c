@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/input.h>
 
 #if defined(ENABLE_READLINE)
@@ -25,6 +25,8 @@
 #elif defined(ENABLE_EDITLINE)
 # include <histedit.h>
 #endif
+
+extern char *progname;
 
 static char *
 get_prompt(void)
@@ -329,7 +331,7 @@ prid_from_string(
 	prid_t		prid;
 	char		*sp;
 
-	prid = strtoul(project, &sp, 10);
+	prid = (prid_t)strtoul(project, &sp, 10);
 	if (sp != project)
 		return prid;
 	prj = getprnam(project);
@@ -346,7 +348,7 @@ uid_from_string(
 	uid_t		uid;
 	char		*sp;
 
-	uid = strtoul(user, &sp, 10);
+	uid = (uid_t)strtoul(user, &sp, 10);
 	if (sp != user)
 		return uid;
 	pwd = getpwnam(user);
@@ -363,7 +365,7 @@ gid_from_string(
 	gid_t		gid;
 	char		*sp;
 
-	gid = strtoul(group, &sp, 10);
+	gid = (gid_t)strtoul(group, &sp, 10);
 	if (sp != group)
 		return gid;
 	grp = getgrnam(group);

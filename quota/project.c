@@ -93,7 +93,7 @@ check_project(
 		if (fsx.fsx_projid != prid)
 			printf(_("%s - project identifier is not set"
 				 " (inode=%u, tree=%u)\n"),
-				path, fsx.fsx_projid, prid);
+				path, fsx.fsx_projid, (unsigned int)prid);
 		if (!(fsx.fsx_xflags & XFS_XFLAG_PROJINHERIT))
 			printf(_("%s - project inheritance flag is not set\n"),
 				path);

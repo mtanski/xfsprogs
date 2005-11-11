@@ -478,7 +478,8 @@ report_project_mount(
 		setprent();
 		while ((p = getprent()) != NULL) {
 			if (flags & NO_LOOKUP_FLAG)
-				snprintf(n, sizeof(n)-1, "#%u", p->pr_prid);
+				snprintf(n, sizeof(n)-1, "#%u",
+					 (unsigned int)p->pr_prid);
 			else
 				strncpy(n, p->pr_name, sizeof(n)-1);
 			if (report_mount(fp, p->pr_prid, n,

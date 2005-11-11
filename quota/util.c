@@ -20,6 +20,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <utmp.h>
+#include "init.h"
 #include "quota.h"
 
 #define SECONDS_IN_A_DAY	(24 * 60 * 60)

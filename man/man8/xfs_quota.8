@@ -165,8 +165,9 @@ guarantee of consistency.
 As such, it is administered differently, in particular:
 .TP
 1.
-.BR quotacheck (8)
-has no effect on XFS filesystems.
+The
+.B quotacheck
+command has no effect on XFS filesystems.
 The first time quota accounting is turned on (at mount time), XFS does
 an automatic quotacheck internally; afterwards, the quota system will
 always be completely consistent until quotas are manually turned off.
@@ -181,7 +182,7 @@ filesystem.
 However, it is possible to turn on/off limit enforcement any time
 quota accounting is turned on.
 The "quota" option to the
-.BR mount (8)
+.B mount
 command turns on both (user) quota accounting and enforcement.
 The "uqnoenforce" option must be used to turn on user accounting with
 limit enforcement disabled.
@@ -190,7 +191,7 @@ limit enforcement disabled.
 Turning on quotas on the root filesystem is slightly different from
 the above.
 For IRIX XFS, refer to
-.BR quotaon (1)
+.BR quotaon (1M).
 For Linux XFS, the quota mount flags must be passed in with the
 "rootflags=" boot parameter.
 .TP
@@ -201,7 +202,7 @@ and also to monitor the space occupied by the quota system itself..
 .TP
 6.
 There is a mechanism built into
-.BR xfsdump (8)
+.B xfsdump
 that allows quota limit information to be backed up for later
 restoration, should the need arise.
 .TP
@@ -452,8 +453,15 @@ Mapping of numeric project identifiers to directories trees.
 .BR /etc/projid
 Mapping of numeric project identifiers to project names.
 .PD
+.SH IRIX SEE ALSO
+quotaon(1M),
+xfs(4).
+
+.SH LINUX SEE ALSO
+warnquota(8),
+xfs(5).
+
 .SH SEE ALSO
 df(1),
 mount(1),
 sync(2),
-xfs(5).

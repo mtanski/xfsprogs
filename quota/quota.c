@@ -314,7 +314,7 @@ getprojectname(
 
 	if ((p = getprprid(prid)))
 		return p->pr_name;
-	snprintf(buffer, sizeof(buffer), "#%u", prid);
+	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
 	return &buffer[0];
 }
 

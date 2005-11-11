@@ -16,11 +16,12 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/command.h>
 
 static cmdinfo_t quit_cmd;
 
+/* ARGSUSED */
 static int
 quit_f(
 	int	argc,

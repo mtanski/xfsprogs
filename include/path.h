@@ -18,7 +18,7 @@
 #ifndef __PATH_H__
 #define __PATH_H__
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 
 /*
  * XFS Filesystem Paths

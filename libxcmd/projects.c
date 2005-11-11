@@ -81,7 +81,7 @@ getprent(void)
 
 	if (!projects)
 		return NULL;
-	do {
+	for (;;) {
 		if (!fgets(projects_buffer, size, projects))
 			break;
 		/*
@@ -101,7 +101,7 @@ getprent(void)
 		p.pr_prid = atoi(idstart+1);
 		p.pr_name = &projects_buffer[0];
 		return &p;
-	} while (1);
+	}
 
 	return NULL;
 }
@@ -142,7 +142,7 @@ getprpathent(void)
 
 	if (!project_paths)
 		return NULL;
-	do {
+	for (;;) {
 		if (!fgets(project_paths_buffer, size, project_paths))
 			break;
 		/*
@@ -162,7 +162,7 @@ getprpathent(void)
 		pp.pp_pathname = nmstart + 1;
 		pp.pp_prid = atoi(&project_paths_buffer[0]);
 		return &pp;
-	} while (1);
+	}
 
 	return NULL;
 }

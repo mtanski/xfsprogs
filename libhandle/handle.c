@@ -16,11 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
-
-/* attributes.h (purposefully) unavailable to xfsprogs, make do */
-struct attrlist_cursor { __u32 opaque[4]; };
-
+#include <xfs/xfs.h>
 #include <xfs/handle.h>
 
 /* just pick a value we know is more than big enough */

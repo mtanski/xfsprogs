@@ -6,7 +6,7 @@ xfs_io \- debug the I/O path of an XFS filesystem
 \f3xfs_io\f1 [ \f3\-c\f1 cmd ] ... [ \f3\-p\f1 prog ] [ \f3\-adFfmrRstx\f1 ] file
 .fi
 .SH DESCRIPTION
-\f2xfs_io\f1 is a debugging tool like \f2xfs_db\f1(8), but is aimed
+\f2xfs_io\f1 is a debugging tool like \f2xfs_db\f1, but is aimed
 at examining the regular file I/O path rather than the raw XFS volume
 itself.
 .PP
@@ -135,15 +135,15 @@ See the \f3pwrite\f1 command.
 .TP
 \f3bmap\f1 [ \f2\-adlpv\f1 ] [ \f2\-n nx\f1 ]
 Prints the block mapping for the current open file.
-Refer to \f2xfs_bmap\f1(8) for complete documentation.
+Refer to the \f2xfs_bmap\f1 manual page for complete documentation.
 .TP
 \f3allocsp\f1 \f2offset\f1 \f2length\f1
 Allocates zeroed space for part of a file using the XFS_IOC_ALLOCSP
-system call described in \f2xfs\f1(5).
+system call described in the \f2xfs\f1 manual page.
 .TP
 \f3freesp\f1 \f2offset\f1 \f2length\f1
 Frees space for part of a file using the XFS_IOC_FREESP
-system call described in \f2xfs\f1(5).
+system call described in the \f2xfs\f1 manual page.
 .TP
 \f3fadvise\f1 [ \f2\-dnrsw\f1 ]
 On platforms which support it, allows hints be given to the system
@@ -162,11 +162,11 @@ See the \f3fsync\f1 command.
 .TP
 \f3resvsp\f1 \f2offset\f1 \f2length\f1
 Allocates reserved, unwritten space for part of a file using the XFS_IOC_RESVSP
-system call described in \f2xfs\f1(5).
+system call described in the \f2xfs\f1 manual page.
 .TP
 \f3unresvsp\f1 \f2offset\f1 \f2length\f1
 Frees reserved space for part of a file using the XFS_IOC_UNRESVSP
-system call described in \f2xfs\f1(5).
+system call described in the \f2xfs\f1 manual page.
 .TP
 \f3truncate\f1 \f2offset\f1
 Truncates the current file at the given offset using \f2ftruncate\f1(2).
@@ -292,8 +292,7 @@ Only available in expert mode and requires privileges.
 .TP
 \f3resblks\f1 [ \f2blocks\f1 ]
 Get and/or set count of reserved filesystem blocks using the
-XFS_IOC_GET_RESBLKS or XFS_IOC_SET_RESBLKS system calls,
-as described in \f2xfs\f1(5).
+XFS_IOC_GET_RESBLKS or XFS_IOC_SET_RESBLKS system calls.
 Note \-\- this can be useful for exercising out of space behavior.
 Only available in expert mode and requires privileges.
 .TP
@@ -303,14 +302,27 @@ Only available in expert mode and requires privileges.
 .TP
 \f3stat\f1 [ \f2\-v\f1 ]
 Selected statistics from \f2stat\f1(2) and the XFS_IOC_GETXATTR
-system call from \f2xfs\f1(5) on the current file.
+system call on the current file.
 If the \f2-v\f1 option is specified, the atime (last access), mtime
 (last modify), and ctime (last change) timestamps are also displayed.
 .TP
 \f3statfs\f1
 Selected statistics from \f2statfs\f1(2) and the XFS_IOC_FSGEOMETRY
-system call from \f2xfs\f1(5) on the filesystem where the current
-file resides.
+system call on the filesystem where the current file resides.
+
+.SH IRIX SEE ALSO
+mkfs_xfs(1M),
+syssgi(2),
+xfs_bmap(1M),
+xfs_db(1M),
+xfs(4).
+
+.SH LINUX SEE ALSO
+mkfs.xfs(8),
+xfsctl(3),
+xfs_bmap(8),
+xfs_db(8),
+xfs(5).
 
 .SH SEE ALSO
 fdatasync(2),
@@ -318,11 +330,7 @@ fstat(2),
 fstatfs(2),
 fsync(2),
 ftruncate(2),
-mkfs.xfs(8),
 mmap(2),
 open(2),
 pread(2),
-pwrite(2),
-xfs_bmap(8),
-xfs_db(8),
-xfs(5).
+pwrite(2).

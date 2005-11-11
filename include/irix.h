@@ -129,6 +129,7 @@ typedef struct xfs_fsop_attrmulti_handlereq {
 #ifndef __GNUC__
 #define __sgi__		__sgi
 #define __inline__	__inline
+#define inline		__inline
 #endif
 
 #define constpp		char * const *

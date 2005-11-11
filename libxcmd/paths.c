@@ -28,6 +28,8 @@
 #include <xfs/input.h>
 #include <xfs/project.h>
 
+extern char *progname;
+
 int fs_count;
 struct fs_path *fs_table;
 struct fs_path *fs_path;
@@ -136,9 +138,7 @@ fs_extract_mount_options(
 	char		**logp,
 	char		**rtp)
 {
-	char		*fslog, *fsrt, *fslogend, *fsrtend;
-
-	fslog = fsrt = fslogend = fsrtend = NULL;
+	char		*fslog, *fsrt;
 
 	/* Extract log device and realtime device from mount options */
 	if ((fslog = hasmntopt(mnt, "logdev=")))
@@ -148,11 +148,11 @@ fs_extract_mount_options(
 
 	/* Do this only after we've finished processing mount options */
 	if (fslog) {
-		fslogend = strtok(fslog, " ,");
+		strtok(fslog, " ,");
 		fslog = strdup(fslog);
 	}
 	if (fsrt) {
-		fsrtend = strtok(fsrt, " ,");
+		strtok(fsrt, " ,");
 		fsrt = strdup(fsrt);
 	}
 

@@ -38,7 +38,7 @@ extern double	tdiv(double value, struct timeval tv);
 enum {
 	DEFAULT_TIME		= 0x0,
 	TERSE_FIXED_TIME	= 0x1,
-	VERBOSE_FIXED_TIME	= 0x2,
+	VERBOSE_FIXED_TIME	= 0x2
 };
 
 extern void	timestr(struct timeval *tv, char *str, size_t sz, int flags);
