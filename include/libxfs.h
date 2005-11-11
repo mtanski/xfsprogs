@@ -30,7 +30,6 @@
 #include <xfs/xfs_inum.h>
 #include <xfs/xfs_sb.h>
 #include <xfs/xfs_ag.h>
-//#include <xfs/xfs_dir.h>
 #include <xfs/xfs_dir2.h>
 #include <xfs/xfs_mount.h>
 #include <xfs/xfs_da_btree.h>
