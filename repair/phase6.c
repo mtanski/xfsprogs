@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -43,7 +43,8 @@
 #include "dinode.h"
 #include "versions.h"
 
-static cred_t zerocr;
+static struct cred zerocr;
+static struct fsxattr zerofsx;
 static int orphanage_entered;
 
 /*
@@ -753,7 +754,7 @@ mk_orphanage(xfs_mount_t *mp)
 			i, ORPHANAGE);
 
 	error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
-					1, 0, &zerocr, &ip);
+					1, 0, &zerocr, &zerofsx, &ip);
 
 	if (error) {
 		do_error(_("%s inode allocation failed %d\n"),
@@ -3891,7 +3892,8 @@ phase6(xfs_mount_t *mp)
 	int			i;
 	int			j;
 
-	bzero(&zerocr, sizeof(cred_t));
+	bzero(&zerocr, sizeof(struct cred));
+	bzero(&zerofsx, sizeof(struct fsxattr));
 
 	do_log(_("Phase 6 - check inode connectivity...\n"));
 

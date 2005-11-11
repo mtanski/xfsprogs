@@ -1,32 +1,32 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
- * 
+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.  All Rights Reserved.
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it would be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * Further, this software is distributed without any warranty that it is
  * free of the rightful claim of any third person regarding infringement
  * or the like.  Any license provided herein, whether implied or
  * otherwise, applies only to this software file.  Patent licenses, if
  * any, provided herein do not apply to combinations of this program with
  * other software, or any other product whatsoever.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
+ *
  * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
  * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
+ *
+ * http://www.sgi.com
+ *
+ * For further information regarding this notice, see:
+ *
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
@@ -37,8 +37,6 @@
 /*
  * Prototypes for internal functions.
  */
-extern void parseproto(xfs_mount_t *mp, xfs_inode_t *pip, char **pp,
-	char *name); 
 static long getnum(char **pp);
 static char *getstr(char **pp);
 static void fail(char *msg, int i);
@@ -46,7 +44,7 @@ static void getres(xfs_trans_t *tp, uint blocks);
 static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
 static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, xfs_bmap_free_t *flist,
 	xfs_fsblock_t *first, int dolocal, int logit, char *buf, int len);
-static char *newregfile(char **pp, int *len); 
+static char *newregfile(char **pp, int *len);
 static void rtinit(xfs_mount_t *mp);
 static long filesize(int fd);
 
@@ -355,10 +353,11 @@ newdirectory(
 		fail(_("directory create error"), error);
 }
 
-void
+static void
 parseproto(
 	xfs_mount_t	*mp,
 	xfs_inode_t	*pip,
+	struct fsxattr	*fsxp,
 	char		**pp,
 	char		*name)
 {
@@ -463,7 +462,7 @@ parseproto(
 		buf = newregfile(pp, &len);
 		getres(tp, XFS_B_TO_FSB(mp, len));
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
-					&creds, &ip);
+					   &creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		flags |= newfile(tp, ip, &flist, &first, 0, 0, buf, len);
@@ -481,7 +480,7 @@ parseproto(
 		getres(tp, XFS_B_TO_FSB(mp, llen));
 
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
-						&creds, &ip);
+					  &creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode pre-allocation failed"), error);
 
@@ -504,7 +503,7 @@ parseproto(
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFBLK, 1,
-				IRIX_MKDEV(majdev, mindev), &creds, &ip);
+				IRIX_MKDEV(majdev, mindev), &creds, fsxp, &ip);
 		if (error) {
 			fail(_("Inode allocation failed"), error);
 		}
@@ -520,7 +519,7 @@ parseproto(
 		majdev = (int)getnum(pp);
 		mindev = (int)getnum(pp);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFCHR, 1,
-				IRIX_MKDEV(majdev, mindev), &creds, &ip);
+				IRIX_MKDEV(majdev, mindev), &creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
@@ -533,7 +532,7 @@ parseproto(
 	case IF_FIFO:
 		getres(tp, 0);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFIFO, 1, 0,
-				&creds, &ip);
+				&creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
@@ -546,7 +545,7 @@ parseproto(
 		len = (int)strlen(buf);
 		getres(tp, XFS_B_TO_FSB(mp, len));
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFLNK, 1, 0,
-				&creds, &ip);
+				&creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		flags |= newfile(tp, ip, &flist, &first, 1, 1, buf, len);
@@ -558,7 +557,7 @@ parseproto(
 	case IF_DIRECTORY:
 		getres(tp, 0);
 		error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR, 1, 0,
-				&creds, &ip);
+				&creds, fsxp, &ip);
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		ip->i_d.di_nlink++;		/* account for . */
@@ -597,7 +596,7 @@ parseproto(
 				break;
 			if (strcmp(name, "$") == 0)
 				break;
-			parseproto(mp, ip, pp, name);
+			parseproto(mp, ip, fsxp, pp, name);
 		}
 		libxfs_iput(ip, 0);
 		return;
@@ -609,6 +608,15 @@ parseproto(
 			error);
 	}
 	libxfs_trans_commit(tp, 0, NULL);
+}
+
+void
+parse_proto(
+	xfs_mount_t	*mp,
+	struct fsxattr	*fsx,
+	char		**pp)
+{
+	parseproto(mp, NULL, fsx, pp, NULL);
 }
 
 /*
@@ -632,7 +640,8 @@ rtinit(
 	xfs_inode_t	*rbmip;
 	xfs_inode_t	*rsumip;
 	xfs_trans_t	*tp;
-	cred_t		creds;
+	struct cred	creds;
+	struct fsxattr	fsxattrs;
 
 	/*
 	 * First, allocate the inodes.
@@ -641,8 +650,9 @@ rtinit(
 	if ((i = libxfs_trans_reserve(tp, MKFS_BLOCKRES_INODE, 0, 0, 0, 0)))
 		res_failed(i);
 	bzero(&creds, sizeof(creds));
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1, 0,
-				&creds, &rbmip);
+	bzero(&fsxattrs, sizeof(fsxattrs));
+	error = libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
+					&creds, &fsxattrs, &rbmip);
 	if (error) {
 		fail(_("Realtime bitmap inode allocation failed"), error);
 	}
@@ -659,8 +669,8 @@ rtinit(
 	libxfs_mod_sb(tp, XFS_SB_RBMINO);
 	libxfs_trans_ihold(tp, rbmip);
 	mp->m_rbmip = rbmip;
-	error = libxfs_inode_alloc(&tp, mp->m_rootip, S_IFREG, 1, 0,
-				&creds, &rsumip);
+	error = libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
+					&creds, &fsxattrs, &rsumip);
 	if (error) {
 		fail(_("Realtime summary inode allocation failed"), error);
 	}

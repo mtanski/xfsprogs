@@ -103,7 +103,6 @@
 #define xfs_rtmount_init		libxfs_rtmount_init
 #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
 #define xfs_iread			libxfs_iread
-#define xfs_ialloc			libxfs_ialloc
 #define xfs_idata_realloc		libxfs_idata_realloc
 #define xfs_idestroy_fork		libxfs_idestroy_fork
 #define xfs_itobp			libxfs_itobp

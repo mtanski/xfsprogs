@@ -65,7 +65,7 @@ extern long long cvtnum (unsigned int blocksize,
 
 /* proto.c */
 extern char *setup_proto (char *fname);
-extern void parseproto (xfs_mount_t *mp, xfs_inode_t *pip, char **pp, char *n);
+extern void parse_proto (xfs_mount_t *mp, struct fsxattr *fsx, char **pp);
 extern void res_failed (int err);
 
 /* maxtrres.c */ 

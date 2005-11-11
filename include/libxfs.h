@@ -352,13 +352,14 @@ typedef struct xfs_inode {
 #define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
 #define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
 
-typedef struct {
+typedef struct cred {
 	uid_t	cr_uid;
 	gid_t	cr_gid;
 } cred_t;
 
 extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
-				ushort, xfs_dev_t, cred_t *, xfs_inode_t **);
+				nlink_t, xfs_dev_t, struct cred *,
+				struct fsxattr *, xfs_inode_t **);
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
 extern void	libxfs_idata_realloc (xfs_inode_t *, int, int);

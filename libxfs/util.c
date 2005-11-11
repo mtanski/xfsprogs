@@ -34,63 +34,6 @@
 #include <time.h>
 
 /*
- * Wrapper around call to libxfs_ialloc. Takes care of committing and
- * allocating a new transaction as needed.
- *
- * Originally there were two copies of this code - one in mkfs, the
- * other in repair - now there is just the one.
- */
-int
-libxfs_inode_alloc(
-	xfs_trans_t	**tp,
-	xfs_inode_t	*pip,
-	mode_t		mode,
-	ushort		nlink,
-	xfs_dev_t	rdev,
-	cred_t		*cr,
-	xfs_inode_t	**ipp)
-{
-	boolean_t	call_again;
-	int		i;
-	xfs_buf_t	*ialloc_context;
-	xfs_inode_t	*ip;
-	xfs_trans_t	*ntp;
-	int		error;
-
-	call_again = B_FALSE;
-	ialloc_context = (xfs_buf_t *)0;
-	error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr, (xfs_prid_t) 0,
-			   1, &ialloc_context, &call_again, &ip);
-	if (error)
-		return error;
-
-	if (call_again) {
-		xfs_trans_bhold(*tp, ialloc_context);
-		ntp = xfs_trans_dup(*tp);
-		xfs_trans_commit(*tp, 0, NULL);
-		*tp = ntp;
-		if ((i = xfs_trans_reserve(*tp, 0, 0, 0, 0, 0))) {
-			fprintf(stderr, _("%s: cannot reserve space: %s\n"),
-				progname, strerror(errno));
-			exit(1);
-		}
-		xfs_trans_bjoin(*tp, ialloc_context);
-		error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr,
-				   (xfs_prid_t) 0, 1, &ialloc_context,
-				   &call_again, &ip);
-		if (!ip)
-			error = ENOSPC;
-		if (error)
-			return error;
-	}
-	if (!ip)
-		error = ENOSPC;
-
-	*ipp = ip;
-	return error;
-}
-
-/*
  * Change the requested timestamp in the given inode.
  *
  * This was once shared with the kernel, but has diverged to the point
@@ -128,15 +71,15 @@ libxfs_ichgtime(xfs_inode_t *ip, int flags)
  * This was once shared with the kernel, but has diverged to the point
  * where its no longer worth the hassle of maintaining common code.
  */
-int
+static int
 libxfs_ialloc(
 	xfs_trans_t	*tp,
 	xfs_inode_t	*pip,
 	mode_t		mode,
 	nlink_t		nlink,
 	xfs_dev_t	rdev,
-	cred_t		*cr,
-	xfs_prid_t	prid,
+	struct cred	*cr,
+	struct fsxattr	*fsx,
 	int		okalloc,
 	xfs_buf_t	**ialloc_context,
 	boolean_t	*call_again,
@@ -172,7 +115,7 @@ libxfs_ialloc(
 	ASSERT(ip->i_d.di_nlink == nlink);
 	ip->i_d.di_uid = cr->cr_uid;
 	ip->i_d.di_gid = cr->cr_gid;
-	ip->i_d.di_projid = prid;
+	ip->i_d.di_projid = pip ? 0 : fsx->fsx_projid;
 	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 
 	/*
@@ -187,6 +130,12 @@ libxfs_ialloc(
 		/* old link count, projid field, pad field already zeroed */
 	}
 
+	if (pip && (pip->i_d.di_mode & S_ISGID)) {
+		ip->i_d.di_gid = pip->i_d.di_gid;
+		if ((pip->i_d.di_mode & S_ISGID) && (mode & S_IFMT) == S_IFDIR)
+			ip->i_d.di_mode |= S_ISGID;
+	}
+
 	ip->i_d.di_size = 0;
 	ip->i_d.di_nextents = 0;
 	ASSERT(ip->i_d.di_nblocks == 0);
@@ -194,10 +143,10 @@ libxfs_ialloc(
 	/*
 	 * di_gen will have been taken care of in xfs_iread.
 	 */
-	ip->i_d.di_extsize = 0;
+	ip->i_d.di_extsize = pip ? 0 : fsx->fsx_extsize;
 	ip->i_d.di_dmevmask = 0;
 	ip->i_d.di_dmstate = 0;
-	ip->i_d.di_flags = 0;
+	ip->i_d.di_flags = pip ? 0 : fsx->fsx_xflags;
 	flags = XFS_ILOG_CORE;
 	switch (mode & S_IFMT) {
 	case S_IFIFO:
@@ -212,6 +161,30 @@ libxfs_ialloc(
 		break;
 	case S_IFREG:
 	case S_IFDIR:
+		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
+			uint	di_flags = 0;
+
+			if ((mode & S_IFMT) == S_IFDIR) {
+				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+					di_flags |= XFS_DIFLAG_RTINHERIT;
+				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+					ip->i_d.di_extsize = pip->i_d.di_extsize;
+				}
+			} else {
+				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT) {
+					di_flags |= XFS_DIFLAG_REALTIME;
+				}
+				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+					di_flags |= XFS_DIFLAG_EXTSIZE;
+					ip->i_d.di_extsize = pip->i_d.di_extsize;
+				}
+			}
+			if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+				di_flags |= XFS_DIFLAG_PROJINHERIT;
+			ip->i_d.di_flags |= di_flags;
+		}
+		/* FALLTHROUGH */
 	case S_IFLNK:
 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 		ip->i_df.if_flags = XFS_IFEXTENTS;
@@ -737,4 +710,62 @@ libxfs_da_bjoin(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
 
 	for (i = 0; i < dabuf->nbuf; i++)
 		xfs_trans_bjoin(tp, dabuf->bps[i]);
+}
+
+/*
+ * Wrapper around call to libxfs_ialloc. Takes care of committing and
+ * allocating a new transaction as needed.
+ *
+ * Originally there were two copies of this code - one in mkfs, the
+ * other in repair - now there is just the one.
+ */
+int
+libxfs_inode_alloc(
+	xfs_trans_t	**tp,
+	xfs_inode_t	*pip,
+	mode_t		mode,
+	nlink_t		nlink,
+	xfs_dev_t	rdev,
+	struct cred	*cr,
+	struct fsxattr	*fsx,
+	xfs_inode_t	**ipp)
+{
+	boolean_t	call_again;
+	int		i;
+	xfs_buf_t	*ialloc_context;
+	xfs_inode_t	*ip;
+	xfs_trans_t	*ntp;
+	int		error;
+
+	call_again = B_FALSE;
+	ialloc_context = (xfs_buf_t *)0;
+	error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr, fsx,
+			   1, &ialloc_context, &call_again, &ip);
+	if (error)
+		return error;
+
+	if (call_again) {
+		xfs_trans_bhold(*tp, ialloc_context);
+		ntp = xfs_trans_dup(*tp);
+		xfs_trans_commit(*tp, 0, NULL);
+		*tp = ntp;
+		if ((i = xfs_trans_reserve(*tp, 0, 0, 0, 0, 0))) {
+			fprintf(stderr, _("%s: cannot reserve space: %s\n"),
+				progname, strerror(errno));
+			exit(1);
+		}
+		xfs_trans_bjoin(*tp, ialloc_context);
+		error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr,
+				   fsx, 1, &ialloc_context,
+				   &call_again, &ip);
+		if (!ip)
+			error = ENOSPC;
+		if (error)
+			return error;
+	}
+	if (!ip)
+		error = ENOSPC;
+
+	*ipp = ip;
+	return error;
 }

@@ -84,6 +84,12 @@ char	*dopts[] = {
 	"sectsize",
 #define D_NOALIGN	12
 	"noalign",
+#define D_RTINHERIT	13
+	"rtinherit",
+#define D_PROJINHERIT	14
+	"projinherit",
+#define D_EXTSZINHERIT	15
+	"extszinherit",
 	NULL
 };
 
@@ -543,6 +549,7 @@ main(
 	int			dswidth;
 	int			extent_flagging;
 	int			force_overwrite;
+	struct fsxattr		fsx;
 	int			iaflag;
 	int			ilflag;
 	int			imaxpct;
@@ -634,6 +641,7 @@ main(
 	extent_flagging = 1;
 	force_overwrite = 0;
 	worst_freelist = 0;
+	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
 	xi.notvolok = 1;
@@ -848,6 +856,24 @@ main(
 					sectorlog =
 						libxfs_highbit32(sectorsize);
 					ssflag = 1;
+					break;
+				case D_RTINHERIT:
+					fsx.fsx_xflags |= \
+						XFS_DIFLAG_RTINHERIT;
+					break;
+				case D_PROJINHERIT:
+					if (!value)
+						reqval('d', dopts, D_PROJINHERIT);
+					fsx.fsx_projid = atoi(value);
+					fsx.fsx_xflags |= \
+						XFS_DIFLAG_PROJINHERIT;
+					break;
+				case D_EXTSZINHERIT:
+					if (!value)
+						reqval('d', dopts, D_EXTSZINHERIT);
+					fsx.fsx_extsize = atoi(value);
+					fsx.fsx_xflags |= \
+						XFS_DIFLAG_EXTSZINHERIT;
 					break;
 				default:
 					unknown('d', value);
@@ -2265,7 +2291,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	 * Allocate the root inode and anything else in the proto file.
 	 */
 	mp->m_rootip = NULL;
-	parseproto(mp, NULL, &protostring, NULL);
+	parse_proto(mp, &fsx, &protostring);
 
 	/*
 	 * Protect ourselves against possible stupidity
