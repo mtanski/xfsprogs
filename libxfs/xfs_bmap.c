@@ -1745,13 +1745,177 @@ xfs_bmap_add_extent_hole_real(
 	return 0; /* keep gcc quite */
 }
 
+/*
+ * xfs_bmap_alloc_extsize_align is called by xfs_bmapi_alloc to adjust
+ * size of the extent-to-be-allocated based on inode and rt extsize.
+ */
+STATIC int
+xfs_bmap_extsize_align(
+	xfs_mount_t	*mp,
+	xfs_bmbt_irec_t	*gotp,		/* next extent pointer */
+	xfs_bmbt_irec_t	*prevp,		/* previous extent pointer */
+	xfs_extlen_t	extsz,		/* align to this extent size */
+	int		rt,		/* is this a realtime inode? */
+	int		eof,		/* is extent at end-of-file? */
+	int		delay,		/* creating delalloc extent? */
+	int		convert,	/* overwriting unwritten extent? */
+	xfs_fileoff_t	*offp,		/* in/out: aligned offset */
+	xfs_extlen_t	*lenp)		/* in/out: aligned length */
+{
+	xfs_fileoff_t	orig_off;	/* original offset */
+	xfs_extlen_t	orig_alen;	/* original length */
+	xfs_fileoff_t	orig_end;	/* original off+len */
+	xfs_fileoff_t	nexto;		/* next file offset */
+	xfs_fileoff_t	prevo;		/* previous file offset */
+	xfs_fileoff_t	align_off;	/* temp for offset */
+	xfs_extlen_t	align_alen;	/* temp for length */
+	xfs_extlen_t	temp;		/* temp for calculations */
+
+	if (convert)
+		return 0;
+
+	orig_off = align_off = *offp;
+	orig_alen = align_alen = *lenp;
+	orig_end = orig_off + orig_alen;
+
+	/*
+	 * If this request overlaps an existing extent, then don't
+	 * attempt to perform any additional alignment.
+	 */
+	if (!delay && !eof &&
+	    (orig_off >= gotp->br_startoff) &&
+	    (orig_end <= gotp->br_startoff + gotp->br_blockcount)) {
+		return 0;
+	}
+
+	/*
+	 * If the file offset is unaligned vs. the extent size
+	 * we need to align it.  This will be possible unless
+	 * the file was previously written with a kernel that didn't
+	 * perform this alignment, or if a truncate shot us in the
+	 * foot.
+	 */
+	temp = do_mod(orig_off, extsz);
+	if (temp) {
+		align_alen += temp;
+		align_off -= temp;
+	}
+	/*
+	 * Same adjustment for the end of the requested area.
+	 */
+	if ((temp = (align_alen % extsz))) {
+		align_alen += extsz - temp;
+	}
+	/*
+	 * If the previous block overlaps with this proposed allocation
+	 * then move the start forward without adjusting the length.
+	 */
+	if (prevp->br_startoff != NULLFILEOFF) {
+		if (prevp->br_startblock == HOLESTARTBLOCK)
+			prevo = prevp->br_startoff;
+		else
+			prevo = prevp->br_startoff + prevp->br_blockcount;
+	} else
+		prevo = 0;
+	if (align_off != orig_off && align_off < prevo)
+		align_off = prevo;
+	/*
+	 * If the next block overlaps with this proposed allocation
+	 * then move the start back without adjusting the length,
+	 * but not before offset 0.
+	 * This may of course make the start overlap previous block,
+	 * and if we hit the offset 0 limit then the next block
+	 * can still overlap too.
+	 */
+	if (!eof && gotp->br_startoff != NULLFILEOFF) {
+		if ((delay && gotp->br_startblock == HOLESTARTBLOCK) ||
+		    (!delay && gotp->br_startblock == DELAYSTARTBLOCK))
+			nexto = gotp->br_startoff + gotp->br_blockcount;
+		else
+			nexto = gotp->br_startoff;
+	} else
+		nexto = NULLFILEOFF;
+	if (!eof &&
+	    align_off + align_alen != orig_end &&
+	    align_off + align_alen > nexto)
+		align_off = nexto > align_alen ? nexto - align_alen : 0;
+	/*
+	 * If we're now overlapping the next or previous extent that
+	 * means we can't fit an extsz piece in this hole.  Just move
+	 * the start forward to the first valid spot and set
+	 * the length so we hit the end.
+	 */
+	if (align_off != orig_off && align_off < prevo)
+		align_off = prevo;
+	if (align_off + align_alen != orig_end &&
+	    align_off + align_alen > nexto &&
+	    nexto != NULLFILEOFF) {
+		ASSERT(nexto > prevo);
+		align_alen = nexto - align_off;
+	}
+
+	/*
+	 * If realtime, and the result isn't a multiple of the realtime
+	 * extent size we need to remove blocks until it is.
+	 */
+	if (rt && (temp = (align_alen % mp->m_sb.sb_rextsize))) {
+		/*
+		 * We're not covering the original request, or
+		 * we won't be able to once we fix the length.
+		 */
+		if (orig_off < align_off ||
+		    orig_end > align_off + align_alen ||
+		    align_alen - temp < orig_alen)
+			return XFS_ERROR(EINVAL);
+		/*
+		 * Try to fix it by moving the start up.
+		 */
+		if (align_off + temp <= orig_off) {
+			align_alen -= temp;
+			align_off += temp;
+		}
+		/*
+		 * Try to fix it by moving the end in.
+		 */
+		else if (align_off + align_alen - temp >= orig_end)
+			align_alen -= temp;
+		/*
+		 * Set the start to the minimum then trim the length.
+		 */
+		else {
+			align_alen -= orig_off - align_off;
+			align_off = orig_off;
+			align_alen -= align_alen % mp->m_sb.sb_rextsize;
+		}
+		/*
+		 * Result doesn't cover the request, fail it.
+		 */
+		if (orig_off < align_off || orig_end > align_off + align_alen)
+			return XFS_ERROR(EINVAL);
+	} else {
+		ASSERT(orig_off >= align_off);
+		ASSERT(orig_end <= align_off + align_alen);
+	}
+
+#ifdef DEBUG
+	if (!eof && gotp->br_startoff != NULLFILEOFF)
+		ASSERT(align_off + align_alen <= gotp->br_startoff);
+	if (prevp->br_startoff != NULLFILEOFF)
+		ASSERT(align_off >= prevp->br_startoff + prevp->br_blockcount);
+#endif
+
+	*lenp = align_alen;
+	*offp = align_off;
+	return 0;
+}
+
 #define XFS_ALLOC_GAP_UNITS	4
 
 /*
  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
  * It figures out where to ask the underlying allocator to put the new extent.
  */
-STATIC int				/* error */
+STATIC int
 xfs_bmap_alloc(
 	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
 {
@@ -1762,10 +1926,10 @@ xfs_bmap_alloc(
 	xfs_mount_t	*mp;		/* mount point structure */
 	int		nullfb;		/* true if ap->firstblock isn't set */
 	int		rt;		/* true if inode is realtime */
-#ifdef __KERNEL__
-	xfs_extlen_t	prod=0;		/* product factor for allocators */
-	xfs_extlen_t	ralen=0;	/* realtime allocation length */
-#endif
+	xfs_extlen_t	prod = 0;	/* product factor for allocators */
+	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
+	xfs_extlen_t	align;		/* minimum allocation alignment */
+	xfs_rtblock_t	rtx;
 
 #define	ISVALID(x,y)	\
 	(rt ? \
@@ -1781,125 +1945,25 @@ xfs_bmap_alloc(
 	nullfb = ap->firstblock == NULLFSBLOCK;
 	rt = XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata;
 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, ap->firstblock);
-#ifdef __KERNEL__
 	if (rt) {
-		xfs_extlen_t	extsz;		/* file extent size for rt */
-		xfs_fileoff_t	nexto;		/* next file offset */
-		xfs_extlen_t	orig_alen;	/* original ap->alen */
-		xfs_fileoff_t	orig_end;	/* original off+len */
-		xfs_fileoff_t	orig_off;	/* original ap->off */
-		xfs_extlen_t	mod_off;	/* modulus calculations */
-		xfs_fileoff_t	prevo;		/* previous file offset */
-		xfs_rtblock_t	rtx;		/* realtime extent number */
-		xfs_extlen_t	temp;		/* temp for rt calculations */
+		align = ap->ip->i_d.di_extsize ?
+			ap->ip->i_d.di_extsize : mp->m_sb.sb_rextsize;
+		/* Set prod to match the extent size */
+		prod = align / mp->m_sb.sb_rextsize;
 
-		/*
-		 * Set prod to match the realtime extent size.
-		 */
-		if (!(extsz = ap->ip->i_d.di_extsize))
-			extsz = mp->m_sb.sb_rextsize;
-		prod = extsz / mp->m_sb.sb_rextsize;
-		orig_off = ap->off;
-		orig_alen = ap->alen;
-		orig_end = orig_off + orig_alen;
-		/*
-		 * If the file offset is unaligned vs. the extent size
-		 * we need to align it.  This will be possible unless
-		 * the file was previously written with a kernel that didn't
-		 * perform this alignment.
-		 */
-		mod_off = do_mod(orig_off, extsz);
-		if (mod_off) {
-			ap->alen += mod_off;
-			ap->off -= mod_off;
-		}
-		/*
-		 * Same adjustment for the end of the requested area.
-		 */
-		if ((temp = (ap->alen % extsz)))
-			ap->alen += extsz - temp;
-		/*
-		 * If the previous block overlaps with this proposed allocation
-		 * then move the start forward without adjusting the length.
-		 */
-		prevo =
-			ap->prevp->br_startoff == NULLFILEOFF ?
-				0 :
-				(ap->prevp->br_startoff +
-				 ap->prevp->br_blockcount);
-		if (ap->off != orig_off && ap->off < prevo)
-			ap->off = prevo;
-		/*
-		 * If the next block overlaps with this proposed allocation
-		 * then move the start back without adjusting the length,
-		 * but not before offset 0.
-		 * This may of course make the start overlap previous block,
-		 * and if we hit the offset 0 limit then the next block
-		 * can still overlap too.
-		 */
-		nexto = (ap->eof || ap->gotp->br_startoff == NULLFILEOFF) ?
-			NULLFILEOFF : ap->gotp->br_startoff;
-		if (!ap->eof &&
-		    ap->off + ap->alen != orig_end &&
-		    ap->off + ap->alen > nexto)
-			ap->off = nexto > ap->alen ? nexto - ap->alen : 0;
-		/*
-		 * If we're now overlapping the next or previous extent that
-		 * means we can't fit an extsz piece in this hole.  Just move
-		 * the start forward to the first valid spot and set
-		 * the length so we hit the end.
-		 */
-		if ((ap->off != orig_off && ap->off < prevo) ||
-		    (ap->off + ap->alen != orig_end &&
-		     ap->off + ap->alen > nexto)) {
-			ap->off = prevo;
-			ap->alen = nexto - prevo;
-		}
-		/*
-		 * If the result isn't a multiple of rtextents we need to
-		 * remove blocks until it is.
-		 */
-		if ((temp = (ap->alen % mp->m_sb.sb_rextsize))) {
-			/*
-			 * We're not covering the original request, or
-			 * we won't be able to once we fix the length.
-			 */
-			if (orig_off < ap->off ||
-			    orig_end > ap->off + ap->alen ||
-			    ap->alen - temp < orig_alen)
-				return XFS_ERROR(EINVAL);
-			/*
-			 * Try to fix it by moving the start up.
-			 */
-			if (ap->off + temp <= orig_off) {
-				ap->alen -= temp;
-				ap->off += temp;
-			}
-			/*
-			 * Try to fix it by moving the end in.
-			 */
-			else if (ap->off + ap->alen - temp >= orig_end)
-				ap->alen -= temp;
-			/*
-			 * Set the start to the minimum then trim the length.
-			 */
-			else {
-				ap->alen -= orig_off - ap->off;
-				ap->off = orig_off;
-				ap->alen -= ap->alen % mp->m_sb.sb_rextsize;
-			}
-			/*
-			 * Result doesn't cover the request, fail it.
-			 */
-			if (orig_off < ap->off || orig_end > ap->off + ap->alen)
-				return XFS_ERROR(EINVAL);
-		}
+		error = xfs_bmap_extsize_align(mp, ap->gotp, ap->prevp,
+						align, rt, ap->eof, 0,
+						ap->conv, &ap->off, &ap->alen);
+		if (error)
+			return error;
+		ASSERT(ap->alen);
 		ASSERT(ap->alen % mp->m_sb.sb_rextsize == 0);
+
 		/*
 		 * If the offset & length are not perfectly aligned
 		 * then kill prod, it will just get us in trouble.
 		 */
-		if (do_mod(ap->off, extsz) || ap->alen % extsz)
+		if (do_mod(ap->off, align) || ap->alen % align)
 			prod = 1;
 		/*
 		 * Set ralen to be the actual requested length in rtextents.
@@ -1925,15 +1989,24 @@ xfs_bmap_alloc(
 			ap->rval = rtx * mp->m_sb.sb_rextsize;
 		} else
 			ap->rval = 0;
+	} else {
+		align = (ap->userdata && ap->ip->i_d.di_extsize &&
+			(ap->ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)) ?
+			ap->ip->i_d.di_extsize : 0;
+		if (unlikely(align)) {
+			error = xfs_bmap_extsize_align(mp, ap->gotp, ap->prevp,
+							align, rt,
+							ap->eof, 0, ap->conv,
+							&ap->off, &ap->alen);
+			ASSERT(!error);
+			ASSERT(ap->alen);
+		}
+		if (nullfb)
+			ap->rval = XFS_INO_TO_FSB(mp, ap->ip->i_ino);
+		else
+			ap->rval = ap->firstblock;
 	}
-#else
-	if (rt)
-		ap->rval = 0;
-#endif	/* __KERNEL__ */
-	else if (nullfb)
-		ap->rval = XFS_INO_TO_FSB(mp, ap->ip->i_ino);
-	else
-		ap->rval = ap->firstblock;
+
 	/*
 	 * If allocating at eof, and there's a previous real block,
 	 * try to use it's last block as our starting point.
@@ -2197,11 +2270,12 @@ xfs_bmap_alloc(
 			args.total = ap->total;
 			args.minlen = ap->minlen;
 		}
-		if (ap->ip->i_d.di_extsize) {
+		if (unlikely(ap->userdata && ap->ip->i_d.di_extsize &&
+			    (ap->ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE))) {
 			args.prod = ap->ip->i_d.di_extsize;
 			if ((args.mod = (xfs_extlen_t)do_mod(ap->off, args.prod)))
 				args.mod = (xfs_extlen_t)(args.prod - args.mod);
-		} else if (mp->m_sb.sb_blocksize >= NBPP) {
+		} else if (unlikely(mp->m_sb.sb_blocksize >= NBPP)) {
 			args.prod = 1;
 			args.mod = 0;
 		} else {
@@ -3839,18 +3913,18 @@ xfs_bmapi(
 	xfs_extlen_t	alen;		/* allocated extent length */
 	xfs_fileoff_t	aoff;		/* allocated file offset */
 	xfs_bmalloca_t	bma;		/* args for xfs_bmap_alloc */
-	char		contig;		/* allocation must be one extent */
 	xfs_btree_cur_t	*cur;		/* bmap btree cursor */
-	char		delay;		/* this request is for delayed alloc */
 	xfs_fileoff_t	end;		/* end of mapped file region */
 	int		eof;		/* we've hit the end of extent list */
+	char		contig;		/* allocation must be one extent */
+	char		delay;		/* this request is for delayed alloc */
+	char		exact;		/* don't do all of wasdelayed extent */
+	char		convert;	/* unwritten extent I/O completion */
 	xfs_bmbt_rec_t	*ep;		/* extent list entry pointer */
 	int		error;		/* error return */
-	char		exact;		/* don't do all of wasdelayed extent */
 	xfs_bmbt_irec_t	got;		/* current extent list record */
 	xfs_ifork_t	*ifp;		/* inode fork pointer */
 	xfs_extlen_t	indlen;		/* indirect blocks length */
-	char		inhole;		/* current location is hole in file */
 	xfs_extnum_t	lastx;		/* last useful extent number */
 	int		logflags;	/* flags for transaction logging */
 	xfs_extlen_t	minleft;	/* min blocks left after allocation */
@@ -3861,13 +3935,15 @@ xfs_bmapi(
 	xfs_extnum_t	nextents;	/* number of extents in file */
 	xfs_fileoff_t	obno;		/* old block number (offset) */
 	xfs_bmbt_irec_t	prev;		/* previous extent list record */
-	char		stateless;	/* ignore state flag set */
 	int		tmp_logflags;	/* temp flags holder */
+	int		whichfork;	/* data or attr fork */
+	char		inhole;		/* current location is hole in file */
+	char		stateless;	/* ignore state flag set */
 	char		trim;		/* output trimmed to match range */
 	char		userdata;	/* allocating non-metadata */
 	char		wasdelay;	/* old extent was delayed */
-	int		whichfork;	/* data or attr fork */
 	char		wr;		/* this is a write request */
+	char		rt;		/* this is a realtime file */
 	char		rsvd;		/* OK to allocate reserved blocks */
 #ifdef DEBUG
 	xfs_fileoff_t	orig_bno;	/* original block number value */
@@ -3897,6 +3973,7 @@ xfs_bmapi(
 	}
 	if (XFS_FORCED_SHUTDOWN(mp))
 		return XFS_ERROR(EIO);
+	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 	ASSERT(ifp->if_ext_max ==
 	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
@@ -3907,6 +3984,7 @@ xfs_bmapi(
 	delay = (flags & XFS_BMAPI_DELAY) != 0;
 	trim = (flags & XFS_BMAPI_ENTIRE) == 0;
 	userdata = (flags & XFS_BMAPI_METADATA) == 0;
+	convert = (flags & XFS_BMAPI_CONVERT) != 0;
 	exact = (flags & XFS_BMAPI_EXACT) != 0;
 	rsvd = (flags & XFS_BMAPI_RSVBLOCKS) != 0;
 	contig = (flags & XFS_BMAPI_CONTIG) != 0;
@@ -4001,9 +4079,26 @@ xfs_bmapi(
 			}
 			minlen = contig ? alen : 1;
 			if (delay) {
-				indlen = (xfs_extlen_t)
-					xfs_bmap_worst_indlen(ip, alen);
-				ASSERT(indlen > 0);
+				xfs_extlen_t	extsz;
+
+				/* Figure out the extent size, adjust alen */
+				if (rt) {
+					if (!(extsz = ip->i_d.di_extsize))
+						extsz = mp->m_sb.sb_rextsize;
+				} else {
+					extsz = ip->i_d.di_extsize;
+				}
+				if (extsz) {
+					error = xfs_bmap_extsize_align(mp,
+							&got, &prev, extsz,
+							rt, eof, delay, convert,
+							&aoff, &alen);
+					ASSERT(!error);
+				}
+
+				if (rt)
+					extsz = alen / mp->m_sb.sb_rextsize;
+
 				/*
 				 * Make a transaction-less quota reservation for
 				 * delayed allocation blocks. This number gets
@@ -4011,8 +4106,10 @@ xfs_bmapi(
 				 * We return EDQUOT if we haven't allocated
 				 * blks already inside this loop;
 				 */
-				if (XFS_TRANS_RESERVE_BLKQUOTA(
-						mp, NULL, ip, (long)alen)) {
+				if (XFS_TRANS_RESERVE_QUOTA_NBLKS(
+						mp, NULL, ip, (long)alen, 0,
+						rt ? XFS_QMOPT_RES_RTBLKS :
+						     XFS_QMOPT_RES_REGBLKS)) {
 					if (n == 0) {
 						*nmap = 0;
 						ASSERT(cur == NULL);
@@ -4025,40 +4122,46 @@ xfs_bmapi(
 				 * Split changing sb for alen and indlen since
 				 * they could be coming from different places.
 				 */
-				if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-					xfs_extlen_t	extsz;
-					xfs_extlen_t	ralen;
-					if (!(extsz = ip->i_d.di_extsize))
-						extsz = mp->m_sb.sb_rextsize;
-					ralen = roundup(alen, extsz);
-					ralen = ralen / mp->m_sb.sb_rextsize;
-					if (xfs_mod_incore_sb(mp,
-						XFS_SBS_FREXTENTS,
-						-(ralen), rsvd)) {
-						if (XFS_IS_QUOTA_ON(ip->i_mount))
-							(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
-						     		mp, NULL, ip,
-								(long)alen);
-						break;
-					}
+				indlen = (xfs_extlen_t)
+					xfs_bmap_worst_indlen(ip, alen);
+				ASSERT(indlen > 0);
+
+				if (rt) {
+					error = xfs_mod_incore_sb(mp,
+							XFS_SBS_FREXTENTS,
+							-(extsz), rsvd);
 				} else {
-					if (xfs_mod_incore_sb(mp,
-							      XFS_SBS_FDBLOCKS,
-							      -(alen), rsvd)) {
-						if (XFS_IS_QUOTA_ON(ip->i_mount))
-							(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
-								mp, NULL, ip,
-								(long)alen);
-						break;
+					error = xfs_mod_incore_sb(mp,
+							XFS_SBS_FDBLOCKS,
+							-(alen), rsvd);
+				}
+				if (!error) {
+					error = xfs_mod_incore_sb(mp,
+							XFS_SBS_FDBLOCKS,
+							-(indlen), rsvd);
+					if (error && rt) {
+						xfs_mod_incore_sb(ip->i_mount,
+							XFS_SBS_FREXTENTS,
+							extsz, rsvd);
+					} else if (error) {
+						xfs_mod_incore_sb(ip->i_mount,
+							XFS_SBS_FDBLOCKS,
+							alen, rsvd);
 					}
 				}
 
-				if (xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
-						-(indlen), rsvd)) {
-					(void)XFS_TRANS_UNRESERVE_BLKQUOTA(
-						mp, NULL, ip, (long)alen);
+				if (error) {
+					if (XFS_IS_QUOTA_ON(ip->i_mount))
+						/* unreserve the blocks now */
+						(void)
+						XFS_TRANS_UNRESERVE_QUOTA_NBLKS(
+							mp, NULL, ip,
+							(long)alen, 0, rt ?
+							XFS_QMOPT_RES_RTBLKS :
+							XFS_QMOPT_RES_REGBLKS);
 					break;
 				}
+
 				ip->i_delayed_blks += alen;
 				abno = NULLSTARTBLOCK(indlen);
 			} else {
@@ -4089,6 +4192,7 @@ xfs_bmapi(
 				bma.firstblock = *firstblock;
 				bma.alen = alen;
 				bma.off = aoff;
+				bma.conv = convert;
 				bma.wasdel = wasdelay;
 				bma.minlen = minlen;
 				bma.low = flist->xbf_low;
@@ -4510,8 +4614,7 @@ xfs_bunmapi(
 		return 0;
 	}
 	XFS_STATS_INC(xs_blk_unmap);
-	isrt = (whichfork == XFS_DATA_FORK) &&
-	       (ip->i_d.di_flags & XFS_DIFLAG_REALTIME);
+	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
 	start = bno;
 	bno = start + len - 1;
 	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
@@ -4683,13 +4786,24 @@ xfs_bunmapi(
 		}
 		if (wasdel) {
 			ASSERT(STARTBLOCKVAL(del.br_startblock) > 0);
-			xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
-				(int)del.br_blockcount, rsvd);
-			/* Unreserve our quota space */
-			(void)XFS_TRANS_RESERVE_QUOTA_NBLKS(
-				mp, NULL, ip, -((long)del.br_blockcount), 0,
-				isrt ?	XFS_QMOPT_RES_RTBLKS :
+			/* Update realtime/data freespace, unreserve quota */
+			if (isrt) {
+				xfs_filblks_t rtexts;
+
+				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
+				do_div(rtexts, mp->m_sb.sb_rextsize);
+				xfs_mod_incore_sb(mp, XFS_SBS_FREXTENTS,
+						(int)rtexts, rsvd);
+				(void)XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,
+					NULL, ip, -((long)del.br_blockcount), 0,
+					XFS_QMOPT_RES_RTBLKS);
+			} else {
+				xfs_mod_incore_sb(mp, XFS_SBS_FDBLOCKS,
+						(int)del.br_blockcount, rsvd);
+				(void)XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,
+					NULL, ip, -((long)del.br_blockcount), 0,
 					XFS_QMOPT_RES_REGBLKS);
+			}
 			ip->i_delayed_blks -= del.br_blockcount;
 			if (cur)
 				cur->bc_private.b.flags |=

@@ -389,6 +389,8 @@ int  xfs_dilocate (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_fsblock_t *,
 			int *, int *, uint);
 
 /* xfs_rtalloc.c */
+int  xfs_rtpick_extent (xfs_mount_t *, xfs_trans_t *, xfs_extlen_t,
+			xfs_rtblock_t *);
 int  xfs_rtfree_extent (xfs_trans_t *, xfs_rtblock_t, xfs_extlen_t);
 int  xfs_rtmodify_range (xfs_mount_t *, xfs_trans_t *, xfs_rtblock_t,
 			xfs_extlen_t, int);

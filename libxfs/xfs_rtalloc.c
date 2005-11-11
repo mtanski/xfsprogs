@@ -788,3 +788,52 @@ xfs_rtfree_extent(
 	}
 	return 0;
 }
+
+/*
+ * Pick an extent for allocation at the start of a new realtime file.
+ * Use the sequence number stored in the atime field of the bitmap inode.
+ * Translate this to a fraction of the rtextents, and return the product
+ * of rtextents and the fraction.
+ * The fraction sequence is 0, 1/2, 1/4, 3/4, 1/8, ..., 7/8, 1/16, ...
+ */
+int					/* error */
+xfs_rtpick_extent(
+	xfs_mount_t	*mp,		/* file system mount point */
+	xfs_trans_t	*tp,		/* transaction pointer */
+	xfs_extlen_t	len,		/* allocation length (rtextents) */
+	xfs_rtblock_t	*pick)		/* result rt extent */
+{
+	xfs_rtblock_t	b;		/* result block */
+	int		error;		/* error return value */
+	xfs_inode_t	*ip;		/* bitmap incore inode */
+	int		log2;		/* log of sequence number */
+	__uint64_t	resid;		/* residual after log removed */
+	__uint64_t	seq;		/* sequence number of file creation */
+	__uint64_t	*seqp;		/* pointer to seqno in inode */
+
+	error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, XFS_ILOCK_EXCL, &ip);
+	if (error)
+		return error;
+	ASSERT(ip == mp->m_rbmip);
+	seqp = (__uint64_t *)&ip->i_d.di_atime;
+	if (!(ip->i_d.di_flags & XFS_DIFLAG_NEWRTBM)) {
+		ip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+		*seqp = 0;
+	}
+	seq = *seqp;
+	if ((log2 = xfs_highbit64(seq)) == -1)
+		b = 0;
+	else {
+		resid = seq - (1ULL << log2);
+		b = (mp->m_sb.sb_rextents * ((resid << 1) + 1ULL)) >>
+		    (log2 + 1);
+		if (b >= mp->m_sb.sb_rextents)
+			b = do_mod(b, mp->m_sb.sb_rextents);
+		if (b + len > mp->m_sb.sb_rextents)
+			b = mp->m_sb.sb_rextents - len;
+	}
+	*seqp = seq + 1;
+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+	*pick = b;
+	return 0;
+}
