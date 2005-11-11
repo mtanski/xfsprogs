@@ -30,6 +30,16 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
+/*
+ * Read/write patterns (default is always "forward")
+ */
+#define IO_RANDOM	( 0)
+#define IO_FORWARD	( 1)
+#define IO_BACKWARD	(-1)
+
+/*
+ * File descriptor options
+ */
 #define IO_READONLY	(1<<0)
 #define IO_DIRECT	(1<<1)
 #define IO_REALTIME	(1<<2)

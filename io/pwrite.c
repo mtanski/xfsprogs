@@ -50,15 +50,116 @@ pwrite_help(void)
 "\n"
 " Writes into a segment of the currently open file, using either a buffer\n"
 " filled with a set pattern (0xcdcdcdcd) or data read from an input file.\n"
-" -S -- use an alternate seed number\n"
-" -i -- specifies an input file from which to source data to write\n"
-" -d -- open the input file for direct IO\n"
-" -s -- skip a number of bytes at the start of the input file\n"
-" -w -- call fdatasync(2) at the end (included in timing results)\n"
-" -W -- call fsync(2) at the end (included in timing results)\n"
 " The writes are performed in sequential blocks starting at offset, with the\n"
-" blocksize tunable using the -b option (default blocksize is 4096 bytes).\n"
+" blocksize tunable using the -b option (default blocksize is 4096 bytes),\n"
+" unless a different write pattern is requested.\n"
+" -S   -- use an alternate seed number for filling the write buffer\n"
+" -i   -- input file, source of data to write (used when writing forward)\n"
+" -d   -- open the input file for direct IO\n"
+" -s   -- skip a number of bytes at the start of the input file\n"
+" -w   -- call fdatasync(2) at the end (included in timing results)\n"
+" -W   -- call fsync(2) at the end (included in timing results)\n"
+" -B   -- write backwards through the range from offset (backwards N bytes)\n"
+" -F   -- write forwards through the range of bytes from offset (default)\n"
+" -R   -- write at random offsets in the specified range of bytes\n"
+" -Z N -- zeed the random number generator (used when writing randomly)\n"
+"         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
 "\n"));
+}
+
+static int
+write_random(
+	off64_t		offset,
+	long long	count,
+	unsigned int	seed,
+	long long	*total)
+{
+	off64_t		off, range;
+	ssize_t		bytes;
+	int		ops = 0;
+
+	srandom(seed);
+	if ((bytes = (offset % buffersize)))
+		offset -= bytes;
+	offset = max(0, offset);
+	if ((bytes = (count % buffersize)))
+		count += bytes;
+	count = max(buffersize, count);
+	range = count - buffersize;
+
+	*total = 0;
+	while (count > 0) {
+		off = ((random() % range) / buffersize) * buffersize;
+		bytes = pwrite64(file->fd, buffer, buffersize, off);
+		if (bytes == 0)
+			break;
+		if (bytes < 0) {
+			perror("pwrite64");
+			return -1;
+		}
+		ops++;
+		*total += bytes;
+		if (bytes < buffersize)
+			break;
+		count -= bytes;
+	}
+	return ops;
+}
+
+static int
+write_backward(
+	off64_t		offset,
+	long long	*count,
+	long long	*total)
+{
+	off64_t		end, off = offset;
+	ssize_t		bytes = 0, bytes_requested;
+	long long	cnt = *count;
+	int		ops = 0;
+
+	if ((end = off - cnt) < 0) {
+		cnt += end;	/* subtraction, end is negative */
+		end = 0;
+	}
+	*total = 0;
+	*count = cnt;
+
+	/* Do initial unaligned write if needed */
+	if ((bytes_requested = (off % buffersize))) {
+		bytes_requested = min(cnt, bytes_requested);
+		off -= bytes_requested;
+		bytes = pwrite(file->fd, buffer, bytes_requested, off);
+		if (bytes == 0)
+			return ops;
+		if (bytes < 0) {
+			perror("pwrite64");
+			return -1;
+		}
+		ops++;
+		*total += bytes;
+		if (bytes < bytes_requested)
+			return ops;
+		cnt -= bytes;
+	}
+
+	/* Iterate backward through the rest of the range */
+	while (cnt > end) {
+		bytes_requested = min(cnt, buffersize);
+		off -= bytes_requested;
+		bytes = pwrite64(file->fd, buffer, bytes_requested, off);
+		if (bytes == 0)
+			break;
+		if (bytes < 0) {
+			perror("pwrite64");
+			return -1;
+		}
+		ops++;
+		*total += bytes;
+		if (bytes < bytes_requested)
+			break;
+		cnt -= bytes;
+	}
+	return ops;
 }
 
 static int
@@ -104,30 +205,43 @@ pwrite_f(
 	int		argc,
 	char		**argv)
 {
-	size_t		blocksize, sectsize;
+	size_t		bsize;
 	off64_t		offset, skip = 0;
 	long long	count, total, tmp;
-	unsigned int	seed = 0xcdcdcdcd;
+	unsigned int	zeed = 0, seed = 0xcdcdcdcd;
+	unsigned int	fsblocksize, fssectsize;
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
 	int		Cflag, uflag, dflag, wflag, Wflag;
+	int		direction = IO_FORWARD;
 	int		c, fd = -1;
 
 	Cflag = uflag = dflag = wflag = Wflag = 0;
-	init_cvtnum(&blocksize, &sectsize);
-	while ((c = getopt(argc, argv, "b:Cdf:i:s:S:uwW")) != EOF) {
+	init_cvtnum(&fsblocksize, &fssectsize);
+	bsize = fsblocksize;
+
+	while ((c = getopt(argc, argv, "b:Cdf:i:s:S:uwWZ:")) != EOF) {
 		switch (c) {
 		case 'b':
-			tmp = cvtnum(blocksize, sectsize, optarg);
+			tmp = cvtnum(fsblocksize, fssectsize, optarg);
 			if (tmp < 0) {
 				printf(_("non-numeric bsize -- %s\n"), optarg);
 				return 0;
 			}
-			blocksize = tmp;
+			bsize = tmp;
 			break;
 		case 'C':
 			Cflag = 1;
+			break;
+		case 'F':
+			direction = IO_FORWARD;
+			break;
+		case 'B':
+			direction = IO_BACKWARD;
+			break;
+		case 'R':
+			direction = IO_RANDOM;
 			break;
 		case 'd':
 			dflag = 1;
@@ -137,7 +251,7 @@ pwrite_f(
 			infile = optarg;
 			break;
 		case 's':
-			skip = cvtnum(blocksize, sectsize, optarg);
+			skip = cvtnum(fsblocksize, fssectsize, optarg);
 			if (skip < 0) {
 				printf(_("non-numeric skip -- %s\n"), optarg);
 				return 0;
@@ -159,25 +273,34 @@ pwrite_f(
 		case 'W':
 			Wflag = 1;
 			break;
+		case 'Z':
+			zeed = strtoul(optarg, &sp, 0);
+			if (!sp || sp == optarg) {
+				printf(_("non-numeric seed -- %s\n"), optarg);
+				return 0;
+			}
+			break;
 		default:
 			return command_usage(&pwrite_cmd);
 		}
 	}
-	if ( ((skip || dflag) && !infile) || (optind != argc - 2))
+	if (((skip || dflag) && !infile) || (optind != argc - 2))
 		return command_usage(&pwrite_cmd);
-	offset = cvtnum(blocksize, sectsize, argv[optind]);
+	if (infile && direction != IO_FORWARD)
+		return command_usage(&pwrite_cmd);
+	offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
 	if (offset < 0) {
 		printf(_("non-numeric offset argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 	optind++;
-	count = cvtnum(blocksize, sectsize, argv[optind]);
+	count = cvtnum(fsblocksize, fssectsize, argv[optind]);
 	if (count < 0) {
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
 
-	if (alloc_buffer(blocksize, uflag, seed) < 0)
+	if (alloc_buffer(bsize, uflag, seed) < 0)
 		return 0;
 
 	c = IO_READONLY | (dflag ? IO_DIRECT : 0);
@@ -185,7 +308,21 @@ pwrite_f(
 		return 0;
 
 	gettimeofday(&t1, NULL);
-	c = write_buffer(offset, count, blocksize, fd, skip, &total);
+	switch (direction) {
+	case IO_RANDOM:
+		if (!zeed)	/* srandom seed */
+			zeed = time(NULL);
+		c = write_random(offset, count, zeed, &total);
+		break;
+	case IO_FORWARD:
+		c = write_buffer(offset, count, bsize, fd, skip, &total);
+		break;
+	case IO_BACKWARD:
+		c = write_backward(offset, &count, &total);
+		break;
+	default:
+		ASSERT(0);
+	}
 	if (c < 0) {
 		close(fd);
 		return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -277,7 +277,6 @@ bmap_f(
 #define MINRANGE_WIDTH	16
 #define MINAG_WIDTH	2
 #define MINTOT_WIDTH	5
-#define	max(a,b)	(a > b ? a : b)
 #define NFLG		5	/* count of flags */
 #define	FLG_NULL	000000	/* Null flag */
 #define	FLG_PRE		010000	/* Unwritten extent */
