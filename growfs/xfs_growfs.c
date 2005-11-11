@@ -74,11 +74,12 @@ report_info(
 	char		*rtname,
 	int		unwritten,
 	int		dirversion,
-	int		logversion)
+	int		logversion,
+	int		attrversion)
 {
 	printf(_(
 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
-	    "         =%-22s sectsz=%-5u\n"
+	    "         =%-22s sectsz=%-5u attr=%u\n"
 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 	    "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
 	    "naming   =version %-14u bsize=%-6u\n"
@@ -87,7 +88,7 @@ report_info(
 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
 
 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
-		"", geo.sectsize,
+		"", geo.sectsize, attrversion,
 		"", geo.blocksize, (unsigned long long)geo.datablocks,
 			geo.imaxpct,
 		"", geo.sunit, geo.swidth, unwritten,
@@ -107,6 +108,7 @@ main(int argc, char **argv)
 	int			c;	/* current option character */
 	long long		ddsize;	/* device size in 512-byte blocks */
 	int			dflag;	/* -d flag */
+	int			attrversion;/* attribute version number */
 	int			dirversion; /* directory version number */
 	int			logversion; /* log version number */
 	long long		dlsize;	/* device size in 512-byte blocks */
@@ -249,10 +251,12 @@ main(int argc, char **argv)
 	unwritten = geo.flags & XFS_FSOP_GEOM_FLAGS_EXTFLG ? 1 : 0;
 	dirversion = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? 2 : 1;
 	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
+	attrversion = geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
+			(geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR ? 1 : 0);
 
 	if (nflag) {
 		report_info(geo, datadev, isint, logdev, rtdev,
-				unwritten, dirversion, logversion);
+				unwritten, dirversion, logversion, attrversion);
 		exit(0);
 	}
 
@@ -289,7 +293,7 @@ main(int argc, char **argv)
 	}
 
 	report_info(geo, datadev, isint, logdev, rtdev,
-				unwritten, dirversion, logversion);
+			unwritten, dirversion, logversion, attrversion);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :

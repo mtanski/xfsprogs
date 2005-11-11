@@ -68,15 +68,16 @@ struct xfs_mount;
 	(XFS_SB_VERSION_NUMBITS | \
 	 XFS_SB_VERSION_OKREALFBITS | \
 	 XFS_SB_VERSION_OKSASHFBITS)
-#define XFS_SB_VERSION_MKFS(ia,dia,extflag,dirv2,na,sflag,morebits)	\
-	(((ia) || (dia) || (extflag) || (dirv2) || (na) || (sflag) || \
-	  (morebits)) ? \
+#define XFS_SB_VERSION_MKFS(ia,dia,extflag,dirv2,logv2,attrv1,sflag,morebits) \
+	(((ia) || (dia) || (extflag) || (dirv2) || (logv2) || (attrv1) || \
+	  (sflag) || (morebits)) ? \
 		(XFS_SB_VERSION_4 | \
 		 ((ia) ? XFS_SB_VERSION_ALIGNBIT : 0) | \
 		 ((dia) ? XFS_SB_VERSION_DALIGNBIT : 0) | \
 		 ((extflag) ? XFS_SB_VERSION_EXTFLGBIT : 0) | \
 		 ((dirv2) ? XFS_SB_VERSION_DIRV2BIT : 0) | \
-		 ((na) ? XFS_SB_VERSION_LOGV2BIT : 0) | \
+		 ((logv2) ? XFS_SB_VERSION_LOGV2BIT : 0) | \
+		 ((attrv1) ? XFS_SB_VERSION_ATTRBIT : 0) | \
 		 ((sflag) ? XFS_SB_VERSION_SECTORBIT : 0) | \
 		 ((morebits) ? XFS_SB_VERSION_MOREBITSBIT : 0)) : \
 		XFS_SB_VERSION_1)
@@ -108,7 +109,8 @@ struct xfs_mount;
 /*
  * mkfs macro to set up sb_features2 word
  */
-#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr)	0
+#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr, attrv2)		\
+	(((attrv2) ? XFS_SB_VERSION2_ATTR2BIT : 0))
 
 typedef struct xfs_sb
 {

@@ -104,6 +104,8 @@ char	*iopts[] = {
 	"perblock",
 #define	I_SIZE		4
 	"size",
+#define	I_ATTR		5
+	"attr",
 	NULL
 };
 
@@ -527,6 +529,7 @@ main(
 	xfs_agnumber_t		agno;
 	__uint64_t		agsize;
 	xfs_alloc_rec_t		*arec;
+	int			attrversion;
 	xfs_btree_sblock_t	*block;
 	int			blflag;
 	int			blocklog;
@@ -619,6 +622,7 @@ main(
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
+	attrversion = 0;
 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
@@ -954,6 +958,14 @@ main(
 						illegal(value, "i size");
 					inodelog = libxfs_highbit32(isize);
 					isflag = 1;
+					break;
+				case I_ATTR:
+					if (!value)
+						reqval('i', iopts, I_ATTR);
+					c = atoi(value);
+					if (c < 0 || c > 2)
+						illegal(value, "i attr");
+					attrversion = c;
 					break;
 				default:
 					unknown('i', value);
@@ -1940,7 +1952,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	if (!qflag || Nflag) {
 		printf(_(
 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-		   "         =%-22s sectsz=%-5u\n"
+		   "         =%-22s sectsz=%-5u attr=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 		   "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
 		   "naming   =version %-14u bsize=%-6u\n"
@@ -1948,7 +1960,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sectsz=%-5u sunit=%d blks\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
-			"", sectorsize,
+			"", sectorsize, attrversion,
 			"", blocksize, (long long)dblocks,
 				imflag ? imaxpct : XFS_DFL_IMAXIMUM_PCT,
 			"", dsunit, dswidth, extent_flagging,
@@ -2018,10 +2030,11 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	}
 	sbp->sb_versionnum =
 		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
-			dirversion == 2, logversion == 2,
+			dirversion == 2, logversion == 2, attrversion == 1,
 			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
-			(0 /*mmr*/ || 0 /*lazy_sb_counters*/));
-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0 /*mmr*/, 0);
+			(0/*mmr*/|| 0/*lazy_sb_counters*/ || attrversion == 2));
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0/*mmr*/,0/*lazy_sb_counters*/,
+				attrversion == 2);
 
 	/*
 	 * Zero out the beginning of the device, to obliterate any old

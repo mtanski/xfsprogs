@@ -281,9 +281,9 @@ XFS uses 64-bit inode numbers internally; however, the number of
 significant bits in an inode number
 is affected by filesystem geometry.  In
 practice, filesystem size and inode size are the predominant factors.
-The Linux kernel and most applications cannot currently handle
-inode numbers greater than 32 significant bits, so if no
-inode size is given on the command line, 
+The Linux kernel (on 32 bit hardware platforms) and most applications
+cannot currently handle inode numbers greater than 32 significant bits,
+so if no inode size is given on the command line, 
 .I mkfs.xfs
 will attempt to choose a size
 such that inode numbers will be < 32 bits.  If an inode size
@@ -312,6 +312,18 @@ This option can be used to turn off inode alignment when the
 filesystem needs to be mountable by a version of IRIX
 that does not have the inode alignment feature
 (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
+.IP
+The option
+.BI attr[= value ]
+is used to specify the version of extended attribute inline allocation
+policy to be used.
+By default, this is zero.  Once extended attributes are used for the
+first time, the version will be set to either one or two.
+The current version (two) uses a more efficient algorithm for managing
+the available inline inode space than version one does, however, for
+backward compatibility reasons (and in the absence of the \f3attr\f1=\f22\f1
+mkfs option, or the \f2attr2\f1 mount option), version one will be selected
+by default when attributes are first used on a filesystem.
 .TP
 .B \-l
 Log section options.
