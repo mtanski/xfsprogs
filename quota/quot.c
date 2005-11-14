@@ -139,7 +139,7 @@ quot_bulkstat_mount(
 {
 	xfs_fsop_bulkreq_t	bulkreq;
 	xfs_bstat_t		*buf;
-	__int64_t		last = 0;
+	__uint64_t		last = 0;
 	__int32_t		count;
 	int			i, sts, fsfd;
 	du_t			**dp;

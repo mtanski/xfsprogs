@@ -219,12 +219,6 @@ type_to_string(
  * Identifier caches - user/group/project names/IDs
  */
 
-#ifndef UT_NAMESIZE
-struct utmp utmp;
-#define NMAX		(sizeof(utmp.ut_name))
-#else
-#define NMAX		UT_NAMESIZE
-#endif
 #define NID		4096
 #define IDMASK		(NID-1)
 

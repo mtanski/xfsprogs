@@ -19,6 +19,7 @@
 #include <xfs/command.h>
 #include <pwd.h>
 #include <grp.h>
+#include <utmp.h>
 #include "init.h"
 #include "quota.h"
 
@@ -389,7 +390,7 @@ report_user_mount(
 	uint		flags)
 {
 	struct passwd	*u;
-	char		n[MAXNAMELEN];
+	char		n[NMAX];
 	uint		id;
 
 	if (upper) {	/* identifier range specified */
@@ -427,7 +428,7 @@ report_group_mount(
 	uint		flags)
 {
 	struct group	*g;
-	char		n[MAXNAMELEN];
+	char		n[NMAX];
 	uint		id;
 
 	if (upper) {	/* identifier range specified */
@@ -464,7 +465,7 @@ report_project_mount(
 	uint		flags)
 {
 	fs_project_t	*p;
-	char		n[MAXNAMELEN];
+	char		n[NMAX];
 	uint		id;
 
 	if (upper) {	/* identifier range specified */

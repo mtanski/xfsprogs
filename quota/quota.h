@@ -76,6 +76,7 @@ enum {
 /*
  * Identifier (uid/gid/prid) cache routines
  */
+#define NMAX 32
 extern char *uid_to_name(__uint32_t __uid);
 extern char *gid_to_name(__uint32_t __gid);
 extern char *prid_to_name(__uint32_t __prid);

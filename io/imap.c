@@ -22,12 +22,6 @@
 #include "init.h"
 #include "io.h"
 
-#if defined(__sgi__)
-# define ino64p		ino64_t *
-#else
-# define ino64p		__u64 *
-#endif
-
 static cmdinfo_t imap_cmd;
 
 int
@@ -36,7 +30,7 @@ imap_f(int argc, char **argv)
 	int		count;
 	int		nent;
 	int		i;
-	__s64		last = 0;
+	__uint64_t	last = 0;
 	xfs_inogrp_t	*t;
 	xfs_fsop_bulkreq_t bulkreq;
 
@@ -47,7 +41,7 @@ imap_f(int argc, char **argv)
 
 	t = malloc(nent * sizeof(*t));
 
-	bulkreq.lastip  = (ino64p)&last;
+	bulkreq.lastip  = &last;
 	bulkreq.icount  = nent;
 	bulkreq.ubuffer = (void *)t;
 	bulkreq.ocount  = &count;
