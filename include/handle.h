@@ -24,6 +24,8 @@ extern "C" {
 
 struct fsdmidata;
 struct attrlist_cursor;
+struct parent_cursor;
+struct parent;
 
 extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
 extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
@@ -39,6 +41,14 @@ extern int  attr_multi_by_handle (void *__hanp, size_t __hlen, void *__buf,
 extern int  attr_list_by_handle (void *__hanp, size_t __hlen, void *__buf,
 				 size_t __bufsize, int __flags,
 				 struct attrlist_cursor *__cursor);
+extern int  getparents_by_handle(void *__hanp, size_t __hlen,
+				 struct parent *__buf, size_t __bufsize,
+				 struct parent_cursor *__cursor,
+				 unsigned int *__count, unsigned int *__more);
+extern int  getparentpaths_by_handle(void *__hanp, size_t __hlen,
+				     struct parent *__buf, size_t __bufsize,
+				     struct parent_cursor *__cursor,
+				     unsigned int *__count, unsigned int *__more);
 extern int  fssetdm_by_handle (void *__hanp, size_t __hlen,
 			       struct fsdmidata *__fsdmi);
 

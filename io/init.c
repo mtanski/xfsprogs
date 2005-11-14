@@ -66,6 +66,7 @@ init_commands(void)
 	inject_init();
 	mmap_init();
 	open_init();
+	parent_init();
 	pread_init();
 	prealloc_init();
 	pwrite_init();

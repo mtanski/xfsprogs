@@ -18,6 +18,7 @@
 
 #include <xfs/xfs.h>
 #include <xfs/handle.h>
+#include <xfs/parent.h>
 
 /* just pick a value we know is more than big enough */
 #define	MAXHANSIZ	64
@@ -342,7 +343,7 @@ attr_list_by_handle(
 	int		flags,
 	struct attrlist_cursor *cursor)
 {
-	int		fd;
+	int		error, fd;
 	char		*path;
 	xfs_fsop_attrlist_handlereq_t alhreq;
 
@@ -362,7 +363,93 @@ attr_list_by_handle(
 	alhreq.buflen = bufsize;
 	alhreq.buffer = buf;
 
-	return xfsctl(path, fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
+	error = xfsctl(path, fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
+
+	memcpy(cursor, &alhreq.pos, sizeof(alhreq.pos));
+	return error;
+}
+
+int
+getparents_by_handle(
+	void		*hanp,
+	size_t		hlen,
+	parent_t	*buf,
+	size_t		bufsiz,
+	parent_cursor_t *cursor,
+	unsigned int	*count,
+	unsigned int	*more)
+{
+#if !defined(__sgi__)
+	errno = EOPNOTSUPP;
+	return -1;
+#else
+
+	int		error, fd;
+	char		*path;
+	xfs_fsop_getparents_handlereq_t gphreq;
+
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
+		return -1;
+
+	gphreq.hreq.fd       = 0;
+	gphreq.hreq.path     = NULL;
+	gphreq.hreq.oflags   = O_LARGEFILE;
+	gphreq.hreq.ihandle  = hanp;
+	gphreq.hreq.ihandlen = hlen;
+	gphreq.hreq.ohandle  = NULL;
+	gphreq.hreq.ohandlen = NULL;
+	memcpy(&gphreq.pos, cursor, sizeof(gphreq.pos));
+	gphreq.buflen = bufsiz;
+	gphreq.buffer = buf;
+	gphreq.ocount = count;
+	gphreq.omore = more;
+
+	error = xfsctl(path, fd, XFS_IOC_GETPARENTS, &gphreq);
+
+	memcpy(cursor, &gphreq.pos, sizeof(gphreq.pos));
+	return error;
+#endif
+}
+
+int
+getparentpaths_by_handle(
+	void		*hanp,
+	size_t		hlen,
+	parent_t	*buf,
+	size_t		bufsiz,
+	parent_cursor_t *cursor,
+	unsigned int	*count,
+	unsigned int	*more)
+{
+#if !defined(__sgi__)
+	errno = EOPNOTSUPP;
+	return -1;
+#else
+	int		error, fd;
+	char		*path;
+	xfs_fsop_getparents_handlereq_t gphreq;
+
+	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
+		return -1;
+
+	gphreq.hreq.fd       = 0;
+	gphreq.hreq.path     = NULL;
+	gphreq.hreq.oflags   = O_LARGEFILE;
+	gphreq.hreq.ihandle  = hanp;
+	gphreq.hreq.ihandlen = hlen;
+	gphreq.hreq.ohandle  = NULL;
+	gphreq.hreq.ohandlen = NULL;
+	memcpy(&gphreq.pos, cursor, sizeof(gphreq.pos));
+	gphreq.buflen = bufsiz;
+	gphreq.buffer = buf;
+	gphreq.ocount = count;
+	gphreq.omore = more;
+
+	error = xfsctl(path, fd, XFS_IOC_GETPARENTPATHS, &gphreq);
+
+	memcpy(cursor, &gphreq.pos, sizeof(gphreq.pos));
+	return error;
+#endif
 }
 
 int

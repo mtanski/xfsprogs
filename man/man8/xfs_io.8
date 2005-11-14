@@ -309,6 +309,19 @@ If the \f2-v\f1 option is specified, the atime (last access), mtime
 \f3statfs\f1
 Selected statistics from \f2statfs\f1(2) and the XFS_IOC_FSGEOMETRY
 system call on the filesystem where the current file resides.
+.TP
+\f3parent\f1 [ \f2\-cpv\f1 ]
+By default this command prints out the parent inode numbers,
+inode generation numbers and basenames of all the hardlinks which
+point to the inode of the current file.
+If the \f2-p\f1 option is specified, then the output is similar 
+to the default output except pathnames up to the mount-point
+are printed out instead of the component name.
+If the \f2-c\f1 option is specified, then the file's filesystem
+will check all the parent attributes for consistency. 
+If the \f2-v\f1 option is specified, then verbose output will be
+printed.
+Not currently operational on Linux.
 
 .SH IRIX SEE ALSO
 mkfs_xfs(1M),

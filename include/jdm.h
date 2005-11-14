@@ -24,6 +24,8 @@ typedef void	jdm_filehandle_t;	/* filehandle */
 
 struct xfs_bstat;
 struct attrlist_cursor;
+struct parent_cursor;
+struct parent;
 
 extern jdm_fshandle_t *
 jdm_getfshandle( char *mntpnt);
@@ -59,6 +61,20 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
 		xfs_bstat_t *statp,
 		char *bufp, size_t bufsz, int flags,
 		struct attrlist_cursor *cursor);
+
+extern int
+jdm_getparents( jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		struct parent *bufp, size_t bufsz,
+		struct parent_cursor *cursor,
+		unsigned int *count, unsigned int *more);
+
+extern int
+jdm_getparentpaths( jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		struct parent *bufp, size_t bufsz,
+		struct parent_cursor *cursor,
+		unsigned int *count, unsigned int *more);
 
 /* macro for determining the size of a structure member */
 #define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )

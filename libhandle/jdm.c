@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/handle.h>
 #include <xfs/jdm.h>
+#include <xfs/parent.h>
 
 /* internal fshandle - typecast to a void for external use */
 #define FSHANDLE_SZ		8
@@ -170,4 +171,46 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
 			sizeof( filehandle ),
 			bufp, bufsz, flags, cursor);
 	return rval;
+}
+
+int
+jdm_getparents( jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		parent_t *bufp, size_t bufsz,
+		parent_cursor_t *cursor,
+		unsigned int *count, unsigned int *more)
+{
+#if !defined(__sgi__)
+	errno = EOPNOTSUPP;
+	return -1;
+#else
+	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
+	filehandle_t filehandle;
+
+	jdm_fill_filehandle( &filehandle, fshandlep, statp );
+	return getparents_by_handle (( void * )&filehandle,
+			sizeof( filehandle ),
+			bufp, bufsz, cursor, count, more);
+#endif
+}
+
+int
+jdm_getparentpaths( jdm_fshandle_t *fshp,
+		xfs_bstat_t *statp,
+		parent_t *bufp, size_t bufsz,
+		parent_cursor_t *cursor,
+		unsigned int *count, unsigned int *more)
+{
+#if !defined(__sgi__)
+	errno = EOPNOTSUPP;
+	return -1;
+#else
+	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
+	filehandle_t filehandle;
+
+	jdm_fill_filehandle( &filehandle, fshandlep, statp );
+	return getparentpaths_by_handle (( void * )&filehandle,
+			sizeof( filehandle ),
+			bufp, bufsz, cursor, count, more);
+#endif
 }

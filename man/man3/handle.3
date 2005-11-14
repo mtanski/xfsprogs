@@ -1,6 +1,6 @@
 .TH HANDLE 3 
 .SH NAME
-path_to_handle, path_to_fshandle, fd_to_handle, handle_to_fshandle, open_by_handle, readlink_by_handle, attr_multi_by_handle, attr_list_by_handle, fssetdm_by_handle, free_handle \- file handle operations
+path_to_handle, path_to_fshandle, fd_to_handle, handle_to_fshandle, open_by_handle, readlink_by_handle, attr_multi_by_handle, attr_list_by_handle, fssetdm_by_handle, free_handle, getparents_by_handle, getparentpaths_by_handle \- file handle operations
 .SH C SYNOPSIS
 .nf
 .B #include <sys/types.h>
@@ -36,6 +36,16 @@ path_to_handle, path_to_fshandle, fd_to_handle, handle_to_fshandle, open_by_hand
 .B "                       struct fsdmidata *fssetdm);"
 .PP
 .B "void free_handle (void *hanp, size_t hlen);
+.PP
+.B "int getparents_by_handle(void *hanp, size_t hlen,"
+.B "                         parent_t *buf, size_t bufsiz,"
+.B "                         parent_cursor_t *cursor,"
+.B "                         unsigned int *count, unsigned int *more);"
+.PP
+.B "int getparentpaths_by_handle(void *hanp, size_t hlen,"
+.B "                             parent_t *buf, size_t bufsiz,"
+.B "                             parent_cursor_t *cursor,"
+.B "                             unsigned int *count, unsigned int *more);"
 .Op
 .SH DESCRIPTION
 .PP
@@ -135,6 +145,19 @@ returned by the following functions:
 \f2fd_to_handle\f1(),
 and
 \f2handle_to_fshandle\f1().
+.P
+The \f2getparents_by_handle\f1() function returns an array
+of \f2parent_t\f1 structures for each hardlink to
+the inode represented by the given handle. The parent structure
+encodes the parent inode number, generation number and the 
+basename of the link.
+This function is not operational on Linux.
+.P
+The \f2getparentpaths_by_handle\f1() function is identical to
+the \f2getparents_by_handle\f1() function except that instead
+of returning the basename it returns the path of the link up
+to the mount point.
+This function is also not operational on Linux.
 .SH "SEE ALSO"
 open(2),
 readlink(2),

@@ -135,8 +135,20 @@ openfile(
 
 	fd = open(path, oflags, mode);
 	if (fd < 0) {
-		perror(path);
-		return -1;
+		if ((errno == EISDIR) && (oflags & O_RDWR)) {
+			/* make it as if we asked for O_RDONLY & try again */
+			oflags &= ~O_RDWR;
+			oflags |= O_RDONLY;
+			flags |= IO_READONLY;
+			fd = open(path, oflags, mode);
+			if (fd < 0) {
+				perror(path);
+				return -1;
+			}
+		} else {
+			perror(path);
+			return -1;
+		}
 	}
 
 	if (!geom)

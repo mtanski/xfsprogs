@@ -101,6 +101,15 @@ typedef struct xfs_fsop_attrlist_handlereq {
 	void				*buffer;	/* returned names */
 } xfs_fsop_attrlist_handlereq_t;
 
+typedef struct xfs_fsop_getparents_handlereq {
+	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
+	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
+	__u32				buflen;	/* length of buffer supplied */
+	void				*buffer; /* returned data */
+	__u32				*ocount; /* return number of links */
+	__u32				*omore; /* return whether more to come */
+} xfs_fsop_getparents_handlereq_t;
+
 typedef struct xfs_attr_multiop {
 	__u32		am_opcode;
 	__s32		am_error;
@@ -196,6 +205,16 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
 					((xfs_fsop_attrlist_handlereq_t*)arg)->buflen,
 					((xfs_fsop_attrlist_handlereq_t*)arg)->flags,
 					&(((xfs_fsop_attrlist_handlereq_t*)arg)->pos));
+		case SGI_XFS_GETPARENTS:
+		case SGI_XFS_GETPARENTPATHS:
+			return syssgi(cmd,
+					((xfs_fsop_getparents_handlereq_t*)arg)->hreq.ihandle,
+					((xfs_fsop_getparents_handlereq_t*)arg)->hreq.ihandlen,
+					((xfs_fsop_getparents_handlereq_t*)arg)->buffer,
+					((xfs_fsop_getparents_handlereq_t*)arg)->buflen,
+					&(((xfs_fsop_getparents_handlereq_t*)arg)->pos),
+					((xfs_fsop_getparents_handlereq_t*)arg)->ocount,
+					((xfs_fsop_getparents_handlereq_t*)arg)->omore);
 		case SGI_ATTR_MULTI_BY_HANDLE:
 			return syssgi(cmd,
 					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.ihandle,
@@ -302,5 +321,7 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_ATTRMULTI_BY_HANDLE	SGI_ATTR_MULTI_BY_HANDLE
 #define XFS_IOC_FSGEOMETRY		XFS_FS_GEOMETRY
 #define XFS_IOC_GOINGDOWN		XFS_FS_GOINGDOWN
+#define XFS_IOC_GETPARENTS		SGI_XFS_GETPARENTS
+#define XFS_IOC_GETPARENTPATHS		SGI_XFS_GETPARENTPATHS
 
 #endif	/* __XFS_IRIX_H__ */

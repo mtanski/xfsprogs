@@ -146,3 +146,8 @@ extern void		mincore_init(void);
 #define mincore_init()	do { } while (0)
 #endif
 
+#ifdef HAVE_PARENT
+extern void		parent_init(void);
+#else
+#define parent_init()	do { } while (0)
+#endif

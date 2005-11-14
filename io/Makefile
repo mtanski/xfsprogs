@@ -44,11 +44,14 @@ else
 LSRCFILES += sendfile.c
 endif
 
-ifneq ($(PKG_PLATFORM),irix)
+ifeq ($(PKG_PLATFORM),irix)
+LSRCFILES += inject.c resblks.c shutdown.c
+CFILES += parent.c
+LCFLAGS += -DHAVE_PARENT
+else
+LSRCFILES += parent.c
 CFILES += inject.c resblks.c shutdown.c
 LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS -DHAVE_SHUTDOWN
-else
-LSRCFILES += inject.c resblks.c shutdown.c
 endif
 
 ifeq ($(ENABLE_READLINE),yes)
