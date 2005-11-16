@@ -2476,7 +2476,7 @@ usage( void )
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
 			    (sunit=value,swidth=value|su=num,sw=num),\n\
 			    sectlog=n|sectsize=num,unwritten=0|1]\n\
-/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n]\n\
+/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
 			    sunit=value|su=num,sectlog=n|sectsize=num]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
