@@ -31,6 +31,7 @@ static cmdinfo_t chproj_cmd;
 static cmdinfo_t lsproj_cmd;
 static cmdinfo_t extsize_cmd;
 static prid_t prid;
+static long extsize;
 
 off64_t
 filesize(void)
@@ -406,6 +407,7 @@ lsproj_f(
 	prid_t		projid;
 	int		c;
 
+	recurse_all = recurse_dir = 0;
 	while ((c = getopt(argc, argv, "DR")) != EOF) {
 		switch (c) {
 		case 'D':
@@ -476,6 +478,7 @@ chproj_f(
 {
 	int		c;
 
+	recurse_all = recurse_dir = 0;
 	while ((c = getopt(argc, argv, "DR")) != EOF) {
 		switch (c) {
 		case 'D':
@@ -505,6 +508,158 @@ chproj_f(
 			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
 	else if (setprojid(file->name, file->fd, prid) < 0)
 		perror("setprojid");
+	return 0;
+}
+
+static void
+extsize_help(void)
+{
+	printf(_(
+"\n"
+" report or modify prefered extent size (in bytes) for the current path\n"
+"\n"
+" -R -- recursively descend (useful when current path is a directory)\n"
+" -D -- recursively descend, only modifying extsize on directories\n"
+"\n"));
+}
+
+static int
+get_extsize(const char *path, int fd)
+{
+	struct fsxattr	fsx;
+
+	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+			progname, path, strerror(errno));
+		return 0;
+	}
+	printf("[%u] %s\n", fsx.fsx_extsize, path);
+	return 0;
+}
+
+static int
+set_extsize(const char *path, int fd, long extsz)
+{
+	struct fsxattr	fsx;
+	struct stat64	stat;
+
+	if (fstat64(fd, &stat) < 0) {
+		perror("fstat64");
+		return 0;
+	}
+	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+			progname, path, strerror(errno));
+		return 0;
+	}
+
+	if (S_ISREG(stat.st_mode)) {
+		fsx.fsx_xflags |= XFS_XFLAG_EXTSIZE;
+	} else if (S_ISDIR(stat.st_mode)) {
+		fsx.fsx_xflags |= XFS_XFLAG_EXTSZINHERIT;
+	} else {
+		printf(_("invalid target file type - file %s\n"), path);
+		return 0;
+	}
+	fsx.fsx_extsize = extsz;
+
+	if ((xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
+		printf("%s: XFS_IOC_FSSETXATTR %s: %s\n",
+			progname, path, strerror(errno));
+		return 0;
+	}
+
+	return 0;
+}
+
+static int
+get_extsize_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1) {
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	} else {
+		get_extsize(path, fd);
+		close(fd);
+	}
+	return 0;
+}
+
+static int
+set_extsize_callback(
+	const char		*path,
+	const struct stat	*stat,
+	int			status,
+	struct FTW		*data)
+{
+	int			fd;
+
+	if (recurse_dir && !S_ISDIR(stat->st_mode))
+		return 0;
+
+	if ((fd = open(path, O_RDONLY)) == -1) {
+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+			progname, path, strerror(errno));
+	} else {
+		set_extsize(path, fd, extsize);
+		close(fd);
+	}
+	return 0;
+}
+
+static int
+extsize_f(
+	int		argc,
+	char		**argv)
+{
+	size_t			blocksize, sectsize;
+	int			c;
+
+	recurse_all = recurse_dir = 0;
+	init_cvtnum(&blocksize, &sectsize);
+	while ((c = getopt(argc, argv, "DR")) != EOF) {
+		switch (c) {
+		case 'D':
+			recurse_all = 0;
+			recurse_dir = 1;
+			break;
+		case 'R':
+			recurse_all = 1;
+			recurse_dir = 0;
+			break;
+		default:
+			return command_usage(&extsize_cmd);
+		}
+	}
+
+	if (optind < argc) {
+		extsize = (long)cvtnum(blocksize, sectsize, argv[optind]);
+		if (extsize < 0) {
+			printf(_("non-numeric extsize argument -- %s\n"),
+				argv[optind]);
+			return 0;
+		}
+	} else {
+		extsize = -1;
+	}
+
+	if (recurse_all || recurse_dir)
+		nftw(file->name, (extsize >= 0) ?
+			set_extsize_callback : get_extsize_callback,
+			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+	else if (extsize >= 0)
+		set_extsize(file->name, file->fd, extsize);
+	else
+		get_extsize(file->name, file->fd);
 	return 0;
 }
 
@@ -543,49 +698,6 @@ setfl_f(
 
 	if (fcntl(file->fd, F_SETFL, flags)  < 0)
 		perror("fcntl(F_SETFL)");
-
-	return 0;
-}
-
-static int
-extsize_f(
-	int			argc,
-	char			**argv)
-{
-	struct fsxattr		fsx;
-	struct stat64		stat;
-	long			extsize;
-	size_t			blocksize, sectsize;
-
-	init_cvtnum(&blocksize, &sectsize);
-	extsize = (long)cvtnum(blocksize, sectsize, argv[1]);
-	if (extsize < 0) {
-		printf(_("non-numeric extsize argument -- %s\n"), argv[1]);
-		return 0;
-	}
-	if (fstat64(file->fd, &stat) < 0) {
-		perror("fstat64");
-		return 0;
-	}
-	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-		perror("XFS_IOC_FSGETXATTR");
-		return 0;
-	}
-
-	if (S_ISREG(stat.st_mode)) {
-		fsx.fsx_xflags |= XFS_XFLAG_EXTSIZE;
-	} else if (S_ISDIR(stat.st_mode)) {
-		fsx.fsx_xflags |= XFS_XFLAG_EXTSZINHERIT;
-	} else {
-		printf(_("invalid target file type - file %s\n"), file->name);
-		return 0;
-	}
-	fsx.fsx_extsize = extsize;
-
-	if ((xfsctl(file->name, file->fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
-		perror("XFS_IOC_FSSETXATTR");
-		return 0;
-	}
 
 	return 0;
 }
@@ -710,11 +822,13 @@ open_init(void)
 
 	extsize_cmd.name = _("extsize");
 	extsize_cmd.cfunc = extsize_f;
-	extsize_cmd.argmin = 1;
-	extsize_cmd.argmax = 1;
+	extsize_cmd.args = _("[-D | -R] [extsize]");
+	extsize_cmd.argmin = 0;
+	extsize_cmd.argmax = -1;
 	extsize_cmd.flags = CMD_NOMAP_OK;
 	extsize_cmd.oneline =
-		_("set prefered extent size (in bytes) for the open file");
+		_("get/set prefered extent size (in bytes) for the open file");
+	extsize_cmd.help = extsize_help;
 
 	add_command(&open_cmd);
 	add_command(&stat_cmd);
