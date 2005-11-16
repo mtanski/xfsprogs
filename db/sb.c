@@ -534,6 +534,8 @@ version_help(void)
 "\n"
 " 'version'          - print current feature bits\n"
 " 'version extflg'   - enable unwritten extents\n"
+" 'version attr1'    - enable v1 inline extended attributes\n"
+" 'version attr2'    - enable v2 inline extended attributes\n"
 "\n"
 "The version function prints currently enabled features for a filesystem\n"
 "according to its the version field of the primary superblock.\n"
@@ -544,15 +546,17 @@ version_help(void)
 }
 
 static int
-do_version(xfs_agnumber_t agno, __uint16_t versionnum)
+do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 {
 	xfs_sb_t	tsb;
 
 	if (!get_sb(agno, &tsb))
 		return 0;
 
-	tsb.sb_versionnum = versionnum;
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_VERSIONNUM);
+	tsb.sb_versionnum = version;
+	tsb.sb_features2 = features;
+	libxfs_xlate_sb(iocur_top->data, &tsb, -1,
+			(XFS_SB_VERSIONNUM | XFS_SBS_FEATURES2));
 	write_cur();
 	return 1;
 }
@@ -605,6 +609,7 @@ version_f(
 	char		**argv)
 {
 	__uint16_t	version = 0;
+	__uint32_t	features = 0;
 	xfs_agnumber_t	ag;
 
 	if (argc == 2) {	/* WRITE VERSION */
@@ -636,6 +641,21 @@ version_f(
 						  XFS_SB_VERSION_EXTFLGBIT;
 				break;
 			}
+		} else if (!strcasecmp(argv[1], "attr1")) {
+			if (XFS_SB_VERSION_HASATTR2(&mp->m_sb)) {
+				if (!(mp->m_sb.sb_features2 &=
+						~XFS_SB_VERSION2_ATTR2BIT))
+					mp->m_sb.sb_versionnum &=
+						~XFS_SB_VERSION_MOREBITSBIT;
+			}
+			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
+			version = mp->m_sb.sb_versionnum;
+			features = mp->m_sb.sb_features2;
+		} else if (!strcasecmp(argv[1], "attr2")) {
+			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
+			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
+			version = mp->m_sb.sb_versionnum;
+			features = mp->m_sb.sb_features2;
 		} else {
 			dbprintf("%s: invalid version change command \"%s\"\n",
 				progname, argv[1]);
@@ -645,12 +665,13 @@ version_f(
 		if (version) {
 			dbprintf("writing all SBs\n");
 			for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
-				if (!do_version(ag, version)) {
+				if (!do_version(ag, version, features)) {
 					dbprintf("failed to set versionnum "
 						 "in AG %d\n", ag);
 					break;
 				}
 			mp->m_sb.sb_versionnum = version;
+			mp->m_sb.sb_features2 = features;
 		}
 	}
 	dbprintf("versionnum [0x%x+0x%x] = %s\n", mp->m_sb.sb_versionnum,
