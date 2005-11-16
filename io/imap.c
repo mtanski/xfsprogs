@@ -30,7 +30,7 @@ imap_f(int argc, char **argv)
 	int		count;
 	int		nent;
 	int		i;
-	__uint64_t	last = 0;
+	__u64		last = 0;
 	xfs_inogrp_t	*t;
 	xfs_fsop_bulkreq_t bulkreq;
 

@@ -31,6 +31,18 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+typedef unsigned char		__u8;
+typedef signed char		__s8;
+typedef unsigned short		__u16;
+typedef signed short		__s16;
+typedef unsigned int		__u32;
+typedef signed int		__s32;
+typedef unsigned long long int	__u64;
+typedef signed long long int	__s64;
+
+typedef __u16			__be16;
+typedef __u32			__be32;
+typedef __u64			__be64;
 
 #if defined(__linux__)
 #include <xfs/linux.h>
@@ -38,12 +50,11 @@
 #include <xfs/freebsd.h>
 #elif defined(__APPLE__)
 #include <xfs/darwin.h>
-#elif defined(__sgi__) || defined(___sgi)
+#elif defined(__sgi__) || defined(__sgi)
 #include <xfs/irix.h>
 #else
 # error unknown platform... have fun porting!
 #endif
-
 
 /* long and pointer must be either 32 bit or 64 bit */
 #undef HAVE_32BIT_LONG
@@ -119,9 +130,6 @@ typedef unsigned long long __psunsigned_t;
 #ifndef __user
 #define __user
 #endif
-typedef __u16 __be16;
-typedef __u32 __be32;
-typedef __u64 __be64;
 
 #define IRIX_DEV_BITSMAJOR      14
 #define IRIX_DEV_BITSMINOR      18

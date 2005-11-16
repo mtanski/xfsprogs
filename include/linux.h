@@ -21,7 +21,6 @@
 #include <sys/vfs.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
-#include <linux/types.h>
 #include <malloc.h>
 #include <getopt.h>
 #include <endian.h>

@@ -164,8 +164,8 @@ do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 	    char *mntpt, int fsfd, jdm_fshandle_t *fshandlep)
 {
 	int error;
-	int buflenout;
-	ino64_t lastino = 0;
+	__s32 buflenout;
+	__u64 lastino = 0;
 	xfs_bstat_t *p;
 	xfs_bstat_t *endp;
 	xfs_fsop_bulkreq_t bulkreq;

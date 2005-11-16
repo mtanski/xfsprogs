@@ -1,3 +1,8 @@
+xfsprogs-2.7.7 (16 November 2005)
+	- Fix some gcc compiler warnings on 64 bit platforms.
+	- Remove last reference to a <linux/*.h> (kernel) header.
+	- Updated aclocal.m4
+
 xfsprogs-2.7.6 (31 October 2005)
 	- Add support for the inode extent size hint for the regular
 	  data device (previously was realtime only), and allow the
