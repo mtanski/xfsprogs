@@ -128,12 +128,6 @@ extern void		sendfile_init(void);
 #define sendfile_init()	do { } while (0)
 #endif
 
-#ifdef HAVE_SHUTDOWN
-extern void		shutdown_init(void);
-#else
-#define shutdown_init()	do { } while (0)
-#endif
-
 #ifdef HAVE_MADVISE
 extern void		madvise_init(void);
 #else
