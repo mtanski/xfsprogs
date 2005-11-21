@@ -137,6 +137,19 @@ See the \f3pwrite\f1 command.
 Prints the block mapping for the current open file.
 Refer to the \f2xfs_bmap\f1 manual page for complete documentation.
 .TP
+\f3extsize\f1 [ \f2\-R\f1 | \f2\-D\f1 ] [ \f2value\f1 ]
+Display and/or modify the preferred extent size used when allocating
+space for the currently open file.
+If the \f2-R\f1 option is specified, a recursive descent is performed
+for all directory entries below the currently open file (\f2-D\f1 can
+be used to restrict the output to directories only).
+If the target file is a directory, then the inherited extent size
+is set for that directory (new files created in that directory
+inherit that extent size).
+The \f2value\f1 should be specified in bytes, or using one of the
+usual units suffixes (k, m, g, b, etc).
+The extent size is always reported in units of bytes.
+.TP
 \f3allocsp\f1 \f2offset\f1 \f2length\f1
 Allocates zeroed space for part of a file using the XFS_IOC_ALLOCSP
 system call described in the \f2xfs\f1 manual page.
