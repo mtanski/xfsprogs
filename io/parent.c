@@ -138,7 +138,7 @@ check_parents(parent_t *parentbuf, jdm_fshandle_t *fshandlep, xfs_bstat_t *statp
 		if (error) {
 			fprintf(stderr, _("getparentpaths failed for ino %llu: %s\n"),
 				statp->bs_ino,
-				strerror(error));
+				strerror(errno));
 			err_status++;
 			break;
 		}
@@ -173,7 +173,7 @@ do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 
 	if ((error = stat(mntpt, &mntstat))) {
 		fprintf(stderr, _("can't stat mount point \"%s\": %s\n"),
-			mntpt, strerror(error));
+			mntpt, strerror(errno));
 		return 1;
 	}
 
