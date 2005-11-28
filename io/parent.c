@@ -163,7 +163,6 @@ static int
 do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 	    char *mntpt, int fsfd, jdm_fshandle_t *fshandlep)
 {
-	int error;
 	__s32 buflenout;
 	__u64 lastino = 0;
 	xfs_bstat_t *p;
@@ -171,7 +170,7 @@ do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 	xfs_fsop_bulkreq_t bulkreq;
 	struct stat mntstat;
 
-	if ((error = stat(mntpt, &mntstat))) {
+	if (stat(mntpt, &mntstat)) {
 		fprintf(stderr, _("can't stat mount point \"%s\": %s\n"),
 			mntpt, strerror(errno));
 		return 1;
