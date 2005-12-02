@@ -105,7 +105,7 @@ typedef struct xfs_bmalloca {
 	char			wasdel;	/* replacing a delayed allocation */
 	char			userdata;/* set if is user data */
 	char			low;	/* low on space, using seq'l ags */
-	char			aeof;   /* allocated space at eof */
+	char			aeof;	/* allocated space at eof */
 	char			conv;	/* overwriting unwritten extents */
 } xfs_bmalloca_t;
 

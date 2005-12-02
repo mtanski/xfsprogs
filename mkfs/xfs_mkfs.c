@@ -2014,13 +2014,12 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		sbp->sb_logsectlog = 0;
 		sbp->sb_logsectsize = 0;
 	}
-	sbp->sb_versionnum =
-		XFS_SB_VERSION_MKFS(iaflag, dsunit != 0, extent_flagging,
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0, attrversion == 2, 0);
+	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(
+			iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2, logversion == 2, attrversion == 1,
 			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
-			(0/*mmr*/|| 0/*lazy_sb_counters*/ || attrversion == 2));
-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0/*mmr*/,0/*lazy_sb_counters*/,
-				attrversion == 2);
+			sbp->sb_features2 != 0);
 
 	/*
 	 * Zero out the beginning of the device, to obliterate any old

@@ -170,6 +170,21 @@
     } \
 }
 
+static inline void be16_add(__be16 *a, __s16 b)
+{
+	*a = cpu_to_be16(be16_to_cpu(*a) + b);
+}
+
+static inline void be32_add(__be32 *a, __s32 b)
+{
+	*a = cpu_to_be32(be32_to_cpu(*a) + b);
+}
+
+static inline void be64_add(__be64 *a, __s64 b)
+{
+	*a = cpu_to_be64(be64_to_cpu(*a) + b);
+}
+
 /*
  * In directories inode numbers are stored as unaligned arrays of unsigned
  * 8bit integers on disk.
@@ -184,7 +199,7 @@
  * into 32bits a four-member array is used:
  *
  *  |24-31|16-23| 8-15| 0- 7|
- */
+ */ 
 
 #define XFS_GET_DIR_INO4(di) \
 	(((__u32)(di).i[0] << 24) | ((di).i[1] << 16) | ((di).i[2] << 8) | ((di).i[3]))

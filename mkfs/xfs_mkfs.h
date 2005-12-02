@@ -18,6 +18,25 @@
 #ifndef __XFS_MKFS_H__
 #define	__XFS_MKFS_H__
 
+#define XFS_SB_VERSION_MKFS(ia,dia,extflag,dir2,log2,attr1,sflag,more) (\
+	((ia)||(dia)||(extflag)||(dir2)||(log2)||(attr1)||(sflag)||(more)) ? \
+	( XFS_SB_VERSION_4 |						\
+		((ia) ? XFS_SB_VERSION_ALIGNBIT : 0) |			\
+		((dia) ? XFS_SB_VERSION_DALIGNBIT : 0) |		\
+		((extflag) ? XFS_SB_VERSION_EXTFLGBIT : 0) |		\
+		((dir2) ? XFS_SB_VERSION_DIRV2BIT : 0) |		\
+		((log2) ? XFS_SB_VERSION_LOGV2BIT : 0) |		\
+		((attr1) ? XFS_SB_VERSION_ATTRBIT : 0) |		\
+		((sflag) ? XFS_SB_VERSION_SECTORBIT : 0) |		\
+		((more) ? XFS_SB_VERSION_MOREBITSBIT : 0) |		\
+	0 ) : XFS_SB_VERSION_1 )
+
+#define XFS_SB_VERSION2_MKFS(lazycount, attr2, parent) (\
+	((lazycount) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0) |		\
+	((attr2) ? XFS_SB_VERSION2_ATTR2BIT : 0) |			\
+	((parent) ? XFS_SB_VERSION2_PARENTBIT : 0) |			\
+	0 )
+
 #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
 #define	XFS_DINODE_DFL_LOG	8		/* 256 byte inodes */
 #define	XFS_MIN_DATA_BLOCKS	100
@@ -30,7 +49,7 @@
 #define	XFS_MIN_LOG_FACTOR	3		/* min log size factor */
 #define	XFS_DFL_LOG_FACTOR	16		/* default log size, factor */
 						/* with max trans reservation */
-#define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an 
+#define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
 						 * inode number that we'll
 						 * accept w/o warnings
 						 */
@@ -54,7 +73,7 @@ extern char *setup_proto (char *fname);
 extern void parse_proto (xfs_mount_t *mp, struct fsxattr *fsx, char **pp);
 extern void res_failed (int err);
 
-/* maxtrres.c */ 
+/* maxtrres.c */
 extern int max_trans_res (int dirversion,
 		int sectorlog, int blocklog, int inodelog, int dirblocklog);
 

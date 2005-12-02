@@ -68,19 +68,6 @@ struct xfs_mount;
 	(XFS_SB_VERSION_NUMBITS | \
 	 XFS_SB_VERSION_OKREALFBITS | \
 	 XFS_SB_VERSION_OKSASHFBITS)
-#define XFS_SB_VERSION_MKFS(ia,dia,extflag,dirv2,logv2,attrv1,sflag,morebits) \
-	(((ia) || (dia) || (extflag) || (dirv2) || (logv2) || (attrv1) || \
-	  (sflag) || (morebits)) ? \
-		(XFS_SB_VERSION_4 | \
-		 ((ia) ? XFS_SB_VERSION_ALIGNBIT : 0) | \
-		 ((dia) ? XFS_SB_VERSION_DALIGNBIT : 0) | \
-		 ((extflag) ? XFS_SB_VERSION_EXTFLGBIT : 0) | \
-		 ((dirv2) ? XFS_SB_VERSION_DIRV2BIT : 0) | \
-		 ((logv2) ? XFS_SB_VERSION_LOGV2BIT : 0) | \
-		 ((attrv1) ? XFS_SB_VERSION_ATTRBIT : 0) | \
-		 ((sflag) ? XFS_SB_VERSION_SECTORBIT : 0) | \
-		 ((morebits) ? XFS_SB_VERSION_MOREBITSBIT : 0)) : \
-		XFS_SB_VERSION_1)
 
 /*
  * There are two words to hold XFS "feature" bits: the original
@@ -90,10 +77,11 @@ struct xfs_mount;
  * These defines represent bits in sb_features2.
  */
 #define XFS_SB_VERSION2_REALFBITS	0x00ffffff	/* Mask: features */
-#define XFS_SB_VERSION2_RESERVED1BIT	0x00000001
-#define XFS_SB_VERSION2_RESERVED2BIT	0x00000002
-#define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
+#define XFS_SB_VERSION2_DONOTUSEBIT1	0x00000001
+#define XFS_SB_VERSION2_LAZYSBCOUNTBIT	0x00000002	/* Lazy SB counters */
+#define XFS_SB_VERSION2_DONOTUSEBIT2	0x00000004
 #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+#define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* Parent pointers */
 #define XFS_SB_VERSION2_SASHFBITS	0xff000000	/* Mask: features that
 							   require changing
 							   PROM and SASH */
@@ -105,12 +93,6 @@ struct xfs_mount;
 #define XFS_SB_VERSION2_OKREALBITS	\
 	(XFS_SB_VERSION2_OKREALFBITS |	\
 	 XFS_SB_VERSION2_OKSASHFBITS )
-
-/*
- * mkfs macro to set up sb_features2 word
- */
-#define	XFS_SB_VERSION2_MKFS(resvd1, sbcntr, attrv2)		\
-	(((attrv2) ? XFS_SB_VERSION2_ATTR2BIT : 0))
 
 typedef struct xfs_sb
 {

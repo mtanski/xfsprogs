@@ -2422,8 +2422,8 @@ xfs_bmap_btree_to_extents(
 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
 	rblock = ifp->if_broot;
-	ASSERT(INT_GET(rblock->bb_level, ARCH_CONVERT) == 1);
-	ASSERT(INT_GET(rblock->bb_numrecs, ARCH_CONVERT) == 1);
+	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
+	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
 	ASSERT(XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes) == 1);
 	mp = ip->i_mount;
 	pp = XFS_BMAP_BROOT_PTR_ADDR(rblock, 1, ifp->if_broot_bytes);
@@ -2866,11 +2866,11 @@ xfs_bmap_extents_to_btree(
 	 * Fill in the root.
 	 */
 	block = ifp->if_broot;
-	INT_SET(block->bb_magic, ARCH_CONVERT, XFS_BMAP_MAGIC);
-	INT_SET(block->bb_level, ARCH_CONVERT, 1);
-	INT_SET(block->bb_numrecs, ARCH_CONVERT, 1);
-	INT_SET(block->bb_leftsib, ARCH_CONVERT, NULLDFSBNO);
-	INT_SET(block->bb_rightsib, ARCH_CONVERT, NULLDFSBNO);
+	block->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
+	block->bb_level = cpu_to_be16(1);
+	block->bb_numrecs = cpu_to_be16(1);
+	block->bb_leftsib = cpu_to_be64(NULLDFSBNO);
+	block->bb_rightsib = cpu_to_be64(NULLDFSBNO);
 	/*
 	 * Need a cursor.  Can't allocate until bb_level is filled in.
 	 */
@@ -2923,10 +2923,10 @@ xfs_bmap_extents_to_btree(
 	 * Fill in the child block.
 	 */
 	ablock = XFS_BUF_TO_BMBT_BLOCK(abp);
-	INT_SET(ablock->bb_magic, ARCH_CONVERT, XFS_BMAP_MAGIC);
+	ablock->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
 	ablock->bb_level = 0;
-	INT_SET(ablock->bb_leftsib, ARCH_CONVERT, NULLDFSBNO);
-	INT_SET(ablock->bb_rightsib, ARCH_CONVERT, NULLDFSBNO);
+	ablock->bb_leftsib = cpu_to_be64(NULLDFSBNO);
+	ablock->bb_rightsib = cpu_to_be64(NULLDFSBNO);
 	arp = XFS_BMAP_REC_IADDR(ablock, 1, cur);
 	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
 	for (ep = ifp->if_u1.if_extents, cnt = i = 0; i < nextents; i++, ep++) {
@@ -2936,8 +2936,8 @@ xfs_bmap_extents_to_btree(
 			arp++; cnt++;
 		}
 	}
-	INT_SET(ablock->bb_numrecs, ARCH_CONVERT, cnt);
-	ASSERT(INT_GET(ablock->bb_numrecs, ARCH_CONVERT) == XFS_IFORK_NEXTENTS(ip, whichfork));
+	ASSERT(cnt == XFS_IFORK_NEXTENTS(ip, whichfork));
+	ablock->bb_numrecs = cpu_to_be16(cnt);
 	/*
 	 * Fill in the root key and pointer.
 	 */
@@ -2951,7 +2951,7 @@ xfs_bmap_extents_to_btree(
 	 * the root is at the right level.
 	 */
 	xfs_bmbt_log_block(cur, abp, XFS_BB_ALL_BITS);
-	xfs_bmbt_log_recs(cur, abp, 1, INT_GET(ablock->bb_numrecs, ARCH_CONVERT));
+	xfs_bmbt_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
 	ASSERT(*curp == NULL);
 	*curp = cur;
 	*logflagsp = XFS_ILOG_CORE | XFS_ILOG_FBROOT(whichfork);
@@ -3761,8 +3761,8 @@ xfs_bmap_read_extents(
 	/*
 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
 	 */
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	level = INT_GET(block->bb_level, ARCH_CONVERT);
+	level = be16_to_cpu(block->bb_level);
+	ASSERT(level > 0);
 	pp = XFS_BMAP_BROOT_PTR_ADDR(block, 1, ifp->if_broot_bytes);
 	ASSERT(INT_GET(*pp, ARCH_CONVERT) != NULLDFSBNO);
 	ASSERT(XFS_FSB_TO_AGNO(mp, INT_GET(*pp, ARCH_CONVERT)) < mp->m_sb.sb_agcount);
@@ -3805,7 +3805,7 @@ xfs_bmap_read_extents(
 		xfs_extnum_t	num_recs;
 
 
-		num_recs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
+		num_recs = be16_to_cpu(block->bb_numrecs);
 		if (unlikely(i + num_recs > room)) {
 			ASSERT(i + num_recs <= room);
 			xfs_fs_cmn_err(CE_WARN, ip->i_mount,
@@ -3822,7 +3822,7 @@ xfs_bmap_read_extents(
 		/*
 		 * Read-ahead the next leaf block, if any.
 		 */
-		nextbno = INT_GET(block->bb_rightsib, ARCH_CONVERT);
+		nextbno = be64_to_cpu(block->bb_rightsib);
 		if (nextbno != NULLFSBLOCK)
 			xfs_btree_reada_bufl(mp, nextbno, 1);
 		/*
@@ -4008,7 +4008,7 @@ xfs_bmapi(
 	}
 	if (wr && *firstblock == NULLFSBLOCK) {
 		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
-			minleft = INT_GET(ifp->if_broot->bb_level, ARCH_CONVERT) + 1;
+			minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
 		else
 			minleft = 1;
 	} else
@@ -4127,19 +4127,18 @@ xfs_bmapi(
 					error = xfs_mod_incore_sb(mp,
 							XFS_SBS_FDBLOCKS,
 							-(indlen), rsvd);
-					if (error && rt) {
-						xfs_mod_incore_sb(ip->i_mount,
+					if (error && rt)
+						xfs_mod_incore_sb(mp,
 							XFS_SBS_FREXTENTS,
 							extsz, rsvd);
-					} else if (error) {
-						xfs_mod_incore_sb(ip->i_mount,
+					else if (error)
+						xfs_mod_incore_sb(mp,
 							XFS_SBS_FDBLOCKS,
 							alen, rsvd);
-					}
 				}
 
 				if (error) {
-					if (XFS_IS_QUOTA_ON(ip->i_mount))
+					if (XFS_IS_QUOTA_ON(mp))
 						/* unreserve the blocks now */
 						(void)
 						XFS_TRANS_UNRESERVE_QUOTA_NBLKS(

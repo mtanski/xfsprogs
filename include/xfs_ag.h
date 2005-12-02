@@ -199,8 +199,8 @@ typedef struct xfs_perag
 	(MIN(bl + 1, XFS_AG_MAXLEVELS(mp)) + MIN(cl + 1, XFS_AG_MAXLEVELS(mp)))
 #define	XFS_MIN_FREELIST(a,mp)		\
 	(XFS_MIN_FREELIST_RAW(		\
-		INT_GET((a)->agf_levels[XFS_BTNUM_BNOi], ARCH_CONVERT), \
-		INT_GET((a)->agf_levels[XFS_BTNUM_CNTi], ARCH_CONVERT), mp))
+		be32_to_cpu((a)->agf_levels[XFS_BTNUM_BNOi]), \
+		be32_to_cpu((a)->agf_levels[XFS_BTNUM_CNTi]), mp))
 #define	XFS_MIN_FREELIST_PAG(pag,mp)	\
 	(XFS_MIN_FREELIST_RAW(		\
 		(uint_t)(pag)->pagf_levels[XFS_BTNUM_BNOi], \

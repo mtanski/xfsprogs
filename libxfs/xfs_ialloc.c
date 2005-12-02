@@ -104,7 +104,6 @@ xfs_ialloc_ag_alloc(
 	int		blks_per_cluster;  /* fs blocks per inode cluster */
 	xfs_btree_cur_t	*cur;		/* inode btree cursor */
 	xfs_daddr_t	d;		/* disk addr of buffer */
-	xfs_agnumber_t	agno;
 	int		error;
 	xfs_buf_t	*fbuf;		/* new free inodes' buffer */
 	xfs_dinode_t	*free;		/* new free inode structure */
@@ -158,8 +157,8 @@ xfs_ialloc_ag_alloc(
 	 * Ideally they should be spaced out through the a.g.
 	 * For now, just allocate blocks up front.
 	 */
-	args.agbno = INT_GET(agi->agi_root, ARCH_CONVERT);
-	args.fsbno = XFS_AGB_TO_FSB(args.mp, INT_GET(agi->agi_seqno, ARCH_CONVERT),
+	args.agbno = be32_to_cpu(agi->agi_root);
+	args.fsbno = XFS_AGB_TO_FSB(args.mp, be32_to_cpu(agi->agi_seqno),
 				    args.agbno);
 	/*
 	 * Allocate a fixed-size extent of inodes.
@@ -181,9 +180,9 @@ xfs_ialloc_ag_alloc(
 	 */
 	if (isaligned && args.fsbno == NULLFSBLOCK) {
 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-		args.agbno = INT_GET(agi->agi_root, ARCH_CONVERT);
+		args.agbno = be32_to_cpu(agi->agi_root);
 		args.fsbno = XFS_AGB_TO_FSB(args.mp,
-				INT_GET(agi->agi_seqno, ARCH_CONVERT), args.agbno);
+				be32_to_cpu(agi->agi_seqno), args.agbno);
 		if (XFS_SB_VERSION_HASALIGN(&args.mp->m_sb) &&
 			args.mp->m_sb.sb_inoalignmt >=
 			XFS_B_TO_FSBT(args.mp, XFS_INODE_CLUSTER_SIZE(args.mp)))
@@ -238,7 +237,7 @@ xfs_ialloc_ag_alloc(
 		/*
 		 * Get the block.
 		 */
-		d = XFS_AGB_TO_DADDR(args.mp, INT_GET(agi->agi_seqno, ARCH_CONVERT),
+		d = XFS_AGB_TO_DADDR(args.mp, be32_to_cpu(agi->agi_seqno),
 				     args.agbno + (j * blks_per_cluster));
 		fbuf = xfs_trans_get_buf(tp, args.mp->m_ddev_targp, d,
 					 args.mp->m_bsize * blks_per_cluster,
@@ -258,17 +257,17 @@ xfs_ialloc_ag_alloc(
 		}
 		xfs_trans_inode_alloc_buf(tp, fbuf);
 	}
-	INT_MOD(agi->agi_count, ARCH_CONVERT, newlen);
-	INT_MOD(agi->agi_freecount, ARCH_CONVERT, newlen);
-	agno = INT_GET(agi->agi_seqno, ARCH_CONVERT);
+	be32_add(&agi->agi_count, newlen);
+	be32_add(&agi->agi_freecount, newlen);
 	down_read(&args.mp->m_peraglock);
-	args.mp->m_perag[agno].pagi_freecount += newlen;
+	args.mp->m_perag[be32_to_cpu(agi->agi_seqno)].pagi_freecount += newlen;
 	up_read(&args.mp->m_peraglock);
-	INT_SET(agi->agi_newino, ARCH_CONVERT, newino);
+	agi->agi_newino = cpu_to_be32(newino);
 	/*
 	 * Insert records describing the new inode chunk into the btree.
 	 */
-	cur = xfs_btree_init_cursor(args.mp, tp, agbp, agno,
+	cur = xfs_btree_init_cursor(args.mp, tp, agbp,
+			be32_to_cpu(agi->agi_seqno),
 			XFS_BTNUM_INO, (xfs_inode_t *)0, 0);
 	for (thisino = newino;
 	     thisino < newino + newlen;
@@ -508,7 +507,7 @@ xfs_dialloc(
 			return 0;
 		}
 		agi = XFS_BUF_TO_AGI(agbp);
-		ASSERT(INT_GET(agi->agi_magicnum, ARCH_CONVERT) == XFS_AGI_MAGIC);
+		ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
 	} else {
 		/*
 		 * Continue where we left off before.  In this case, we
@@ -516,12 +515,12 @@ xfs_dialloc(
 		 */
 		agbp = *IO_agbp;
 		agi = XFS_BUF_TO_AGI(agbp);
-		ASSERT(INT_GET(agi->agi_magicnum, ARCH_CONVERT) == XFS_AGI_MAGIC);
-		ASSERT(INT_GET(agi->agi_freecount, ARCH_CONVERT) > 0);
+		ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
+		ASSERT(be32_to_cpu(agi->agi_freecount) > 0);
 	}
 	mp = tp->t_mountp;
 	agcount = mp->m_sb.sb_agcount;
-	agno = INT_GET(agi->agi_seqno, ARCH_CONVERT);
+	agno = be32_to_cpu(agi->agi_seqno);
 	tagno = agno;
 	pagno = XFS_INO_TO_AGNO(mp, parent);
 	pagino = XFS_INO_TO_AGINO(mp, parent);
@@ -569,7 +568,7 @@ xfs_dialloc(
 				 * can commit the current transaction and call
 				 * us again where we left off.
 				 */
-				ASSERT(INT_GET(agi->agi_freecount, ARCH_CONVERT) > 0);
+				ASSERT(be32_to_cpu(agi->agi_freecount) > 0);
 				*alloc_done = B_TRUE;
 				*IO_agbp = agbp;
 				*inop = NULLFSINO;
@@ -600,7 +599,7 @@ nextag:
 		if (error)
 			goto nextag;
 		agi = XFS_BUF_TO_AGI(agbp);
-		ASSERT(INT_GET(agi->agi_magicnum, ARCH_CONVERT) == XFS_AGI_MAGIC);
+		ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
 	}
 	/*
 	 * Here with an allocation group that has a free inode.
@@ -609,14 +608,14 @@ nextag:
 	 */
 	agno = tagno;
 	*IO_agbp = NULL;
-	cur = xfs_btree_init_cursor(mp, tp, agbp, INT_GET(agi->agi_seqno, ARCH_CONVERT),
+	cur = xfs_btree_init_cursor(mp, tp, agbp, be32_to_cpu(agi->agi_seqno),
 				    XFS_BTNUM_INO, (xfs_inode_t *)0, 0);
 	/*
 	 * If pagino is 0 (this is the root inode allocation) use newino.
 	 * This must work because we've just allocated some.
 	 */
 	if (!pagino)
-		pagino = INT_GET(agi->agi_newino, ARCH_CONVERT);
+		pagino = be32_to_cpu(agi->agi_newino);
 #ifdef DEBUG
 	if (cur->bc_nlevels == 1) {
 		int	freecount = 0;
@@ -634,7 +633,7 @@ nextag:
 				goto error0;
 		} while (i == 1);
 
-		ASSERT(freecount == INT_GET(agi->agi_freecount, ARCH_CONVERT) ||
+		ASSERT(freecount == be32_to_cpu(agi->agi_freecount) ||
 		       XFS_FORCED_SHUTDOWN(mp));
 	}
 #endif
@@ -793,9 +792,9 @@ nextag:
 	 * In a different a.g. from the parent.
 	 * See if the most recently allocated block has any free.
 	 */
-	else if (INT_GET(agi->agi_newino, ARCH_CONVERT) != NULLAGINO) {
+	else if (be32_to_cpu(agi->agi_newino) != NULLAGINO) {
 		if ((error = xfs_inobt_lookup_eq(cur,
-				INT_GET(agi->agi_newino, ARCH_CONVERT), 0, 0, &i)))
+				be32_to_cpu(agi->agi_newino), 0, 0, &i)))
 			goto error0;
 		if (i == 1 &&
 		    (error = xfs_inobt_get_rec(cur, &rec.ir_startino,
@@ -842,7 +841,7 @@ nextag:
 	if ((error = xfs_inobt_update(cur, rec.ir_startino, rec.ir_freecount,
 			rec.ir_free)))
 		goto error0;
-	INT_MOD(agi->agi_freecount, ARCH_CONVERT, -1);
+	be32_add(&agi->agi_freecount, -1);
 	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
 	down_read(&mp->m_peraglock);
 	mp->m_perag[tagno].pagi_freecount--;
@@ -862,7 +861,7 @@ nextag:
 			if ((error = xfs_inobt_increment(cur, 0, &i)))
 				goto error0;
 		} while (i == 1);
-		ASSERT(freecount == INT_GET(agi->agi_freecount, ARCH_CONVERT) ||
+		ASSERT(freecount == be32_to_cpu(agi->agi_freecount) ||
 		       XFS_FORCED_SHUTDOWN(mp));
 	}
 #endif
@@ -1075,7 +1074,7 @@ xfs_ialloc_log_agi(
 	xfs_agi_t		*agi;	/* allocation group header */
 
 	agi = XFS_BUF_TO_AGI(bp);
-	ASSERT(INT_GET(agi->agi_magicnum, ARCH_CONVERT) == XFS_AGI_MAGIC);
+	ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
 #endif
 	/*
 	 * Compute byte offsets for the first and last fields.
@@ -1117,9 +1116,8 @@ xfs_ialloc_read_agi(
 	 */
 	agi = XFS_BUF_TO_AGI(bp);
 	agi_ok =
-		INT_GET(agi->agi_magicnum, ARCH_CONVERT) == XFS_AGI_MAGIC &&
-		XFS_AGI_GOOD_VERSION(
-			INT_GET(agi->agi_versionnum, ARCH_CONVERT));
+		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
+		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
 			XFS_RANDOM_IALLOC_READ_AGI))) {
 		XFS_CORRUPTION_ERROR("xfs_ialloc_read_agi", XFS_ERRLEVEL_LOW,
@@ -1129,16 +1127,15 @@ xfs_ialloc_read_agi(
 	}
 	pag = &mp->m_perag[agno];
 	if (!pag->pagi_init) {
-		pag->pagi_freecount = INT_GET(agi->agi_freecount, ARCH_CONVERT);
+		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
 		pag->pagi_init = 1;
 	} else {
 		/*
 		 * It's possible for these to be out of sync if
 		 * we are in the middle of a forced shutdown.
 		 */
-		ASSERT(pag->pagi_freecount ==
-				INT_GET(agi->agi_freecount, ARCH_CONVERT)
-			|| XFS_FORCED_SHUTDOWN(mp));
+		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+			XFS_FORCED_SHUTDOWN(mp));
 	}
 
 #ifdef DEBUG
