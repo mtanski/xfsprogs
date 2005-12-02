@@ -48,7 +48,7 @@ static const cmdinfo_t	label_cmd =
 	{ "label", NULL, label_f, 0, 1, 1, "[label]",
 	  "write/print FS label", label_help };
 static const cmdinfo_t	version_cmd =
-	{ "version", NULL, version_f, 0, 1, 1, "[feature]",
+	{ "version", NULL, version_f, 0, -1, 1, "[feature | [vnum fnum]]",
 	  "set feature bit(s) in the sb version field", version_help };
 
 void
@@ -674,7 +674,24 @@ version_f(
 			mp->m_sb.sb_features2 = features;
 		}
 	}
+
+	if (argc == 3) {	/* VERSIONNUM + FEATURES2 */
+		char	*sp;
+
+		version = mp->m_sb.sb_versionnum;
+		features = mp->m_sb.sb_features2;
+		mp->m_sb.sb_versionnum = strtoul(argv[1], &sp, 0);
+		mp->m_sb.sb_features2 = strtoul(argv[2], &sp, 0);
+	}
+
 	dbprintf("versionnum [0x%x+0x%x] = %s\n", mp->m_sb.sb_versionnum,
 			mp->m_sb.sb_features2, version_string(&mp->m_sb));
+
+	if (argc == 3) {	/* now reset... */
+		mp->m_sb.sb_versionnum = version;
+		mp->m_sb.sb_features2 = features;
+		return 0;
+	}
+
 	return 0;
 }

@@ -23,7 +23,7 @@ The commands are run in the sequence given, then the program exits.
 This is the mechanism used to implement \f2xfs_check\f1(8).
 .TP
 \f3\-f\f1
-Specifies that the filesystem image to be processed is stored in a 
+Specifies that the filesystem image to be processed is stored in a
 regular file
 (see the \f2mkfs.xfs\f1 \f3\-d\f1 \f2file\f1 option).
 This might happen if an image copy
@@ -436,16 +436,25 @@ superblock in the filesystem.
 to all secondary copies of the superblock.
 If no argument is given, the current filesystem UUID is printed.
 .TP
-\f3version\f1 [ \f2extflg\f1 ]
+\f3version\f1 [ \f2extflg\f1 | [\f2versionnum\f1 \f2features2\f1 ] ]
 Enable selected features for a filesystem (certain features can
 be enabled on an unmounted filesystem, after
 .IR mkfs.xfs (8)
 has created the filesystem).
 Support for unwritten extents can be enabled using the \f2extflg\f1
 option.
-This option will write the version number into every copy of the
-superblock in the filesystem.
+Support for extended attributes can be enabled using the \f2attr1\f1
+or \f2attr2\f1 option.
+Once enabled, extended attributes cannot be disabled, but the user
+may toggle between \f2attr1\f1 and \f2attr2\f1 at will (older kernels
+may not support the newer version).
+.br
+With one argument, this command will write the updated version number
+into every copy of the superblock in the filesystem.
 If no argument is given, the current version and feature bits are printed.
+If two arguments are given, they will be used as numeric values for the
+\f2versionnum\f1 and \f2features2\f1 bits respectively, and their string
+equivalent reported (but no modifications are made).
 .TP
 \f3write\f1 [ \f2field\f1 or \f2value\f1 ] ...
 Write a value to disk.
@@ -647,7 +656,7 @@ and \f3blockcount\f1
 .br
 \f3keys\f1: [nonleaf blocks only] array of key records.
 These are the first value of each block in the level below this one.
-Each record contains 
+Each record contains
 \f3startblock\f1
 and \f3blockcount\f1
 .br
@@ -675,13 +684,13 @@ Each block has the following fields:
 \f3rightsib\f1: right (logically higher) sibling block, 0 if none
 .br
 \f3recs\f1: [leaf blocks only] array of freespace records.
-Each record contains 
+Each record contains
 \f3startblock\f1
 and \f3blockcount\f1
 .br
 \f3keys\f1: [nonleaf blocks only] array of key records.
 These are the first value of each block in the level below this one.
-Each record contains 
+Each record contains
 \f3blockcount\f1
 and \f3startblock\f1
 .br
@@ -756,7 +765,7 @@ data blocks.
 .sp
 A single-block directory block contains the following fields:
 .br
-\f3bhdr\f1: header containing 
+\f3bhdr\f1: header containing
 \f3magic\f1 number 0x58443242 ('XD2B')
 and an array \f3bestfree\f1 of the longest 3 free spaces in the block
 (\f3offset\f1, \f3length\f1)
@@ -787,7 +796,7 @@ and \f3stale\f1 count of unused leaf entries
 A data block contains the following fields:
 .br
 \f3dhdr\f1:
-header containing 
+header containing
 \f3magic\f1 number 0x58443244 ('XD2D')
 and an array \f3bestfree\f1 of the longest 3 free spaces in the block
 (\f3offset\f1, \f3length\f1)
@@ -821,7 +830,7 @@ A node block is identical to that for types \f3attr\f1 and \f3dir\f1.
 A freespace block contains the following fields:
 .br
 \f3fhdr\f1: header containing
-\f3magic\f1 number 0x58443246 ('XD2F'), 
+\f3magic\f1 number 0x58443246 ('XD2F'),
 \f3firstdb\f1 first data block number covered by this freespace block,
 \f3nvalid\f1 number of valid entries,
 and \f3nused\f1 number of entries representing real data blocks
@@ -903,14 +912,14 @@ Each block has the following fields:
 \f3rightsib\f1: right (logically higher) sibling block, 0 if none
 .br
 \f3recs\f1: [leaf blocks only] array of inode records.
-Each record contains 
+Each record contains
 \f3startino\f1 allocation-group relative inode number,
 \f3freecount\f1 count of free inodes in this chunk,
 and \f3free\f1 bitmap, LSB corresponds to inode 0
 .br
 \f3keys\f1: [nonleaf blocks only] array of key records.
 These are the first value of each block in the level below this one.
-Each record contains 
+Each record contains
 \f3startino\f1
 .br
 \f3ptrs\f1: [nonleaf blocks only] array of child block pointers.
@@ -1015,26 +1024,26 @@ This looks like a \f3bmapbtd\f1 block with redundant information removed
 \f3dev\f1: dev_t for the block or character device
 .br
 \f3sfdir\f1: shortform (in-inode) version 1 directory.
-This consists of 
-a \f3hdr\f1 containing 
+This consists of
+a \f3hdr\f1 containing
 the \f3parent\f1 inode number
 and a \f3count\f1 of active entries in the directory,
-followed by 
+followed by
 an array \f3list\f1 of \f3hdr\f1.\f3count\f1 entries.
-Each such entry contains 
-\f3inumber\f1, 
+Each such entry contains
+\f3inumber\f1,
 \f3namelen\f1,
 and \f3name\f1 string
 .br
 \f3sfdir2\f1: shortform (in-inode) version 2 directory.
-This consists of 
-a \f3hdr\f1 containing 
+This consists of
+a \f3hdr\f1 containing
 a \f3count\f1 of active entries in the directory,
 an \f3i8count\f1 of entries with inumbers that don't fit in a 32-bit value,
 and the \f3parent\f1 inode number,
-followed by 
+followed by
 an array \f3list\f1 of \f3hdr\f1.\f3count\f1 entries.
-Each such entry contains 
+Each such entry contains
 \f3namelen\f1,
 a saved \f3offset\f1 used when the directory is converted to a larger form,
 a \f3name\f1 string,
@@ -1217,7 +1226,7 @@ Bytes past the logical end of the symbolic link value have arbitrary values.
 \f3text\f1
 User file blocks, and other blocks whose type is unknown,
 have this type for display purposes in \f2xfs_db\f1.
-The block data is displayed in two columns: Hexadecimal format 
+The block data is displayed in two columns: Hexadecimal format
 and printable ASCII chars.
 .SH DIAGNOSTICS
 Many messages can come from the \f3check\f1 (\f3blockget\f1) command;
