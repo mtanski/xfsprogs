@@ -103,6 +103,7 @@ extern void		pread_init(void);
 extern void		prealloc_init(void);
 extern void		pwrite_init(void);
 extern void		quit_init(void);
+extern void		shutdown_init(void);
 extern void		truncate_init(void);
 
 #ifdef HAVE_FADVISE
