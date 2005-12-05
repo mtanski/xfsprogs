@@ -149,6 +149,7 @@ cvtnum(
 {
 	long long	i;
 	char		*sp;
+	int		c;
 
 	i = strtoll(s, &sp, 0);
 	if (i == 0 && sp == s)
@@ -156,22 +157,28 @@ cvtnum(
 	if (*sp == '\0')
 		return i;
 
-	if (*sp == 'b' && sp[1] == '\0')
+	if (sp[1] == '\0')
+		return -1LL;
+
+	c = tolower(*sp);
+	switch (c) {
+	case 'b':
 		return i * blocksize;
-	if (*sp == 's' && sp[1] == '\0')
+	case 's':
 		return i * sectorsize;
-	if (*sp == 'k' && sp[1] == '\0')
+	case 'k':
 		return KILOBYTES(i);
-	if (*sp == 'm' && sp[1] == '\0')
+	case 'm':
 		return MEGABYTES(i);
-	if (*sp == 'g' && sp[1] == '\0')
+	case 'g':
 		return GIGABYTES(i);
-	if (*sp == 't' && sp[1] == '\0')
+	case 't':
 		return TERABYTES(i);
-	if (*sp == 'p' && sp[1] == '\0')
+	case 'p':
 		return PETABYTES(i);
-	if (*sp == 'e' && sp[1] == '\0')
+	case 'e':
 		return  EXABYTES(i);
+	}
 	return -1LL;
 }
 

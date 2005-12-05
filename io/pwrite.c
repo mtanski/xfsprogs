@@ -199,15 +199,15 @@ pwrite_f(
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp, *infile = NULL;
-	int		Cflag, uflag, dflag, wflag, Wflag;
+	int		Cflag, qflag, uflag, dflag, wflag, Wflag;
 	int		direction = IO_FORWARD;
 	int		c, fd = -1;
 
-	Cflag = uflag = dflag = wflag = Wflag = 0;
+	Cflag = qflag = uflag = dflag = wflag = Wflag = 0;
 	init_cvtnum(&fsblocksize, &fssectsize);
 	bsize = fsblocksize;
 
-	while ((c = getopt(argc, argv, "b:Cdf:i:s:S:uwWZ:")) != EOF) {
+	while ((c = getopt(argc, argv, "b:Cdf:i:qs:S:uwWZ:")) != EOF) {
 		switch (c) {
 		case 'b':
 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
@@ -250,6 +250,9 @@ pwrite_f(
 				return 0;
 			}
 			break;
+		case 'q':
+			qflag = 1;
+			break;
 		case 'u':
 			uflag = 1;
 			break;
@@ -288,6 +291,8 @@ pwrite_f(
 
 	if (alloc_buffer(bsize, uflag, seed) < 0)
 		return 0;
+	if (align_direct(&offset, &count) < 0)
+		return 0;
 
 	c = IO_READONLY | (dflag ? IO_DIRECT : 0);
 	if (infile && ((fd = openfile(infile, NULL, c, 0)) < 0))
@@ -309,14 +314,14 @@ pwrite_f(
 	default:
 		ASSERT(0);
 	}
-	if (c < 0) {
-		close(fd);
-		return 0;
-	}
+	if (c < 0)
+		goto done;
 	if (Wflag)
 		fsync(file->fd);
 	if (wflag)
 		fdatasync(file->fd);
+	if (qflag)
+		goto done;
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
 
@@ -334,6 +339,7 @@ pwrite_f(
 			total, c, ts,
 			tdiv((double)total, t2), tdiv((double)c, t2));
 	}
+done:
 	close(fd);
 	return 0;
 }

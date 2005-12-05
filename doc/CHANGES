@@ -1,3 +1,8 @@
+xfsprogs-2.7.8 (05 December 2005)
+	- Extend xfs_io to do aligned direct IO automatically
+	- Report direct IO parameters (dioinfo) in xfs_io
+	- Make xfs_mkfile a shell script wrapper around xfs_io
+
 xfsprogs-2.7.7 (16 November 2005)
 	- Fix some gcc compiler warnings on 64 bit platforms.
 	- Remove last reference to a <linux/*.h> (kernel) header.

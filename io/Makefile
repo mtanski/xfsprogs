@@ -6,7 +6,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_io
-LSRCFILES = xfs_bmap.sh xfs_freeze.sh
+LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
 HFILES = init.h io.h
 CFILES = init.c \
 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c mmap.c \
@@ -73,4 +73,5 @@ install: default
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 	$(LTINSTALL) -m 755 xfs_bmap.sh $(PKG_BIN_DIR)/xfs_bmap
 	$(LTINSTALL) -m 755 xfs_freeze.sh $(PKG_BIN_DIR)/xfs_freeze
+	$(LTINSTALL) -m 755 xfs_mkfile.sh $(PKG_BIN_DIR)/xfs_mkfile
 install-dev:

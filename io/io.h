@@ -82,6 +82,7 @@ extern unsigned int	recurse_dir;
 
 extern void		*buffer;
 extern size_t		buffersize;
+extern int		align_direct(off64_t *, long long *);
 extern int		alloc_buffer(size_t, int, unsigned int);
 extern int		read_buffer(int, off64_t, long long, long long *,
 					int, int);

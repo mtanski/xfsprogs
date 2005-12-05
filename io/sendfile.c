@@ -84,15 +84,19 @@ sendfile_f(
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*infile = NULL;
-	int		Cflag;
+	int		Cflag, qflag;
 	int		c, fd = -1;
 
-	Cflag = 0;
+	Cflag = qflag = 0;
 	init_cvtnum(&blocksize, &sectsize);
-	while ((c = getopt(argc, argv, "Cf:i:")) != EOF) {
+	while ((c = getopt(argc, argv, "Cf:i:q")) != EOF) {
 		switch (c) {
 		case 'C':
 			Cflag = 1;
+			break;
+		case 'q':
+			qflag = 1;
+			break;
 		case 'f':
 			fd = atoi(argv[1]);
 			if (fd < 0 || fd >= filecount) {
@@ -143,6 +147,8 @@ sendfile_f(
 	gettimeofday(&t1, NULL);
 	c = send_buffer(offset, count, fd, &total);
 	if (c < 0)
+		goto done;
+	if (qflag)
 		goto done;
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);

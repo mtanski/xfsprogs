@@ -72,7 +72,8 @@ stat_f(
 	int		argc,
 	char		**argv)
 {
-	struct fsxattr	fsx;
+	struct dioattr	dio;
+	struct fsxattr	fsx, fsxa;
 	struct stat64	st;
 	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
 
@@ -99,13 +100,23 @@ stat_f(
 	}
 	if (file->flags & IO_FOREIGN)
 		return 0;
-	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTR, &fsx)) < 0 ||
+	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
 		perror("XFS_IOC_FSGETXATTR");
 	} else {
-		printf(_("xattr.xflags = 0x%x "), fsx.fsx_xflags);
+		printf(_("fsxattr.xflags = 0x%x "), fsx.fsx_xflags);
 		printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
-		printf(_("xattr.extsize = %u\n"), fsx.fsx_extsize);
-		printf(_("xattr.nextents = %u\n"), fsx.fsx_nextents);
+		printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
+		printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
+		printf(_("fsxattr.nextents = %u\n"), fsx.fsx_nextents);
+		printf(_("fsxattr.naextents = %u\n"), fsxa.fsx_nextents);
+	}
+	if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
+		perror("XFS_IOC_DIOINFO");
+	} else {
+		printf(_("dioattr.mem = 0x%x\n"), dio.d_mem);
+		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
+		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
 	}
 	return 0;
 }

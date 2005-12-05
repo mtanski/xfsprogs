@@ -105,6 +105,36 @@ dump_buffer(
 	}
 }
 
+int
+align_direct(
+	off64_t		*offset,
+	long long	*count)
+{
+	struct dioattr	dio;
+	unsigned int	align;
+
+	if (!(file->flags & IO_DIRECT))
+		return 0;
+
+	if (file->flags & IO_FOREIGN) {
+		dio.d_miniosz = BBSIZE;	/* punt */
+	} else if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
+		perror("XFS_IOC_DIOINFO");
+		return 1;
+	}
+
+	align = (*offset % dio.d_miniosz);
+	if (align) {
+		*offset -= align;
+		*count += align;
+	}
+	align = (*count % dio.d_miniosz);
+	if (align) {
+		*count += (dio.d_miniosz - align);
+	}
+	return 0;
+}
+
 static int
 read_random(
 	int		fd,
@@ -270,15 +300,15 @@ pread_f(
 	struct timeval	t1, t2;
 	char		s1[64], s2[64], ts[64];
 	char		*sp;
-	int		Cflag, uflag, vflag;
+	int		Cflag, qflag, uflag, vflag;
 	int		eof = 0, direction = IO_FORWARD;
 	int		c;
 
-	Cflag = uflag = vflag = 0;
+	Cflag = qflag = uflag = vflag = 0;
 	init_cvtnum(&fsblocksize, &fssectsize);
 	bsize = fsblocksize;
 
-	while ((c = getopt(argc, argv, "b:BCFRuvZ:")) != EOF) {
+	while ((c = getopt(argc, argv, "b:BCFRquvZ:")) != EOF) {
 		switch (c) {
 		case 'b':
 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
@@ -299,6 +329,9 @@ pread_f(
 			break;
 		case 'R':
 			direction = IO_RANDOM;
+			break;
+		case 'q':
+			qflag = 1;
 			break;
 		case 'u':
 			uflag = 1;
@@ -335,7 +368,10 @@ pread_f(
 		printf(_("non-numeric length argument -- %s\n"), argv[optind]);
 		return 0;
 	}
+
 	if (alloc_buffer(bsize, uflag, 0xabababab) < 0)
+		return 0;
+	if (align_direct(&offset, &count) < 0)
 		return 0;
 
 	gettimeofday(&t1, NULL);
@@ -357,6 +393,8 @@ pread_f(
 		ASSERT(0);
 	}
 	if (c < 0)
+		return 0;
+	if (qflag)
 		return 0;
 	gettimeofday(&t2, NULL);
 	t2 = tsub(t2, t1);
