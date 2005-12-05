@@ -18,6 +18,7 @@
 
 #include <xfs/xfs.h>
 #include <xfs/input.h>
+#include <ctype.h>
 
 #if defined(ENABLE_READLINE)
 # include <readline/history.h>
