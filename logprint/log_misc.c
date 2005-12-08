@@ -478,17 +478,19 @@ xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_efd_log_format_t structure
      */
-    bcopy(*ptr, &lbuf, sizeof(xfs_efd_log_format_t));
+    bcopy(*ptr, &lbuf, len);
     f = &lbuf;
     *ptr += len;
     if (len >= sizeof(xfs_efd_log_format_t)) {
 	printf("EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
 	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
 	ex = f->efd_extents;
-	for (i=0; i< f->efd_size; i++) {
+	len -= (sizeof(xfs_efd_log_format_t) - sizeof(xfs_extent_t));
+	for (i = 0; len > 0 && i < f->efd_nextents; i++) {
 		printf("(s: 0x%llx, l: %d) ",
 			(unsigned long long)ex->ext_start, ex->ext_len);
 		if (i % 4 == 3) printf("\n");
+		len -= sizeof(xfs_extent_t);
 		ex++;
 	}
 	if (i % 4 != 0) printf("\n");
@@ -512,17 +514,19 @@ xlog_print_trans_efi(xfs_caddr_t *ptr, uint len)
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_efi_log_format_t structure
      */
-    bcopy(*ptr, &lbuf, sizeof(xfs_efi_log_format_t));
+    bcopy(*ptr, &lbuf, len);
     f = &lbuf;
     *ptr += len;
     if (len >= sizeof(xfs_efi_log_format_t)) {
 	printf("EFI:  #regs: %d    num_extents: %d  id: 0x%llx\n",
 	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
 	ex = f->efi_extents;
-	for (i=0; i< f->efi_size; i++) {
+	len -= (sizeof(xfs_efi_log_format_t) - sizeof(xfs_extent_t));
+	for (i=0; len > 0 && i < f->efi_nextents; i++) {
 		printf("(s: 0x%llx, l: %d) ",
 			(unsigned long long)ex->ext_start, ex->ext_len);
 		if (i % 4 == 3) printf("\n");
+		len -= sizeof(xfs_extent_t);
 		ex++;
 	}
 	if (i % 4 != 0) printf("\n");
@@ -540,7 +544,7 @@ xlog_print_trans_qoff(xfs_caddr_t *ptr, uint len)
     xfs_qoff_logformat_t *f;
     xfs_qoff_logformat_t lbuf;
 
-    bcopy(*ptr, &lbuf, sizeof(xfs_qoff_logformat_t));
+    bcopy(*ptr, &lbuf, MIN(sizeof(xfs_qoff_logformat_t), len));
     f = &lbuf;
     *ptr += len;
     if (len >= sizeof(xfs_qoff_logformat_t)) {

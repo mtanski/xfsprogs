@@ -1,3 +1,7 @@
+xfsprogs-2.7.9 (08 December 2005)
+	- Fix thinko in libxcmd cvtnum routine
+	- Fix EFI/EFD printing in xfs_logprint
+
 xfsprogs-2.7.8 (05 December 2005)
 	- Extend xfs_io to do aligned direct IO automatically
 	- Report direct IO parameters (dioinfo) in xfs_io

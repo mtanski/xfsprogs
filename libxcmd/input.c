@@ -158,7 +158,7 @@ cvtnum(
 	if (*sp == '\0')
 		return i;
 
-	if (sp[1] == '\0')
+	if (sp[1] != '\0')
 		return -1LL;
 
 	c = tolower(*sp);
