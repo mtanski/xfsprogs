@@ -4233,6 +4233,7 @@ scanfunc_bno(
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
 	xfs_agnumber_t		seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+	xfs_agblock_t		lastblock;
 
 	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_ABTB_MAGIC) {
 		dbprintf("bad magic # %#x in btbno block %u/%u\n",
@@ -4261,10 +4262,21 @@ scanfunc_bno(
 		}
 		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
 			1, mp->m_alloc_mxr[0]);
+		lastblock = 0;
 		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++) {
 			set_dbmap(seqno, INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT), DBM_FREE1,
 				seqno, bno);
+			if (INT_GET(rp[i].ar_startblock, ARCH_CONVERT) <= lastblock) {
+				dbprintf(
+		"out-of-order bno btree record %d (%u %u) block %u/%u\n",
+				i, INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
+				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT),
+				INT_GET(agf->agf_seqno, ARCH_CONVERT), bno);
+				serious_error++;
+			} else {
+				lastblock = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
+			}
 		}
 		return;
 	}
@@ -4296,6 +4308,7 @@ scanfunc_cnt(
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
+	xfs_extlen_t		lastcount;
 
 	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_ABTC_MAGIC) {
 		dbprintf("bad magic # %#x in btcnt block %u/%u\n",
@@ -4324,6 +4337,7 @@ scanfunc_cnt(
 		}
 		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
 			1, mp->m_alloc_mxr[0]);
+		lastcount = 0;
 		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++) {
 			check_set_dbmap(seqno, INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT), DBM_FREE1, DBM_FREE2,
@@ -4332,6 +4346,15 @@ scanfunc_cnt(
 			agffreeblks += INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
 			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) > agflongest)
 				agflongest = INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) < lastcount) {
+				dbprintf(
+		"out-of-order cnt btree record %d (%u %u) block %u/%u\n",
+					 i, INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
+					 INT_GET(rp[i].ar_blockcount, ARCH_CONVERT),
+					 INT_GET(agf->agf_seqno, ARCH_CONVERT), bno);
+			} else {
+				lastcount = INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			}
 		}
 		return;
 	}
