@@ -317,11 +317,17 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
      memmove((ptr), &__tmp, sizeof(*(ptr)));	\
      (void)0; })
 
+#define REPAIR_MESSAGE _("  This is a bug.\n"	\
+			 "Please report it to linux-xfs@oss.sgi.com.\n")
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
+# define xfs_fs_repair_cmn_err(a,b,msg,args...)	\
+	( fprintf(stderr, msg, ## args), fprintf(stderr, REPAIR_MESSAGE) )
 # define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )
 # define cmn_err(a,msg,args...)		( fprintf(stderr, msg, ## args) )
 # define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
 #else
+# define xfs_fs_repair_cmn_err(a,b,...)	\
+	( fprintf(stderr, __VA_ARGS__), fprintf(stderr, REPAIR_MESSAGE) )
 # define xfs_fs_cmn_err(a,b,...)	( fprintf(stderr, __VA_ARGS__) )
 # define cmn_err(a,...)			( fprintf(stderr, __VA_ARGS__) )
 # define printk(...)			( fprintf(stderr, __VA_ARGS__) )
