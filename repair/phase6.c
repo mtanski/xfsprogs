@@ -2262,7 +2262,8 @@ longform_dir2_check_node(
 		libxfs_da_brelse(NULL, bp);
 	}
 	for (i = 0; i < freetab->nents; i++) {
-		if (freetab->ents[i].s == 0) {
+		if ((freetab->ents[i].s == 0) &&
+		    (freetab->ents[i].v != NULLDATAOFF)) {
 			do_warn(_("missing freetab entry %u for "
 				  "directory inode %llu\n"),
 				i, ip->i_ino);
