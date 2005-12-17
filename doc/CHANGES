@@ -1,6 +1,9 @@
 xfsprogs-2.7.10 (16 December 2005)
 	- Make xfs_db keep trying when root inode can't be read.
 	- Make xfs_db check AGF BNO and CNT btree consistency.
+	- Tweak a couple of libxfs headers so they can be used by
+	  C++ programs (removes nested struct declarations, which
+	  are used outside the scope they're declared in).
 	- Fix a rounding issue in xfs_quota time reporting, making
 	  it more consistent with the standard quota utilities.
 	- Fix dopey libxfs message "Unmount and run xfs_repair.",
