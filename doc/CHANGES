@@ -1,3 +1,13 @@
+xfsprogs-2.7.10 (16 December 2005)
+	- Make xfs_db keep trying when root inode can't be read.
+	- Make xfs_db check AGF BNO and CNT btree consistency.
+	- Fix a rounding issue in xfs_quota time reporting, making
+	  it more consistent with the standard quota utilities.
+	- Fix dopey libxfs message "Unmount and run xfs_repair.",
+	  especially annoying when printed by xfs_repair itself.
+	- Fix a dir2 xfs_repair bug, misdiagnosing a valid dir as
+	  corrupt.  Thanks to Masanori Tsuda.
+
 xfsprogs-2.7.9 (08 December 2005)
 	- Fix thinko in libxcmd cvtnum routine
 	- Fix EFI/EFD printing in xfs_logprint
