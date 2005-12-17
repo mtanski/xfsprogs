@@ -42,6 +42,9 @@ time_to_string(
 		time(&now);
 		timer = MAX(origin - now, 0);
 	}
+	if (timer > 60)	/* roundup */
+		timer += 30;
+
 	days = timer / SECONDS_IN_A_DAY;
 	if (days)
 		timer %= SECONDS_IN_A_DAY;
