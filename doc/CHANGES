@@ -1,3 +1,7 @@
+xfsprogs-2.7.11 (16 January 2005)
+	- Fix a problem with the generated source tarballs and a
+	  missing parent.h header file.
+
 xfsprogs-2.7.10 (16 December 2005)
 	- Make xfs_db keep trying when root inode can't be read.
 	- Make xfs_db check AGF BNO and CNT btree consistency.
