@@ -5,40 +5,49 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-# Currently LINGUAS is undefined, so buildmacros provides no targets.
-LINGUAS =
+LINGUAS = pl
 LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
 
 # TODO: db/ logprint/
 XGETTEXTFILES =	\
-		$(TOPDIR)/growfs/explore.c \
+		$(TOPDIR)/copy/xfs_copy.c \
 		$(TOPDIR)/growfs/xfs_growfs.c \
-		$(TOPDIR)/imap/xfs_imap.c \
+		$(TOPDIR)/io/attr.c \
 		$(TOPDIR)/io/bmap.c \
-		$(TOPDIR)/io/command.c \
 		$(TOPDIR)/io/fadvise.c \
 		$(TOPDIR)/io/file.c \
 		$(TOPDIR)/io/freeze.c \
 		$(TOPDIR)/io/fsync.c \
-		$(TOPDIR)/io/help.c \
+		$(TOPDIR)/io/getrusage.c \
+		$(TOPDIR)/io/imap.c \
 		$(TOPDIR)/io/init.c \
 		$(TOPDIR)/io/inject.c \
-		$(TOPDIR)/io/input.c \
+		$(TOPDIR)/io/madvise.c \
+		$(TOPDIR)/io/mincore.c \
 		$(TOPDIR)/io/mmap.c \
 		$(TOPDIR)/io/open.c \
+		$(TOPDIR)/io/parent.c \
 		$(TOPDIR)/io/pread.c \
 		$(TOPDIR)/io/prealloc.c \
 		$(TOPDIR)/io/pwrite.c \
-		$(TOPDIR)/io/quit.c \
 		$(TOPDIR)/io/resblks.c \
+		$(TOPDIR)/io/sendfile.c \
 		$(TOPDIR)/io/shutdown.c \
 		$(TOPDIR)/io/truncate.c \
-		$(TOPDIR)/mkfile/xfs_mkfile.c \
-		$(TOPDIR)/mkfs/proto.c \
-		$(TOPDIR)/mkfs/xfs_mkfs.c \
+		$(TOPDIR)/libdisk/dm.c \
 		$(TOPDIR)/libdisk/drivers.c \
+		$(TOPDIR)/libdisk/evms.c \
+		$(TOPDIR)/libdisk/fstype.c \
 		$(TOPDIR)/libdisk/lvm.c \
 		$(TOPDIR)/libdisk/md.c \
+		$(TOPDIR)/libdisk/pttype.c \
+		$(TOPDIR)/libdisk/xvm.c \
+		$(TOPDIR)/libxcmd/command.c \
+		$(TOPDIR)/libxcmd/help.c \
+		$(TOPDIR)/libxcmd/input.c \
+		$(TOPDIR)/libxcmd/paths.c \
+		$(TOPDIR)/libxcmd/projects.c \
+		$(TOPDIR)/libxcmd/quit.c \
 		$(TOPDIR)/libxfs/darwin.c \
 		$(TOPDIR)/libxfs/freebsd.c \
 		$(TOPDIR)/libxfs/init.c \
@@ -48,6 +57,18 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/libxfs/trans.c \
 		$(TOPDIR)/libxfs/util.c \
 		$(TOPDIR)/libxlog/util.c \
+		$(TOPDIR)/mkfs/proto.c \
+		$(TOPDIR)/mkfs/xfs_mkfs.c \
+		$(TOPDIR)/quota/edit.c \
+		$(TOPDIR)/quota/free.c \
+		$(TOPDIR)/quota/init.c \
+		$(TOPDIR)/quota/path.c \
+		$(TOPDIR)/quota/project.c \
+		$(TOPDIR)/quota/quot.c \
+		$(TOPDIR)/quota/quota.c \
+		$(TOPDIR)/quota/report.c \
+		$(TOPDIR)/quota/state.c \
+		$(TOPDIR)/quota/util.c \
 		$(TOPDIR)/repair/agheader.c \
 		$(TOPDIR)/repair/attr_repair.c \
 		$(TOPDIR)/repair/avl.c \

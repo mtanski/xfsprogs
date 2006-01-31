@@ -190,7 +190,7 @@ char *
 form_to_string(
 	uint		form)
 {
-	static char	*forms[] = {
+	char	*forms[] = {
 		_("Blocks"), _("Inodes"), _("Realtime Blocks") };
 
 	if (form & XFS_BLOCK_QUOTA)
@@ -206,7 +206,7 @@ char *
 type_to_string(
 	uint		type)
 {
-	static char	*types[] = { _("User"), _("Group"), _("Project") };
+	char	*types[] = { _("User"), _("Group"), _("Project") };
 
 	if (type & XFS_USER_QUOTA)
 		return types[0];

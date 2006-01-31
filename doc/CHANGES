@@ -1,4 +1,8 @@
-xfsprogs-2.7.11 (16 January 2005)
+xfsprogs-2.7.12 (31 January 2006)
+	- Added initial Polish translation.
+	  Thanks to Jakub Bogusz <qboosh@pld-linux.org> for this.
+
+xfsprogs-2.7.11 (16 January 2006)
 	- Fix a problem with the generated source tarballs and a
 	  missing parent.h header file.
 

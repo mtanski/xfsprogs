@@ -1,8 +1,9 @@
-xfsprogs (2.7.11-1) unstable; urgency=low
+xfsprogs (2.7.12-1) unstable; urgency=low
 
   * New upstream release.
+  * Includes polish transalation from Jakub Bogusz.
 
- -- Nathan Scott <nathans@debian.org>  Mon, 16 Jan 2006 08:38:31 +1100
+ -- Nathan Scott <nathans@debian.org>  Tue, 31 Jan 2006 13:35:39 +1100
 
 xfsprogs (2.7.7-1) unstable; urgency=low
 
