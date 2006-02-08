@@ -70,14 +70,6 @@ static __inline__ void platform_getoptreset(void)
 #define __uint16_t	u_int16_t
 #define __uint32_t	u_int32_t
 #define __uint64_t	u_int64_t
-#define __s8		int8_t
-#define __s16		int16_t
-#define __s32		int32_t
-#define __s64		int64_t
-#define __u8		u_int8_t
-#define __u16		u_int16_t
-#define __u32		u_int32_t
-#define __u64		u_int64_t
 #define loff_t		off_t
 #define off64_t		off_t
 

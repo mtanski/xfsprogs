@@ -38,14 +38,6 @@
 #include <sys/fs/xfs_fsops.h>
 #include <sys/fs/xfs_itable.h>
 
-#define __s8		char
-#define __s16		short
-#define __s32		__int32_t
-#define __s64		__int64_t
-#define __u8		unsigned char
-#define __u16		unsigned short
-#define __u32		__uint32_t
-#define __u64		__uint64_t
 #define __int8_t	char
 #define __int16_t	short
 #define __uint8_t	unsigned char

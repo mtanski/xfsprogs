@@ -2,6 +2,8 @@ xfsprogs-2.7.13 (08 February 2006)
 	- Convert fsck into a shell script and make it provide a
 	  hint to run repair/check (in non-auto fsck modes).
 	  Thanks to Marian Jancar <mjancar@suse.cz> for this.
+	- Fix compilation botch on non-Linux platforms (duplicate
+	  type definitions).
 
 xfsprogs-2.7.12 (31 January 2006)
 	- Added initial Polish translation.
