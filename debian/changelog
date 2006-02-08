@@ -1,3 +1,9 @@
+xfsprogs (2.7.13-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 08 Feb 2006 09:49:48 +1100
+
 xfsprogs (2.7.12-1) unstable; urgency=low
 
   * New upstream release.
