@@ -17,6 +17,7 @@
  */
 
 #include <xfs/command.h>
+#include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
 #include <utmp.h>
