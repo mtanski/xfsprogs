@@ -1,6 +1,7 @@
 xfsprogs (2.7.14-1) unstable; urgency=low
 
   * New upstream release.
+  * Switch from debmake to debhelper
 
  -- Nathan Scott <nathans@debian.org>  Wed, 15 Feb 2006 20:04:55 +1100
 
