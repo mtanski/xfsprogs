@@ -370,86 +370,28 @@ attr_list_by_handle(
 }
 
 int
-getparents_by_handle(
+parents_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	parent_t	*buf,
 	size_t		bufsiz,
-	parent_cursor_t *cursor,
-	unsigned int	*count,
-	unsigned int	*more)
+	unsigned int	*count)
+	
 {
-#if !defined(__sgi__)
 	errno = EOPNOTSUPP;
 	return -1;
-#else
-
-	int		error, fd;
-	char		*path;
-	xfs_fsop_getparents_handlereq_t gphreq;
-
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
-		return -1;
-
-	gphreq.hreq.fd       = 0;
-	gphreq.hreq.path     = NULL;
-	gphreq.hreq.oflags   = O_LARGEFILE;
-	gphreq.hreq.ihandle  = hanp;
-	gphreq.hreq.ihandlen = hlen;
-	gphreq.hreq.ohandle  = NULL;
-	gphreq.hreq.ohandlen = NULL;
-	memcpy(&gphreq.pos, cursor, sizeof(gphreq.pos));
-	gphreq.buflen = bufsiz;
-	gphreq.buffer = buf;
-	gphreq.ocount = count;
-	gphreq.omore = more;
-
-	error = xfsctl(path, fd, XFS_IOC_GETPARENTS, &gphreq);
-
-	memcpy(cursor, &gphreq.pos, sizeof(gphreq.pos));
-	return error;
-#endif
 }
 
 int
-getparentpaths_by_handle(
+parentpaths_by_handle(
 	void		*hanp,
 	size_t		hlen,
 	parent_t	*buf,
 	size_t		bufsiz,
-	parent_cursor_t *cursor,
-	unsigned int	*count,
-	unsigned int	*more)
+	unsigned int	*count)
 {
-#if !defined(__sgi__)
 	errno = EOPNOTSUPP;
 	return -1;
-#else
-	int		error, fd;
-	char		*path;
-	xfs_fsop_getparents_handlereq_t gphreq;
-
-	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
-		return -1;
-
-	gphreq.hreq.fd       = 0;
-	gphreq.hreq.path     = NULL;
-	gphreq.hreq.oflags   = O_LARGEFILE;
-	gphreq.hreq.ihandle  = hanp;
-	gphreq.hreq.ihandlen = hlen;
-	gphreq.hreq.ohandle  = NULL;
-	gphreq.hreq.ohandlen = NULL;
-	memcpy(&gphreq.pos, cursor, sizeof(gphreq.pos));
-	gphreq.buflen = bufsiz;
-	gphreq.buffer = buf;
-	gphreq.ocount = count;
-	gphreq.omore = more;
-
-	error = xfsctl(path, fd, XFS_IOC_GETPARENTPATHS, &gphreq);
-
-	memcpy(cursor, &gphreq.pos, sizeof(gphreq.pos));
-	return error;
-#endif
 }
 
 int

@@ -174,43 +174,21 @@ jdm_attr_list(	jdm_fshandle_t *fshp,
 }
 
 int
-jdm_getparents( jdm_fshandle_t *fshp,
+jdm_parents( jdm_fshandle_t *fshp,
 		xfs_bstat_t *statp,
 		parent_t *bufp, size_t bufsz,
-		parent_cursor_t *cursor,
-		unsigned int *count, unsigned int *more)
+		unsigned int *count)
 {
-#if !defined(__sgi__)
 	errno = EOPNOTSUPP;
 	return -1;
-#else
-	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-	filehandle_t filehandle;
-
-	jdm_fill_filehandle( &filehandle, fshandlep, statp );
-	return getparents_by_handle (( void * )&filehandle,
-			sizeof( filehandle ),
-			bufp, bufsz, cursor, count, more);
-#endif
 }
 
 int
-jdm_getparentpaths( jdm_fshandle_t *fshp,
+jdm_parentpaths( jdm_fshandle_t *fshp,
 		xfs_bstat_t *statp,
 		parent_t *bufp, size_t bufsz,
-		parent_cursor_t *cursor,
-		unsigned int *count, unsigned int *more)
+		unsigned int *count)
 {
-#if !defined(__sgi__)
 	errno = EOPNOTSUPP;
 	return -1;
-#else
-	register fshandle_t *fshandlep = ( fshandle_t * )fshp;
-	filehandle_t filehandle;
-
-	jdm_fill_filehandle( &filehandle, fshandlep, statp );
-	return getparentpaths_by_handle (( void * )&filehandle,
-			sizeof( filehandle ),
-			bufp, bufsz, cursor, count, more);
-#endif
 }
