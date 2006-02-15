@@ -1,3 +1,7 @@
+xfsprogs-2.7.14 (15 February 2006)
+	- Debian packaging updates.
+	- Fix a header to work with additional compiler variants.
+
 xfsprogs-2.7.13 (08 February 2006)
 	- Convert fsck into a shell script and make it provide a
 	  hint to run repair/check (in non-auto fsck modes).

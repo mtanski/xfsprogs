@@ -8,10 +8,10 @@ version = $(shell dpkg-parsechangelog | grep ^Version: | cut -d ' ' -f 2)
 target ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 udebpkg = $(bootpkg)_$(version)_$(target).udeb
 
-dirtmp = debian/tmp
+dirme  = debian/$(package)
 dirdev = debian/$(develop)
 dirdi  = debian/$(bootpkg)
-pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
+pkgme  = DIST_ROOT=`pwd`/$(dirme);  export DIST_ROOT;
 pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
 pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
@@ -22,6 +22,7 @@ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
 diopts  = $(options) \
 	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no" ;
 checkdir = test -f debian/rules
+checkver = rm -f debian/compat && echo 5 > debian/compat
 
 build: built
 built: dibuild config
@@ -53,18 +54,20 @@ clean:
 	$(checkdir)
 	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
 	$(MAKE) distclean
-	-rm -rf $(dirtmp) $(dirdev) $(dirdi) debian/*substvars debian/files*
+	-rm -rf $(dirme) $(dirdev) $(dirdi)
+	-rm -f debian/*substvars debian/files* debian/*.debhelper debian/compat
 
 binary-indep:
 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
-	-rm -rf $(dirtmp) $(dirdev) $(dirdi)
-	$(pkgtmp) $(MAKE) -C . install
+	$(checkver)
+	-rm -rf $(dirme) $(dirdev) $(dirdi)
+	$(pkgme)  $(MAKE) -C . install
 	$(pkgdev) $(MAKE) -C . install-dev
-	$(pkgdi) $(MAKE) -C debian install-d-i
-	$(pkgtmp) $(MAKE) -C build src-manifest
+	$(pkgdi)  $(MAKE) -C debian install-d-i
+	$(pkgme)  $(MAKE) -C build src-manifest
 
 	dh_installdocs -p$(package) -p$(develop)
 	dh_installchangelogs -N$(bootpkg)
