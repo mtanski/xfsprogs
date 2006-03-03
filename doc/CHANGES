@@ -1,3 +1,10 @@
+xfsprogs-2.7.15 (03 March 2006)
+	- Fix the way external log/realtime devices were handled in
+	  userspace with older kernels (subtely different in procfs)
+	- Fix a corruption problem in xfs_copy(8) when attempting to
+	  zero the (old) log, a section was sometimes missed (depends
+	  on log and I/O buffer (mis)alignment).
+
 xfsprogs-2.7.14 (15 February 2006)
 	- Debian packaging updates (debmake out, debhelper in).
 	- Fix a header to work with additional compiler variants.
