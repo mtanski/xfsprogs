@@ -344,12 +344,16 @@ static xfs_off_t source_position = -1;
 wbuf *
 wbuf_init(wbuf *buf, int data_size, int data_align, int min_io_size, int id)
 {
-	buf->id = id;
-	if ((buf->data = memalign(data_align, data_size)) == NULL)
-		return NULL;
+	ASSERT(data_size % BBSIZE == 0);
+	while ((buf->data = memalign(data_align, data_size)) == NULL) {
+		data_size >>= 1;
+		if (data_size < min_io_size)
+			return NULL;
+	}
 	ASSERT(min_io_size % BBSIZE == 0);
 	buf->min_io_size = min_io_size;
-	buf->size = MAX(data_size, 2*min_io_size);
+	buf->size = data_size;
+	buf->id = id;
 	return buf;
 }
 
@@ -424,7 +428,7 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
 	length = buf->length = first_agbno * blocksize;
-	
+
 	/* handle alignment stuff */
 
 	newpos = rounddown(buf->position, (xfs_off_t) buf->min_io_size);
@@ -618,13 +622,13 @@ main(int argc, char **argv)
 		}
 
 		wbuf_align = d.d_mem;
-		wbuf_size = d.d_maxiosz;
+		wbuf_size = MIN(d.d_maxiosz, 1 * 1024 * 1024);
 		wbuf_miniosize = d.d_miniosz;
 	} else  {
 		/* set arbitrary I/O params, miniosize at least 1 disk block */
 
-		wbuf_align = 4096*4;
-		wbuf_size = 1024 * 4000;
+		wbuf_align = getpagesize();
+		wbuf_size = 1 * 1024 * 1024;
 		wbuf_miniosize = -1;	/* set after mounting source fs */
 	}
 
@@ -726,7 +730,7 @@ main(int argc, char **argv)
 
 	for (i = 0; i < num_targets; i++)  {
 		int	write_last_block = 0;
-	
+
 		if (stat64(target[i].name, &statbuf) < 0)  {
 			/* ok, assume it's a file and create it */
 
@@ -833,7 +837,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 	/* need to start out blocking */
-	pthread_mutex_lock(&mainwait); 
+	pthread_mutex_lock(&mainwait);
 
 	/* set up sigchild signal handler */
 
@@ -860,7 +864,7 @@ main(int argc, char **argv)
 			exit(1);
 		}
 		/* need to start out blocking */
-		pthread_mutex_lock(&tcarg->wait); 
+		pthread_mutex_lock(&tcarg->wait);
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
@@ -1153,7 +1157,7 @@ main(int argc, char **argv)
 
 	check_errors();
 	killall();
-	pthread_exit(NULL);		
+	pthread_exit(NULL);
 	/*NOTREACHED*/
 	return 0;
 }
@@ -1176,7 +1180,7 @@ next_log_chunk(xfs_caddr_t p, int offset, void *private)
 /*
  * Writes a log header at the start of the log (with the real
  * filesystem UUID embedded into it), and writes to all targets.
- * 
+ *
  * Returns the next buffer-length-aligned disk address.
  */
 xfs_off_t
@@ -1203,7 +1207,7 @@ write_log_header(int fd, wbuf *buf, xfs_mount_t *mp)
 			next_log_chunk, buf);
 	do_write(buf->owner);
 
-	return logstart + roundup(offset, buf->length);
+	return roundup(logstart + offset, buf->length);
 }
 
 /*
