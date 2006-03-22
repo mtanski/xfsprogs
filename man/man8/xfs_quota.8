@@ -144,8 +144,8 @@ Reports filesystem usage, much like the
 utility.
 It can show usage for blocks, inode, and/or realtime block space,
 and shows used, free, and total available.
-If directory quota are in use (see the DIRECTORY QUOTA section below),
-it will also report utilisation for those directory trees.
+If project quota are in use (see the DIRECTORY TREE QUOTA section below),
+it will also report utilisation for those projects (directory trees).
 The \f2\-h\f1 option reports in a "human-readable" format,
 .TP
 \f3help\f1 [ \f2command\f1]
@@ -319,7 +319,7 @@ and
 files).
 The \f2\-c\f1, \f2\-C\f1, and \f2\-s\f1 options allow the directory
 tree quota mechanism, discussed in detail below, to be maintained.
-.SH TREE QUOTA
+.SH DIRECTORY TREE QUOTA
 The project quota mechanism in XFS can be used to implement a form of
 directory tree quota, where a specified directory and all of the files
 and subdirectories below it (i.e. a tree) can be restricted to using
@@ -403,12 +403,12 @@ to a set amount of space).
 .in -5
 .fi
 .PP
-Enabling directory quota on an XFS filesystem (restrict files in
+Enabling project quota on an XFS filesystem (restrict files in
 log file directories to only using 1 gigabyte of space).
 .nf
 .sp .8v
 .in +5
-# mount \-o pquota /dev/xvm/var /var
+# mount \-o prjquota /dev/xvm/var /var
 # echo 42:/var/log >> /etc/projects
 # echo logfiles:42 >> /etc/projid
 # xfs_quota \-x \-c 'projects \-c logfiles' /home
