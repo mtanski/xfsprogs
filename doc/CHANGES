@@ -1,3 +1,8 @@
+xfsprogs-2.7.16 (22 March 2006)
+	- Fix freespace accounting in xfs_quota(8) df command.
+	- Fix a typo on the xfs_quota(8) man page.
+	- Make -O2 (cc optimisation level) the default.
+
 xfsprogs-2.7.15 (03 March 2006)
 	- Fix the way external log/realtime devices were handled in
 	  userspace with older kernels (subtely different in procfs)
