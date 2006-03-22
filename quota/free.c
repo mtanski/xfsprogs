@@ -93,8 +93,8 @@ mount_free_space_data(
 	*ifree  = st.f_ffree;
 	*iused  = st.f_files - st.f_ffree;
 
-	count = fsgeo.rtextents * fsgeo.rtextsize;
-	free  = fscounts.freertx * fsgeo.rtextsize;
+	count = fsgeo.rtextents * fsgeo.rtextsize * fsgeo.blocksize;
+	free  = fscounts.freertx * fsgeo.rtextsize * fsgeo.blocksize;
 	*rcount = BTOBB(count);
 	*rfree  = BTOBB(free);
 	*rused  = BTOBB(count - free);
