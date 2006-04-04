@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
 #
 
 TOPDIR = .
@@ -41,6 +41,7 @@ $(CONFIGURE):
 		--bindir=/usr/sbin \
 		--libdir=/lib \
 		--libexecdir=/usr/lib \
+		--enable-lib64=yes \
 		--includedir=/usr/include \
 		--mandir=/usr/share/man \
 		--datadir=/usr/share \
@@ -48,7 +49,7 @@ $(CONFIGURE):
 	touch .census
 
 aclocal.m4::
-	aclocal --acdir=$(TOPDIR)/m4 --output=$@
+	aclocal --acdir=`pwd`/m4 --output=$@
 
 install: default
 	$(SUBDIRS_MAKERULE)

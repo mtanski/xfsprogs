@@ -30,8 +30,14 @@ AC_ARG_ENABLE(termcap,
 	test $enable_termcap = yes && libtermcap="-ltermcap",)
 AC_SUBST(libtermcap)
 
+AC_ARG_ENABLE(lib64,
+[ --enable-lib64=[yes/no] Enable lib64 support [default=no]],,
+	enable_lib64=no)
+AC_SUBST(enable_lib64)
+
 AC_PACKAGE_GLOBALS(xfsprogs)
 AC_PACKAGE_UTILITIES(xfsprogs)
+AC_MULTILIB($enable_lib64)
 
 AC_PACKAGE_NEED_UUID_H
 AC_PACKAGE_NEED_UUIDCOMPARE
