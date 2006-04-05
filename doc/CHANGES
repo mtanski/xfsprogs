@@ -1,3 +1,10 @@
+xfsprogs-2.7.17 (05 April 2006)
+	- Fix libxfs access(2) check on /proc/mounts, which was
+	  causing issues when xfs_check/xfs_repair run on readonly
+	  root filesystem mounts.
+	- Fix Debian packaging for libc-dev build dependency.
+	- Fix up auto lib64 install detection for x86_64 platforms.
+
 xfsprogs-2.7.16 (22 March 2006)
 	- Fix freespace accounting in xfs_quota(8) df command.
 	- Fix a typo on the xfs_quota(8) man page.

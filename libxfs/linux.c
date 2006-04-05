@@ -76,7 +76,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 	struct mntent	*mnt;
 	char		mounts[MAXPATHLEN];
 
-	strcpy(mounts, access(PROC_MOUNTED, R_OK)? PROC_MOUNTED : MOUNTED);
+	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
 	if ((f = setmntent(mounts, "r")) == NULL) {
 		fprintf(stderr, _("%s: %s contains a possibly writable, "
 				"mounted filesystem\n"), progname, name);
