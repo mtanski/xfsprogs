@@ -434,17 +434,18 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	}
 
 	/*
-	 * Check that the last child block's forward sibling pointer
-	 * is NULL.
+	 * If we're the last node at our level, check that the last child 
+	 * block's forward sibling pointer is NULL.
 	 */
 	if (check_dups == 0 &&
+		bm_cursor->level[level].right_fsbno == NULLDFSBNO &&
 		bm_cursor->level[level - 1].right_fsbno != NULLDFSBNO)  {
 		do_warn(
 	_("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
 	  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
 			bm_cursor->level[level - 1].right_fsbno,
 			ino, forkname,
-			bm_cursor->level[level].fsbno);
+			bm_cursor->level[level - 1].fsbno);
 		return(1);
 	}
 
