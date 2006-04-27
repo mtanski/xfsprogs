@@ -122,12 +122,15 @@ typedef struct xfs_fsop_attrmulti_handlereq {
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#define __fswab16(x)	(x)
-#define __fswab32(x)	(x)
-#define __fswab64(x)	(x)
+#define HAVE_SWABMACROS	1
+#define INT_SWAP16(type,var)	(var)
+#define INT_SWAP32(type,var)	(var)
+#define INT_SWAP64(type,var)	(var)
 
 /* Map some gcc macros for the MipsPRO compiler */
 #ifndef __GNUC__
+#define __builtin_constant_p(x)	(0)
+#define __FUNCTION__	"XFS"
 #define __sgi__		__sgi
 #define __inline__	__inline
 #define inline		__inline
@@ -247,6 +250,53 @@ static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
 static __inline__ void platform_getoptreset(void)
 {
 	getoptreset();
+}
+
+static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
+{
+	uint_t status;
+	return uuid_compare(uu1, uu2, &status);
+}
+
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
+{
+	uint_t status;
+	char *s;
+	uuid_to_string(uu, &s, &status);
+	if (status == uuid_s_ok)
+		strcpy(*buffer, s);
+	else *buffer[0] = '\0';
+	free(s);
+}
+
+static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
+{
+	uint_t status;
+	uuid_from_string(buffer, uu, &status);
+	return (status == uuid_s_ok);
+}
+
+static __inline__ int platform_uuid_is_null(uuid_t *uu)
+{
+	uint status;
+	return uuid_is_nil(uu, &status);
+}
+
+static __inline__ void platform_uuid_generate(uuid_t *uu)
+{
+	uint_t status;
+	uuid_create(uu, &status);
+}
+
+static __inline__ void platform_uuid_clear(uuid_t *uu)
+{
+	uint_t status;
+	uuid_create_nil(uu, &status);
+}
+
+static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+{
+	memcpy(dst, src, sizeof(uuid_t));
 }
 
 static __inline__ char * strsep(char **s, const char *ct)

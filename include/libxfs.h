@@ -505,6 +505,8 @@ extern void	libxfs_dir2_free_log_bests (xfs_trans_t *, xfs_dabuf_t *,
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);
 
+extern void cmn_err(int, char *, ...);
+enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
 
 #include <xfs/xfs_ialloc.h>
 #include <xfs/xfs_rtalloc.h>

@@ -1,3 +1,9 @@
+[cvs]
+	- Fix a case where xfs_repair could incorrectly flag extent
+	  b+tree nodes as corrupt.
+	- Portability changes, get xfs_repair compiling on IRIX.
+	- Parent pointer updates in xfs_io checker command.
+
 xfsprogs-2.7.17 (05 April 2006)
 	- Fix libxfs access(2) check on /proc/mounts, which was
 	  causing issues when xfs_check/xfs_repair run on readonly

@@ -75,25 +75,9 @@ typedef union {
 #define unlikely(x)			(x)
 #define min(a,b)			((a) < (b) ? (a) : (b))
 
-#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
-# define xlog_warn(fmt,args...) \
-	( fprintf(stderr,fmt,## args), fputc('\n', stderr) )
-# define cmn_err(sev,fmt,args...) \
-	xlog_warn(fmt,## args)
-# define xlog_exit(fmt,args...) \
-	( xlog_warn(fmt,## args), exit(1) )
-# define xlog_panic(fmt,args...) \
-	xlog_exit(fmt,## args)
-#else
-# define xlog_warn(...) \
-	( fprintf(stderr,__VA_ARGS__), fputc('\n', stderr) )
-# define cmn_err(sev,...) \
-	xlog_warn(__VA_ARGS__)
-# define xlog_exit(...) \
-	( xlog_warn(__VA_ARGS__), exit(1) )
-# define xlog_panic(...) \
-	xlog_exit(__VA_ARGS__)
-#endif
+extern void xlog_warn(char *fmt,...);
+extern void xlog_exit(char *fmt,...);
+extern void xlog_panic(char *fmt,...);
 
 #define xlog_get_bp(log,bbs)	libxfs_getbuf(x.logdev, 0, (bbs))
 #define xlog_put_bp(bp)		libxfs_putbuf(bp)

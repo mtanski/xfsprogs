@@ -391,11 +391,12 @@ libxfs_trans_get_buf(
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
-	xfs_buftarg_t		bdev = { dev };
+	xfs_buftarg_t		bdev;
 
 	if (tp == NULL)
 		return libxfs_getbuf(dev, d, len);
 
+	bdev.dev = dev;
 	if (tp->t_items.lic_next == NULL)
 		bp = xfs_trans_buf_item_match(tp, &bdev, d, len);
 	else
@@ -438,7 +439,7 @@ libxfs_trans_read_buf(
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
 	int			error;
-	xfs_buftarg_t		bdev = { dev };
+	xfs_buftarg_t		bdev;
 
 	if (tp == NULL) {
 		bp = libxfs_getbuf(mp->m_dev, blkno, len);
@@ -447,6 +448,7 @@ libxfs_trans_read_buf(
 		return error;
 	}
 
+	bdev.dev = dev;
 	if (tp->t_items.lic_next == NULL)
 		bp = xfs_trans_buf_item_match(tp, &bdev, blkno, len);
 	else

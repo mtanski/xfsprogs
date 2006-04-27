@@ -86,7 +86,7 @@ static void unmount_record(void *p)
 	INT_SET(op->oh_res2,		ARCH_CONVERT, 0);
 
 	/* and the data for this op */
-	memcpy(p + sizeof(xlog_op_header_t), &magic, sizeof(magic));
+	memcpy((char *)p + sizeof(xlog_op_header_t), &magic, sizeof(magic));
 }
 
 static xfs_caddr_t next(xfs_caddr_t ptr, int offset, void *private)

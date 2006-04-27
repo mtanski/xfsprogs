@@ -26,13 +26,13 @@ libxfs_init_t x;
 static int
 header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
-    char uu_log[64], uu_sb[64];
+    char uu_log[64], uu_sb[64], *uup_log = &uu_log[0], *uup_sb = &uu_sb[0];
 
     if (print_skip_uuid) return 0;
-    if (!uuid_compare(mp->m_sb.sb_uuid, head->h_fs_uuid)) return 0;
+    if (!platform_uuid_compare(&mp->m_sb.sb_uuid, &head->h_fs_uuid)) return 0;
 
-    uuid_unparse(mp->m_sb.sb_uuid, uu_sb);
-    uuid_unparse(head->h_fs_uuid, uu_log);
+    platform_uuid_unparse(&mp->m_sb.sb_uuid, &uup_sb);
+    platform_uuid_unparse(&head->h_fs_uuid, &uup_log);
 
     printf(_("* ERROR: mismatched uuid in log\n"
 	     "*            SB : %s\n*            log: %s\n"),
@@ -82,11 +82,49 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
 int
 xlog_header_check_mount(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
-    if (uuid_is_null(head->h_fs_uuid)) return 0;
+    if (platform_uuid_is_null(&head->h_fs_uuid)) return 0;
     if (header_check_uuid(mp, head)) {
 	/* bail out now or just carry on regardless */
 	if (print_exit)
 	    xlog_exit(_("Bad log"));
     }
     return 0;
+}
+
+/*
+ * Userspace versions of common diagnostic routines (varargs fun).
+ */
+void
+xlog_warn(char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fputs("\n", stderr);
+	va_end(ap);
+}
+
+void
+xlog_exit(char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fputs("\n", stderr);
+	va_end(ap);
+	exit(1);
+}
+
+void
+xlog_panic(char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fputs("\n", stderr);
+	va_end(ap);
+	abort();
 }

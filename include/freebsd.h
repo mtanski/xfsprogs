@@ -97,43 +97,47 @@ static __inline__ void platform_getoptreset(void)
 	optind = 0;
 }
 
-/*
- * Implement Linux libuuid functions in terms of DEC DCE's uuid
- * functions from FreeBSD libc.
- */
-
-static __inline__ int gnu_uuid_compare(uuid_t a, uuid_t b)
+static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
 {
-	return uuid_compare(&a, &b, NULL);
-}
-#define	uuid_compare	gnu_uuid_compare
-
-static __inline__ int uuid_is_null(uuid_t uid)
-{
-	return uuid_is_nil(&uid, NULL);
+	return uuid_compare(uu1, uu2, NULL);
 }
 
-static __inline__ void uuid_unparse(uuid_t uid, char *buf)
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
 {
 	uint32_t status;
-	char *str;
-	uuid_to_string(&uid, &str, &status);
+	char *s;
+	uuid_to_string(uu, &s, &status);
 	if (status == uuid_s_ok)
-		strcpy(buf, str);
-	else *buf = '\0';
-	free(str);
+		strcpy(*buffer, s);
+	else *buffer[0] = '\0';
+	free(s);
 }
 
-static __inline__ int gnu_uuid_parse(const char *buf, uuid_t *uid)
+static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
 {
 	uint32_t status;
-	uuid_from_string(buf, uid, &status);
+	uuid_from_string(buffer, uu, &status);
 	return (status == uuid_s_ok);
 }
-#define	uuid_parse(s,u)	gnu_uuid_parse((s), &(u))
 
-#define uuid_generate(uid)  uuid_create(&(uid), NULL)
-#define uuid_clear(uid)  uuid_create_nil(&(uid), NULL)
-#define uuid_copy(dst, src)  memcpy(&(dst), &(src), sizeof(uuid_t))
+static __inline__ int platform_uuid_is_null(uuid_t *uu)
+{
+	return uuid_is_nil(uu, NULL);
+}
+
+static __inline__ void platform_uuid_generate(uuid_t *uu)
+{
+	uuid_create(uu, NULL);
+}
+
+static __inline__ void platform_uuid_clear(uuid_t *uu)
+{
+	uuid_create_nil(uu, NULL);
+}
+
+static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+{
+	memcpy(dst, src, sizeof(uuid_t));
+}
 
 #endif	/* __XFS_FREEBSD_H__ */

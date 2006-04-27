@@ -294,7 +294,6 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define spinlock_init(a,b)		((void) 0)
 #define spin_lock(a)			((void) 0)
 #define spin_unlock(a)			((void) 0)
-#define __return_address		__builtin_return_address(0)
 #define xfs_btree_reada_bufl(m,fsb,c)	((void) 0)
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)
 #define XFS_SB_LOCK(mp)			0
@@ -308,47 +307,32 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
 #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
 
-/* These are lifted from the kernel */
+#ifdef __GNUC__
+#define __return_address	__builtin_return_address(0)
 #define get_unaligned(ptr) \
   ({ __typeof__(*(ptr)) __tmp; memmove(&__tmp, (ptr), sizeof(*(ptr))); __tmp; })
-
 #define put_unaligned(val, ptr)			\
   ({ __typeof__(*(ptr)) __tmp = (val);		\
      memmove((ptr), &__tmp, sizeof(*(ptr)));	\
      (void)0; })
-
-#define REPAIR_MESSAGE _("  This is a bug.\n"	\
-			 "Please report it to linux-xfs@oss.sgi.com.\n")
-#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 95))
-# define xfs_fs_repair_cmn_err(a,b,msg,args...)	\
-	( fprintf(stderr, msg, ## args), fprintf(stderr, REPAIR_MESSAGE) )
-# define xfs_fs_cmn_err(a,b,msg,args...)( fprintf(stderr, msg, ## args) )
-# define cmn_err(a,msg,args...)		( fprintf(stderr, msg, ## args) )
-# define printk(msg,args...)		( fprintf(stderr, msg, ## args) )
 #else
-# define xfs_fs_repair_cmn_err(a,b,...)	\
-	( fprintf(stderr, __VA_ARGS__), fprintf(stderr, REPAIR_MESSAGE) )
-# define xfs_fs_cmn_err(a,b,...)	( fprintf(stderr, __VA_ARGS__) )
-# define cmn_err(a,...)			( fprintf(stderr, __VA_ARGS__) )
-# define printk(...)			( fprintf(stderr, __VA_ARGS__) )
+#define get_unaligned(ptr)	(*(ptr))
+#define put_unaligned(val, ptr)	(*(ptr) = (val))
 #endif
 
-#define rol32(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
-#define do_mod(a, b)	((a) % (b))
-#define do_div(n,base)	({ \
-	int __res; \
-	__res = ((unsigned long) n) % (unsigned) base; \
-	n = ((unsigned long) n) / (unsigned) base; \
-	__res; })
+extern void xfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
+extern void xfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
 
-static inline int atomicIncWithWrap(int *a, int b)
+static inline int __do_div(unsigned long long *n, unsigned base)
 {
-	int r = *a;
-	(*a)++;
-	if (*a == b)
-		*a = 0;
-	return r;
+	int __res;
+	__res = (int)(((unsigned long) *n) % (unsigned) base);
+	*n = ((unsigned long) *n) / (unsigned) base;
+	return __res;
 }
+#define do_div(n,base)	(__do_div(&(n), (base)))
+#define do_mod(a, b)	((a) % (b))
+#define rol32(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
 
 
 /*

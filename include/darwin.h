@@ -61,6 +61,49 @@ static __inline__ void platform_getoptreset(void)
 	optreset = 0;
 }
 
+static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
+{
+	return uuid_compare(uu1, uu2, NULL);
+}
+
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
+{
+	uint32_t status;
+	char *str;
+	uuid_to_string(uu, &str, &status);
+	if (status == uuid_s_ok)
+		strcpy(buf, str);
+	else *buf = '\0';
+	free(str);
+}
+
+static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
+{
+	uint32_t status;
+	uuid_from_string(buffer, uu, &status);
+	return (status == uuid_s_ok);
+}
+
+static __inline__ int platform_uuid_is_null(uuid_t *uu)
+{
+	return uuid_is_nil(uu, NULL);
+}
+
+static __inline__ void platform_uuid_generate(uuid_t *uu)
+{
+	uuid_create(uu, NULL);
+}
+
+static __inline__ void platform_uuid_clear(uuid_t *uu)
+{
+	uuid_create_nil(uu, NULL);
+}
+
+static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+{
+	memcpy(dst, src, sizeof(uuid_t));
+}
+
 #define __int8_t	int8_t
 #define __int16_t	int16_t
 #define __int32_t	int32_t

@@ -40,12 +40,6 @@ platform_set_blocksize(int fd, char *path, int blocksize)
 }
 
 void
-platform_get_blocksize(int fd, char *path)
-{
-	return BBSIZE;
-}
-
-void
 platform_flush_device(int fd, dev_t device)
 {
 	return;

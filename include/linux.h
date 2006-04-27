@@ -58,13 +58,20 @@ static __inline__ void platform_getoptreset(void)
 	optind = 0;
 }
 
-#ifndef O_DIRECT
-# if defined (__powerpc__)
-#  define O_DIRECT	0400000
-# elif defined (__sparc__)
-#  define O_DIRECT	0x100000
-# endif
-#endif
+static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
+{
+	return uuid_compare(*uu1, *uu2);
+}
+
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
+{
+	uuid_unparse(*uu, *buffer);
+}
+
+static __inline__ int platform_uuid_is_null(uuid_t *uu)
+{
+	return uuid_is_null(*uu);
+}
 
 #if (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1))
 # define constpp	const char * const *
@@ -73,7 +80,7 @@ static __inline__ void platform_getoptreset(void)
 #endif
 
 #define ENOATTR		ENODATA	/* Attribute not found */
-#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+#define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
 
 typedef loff_t		xfs_off_t;
 typedef __uint64_t	xfs_ino_t;

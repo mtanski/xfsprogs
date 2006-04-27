@@ -18,6 +18,8 @@
 
 #include <xfs.h>
 #include <time.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 /*
  * Change the requested timestamp in the given inode.
@@ -737,7 +739,7 @@ libxfs_inode_alloc(
 		*tp = ntp;
 		if ((i = xfs_trans_reserve(*tp, 0, 0, 0, 0, 0))) {
 			fprintf(stderr, _("%s: cannot reserve space: %s\n"),
-				progname, strerror(errno));
+				progname, strerror(i));
 			exit(1);
 		}
 		xfs_trans_bjoin(*tp, ialloc_context);
@@ -754,4 +756,41 @@ libxfs_inode_alloc(
 
 	*ipp = ip;
 	return error;
+}
+
+/*
+ * Userspace versions of common diagnostic routines (varargs fun).
+ */
+void
+xfs_fs_repair_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "  This is a bug.\n");
+	fprintf(stderr, "Please report it to xfs@oss.sgi.com.\n");
+	va_end(ap);
+}
+
+void
+xfs_fs_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fputs("\n", stderr);
+	va_end(ap);
+}
+
+void
+cmn_err(int level, char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fputs("\n", stderr);
+	va_end(ap);
 }
