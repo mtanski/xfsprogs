@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 Silicon Graphics, Inc.
+ * Copyright (c) 2005-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -27,18 +27,19 @@
 #include "io.h"
 
 #define PARENTBUF_SZ		16384
-#define BSTATBUF_SZ		4096
+#define BSTATBUF_SZ		16384
 
 static cmdinfo_t parent_cmd;
 static int verbose_flag;
 static int err_status;
-static uint64_t inodes_checked;
+static __u64 inodes_checked;
+static char *mntpt;
 
 /*
  * check out a parent entry to see if the values seem valid
  */
 static void
-check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent, char *mntpt)
+check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 {
 	int sts;
 	char fullpath[PATH_MAX];
@@ -50,8 +51,8 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent, char *mntpt)
 	sts = lstat(fullpath, &statbuf);
 	if (sts != 0) {
 		fprintf(stderr,
-			_("inode-path for inode: %llu is incorrect - path non-existent\n"),
-			bstatp->bs_ino);
+			_("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
+			bstatp->bs_ino, fullpath);
 		if (verbose_flag) {
 			fprintf(stderr,
 				_("path \"%s\" does not stat for inode: %llu; err = %s\n"),
@@ -118,50 +119,45 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent, char *mntpt)
 }
 
 static void
-check_parents(parent_t *parentbuf, jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, char *mntpt)
+check_parents(parent_t *parentbuf, size_t *parentbuf_size,
+	     jdm_fshandle_t *fshandlep, xfs_bstat_t *statp)
 {
 	int error, i;
-	__u32 count, more;
+	__u32 count;
 	parent_t *entryp;
-	parent_cursor_t cursor;
 
-	memset(&cursor, 0, sizeof(cursor));
 	do {
-		error = jdm_getparentpaths(fshandlep,
-					   statp,
-					   parentbuf,
-					   PARENTBUF_SZ,
-					   &cursor,
-					   &count,
-					   &more);
+		error = jdm_parentpaths(fshandlep, statp, parentbuf, *parentbuf_size, &count);
 
-		if (error) {
-			fprintf(stderr, _("getparentpaths failed for ino %llu: %s\n"),
+		if (error == ERANGE) {
+			*parentbuf_size *= 2;
+			parentbuf = (parent_t *)realloc(parentbuf, *parentbuf_size);
+		} else if (error) {
+			fprintf(stderr, _("parentpaths failed for ino %llu: %s\n"),
 				statp->bs_ino,
 				strerror(errno));
 			err_status++;
 			break;
 		}
+	} while (error == ERANGE);
+	
 
-		if (count == 0) {
-			/* no links for inode - something wrong here */
-			fprintf(stderr, _("inode-path for inode: %llu is missing\n"), statp->bs_ino);
-			err_status++;
-			break;
-		}
+	if (count == 0) {
+		/* no links for inode - something wrong here */
+		fprintf(stderr, _("inode-path for inode: %llu is missing\n"), statp->bs_ino);
+		err_status++;
+	}
 
-		entryp = parentbuf;
-		for (i = 0; i < count; i++) {
-			check_parent_entry(statp, entryp, mntpt);
-			entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
-		}
-
-	} while(more);
+	entryp = parentbuf;
+	for (i = 0; i < count; i++) {
+		check_parent_entry(statp, entryp);
+		entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
+	}
 }
 
 static int
-do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
-	    char *mntpt, int fsfd, jdm_fshandle_t *fshandlep)
+do_bulkstat(parent_t *parentbuf, size_t *parentbuf_size, xfs_bstat_t *bstatbuf,
+	    int fsfd, jdm_fshandle_t *fshandlep)
 {
 	__s32 buflenout;
 	__u64 lastino = 0;
@@ -219,7 +215,7 @@ do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 			}
 			inodes_checked++;
 
-			check_parents(parentbuf, fshandlep, p, mntpt);
+			check_parents(parentbuf, parentbuf_size, fshandlep, p);
 		}
 
 	}/*while*/
@@ -231,12 +227,10 @@ do_bulkstat(parent_t *parentbuf, xfs_bstat_t *bstatbuf,
 static int
 parent_check(void)
 {
-	static int tab_init;
-	char *mntpt;
-	fs_path_t *fs;
 	int fsfd;
 	jdm_fshandle_t *fshandlep;
 	parent_t *parentbuf;
+	size_t parentbuf_size = PARENTBUF_SZ;
 	xfs_bstat_t *bstatbuf;
 
 	err_status = 0;
@@ -244,17 +238,6 @@ parent_check(void)
 
 	sync();
 
-	if (!tab_init) {
-		tab_init = 1;
-		fs_table_initialise();
-	}
-	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
-	if (!fs) {
-		fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
-			file->name);
-		return 1;
-	}
-	mntpt = fs->fs_dir;
         fsfd = file->fd;
 
 	fshandlep = jdm_getfshandle(mntpt);
@@ -267,14 +250,14 @@ parent_check(void)
 
 	/* allocate buffers */
         bstatbuf = (xfs_bstat_t *)calloc(BSTATBUF_SZ, sizeof(xfs_bstat_t));
-	parentbuf = (parent_t *)malloc(PARENTBUF_SZ);
+	parentbuf = (parent_t *)malloc(parentbuf_size);
 	if (!bstatbuf || !parentbuf) {
 		fprintf(stderr, _("unable to allocate buffers: %s\n"),
 			strerror(errno));
 		return 1;
 	}
 
-	if (do_bulkstat(parentbuf, bstatbuf, mntpt, fsfd, fshandlep) != 0)
+	if (do_bulkstat(parentbuf, &parentbuf_size, bstatbuf, fsfd, fshandlep) != 0)
 		err_status++;
 
 	if (err_status > 0)
@@ -288,12 +271,15 @@ parent_check(void)
 }
 
 static void
-print_parent_entry(parent_t *parent)
+print_parent_entry(parent_t *parent, int fullpath)
 {
 	printf(_("p_ino    = %llu\n"),	parent->p_ino);
 	printf(_("p_gen    = %u\n"),	parent->p_gen);
 	printf(_("p_reclen = %u\n"),	parent->p_reclen);
-	printf(_("p_name   = \"%s\"\n"),parent->p_name);
+	if (fullpath)
+		printf(_("p_name   = \"%s%s\"\n"), mntpt, parent->p_name);
+	else
+		printf(_("p_name   = \"%s\"\n"), parent->p_name);
 }
 
 static int
@@ -303,25 +289,18 @@ parent_list(int fullpath)
 	size_t handlen;
 	int error, i;
 	int retval = 1;
-	__u32 count, more;
+	__u32 count;
 	parent_t *entryp;
-	parent_cursor_t cursor;
-	parent_t *parentbuf;
+	parent_t *parentbuf = NULL;
 	char *path = file->name;
-
-	parentbuf = (parent_t *)malloc(PARENTBUF_SZ);
-	if (!parentbuf) {
-		fprintf(stderr, _("%s: unable to allocate parent buffer: %s\n"),
-			progname, strerror(errno));
-		return 1;
-	}
+	int pb_size = PARENTBUF_SZ;
 
 	/* XXXX for linux libhandle version - to set libhandle fsfd cache */
 	{
 		void *fshandle;
 		size_t fshlen;
 
-		if (path_to_fshandle(path, &fshandle, &fshlen) != 0) {
+		if (path_to_fshandle(mntpt, &fshandle, &fshlen) != 0) {
 			fprintf(stderr, _("%s: failed path_to_fshandle \"%s\": %s\n"),
 				progname, path, strerror(errno));
 			goto error;
@@ -333,45 +312,48 @@ parent_list(int fullpath)
 		goto error;
 	}
 
-	memset(&cursor, 0, sizeof(cursor));
 	do {
+		parentbuf = (parent_t *)realloc(parentbuf, pb_size);
+		if (!parentbuf) {
+			fprintf(stderr, _("%s: unable to allocate parent buffer: %s\n"),
+				progname, strerror(errno));
+			return 1;
+		}
+
 		if (fullpath) {
-			error = getparentpaths_by_handle(handlep,
+			error = parentpaths_by_handle(handlep,
 						       handlen,
 						       parentbuf,
-						       PARENTBUF_SZ,
-						       &cursor,
-						       &count,
-						       &more);
+						       pb_size,
+						       &count);
 		} else {
-			error = getparents_by_handle(handlep,
+			error = parents_by_handle(handlep,
 						   handlen,
 						   parentbuf,
-						   PARENTBUF_SZ,
-						   &cursor,
-						   &count,
-						   &more);
+						   pb_size,
+						   &count);
 		}
-
-		if (error) {
-			fprintf(stderr, _("%s: getparentpaths failed for \"%s\": %s\n"),
-				progname, path, strerror(errno));
+		if (error == ERANGE) {
+			pb_size *= 2;
+		} else if (error) {
+			fprintf(stderr, _("%s: %s call failed for \"%s\": %s\n"),
+				progname, fullpath ? "parentpaths" : "parents",
+				path, strerror(errno));
 			goto error;
 		}
+	} while (error == ERANGE);
 
-		if (count == 0) {
-			/* no links for inode - something wrong here */
-			fprintf(stderr, _("%s: inode-path is missing\n"), progname);
-			goto error;
-		}
+	if (count == 0) {
+		/* no links for inode - something wrong here */
+		fprintf(stderr, _("%s: inode-path is missing\n"), progname);
+		goto error;
+	}
 
-		entryp = parentbuf;
-		for (i = 0; i < count; i++) {
-			print_parent_entry(entryp);
-			entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
-		}
-
-	} while(more);
+	entryp = parentbuf;
+	for (i = 0; i < count; i++) {
+		print_parent_entry(entryp, fullpath);
+		entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
+	}
 
 	retval = 0;
 error:
@@ -385,6 +367,20 @@ parent_f(int argc, char **argv)
 	int c;
 	int listpath_flag = 0;
 	int check_flag = 0;
+	fs_path_t *fs;
+	static int tab_init;
+
+	if (!tab_init) {
+		tab_init = 1;
+		fs_table_initialise();
+	}
+	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
+	if (!fs) {
+		fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
+			file->name);
+		return 1;
+	}
+	mntpt = fs->fs_dir;
 
 	verbose_flag = 0;
 

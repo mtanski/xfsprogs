@@ -10,10 +10,10 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
 HFILES = init.h io.h
 CFILES = init.c \
 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c mmap.c \
-	open.c pread.c prealloc.c pwrite.c shutdown.c truncate.c
+	open.c parent.c pread.c prealloc.c pwrite.c shutdown.c truncate.c
 
-LLDLIBS = $(LIBXCMD)
-LTDEPENDENCIES = $(LIBXCMD)
+LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
 LLDFLAGS = -static
 
 ifeq ($(HAVE_FADVISE),yes)
@@ -46,10 +46,7 @@ endif
 
 ifeq ($(PKG_PLATFORM),irix)
 LSRCFILES += inject.c resblks.c
-CFILES += parent.c
-LCFLAGS += -DHAVE_PARENT
 else
-LSRCFILES += parent.c
 CFILES += inject.c resblks.c
 LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
 endif

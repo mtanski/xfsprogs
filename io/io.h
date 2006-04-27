@@ -99,6 +99,7 @@ extern void		imap_init(void);
 extern void		inject_init(void);
 extern void		mmap_init(void);
 extern void		open_init(void);
+extern void		parent_init(void);
 extern void		pread_init(void);
 extern void		prealloc_init(void);
 extern void		pwrite_init(void);
@@ -140,10 +141,4 @@ extern void		madvise_init(void);
 extern void		mincore_init(void);
 #else
 #define mincore_init()	do { } while (0)
-#endif
-
-#ifdef HAVE_PARENT
-extern void		parent_init(void);
-#else
-#define parent_init()	do { } while (0)
 #endif
