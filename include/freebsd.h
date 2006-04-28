@@ -102,14 +102,14 @@ static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
 	return uuid_compare(uu1, uu2, NULL);
 }
 
-static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
 {
 	uint32_t status;
 	char *s;
 	uuid_to_string(uu, &s, &status);
 	if (status == uuid_s_ok)
-		strcpy(*buffer, s);
-	else *buffer[0] = '\0';
+		strcpy(buffer, s);
+	else buffer[0] = '\0';
 	free(s);
 }
 

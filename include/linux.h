@@ -63,14 +63,34 @@ static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
 	return uuid_compare(*uu1, *uu2);
 }
 
-static __inline__ void platform_uuid_unparse(uuid_t *uu, char **buffer)
+static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
 {
-	uuid_unparse(*uu, *buffer);
+	uuid_unparse(*uu, buffer);
+}
+
+static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
+{
+	return uuid_parse(buffer, *uu);
 }
 
 static __inline__ int platform_uuid_is_null(uuid_t *uu)
 {
 	return uuid_is_null(*uu);
+}
+
+static __inline__ void platform_uuid_generate(uuid_t *uu)
+{
+	uuid_generate(*uu);
+}
+
+static __inline__ void platform_uuid_clear(uuid_t *uu)
+{
+	uuid_clear(*uu);
+}
+
+static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+{
+	uuid_copy(*dst, *src);
 }
 
 #if (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1))

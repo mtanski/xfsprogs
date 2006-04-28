@@ -1966,8 +1966,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_dblocks = dblocks;
 	sbp->sb_rblocks = rtblocks;
 	sbp->sb_rextents = rtextents;
-	uuid_generate(uuid);
-	uuid_copy(sbp->sb_uuid, uuid);
+	platform_uuid_generate(&uuid);
+	platform_uuid_copy(&sbp->sb_uuid, &uuid);
 	sbp->sb_logstart = logstart;
 	sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
 	sbp->sb_rextsize = rtextblocks;

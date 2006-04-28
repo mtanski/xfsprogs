@@ -23,6 +23,7 @@ _BUILDDEFS_INCLUDED_ = 1
 DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
+LOADERFLAGS = @LDFLAGS@
 
 LIBUUID = @libuuid@
 LIBPTHREAD = @libpthread@

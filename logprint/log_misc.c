@@ -1124,7 +1124,7 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	printf("\n");
     }
 
-    uuid_unparse(head->h_fs_uuid, uub);
+    platform_uuid_unparse(&head->h_fs_uuid, uub);
     printf("uuid: %s   format: ", uub);
     switch (INT_GET(head->h_fmt, ARCH_CONVERT)) {
 	case XLOG_FMT_UNKNOWN:

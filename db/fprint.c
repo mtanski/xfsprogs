@@ -177,7 +177,7 @@ fp_uuid(
 	     i++, p++) {
 		if (array)
 			dbprintf("%d:", i + base);
-		uuid_unparse(*p, bp);
+		platform_uuid_unparse(p, bp);
 		dbprintf("%s", bp);
 		if (i < count - 1)
 			dbprintf(" ");

@@ -854,9 +854,9 @@ main(int argc, char **argv)
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
 		if (!duplicate)
-			uuid_generate(tcarg->uuid);
+			platform_uuid_generate(&tcarg->uuid);
 		else
-			uuid_copy(tcarg->uuid, mp->m_sb.sb_uuid);
+			platform_uuid_copy(&tcarg->uuid, &mp->m_sb.sb_uuid);
 
 		if (pthread_mutex_init(&tcarg->wait, NULL) != 0)  {
 			do_log(_("Error creating thread mutex %d\n"), i);
@@ -1146,7 +1146,8 @@ main(int argc, char **argv)
 			/* do each thread in turn, each has its own UUID */
 
 			for (j = 0, tcarg = targ; j < num_targets; j++)  {
-				uuid_copy(ag_hdr.xfs_sb->sb_uuid, tcarg->uuid);
+				platform_uuid_copy(&ag_hdr.xfs_sb->sb_uuid,
+							&tcarg->uuid);
 				do_write(tcarg);
 				tcarg++;
 			}

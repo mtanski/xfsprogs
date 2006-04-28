@@ -345,9 +345,9 @@ uuid_f(
 		}
 
 		if (!strcasecmp(argv[1], "generate")) {
-			uuid_generate(uu);
+			platform_uuid_generate(&uu);
 		} else if (!strcasecmp(argv[1], "nil")) {
-			uuid_clear(uu);
+			platform_uuid_clear(&uu);
 		} else if (!strcasecmp(argv[1], "rewrite")) {
 			uup = do_uuid(0, NULL);
 			if (!uup) {
@@ -355,10 +355,10 @@ uuid_f(
 				return 0;
 			}
 			memcpy(&uu, uup, sizeof(uuid_t));
-			uuid_unparse(uu, bp);
+			platform_uuid_unparse(&uu, bp);
 			dbprintf("old UUID = %s\n", bp);
 		} else {
-			if (uuid_parse(argv[1], uu)) {
+			if (platform_uuid_parse(argv[1], &uu)) {
 				dbprintf("invalid UUID\n");
 				return 0;
 			}
@@ -375,7 +375,7 @@ uuid_f(
 				break;
 			}
 
-		uuid_unparse(uu, bp);
+		platform_uuid_unparse(&uu, bp);
 		dbprintf("new UUID = %s\n", bp);
 		return 0;
 
@@ -408,7 +408,7 @@ uuid_f(
 				 "for FS with an external log\n");
 		}
 
-		uuid_unparse(uu, bp);
+		platform_uuid_unparse(&uu, bp);
 		dbprintf("UUID = %s\n", bp);
 	}
 

@@ -330,7 +330,7 @@ static inline int __do_div(unsigned long long *n, unsigned base)
 	*n = ((unsigned long) *n) / (unsigned) base;
 	return __res;
 }
-#define do_div(n,base)	(__do_div(&(n), (base)))
+#define do_div(n,base)	(__do_div((unsigned long long *)&(n), (base)))
 #define do_mod(a, b)	((a) % (b))
 #define rol32(x,y)	(((x) << (y)) | ((x) >> (32 - (y))))
 

@@ -3,6 +3,7 @@
 	  b+tree nodes as corrupt.
 	- Portability changes, get xfs_repair compiling on IRIX.
 	- Parent pointer updates in xfs_io checker command.
+	- Allow LDFLAGS to be overridden, for Gentoo punters.
 
 xfsprogs-2.7.17 (05 April 2006)
 	- Fix libxfs access(2) check on /proc/mounts, which was
