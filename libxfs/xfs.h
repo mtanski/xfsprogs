@@ -307,21 +307,28 @@ typedef struct { dev_t dev; } xfs_buftarg_t;
 #define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
 #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
 
-#ifdef __GNUC__
-#define __return_address	__builtin_return_address(0)
-#define get_unaligned(ptr) \
-  ({ __typeof__(*(ptr)) __tmp; memmove(&__tmp, (ptr), sizeof(*(ptr))); __tmp; })
-#define put_unaligned(val, ptr)			\
-  ({ __typeof__(*(ptr)) __tmp = (val);		\
-     memmove((ptr), &__tmp, sizeof(*(ptr)));	\
-     (void)0; })
-#else
-#define get_unaligned(ptr)	(*(ptr))
-#define put_unaligned(val, ptr)	(*(ptr) = (val))
-#endif
-
 extern void xfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
 extern void xfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
+
+#ifdef __GNUC__
+#define __return_address	__builtin_return_address(0)
+#endif
+
+static inline __u64 __get_unaligned64(void *ptr)
+{
+	__u64 __tmp;
+	memmove(&__tmp, ptr, 8);
+	return __tmp;
+}
+
+static inline void __put_unaligned64(__u64 val, void *ptr)
+{
+	__u64 __tmp = val;
+	memmove(ptr, &__tmp, 8);
+}
+
+#define get_unaligned(ptr)	__get_unaligned64(ptr)
+#define put_unaligned(val,ptr)	__put_unaligned64(val,ptr)
 
 static inline int __do_div(unsigned long long *n, unsigned base)
 {
