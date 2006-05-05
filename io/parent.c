@@ -76,13 +76,14 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 			fprintf(stderr,
 				_("ino mismatch for path \"%s\" %llu vs %llu\n"),
 				fullpath,
-				statbuf.st_ino,
-				bstatp->bs_ino);
+				(unsigned long long)statbuf.st_ino,
+				(unsigned long long)bstatp->bs_ino);
 		}
 		err_status++;
 		return;
 	} else if (verbose_flag > 1) {
-		printf(_("inode number match: %llu\n"), statbuf.st_ino);
+		printf(_("inode number match: %llu\n"),
+			(unsigned long long)statbuf.st_ino);
 	}
 
 	/* get parent path */
@@ -105,8 +106,8 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 				fprintf(stderr,
 					_("ino mismatch for path \"%s\" %llu vs %llu\n"),
 					fullpath,
-					parent->p_ino,
-					statbuf.st_ino);
+					(unsigned long long)parent->p_ino,
+					(unsigned long long)statbuf.st_ino);
 			}
 			err_status++;
 			return;
