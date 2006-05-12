@@ -84,10 +84,28 @@ avl_init_tree(
 	avltree_desc_t  *tree,
 	avlops_t *ops);
 
-avlnode_t *
+__inline avlnode_t *
 avl_findrange(
 	avltree_desc_t *tree,
-	__psunsigned_t value);
+	__psunsigned_t value)
+{
+	register avlnode_t *np = tree->avl_root;
+
+	while (np) {
+		if (value < AVL_START(tree, np)) {
+			np = np->avl_back;
+			continue;
+		}
+		if (value >= AVL_END(tree, np)) {
+			np = np->avl_forw;
+			continue;
+		}
+		ASSERT(AVL_START(tree, np) <= value &&
+		       value < AVL_END(tree, np));
+		return np;
+	}
+	return NULL;
+}
 
 avlnode_t *
 avl_find(

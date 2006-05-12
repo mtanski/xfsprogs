@@ -306,6 +306,33 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
  * misc. inode-related utility routines
  */
 
+/* 
+ * verify_ag_bno is heavily used. In the common case, it 
+ * performs just two number of compares
+ */
+static __inline int
+verify_ag_bno(xfs_sb_t *sbp,
+		xfs_agnumber_t agno,
+		xfs_agblock_t agbno)
+{
+	if (agno < sbp->sb_agcount) {
+		if (agbno >= sbp->sb_agblocks) {
+			return 1;	/* bad */
+		}
+		return 0;		/* good */
+	}
+	if (agno == sbp->sb_agcount) {
+		if (agbno >=
+			(sbp->sb_dblocks -
+			(sbp->sb_agcount-1) *
+			sbp->sb_agblocks)) {
+			return 1;	/* bad */
+		}
+		return 0;		/* good */
+	}
+	return 1;			/* bad */
+}
+
 /*
  * returns 0 if inode number is valid, 1 if bogus
  */
@@ -323,6 +350,8 @@ verify_inum(xfs_mount_t		*mp,
 	agno = XFS_INO_TO_AGNO(mp, ino);
 	agino = XFS_INO_TO_AGINO(mp, ino);
 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+	if (agbno == 0)
+		return 1;
 
 	if (ino == 0 || ino == NULLFSINO)
 		return(1);
@@ -330,14 +359,7 @@ verify_inum(xfs_mount_t		*mp,
 	if (ino != XFS_AGINO_TO_INO(mp, agno, agino))
 		return(1);
 
-	if (agno >= sbp->sb_agcount ||
-		(agno < sbp->sb_agcount && agbno >= sbp->sb_agblocks) ||
-		(agno == sbp->sb_agcount && agbno >= sbp->sb_dblocks -
-				(sbp->sb_agcount-1) * sbp->sb_agblocks) ||
-		(agbno == 0))
-		return(1);
-
-	return(0);
+	return verify_ag_bno(sbp, agno, agbno);
 }
 
 /*
@@ -366,15 +388,10 @@ verify_aginum(xfs_mount_t	*mp,
 	 * will be extra bits set at the top that shouldn't be set.
 	 */
 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+	if (agbno == 0)
+		return 1;
 
-	if (agno >= sbp->sb_agcount ||
-		(agno < sbp->sb_agcount && agbno >= sbp->sb_agblocks) ||
-		(agno == sbp->sb_agcount && agbno >= sbp->sb_dblocks -
-				(sbp->sb_agcount-1) * sbp->sb_agblocks) ||
-		(agbno == 0))
-		return(1);
-
-	return(0);
+	return verify_ag_bno(sbp, agno, agbno);
 }
 
 /*
@@ -393,13 +410,40 @@ verify_dfsbno(xfs_mount_t	*mp,
 	agno = XFS_FSB_TO_AGNO(mp, fsbno);
 	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
 
-	if (agno >= sbp->sb_agcount ||
-		(agno < sbp->sb_agcount && agbno >= sbp->sb_agblocks) ||
-		(agno == sbp->sb_agcount && agbno >= sbp->sb_dblocks -
-				(sbp->sb_agcount-1) * sbp->sb_agblocks))
-		return(0);
+	return verify_ag_bno(sbp, agno, agbno) == 0;
+}
 
-	return(1);
+#define XR_DFSBNORANGE_VALID	0
+#define XR_DFSBNORANGE_BADSTART	1
+#define XR_DFSBNORANGE_BADEND	2
+#define XR_DFSBNORANGE_OVERFLOW	3
+
+static __inline int
+verify_dfsbno_range(xfs_mount_t	*mp,
+		xfs_dfsbno_t	fsbno,
+		xfs_dfilblks_t	count)
+{
+	xfs_agnumber_t	agno;
+	xfs_agblock_t	agbno;
+	xfs_sb_t	*sbp = &mp->m_sb;;
+
+	/* the start and end blocks better be in the same allocation group */
+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+	if (agno != XFS_FSB_TO_AGNO(mp, fsbno + count - 1)) {
+		return XR_DFSBNORANGE_OVERFLOW;
+	}
+
+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+	if (verify_ag_bno(sbp, agno, agbno)) {
+		return XR_DFSBNORANGE_BADSTART;
+	}
+
+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno + count - 1);
+	if (verify_ag_bno(sbp, agno, agbno)) {
+		return XR_DFSBNORANGE_BADEND;
+	}
+
+	return (XR_DFSBNORANGE_VALID);
 }
 
 int
@@ -410,14 +454,7 @@ verify_agbno(xfs_mount_t	*mp,
 	xfs_sb_t	*sbp = &mp->m_sb;;
 
 	/* range check ag #, ag block.  range-checking offset is pointless */
-
-	if (agno >= sbp->sb_agcount ||
-		(agno < sbp->sb_agcount && agbno >= sbp->sb_agblocks) ||
-		(agno == sbp->sb_agcount && agbno >= sbp->sb_dblocks -
-				(sbp->sb_agcount-1) * sbp->sb_agblocks))
-		return(0);
-
-	return(1);
+	return verify_ag_bno(sbp, agno, agbno) == 0;
 }
 
 void
@@ -512,6 +549,9 @@ process_bmbt_reclist_int(
 	int			state;
 	int			flag;		/* extent flag */
 	int			pwe;		/* partially-written extent */
+	xfs_dfsbno_t		e;
+	xfs_agnumber_t		agno;
+	xfs_agblock_t		agbno;
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -570,20 +610,22 @@ process_bmbt_reclist_int(
 				return(1);
 			}
 		} else  {
-			if (!verify_dfsbno(mp, s))  {
+			switch (verify_dfsbno_range(mp, s, c)) {
+			case XR_DFSBNORANGE_VALID:
+				break;
+			case XR_DFSBNORANGE_BADSTART:
 				do_warn(
 	_("inode %llu - bad extent starting block number %llu, offset %llu\n"),
 					ino, s, o);
 				return(1);
-			}
-			if (!verify_dfsbno(mp, s + c - 1))  {
+			case XR_DFSBNORANGE_BADEND:
 				do_warn(
 	_("inode %llu - bad extent last block number %llu, offset %llu\n"),
 					ino, s + c - 1, o);
 				return(1);
-			}
-			if (s + c - 1 < s)  {
+			case XR_DFSBNORANGE_OVERFLOW:
 				do_warn(
+
 	_("inode %llu - bad extent overflows - start %llu, end %llu, "
 	  "offset %llu\n"),
 					ino, s, s + c - 1, o);
@@ -699,7 +741,14 @@ process_bmbt_reclist_int(
 		 */
 		if (blkmapp && *blkmapp)
 			blkmap_set_ext(blkmapp, o, s, c);
-		for (b = s; b < s + c; b++)  {
+		/*
+		 * Profiling shows that the following loop takes the
+		 * most time in all of xfs_repair.
+		 */
+		agno = XFS_FSB_TO_AGNO(mp, s);
+		agbno = XFS_FSB_TO_AGBNO(mp, s);
+		e = s + c;
+		for (b = s; b < e; b++, agbno++)  {
 			if (check_dups == 1)  {
 				/*
 				 * if we're just checking the bmap for dups,
@@ -707,9 +756,7 @@ process_bmbt_reclist_int(
 				 * checking each entry without setting the
 				 * block bitmap
 				 */
-				if (search_dup_extent(mp,
-						    XFS_FSB_TO_AGNO(mp, b),
-						    XFS_FSB_TO_AGBNO(mp, b)))  {
+				if (search_dup_extent(mp, agno, agbno)) {
 					do_warn(
 	_("%s fork in ino %llu claims dup extent, off - %llu, "
 	  "start - %llu, cnt %llu\n"),
@@ -724,11 +771,24 @@ process_bmbt_reclist_int(
 			 * in regular data space, not realtime partion.
 			 */
 			if (type == XR_INO_RTDATA && whichfork == XFS_ATTR_FORK) {
-			  if (mp->m_sb.sb_agcount < XFS_FSB_TO_AGNO(mp, b))
+			  if (mp->m_sb.sb_agcount < agno)
 				return(1);
 			}
 
-			state = get_fsbno_state(mp, b);
+			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) 
+			 * for common XR_E_UNKNOWN to XR_E_INUSE transition
+			 */
+			if (((agbno & XR_BB_MASK) == 0) && ((s + c - b) >= (XR_BB_UNIT/XR_BB))) {
+				if (ba_bmap[agno][agbno>>XR_BB] == XR_E_UNKNOWN_LL) {
+					ba_bmap[agno][agbno>>XR_BB] = XR_E_INUSE_LL;
+					agbno += (XR_BB_UNIT/XR_BB) - 1;
+					b += (XR_BB_UNIT/XR_BB) - 1;
+					continue;
+				}
+
+			}
+
+			state = get_agbno_state(mp, agno, agbno);
 			switch (state)  {
 			case XR_E_FREE:
 			case XR_E_FREE1:
@@ -737,7 +797,7 @@ process_bmbt_reclist_int(
 					forkname, ino, (__uint64_t) b);
 				/* fall through ... */
 			case XR_E_UNKNOWN:
-				set_fsbno_state(mp, b, XR_E_INUSE);
+				set_agbno_state(mp, agno, agbno, XR_E_INUSE);
 				break;
 			case XR_E_BAD_STATE:
 				do_error(_("bad state in block map %llu\n"), b);
@@ -752,7 +812,7 @@ process_bmbt_reclist_int(
 				return(1);
 			case XR_E_INUSE:
 			case XR_E_MULT:
-				set_fsbno_state(mp, b, XR_E_MULT);
+				set_agbno_state(mp, agno, agbno, XR_E_MULT);
 				do_warn(
 			_("%s fork in %s inode %llu claims used block %llu\n"),
 					forkname, ftype, ino, (__uint64_t) b);
@@ -898,7 +958,9 @@ getfunc_btree(xfs_mount_t		*mp,
 		int			whichfork)
 {
 	int			i;
+#ifdef DEBUG
 	int			prev_level;
+#endif
 	int			flag;
 	int			found;
 	xfs_bmbt_rec_32_t	*rec;
@@ -961,12 +1023,16 @@ getfunc_btree(xfs_mount_t		*mp,
 	/*
 	 * ok, now traverse any interior btree nodes
 	 */
-	prev_level = rootblock->bb_level;
+#ifdef DEBUG
+	prev_level = INT_GET(block->bb_level, ARCH_CONVERT);
+#endif
 
 	while (INT_GET(block->bb_level, ARCH_CONVERT) > 0)  {
+#ifdef DEBUG
 		ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) < prev_level);
 
 		prev_level = INT_GET(block->bb_level, ARCH_CONVERT);
+#endif
 
 		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
 						mp->m_bmap_dmxr[1]) {
@@ -1647,7 +1713,7 @@ process_misc_ino_types(xfs_mount_t	*mp,
 	return(0);
 }
 
-int
+static __inline int
 process_misc_ino_types_blocks(xfs_drfsbno_t totblocks, xfs_ino_t lino, int type)
 {
 	/*
@@ -1901,8 +1967,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 */
 	if (INT_GET(dinoc->di_mode, ARCH_CONVERT) != 0 &&
 		((((INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT) >> 12) > 15) ||
-		dinoc->di_format < XFS_DINODE_FMT_DEV ||
-		dinoc->di_format > XFS_DINODE_FMT_UUID ||
+		(uchar_t) dinoc->di_format > XFS_DINODE_FMT_UUID ||
 			(!(okfmts[(INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT) >> 12] &
 			  (1 << dinoc->di_format))))) {
 		/* bad inode format */
@@ -2385,7 +2450,6 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		*used = is_free;
 		*isa_dir = 0;
 		blkmap_free(dblkmap);
-
 		return(1);
 	}
 
@@ -2426,7 +2490,6 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 			*used = is_free;
 			*isa_dir = 0;
 			blkmap_free(dblkmap);
-
 			return(1);
 		}
 
@@ -2549,7 +2612,6 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 				*isa_dir = 0;
 				blkmap_free(dblkmap);
 				blkmap_free(ablkmap);
-
 				return(1);
 			}
 
@@ -2602,7 +2664,6 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		*used = is_free;
 		*isa_dir = 0;
 		blkmap_free(dblkmap);
-
 		return(1);
 	}
 
@@ -2669,7 +2730,6 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		*used = is_free;
 		*isa_dir = 0;
 		blkmap_free(dblkmap);
-
 		return(1);
 	}
 	if (anextents != INT_GET(dinoc->di_anextents, ARCH_CONVERT))  {
@@ -2732,7 +2792,8 @@ _("mismatch between format (%d) and size (%lld) in directory ino %llu\n"),
 		abort();
 	}
 
-	blkmap_free(dblkmap);
+	if (dblkmap)
+		blkmap_free(dblkmap);
 
 	if (err)  {
 		/*

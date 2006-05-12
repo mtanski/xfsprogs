@@ -2138,7 +2138,7 @@ _("dir entry slot %d in block %u conflicts with used space in dir inode %llu\n")
 		 */
 		bcopy(namest->name, fname, entry->namelen);
 		fname[entry->namelen] = '\0';
-		hashval = libxfs_da_hashname(fname, entry->namelen);
+		hashval = libxfs_da_hashname((uchar_t *) fname, entry->namelen);
 
 		/*
 		 * only complain about illegal names in phase 3 (when

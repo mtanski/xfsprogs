@@ -71,7 +71,7 @@ static rt_ext_flist_t rt_ext_flist;
 
 static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
 
-static avltree_desc_t	**extent_tree_ptrs;	/* array of extent tree ptrs */
+avltree_desc_t	**extent_tree_ptrs;		/* array of extent tree ptrs */
 						/* one per ag for dups */
 static avltree_desc_t	**extent_bno_ptrs;	/*
 						 * array of extent tree ptrs
@@ -571,21 +571,6 @@ add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	}
 
 	return;
-}
-
-/*
- * returns 1 if block is a dup, 0 if not
- */
-/* ARGSUSED */
-int
-search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
-{
-	ASSERT(agno < glob_agcount);
-
-	if (avl_findrange(extent_tree_ptrs[agno], agbno) != NULL)
-		return(1);
-
-	return(0);
 }
 
 static __psunsigned_t

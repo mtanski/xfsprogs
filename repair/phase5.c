@@ -123,6 +123,19 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 					agbno, state);
 		}
 #endif
+		/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
+		if ((in_extent == 0) && ((agbno & XR_BB_MASK) == 0)) {
+			/* testing >= XR_E_INUSE */
+			switch (ba_bmap[agno][agbno>>XR_BB]) {
+			case XR_E_INUSE_LL:
+			case XR_E_INUSE_FS_LL:
+			case XR_E_INO_LL:
+			case XR_E_FS_MAP_LL:
+				agbno += (XR_BB_UNIT/XR_BB) - 1;
+				continue;
+			}
+
+		}
 		if (get_agbno_state(mp, agno, agbno) < XR_E_INUSE)  {
 			free_blocks++;
 			if (in_extent == 0)  {
@@ -1413,7 +1426,9 @@ phase5(xfs_mount_t *mp)
 	int		extra_blocks = 0;
 	uint		num_freeblocks;
 	xfs_extlen_t	freeblks1;
+#ifdef DEBUG
 	xfs_extlen_t	freeblks2;
+#endif
 	xfs_agblock_t	num_extents;
 	extern int	count_bno_extents(xfs_agnumber_t);
 	extern int	count_bno_extents_blocks(xfs_agnumber_t, uint *);
@@ -1564,8 +1579,13 @@ phase5(xfs_mount_t *mp)
 #endif
 		write_cursor(&bno_btree_curs);
 
+#ifdef DEBUG
 		freeblks2 = build_freespace_tree(mp, agno,
 					&bcnt_btree_curs, XFS_ABTC_MAGIC);
+#else
+		(void) build_freespace_tree(mp, agno,
+					&bcnt_btree_curs, XFS_ABTC_MAGIC);
+#endif
 		write_cursor(&bcnt_btree_curs);
 
 		ASSERT(freeblks1 == freeblks2);

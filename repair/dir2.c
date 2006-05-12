@@ -83,15 +83,22 @@ da_read_buf(
 	bmap_ext_t	*bmp)
 {
 	xfs_buf_t	*bp;
+	xfs_buf_t	*bparray[4];
 	xfs_buf_t	**bplist;
 	xfs_dabuf_t	*dabuf;
 	int		i;
 	int		off;
 
-	bplist = calloc(nex, sizeof(*bplist));
-	if (bplist == NULL) {
-		do_error(_("couldn't malloc dir2 buffer list\n"));
-		exit(1);
+	if (nex > (sizeof(bparray)/sizeof(xfs_buf_t *))) {
+		bplist = calloc(nex, sizeof(*bplist));
+		if (bplist == NULL) {
+			do_error(_("couldn't malloc dir2 buffer list\n"));
+			exit(1);
+		}
+	}
+	else {
+		/* common case avoids calloc/free */
+		bplist = bparray;
 	}
 	for (i = 0; i < nex; i++) {
 		bplist[i] = libxfs_readbuf(mp->m_dev,
@@ -128,12 +135,14 @@ da_read_buf(
 				XFS_BUF_COUNT(bp));
 		}
 	}
-	free(bplist);
+	if (bplist != bparray)
+		free(bplist);
 	return dabuf;
 failed:
 	for (i = 0; i < nex; i++)
 		libxfs_putbuf(bplist[i]);
-	free(bplist);
+	if (bplist != bparray)
+		free(bplist);
 	return NULL;
 }
 
@@ -249,6 +258,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 	int			i;
 	int			nex;
 	xfs_da_intnode_t	*node;
+	bmap_ext_t		lbmp;
 
 	/*
 	 * traverse down left-side of tree until we hit the
@@ -265,13 +275,14 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		 * read in each block along the way and set up cursor
 		 */
 		nex = blkmap_getn(da_cursor->blkmap, bno, mp->m_dirblkfsbs,
-			&bmp);
+				&bmp, &lbmp);
 
 		if (nex == 0)
 			goto error_out;
 
 		bp = da_read_buf(mp, nex, bmp);
-		free(bmp);
+		if (bmp != &lbmp)
+			free(bmp);
 		if (bp == NULL) {
 			do_warn(_("can't read block %u for directory inode "
 				  "%llu\n"),
@@ -578,6 +589,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 	int			this_level = p_level + 1;
 	bmap_ext_t		*bmp;
 	int			nex;
+	bmap_ext_t		lbmp;
 
 	/*
 	 * index is currently set to point to the entry that
@@ -619,7 +631,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 		dabno = INT_GET(node->hdr.info.forw, ARCH_CONVERT);
 		ASSERT(dabno != 0);
 		nex = blkmap_getn(cursor->blkmap, dabno, mp->m_dirblkfsbs,
-			&bmp);
+			&bmp, &lbmp);
 		if (nex == 0) {
 			do_warn(_("can't get map info for block %u of "
 				  "directory inode %llu\n"),
@@ -628,6 +640,8 @@ verify_dir2_path(xfs_mount_t	*mp,
 		}
 
 		bp = da_read_buf(mp, nex, bmp);
+		if (bmp != &lbmp)
+			free(bmp);
 
 		if (bp == NULL) {
 			do_warn(_("can't read block %u for directory inode "
@@ -1674,17 +1688,19 @@ process_block_dir2(
 	xfs_dir2_block_tail_t	*btp;
 	int			nex;
 	int			rval;
+	bmap_ext_t		lbmp;
 
 	*repair = *dot = *dotdot = 0;
 	*parent = NULLFSINO;
-	nex = blkmap_getn(blkmap, mp->m_dirdatablk, mp->m_dirblkfsbs, &bmp);
+	nex = blkmap_getn(blkmap, mp->m_dirdatablk, mp->m_dirblkfsbs, &bmp, &lbmp);
 	if (nex == 0) {
 		do_warn(_("block %u for directory inode %llu is missing\n"),
 			mp->m_dirdatablk, ino);
 		return 1;
 	}
 	bp = da_read_buf(mp, nex, bmp);
-	free(bmp);
+	if (bmp != &lbmp)
+		free(bmp);
 	if (bp == NULL) {
 		do_warn(_("can't read block %u for directory inode %llu\n"),
 			mp->m_dirdatablk, ino);
@@ -1786,6 +1802,7 @@ process_leaf_level_dir2(
 	xfs_dir2_leaf_t		*leaf;
 	int			nex;
 	xfs_dablk_t		prev_bno;
+	bmap_ext_t		lbmp;
 
 	da_bno = da_cursor->level[0].bno;
 	ino = da_cursor->ino;
@@ -1796,7 +1813,7 @@ process_leaf_level_dir2(
 
 	do {
 		nex = blkmap_getn(da_cursor->blkmap, da_bno, mp->m_dirblkfsbs,
-			&bmp);
+			&bmp, &lbmp);
 		/*
 		 * Directory code uses 0 as the NULL block pointer since 0
 		 * is the root block and no directory block pointer can point
@@ -1811,7 +1828,8 @@ process_leaf_level_dir2(
 			goto error_out;
 		}
 		bp = da_read_buf(mp, nex, bmp);
-		free(bmp);
+		if (bmp != &lbmp)
+			free(bmp);
 		bmp = NULL;
 		if (bp == NULL) {
 			do_warn(_("can't read file block %u for directory "
@@ -1895,7 +1913,7 @@ error_out:
 	 * Release all buffers holding interior btree blocks.
 	 */
 	err_release_dir2_cursor(mp, da_cursor, 0);
-	if (bmp)
+	if (bmp && (bmp != &lbmp))
 		free(bmp);
 	return 1;
 }
@@ -1976,12 +1994,13 @@ process_leaf_node_dir2(
 	xfs_dfiloff_t		ndbno;
 	int			nex;
 	int			t;
+	bmap_ext_t		lbmp;
 
 	*repair = *dot = *dotdot = good = 0;
 	*parent = NULLFSINO;
 	ndbno = NULLDFILOFF;
 	while ((dbno = blkmap_next_off(blkmap, ndbno, &t)) < mp->m_dirleafblk) {
-		nex = blkmap_getn(blkmap, dbno, mp->m_dirblkfsbs, &bmp);
+		nex = blkmap_getn(blkmap, dbno, mp->m_dirblkfsbs, &bmp, &lbmp);
 		ndbno = dbno + mp->m_dirblkfsbs - 1;
 		if (nex == 0) {
 			do_warn(_("block %llu for directory inode %llu is "
@@ -1990,7 +2009,8 @@ process_leaf_node_dir2(
 			continue;
 		}
 		bp = da_read_buf(mp, nex, bmp);
-		free(bmp);
+		if (bmp != &lbmp)
+			free(bmp);
 		if (bp == NULL) {
 			do_warn(_("can't read block %llu for directory inode "
 				  "%llu\n"),

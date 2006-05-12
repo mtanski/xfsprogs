@@ -169,7 +169,8 @@ blkmap_getn(
 	blkmap_t	*blkmap,
 	xfs_dfiloff_t	o,
 	xfs_dfilblks_t	nb,
-	bmap_ext_t	**bmpp)
+	bmap_ext_t	**bmpp,
+	bmap_ext_t	*bmpp_single)
 {
 	bmap_ext_t	*bmp;
 	blkent_t	*ent;
@@ -178,6 +179,18 @@ blkmap_getn(
 	int		i;
 	int		nex;
 
+	if (nb == 1) {
+		/* 
+		 * in the common case, when mp->m_dirblkfsbs == 1,
+		 * avoid additional malloc/free overhead
+		 */
+		bmpp_single->startblock = blkmap_get(blkmap, o);
+		bmpp_single->blockcount = 1;
+		bmpp_single->startoff = 0;
+		bmpp_single->flag = 0;
+		*bmpp = bmpp_single;
+		return (bmpp_single->startblock != NULLDFSBNO) ? 1 : 0;
+	}
 	for (i = nex = 0, bmp = NULL, entp = blkmap->ents;
 	     i < blkmap->nents;
 	     i++, entp++) {

@@ -29,7 +29,7 @@ extern avlnode_t	*avl_firstino(avlnode_t *root);
 /*
  * array of inode tree ptrs, one per ag
  */
-static avltree_desc_t	**inode_tree_ptrs;
+avltree_desc_t	**inode_tree_ptrs;
 
 /*
  * ditto for uncertain inodes
@@ -323,18 +323,6 @@ free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
 	return;
 }
 
-/*
- * returns the inode record desired containing the inode
- * returns NULL if inode doesn't exist.  The tree-based find
- * routines do NOT pull records out of the tree.
- */
-ino_tree_node_t *
-find_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino)
-{
-	return((ino_tree_node_t *)
-		avl_findrange(inode_tree_ptrs[agno], ino));
-}
-
 void
 find_inode_rec_range(xfs_agnumber_t agno, xfs_agino_t start_ino,
 			xfs_agino_t end_ino, ino_tree_node_t **first,
@@ -387,12 +375,6 @@ set_inode_free_alloc(xfs_agnumber_t agno, xfs_agino_t ino)
 	set_inode_free(ino_rec, ino - ino_rec->ino_startnum);
 
 	return(ino_rec);
-}
-
-ino_tree_node_t *
-findfirst_inode_rec(xfs_agnumber_t agno)
-{
-	return((ino_tree_node_t *) inode_tree_ptrs[agno]->avl_firstino);
 }
 
 void
@@ -589,6 +571,7 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
  * pointers, link counts and reached bits for phase 6 and phase 7.
  */
 
+#ifdef DEBUG
 void
 add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 {
@@ -644,6 +627,7 @@ num_inode_references(ino_tree_node_t *ino_rec, int ino_offset)
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
 	return(ino_rec->ino_un.backptrs->nlinks[ino_offset]);
 }
+#endif /* DEBUG */
 
 #if 0
 static backptrs_t	*bptrs;

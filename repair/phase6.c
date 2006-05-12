@@ -1896,7 +1896,7 @@ longform_dir2_entry_check_data(
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
 		lastfree = 0;
 		dir_hash_add(hashtab,
-			libxfs_da_hashname((char *)dep->name, dep->namelen),
+			libxfs_da_hashname((uchar_t *)dep->name, dep->namelen),
 			addr, dep->name[0] == '/');
 		/*
 		 * skip bogus entries (leading '/').  they'll be deleted

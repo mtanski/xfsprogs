@@ -167,6 +167,16 @@ typedef struct rt_extent_tree_node  {
 #define XR_E_FS_MAP	7	/* extent used by fs space/inode maps */
 #define XR_E_BAD_STATE	8
 
+/* extent states, in 64 bit word chunks */
+#define	XR_E_UNKNOWN_LL		0x0000000000000000LL
+#define	XR_E_FREE1_LL		0x1111111111111111LL
+#define	XR_E_FREE_LL		0x2222222222222222LL
+#define	XR_E_INUSE_LL		0x3333333333333333LL
+#define	XR_E_INUSE_FS_LL	0x4444444444444444LL
+#define	XR_E_MULT_LL		0x5555555555555555LL
+#define	XR_E_INO_LL		0x6666666666666666LL
+#define	XR_E_FS_MAP_LL		0x7777777777777777LL
+
 /* separate state bit, OR'ed into high (4th) bit of ex_state field */
 
 #define XR_E_WRITTEN	0x8	/* extent has been written out, can't reclaim */
@@ -227,9 +237,18 @@ void		add_dup_extent(xfs_agnumber_t agno,
 				xfs_agblock_t startblock,
 				xfs_extlen_t blockcount);
 
-int		search_dup_extent(xfs_mount_t *mp,
-				xfs_agnumber_t agno,
-				xfs_agblock_t agbno);
+extern avltree_desc_t   **extent_tree_ptrs;
+/* ARGSUSED */
+static __inline int
+search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
+{
+	ASSERT(agno < glob_agcount);
+
+	if (avl_findrange(extent_tree_ptrs[agno], agbno) != NULL)
+		return(1);
+
+	return(0);
+}
 
 void		add_rt_dup_extent(xfs_drtbno_t	startblock,
 				xfs_extlen_t	blockcount);
@@ -348,8 +367,18 @@ void		free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec);
  */
 void		get_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec);
 
-ino_tree_node_t *findfirst_inode_rec(xfs_agnumber_t agno);
-ino_tree_node_t *find_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino);
+extern avltree_desc_t     **inode_tree_ptrs;
+static __inline ino_tree_node_t *
+findfirst_inode_rec(xfs_agnumber_t agno)
+{
+	return((ino_tree_node_t *) inode_tree_ptrs[agno]->avl_firstino);
+}
+static __inline ino_tree_node_t *
+find_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino)
+{
+	return((ino_tree_node_t *)
+		avl_findrange(inode_tree_ptrs[agno], ino));
+}
 void		find_inode_rec_range(xfs_agnumber_t agno,
 			xfs_agino_t start_ino, xfs_agino_t end_ino,
 			ino_tree_node_t **first, ino_tree_node_t **last);
@@ -486,12 +515,55 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
  * an inode that we've counted is removed.
  */
 
-void		add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset);
-void		add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset);
-void		drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset);
-int		is_inode_reached(ino_tree_node_t *ino_rec, int ino_offset);
-int		is_inode_referenced(ino_tree_node_t *ino_rec, int ino_offset);
-__uint32_t	num_inode_references(ino_tree_node_t *ino_rec, int ino_offset);
+static __inline int
+is_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	return(XFS_INO_RCHD_IS_RCHD(ino_rec, ino_offset));
+}
+
+static __inline void
+add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+
+	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
+	XFS_INO_RCHD_SET_RCHD(ino_rec, ino_offset);
+
+	ASSERT(is_inode_reached(ino_rec, ino_offset));
+}
+
+static __inline void
+add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+
+	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
+}
+
+static __inline void
+drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	ASSERT(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
+
+	if (--ino_rec->ino_un.backptrs->nlinks[ino_offset] == 0)
+		XFS_INO_RCHD_CLR_RCHD(ino_rec, ino_offset);
+}
+
+static __inline int
+is_inode_referenced(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	return(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
+}
+
+static __inline __uint32_t
+num_inode_references(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	return(ino_rec->ino_un.backptrs->nlinks[ino_offset]);
+}
 
 /*
  * has an inode been processed for phase 6 (reference count checking)?

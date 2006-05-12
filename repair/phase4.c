@@ -1176,6 +1176,21 @@ phase4(xfs_mount_t *mp)
 		 */
 		for (j = ag_hdr_block; j < ag_end; j++)  {
 
+			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
+			if ((extent_start == 0) && ((j & XR_BB_MASK) == 0)) {
+				switch(ba_bmap[i][j>>XR_BB]) {
+				case XR_E_UNKNOWN_LL:
+				case XR_E_FREE1_LL:
+				case XR_E_FREE_LL:
+				case XR_E_INUSE_LL:
+				case XR_E_INUSE_FS_LL:
+				case XR_E_INO_LL:
+				case XR_E_FS_MAP_LL:
+					j += (XR_BB_UNIT/XR_BB) - 1;
+					continue;
+				}
+			}
+
 			bstate = get_agbno_state(mp, i, j);
 
 			switch (bstate)  {

@@ -654,34 +654,6 @@ avl_findanyrange(
 	return NULL;
 }
 
-
-/*
- * Returns a pointer to range which contains value.
- */
-avlnode_t *
-avl_findrange(
-	register avltree_desc_t *tree,
-	register __psunsigned_t value)
-{
-	register avlnode_t *np = tree->avl_root;
-
-	while (np) {
-		if (value < AVL_START(tree, np)) {
-			np = np->avl_back;
-			continue;
-		}
-		if (value >= AVL_END(tree, np)) {
-			np = np->avl_forw;
-			continue;
-		}
-		ASSERT(AVL_START(tree, np) <= value &&
-		       value < AVL_END(tree, np));
-		return np;
-	}
-	return NULL;
-}
-
-
 /*
  * Returns a pointer to node which contains exact value.
  */

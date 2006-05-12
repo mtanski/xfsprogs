@@ -476,7 +476,7 @@ process_leaf_attr_block(
 			 * hashvalue were wrong but matched. Unlikely, however.
 			*/
 			if (INT_GET(entry->hashval, ARCH_CONVERT) !=
-				libxfs_da_hashname((char *)&local->nameval[0],
+				libxfs_da_hashname((uchar_t *)&local->nameval[0],
 					INT_GET(local->namelen,
 						ARCH_CONVERT)) ||
 			   (INT_GET(entry->hashval, ARCH_CONVERT) <
@@ -517,7 +517,7 @@ process_leaf_attr_block(
 					INT_GET(remotep->namelen, ARCH_CONVERT))) ||
 				   (INT_GET(entry->hashval, ARCH_CONVERT)
 						!= libxfs_da_hashname(
-					(char *)&remotep->name[0],
+					(uchar_t *)&remotep->name[0],
 					 INT_GET(remotep->namelen, ARCH_CONVERT))) ||
 				   (INT_GET(entry->hashval, ARCH_CONVERT)
 						< last_hashval) ||

@@ -61,7 +61,8 @@ blkmap_t	*blkmap_alloc(xfs_extnum_t);
 void		blkmap_free(blkmap_t *blkmap);
 xfs_dfsbno_t	blkmap_get(blkmap_t *blkmap, xfs_dfiloff_t o);
 int		blkmap_getn(blkmap_t *blkmap, xfs_dfiloff_t o,
-			    xfs_dfilblks_t nb, bmap_ext_t **bmpp);
+			    xfs_dfilblks_t nb, bmap_ext_t **bmpp, 
+			    bmap_ext_t *bmpp_single);
 void		blkmap_grow(blkmap_t **blkmapp, blkent_t **entp,
 			    blkent_t *newent);
 xfs_dfiloff_t	blkmap_last_off(blkmap_t *blkmap);
