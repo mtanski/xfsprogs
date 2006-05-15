@@ -84,7 +84,7 @@ avl_init_tree(
 	avltree_desc_t  *tree,
 	avlops_t *ops);
 
-__inline avlnode_t *
+static inline avlnode_t *
 avl_findrange(
 	avltree_desc_t *tree,
 	__psunsigned_t value)

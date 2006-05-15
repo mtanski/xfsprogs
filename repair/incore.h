@@ -239,7 +239,7 @@ void		add_dup_extent(xfs_agnumber_t agno,
 
 extern avltree_desc_t   **extent_tree_ptrs;
 /* ARGSUSED */
-static __inline int
+static inline int
 search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
 {
 	ASSERT(agno < glob_agcount);
@@ -368,12 +368,12 @@ void		free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec);
 void		get_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec);
 
 extern avltree_desc_t     **inode_tree_ptrs;
-static __inline ino_tree_node_t *
+static inline ino_tree_node_t *
 findfirst_inode_rec(xfs_agnumber_t agno)
 {
 	return((ino_tree_node_t *) inode_tree_ptrs[agno]->avl_firstino);
 }
-static __inline ino_tree_node_t *
+static inline ino_tree_node_t *
 find_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino)
 {
 	return((ino_tree_node_t *)
@@ -515,14 +515,14 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
  * an inode that we've counted is removed.
  */
 
-static __inline int
+static inline int
 is_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
 	return(XFS_INO_RCHD_IS_RCHD(ino_rec, ino_offset));
 }
 
-static __inline void
+static inline void
 add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
@@ -533,7 +533,7 @@ add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 	ASSERT(is_inode_reached(ino_rec, ino_offset));
 }
 
-static __inline void
+static inline void
 add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
@@ -541,7 +541,7 @@ add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
 }
 
-static __inline void
+static inline void
 drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
@@ -551,14 +551,14 @@ drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 		XFS_INO_RCHD_CLR_RCHD(ino_rec, ino_offset);
 }
 
-static __inline int
+static inline int
 is_inode_referenced(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);
 	return(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
 }
 
-static __inline __uint32_t
+static inline __uint32_t
 num_inode_references(ino_tree_node_t *ino_rec, int ino_offset)
 {
 	ASSERT(ino_rec->ino_un.backptrs != NULL);

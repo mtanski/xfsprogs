@@ -518,23 +518,6 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	return;
 }
 
-#if 0
-/*
- * not needed for now since we don't set the parent info
- * until phase 4 -- at which point we know that the directory
- * inode won't be going away -- so we won't ever need to clear
- * directory parent data that we set.
- */
-void
-clear_inode_parent(ino_tree_node_t *irec, int offset)
-{
-	ASSERT(full_backptrs == 0);
-	ASSERT(irec->ino_un.plist != NULL);
-
-	return;
-}
-#endif
-
 xfs_ino_t
 get_inode_parent(ino_tree_node_t *irec, int offset)
 {
@@ -565,104 +548,6 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
 
 	return(0LL);
 }
-
-/*
- * code that deals with the inode descriptor appendages -- the back
- * pointers, link counts and reached bits for phase 6 and phase 7.
- */
-
-#ifdef DEBUG
-void
-add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-
-	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
-	XFS_INO_RCHD_SET_RCHD(ino_rec, ino_offset);
-
-	ASSERT(is_inode_reached(ino_rec, ino_offset));
-
-	return;
-}
-
-int
-is_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	return(XFS_INO_RCHD_IS_RCHD(ino_rec, ino_offset));
-}
-
-void
-add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-
-	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
-
-	return;
-}
-
-void
-drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	ASSERT(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
-
-	if (--ino_rec->ino_un.backptrs->nlinks[ino_offset] == 0)
-		XFS_INO_RCHD_CLR_RCHD(ino_rec, ino_offset);
-
-	return;
-}
-
-int
-is_inode_referenced(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	return(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
-}
-
-__uint32_t
-num_inode_references(ino_tree_node_t *ino_rec, int ino_offset)
-{
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	return(ino_rec->ino_un.backptrs->nlinks[ino_offset]);
-}
-#endif /* DEBUG */
-
-#if 0
-static backptrs_t	*bptrs;
-static int		bptrs_index;
-#define BPTR_ALLOC_NUM	1000
-
-backptrs_t *
-get_backptr(void)
-{
-	backptrs_t *bptr;
-
-	if (bptrs_index == BPTR_ALLOC_NUM)  {
-		ASSERT(bptrs == NULL);
-
-		if ((bptrs = malloc(sizeof(backptrs_t[BPTR_ALLOC_NUM])))
-				== NULL)  {
-			do_error(_("couldn't malloc ino rec backptrs.\n"));
-		}
-
-		bptrs_index = 0;
-	}
-
-	ASSERT(bptrs != NULL);
-
-	bptr = &bptrs[bptrs_index];
-	bptrs_index++;
-
-	if (bptrs_index == BPTR_ALLOC_NUM)
-		bptrs = NULL;
-
-	bzero(bptr, sizeof(backptrs_t));
-
-	return(bptr);
-}
-#endif
 
 backptrs_t *
 get_backptr(void)
