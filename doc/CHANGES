@@ -1,5 +1,7 @@
-[cvs]
-	- Fix a case where xfs_repair could incorrectly flag extent
+xfsprogs-2.7.18 (16 May 2006)
+	- Fixed a case where xfs_repair was reporting a valid used 
+	  block as a duplicate during phase 4.
+	- Fixed a case where xfs_repair could incorrectly flag extent
 	  b+tree nodes as corrupt.
 	- Portability changes, get xfs_repair compiling on IRIX.
 	- Parent pointer updates in xfs_io checker command.

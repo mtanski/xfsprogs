@@ -1301,13 +1301,11 @@ phase4(xfs_mount_t *mp)
 	 * initialize bitmaps for all AGs
 	 */
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		ag_end = (i < mp->m_sb.sb_agcount - 1) ? mp->m_sb.sb_agblocks :
-			mp->m_sb.sb_dblocks -
-				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
 		/*
 		 * now reset the bitmap for all ags
 		 */
-		bzero(ba_bmap[i], roundup(mp->m_sb.sb_agblocks/(NBBY/XR_BB),
+		bzero(ba_bmap[i], 
+		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
 						sizeof(__uint64_t)));
 		for (j = 0; j < ag_hdr_block; j++)
 			set_agbno_state(mp, i, j, XR_E_INUSE_FS);
