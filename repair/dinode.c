@@ -315,13 +315,13 @@ verify_ag_bno(xfs_sb_t *sbp,
 		xfs_agnumber_t agno,
 		xfs_agblock_t agbno)
 {
-	if (agno < sbp->sb_agcount) {
+	if (agno < (sbp->sb_agcount - 1)) {
 		if (agbno >= sbp->sb_agblocks) {
 			return 1;	/* bad */
 		}
 		return 0;		/* good */
 	}
-	if (agno == sbp->sb_agcount) {
+	if (agno == (sbp->sb_agcount - 1)) {
 		if (agbno >=
 			(sbp->sb_dblocks -
 			(sbp->sb_agcount-1) *
