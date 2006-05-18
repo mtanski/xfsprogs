@@ -470,7 +470,7 @@ _("can't access block %llu (fsbno %llu) of realtime bitmap inode %llu\n"),
 	}
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
-
+	libxfs_iput(ip, 0);
 	return(0);
 }
 
@@ -540,7 +540,7 @@ _("can't access block %llu (fsbno %llu) of realtime summary inode %llu\n"),
 	}
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
-
+	libxfs_iput(ip, 0);
 	return(0);
 }
 
