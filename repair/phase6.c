@@ -1900,10 +1900,13 @@ longform_dir2_entry_check_data(
 			addr, dep->name[0] == '/');
 		/*
 		 * skip bogus entries (leading '/').  they'll be deleted
-		 * later
+		 * later.  must still log it, else we leak references to
+		 * buffers.
 		 */
 		if (dep->name[0] == '/')  {
 			nbad++;
+			if (!no_modify)
+				libxfs_dir2_data_log_entry(tp, bp, dep);
 			continue;
 		}
 		junkit = 0;
@@ -2070,6 +2073,8 @@ _("entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino %llu,
 		libxfs_dir2_data_freescan(mp, d, &needlog, NULL);
 	if (needlog)
 		libxfs_dir2_data_log_header(tp, bp);
+	else if (!isblock && !nbad)
+		libxfs_da_brelse(tp, bp);
 	libxfs_bmap_finish(&tp, &flist, firstblock, &committed);
 	libxfs_trans_commit(tp, 0, 0);
 	freetab->ents[db].v = INT_GET(d->hdr.bestfree[0].length, ARCH_CONVERT);
@@ -2347,6 +2352,8 @@ longform_dir2_rebuild_setup(
 		if (needscan)
 			libxfs_dir2_data_freescan(mp, data, &needlog, NULL);
 		libxfs_da_log_buf(tp, dbp, 0, mp->m_dirblksize - 1);
+	} else if (dbp) {
+		libxfs_da_brelse(tp, dbp);
 	}
 
 	/* allocate blocks for btree */
