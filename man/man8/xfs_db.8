@@ -436,12 +436,14 @@ superblock in the filesystem.
 to all secondary copies of the superblock.
 If no argument is given, the current filesystem UUID is printed.
 .TP
-\f3version\f1 [ \f2extflg\f1 | [\f2versionnum\f1 \f2features2\f1 ] ]
+\f3version\f1 [ \f2feature\f1 | [\f2versionnum\f1 \f2features2\f1 ] ]
 Enable selected features for a filesystem (certain features can
 be enabled on an unmounted filesystem, after
 .IR mkfs.xfs (8)
 has created the filesystem).
 Support for unwritten extents can be enabled using the \f2extflg\f1
+option.
+Support for version 2 log format can be enabled using the \f2log2\f1
 option.
 Support for extended attributes can be enabled using the \f2attr1\f1
 or \f2attr2\f1 option.

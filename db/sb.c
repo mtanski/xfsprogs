@@ -536,11 +536,12 @@ version_help(void)
 " 'version extflg'   - enable unwritten extents\n"
 " 'version attr1'    - enable v1 inline extended attributes\n"
 " 'version attr2'    - enable v2 inline extended attributes\n"
+" 'version log2'     - enable v2 log format\n"
 "\n"
 "The version function prints currently enabled features for a filesystem\n"
 "according to its the version field of the primary superblock.\n"
 "It can also be used to enable selected features, such as support for\n"
-"unwritten extents.  The upated version is written into to all AGs.\n"
+"unwritten extents.  The upated version is written into all AGs.\n"
 "\n"
 );
 }
@@ -549,14 +550,21 @@ static int
 do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 {
 	xfs_sb_t	tsb;
+	__int64_t	fields = 0;
 
 	if (!get_sb(agno, &tsb))
 		return 0;
 
+	if ((version & XFS_SB_VERSION_LOGV2BIT) &&
+	    !XFS_SB_VERSION_HASLOGV2(&tsb)) {
+		tsb.sb_logsunit = 1;
+		fields |= (1LL << XFS_SBS_LOGSUNIT);
+	}
+
 	tsb.sb_versionnum = version;
 	tsb.sb_features2 = features;
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1,
-			(XFS_SB_VERSIONNUM | XFS_SBS_FEATURES2));
+	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2;
+	libxfs_xlate_sb(iocur_top->data, &tsb, -1, fields);
 	write_cur();
 	return 1;
 }
@@ -639,6 +647,26 @@ version_f(
 				else
 					version = mp->m_sb.sb_versionnum |
 						  XFS_SB_VERSION_EXTFLGBIT;
+				break;
+			}
+		} else if (!strcasecmp(argv[1], "log2")) {
+			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
+			case XFS_SB_VERSION_1:
+				version = 0x0004 | XFS_SB_VERSION_LOGV2BIT;
+				break;
+			case XFS_SB_VERSION_2:
+				version = 0x0014 | XFS_SB_VERSION_LOGV2BIT;
+				break;
+			case XFS_SB_VERSION_3:
+				version = 0x0034 | XFS_SB_VERSION_LOGV2BIT;
+				break;
+			case XFS_SB_VERSION_4:
+				if (XFS_SB_VERSION_HASLOGV2(&mp->m_sb))
+					dbprintf("version 2 log format"
+						 " is already in use\n");
+				else
+					version = mp->m_sb.sb_versionnum |
+						  XFS_SB_VERSION_LOGV2BIT;
 				break;
 			}
 		} else if (!strcasecmp(argv[1], "attr1")) {

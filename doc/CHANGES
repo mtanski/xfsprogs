@@ -1,3 +1,7 @@
+[cvs]
+	- Added code to xfs_db and xfs_admin to allow conversion
+	  from version 1 to version 2 logs.
+
 xfsprogs-2.7.18 (16 May 2006)
 	- Fixed a case where xfs_repair was reporting a valid used 
 	  block as a duplicate during phase 4.
