@@ -500,6 +500,10 @@ main(int argc, char **argv)
 
 	phase4(mp);
 
+	/* XXX: nathans - something in phase4 ain't playing by */
+	/* the buffer cache rules.. why doesn't IRIX hit this? */
+	libxfs_bcache_purge();
+
 	if (no_modify)
 		printf(_("No modify flag set, skipping phase 5\n"));
 	else
@@ -576,6 +580,12 @@ _("Warning:  project quota information would be cleared.\n"
 
 		return(0);
 	}
+
+	/*
+	 * Done, flush all cached buffers and inodes.
+	 */
+	libxfs_icache_purge();
+	libxfs_bcache_purge();
 
 	/*
 	 * Clear the quota flags if they're on.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,6 +24,16 @@
 #define BDSTRAT_SIZE	(256 * 1024)
 #define min(x, y)	((x) < (y) ? (x) : (y))
 
+static inline void *
+libxfs_memalign(size_t size)
+{
+	static size_t	pagealign;
+
+	if (!pagealign)
+		pagealign = getpagesize();
+	return memalign(pagealign, size);
+}
+
 void
 libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 {
@@ -33,7 +43,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 	int		fd;
 
 	zsize = min(BDSTRAT_SIZE, BBTOB(len));
-	if ((z = memalign(getpagesize(), zsize)) == NULL) {
+	if ((z = libxfs_memalign(zsize)) == NULL) {
 		fprintf(stderr,
 			_("%s: %s can't memalign %d bytes: %s\n"),
 			progname, __FUNCTION__, (int)zsize, strerror(errno));
@@ -121,13 +131,10 @@ libxfs_log_clear(
 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 2;
 	len = MAX(len, 2);
 	buf = libxfs_getbuf(device, start, len);
-	if (!buf)
-		return -1;
 	libxfs_log_header(XFS_BUF_PTR(buf),
 			  fs_uuid, version, sunit, fmt, next, buf);
-	if (libxfs_writebuf(buf, 0))
-		return -1;
-
+	libxfs_writebufr(buf);
+	libxfs_putbuf(buf);
 	return 0;
 }
 
@@ -186,46 +193,125 @@ libxfs_log_header(
 	return BBTOB(len);
 }
 
+xfs_buf_t *
+libxfs_getsb(xfs_mount_t *mp, int flags)
+{
+	return libxfs_readbuf(mp->m_dev, XFS_SB_DADDR,
+				XFS_FSS_TO_BB(mp, 1), flags);
+}
+
 
 /*
- * Simple I/O interface
+ * Simple I/O (buffer cache) interface
  */
+
+xfs_zone_t	*xfs_buf_zone;
+
+typedef struct {
+	dev_t		device;
+	xfs_daddr_t	blkno;
+	unsigned int	count;
+} xfs_bufkey_t;
+
+static unsigned int
+libxfs_bhash(cache_key_t key, unsigned int hashsize)
+{
+	return ((unsigned int)((xfs_bufkey_t *)key)->blkno) % hashsize;
+}
+
+static int
+libxfs_bcompare(struct cache_node *node, cache_key_t key)
+{
+	xfs_buf_t	*bp = (xfs_buf_t *)node;
+	xfs_bufkey_t	*bkey = (xfs_bufkey_t *)key;
+
+#ifdef IO_BCOMPARE_CHECK
+	if (bp->b_dev == bkey->device &&
+	    bp->b_blkno == bkey->blkno &&
+	    bp->b_bcount != bkey->count)
+		fprintf(stderr, "Badness in key lookup (length)\n"
+			"bp=(bno %llu, len %u bb) key=(bno %llu, len %u bbs)\n",
+			(unsigned long long)bp->b_blkno, (int)bp->b_bcount,
+			(unsigned long long)bkey->blkno, (int)bkey->count);
+#endif
+
+	return (bp->b_dev == bkey->device &&
+		bp->b_blkno == bkey->blkno &&
+		bp->b_bcount == bkey->count);
+}
+
+void
+libxfs_bprint(xfs_buf_t *bp)
+{
+	fprintf(stderr, "Buffer 0x%p blkno=%llu bytes=%u flags=0x%x count=%u\n",
+		bp, (unsigned long long)bp->b_blkno, (unsigned)bp->b_bcount,
+		bp->b_flags, bp->b_node.cn_count);
+}
 
 xfs_buf_t *
 libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 {
-	xfs_buf_t	*buf;
-	size_t		total;
+	xfs_buf_t	*bp;
+	xfs_bufkey_t	key;
+	unsigned int	bytes = BBTOB(len);
 
-	total = sizeof(xfs_buf_t) + BBTOB(len);
-	if ((buf = calloc(total, 1)) == NULL) {
-		fprintf(stderr, _("%s: buf calloc failed (%ld bytes): %s\n"),
-			progname, (long)total, strerror(errno));
-		exit(1);
-	}
-	/* by default, we allocate buffer directly after the header */
-	buf->b_blkno = blkno;
-	buf->b_bcount = BBTOB(len);
-	buf->b_dev = device;
-	buf->b_addr = (char *)(&buf->b_addr + 1);	/* must be last field */
+	key.device = device;
+	key.blkno = blkno;
+	key.count = bytes;
+
+	if (cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp)) {
 #ifdef IO_DEBUG
-	fprintf(stderr, "getbuf allocated %ubytes, blkno=%llu(%llu), %p\n",
-		BBTOB(len), BBTOOFF64(blkno), blkno, buf);
+		fprintf(stderr, "%s: allocated buffer, key=%llu(%llu), %p\n",
+			__FUNCTION__, BBTOB(len), BBTOOFF64(blkno), blkno, buf);
 #endif
+		bp->b_flags = 0;
+		bp->b_blkno = blkno;
+		bp->b_bcount = bytes;
+		bp->b_dev = device;
+		if (!(bp->b_addr = libxfs_memalign(bytes))) {
+			fprintf(stderr,
+				_("%s: %s can't memalign %d bytes: %s\n"),
+				progname, __FUNCTION__, (int)bytes,
+				strerror(errno));
+			exit(1);
+		}
+	}
+	return bp;
+}
 
-	return(buf);
+void
+libxfs_putbuf(xfs_buf_t *bp)
+{
+	cache_node_put((struct cache_node *)bp);
+}
+
+void
+libxfs_purgebuf(xfs_buf_t *bp)
+{
+	xfs_bufkey_t	key;
+
+	key.device = bp->b_dev;
+	key.blkno = bp->b_blkno;
+	key.count = bp->b_bcount;
+
+	cache_node_purge(libxfs_bcache, &key, (struct cache_node *)bp);
+}
+
+static struct cache_node *
+libxfs_balloc(void)
+{
+	return libxfs_zone_zalloc(xfs_buf_zone);
 }
 
 int
-libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int flags)
+libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *bp, int len, int flags)
 {
 	int	fd = libxfs_device_to_fd(dev);
+	int	bytes = BBTOB(len);
 
-	buf->b_dev = dev;
-	buf->b_blkno = blkno;
-	ASSERT(BBTOB(len) <= buf->b_bcount);
+	ASSERT(BBTOB(len) <= bp->b_bcount);
 
-	if (pread64(fd, buf->b_addr, BBTOB(len), BBTOOFF64(blkno)) < 0) {
+	if (pread64(fd, bp->b_addr, bytes, BBTOOFF64(blkno)) < 0) {
 		fprintf(stderr, _("%s: read failed: %s\n"),
 			progname, strerror(errno));
 		if (flags & LIBXFS_EXIT_ON_FAILURE)
@@ -234,107 +320,134 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *buf, int len, int flags
 	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "readbufr read %ubytes, blkno=%llu(%llu), %p\n",
-		BBTOB(len), BBTOOFF64(blkno), blkno, buf);
+		bytes, BBTOOFF64(blkno), blkno, bp);
 #endif
+	if (bp->b_dev == dev &&
+	    bp->b_blkno == blkno &&
+	    bp->b_bcount == bytes)
+		bp->b_flags |= LIBXFS_B_UPTODATE;
 	return 0;
 }
 
 xfs_buf_t *
 libxfs_readbuf(dev_t dev, xfs_daddr_t blkno, int len, int flags)
 {
-	xfs_buf_t	*buf;
+	xfs_buf_t	*bp;
 	int		error;
 
-	buf = libxfs_getbuf(dev, blkno, len);
-	error = libxfs_readbufr(dev, blkno, buf, len, flags);
-	if (error) {
-		libxfs_putbuf(buf);
-		return NULL;
+	bp = libxfs_getbuf(dev, blkno, len);
+	if (!(bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+		error = libxfs_readbufr(dev, blkno, bp, len, flags);
+		if (error) {
+			libxfs_putbuf(bp);
+			return NULL;
+		}
 	}
-	return buf;
-}
-
-xfs_buf_t *
-libxfs_getsb(xfs_mount_t *mp, int flags)
-{
-	return libxfs_readbuf(mp->m_dev, XFS_SB_DADDR,
-				XFS_FSB_TO_BB(mp, 1), flags);
+	return bp;
 }
 
 int
-libxfs_writebuf_int(xfs_buf_t *buf, int flags)
+libxfs_writebufr(xfs_buf_t *bp)
 {
 	int	sts;
-	int	fd = libxfs_device_to_fd(buf->b_dev);
+	int	fd = libxfs_device_to_fd(bp->b_dev);
 
-#ifdef IO_DEBUG
-	fprintf(stderr, "writing %ubytes at blkno=%llu(%llu), %p\n",
-		buf->b_bcount, BBTOOFF64(buf->b_blkno), buf->b_blkno, buf);
-#endif
-	sts = pwrite64(fd, buf->b_addr, buf->b_bcount, BBTOOFF64(buf->b_blkno));
+	sts = pwrite64(fd, bp->b_addr, bp->b_bcount, BBTOOFF64(bp->b_blkno));
 	if (sts < 0) {
 		fprintf(stderr, _("%s: pwrite64 failed: %s\n"),
 			progname, strerror(errno));
-		if (flags & LIBXFS_EXIT_ON_FAILURE)
+		if (bp->b_flags & LIBXFS_B_EXIT)
 			exit(1);
 		return errno;
 	}
-	else if (sts != buf->b_bcount) {
+	else if (sts != bp->b_bcount) {
 		fprintf(stderr, _("%s: error - wrote only %d of %d bytes\n"),
-			progname, sts, buf->b_bcount);
-		if (flags & LIBXFS_EXIT_ON_FAILURE)
+			progname, sts, bp->b_bcount);
+		if (bp->b_flags & LIBXFS_B_EXIT)
 			exit(1);
 		return EIO;
 	}
+#ifdef IO_DEBUG
+	fprintf(stderr, "writebufr wrote %ubytes, blkno=%llu(%llu), %p\n",
+		bp->b_bcount, BBTOOFF64(bp->b_blkno), bp->b_blkno, bp);
+#endif
+	bp->b_flags |= LIBXFS_B_UPTODATE;
+	bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);
 	return 0;
 }
 
 int
-libxfs_writebuf(xfs_buf_t *buf, int flags)
+libxfs_writebuf_int(xfs_buf_t *bp, int flags)
 {
-	int error = libxfs_writebuf_int(buf, flags);
-	libxfs_putbuf(buf);
-	return error;
+	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
+	return 0;
+}
+
+int
+libxfs_writebuf(xfs_buf_t *bp, int flags)
+{
+	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
+	libxfs_putbuf(bp);
+	return 0;
 }
 
 void
-libxfs_iomove(xfs_buf_t *buf, uint boff, int len, void *data, int flags)
+libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
 {
-	if (boff + len > buf->b_bcount)
+#ifdef IO_DEBUG
+	if (boff + len > bp->b_bcount) {
+		fprintf(stderr, "Badness, iomove out of range!\n"
+			"bp=(bno %llu, bytes %u) range=(boff %u, bytes %u)\n",
+			bp->b_blkno, bp->b_bcount, boff, len);
 		abort();
-
+	}
+#endif
 	switch (flags) {
 	case LIBXFS_BZERO:
-		memset(buf->b_addr + boff, 0, len);
+		memset(bp->b_addr + boff, 0, len);
 		break;
 	case LIBXFS_BREAD:
-		memcpy(data, buf->b_addr + boff, len);
+		memcpy(data, bp->b_addr + boff, len);
 		break;
 	case LIBXFS_BWRITE:
-		memcpy(buf->b_addr + boff, data, len);
+		memcpy(bp->b_addr + boff, data, len);
 		break;
+	}
+}
+
+static void
+libxfs_brelse(struct cache_node *node)
+{
+	xfs_buf_t		*bp = (xfs_buf_t *)node;
+	xfs_buf_log_item_t	*bip;
+	extern xfs_zone_t	*xfs_buf_item_zone;
+
+	if (bp != NULL) {
+		if (bp->b_flags & LIBXFS_B_DIRTY)
+			libxfs_writebufr(bp);
+		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+		if (bip)
+		    libxfs_zone_free(xfs_buf_item_zone, bip);
+		free(bp->b_addr);
+		bp->b_addr = NULL;
+		bp->b_flags = 0;
+		free(bp);
+		bp = NULL;
 	}
 }
 
 void
-libxfs_putbuf(xfs_buf_t *buf)
+libxfs_bcache_purge(void)
 {
-	if (buf != NULL) {
-		xfs_buf_log_item_t	*bip;
-		extern xfs_zone_t	*xfs_buf_item_zone;
-
-		bip = XFS_BUF_FSPRIVATE(buf, xfs_buf_log_item_t *);
-
-		if (bip)
-		    libxfs_zone_free(xfs_buf_item_zone, bip);
-#ifdef IO_DEBUG
-		fprintf(stderr, "putbuf released %ubytes, %p\n",
-			buf->b_bcount, buf);
-#endif
-		free(buf);
-		buf = NULL;
-	}
+	cache_purge(libxfs_bcache);
 }
+
+struct cache_operations libxfs_bcache_operations = {
+	/* .hash */	libxfs_bhash,
+	/* .alloc */	libxfs_balloc,
+	/* .relse */	libxfs_brelse,
+	/* .compare */	libxfs_bcompare,
+};
 
 
 /*
@@ -406,8 +519,7 @@ libxfs_malloc(size_t size)
 		exit(1);
 	}
 #ifdef MEM_DEBUG
-	fprintf(stderr, "## calloc'd item %p size %d bytes\n",
-		ptr, size);
+	fprintf(stderr, "## calloc'd item %p size %d bytes\n", ptr, size);
 #endif
 	return ptr;
 }
@@ -416,8 +528,7 @@ void
 libxfs_free(void *ptr)
 {
 #ifdef MEM_DEBUG
-	fprintf(stderr, "## freed item %p\n",
-		ptr);
+	fprintf(stderr, "## freed item %p\n", ptr);
 #endif
 	if (ptr != NULL) {
 		free(ptr);
@@ -444,21 +555,62 @@ libxfs_realloc(void *ptr, size_t size)
 }
 
 
+/*
+ * Inode cache interfaces
+ */
+
+extern xfs_zone_t	*xfs_ili_zone;
+extern xfs_zone_t	*xfs_inode_zone;
+
+static unsigned int
+libxfs_ihash(cache_key_t key, unsigned int hashsize)
+{
+	return ((unsigned int)*(xfs_ino_t *)key) % hashsize;
+}
+
+static int
+libxfs_icompare(struct cache_node *node, cache_key_t key)
+{
+	xfs_inode_t	*ip = (xfs_inode_t *)node;
+
+	return (ip->i_ino == *(xfs_ino_t *)key);
+}
+
 int
 libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
 		xfs_inode_t **ipp, xfs_daddr_t bno)
 {
 	xfs_inode_t	*ip;
-	int		error;
+	int		error = 0;
 
-	error = libxfs_iread(mp, tp, ino, &ip, bno);
-	if (error)
-		return error;
+	if (cache_node_get(libxfs_icache, &ino, (struct cache_node **)&ip)) {
+#ifdef INO_DEBUG
+		fprintf(stderr, "%s: allocated inode, ino=%llu(%llu), %p\n",
+			__FUNCTION__, (unsigned long long)ino, bno, ip);
+#endif
+		if ((error = libxfs_iread(mp, tp, ino, ip, bno))) {
+			cache_node_purge(libxfs_icache, &ino,
+					(struct cache_node *)ip);
+			ip = NULL;
+		}
+	}
 	*ipp = ip;
-	return 0;
+	return error;
 }
 
 void
+libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+{
+	cache_node_put((struct cache_node *)ip);
+}
+
+static struct cache_node *
+libxfs_ialloc(void)
+{
+	return libxfs_zone_zalloc(xfs_inode_zone);
+}
+
+static void
 libxfs_idestroy(xfs_inode_t *ip)
 {
 	switch (ip->i_d.di_mode & S_IFMT) {
@@ -472,15 +624,12 @@ libxfs_idestroy(xfs_inode_t *ip)
 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
 }
 
-void
-libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+static void
+libxfs_irelse(struct cache_node *node)
 {
-	extern xfs_zone_t	*xfs_ili_zone;
-	extern xfs_zone_t	*xfs_inode_zone;
+	xfs_inode_t	*ip = (xfs_inode_t *)node;
 
 	if (ip != NULL) {
-
-		/* free attached inode log item */
 		if (ip->i_itemp)
 			libxfs_zone_free(xfs_ili_zone, ip->i_itemp);
 		ip->i_itemp = NULL;
@@ -490,22 +639,15 @@ libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 	}
 }
 
-/*
- * libxfs_mod_sb can be used to copy arbitrary changes to the
- * in-core superblock into the superblock buffer to be logged.
- *
- * In user-space, we simply convert to big-endian, and write the
- * the whole superblock - the in-core changes have all been made
- * already.
- */
 void
-libxfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
+libxfs_icache_purge(void)
 {
-	xfs_buf_t	*bp;
-	xfs_mount_t	*mp;
-
-	mp = tp->t_mountp;
-	bp = libxfs_getbuf(mp->m_dev, XFS_SB_DADDR, 1);
-	libxfs_xlate_sb(XFS_BUF_PTR(bp), &mp->m_sb, -1, XFS_SB_ALL_BITS);
-	libxfs_writebuf(bp, LIBXFS_EXIT_ON_FAILURE);
+	cache_purge(libxfs_icache);
 }
+
+struct cache_operations libxfs_icache_operations = {
+	/* .hash */	libxfs_ihash,
+	/* .alloc */	libxfs_ialloc,
+	/* .relse */	libxfs_irelse,
+	/* .compare */	libxfs_icompare,
+};

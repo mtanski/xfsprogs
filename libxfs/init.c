@@ -25,6 +25,14 @@
 
 char *progname = "libxfs";	/* default, changed by each tool */
 
+struct cache *libxfs_icache;	/* global inode cache */
+int libxfs_icache_size;		/* #buckets in icache */
+
+struct cache *libxfs_bcache;	/* global buffer cache */
+int libxfs_bcache_size;		/* #buckets in bcache */
+
+static void manage_zones(int);	/* setup global zones */
+
 /*
  * dev_map - map open devices to fd.
  */
@@ -380,6 +388,13 @@ voldone:
 	}
 	if (needcd)
 		chdir(curdir);
+	if (!libxfs_icache_size)
+		libxfs_icache_size = LIBXFS_IHASHSIZE(sbp);
+	libxfs_icache = cache_init(libxfs_icache_size,&libxfs_icache_operations);
+	if (!libxfs_bcache_size)
+		libxfs_bcache_size = LIBXFS_BHASHSIZE(sbp);
+	libxfs_bcache = cache_init(libxfs_bcache_size,&libxfs_bcache_operations);
+	manage_zones(0);
 	rval = 1;
 done:
 	if (dpath[0])
@@ -406,6 +421,7 @@ done:
 static void
 manage_zones(int release)
 {
+	extern xfs_zone_t	*xfs_buf_zone;
 	extern xfs_zone_t	*xfs_ili_zone;
 	extern xfs_zone_t	*xfs_inode_zone;
 	extern xfs_zone_t	*xfs_ifork_zone;
@@ -417,6 +433,7 @@ manage_zones(int release)
 	extern void		xfs_dir_startup();
 
 	if (release) {	/* free zone allocation */
+		libxfs_free(xfs_buf_zone);
 		libxfs_free(xfs_inode_zone);
 		libxfs_free(xfs_ifork_zone);
 		libxfs_free(xfs_dabuf_zone);
@@ -427,6 +444,7 @@ manage_zones(int release)
 		return;
 	}
 	/* otherwise initialise zone allocation */
+	xfs_buf_zone = libxfs_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
 	xfs_inode_zone = libxfs_zone_init(sizeof(xfs_inode_t), "xfs_inode");
 	xfs_ifork_zone = libxfs_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
 	xfs_dabuf_zone = libxfs_zone_init(sizeof(xfs_dabuf_t), "xfs_dabuf");
@@ -456,7 +474,7 @@ rtmount_inodes(xfs_mount_t *mp)
 	sbp = &mp->m_sb;
 	if (sbp->sb_rbmino == NULLFSINO)
 		return 0;
-	error = libxfs_iread(mp, NULL, sbp->sb_rbmino, &mp->m_rbmip, 0);
+	error = libxfs_iget(mp, NULL, sbp->sb_rbmino, 0, &mp->m_rbmip, 0);
 	if (error) {
 		fprintf(stderr,
 			_("%s: cannot read realtime bitmap inode (%d)\n"),
@@ -465,8 +483,9 @@ rtmount_inodes(xfs_mount_t *mp)
 	}
 	ASSERT(mp->m_rbmip != NULL);
 	ASSERT(sbp->sb_rsumino != NULLFSINO);
-	error = libxfs_iread(mp, NULL, sbp->sb_rsumino, &mp->m_rsumip, 0);
+	error = libxfs_iget(mp, NULL, sbp->sb_rsumino, 0, &mp->m_rsumip, 0);
 	if (error) {
+		libxfs_iput(mp->m_rbmip, 0);
 		fprintf(stderr,
 			_("%s: cannot read realtime summary inode (%d)\n"),
 			progname, error);
@@ -556,7 +575,6 @@ libxfs_mount(
 	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
 	mp->m_sb = *sb;
 	sbp = &(mp->m_sb);
-	manage_zones(0);
 
 	libxfs_mount_common(mp, sb);
 
@@ -675,7 +693,7 @@ libxfs_mount(
 	 * mkfs calls mount before the root inode is allocated.
 	 */
 	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO) {
-		error = libxfs_iread(mp, NULL, sbp->sb_rootino,
+		error = libxfs_iget(mp, NULL, sbp->sb_rootino, 0,
 				&mp->m_rootip, 0);
 		if (error) {
 			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
@@ -685,9 +703,21 @@ libxfs_mount(
 		}
 		ASSERT(mp->m_rootip != NULL);
 	}
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp))
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
+		libxfs_iput(mp->m_rootip, 0);
 		return NULL;
+	}
 	return mp;
+}
+
+void
+libxfs_rtmount_destroy(xfs_mount_t *mp)
+{
+	if (mp->m_rsumip)
+		libxfs_iput(mp->m_rsumip, 0);
+	if (mp->m_rbmip)
+		libxfs_iput(mp->m_rbmip, 0);
+	mp->m_rsumip = mp->m_rbmip = NULL;
 }
 
 /*
@@ -696,7 +726,10 @@ libxfs_mount(
 void
 libxfs_umount(xfs_mount_t *mp)
 {
-	manage_zones(1);
+	libxfs_rtmount_destroy(mp);
+	libxfs_icache_purge();
+	libxfs_bcache_purge();
+
 	if (mp->m_perag) {
 		int     agno;
 		for (agno = 0; agno < mp->m_maxagi; agno++) {
@@ -705,4 +738,15 @@ libxfs_umount(xfs_mount_t *mp)
 		}
 		free(mp->m_perag);
 	}
+}
+
+/*
+ * Release any global resources used by libxfs.
+ */
+void
+libxfs_destroy(void)
+{
+	manage_zones(1);
+	cache_destroy(libxfs_icache);
+	cache_destroy(libxfs_bcache);
 }

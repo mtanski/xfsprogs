@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -210,6 +210,46 @@ xfs_xlatesb(
 
 		fields &= ~(1LL << f);
 	}
+}
+
+/*
+ * xfs_mod_sb() can be used to copy arbitrary changes to the
+ * in-core superblock into the superblock buffer to be logged.
+ * It does not provide the higher level of locking that is
+ * needed to protect the in-core superblock from concurrent
+ * access.
+ */
+void
+xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
+{
+	xfs_buf_t	*bp;
+	int		first;
+	int		last;
+	xfs_mount_t	*mp;
+	xfs_sb_t	*sbp;
+	xfs_sb_field_t	f;
+
+	ASSERT(fields);
+	if (!fields)
+		return;
+	mp = tp->t_mountp;
+	bp = xfs_trans_getsb(tp, mp, 0);
+	sbp = XFS_BUF_TO_SBP(bp);
+	first = sizeof(xfs_sb_t);
+	last = 0;
+
+	/* translate/copy */
+	xfs_xlatesb(XFS_BUF_PTR(bp), &(mp->m_sb), -1, fields);
+
+	/* find modified range */
+	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
+	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
+	first = xfs_sb_info[f].offset;
+	f = (xfs_sb_field_t)xfs_highbit64((__uint64_t)fields);
+	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
+	last = xfs_sb_info[f + 1].offset - 1;
+
+	xfs_trans_log_buf(tp, bp, first, last);
 }
 
 xfs_agnumber_t

@@ -23,6 +23,10 @@
 
 #include <xfs/platform_defs.h>
 
+#include "pthread.h"
+#include <xfs/list.h>
+#include <xfs/cache.h>
+
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_types.h>
 #include <xfs/xfs_arch.h>
@@ -97,6 +101,7 @@ typedef struct {
 
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
+extern void	libxfs_destroy (void);
 extern int	libxfs_device_to_fd (dev_t);
 extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
@@ -183,12 +188,16 @@ typedef struct xfs_mount {
 #define LIBXFS_MOUNT_32BITINOOPT	0x0008
 #define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
 
+#define LIBXFS_IHASHSIZE(sbp)		(1<<16)	/* tweak based on icount? */
+#define LIBXFS_BHASHSIZE(sbp)		(1<<16)	/* ditto, on blocks used? */
+
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
 extern void	libxfs_mount_common (xfs_mount_t *, xfs_sb_t *);
 extern xfs_agnumber_t	libxfs_initialize_perag (xfs_mount_t *, xfs_agnumber_t);
 extern void	libxfs_umount (xfs_mount_t *);
 extern int	libxfs_rtmount_init (xfs_mount_t *);
+extern void	libxfs_rtmount_destroy (xfs_mount_t *);
 extern void	libxfs_alloc_compute_maxlevels (xfs_mount_t *);
 extern void	libxfs_bmap_compute_maxlevels (xfs_mount_t *, int);
 extern void	libxfs_ialloc_compute_maxlevels (xfs_mount_t *);
@@ -199,15 +208,24 @@ extern void	libxfs_trans_init (xfs_mount_t *);
  * Simple I/O interface
  */
 typedef struct xfs_buf {
-	xfs_daddr_t	b_blkno;
-	unsigned	b_bcount;
-	dev_t		b_dev;
-	void		*b_fsprivate;
-	void		*b_fsprivate2;
-	void		*b_fsprivate3;
-	char		*b_addr;
-	/* b_addr must be the last field */
+	struct cache_node	b_node;
+	unsigned int		b_flags;
+	xfs_daddr_t		b_blkno;
+	unsigned		b_bcount;
+	dev_t			b_dev;
+	void			*b_fsprivate;
+	void			*b_fsprivate2;
+	void			*b_fsprivate3;
+	char			*b_addr;
 } xfs_buf_t;
+
+enum xfs_buf_flags_t {	/* b_flags bits */
+	LIBXFS_B_EXIT		= 0x0001,	/* ==LIBXFS_EXIT_ON_FAILURE */
+	LIBXFS_B_DIRTY		= 0x0002,	/* buffer has been modified */
+	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
+	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+};
+
 #define XFS_BUF_PTR(bp)			((bp)->b_addr)
 #define xfs_buf_offset(bp, offset)	(XFS_BUF_PTR(bp) + (offset))
 #define XFS_BUF_ADDR(bp)		((bp)->b_blkno)
@@ -226,13 +244,20 @@ typedef struct xfs_buf {
 #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
 #define XFS_BUF_SET_FSPRIVATE3(bp,val)	(bp)->b_fsprivate3 = (void *)(val)
 
-extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
-extern xfs_buf_t	*libxfs_readbuf (dev_t, xfs_daddr_t, int, int);
 extern xfs_buf_t	*libxfs_getsb (xfs_mount_t *, int);
+extern xfs_buf_t	*libxfs_readbuf (dev_t, xfs_daddr_t, int, int);
 extern int	libxfs_readbufr (dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
 extern int	libxfs_writebuf (xfs_buf_t *, int);
+extern int	libxfs_writebufr (xfs_buf_t *);
 extern int	libxfs_writebuf_int (xfs_buf_t *, int);
+
+/* Buffer Cache Interfaces */
+extern struct cache	*libxfs_bcache;
+extern struct cache_operations	libxfs_bcache_operations;
+extern void	libxfs_bcache_purge (void);
+extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
+extern void	libxfs_purgebuf (xfs_buf_t *);
 
 #define LIBXFS_BREAD	0x1
 #define LIBXFS_BWRITE	0x2
@@ -289,6 +314,7 @@ extern int	libxfs_trans_reserve (xfs_trans_t *, uint,uint,uint,uint,uint);
 extern int	libxfs_trans_commit (xfs_trans_t *, uint, xfs_lsn_t *);
 extern void	libxfs_trans_cancel (xfs_trans_t *, int);
 extern void	libxfs_mod_sb (xfs_trans_t *, __int64_t);
+extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
 
 extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, uint, struct xfs_inode **);
@@ -330,8 +356,8 @@ extern void	*libxfs_realloc (void *, size_t);
 /*
  * Inode interface
  */
-struct xfs_inode_log_item;
 typedef struct xfs_inode {
+	struct cache_node	i_node;
 	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
 	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
 	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
@@ -340,8 +366,8 @@ typedef struct xfs_inode {
 	ushort			i_boffset;	/* off of inode in buffer */
 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
 	xfs_ifork_t		i_df;		/* data fork */
-	struct xfs_trans	*i_transp;	/* ptr to owning transaction */
-	struct xfs_inode_log_item *i_itemp;	/* logging information */
+	xfs_trans_t		*i_transp;	/* ptr to owning transaction */
+	xfs_inode_log_item_t	*i_itemp;	/* logging information */
 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
 	xfs_dinode_core_t	i_d;		/* most of ondisk inode */
 } xfs_inode_t;
@@ -363,12 +389,18 @@ extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
 extern void	libxfs_idata_realloc (xfs_inode_t *, int, int);
 extern void	libxfs_idestroy_fork (xfs_inode_t *, int);
-extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
-				xfs_inode_t **, xfs_daddr_t);
+extern int	libxfs_iformat (xfs_inode_t *, xfs_dinode_t *);
 extern void	libxfs_ichgtime (xfs_inode_t *, int);
 extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 extern int	libxfs_itobp (xfs_mount_t *, xfs_trans_t *, xfs_inode_t *,
 				xfs_dinode_t **, xfs_buf_t **, xfs_daddr_t);
+extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
+				xfs_inode_t *, xfs_daddr_t);
+
+/* Inode Cache Interfaces */
+extern struct cache	*libxfs_icache;
+extern struct cache_operations	libxfs_icache_operations;
+extern void	libxfs_icache_purge (void);
 extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);

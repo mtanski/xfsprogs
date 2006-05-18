@@ -51,6 +51,61 @@ libxfs_ichgtime(xfs_inode_t *ip, int flags)
 }
 
 /*
+ * Given a mount structure and an inode number, return a pointer
+ * to a newly allocated in-core inode coresponding to the given
+ * inode number.
+ *
+ * Initialize the inode's attributes and extent pointers if it
+ * already has them (it will not if the inode has no links).
+ */
+int
+libxfs_iread(
+	xfs_mount_t     *mp,
+	xfs_trans_t	*tp,
+	xfs_ino_t	ino,
+	xfs_inode_t	*ip,
+	xfs_daddr_t	bno)
+{
+	xfs_buf_t	*bp;
+	xfs_dinode_t	*dip;
+	int		error;
+
+	ip->i_ino = ino;
+	ip->i_mount = mp;
+	if ((error = xfs_itobp(mp, tp, ip, &dip, &bp, bno)))
+		return error;
+	if (INT_GET(dip->di_core.di_magic, ARCH_CONVERT) != XFS_DINODE_MAGIC) {
+		xfs_trans_brelse(tp, bp);
+		return EINVAL;
+	}
+	if (dip->di_core.di_mode) {
+		xfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core,
+					&(ip->i_d), 1);
+		if ((error = xfs_iformat(ip, dip))) {
+			xfs_trans_brelse(tp, bp);
+			return error;
+		}
+	} else {
+		ip->i_d.di_magic = INT_GET(dip->di_core.di_magic, ARCH_CONVERT);
+		ip->i_d.di_version = INT_GET(dip->di_core.di_version, ARCH_CONVERT);
+		ip->i_d.di_gen = INT_GET(dip->di_core.di_gen, ARCH_CONVERT);
+		ip->i_d.di_flushiter = INT_GET(dip->di_core.di_flushiter, ARCH_CONVERT);
+		ip->i_d.di_mode = 0;
+		ip->i_df.if_ext_max =
+			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+	}
+	if (ip->i_d.di_version == XFS_DINODE_VERSION_1) {
+		ip->i_d.di_nlink = ip->i_d.di_onlink;
+		ip->i_d.di_onlink = 0;
+		ip->i_d.di_projid = 0;
+	}
+	ip->i_delayed_blks = 0;
+	XFS_BUF_SET_REF(bp, XFS_INO_REF);
+	xfs_trans_brelse(tp, bp);
+	return 0;
+}
+
+/*
  * Allocate an inode on disk and return a copy of it's in-core version.
  * Set mode, nlink, and rdev appropriately within the inode.
  * The uid and gid for the inode are set according to the contents of

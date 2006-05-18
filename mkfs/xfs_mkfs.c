@@ -2030,6 +2030,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	buf = libxfs_getbuf(xi.ddev, 0, BTOBB(WHACK_SIZE));
 	bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+	libxfs_purgebuf(buf);
 
 	/* OK, now write the superblock */
 	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
@@ -2330,6 +2331,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		}
 	}
+
+	/*
+	 * Dump all inodes and buffers before marking us all done.
+	 * Need to drop references to inodes we still hold, first.
+	 */
+	libxfs_rtmount_destroy(mp);
+	libxfs_icache_purge();
+	libxfs_bcache_purge();
 
 	/*
 	 * Mark the filesystem ok.

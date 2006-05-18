@@ -42,6 +42,7 @@ static xfs_agino_t	agifreecount;
 void
 set_mp(xfs_mount_t *mpp)
 {
+	libxfs_bcache_purge();
 	mp = mpp;
 }
 
@@ -1171,7 +1172,7 @@ scan_ag(
 	agicount = agifreecount = 0;
 
 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-				1, 0);
+				XFS_FSS_TO_BB(mp, 1), 0);
 	if (!sbbuf)  {
 		do_error(_("can't get root superblock for ag %d\n"), agno);
 		return;

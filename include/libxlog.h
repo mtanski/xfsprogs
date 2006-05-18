@@ -79,7 +79,7 @@ extern void xlog_warn(char *fmt,...);
 extern void xlog_exit(char *fmt,...);
 extern void xlog_panic(char *fmt,...);
 
-#define xlog_get_bp(log,bbs)	libxfs_getbuf(x.logdev, 0, (bbs))
+#define xlog_get_bp(log,bbs)	libxfs_getbuf(x.logdev, (xfs_daddr_t)-1, (bbs))
 #define xlog_put_bp(bp)		libxfs_putbuf(bp)
 #define xlog_bread(log,blkno,bbs,bp)	\
 	(libxfs_readbufr(x.logdev,	\

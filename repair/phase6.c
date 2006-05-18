@@ -719,8 +719,6 @@ mk_orphanage(xfs_mount_t *mp)
 	int		error;
 	xfs_bmap_free_t	flist;
 	const int	mode = 0755;
-	const int	uid = 0;
-	const int	gid = 0;
 	int		nres;
 
 	tp = libxfs_trans_alloc(mp, 0);
@@ -741,14 +739,10 @@ mk_orphanage(xfs_mount_t *mp)
 
 	error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
 					1, 0, &zerocr, &zerofsx, &ip);
-
 	if (error) {
 		do_error(_("%s inode allocation failed %d\n"),
 			ORPHANAGE, error);
 	}
-
-	ip->i_d.di_uid = uid;
-	ip->i_d.di_gid = gid;
 	ip->i_d.di_nlink++;		/* account for . */
 
 	/*

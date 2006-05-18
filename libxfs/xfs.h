@@ -88,10 +88,11 @@
 #define xfs_initialize_perag		libxfs_initialize_perag
 #define xfs_rtmount_init		libxfs_rtmount_init
 #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
-#define xfs_iread			libxfs_iread
 #define xfs_idata_realloc		libxfs_idata_realloc
 #define xfs_idestroy_fork		libxfs_idestroy_fork
+#define xfs_iread			libxfs_iread
 #define xfs_itobp			libxfs_itobp
+#define xfs_iformat			libxfs_iformat
 #define xfs_ichgtime			libxfs_ichgtime
 #define xfs_bmapi			libxfs_bmapi
 #define xfs_bmap_finish			libxfs_bmap_finish
@@ -112,8 +113,9 @@
 #define xfs_trans_alloc			libxfs_trans_alloc
 #define xfs_trans_commit		libxfs_trans_commit
 #define xfs_trans_cancel		libxfs_trans_cancel
-#define xfs_trans_mod_sb		libxfs_trans_mod_sb
 #define xfs_trans_reserve		libxfs_trans_reserve
+#define xfs_trans_getsb			libxfs_trans_getsb
+#define xfs_trans_mod_sb		libxfs_trans_mod_sb
 #define xfs_trans_get_buf		libxfs_trans_get_buf
 #define xfs_trans_log_buf		libxfs_trans_log_buf
 #define xfs_trans_read_buf		libxfs_trans_read_buf
@@ -153,11 +155,11 @@
 #define XFS_BUF_LOCK			0
 #define XFS_BUF_MAPPED			0
 #define XFS_BUF_TRYLOCK			0
-#define XFS_BUF_ISDONE(bp)		0
 #define XFS_BUF_GETERROR(bp)		0
-#define XFS_BUF_DONE(bp)		((void) 0)
-#define XFS_BUF_STALE(bp)		((void) 0)
-#define XFS_BUF_UNDELAYWRITE(bp)	((void) 0)
+#define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
+#define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
+#define XFS_BUF_STALE(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
+#define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
 #define XFS_BUF_SET_REF(a,b)		((void) 0)
 #define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
 #define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
@@ -420,6 +422,8 @@ static inline int xfs_btree_readahead (xfs_btree_cur_t *cur, int lev, int lr)
 /* xfs_inode.c */
 int  xfs_ialloc (xfs_trans_t *, xfs_inode_t *, mode_t, nlink_t, xfs_dev_t, cred_t *,
 		xfs_prid_t, int, xfs_buf_t **, boolean_t *, xfs_inode_t **);
+int xfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_inode_t *,
+		xfs_daddr_t);
 int  xfs_iread_extents (xfs_trans_t *, xfs_inode_t *, int);
 int  xfs_imap (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_imap_t *, uint);
 int  xfs_iextents_copy (xfs_inode_t *, xfs_bmbt_rec_t *, int);
