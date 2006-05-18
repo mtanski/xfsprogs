@@ -447,6 +447,7 @@ struct cache_operations libxfs_bcache_operations = {
 	/* .alloc */	libxfs_balloc,
 	/* .relse */	libxfs_brelse,
 	/* .compare */	libxfs_bcompare,
+	/* .bulkrelse */ NULL	/* TODO: lio_listio64 interface? */
 };
 
 
@@ -650,4 +651,5 @@ struct cache_operations libxfs_icache_operations = {
 	/* .alloc */	libxfs_ialloc,
 	/* .relse */	libxfs_irelse,
 	/* .compare */	libxfs_icompare,
+	/* .bulkrelse */ NULL
 };

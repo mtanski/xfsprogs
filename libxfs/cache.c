@@ -28,6 +28,8 @@
 
 #define CACHE_DEBUG 1
 
+static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
+
 struct cache *
 cache_init(
 	unsigned int		hashsize,
@@ -52,6 +54,8 @@ cache_init(
 	cache->alloc = cache_operations->alloc;
 	cache->relse = cache_operations->relse;
 	cache->compare = cache_operations->compare;
+	cache->bulkrelse = cache_operations->bulkrelse ?
+		cache_operations->bulkrelse : cache_generic_bulkrelse;
 	pthread_mutex_init(&cache->c_mutex, NULL);
 
 	for (i = 0; i < hashsize; i++) {
@@ -170,7 +174,6 @@ cache_shake_hash(
 	struct list_head *	n;
 	struct cache_node *	node;
 	unsigned int		inuse = 0;
-	unsigned int		count = 0;
 
 	list_head_init(&temp);
 	head = &hash->ch_list;
@@ -186,8 +189,23 @@ cache_shake_hash(
 			break;
 	}
 	pthread_mutex_unlock(&hash->ch_mutex);
-	while (!list_empty(&temp)) {
-		node = (struct cache_node *)temp.next;
+	return cache->bulkrelse(cache, &temp);
+}
+
+/*
+ * Generic implementation of bulk release, which just iterates over
+ * the list calling the single node relse routine for each node.
+ */
+static unsigned int
+cache_generic_bulkrelse(
+	struct cache *		cache,
+	struct list_head *	list)
+{
+	struct cache_node *	node;
+	unsigned int		count = 0;
+
+	while (!list_empty(list)) {
+		node = (struct cache_node *)list->next;
 		pthread_mutex_destroy(&node->cn_mutex);
 		list_del_init(&node->cn_list);
 		cache->relse(node);

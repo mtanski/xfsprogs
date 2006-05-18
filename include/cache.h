@@ -33,12 +33,14 @@ typedef struct cache_node * (*cache_node_alloc_t)(void);
 typedef void (*cache_node_relse_t)(struct cache_node *);
 typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int);
 typedef int (*cache_node_compare_t)(struct cache_node *, cache_key_t);
+typedef unsigned int (*cache_bulk_relse_t)(struct cache *, struct list_head *);
 
 struct cache_operations {
 	cache_node_hash_t	hash;
 	cache_node_alloc_t	alloc;
 	cache_node_relse_t	relse;
 	cache_node_compare_t	compare;
+	cache_bulk_relse_t	bulkrelse;	/* optional */
 };
 
 struct cache {
@@ -49,6 +51,7 @@ struct cache {
 	cache_node_alloc_t	alloc;		/* allocation function */
 	cache_node_relse_t	relse;		/* memory free function */
 	cache_node_compare_t	compare;	/* comparison routine */
+	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
 	unsigned int		c_hashsize;	/* hash bucket count */
 	struct cache_hash	*c_hash;	/* hash table buckets */
 };
