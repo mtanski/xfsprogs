@@ -1,9 +1,14 @@
-[cvs]
+xfsprogs-2.8.0 (18 May 2006)
+	- Initial pass at user space caching, ultimately provides
+	  a starting point for a faster, parallel version of repair.
+	- Fix several inode/buffer reference counting issues.
+	- Fix compiler warnings, and builds on certain glibc versions
+	  having issues with the device major() macro.
 	- Added code to xfs_db and xfs_admin to allow conversion
 	  from version 1 to version 2 logs.
 
 xfsprogs-2.7.18 (16 May 2006)
-	- Fixed a case where xfs_repair was reporting a valid used 
+	- Fixed a case where xfs_repair was reporting a valid used
 	  block as a duplicate during phase 4.
 	- Fixed a case where xfs_repair could incorrectly flag extent
 	  b+tree nodes as corrupt.

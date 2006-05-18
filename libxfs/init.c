@@ -81,6 +81,7 @@ libxfs_device_to_fd(dev_t device)
 	fprintf(stderr, _("%s: %s: device %lld is not open\n"),
 		progname, __FUNCTION__, (long long)device);
 	exit(1);
+	/* NOTREACHED */
 }
 
 /* libxfs_device_open:
@@ -141,6 +142,7 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
 	fprintf(stderr, _("%s: %s: too many open devices\n"),
 		progname, __FUNCTION__);
 	exit(1);
+	/* NOTREACHED */
 }
 
 void
