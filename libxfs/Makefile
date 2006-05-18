@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
 #
 
 TOPDIR = ..
@@ -11,7 +11,7 @@ LT_REVISION = 0
 LT_AGE = 0
 
 HFILES = xfs.h init.h
-CFILES = bit.c init.c logitem.c rdwr.c trans.c util.c \
+CFILES = bit.c cache.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
 	xfs_inode.c xfs_btree.c xfs_alloc_btree.c xfs_ialloc_btree.c \
 	xfs_bmap_btree.c xfs_da_btree.c xfs_dir.c xfs_dir_leaf.c \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2005 Silicon Graphics, Inc.
+# Copyright (c) 2000-2006 Silicon Graphics, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-HFILES = handle.h jdm.h libxfs.h libxlog.h swab.h xqm.h \
+HFILES = handle.h jdm.h libxfs.h libxlog.h parent.h xfs.h xqm.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
 	xfs_buf_item.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \
@@ -29,12 +29,12 @@ HFILES = handle.h jdm.h libxfs.h libxlog.h swab.h xqm.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
 	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
 
-HFILES += parent.h $(PKG_PLATFORM).h xfs.h
+HFILES += $(PKG_PLATFORM).h swab.h
 PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
 LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
-LSRCFILES += command.h input.h path.h project.h
+LSRCFILES += cache.h command.h input.h list.h path.h project.h
 LDIRT = xfs disk
 
 default install :
