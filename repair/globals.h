@@ -193,4 +193,8 @@ EXTERN xfs_extlen_t	sb_inoalignmt;
 EXTERN __uint32_t	sb_unit;
 EXTERN __uint32_t	sb_width;
 
+extern size_t ts_dirbuf_size;
+extern size_t ts_dir_freemap_size;
+extern size_t ts_attr_freemap_size;
+
 #endif /* _XFS_REPAIR_GLOBAL_H */

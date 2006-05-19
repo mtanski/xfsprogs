@@ -500,22 +500,7 @@ process_shortform_dir(
  * freespace map for directory leaf blocks (1 bit per byte)
  * 1 == used, 0 == free
  */
-static da_freemap_t dir_freemap[DA_BMAP_SIZE];
-
-#if 0
-unsigned char *
-alloc_da_freemap(xfs_mount_t *mp)
-{
-	unsigned char *freemap;
-
-	if ((freemap = malloc(mp->m_sb.sb_blocksize)) == NULL)
-		return(NULL);
-
-	bzero(freemap, mp->m_sb.sb_blocksize/NBBY);
-
-	return(freemap);
-}
-#endif
+size_t ts_dir_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
 
 void
 init_da_freemap(da_freemap_t *dir_freemap)
@@ -1665,7 +1650,7 @@ junk_zerolen_dir_leaf_entries(
 }
 #endif
 
-static char dirbuf[64 * 1024];
+size_t ts_dirbuf_size = 64*1024;
 
 /*
  * called by both node dir and leaf dir processing routines
@@ -1740,9 +1725,7 @@ process_leaf_dir_block(
 	char				fname[MAXNAMELEN + 1];
 	da_hole_map_t			holemap;
 	da_hole_map_t			bholemap;
-#if 0
-	unsigned char			*dir_freemap;
-#endif
+	unsigned char			*dir_freemap = ts_dir_freemap();
 
 #ifdef XR_DIR_TRACE
 	fprintf(stderr, "\tprocess_leaf_dir_block - ino %llu\n", ino);
@@ -1752,20 +1735,6 @@ process_leaf_dir_block(
 	 * clear static dir block freespace bitmap
 	 */
 	init_da_freemap(dir_freemap);
-
-#if 0
-	/*
-	 * XXX - alternatively, do this for parallel usage.
-	 * set up block freespace map.  head part of dir leaf block
-	 * including all entries are packed so we can use sizeof
-	 * and not worry about alignment.
-	 */
-
-	if ((dir_freemap = alloc_da_freemap(mp)) == NULL)  {
-		do_error(_("couldn't allocate directory block freemap\n"));
-		abort();
-	}
-#endif
 
 	*buf_dirty = 0;
 	first_used = mp->m_sb.sb_blocksize;
@@ -2517,7 +2486,7 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 			_("- compacting block %u in dir inode %llu\n"),
 					da_bno, ino);
 
-			new_leaf = (xfs_dir_leafblock_t *) &dirbuf[0];
+			new_leaf = (xfs_dir_leafblock_t *) ts_dirbuf();
 
 			/*
 			 * copy leaf block header

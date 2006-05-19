@@ -23,6 +23,7 @@
 #include "dir.h"
 #include "dinode.h"
 #include "bmap.h"
+#include "protos.h"
 
 static int xfs_acl_valid(xfs_acl_t *aclp);
 static int xfs_mac_valid(xfs_mac_label_t *lp);
@@ -370,7 +371,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
  * freespace map for directory and attribute leaf blocks (1 bit per byte)
  * 1 == used, 0 == free
  */
-static da_freemap_t attr_freemap[DA_BMAP_SIZE];
+size_t ts_attr_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
 
 /* The block is read in. The magic number and forward / backward
  * links are checked by the caller process_leaf_attr.
@@ -395,6 +396,7 @@ process_leaf_attr_block(
 	xfs_attr_leaf_name_local_t *local;
 	xfs_attr_leaf_name_remote_t *remotep;
 	int  i, start, stop, clearit, usedbs, firstb, thissize;
+	da_freemap_t *attr_freemap = ts_attr_freemap();
 
 	clearit = usedbs = 0;
 	*repair = 0;

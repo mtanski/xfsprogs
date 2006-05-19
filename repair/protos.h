@@ -33,10 +33,16 @@ void	write_primary_sb(xfs_sb_t	*sbp,
 
 int	find_secondary_sb(xfs_sb_t	*sb);
 
-void	get_sb_geometry(fs_geometry_t	*geo,
+struct fs_geometry;
+void	get_sb_geometry(struct fs_geometry	*geo,
 			xfs_sb_t	*sbp);
 
 char	*alloc_ag_buf(int size);
 
 void	print_inode_list(xfs_agnumber_t i);
 char *	err_string(int err_code);
+
+extern void *ts_attr_freemap(void);
+extern void *ts_dir_freemap(void);
+extern void *ts_dirbuf(void);
+

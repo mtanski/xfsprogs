@@ -32,12 +32,6 @@ extern int verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		xfs_agf_t *agf, xfs_agi_t *agi, xfs_agnumber_t i);
 
 static xfs_mount_t	*mp = NULL;
-static xfs_extlen_t	bno_agffreeblks;
-static xfs_extlen_t	cnt_agffreeblks;
-static xfs_extlen_t	bno_agflongest;
-static xfs_extlen_t	cnt_agflongest;
-static xfs_agino_t	agicount;
-static xfs_agino_t	agifreecount;
 
 void
 set_mp(xfs_mount_t *mpp)
@@ -474,7 +468,7 @@ scanfunc_bno(
 	int			isroot
 	)
 {
-	xfs_agblock_t		b;
+	xfs_agblock_t		b, e;
 	xfs_alloc_block_t	*block = (xfs_alloc_block_t *)ablock;
 	int			i;
 	xfs_alloc_ptr_t		*pp;
@@ -544,16 +538,10 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 					MAXEXTLEN)
 				continue;
 
-			bno_agffreeblks +=
+			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
-			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) >
-			    bno_agflongest)
-				bno_agflongest = INT_GET(rp[i].ar_blockcount,
-							ARCH_CONVERT);
 			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
-			     b < INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
-				 INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
-			     b++)  {
+			     b < e; b++)  {
 				if (get_agbno_state(mp, agno, b)
 							== XR_E_UNKNOWN)
 					set_agbno_state(mp, agno, b,
@@ -630,7 +618,7 @@ scanfunc_cnt(
 	xfs_alloc_block_t	*block;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
-	xfs_agblock_t		b;
+	xfs_agblock_t		b, e;
 	int			i;
 	int			hdr_errors;
 	int			numrecs;
@@ -700,16 +688,10 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 						MAXEXTLEN)
 				continue;
 
-			cnt_agffreeblks +=
+			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
-			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) >
-			    cnt_agflongest)
-				cnt_agflongest = INT_GET(rp[i].ar_blockcount,
-							ARCH_CONVERT);
 			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
-			     b < INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
-				 INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
-			     b++)  {
+			     b < e; b++)  {
 				state = get_agbno_state(mp, agno, b);
 				/*
 				 * no warning messages -- we'll catch
@@ -1005,9 +987,6 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 					continue;
 			}
 
-			agicount += XFS_INODES_PER_CHUNK;
-			agifreecount +=
-				INT_GET(rp[i].ir_freecount, ARCH_CONVERT);
 			nfree = 0;
 
 			/*
@@ -1164,12 +1143,7 @@ scan_ag(
 	int		sb_dirty;
 	int		status;
 
-	cnt_agffreeblks = cnt_agflongest = 0;
-	bno_agffreeblks = bno_agflongest = 0;
-
 	agi_dirty = agf_dirty = sb_dirty = 0;
-
-	agicount = agifreecount = 0;
 
 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1), 0);
