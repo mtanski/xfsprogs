@@ -221,6 +221,11 @@ the directory will inherit the parents basic extent size value (see
 below).
 Can only be set on a directory.
 .TP
+.SM "Bit 13 (0x2000) \- XFS_XFLAG_NODEFRAG"
+The file should be skipped during a defragment operation. When
+applied to a directory, new files and directories created will
+inherit the no\-defrag bit.
+.TP
 .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
 The file has extended attributes associated with it.
 .RE
