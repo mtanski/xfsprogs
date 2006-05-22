@@ -10,7 +10,7 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-HFILES = xfs.h init.h
+HFILES = xfs.h init.h list.h
 CFILES = bit.c cache.c init.c logitem.c rdwr.c trans.c util.c \
 	xfs_alloc.c xfs_ialloc.c xfs_rtalloc.c \
 	xfs_inode.c xfs_btree.c xfs_alloc_btree.c xfs_ialloc_btree.c \
@@ -30,7 +30,7 @@ LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 # -DLI_DEBUG		log item (ino/buf) manipulation
 # -DXACT_DEBUG		transaction state changes
 #
-#LCFLAGS += 
+#LCFLAGS +=
 
 FCFLAGS = -I.
 
