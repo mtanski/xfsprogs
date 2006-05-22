@@ -18,7 +18,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-HFILES = handle.h jdm.h libxfs.h libxlog.h parent.h xfs.h xqm.h \
+HFILES = cache.h handle.h jdm.h libxfs.h libxlog.h list.h parent.h xfs.h xqm.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
 	xfs_buf_item.h xfs_da_btree.h xfs_dfrag.h xfs_dinode.h \
@@ -34,7 +34,7 @@ PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
 LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
-LSRCFILES += cache.h command.h input.h list.h path.h project.h
+LSRCFILES += command.h input.h path.h project.h
 LDIRT = xfs disk
 
 default install :

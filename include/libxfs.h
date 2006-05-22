@@ -23,7 +23,7 @@
 
 #include <xfs/platform_defs.h>
 
-#include "pthread.h"
+#include <pthread.h>
 #include <xfs/list.h>
 #include <xfs/cache.h>
 
