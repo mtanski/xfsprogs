@@ -26,10 +26,10 @@
 char *progname = "libxfs";	/* default, changed by each tool */
 
 struct cache *libxfs_icache;	/* global inode cache */
-int libxfs_icache_size;		/* #buckets in icache */
+int libxfs_ihash_size;		/* #buckets in icache */
 
 struct cache *libxfs_bcache;	/* global buffer cache */
-int libxfs_bcache_size;		/* #buckets in bcache */
+int libxfs_bhash_size;		/* #buckets in bcache */
 
 static void manage_zones(int);	/* setup global zones */
 
@@ -390,12 +390,12 @@ voldone:
 	}
 	if (needcd)
 		chdir(curdir);
-	if (!libxfs_icache_size)
-		libxfs_icache_size = LIBXFS_IHASHSIZE(sbp);
-	libxfs_icache = cache_init(libxfs_icache_size,&libxfs_icache_operations);
-	if (!libxfs_bcache_size)
-		libxfs_bcache_size = LIBXFS_BHASHSIZE(sbp);
-	libxfs_bcache = cache_init(libxfs_bcache_size,&libxfs_bcache_operations);
+	if (!libxfs_ihash_size)
+		libxfs_ihash_size = LIBXFS_IHASHSIZE(sbp);
+	libxfs_icache = cache_init(libxfs_ihash_size, &libxfs_icache_operations);
+	if (!libxfs_bhash_size)
+		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
+	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
 	manage_zones(0);
 	rval = 1;
 done:
@@ -751,4 +751,11 @@ libxfs_destroy(void)
 	manage_zones(1);
 	cache_destroy(libxfs_icache);
 	cache_destroy(libxfs_bcache);
+}
+
+void
+libxfs_report(void)
+{
+	cache_report("libxfs_icache", libxfs_icache);
+	cache_report("libxfs_bcache", libxfs_bcache);
 }

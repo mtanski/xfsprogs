@@ -48,6 +48,9 @@ cache_init(
 	}
 
 	cache->c_count = 0;
+	cache->c_max = 0;
+	cache->c_hits = 0;
+	cache->c_misses = 0;
 	cache->c_maxcount = maxcount;
 	cache->c_hashsize = hashsize;
 	cache->hash = cache_operations->hash;
@@ -262,8 +265,12 @@ cache_node_allocate(
 	struct cache_node *	node;
 
 	pthread_mutex_lock(&cache->c_mutex);
-	if ((nodesfree = (cache->c_count < cache->c_maxcount)))
+	if ((nodesfree = (cache->c_count < cache->c_maxcount))) {
 		cache->c_count++;
+		if (cache->c_count > cache->c_max)
+			cache->c_max = cache->c_count;
+	}
+	cache->c_misses++;
 	pthread_mutex_unlock(&cache->c_mutex);
 	if (!nodesfree)
 		return NULL;
@@ -312,6 +319,9 @@ cache_node_get(
 		pthread_mutex_lock(&node->cn_mutex);
 		node->cn_count++;
 		pthread_mutex_unlock(&node->cn_mutex);
+		pthread_mutex_lock(&cache->c_mutex);
+		cache->c_hits++;
+		pthread_mutex_unlock(&cache->c_mutex);
 		break;
 	}
 	if (pos == head) {
@@ -396,4 +406,26 @@ cache_purge(
 		/* abort(); */
 	}
 #endif
+}
+
+void
+cache_report(const char *name, struct cache * cache)
+{
+	fprintf(stderr, "%s: %p\n"
+			"Max supported entries = %u\n"
+			"Max utilized entries = %u\n"
+			"Active entries = %u\n"
+			"Hash table size = %u\n"
+			"Hits = %llu\n"
+			"Misses = %llu\n"
+			"Hit ratio = %5.2f\n",
+			name, cache,
+			cache->c_maxcount,
+			cache->c_max,
+			cache->c_count,
+			cache->c_hashsize,
+			cache->c_hits,
+			cache->c_misses,
+			(double) (cache->c_hits*100/(cache->c_hits+cache->c_misses))
+	);
 }

@@ -52,6 +52,10 @@ char *o_opts[] = {
 	"assume_xfs",
 #define PRE_65_BETA	1
 	"fs_is_pre_65_beta",
+#define	IHASH_SIZE	2
+	"ihash",
+#define	BHASH_SIZE	3
+	"bhash",
 	NULL
 };
 
@@ -201,6 +205,12 @@ process_args(int argc, char **argv)
 						respec('o', o_opts,
 							PRE_65_BETA);
 					pre_65_beta = 1;
+					break;
+				case IHASH_SIZE:
+					libxfs_ihash_size = (int) strtol(val, 0, 0);
+					break;
+				case BHASH_SIZE:
+					libxfs_bhash_size = (int) strtol(val, 0, 0);
 					break;
 				default:
 					unknown('o', val);
@@ -571,6 +581,9 @@ _("Warning:  project quota information would be cleared.\n"
 			}
 		}
 	}
+
+	if (verbose)
+		libxfs_report();
 
 	if (no_modify)  {
 		do_log(

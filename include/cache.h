@@ -54,6 +54,9 @@ struct cache {
 	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
 	unsigned int		c_hashsize;	/* hash bucket count */
 	struct cache_hash	*c_hash;	/* hash table buckets */
+	unsigned long long	c_misses;	/* cache misses */
+	unsigned long long	c_hits;		/* cache hits */
+	unsigned int 		c_max;		/* max nodes ever used */
 };
 
 struct cache_hash {
@@ -75,5 +78,6 @@ void cache_purge(struct cache *);
 int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
 void cache_node_put(struct cache_node *);
 int cache_node_purge(struct cache *, cache_key_t, struct cache_node *);
+void cache_report(const char *, struct cache *);
 
 #endif	/* __CACHE_H__ */

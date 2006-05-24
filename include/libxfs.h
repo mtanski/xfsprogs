@@ -106,6 +106,7 @@ extern int	libxfs_device_to_fd (dev_t);
 extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
+extern void	libxfs_report(void);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
 typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
@@ -223,7 +224,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 	LIBXFS_B_EXIT		= 0x0001,	/* ==LIBXFS_EXIT_ON_FAILURE */
 	LIBXFS_B_DIRTY		= 0x0002,	/* buffer has been modified */
 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
-	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+	LIBXFS_B_UPTODATE	= 0x0008	/* buffer is sync'd to disk */
 };
 
 #define XFS_BUF_PTR(bp)			((bp)->b_addr)
@@ -258,6 +259,9 @@ extern void	libxfs_bcache_purge (void);
 extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 extern void	libxfs_purgebuf (xfs_buf_t *);
+
+extern int libxfs_bhash_size;
+extern int libxfs_ihash_size;
 
 #define LIBXFS_BREAD	0x1
 #define LIBXFS_BWRITE	0x2
