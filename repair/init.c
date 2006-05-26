@@ -89,8 +89,9 @@ increase_rlimit(void)
 		if (setrlimit(RLIMIT_FSIZE, &rl) == -1) {
 			perror("setrlimit");
 			fprintf(stderr,
-				"setrlimit Failed: current = %lld, max = %lld\n",
-				rl.rlim_cur, rl.rlim_max);
+				"setrlimit failed - current: %lld, max: %lld\n",
+				(unsigned long)rl.rlim_cur,
+				(unsigned long)rl.rlim_max);
 			exit(1);
 		}
 	}
