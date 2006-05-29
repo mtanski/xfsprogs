@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -122,10 +122,9 @@ typedef struct xfs_fsop_attrmulti_handlereq {
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#define HAVE_SWABMACROS	1
-#define INT_SWAP16(type,var)	(var)
-#define INT_SWAP32(type,var)	(var)
-#define INT_SWAP64(type,var)	(var)
+#define __swab16(x)	(x)
+#define __swab32(x)	(x)
+#define __swab64(x)	(x)
 
 /* Map some gcc macros for the MipsPRO compiler */
 #ifndef __GNUC__
@@ -231,7 +230,7 @@ static __inline__ int platform_test_xfs_fd(int fd)
 	struct statvfs sbuf;
 	if (fstatvfs(fd, &sbuf) < 0)
 		return 0;
-	return (strcmp(sbuf.f_basetype, "xfs") == 0);
+	return strncmp(sbuf.f_basetype, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_test_xfs_path(const char *path)
@@ -239,7 +238,7 @@ static __inline__ int platform_test_xfs_path(const char *path)
 	struct statvfs sbuf;
 	if (statvfs(path, &sbuf) < 0)
 		return 0;
-	return (strcmp(sbuf.f_basetype, "xfs") == 0);
+	return strncmp(sbuf.f_basetype, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_fstatfs(int fd, struct statfs *buf)

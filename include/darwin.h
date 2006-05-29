@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2004-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -25,6 +25,12 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
+#include <machine/endian.h>
+#define __BYTE_ORDER	BYTE_ORDER
+#define __BIG_ENDIAN	BIG_ENDIAN
+#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+#include <xfs/swab.h>
+
 #include <sys/syscall.h>
 # ifndef SYS_fsctl
 #  define SYS_fsctl	242
@@ -39,7 +45,7 @@ static __inline__ int platform_test_xfs_fd(int fd)
 	struct statfs buf;
 	if (fstatfs(fd, &buf) < 0)
 		return 0;
-	return (strcmp(buf.f_fstypename, "xfs") == 0);
+	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_test_xfs_path(const char *path)
@@ -47,7 +53,7 @@ static __inline__ int platform_test_xfs_path(const char *path)
 	struct statfs buf;
 	if (statfs(path, &buf) < 0)
 		return 0;
-	return (strcmp(buf.f_fstypename, "xfs") == 0);
+	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
@@ -131,12 +137,6 @@ typedef unsigned char	uchar_t;
 #define ftruncate64	ftruncate
 #define fdatasync	fsync
 #define memalign(a,sz)	valloc(sz)
-
-#include <machine/endian.h>
-#define __BYTE_ORDER	BYTE_ORDER
-#define __BIG_ENDIAN	BIG_ENDIAN
-#define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#include <xfs/swab.h>
 
 #define O_LARGEFILE     0
 #ifndef O_DIRECT

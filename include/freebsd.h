@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2004-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -27,17 +27,23 @@
 #include <paths.h>
 #include <uuid.h>
 
-#include <machine/endian.h>
+#include <sys/endian.h>
+#define __BYTE_ORDER	BYTE_ORDER
+#define __BIG_ENDIAN	BIG_ENDIAN
+#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+#define __swab16(x)	__bswap16(x)
+#define __swab32(x)	__bswap32(x)
+#define __swab64(x)	__bswap64(x)
 
 /* FreeBSD file API is 64-bit aware */
-#define	fstat64		fstat
-#define	ftruncate64	ftruncate
+#define fstat64		fstat
+#define ftruncate64	ftruncate
 #define lseek64		lseek
-#define	stat64		stat
-#define	pwrite64	pwrite
-#define	pread64		pread
-#define	fdatasync	fsync
-#define memalign(a,size)	valloc(size)
+#define stat64		stat
+#define pwrite64	pwrite
+#define pread64		pread
+#define fdatasync	fsync
+#define memalign(a,sz)	valloc(sz)
 
 #define constpp	char * const *
 
@@ -60,10 +66,6 @@ typedef enum { B_FALSE,B_TRUE }	boolean_t;
 #define	O_LARGEFILE	0
 
 #define HAVE_FID	1
-#define HAVE_SWABMACROS	1
-#define INT_SWAP16(type,var) ((typeof(type))(__bswap16((__u16)(var))))
-#define INT_SWAP32(type,var) ((typeof(type))(__bswap32((__u32)(var))))
-#define INT_SWAP64(type,var) ((typeof(type))(__bswap64((__u64)(var))))
 
 static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
 {
@@ -75,7 +77,7 @@ static __inline__ int platform_test_xfs_fd(int fd)
 	struct statfs buf;
 	if (fstatfs(fd, &buf) < 0)
 		return 0;
-	return strcpy(buf.f_fstypename, "xfs") == 0;
+	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_test_xfs_path(const char *path)
@@ -83,7 +85,7 @@ static __inline__ int platform_test_xfs_path(const char *path)
 	struct statfs buf;
 	if (statfs(path, &buf) < 0)
 		return 0;
-	return strcpy(buf.f_fstypename, "xfs") == 0;
+	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
 }
 
 static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
