@@ -90,8 +90,8 @@ increase_rlimit(void)
 			perror("setrlimit");
 			fprintf(stderr,
 				"setrlimit failed - current: %lld, max: %lld\n",
-				(unsigned long)rl.rlim_cur,
-				(unsigned long)rl.rlim_max);
+				(unsigned long long)rl.rlim_cur,
+				(unsigned long long)rl.rlim_max);
 			exit(1);
 		}
 	}
