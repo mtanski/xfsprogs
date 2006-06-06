@@ -61,6 +61,7 @@ struct cache {
 
 struct cache_hash {
 	struct list_head	ch_list;	/* hash chain head */
+	unsigned int		ch_count;	/* hash chain length */
 	pthread_mutex_t		ch_mutex;	/* hash chain mutex */
 };
 
@@ -78,6 +79,6 @@ void cache_purge(struct cache *);
 int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
 void cache_node_put(struct cache_node *);
 int cache_node_purge(struct cache *, cache_key_t, struct cache_node *);
-void cache_report(const char *, struct cache *);
+void cache_report(FILE *fp, const char *, struct cache *);
 
 #endif	/* __CACHE_H__ */

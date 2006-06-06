@@ -27,6 +27,7 @@
 #include <xfs/cache.h>
 
 #define CACHE_DEBUG 1
+#define	HASH_CACHE_RATIO	8
 
 static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
 
@@ -38,7 +39,7 @@ cache_init(
 	struct cache *		cache;
 	unsigned int		i, maxcount;
 
-	maxcount = hashsize << 3;	/* 8 nodes per hash bucket */
+	maxcount = hashsize * HASH_CACHE_RATIO;
 
 	if (!(cache = malloc(sizeof(struct cache))))
 		return NULL;
@@ -63,6 +64,7 @@ cache_init(
 
 	for (i = 0; i < hashsize; i++) {
 		list_head_init(&cache->c_hash[i].ch_list);
+		cache->c_hash[i].ch_count = 0;
 		pthread_mutex_init(&cache->c_hash[i].ch_mutex, NULL);
 	}
 	return cache;
@@ -147,6 +149,7 @@ cache_shake_node(
 			break;
 		pthread_mutex_destroy(&node->cn_mutex);
 		list_del_init(&node->cn_list);
+		hash->ch_count--;
 		cache->relse(node);
 		break;
 	}
@@ -185,8 +188,10 @@ cache_shake_hash(
 	     pos = n, n = pos->prev) {
 		node = (struct cache_node *)pos;
 		pthread_mutex_lock(&node->cn_mutex);
-		if (!(inuse = (node->cn_count > 0)))
+		if (!(inuse = (node->cn_count > 0))) {
+			hash->ch_count--;
 			list_move(&node->cn_list, &temp);
+		}
 		pthread_mutex_unlock(&node->cn_mutex);
 		if (inuse && !priority)
 			break;
@@ -331,6 +336,7 @@ cache_node_get(
 			goto restart;
 		}
 		allocated = 1;
+		hash->ch_count++;	/* new entry */
 	}
 	/* looked at it, move to hash list head */
 	list_move(&node->cn_list, &hash->ch_list);
@@ -408,10 +414,19 @@ cache_purge(
 #endif
 }
 
+#define	HASH_REPORT	(3*HASH_CACHE_RATIO)
 void
-cache_report(const char *name, struct cache * cache)
+cache_report(FILE *fp, const char *name, struct cache * cache)
 {
-	fprintf(stderr, "%s: %p\n"
+	int i;
+	unsigned long count, index, total;
+	unsigned long hash_bucket_lengths[HASH_REPORT+2];
+
+	if ((cache->c_hits+cache->c_misses) == 0)
+		return;
+
+	/* report cache summary */
+	fprintf(fp, "%s: %p\n"
 			"Max supported entries = %u\n"
 			"Max utilized entries = %u\n"
 			"Active entries = %u\n"
@@ -428,4 +443,28 @@ cache_report(const char *name, struct cache * cache)
 			cache->c_misses,
 			(double) (cache->c_hits*100/(cache->c_hits+cache->c_misses))
 	);
+
+	/* report hash bucket lengths */
+	bzero(hash_bucket_lengths, sizeof(hash_bucket_lengths));
+
+	for (i = 0; i < cache->c_hashsize; i++) {
+		count = cache->c_hash[i].ch_count;
+		if (count > HASH_REPORT)
+			index = HASH_REPORT + 1;
+		else
+			index = count;
+		hash_bucket_lengths[index]++;
+	}
+
+	total = 0;
+	for (i = 0; i < HASH_REPORT+1; i++) {
+		total += i*hash_bucket_lengths[i];
+		if (hash_bucket_lengths[i] == 0)
+			continue;
+		fprintf(fp, "Hash buckets with  %2d entries %5ld (%3ld%%)\n", 
+			i, hash_bucket_lengths[i], (i*hash_bucket_lengths[i]*100)/cache->c_count);
+	}
+	if (hash_bucket_lengths[i])	/* last report bucket is the overflow bucket */
+		fprintf(fp, "Hash buckets with >%2d entries %5ld (%3ld%%)\n", 
+			i-1, hash_bucket_lengths[i], ((cache->c_count-total)*100)/cache->c_count);
 }

@@ -754,8 +754,8 @@ libxfs_destroy(void)
 }
 
 void
-libxfs_report(void)
+libxfs_report(FILE *fp)
 {
-	cache_report("libxfs_icache", libxfs_icache);
-	cache_report("libxfs_bcache", libxfs_bcache);
+	cache_report(fp, "libxfs_icache", libxfs_icache);
+	cache_report(fp, "libxfs_bcache", libxfs_bcache);
 }

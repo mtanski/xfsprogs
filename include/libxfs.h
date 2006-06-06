@@ -106,7 +106,7 @@ extern int	libxfs_device_to_fd (dev_t);
 extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
-extern void	libxfs_report(void);
+extern void	libxfs_report(FILE *);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
 typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
