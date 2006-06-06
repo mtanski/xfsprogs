@@ -506,9 +506,15 @@ main(int argc, char **argv)
 
 	phase2(mp);
 
+	if (verbose)
+		libxfs_report(stderr);
 	phase3(mp);
+	if (verbose)
+		libxfs_report(stderr);
 
 	phase4(mp);
+	if (verbose)
+		libxfs_report(stderr);
 
 	/* XXX: nathans - something in phase4 ain't playing by */
 	/* the buffer cache rules.. why doesn't IRIX hit this? */
@@ -521,6 +527,8 @@ main(int argc, char **argv)
 
 	if (!bad_ino_btree)  {
 		phase6(mp);
+		if (verbose)
+			libxfs_report(stderr);
 
 		phase7(mp);
 	} else  {
@@ -583,7 +591,7 @@ _("Warning:  project quota information would be cleared.\n"
 	}
 
 	if (verbose)
-		libxfs_report();
+		libxfs_report(stderr);
 
 	if (no_modify)  {
 		do_log(
