@@ -7,6 +7,7 @@ include $(TOPDIR)/include/builddefs
 
 LSRCFILES = \
 	manual_format.m4 \
+	package_aiodev.m4 \
 	package_globals.m4 \
 	package_libcdev.m4 \
 	package_pthread.m4 \
@@ -15,7 +16,7 @@ LSRCFILES = \
 	package_uuiddev.m4 \
 	multilib.m4
 
-default: 
+default:
 
 include $(BUILDRULES)
 

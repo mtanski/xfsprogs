@@ -1,7 +1,7 @@
-# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
+# generated automatically by aclocal 1.8.3 -*- Autoconf -*-
 
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-# 2005  Free Software Foundation, Inc.
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
+# Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -72,6 +72,44 @@ AC_DEFUN([AC_MULTILIB],
   fi
   AC_SUBST(libdirsuffix)
 ])
+
+#
+# Check if we have a libaio.h installed
+#
+AC_DEFUN([AC_PACKAGE_WANT_AIO],
+  [ AC_CHECK_HEADERS(libaio.h, [ have_aio=true ], [ have_aio=false ])
+    AC_SUBST(have_aio)
+  ])
+
+#
+# Check if we have an aio.h installed
+#
+AC_DEFUN([AC_PACKAGE_NEED_AIO_H],
+  [ AC_CHECK_HEADERS(aio.h)
+    if test $ac_cv_header_aio_h = no; then
+	echo
+	echo 'FATAL ERROR: could not find a valid <aio.h> header.'
+	exit 1
+    fi
+  ])
+
+#
+# Check if we have the lio_listio routine in either libc/librt
+#
+AC_DEFUN([AC_PACKAGE_NEED_LIO_LISTIO],
+  [ AC_CHECK_FUNCS(lio_listio)
+    if test $ac_cv_func_lio_listio = yes; then
+	librt=""
+    else
+	AC_CHECK_LIB(rt, lio_listio,, [
+	    echo
+	    echo 'FATAL ERROR: could not find a library with lio_listio.'
+	    exit 1])
+	librt="-lrt"
+    fi
+    AC_SUBST(librt)
+  ])
+
 
 # 
 # Generic macro, sets up all of the global packaging variables.

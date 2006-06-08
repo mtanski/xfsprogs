@@ -25,6 +25,7 @@ OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 LOADERFLAGS = @LDFLAGS@
 
+LIBRT = @librt@
 LIBUUID = @libuuid@
 LIBPTHREAD = @libpthread@
 LIBTERMCAP = @libtermcap@
