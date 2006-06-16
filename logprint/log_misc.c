@@ -251,6 +251,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     xfs_buf_log_format_t lbuf;
     int			 size, blen, map_size, struct_size;
     long long		 x, y;
+    ushort		 flags;
 
     /*
      * bcopy to ensure 8-byte alignment for the long longs in
@@ -265,6 +266,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	size = f->blf_size;
 	blen = f->blf_len;
 	map_size = f->blf_map_size;
+        flags = f->blf_flags;
 	struct_size = sizeof(xfs_buf_log_format_t);
     } else {
 	old_f = (xfs_buf_log_format_v1_t*)f;
@@ -272,6 +274,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	size = old_f->blf_size;
 	blen = old_f->blf_len;
 	map_size = old_f->blf_map_size;
+        flags = f->blf_flags;
 	struct_size = sizeof(xfs_buf_log_format_v1_t);
     }
     switch (f->blf_type)  {
@@ -290,8 +293,8 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     }
     if (len >= struct_size) {
 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
-	printf("#regs: %d   start blkno: %lld (0x%llx)  len: %d  bmap size: %d\n",
-	       size, (long long)blkno, (unsigned long long)blkno, blen, map_size);
+	printf("#regs: %d   start blkno: %lld (0x%llx)  len: %d  bmap size: %d  flags: 0x%x\n",
+	       size, (long long)blkno, (unsigned long long)blkno, blen, map_size, flags);
 	if (blkno == 0)
 	    super_block = 1;
     } else {
@@ -470,30 +473,23 @@ int
 xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
 {
     xfs_efd_log_format_t *f;
-    xfs_extent_t	 *ex;
-    int			 i;
     xfs_efd_log_format_t lbuf;
+    /* size without extents at end */
+    uint core_size = sizeof(xfs_efd_log_format_t) - sizeof(xfs_extent_t);
 
     /*
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_efd_log_format_t structure
      */
-    bcopy(*ptr, &lbuf, len);
+    bcopy(*ptr, &lbuf, MIN(core_size, len));
     f = &lbuf;
     *ptr += len;
-    if (len >= sizeof(xfs_efd_log_format_t)) {
+    if (len >= core_size) {
 	printf("EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
 	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
-	ex = f->efd_extents;
-	len -= (sizeof(xfs_efd_log_format_t) - sizeof(xfs_extent_t));
-	for (i = 0; len > 0 && i < f->efd_nextents; i++) {
-		printf("(s: 0x%llx, l: %d) ",
-			(unsigned long long)ex->ext_start, ex->ext_len);
-		if (i % 4 == 3) printf("\n");
-		len -= sizeof(xfs_extent_t);
-		ex++;
-	}
-	if (i % 4 != 0) printf("\n");
+
+	/* don't print extents as they are not used */
+
 	return 0;
     } else {
 	printf("EFD: Not enough data to decode further\n");
@@ -503,38 +499,50 @@ xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
 
 
 int
-xlog_print_trans_efi(xfs_caddr_t *ptr, uint len)
+xlog_print_trans_efi(xfs_caddr_t *ptr, uint src_len)
 {
-    xfs_efi_log_format_t *f;
+    xfs_efi_log_format_t *src_f, *f;
+    uint		 dst_len;
     xfs_extent_t	 *ex;
     int			 i;
-    xfs_efi_log_format_t lbuf;
+    int			 error = 0;
 
     /*
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_efi_log_format_t structure
      */
-    bcopy(*ptr, &lbuf, len);
-    f = &lbuf;
-    *ptr += len;
-    if (len >= sizeof(xfs_efi_log_format_t)) {
-	printf("EFI:  #regs: %d    num_extents: %d  id: 0x%llx\n",
-	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
-	ex = f->efi_extents;
-	len -= (sizeof(xfs_efi_log_format_t) - sizeof(xfs_extent_t));
-	for (i=0; len > 0 && i < f->efi_nextents; i++) {
-		printf("(s: 0x%llx, l: %d) ",
-			(unsigned long long)ex->ext_start, ex->ext_len);
-		if (i % 4 == 3) printf("\n");
-		len -= sizeof(xfs_extent_t);
-		ex++;
-	}
-	if (i % 4 != 0) printf("\n");
-	return 0;
-    } else {
-	printf("EFI: Not enough data to decode further\n");
-	return 1;
+    if ((src_f = (xfs_efi_log_format_t *)malloc(src_len)) == NULL) {
+	fprintf(stderr, "%s: xlog_print_trans_efi: malloc failed\n", progname);
+	exit(1);
     }
+    bcopy(*ptr, (char*)src_f, src_len);
+    *ptr += src_len;
+
+    /* convert to native format */
+    dst_len = sizeof(xfs_efi_log_format_t) + (src_f->efi_nextents - 1) * sizeof(xfs_extent_t);
+    if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
+	fprintf(stderr, "%s: xlog_print_trans_efi: malloc failed\n", progname);
+	exit(1);
+    }
+    if (xfs_efi_copy_format((char*)src_f, src_len, f)) {
+	error = 1;
+	goto error;
+    }
+
+    printf("EFI:  #regs: %d    num_extents: %d  id: 0x%llx\n",
+	   f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
+    ex = f->efi_extents;
+    for (i=0; i < f->efi_nextents; i++) {
+	    printf("(s: 0x%llx, l: %d) ",
+		    (unsigned long long)ex->ext_start, ex->ext_len);
+	    if (i % 4 == 3) printf("\n");
+	    ex++;
+    }
+    if (i % 4 != 0) printf("\n");
+error:
+    free(src_f);
+    free(f);
+    return error;
 }	/* xlog_print_trans_efi */
 
 
@@ -616,12 +624,11 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 int
 xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 {
-    xfs_inode_log_format_t *f;
-    xfs_inode_log_format_t_v1 *old_f;
     xfs_dinode_core_t	   dino;
     xlog_op_header_t	   *op_head;
-    int			   version;
-    xfs_inode_log_format_t lbuf = {0};
+    xfs_inode_log_format_t dst_lbuf;
+    xfs_inode_log_format_64_t src_lbuf; /* buffer of biggest one */
+    xfs_inode_log_format_t *f;
     int			   mode;
     int			   size;
 
@@ -631,41 +638,27 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
      * bcopy to ensure 8-byte alignment for the long longs in
      * xfs_inode_log_format_t structure
      *
-     * len can be smaller than xfs_inode_log_format_t sometimes... (?)
+     * len can be smaller than xfs_inode_log_format_32|64_t 
+     * if format data is split over operations
      */
-    bcopy(*ptr, &lbuf, MIN(sizeof(xfs_inode_log_format_t), len));
-    version = lbuf.ilf_type;
-    f = &lbuf;
+    bcopy(*ptr, &src_lbuf, MIN(sizeof(xfs_inode_log_format_64_t), len));
     (*i)++;					/* bump index */
     *ptr += len;
-    if (version == XFS_LI_5_3_INODE) {
-	old_f = (xfs_inode_log_format_t_v1 *)f;
-	if (len == sizeof(xfs_inode_log_format_t_v1)) {
-	    printf("5.3 INODE: #regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n",
-		   old_f->ilf_size, (unsigned long long)old_f->ilf_ino,
-		   old_f->ilf_fields, old_f->ilf_dsize);
-	} else {
-	    ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
-	    printf("5.3 INODE: #regs: %d   Not printing rest of data\n",
-		   old_f->ilf_size);
-	    return old_f->ilf_size;
-	}
+    if (len == sizeof(xfs_inode_log_format_32_t) ||
+	len == sizeof(xfs_inode_log_format_64_t)) {
+	f = xfs_inode_item_format_convert((char*)&src_lbuf, len, &dst_lbuf);	
+	printf("INODE: ");
+	printf("#regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n",
+	       f->ilf_size, (unsigned long long)f->ilf_ino,
+	       f->ilf_fields, f->ilf_dsize);
+	printf("        blkno: %lld  len: %d  boff: %d\n",
+	       (long long)f->ilf_blkno, f->ilf_len, f->ilf_boffset);
     } else {
-	if (len == sizeof(xfs_inode_log_format_t)) {
-	    if (version == XFS_LI_6_1_INODE)
-		printf("6.1 INODE: ");
-	    else printf("INODE: ");
-	    printf("#regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n",
-		   f->ilf_size, (unsigned long long)f->ilf_ino,
-		   f->ilf_fields, f->ilf_dsize);
-	    printf("        blkno: %lld  len: %d  boff: %d\n",
-		   (long long)f->ilf_blkno, f->ilf_len, f->ilf_boffset);
-	} else {
-	    ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
-	    printf("INODE: #regs: %d   Not printing rest of data\n",
-		   f->ilf_size);
-	    return f->ilf_size;
-	}
+	ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
+	f = (xfs_inode_log_format_t *)&src_lbuf;
+	printf("INODE: #regs: %d   Not printing rest of data\n",
+	       f->ilf_size);
+	return f->ilf_size;
     }
 
     if (*i >= num_ops)			/* end of LR */
@@ -1020,8 +1013,6 @@ xlog_print_record(int			  fd,
 					&i, num_ops);
 			break;
 		    }
-		    case XFS_LI_5_3_INODE:
-		    case XFS_LI_6_1_INODE:
 		    case XFS_LI_INODE: {
 			skip = xlog_print_trans_inode(&ptr,
 					INT_GET(op_head->oh_len, ARCH_CONVERT),
@@ -1514,4 +1505,97 @@ loop2:
 end:
     printf("%s: logical end of log\n", progname);
     print_xlog_record_line();
+}
+
+/*
+ * if necessary, convert an xfs_inode_log_format struct from 32bit or 64 bit versions
+ * (which can have different field alignments) to the native version
+ */
+xfs_inode_log_format_t *
+xfs_inode_item_format_convert(char *src_buf, uint len, xfs_inode_log_format_t *in_f)
+{
+	/* if we have native format then just return buf without copying data */
+	if (len == sizeof(xfs_inode_log_format_t)) {
+		return (xfs_inode_log_format_t *)src_buf;
+	}
+
+	if (len == sizeof(xfs_inode_log_format_32_t)) {
+		xfs_inode_log_format_32_t *in_f32;
+
+		in_f32 = (xfs_inode_log_format_32_t *)src_buf;
+		in_f->ilf_type = in_f32->ilf_type;
+		in_f->ilf_size = in_f32->ilf_size;
+		in_f->ilf_fields = in_f32->ilf_fields;
+		in_f->ilf_asize = in_f32->ilf_asize;
+		in_f->ilf_dsize = in_f32->ilf_dsize;
+		in_f->ilf_ino = in_f32->ilf_ino;
+		/* copy biggest */
+		memcpy(in_f->ilf_u.ilfu_uuid, in_f32->ilf_u.ilfu_uuid, sizeof(uuid_t));
+		in_f->ilf_blkno = in_f32->ilf_blkno;
+		in_f->ilf_len = in_f32->ilf_len;
+		in_f->ilf_boffset = in_f32->ilf_boffset;
+	} else {
+		xfs_inode_log_format_64_t *in_f64;
+
+		ASSERT(len == sizeof(xfs_inode_log_format_64_t));
+		in_f64 = (xfs_inode_log_format_64_t *)src_buf;
+		in_f->ilf_type = in_f64->ilf_type;
+		in_f->ilf_size = in_f64->ilf_size;
+		in_f->ilf_fields = in_f64->ilf_fields;
+		in_f->ilf_asize = in_f64->ilf_asize;
+		in_f->ilf_dsize = in_f64->ilf_dsize;
+		in_f->ilf_ino = in_f64->ilf_ino;
+		/* copy biggest */
+		memcpy(in_f->ilf_u.ilfu_uuid, in_f64->ilf_u.ilfu_uuid, sizeof(uuid_t));
+		in_f->ilf_blkno = in_f64->ilf_blkno;
+		in_f->ilf_len = in_f64->ilf_len;
+		in_f->ilf_boffset = in_f64->ilf_boffset;
+	}
+	return in_f;
+}
+
+int
+xfs_efi_copy_format(char *buf, uint len, xfs_efi_log_format_t *dst_efi_fmt)
+{
+        uint i;
+	uint nextents = ((xfs_efi_log_format_t *)buf)->efi_nextents;
+        uint dst_len = sizeof(xfs_efi_log_format_t) + (nextents - 1) * sizeof(xfs_extent_t);
+        uint len32 = sizeof(xfs_efi_log_format_32_t) + (nextents - 1) * sizeof(xfs_extent_32_t);
+        uint len64 = sizeof(xfs_efi_log_format_64_t) + (nextents - 1) * sizeof(xfs_extent_64_t);
+
+        if (len == dst_len) {
+                memcpy((char *)dst_efi_fmt, buf, len);
+                return 0;
+        } else if (len == len32) {
+                xfs_efi_log_format_32_t *src_efi_fmt_32 = (xfs_efi_log_format_32_t *)buf;
+
+                dst_efi_fmt->efi_type     = src_efi_fmt_32->efi_type;
+                dst_efi_fmt->efi_size     = src_efi_fmt_32->efi_size;
+                dst_efi_fmt->efi_nextents = src_efi_fmt_32->efi_nextents;
+                dst_efi_fmt->efi_id       = src_efi_fmt_32->efi_id;
+                for (i = 0; i < dst_efi_fmt->efi_nextents; i++) {
+                        dst_efi_fmt->efi_extents[i].ext_start =
+                                src_efi_fmt_32->efi_extents[i].ext_start;
+                        dst_efi_fmt->efi_extents[i].ext_len =
+                                src_efi_fmt_32->efi_extents[i].ext_len;
+                }
+                return 0;
+        } else if (len == len64) {
+                xfs_efi_log_format_64_t *src_efi_fmt_64 = (xfs_efi_log_format_64_t *)buf;
+
+                dst_efi_fmt->efi_type     = src_efi_fmt_64->efi_type;
+                dst_efi_fmt->efi_size     = src_efi_fmt_64->efi_size;
+                dst_efi_fmt->efi_nextents = src_efi_fmt_64->efi_nextents;
+                dst_efi_fmt->efi_id       = src_efi_fmt_64->efi_id;
+                for (i = 0; i < dst_efi_fmt->efi_nextents; i++) {
+                        dst_efi_fmt->efi_extents[i].ext_start =
+                                src_efi_fmt_64->efi_extents[i].ext_start;
+                        dst_efi_fmt->efi_extents[i].ext_len =
+                                src_efi_fmt_64->efi_extents[i].ext_len;
+                }
+                return 0;
+        }
+	fprintf(stderr, "%s: bad size of efi format: %u; expected %u or %u; nextents = %u\n",
+		progname, len, len32, len64, nextents);
+        return 1;
 }

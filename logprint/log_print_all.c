@@ -108,8 +108,8 @@ xlog_recover_print_buffer(
 		break;
 	}
 	if (f->blf_type == XFS_LI_BUF) {
-		printf("#regs:%d   start blkno:0x%llx   len:%d   bmap size:%d\n",
-		       f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size);
+		printf("#regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n",
+		       f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size, f->blf_flags);
 		blkno = (xfs_daddr_t)f->blf_blkno;
 	} else {
 		printf("#regs:%d   start blkno:0x%x   len:%d   bmap size:%d\n",
@@ -276,13 +276,16 @@ STATIC void
 xlog_recover_print_inode(
 	xlog_recover_item_t	*item)
 {
+	xfs_inode_log_format_t	f_buf;
 	xfs_inode_log_format_t	*f;
 	int			attr_index;
 	int			hasdata;
 	int			hasattr;
 
-	f = (xfs_inode_log_format_t *)item->ri_buf[0].i_addr;
-	ASSERT(item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t));
+	ASSERT(item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_32_t) ||
+	       item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_64_t));
+	f = xfs_inode_item_format_convert(item->ri_buf[0].i_addr, item->ri_buf[0].i_len, &f_buf);
+
 	printf("	INODE: #regs:%d   ino:0x%llx  flags:0x%x   dsize:%d\n",
 	       f->ilf_size, (unsigned long long)f->ilf_ino, f->ilf_fields,
 	       f->ilf_dsize);
@@ -371,30 +374,16 @@ xlog_recover_print_efd(
 	xlog_recover_item_t	*item)
 {
 	xfs_efd_log_format_t	*f;
-	xfs_extent_t		*ex;
-	int			i;
 
 	f = (xfs_efd_log_format_t *)item->ri_buf[0].i_addr;
 	/*
 	 * An xfs_efd_log_format structure contains a variable length array
-	 * as the last field.  Each element is of size xfs_extent_t.
+	 * as the last field.
+	 * Each element is of size xfs_extent_32_t or xfs_extent_64_t.
+	 * However, the extents are never used and won't be printed.
 	 */
-	ASSERT(item->ri_buf[0].i_len ==
-	       sizeof(xfs_efd_log_format_t) + sizeof(xfs_extent_t) *
-	       (f->efd_nextents-1));
 	printf("	EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
 	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
-	ex = f->efd_extents;
-	printf("	");
-	for (i=0; i < f->efd_size; i++) {
-		printf("(s: 0x%llx, l: %d) ",
-			(unsigned long long) ex->ext_start, ex->ext_len);
-		if (i % 4 == 3)
-			printf("\n");
-		ex++;
-	}
-	if (i % 4 != 0)
-		printf("\n");
 }
 
 
@@ -402,18 +391,28 @@ STATIC void
 xlog_recover_print_efi(
 	xlog_recover_item_t	*item)
 {
-	xfs_efi_log_format_t	*f;
+	xfs_efi_log_format_t	*f, *src_f;
 	xfs_extent_t		*ex;
 	int			i;
+	uint			src_len, dst_len;
 
-	f = (xfs_efi_log_format_t *)item->ri_buf[0].i_addr;
+	src_f = (xfs_efi_log_format_t *)item->ri_buf[0].i_addr;
+	src_len = item->ri_buf[0].i_len;
 	/*
 	 * An xfs_efi_log_format structure contains a variable length array
-	 * as the last field.  Each element is of size xfs_extent_t.
+	 * as the last field.
+	 * Each element is of size xfs_extent_32_t or xfs_extent_64_t.
+	 * Need to convert to native format.
 	 */
-	ASSERT(item->ri_buf[0].i_len ==
-	       sizeof(xfs_efi_log_format_t) + sizeof(xfs_extent_t) *
-	       (f->efi_nextents-1));
+	dst_len = sizeof(xfs_efi_log_format_t) + (src_f->efi_nextents - 1) * sizeof(xfs_extent_t);
+	if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
+	    fprintf(stderr, "%s: xlog_recover_print_efi: malloc failed\n", progname);
+	    exit(1);
+	}
+	if (xfs_efi_copy_format((char*)src_f, src_len, f)) {
+	    free(f);
+	    return;
+	}
 
 	printf("	EFI:  #regs:%d    num_extents:%d  id:0x%llx\n",
 	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
@@ -428,6 +427,7 @@ xlog_recover_print_efi(
 	}
 	if (i % 4 != 0)
 		printf("\n");
+	free(f);
 }
 
 void

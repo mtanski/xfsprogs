@@ -45,4 +45,8 @@ extern void print_xlog_record_line(void);
 extern void print_xlog_op_line(void);
 extern void print_stars(void);
 
+extern xfs_inode_log_format_t *
+	xfs_inode_item_format_convert(char *, uint, xfs_inode_log_format_t *);
+extern int xfs_efi_copy_format(char *, uint, xfs_efi_log_format_t *);
+
 #endif	/* LOGPRINT_H */
