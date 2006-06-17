@@ -586,9 +586,7 @@ inode_item_done(
 	if (!(iip->ili_format.ilf_fields & XFS_ILOG_ALL)) {
 		ip->i_transp = NULL;	/* disassociate from transaction */
 		iip->ili_flags = 0;	/* reset all flags */
-		if (!hold)
-			goto ili_done;
-		return;
+		goto ili_done;
 	}
 
 	/*
@@ -617,15 +615,14 @@ inode_item_done(
 	fprintf(stderr, "flushing dirty inode %llu, buffer %p (hold=%u)\n",
 			ip->i_ino, bp, hold);
 #endif
+ili_done:
 	if (hold) {
 		iip->ili_flags &= ~XFS_ILI_HOLD;
 		return;
-	}
-	else {
-		libxfs_iput(iip->ili_inode, 0);
+	} else {
+		libxfs_iput(ip, 0);
 	}
 
-ili_done:
 	if (ip->i_itemp)
 		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
 	else
@@ -722,6 +719,38 @@ trans_committed(
 	}
 }
 
+STATIC void
+buf_item_unlock(
+	xfs_buf_log_item_t	*bip)
+{
+	xfs_buf_t		*bp = bip->bli_buf;
+	uint			hold;
+
+	/* Clear the buffer's association with this transaction. */
+	XFS_BUF_SET_FSPRIVATE2(bip->bli_buf, NULL);
+
+	hold = bip->bli_flags & XFS_BLI_HOLD;
+	if (!hold)
+		libxfs_putbuf(bp);
+	bip->bli_flags &= ~XFS_BLI_HOLD;
+}
+
+STATIC void
+inode_item_unlock(
+	xfs_inode_log_item_t	*iip)
+{
+	xfs_inode_t		*ip = iip->ili_inode;
+	uint			hold;
+
+	/* Clear the transaction pointer in the inode. */
+	ip->i_transp = NULL;
+
+	hold = iip->ili_flags & XFS_ILI_HOLD;
+	if (!hold)
+		libxfs_iput(ip, 0);
+	iip->ili_flags = 0;
+}
+
 /*
  * Unlock each item pointed to by a descriptor in the given chunk.
  * Free descriptors pointing to items which are not dirty if freeing_chunk
@@ -754,20 +783,10 @@ xfs_trans_unlock_chunk(
 		/*
 		 * Disassociate the logged item from this transaction
 		 */
-		if (lip->li_type == XFS_LI_BUF) {
-			xfs_buf_log_item_t	*bip;
-
-			bip = (xfs_buf_log_item_t *)lidp->lid_item;
-			XFS_BUF_SET_FSPRIVATE2(bip->bli_buf, NULL);
-			bip->bli_flags &= ~XFS_BLI_HOLD;
-		}
-		else if (lip->li_type == XFS_LI_INODE) {
-			xfs_inode_log_item_t	*iip;
-
-			iip = (xfs_inode_log_item_t*)lidp->lid_item;
-			iip->ili_inode->i_transp = NULL;
-			iip->ili_flags &= ~XFS_ILI_HOLD;
-		}
+		if (lip->li_type == XFS_LI_BUF)
+			buf_item_unlock((xfs_buf_log_item_t *)lidp->lid_item);
+		else if (lip->li_type == XFS_LI_INODE)
+			inode_item_unlock((xfs_inode_log_item_t *)lidp->lid_item);
 		else {
 			fprintf(stderr, _("%s: unrecognised log item type\n"),
 				progname);
