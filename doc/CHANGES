@@ -1,6 +1,10 @@
-[cvs]
+xfsprogs-2.8.2 (17 June 2006)
 	- More updates to repair/libxfs for improving performance
 	- Incorporate librt into the build process for lio_listio
+	- Minor xfs_logprint tweaks and fixes.
+	- Small updates to xfs_io manual page.
+	- Several fixes from earler 2.8 releases with respect to
+	  inode/buffer cache refcounting.
 
 xfsprogs-2.8.1 (29 May 2006)
 	- Fix endianness issues on FreeBSD.

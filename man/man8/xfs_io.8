@@ -7,8 +7,11 @@ xfs_io \- debug the I/O path of an XFS filesystem
 .fi
 .SH DESCRIPTION
 \f2xfs_io\f1 is a debugging tool like \f2xfs_db\f1, but is aimed
-at examining the regular file I/O path rather than the raw XFS volume
+at examining the regular file I/O paths rather than the raw XFS volume
 itself.
+These code paths include not only the obvious read/write/mmap interfaces
+for manipulating files, but also cover all of the XFS extensions (such
+as space preallocation, additional inode flags, etc).
 .PP
 The options to \f2xfs_io\f1 are:
 .TP 10
