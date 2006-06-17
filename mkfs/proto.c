@@ -675,6 +675,7 @@ rtinit(
 			(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0, 0, 0, 0)))
 		res_failed(i);
 	libxfs_trans_ijoin(tp, rbmip, 0);
+	libxfs_trans_ihold(tp, rbmip);
 	bno = 0;
 	XFS_BMAP_INIT(&flist, &first);
 	while (bno < mp->m_sb.sb_rbmblocks) {
@@ -711,6 +712,7 @@ rtinit(
 			0, 0, 0, 0)))
 		res_failed(i);
 	libxfs_trans_ijoin(tp, rsumip, 0);
+	libxfs_trans_ihold(tp, rsumip);
 	bno = 0;
 	XFS_BMAP_INIT(&flist, &first);
 	while (bno < nsumblocks) {
