@@ -27,6 +27,10 @@
 #include <xfs/cache.h>
 
 #define CACHE_DEBUG 1
+#undef CACHE_DEBUG
+#define CACHE_DEBUG 1
+#undef CACHE_ABORT
+/* #define CACHE_ABORT 1 */
 #define	HASH_CACHE_RATIO	8
 
 static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
@@ -90,6 +94,12 @@ cache_walk(
 	}
 }
 
+#ifdef CACHE_ABORT
+#define cache_abort()	abort()
+#else
+#define cache_abort()	do { } while (0)
+#endif
+
 #ifdef CACHE_DEBUG
 static void
 cache_zero_check(
@@ -98,7 +108,7 @@ cache_zero_check(
 	if (node->cn_count > 0) {
 		fprintf(stderr, "%s: refcount is %u, not zero (node=%p)\n",
 			__FUNCTION__, node->cn_count, node);
-		/* abort(); */
+		cache_abort();
 	}
 }
 #define cache_destroy_check(c)	cache_walk((c), cache_zero_check)
@@ -354,7 +364,7 @@ cache_node_put(
 	if (node->cn_count < 1) {
 		fprintf(stderr, "%s: node put on refcount %u (node=%p)\n",
 				__FUNCTION__, node->cn_count, node);
-		/* abort(); */
+		cache_abort();
 	}
 #endif
 	node->cn_count--;
@@ -382,12 +392,12 @@ cache_node_purge(
 	if (refcount >= 1) {
 		fprintf(stderr, "%s: refcount was %u, not zero (node=%p)\n",
 				__FUNCTION__, refcount, node);
-		/* abort(); */
+		cache_abort();
 	}
 	if (refcount == -1) {
 		fprintf(stderr, "%s: purge node not found! (node=%p)\n",
 			__FUNCTION__, node);
-		/* abort(); */
+		cache_abort();
 	}
 #endif
 	return (refcount == 0);
@@ -409,7 +419,7 @@ cache_purge(
 	if (cache->c_count != 0) {
 		fprintf(stderr, "%s: shake on cache %p left %u nodes!?\n",
 				__FUNCTION__, cache, cache->c_count);
-		/* abort(); */
+		cache_abort();
 	}
 #endif
 }
