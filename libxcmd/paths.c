@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 Silicon Graphics, Inc.
+ * Copyright (c) 2005-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -105,15 +105,15 @@ fs_table_insert(
 
 	datadev = logdev = rtdev = 0;
 	if (!fs_device_number(dir, &datadev, 0))
-		goto error;
+		return errno;
 	if (fslog && (fslog = fs_device_number(fslog, &logdev, 1)) == NULL)
-		goto error;
+		return errno;
 	if (fsrt && (fsrt = fs_device_number(fsrt, &rtdev, 1)) == NULL)
-		goto error;
+		return errno;
 
 	fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
 	if (!fs_table)
-		goto error;
+		return errno;
 
 	fs_path = &fs_table[fs_count];
 	fs_path->fs_dir = dir;
@@ -127,13 +127,6 @@ fs_table_insert(
 	fs_path->fs_rtdev = rtdev;
 	fs_count++;
 	return 0;
-
-  error:
-	if (dir) free(dir);
-	if (fsrt) free(fsrt);
-	if (fslog) free(fslog);
-	if (fsname) free(fsname);
-	return errno;
 }
 
 void
@@ -191,8 +184,11 @@ fs_table_initialise_mounts(
 {
 	struct mntent	*mnt;
 	FILE		*mtp;
-	char		*dir = NULL, *fsname = NULL, *fslog, *fsrt;
-	int		error = 0, found = 0;
+	char		*dir, *fsname, *fslog, *fsrt;
+	int		error, found;
+
+	error = found = 0;
+	dir = fsname = fslog = fsrt = NULL;
 
 	if (!mtab_file) {
 		mtab_file = PROC_MOUNTS;
@@ -226,8 +222,10 @@ fs_table_initialise_mounts(
 	if (!error && path && !found)
 		error = ENXIO;
 	if (error) {
-		free(dir);
-		free(fsname);
+		if (dir) free(dir);
+		if (fsrt) free(fsrt);
+		if (fslog) free(fslog);
+		if (fsname) free(fsname);
 	}
 	return error;
 }
@@ -240,8 +238,11 @@ fs_table_initialise_mounts(
 	char		*path)
 {
 	struct statfs	*stats;
-	char		*dir = NULL, *fsname = NULL, *fslog = NULL, *fsrt = NULL;
-	int		i, count, found = 0, error = 0;
+	char		*dir, *fsname, *fslog, *fsrt;
+	int		i, count, error, found;
+
+	error = found = 0;
+	dir = fsname = fslog = fsrt = NULL;
 
 	if ((count = getmntinfo(&stats, 0)) < 0) {
 		perror("getmntinfo");
@@ -270,8 +271,10 @@ fs_table_initialise_mounts(
 	if (!error && path && !found)
 		error = ENXIO;
 	if (error) {
-		free(dir);
-		free(fsname);
+		if (dir) free(dir);
+		if (fsrt) free(fsrt);
+		if (fslog) free(fslog);
+		if (fsname) free(fsname);
 	}
 	return error;
 }
@@ -339,8 +342,8 @@ fs_table_initialise_projects(
 	if (!error && project && !found)
 		error = ENOENT;
 	if (error) {
-		free(dir);
-		free(fsname);
+		if (dir) free(dir);
+		if (fsname) free(fsname);
 	}
 	return error;
 }

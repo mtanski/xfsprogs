@@ -1,8 +1,10 @@
-xfsprogs (2.8.2-1) unstable; urgency=low
+xfsprogs (2.8.3-1) unstable; urgency=low
 
   * New upstream release.
+  * Fix segv in xfs_growfs command (closes: #374686)
+  * Ensure source tarball in correct location (closes: #374696)
 
- -- Nathan Scott <nathans@debian.org>  Sat, 17 Jun 2006 14:14:15 +1000
+ -- Nathan Scott <nathans@debian.org>  Wed, 21 Jun 2006 15:19:56 +1000
 
 xfsprogs (2.7.16-1) unstable; urgency=low
 
@@ -20,7 +22,7 @@ xfsprogs (2.7.14-1) unstable; urgency=low
 xfsprogs (2.7.12-1) unstable; urgency=low
 
   * New upstream release.
-  * Includes polish transalation from Jakub Bogusz.
+  * Includes polish translation from Jakub Bogusz.
 
  -- Nathan Scott <nathans@debian.org>  Tue, 31 Jan 2006 13:35:39 +1100
 
@@ -343,8 +345,8 @@ xfsprogs (1.3.15-1) unstable; urgency=low
 
 xfsprogs (1.3.14-1) unstable; urgency=low
 
- * Fix minor package version numbering issue (closes: #117545)
- * Fix bug in mkfs.xfs device size cross-check for realtime device
+  * Fix minor package version numbering issue (closes: #117545)
+  * Fix bug in mkfs.xfs device size cross-check for realtime device
 
  -- Nathan Scott <nathans@debian.org>  Wed,  5 Dec 2001 17:13:06 +1100
 

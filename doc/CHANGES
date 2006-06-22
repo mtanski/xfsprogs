@@ -1,3 +1,6 @@
+xfsprogs-2.8.3 (21 June 2006)
+	- Fix a possible segv in xfs_growfs.
+
 xfsprogs-2.8.2 (17 June 2006)
 	- More updates to repair/libxfs for improving performance
 	- Incorporate librt into the build process for lio_listio
