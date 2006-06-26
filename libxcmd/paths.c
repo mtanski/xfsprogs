@@ -50,7 +50,10 @@ fs_table_lookup(
 	for (i = 0; i < fs_count; i++) {
 		if ((flags & fs_table[i].fs_flags) == 0)
 			continue;
-		if (sbuf.st_dev == fs_table[i].fs_datadev)
+		if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode)) {
+			if (sbuf.st_rdev == fs_table[i].fs_datadev)
+				return &fs_table[i];
+		} else if (sbuf.st_dev == fs_table[i].fs_datadev)
 			return &fs_table[i];
 	}
 	return NULL;
