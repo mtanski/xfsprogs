@@ -1,3 +1,11 @@
+xfsprogs (2.8.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * Improved udeb packaging, thanks to Frans Pop (closes: #375439)
+  * Fix filesystem-from-path detection logic (closes: #374687)
+
+ -- Nathan Scott <nathans@debian.org>  Mon, 26 Jun 2006 10:04:18 +1000
+
 xfsprogs (2.8.3-1) unstable; urgency=low
 
   * New upstream release.

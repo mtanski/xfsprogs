@@ -69,20 +69,17 @@ binary-arch: checkroot built
 	$(pkgdi)  $(MAKE) -C debian install-d-i
 	$(pkgme)  $(MAKE) -C build src-manifest
 
-	dh_installdocs -p$(package) -p$(develop)
-	dh_installchangelogs -N$(bootpkg)
+	dh_installdocs
+	dh_installchangelogs
 	dh_strip
 	dh_compress
 	dh_fixperms
-	dh_makeshlibs -p$(package)
-	dh_installdeb -N$(bootpkg)
+	dh_makeshlibs
+	dh_installdeb
 	dh_shlibdeps
-	dh_gencontrol -N$(bootpkg)
-	dh_gencontrol -p$(bootpkg) -- -n$(udebpkg)
-
-	dh_md5sums -N$(bootpkg)
-	dh_builddeb -N$(bootpkg)
-	dh_builddeb -p$(bootpkg) --filename=$(udebpkg)
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
 
 binary: binary-indep binary-arch
 

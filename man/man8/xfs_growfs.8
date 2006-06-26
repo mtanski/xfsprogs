@@ -106,6 +106,8 @@ the \f2xfs_growfs\f1 operation.
 .TP
 .B \-t
 Specifies an alternate mount table file (default is
+.I /proc/mounts
+if it exists, else
 .IR /etc/mtab ).
 This is used when working with filesystems mounted without writing to
 .I /etc/mtab
@@ -117,8 +119,10 @@ for further details.
 is most often used in conjunction with
 logical volumes
 (see
+.IR md (4)
+and
 .IR lvm (8)
-).
+on Linux).
 However, it can also be used on a regular disk partition, for example if a
 partition has been enlarged while retaining the same starting block.
 .SH PRACTICAL USE
@@ -130,5 +134,6 @@ Therefore there must be at least one spare new disk partition available.
 Adding the space is often done through the use of a logical volume manager.
 .SH SEE ALSO
 mkfs.xfs(8),
+md(4),
 lvm(8),
 mount(8).
