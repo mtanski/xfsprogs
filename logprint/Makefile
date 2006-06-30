@@ -12,7 +12,7 @@ CFILES = logprint.c \
 	 log_copy.c log_dump.c log_misc.c \
 	 log_print_all.c log_print_trans.c
 
-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID)
+LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
 LLDFLAGS = -static
 

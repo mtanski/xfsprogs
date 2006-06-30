@@ -17,6 +17,8 @@
  */
 
 #include <xfs/libxfs.h>
+#include <aio.h>
+#include <diskinfo.h>
 
 extern char *progname;
 extern __int64_t findsize(char *);
@@ -62,4 +64,23 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 		*sz = findsize(path);
 	}
 	*bsz = BBSIZE;
+}
+
+int
+platform_aio_init(int aio_count)
+{
+	struct aioinit aio_init;
+
+	memset(&aio_init, 0, sizeof(aio_init));
+	aio_init.aio_threads = aio_count;
+	aio_init.aio_numusers = aio_count;
+
+	aio_sgi_init64(&aio_init);
+	return (1);		/* aio/lio_listio available */
+}
+
+char *
+platform_findrawpath(char *path)
+{
+	return findrawpath(path);
 }

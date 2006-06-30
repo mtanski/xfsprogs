@@ -9,7 +9,7 @@ LTCOMMAND = xfs_growfs
 
 CFILES = xfs_growfs.c
 
-LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBUUID)
+LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBUUID) $(LIBRT)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
 LLDFLAGS = -static
 LSRCFILES = xfs_info.sh

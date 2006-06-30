@@ -369,4 +369,6 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_GETPARENTS		SGI_XFS_GETPARENTS
 #define XFS_IOC_GETPARENTPATHS		SGI_XFS_GETPARENTPATHS
 
+#define	_AIOCB64_T_DEFINED		1
+
 #endif	/* __XFS_IRIX_H__ */

@@ -25,6 +25,7 @@
 #include "protos.h"
 #include "incore.h"
 #include "err_protos.h"
+#include "prefetch.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
@@ -56,6 +57,12 @@ char *o_opts[] = {
 	"ihash",
 #define	BHASH_SIZE	3
 	"bhash",
+#define	PREFETCH_INO_CNT	4
+	"pfino",
+#define	PREFETCH_DIR_CNT	5
+	"pfdir",
+#define	PREFETCH_AIO_CNT	6
+	"pfaio",
 	NULL
 };
 
@@ -180,7 +187,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvVd")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdP")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -211,6 +218,15 @@ process_args(int argc, char **argv)
 					break;
 				case BHASH_SIZE:
 					libxfs_bhash_size = (int) strtol(val, 0, 0);
+					break;
+				case PREFETCH_INO_CNT:
+					libxfs_lio_ino_count = (int) strtol(val, 0, 0);
+					break;
+				case PREFETCH_DIR_CNT:
+					libxfs_lio_dir_count = (int) strtol(val, 0, 0);
+					break;
+				case PREFETCH_AIO_CNT:
+					libxfs_lio_aio_count = (int) strtol(val, 0, 0);
 					break;
 				default:
 					unknown('o', val);
@@ -244,6 +260,9 @@ process_args(int argc, char **argv)
 		case 'V':
 			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
+		case 'P':
+			do_prefetch ^= 1;
+			break;
 		case '?':
 			usage();
 		}
@@ -254,6 +273,11 @@ process_args(int argc, char **argv)
 
 	if ((fs_name = argv[optind]) == NULL)
 		usage();
+
+	if (!isa_file) {
+		if ((fs_name = libxfs_findrawpath(fs_name)) == NULL)
+			do_error("couldn't find raw device for %s\n", fs_name);
+	}
 }
 
 void

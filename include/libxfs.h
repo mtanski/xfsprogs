@@ -107,6 +107,7 @@ extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
 extern void	libxfs_report(FILE *);
+extern char	*libxfs_findrawpath(char *);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
 typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
@@ -460,6 +461,8 @@ extern int	libxfs_bmapi (xfs_trans_t *, xfs_inode_t *, xfs_fileoff_t,
 				xfs_filblks_t, int, xfs_fsblock_t *,
 				xfs_extlen_t, xfs_bmbt_irec_t *, int *,
 				xfs_bmap_free_t *);
+extern int	libxfs_bmapi_single(xfs_trans_t *, xfs_inode_t *, int,
+				xfs_fsblock_t *, xfs_fileoff_t);
 extern int	libxfs_bmap_finish (xfs_trans_t **, xfs_bmap_free_t *,
 				xfs_fsblock_t, int *);
 extern int	libxfs_bmap_next_offset (xfs_trans_t *, xfs_inode_t *,
@@ -543,6 +546,29 @@ extern unsigned int	libxfs_log2_roundup(unsigned int i);
 
 extern void cmn_err(int, char *, ...);
 enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+
+/* lio interface */
+/* lio_listio(3) interface (POSIX linked asynchronous I/O) */
+extern int libxfs_lio_ino_count;
+extern int libxfs_lio_dir_count;
+extern int libxfs_lio_aio_count;
+
+extern int libxfs_lio_init(void);
+extern void libxfs_lio_allocate(void);
+extern void *libxfs_get_lio_buffer(int type);
+extern void libxfs_put_lio_buffer(void *buffer);
+extern int libxfs_readbuf_list(dev_t dev, int nent, void *voidp, int type);
+
+typedef struct  libxfs_lio_req {
+	xfs_daddr_t	blkno;
+	int		len;	/* bbs */
+} libxfs_lio_req_t;
+
+#define	LIBXFS_LIO_TYPE_INO		0x1
+#define	LIBXFS_LIO_TYPE_DIR		0x2
+#define	LIBXFS_LIO_TYPE_RAW		0x3
+
+#define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
 
 #include <xfs/xfs_ialloc.h>
 #include <xfs/xfs_rtalloc.h>

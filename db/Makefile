@@ -16,7 +16,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
 	attrset.h
 CFILES = $(HFILES:.h=.c)
 LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh
-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID)
+LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
 LLDFLAGS += -static
 

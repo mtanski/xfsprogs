@@ -27,5 +27,6 @@ extern int platform_check_iswritable (char *path, char *block,
 extern void platform_findsizes (char *path, int fd, long long *sz, int *bsz);
 extern void platform_set_blocksize (int fd, char *path, int blocksize);
 extern void platform_flush_device (int fd, dev_t device);
-
+extern char *platform_findrawpath(char *path);
+extern int platform_aio_init(int aio_count);
 #endif	/* LIBXFS_INIT_H */

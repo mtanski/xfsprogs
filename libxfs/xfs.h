@@ -95,6 +95,7 @@
 #define xfs_iformat			libxfs_iformat
 #define xfs_ichgtime			libxfs_ichgtime
 #define xfs_bmapi			libxfs_bmapi
+#define xfs_bmapi_single		libxfs_bmapi_single
 #define xfs_bmap_finish			libxfs_bmap_finish
 #define xfs_bmap_del_free		libxfs_bmap_del_free
 #define xfs_bunmapi			libxfs_bunmapi

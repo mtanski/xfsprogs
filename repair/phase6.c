@@ -27,6 +27,7 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "dinode.h"
+#include "prefetch.h"
 #include "versions.h"
 
 static struct cred zerocr;
@@ -968,6 +969,7 @@ map_first_dblock_fsbno(xfs_mount_t	*mp,
 	int			i;
 	int			error;
 	char			*ftype;
+	xfs_fsblock_t		fblock2;
 
 	/*
 	 * traverse down left-side of tree until we hit the
@@ -1014,6 +1016,11 @@ _("can't map block %d in %s inode %llu, xfs_bmapi returns %d, nmap = %d\n"),
 
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
 		return(fsbno);
+
+	if (do_prefetch) {
+                fblock2 = NULLFSBLOCK;
+                prefetch_p6_dir1(mp, ino, ip, 0, &fblock2);
+        }
 
 	do {
 		/*
@@ -2695,6 +2702,9 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	/* is this a block, leaf, or node directory? */
 	libxfs_dir2_isblock(NULL, ip, &isblock);
 	libxfs_dir2_isleaf(NULL, ip, &isleaf);
+
+	if (do_prefetch && !isblock)
+		prefetch_p6_dir2(mp, ip);
 
 	/* check directory data */
 	hashtab = dir_hash_init(ip->i_d.di_size);

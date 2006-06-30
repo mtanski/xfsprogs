@@ -25,6 +25,7 @@
 #include "err_protos.h"
 #include "dir.h"
 #include "dinode.h"
+#include "prefetch.h"
 #include "versions.h"
 
 /*
@@ -918,6 +919,9 @@ process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno,
 {
 	int num_inos, bogus;
 	ino_tree_node_t *ino_rec, *first_ino_rec, *prev_ino_rec;
+	ino_tree_node_t *ino_ra;
+
+	ino_ra = do_prefetch ? prefetch_inode_chunks(mp, agno, NULL) : NULL;
 
 	first_ino_rec = ino_rec = findfirst_inode_rec(agno);
 	while (ino_rec != NULL)  {
@@ -941,6 +945,9 @@ process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno,
 		}
 
 		ASSERT(num_inos == XFS_IALLOC_INODES(mp));
+
+		if (do_prefetch && ino_ra && (first_ino_rec->ino_startnum >= ino_ra->ino_startnum))
+			ino_ra = prefetch_inode_chunks(mp, agno, ino_ra);
 
 		if (process_inode_chunk(mp, agno, num_inos, first_ino_rec,
 				ino_discovery, check_dups, extra_attr_check, &bogus))  {

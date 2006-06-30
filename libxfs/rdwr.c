@@ -20,7 +20,6 @@
 #include <xfs/xfs_log.h>
 #include <xfs/xfs_log_priv.h>
 
-#define BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
 #define BDSTRAT_SIZE	(256 * 1024)
 #define min(x, y)	((x) < (y) ? (x) : (y))
 
@@ -52,7 +51,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 	memset(z, 0, zsize);
 
 	fd = libxfs_device_to_fd(dev);
-	start_offset = BBTOOFF64(start);
+	start_offset = LIBXFS_BBTOOFF64(start);
 
 	if ((lseek64(fd, start_offset, SEEK_SET)) < 0) {
 		fprintf(stderr, _("%s: %s seek to offset %llu failed: %s\n"),
@@ -61,7 +60,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 		exit(1);
 	}
 
-	end_offset = BBTOOFF64(start + len) - start_offset;
+	end_offset = LIBXFS_BBTOOFF64(start + len) - start_offset;
 	for (offset = 0; offset < end_offset; ) {
 		bytes = min((ssize_t)(end_offset - offset), zsize);
 		if ((bytes = write(fd, z, bytes)) < 0) {
@@ -262,7 +261,7 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 	if (cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp)) {
 #ifdef IO_DEBUG
 		fprintf(stderr, "%s: allocated buffer, key=%llu(%llu), %p\n",
-			__FUNCTION__, BBTOB(len), BBTOOFF64(blkno), blkno, buf);
+			__FUNCTION__, BBTOB(len), LIBXFS_BBTOOFF64(blkno), blkno, buf);
 #endif
 		bp->b_flags = 0;
 		bp->b_blkno = blkno;
@@ -311,7 +310,7 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *bp, int len, int flags)
 
 	ASSERT(BBTOB(len) <= bp->b_bcount);
 
-	if (pread64(fd, bp->b_addr, bytes, BBTOOFF64(blkno)) < 0) {
+	if (pread64(fd, bp->b_addr, bytes, LIBXFS_BBTOOFF64(blkno)) < 0) {
 		fprintf(stderr, _("%s: read failed: %s\n"),
 			progname, strerror(errno));
 		if (flags & LIBXFS_EXIT_ON_FAILURE)
@@ -320,7 +319,7 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *bp, int len, int flags)
 	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "readbufr read %ubytes, blkno=%llu(%llu), %p\n",
-		bytes, BBTOOFF64(blkno), blkno, bp);
+		bytes, LIBXFS_BBTOOFF64(blkno), blkno, bp);
 #endif
 	if (bp->b_dev == dev &&
 	    bp->b_blkno == blkno &&
@@ -352,7 +351,7 @@ libxfs_writebufr(xfs_buf_t *bp)
 	int	sts;
 	int	fd = libxfs_device_to_fd(bp->b_dev);
 
-	sts = pwrite64(fd, bp->b_addr, bp->b_bcount, BBTOOFF64(bp->b_blkno));
+	sts = pwrite64(fd, bp->b_addr, bp->b_bcount, LIBXFS_BBTOOFF64(bp->b_blkno));
 	if (sts < 0) {
 		fprintf(stderr, _("%s: pwrite64 failed: %s\n"),
 			progname, strerror(errno));
@@ -369,7 +368,7 @@ libxfs_writebufr(xfs_buf_t *bp)
 	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "writebufr wrote %ubytes, blkno=%llu(%llu), %p\n",
-		bp->b_bcount, BBTOOFF64(bp->b_blkno), bp->b_blkno, bp);
+		bp->b_bcount, LIBXFS_BBTOOFF64(bp->b_blkno), bp->b_blkno, bp);
 #endif
 	bp->b_flags |= LIBXFS_B_UPTODATE;
 	bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);

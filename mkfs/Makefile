@@ -11,7 +11,7 @@ FSTYP = fstyp
 HFILES = xfs_mkfs.h
 CFILES = maxtrres.c proto.c xfs_mkfs.c 
 
-LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK)
+LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK) $(LIBRT)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
 LLDFLAGS = -static
 

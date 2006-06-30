@@ -756,6 +756,19 @@ libxfs_destroy(void)
 void
 libxfs_report(FILE *fp)
 {
+	time_t t;
+	char *c;
+
 	cache_report(fp, "libxfs_icache", libxfs_icache);
 	cache_report(fp, "libxfs_bcache", libxfs_bcache);
+
+	t = time(NULL);
+	c = asctime(localtime(&t));
+	fprintf(fp, "%s", c);
+}
+
+char *
+libxfs_findrawpath(char *path)
+{
+	return platform_findrawpath(path);
 }

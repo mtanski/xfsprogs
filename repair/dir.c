@@ -26,6 +26,7 @@
 #include "dinode.h"
 #include "dir.h"
 #include "bmap.h"
+#include "prefetch.h"
 
 #if XFS_DIR_LEAF_MAPSIZE >= XFS_ATTR_LEAF_MAPSIZE
 #define XR_DA_LEAF_MAPSIZE	XFS_DIR_LEAF_MAPSIZE
@@ -779,6 +780,9 @@ traverse_int_dablock(xfs_mount_t	*mp,
 	i = -1;
 	node = NULL;
 	da_cursor->active = 0;
+
+	if (do_prefetch && (whichfork == XFS_DATA_FORK))
+		prefetch_dir1(mp, bno, da_cursor);
 
 	do {
 		/*

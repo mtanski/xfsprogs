@@ -20,6 +20,7 @@
 #include <xfs/libxfs.h>
 #include <mntent.h>
 #include <sys/stat.h>
+#include <aio.h>
 #undef ustat
 #include <sys/ustat.h>
 #include <sys/mount.h>
@@ -159,4 +160,23 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 			progname, path, strerror(errno));
 		*bsz = BBSIZE;
 	}
+}
+
+int
+platform_aio_init(int aio_count)
+{
+	struct aioinit lcl_aio_init;
+
+	memset(&lcl_aio_init, 0, sizeof(lcl_aio_init));
+	lcl_aio_init.aio_threads = aio_count;
+	lcl_aio_init.aio_numusers = aio_count;
+
+	aio_init(&lcl_aio_init);
+	return (1);		/* aio/lio_listio available */
+}
+
+char *
+platform_findrawpath(char *path)
+{
+	return (path);
 }

@@ -147,3 +147,16 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 	*sz = (long long) (size / ssize);
 	*bsz = (int)ssize;
 }
+
+/* ARGSUSED */
+int
+platform_aio_init(int aio_count)
+{
+	return (0);		/* aio/lio_listio not available */
+}
+
+char *
+platform_findrawpath(char *path)
+{
+	return (path);
+}

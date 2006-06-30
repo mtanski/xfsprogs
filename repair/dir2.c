@@ -25,6 +25,7 @@
 #include "dir.h"
 #include "dir2.h"
 #include "bmap.h"
+#include "prefetch.h"
 
 /*
  * Tag bad directory entries with this.
@@ -1995,6 +1996,9 @@ process_leaf_node_dir2(
 	int			nex;
 	int			t;
 	bmap_ext_t		lbmp;
+
+	if (do_prefetch)
+		prefetch_dir2(mp, blkmap);
 
 	*repair = *dot = *dotdot = good = 0;
 	*parent = NULLFSINO;
