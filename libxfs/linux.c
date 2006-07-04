@@ -180,3 +180,9 @@ platform_findrawpath(char *path)
 {
 	return (path);
 }
+
+size_t
+platform_memalignment(void)
+{
+	return getpagesize();
+}

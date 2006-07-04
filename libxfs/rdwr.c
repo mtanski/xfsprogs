@@ -19,6 +19,7 @@
 #include <xfs/libxfs.h>
 #include <xfs/xfs_log.h>
 #include <xfs/xfs_log_priv.h>
+#include "init.h"
 
 #define BDSTRAT_SIZE	(256 * 1024)
 #define min(x, y)	((x) < (y) ? (x) : (y))
@@ -26,11 +27,11 @@
 static inline void *
 libxfs_memalign(size_t size)
 {
-	static size_t	pagealign;
+	static size_t	memalignment;
 
-	if (!pagealign)
-		pagealign = getpagesize();
-	return memalign(pagealign, size);
+	if (!memalignment)
+		memalignment = platform_memalignment();
+	return memalign(memalignment, size);
 }
 
 void

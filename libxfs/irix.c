@@ -84,3 +84,9 @@ platform_findrawpath(char *path)
 {
 	return findrawpath(path);
 }
+
+size_t
+platform_memalignment(void)
+{
+	return sizeof(void *);
+}
