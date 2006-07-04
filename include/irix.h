@@ -117,6 +117,48 @@ typedef struct xfs_fsop_attrmulti_handlereq {
 	struct xfs_attr_multiop		*ops; /* attr_multi data */
 } xfs_fsop_attrmulti_handlereq_t;
 
+/* start doing packed stuctures here */
+#define HAVE_FORMAT32	1
+#pragma pack 1
+typedef struct xfs_inode_log_format_32 {
+	__u16			ilf_type;	/* inode log item type */
+	__u16			ilf_size;	/* size of this item */
+	__u32			ilf_fields;	/* flags for fields logged */
+	__u16			ilf_asize;	/* size of attr d/ext/root */
+	__u16			ilf_dsize;	/* size of data/ext/root */
+	__u64			ilf_ino;	/* inode number */
+	union {
+		__u32		ilfu_rdev;	/* rdev value for dev inode*/
+		uuid_t		ilfu_uuid;	/* mount point value */
+	} ilf_u;
+	__s64			ilf_blkno;	/* blkno of inode buffer */
+	__s32			ilf_len;	/* len of inode buffer */
+	__s32			ilf_boffset;	/* off of inode in buffer */
+} xfs_inode_log_format_32_t;
+
+typedef struct xfs_extent_32 {
+	__u64	ext_start;
+	__u32	ext_len;
+} xfs_extent_32_t;
+
+typedef struct xfs_efi_log_format_32 {
+	__u16			efi_type;	/* efi log item type */
+	__u16			efi_size;	/* size of this item */
+	__u32			efi_nextents;	/* # extents to free */
+	__u64			efi_id;		/* efi identifier */
+	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
+} xfs_efi_log_format_32_t;
+
+typedef struct xfs_efd_log_format_32 {
+	__u16			efd_type;	/* efd log item type */
+	__u16			efd_size;	/* size of this item */
+	__u32			efd_nextents;	/* # of extents freed */
+	__u64			efd_efi_id;	/* id of corresponding efi */
+	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
+} xfs_efd_log_format_32_t;
+
+#pragma pack 0
+/* end of packed stuctures */
 
 #include <sys/endian.h>
 #define __BYTE_ORDER	BYTE_ORDER
@@ -370,5 +412,7 @@ static __inline__ char * strsep(char **s, const char *ct)
 #define XFS_IOC_GETPARENTPATHS		SGI_XFS_GETPARENTPATHS
 
 #define	_AIOCB64_T_DEFINED		1
+
+#define	XFS_XFLAG_NODEFRAG		0x00002000
 
 #endif	/* __XFS_IRIX_H__ */

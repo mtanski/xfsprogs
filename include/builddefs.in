@@ -91,21 +91,23 @@ HAVE_SENDFILE = @have_sendfile@
 HAVE_GETMNTENT = @have_getmntent@
 HAVE_GETMNTINFO = @have_getmntinfo@
 
+GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+
 ifeq ($(PKG_PLATFORM),linux)
-PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
 endif
 ifeq ($(PKG_PLATFORM),darwin)
-PCFLAGS = -traditional-cpp
+PCFLAGS = -traditional-cpp $(GCCFLAGS)
 endif
 ifeq ($(PKG_PLATFORM),irix)
 PLDLIBS = -ldisk -lgen
 endif
 ifeq ($(PKG_PLATFORM),freebsd)
 PLDLIBS = -L/usr/local/lib -lintl
-PCFLAGS = -I/usr/local/include
+PCFLAGS = -I/usr/local/include $(GCCFLAGS)
 endif
 
-GCFLAGS = $(OPTIMIZER) $(DEBUG) -funsigned-char -fno-strict-aliasing -Wall \
+GCFLAGS = $(OPTIMIZER) $(DEBUG) \
 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include
 
