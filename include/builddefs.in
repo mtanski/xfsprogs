@@ -95,16 +95,20 @@ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
 
 ifeq ($(PKG_PLATFORM),linux)
 PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
+DEPENDFLAGS = -D__linux__
 endif
 ifeq ($(PKG_PLATFORM),darwin)
 PCFLAGS = -traditional-cpp $(GCCFLAGS)
+DEPENDFLAGS = -D__APPLE__
 endif
 ifeq ($(PKG_PLATFORM),irix)
 PLDLIBS = -ldisk -lgen
+DEPENDFLAGS = -D__sgi__
 endif
 ifeq ($(PKG_PLATFORM),freebsd)
 PLDLIBS = -L/usr/local/lib -lintl
 PCFLAGS = -I/usr/local/include $(GCCFLAGS)
+DEPENDFLAGS = -D__FreeBSD__
 endif
 
 GCFLAGS = $(OPTIMIZER) $(DEBUG) \
