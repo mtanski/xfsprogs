@@ -200,7 +200,7 @@ cache_shake_hash(
 		pthread_mutex_lock(&node->cn_mutex);
 		if (!(inuse = (node->cn_count > 0))) {
 			hash->ch_count--;
-			list_move(&node->cn_list, &temp);
+			list_move_tail(&node->cn_list, &temp);
 		}
 		pthread_mutex_unlock(&node->cn_mutex);
 		if (inuse && !priority)
