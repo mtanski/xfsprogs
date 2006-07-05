@@ -5,8 +5,10 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
+POTHEAD = $(PKG_NAME).pot
 LINGUAS = pl
-LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
+LSRCFILES = $(LINGUAS:%=%.po) $(POTHEAD)
+LDIRT = $(POTHEAD)
 
 # TODO: db/ logprint/
 XGETTEXTFILES =	\
@@ -98,7 +100,7 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/repair/xfs_repair.c \
 		$(TOPDIR)/rtcp/xfs_rtcp.c
 
-default: $(LINGUAS:%=%.mo)
+default: $(POTHEAD) $(LINGUAS:%=%.mo)
 
 include $(BUILDRULES)
 

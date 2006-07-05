@@ -1,3 +1,10 @@
+xfsprogs-2.8.5 (05 July 2006)
+	- Update translation Makefile to work better with the Ubuntu
+	  translation system.  Thanks to feedback from Martin Pitt.
+	- Fix annoying "ignores datarootdir" warning from configure.
+	- Fix issues with makedepend build infrastructure.
+	- Add prefetch code for improved xfs_repair run times.
+
 xfsprogs-2.8.4 (23 June 2006)
 	- Improve Debian udeb package handling, thanks to Frans Pop.
 	- Fix a situation where xfs_growfs can fail to match a block

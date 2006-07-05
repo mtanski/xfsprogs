@@ -35,15 +35,15 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
 	$(LTCOMPILE) -c $<
 endif
 
-ifdef LINGUAS
+ifdef POTHEAD
 %.pot: $(XGETTEXTFILES)
-	xgettext --omit-header --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
+	$(XGETTEXT) --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
 
-%.po:
-	$(MSGMERGE) -o $@.tmpo $@ $(PKG_NAME).pot
-	@if ! diff $@.tmpo $@ >/dev/null; then \
-		echo "$@ is out of date, see $@.tmpo"; \
-	fi
+# Generate temp .po files, to check whether translations need updating.
+# Not by default, due to gettext output differences between versions.
+%.po: $(POTHEAD)
+#	$(MSGMERGE) -o $@.tmpo $@ $(POTHEAD)
+#	if ! diff $@.tmpo $@ >/dev/null; then echo "$@ dated, see $@.tmpo"; fi
 
 %.mo: %.po
 	$(MSGFMT) -o $@ $<

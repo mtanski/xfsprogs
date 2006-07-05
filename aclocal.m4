@@ -1,7 +1,7 @@
-# generated automatically by aclocal 1.8.3 -*- Autoconf -*-
+# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
 
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
-# Free Software Foundation, Inc.
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+# 2005  Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -331,7 +331,7 @@ AC_DEFUN([AC_SIZEOF_POINTERS_AND_LONG],
 
 #
 # Check for specified utility (env var) - if unset, fail.
-# 
+#
 AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
   [ if test -z "$2"; then
         echo
@@ -345,7 +345,7 @@ AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
 # Generic macro, sets up all of the global build variables.
 # The following environment variables may be set to override defaults:
 #  CC MAKE LIBTOOL TAR ZIP MAKEDEPEND AWK SED ECHO SORT
-#  MSGFMT MSGMERGE RPM
+#  MSGFMT MSGMERGE XGETTEXT RPM
 #
 AC_DEFUN([AC_PACKAGE_UTILITIES],
   [ AC_PROG_CC
@@ -432,6 +432,13 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
         msgmerge=$MSGMERGE
         AC_SUBST(msgmerge)
         AC_PACKAGE_NEED_UTILITY($1, "$msgmerge", msgmerge, gettext)
+
+        if test -z "$XGETTEXT"; then
+                AC_PATH_PROG(XGETTEXT, xgettext,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
+        fi
+        xgettext=$XGETTEXT
+        AC_SUBST(xgettext)
+        AC_PACKAGE_NEED_UTILITY($1, "$xgettext", xgettext, gettext)
     fi
 
     if test -z "$RPM"; then
