@@ -54,6 +54,25 @@ typedef struct dir_hash_tab {
 #define	DIR_HASH_FUNC(t,a)	((a) % (t)->size)
 
 /*
+ * Track names to check for duplicates in a directory.
+ */
+
+typedef struct name_hash_ent {
+	struct name_hash_ent	*next;	/* pointer to next entry */
+	xfs_dahash_t		hashval;/* hash value of name */
+	int	  	    	namelen;/* length of name */
+	uchar_t    	    	*name;	/* pointer to name (no NULL) */
+} name_hash_ent_t;		
+
+typedef struct name_hash_tab {
+	int			size;	/* size of hash table */
+	name_hash_ent_t		*tab[1];/* actual hash table, variable size */
+} name_hash_tab_t;
+#define	NAME_HASH_TAB_SIZE(n)	\
+	(offsetof(name_hash_tab_t, tab) + (sizeof(name_hash_ent_t *) * (n)))
+#define	NAME_HASH_FUNC(t,a)	((a) % (t)->size)
+
+/*
  * Track the contents of the freespace table in a directory.
  */
 typedef struct freetab {
@@ -224,6 +243,81 @@ dir_hash_see_all(
 			return rval;
 	}
 	return j == stale ? DIR_HASH_CK_OK : DIR_HASH_CK_BADSTALE;
+}
+
+/*
+ * Returns 0 if the name already exists (ie. a duplicate)
+ */
+static int
+name_hash_add(
+	name_hash_tab_t		*nametab,
+	uchar_t			*name,
+	int			namelen)
+{
+	xfs_dahash_t		hash;
+	int			i;
+	name_hash_ent_t		*p;
+
+	hash = libxfs_da_hashname(name, namelen);
+			
+	i = NAME_HASH_FUNC(nametab, hash);
+	
+	/* 
+	 * search hash bucket for existing name.
+	 */
+	for (p = nametab->tab[i]; p; p = p->next) {
+		if (p->hashval == hash && p->namelen == namelen) {
+			if (memcmp(p->name, name, namelen) == 0) 
+				return 0; /* exists */
+		}
+	}
+	
+	if ((p = malloc(sizeof(*p))) == NULL)
+		do_error(_("malloc failed in name_hash_add (%u bytes)\n"),
+			sizeof(*p));
+	
+	p->next = nametab->tab[i];
+	p->hashval = hash;
+	p->name = name;
+	p->namelen = namelen;
+	nametab->tab[i] = p;
+	
+	return 1;	/* success, no duplicate */
+}
+
+static name_hash_tab_t *
+name_hash_init(
+	xfs_fsize_t	size)
+{
+	name_hash_tab_t	*nametab;
+	int		hsize;
+
+	hsize = size / (16 * 4);
+	if (hsize > 1024)
+		hsize = 1024;
+	else if (hsize < 16)
+		hsize = 16;
+	if ((nametab = calloc(NAME_HASH_TAB_SIZE(hsize), 1)) == NULL)
+		do_error(_("calloc failed in name_hash_init\n"));
+	nametab->size = hsize;
+	return nametab;
+}
+
+static void
+name_hash_done(
+	name_hash_tab_t	*nametab)
+{
+	int		i;
+	name_hash_ent_t	*n;
+	name_hash_ent_t	*p;
+
+	for (i = 0; i < nametab->size; i++) {
+		for (p = nametab->tab[i]; p; p = n) {
+			n = p->next;
+			free(p);
+		}
+	}
+	free(nametab);
 }
 
 
@@ -1290,7 +1384,8 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 			int			*need_dot,
 			dir_stack_t		*stack,
 			ino_tree_node_t		*current_irec,
-			int			current_ino_offset)
+			int			current_ino_offset,
+			name_hash_tab_t		*nametab)
 {
 	xfs_dir_leaf_entry_t	*entry;
 	ino_tree_node_t		*irec;
@@ -1448,6 +1543,27 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		}
 
 		/*
+		 * check for duplicate names in directory.
+		 */ 
+		if (!name_hash_add(nametab, namest->name, entry->namelen)) {
+			do_warn(
+		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
+				fname, lino, ino);
+			nbad++;
+			if (!no_modify) {
+				if (verbose)
+					do_warn(
+					_(", marking entry to be junked\n"));
+				else
+					do_warn("\n");
+				namest->name[0] = '/';
+				*dirty = 1;
+			} else {
+				do_warn(_(", would junk entry\n"));
+			}
+			continue;
+		}
+		/*
 		 * check easy case first, regular inode, just bump
 		 * the link count and continue
 		 */
@@ -1518,7 +1634,8 @@ longform_dir_entry_check(xfs_mount_t	*mp,
 			int		*need_dot,
 			dir_stack_t	*stack,
 			ino_tree_node_t	*irec,
-			int		ino_offset)
+			int		ino_offset,
+			name_hash_tab_t	*nametab)
 {
 	xfs_dir_leafblock_t	*leaf;
 	xfs_buf_t		*bp;
@@ -1584,7 +1701,7 @@ _("bad magic # (0x%x) for dir ino %llu leaf block (bno %u fsbno %llu)\n"),
 		if (!skipit)
 			lf_block_dir_entry_check(mp, ino, leaf, &dirty,
 						num_illegal, need_dot, stack,
-						irec, ino_offset);
+						irec, ino_offset, nametab);
 
 		ASSERT(dirty == 0 || (dirty && !no_modify));
 
@@ -1690,6 +1807,7 @@ longform_dir2_entry_check_data(
 	xfs_dabuf_t		**bpp,
 	dir_hash_tab_t		*hashtab,
 	freetab_t		**freetabp,
+	name_hash_tab_t		*nametab,
 	xfs_dablk_t		da_bno,
 	int			isblock)
 {
@@ -2007,6 +2125,28 @@ longform_dir2_entry_check_data(
 				dep->name[0] = '/';
 				libxfs_dir2_data_log_entry(tp, bp, dep);
 			} else  {
+				do_warn(_(", would junk entry\n"));
+			}
+			continue;
+		}
+		/*
+		 * check for duplicate names in directory.
+		 */ 
+		if (!name_hash_add(nametab, dep->name, dep->namelen)) {
+			do_warn(
+		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
+				fname, INT_GET(dep->inumber, ARCH_CONVERT),
+				ip->i_ino);
+			nbad++;
+			if (!no_modify) {
+				if (verbose)
+					do_warn(
+					_(", marking entry to be junked\n"));
+				else
+					do_warn("\n");
+				dep->name[0] = '/';
+				libxfs_dir2_data_log_entry(tp, bp, dep);
+			} else {
 				do_warn(_(", would junk entry\n"));
 			}
 			continue;
@@ -2669,7 +2809,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 			int		*need_dot,
 			dir_stack_t	*stack,
 			ino_tree_node_t	*irec,
-			int		ino_offset)
+			int		ino_offset,
+			name_hash_tab_t	*nametab)
 {
 	xfs_dir2_block_t	*block;
 	xfs_dir2_leaf_entry_t	*blp;
@@ -2725,8 +2866,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		if (da_bno == 0 && bp == NULL)
 			continue;
 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
-			stack, irec, ino_offset, &bp, hashtab, &freetab, da_bno,
-			isblock);
+			stack, irec, ino_offset, &bp, hashtab, &freetab, 
+			nametab, da_bno, isblock);
 		/* it releases the buffer unless isblock is set */
 	}
 	fixit = (*num_illegal != 0) || dir2_is_badino(ino);
@@ -2764,7 +2905,8 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 			int		*ino_dirty,
 			dir_stack_t	*stack,
 			ino_tree_node_t	*current_irec,
-			int		current_ino_offset)
+			int		current_ino_offset,
+			name_hash_tab_t	*nametab)
 {
 	xfs_ino_t		lino;
 	xfs_ino_t		parent;
@@ -2923,6 +3065,24 @@ _("entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"),
 			} else  {
 				do_warn(_("would junk entry \"%s\"\n"),
 					fname);
+			}
+		} else if (!name_hash_add(nametab, sf_entry->name, 
+					sf_entry->namelen)) {
+			/*
+			 * check for duplicate names in directory.
+			 */ 
+			do_warn(
+		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
+				fname, lino, ino);
+			if (!no_modify) {
+				junkit = 1;
+				if (verbose)
+					do_warn(
+					_(", marking entry to be junked\n"));
+				else
+					do_warn("\n");
+			} else {
+				do_warn(_(", would junk entry\n"));
 			}
 		} else if (!inode_isadir(irec, ino_offset))  {
 			/*
@@ -3150,7 +3310,8 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			int		*ino_dirty,
 			dir_stack_t	*stack,
 			ino_tree_node_t	*current_irec,
-			int		current_ino_offset)
+			int		current_ino_offset,
+			name_hash_tab_t	*nametab)
 {
 	xfs_ino_t		lino;
 	xfs_ino_t		parent;
@@ -3323,6 +3484,23 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				do_warn(_("would junk entry \"%s\"\n"),
 					fname);
 			}
+		} else if (!name_hash_add(nametab, sfep->name, sfep->namelen)) {
+			/*
+			 * check for duplicate names in directory.
+			 */ 
+			do_warn(
+		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
+				fname, lino, ino);
+			if (!no_modify) {
+				junkit = 1;
+				if (verbose)
+					do_warn(
+					_(", marking entry to be junked\n"));
+				else
+					do_warn("\n");
+			} else {
+				do_warn(_(", would junk entry\n"));
+			}
 		} else if (!inode_isadir(irec, ino_offset))  {
 			/*
 			 * check easy case first, regular inode, just bump
@@ -3472,6 +3650,7 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 	xfs_trans_t		*tp;
 	xfs_dahash_t		hashval;
 	ino_tree_node_t		*irec;
+	name_hash_tab_t		*nametab;
 	int			ino_offset, need_dot, committed;
 	int			dirty, num_illegal, error, nres;
 
@@ -3552,6 +3731,8 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 
 		add_inode_refchecked(ino, irec, ino_offset);
 
+		nametab = name_hash_init(ip->i_d.di_size);
+
 		/*
 		 * look for bogus entries
 		 */
@@ -3568,12 +3749,14 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 				longform_dir2_entry_check(mp, ino, ip,
 							&num_illegal, &need_dot,
 							stack, irec,
-							ino_offset);
+							ino_offset,
+							nametab);
 			else
 				longform_dir_entry_check(mp, ino, ip,
 							&num_illegal, &need_dot,
 							stack, irec,
-							ino_offset);
+							ino_offset,
+							nametab);
 			break;
 		case XFS_DINODE_FMT_LOCAL:
 			tp = libxfs_trans_alloc(mp, 0);
@@ -3597,11 +3780,13 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 			if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
 				shortform_dir2_entry_check(mp, ino, ip, &dirty,
 							stack, irec,
-							ino_offset);
+							ino_offset,
+							nametab);
 			else
 				shortform_dir_entry_check(mp, ino, ip, &dirty,
 							stack, irec,
-							ino_offset);
+							ino_offset,
+							nametab);
 
 			ASSERT(dirty == 0 || (dirty && !no_modify));
 			if (dirty)  {
@@ -3616,6 +3801,7 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 		default:
 			break;
 		}
+		name_hash_done(nametab);
 
 		hashval = 0;
 
