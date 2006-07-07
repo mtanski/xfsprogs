@@ -1,3 +1,6 @@
+xfsprogs-2.8.6 (07 July 2006)
+	- Fixed xfs_repair handling of duplicate names in a directory.
+
 xfsprogs-2.8.5 (05 July 2006)
 	- Update translation Makefile to work better with the Ubuntu
 	  translation system.  Thanks to feedback from Martin Pitt.
