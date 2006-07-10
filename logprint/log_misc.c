@@ -1530,7 +1530,7 @@ xfs_inode_item_format_convert(char *src_buf, uint len, xfs_inode_log_format_t *i
 		in_f->ilf_dsize = in_f32->ilf_dsize;
 		in_f->ilf_ino = in_f32->ilf_ino;
 		/* copy biggest */
-		memcpy(in_f->ilf_u.ilfu_uuid, in_f32->ilf_u.ilfu_uuid, sizeof(uuid_t));
+		memcpy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid, sizeof(uuid_t));
 		in_f->ilf_blkno = in_f32->ilf_blkno;
 		in_f->ilf_len = in_f32->ilf_len;
 		in_f->ilf_boffset = in_f32->ilf_boffset;
@@ -1546,7 +1546,7 @@ xfs_inode_item_format_convert(char *src_buf, uint len, xfs_inode_log_format_t *i
 		in_f->ilf_dsize = in_f64->ilf_dsize;
 		in_f->ilf_ino = in_f64->ilf_ino;
 		/* copy biggest */
-		memcpy(in_f->ilf_u.ilfu_uuid, in_f64->ilf_u.ilfu_uuid, sizeof(uuid_t));
+		memcpy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid, sizeof(uuid_t));
 		in_f->ilf_blkno = in_f64->ilf_blkno;
 		in_f->ilf_len = in_f64->ilf_len;
 		in_f->ilf_boffset = in_f64->ilf_boffset;

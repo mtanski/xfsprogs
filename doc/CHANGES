@@ -1,3 +1,7 @@
+xfsprogs-2.8.7 (10 July 2006)
+	- Fix build of xfs_logprint for different uuid_t definitions;
+          thanks to Craig Rodrigues.
+
 xfsprogs-2.8.6 (07 July 2006)
 	- Fixed xfs_repair handling of duplicate names in a directory.
 
