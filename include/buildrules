@@ -58,20 +58,29 @@ $(_FORCE):
 
 .PHONY : depend
 
-depend : $(CFILES) $(HFILES)
-	$(SUBDIRS_MAKERULE)
-	touch .dep
-	$(MAKEDEPEND) $(DEPENDFLAGS) -f - -- $(CFLAGS) -- $(CFILES) | \
-	$(SED) -e 's,`pwd`,$(TOPDIR),g' \
+DEPENDSCRIPT := $(MAKEDEPEND) $(DEPENDFLAGS) -f - -- $(CFLAGS) -- $(CFILES) | \
+	$(SED) \
+	    -e 's,`pwd`,$(TOPDIR),g' \
 	    -e 's,  */[^ ]*,,g' \
 	    -e '/^[^ ]*: *$$/d' \
-	    -e '/^#.*/d' -e '/^ *$$/d' \
-	> .dep
+	    -e '/^ *$$/d'
+
+ifdef LTLIBRARY
+DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
+endif
+
+depend : $(CFILES) $(HFILES)
+	$(SUBDIRS_MAKERULE)
+	$(DEPENDSCRIPT) > .dep
 	test -s .dep || rm -f .dep
 
 # Include dep, but only if it exists
 ifeq ($(shell test -f .dep && echo .dep), .dep)
 include .dep
 else
+ifdef LTLIBRARY
+$(LTOBJECTS): $(HFILES)
+else
 $(OBJECTS): $(HFILES)
+endif
 endif
