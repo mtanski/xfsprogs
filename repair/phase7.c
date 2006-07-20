@@ -25,6 +25,7 @@
 #include "err_protos.h"
 #include "dinode.h"
 #include "versions.h"
+#include "prefetch.h"
 
 /* dinoc is a pointer to the IN-CORE dinode core */
 void
@@ -58,6 +59,132 @@ _("nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"),
 }
 
 void
+phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
+{
+	register ino_tree_node_t *irec;
+	int			j;
+	int			dirty;
+	xfs_ino_t		ino;
+	__uint32_t		nrefs;
+	xfs_agblock_t		agbno;
+	xfs_dinode_t		*dip;
+	ino_tree_node_t 	*ino_ra;
+	xfs_buf_t		*bp;
+
+	if (verbose)
+		do_log(_("        - agno = %d\n"), agno);
+
+	ino_ra = prefetch_inode_chunks(mp, agno, NULL);
+
+	/*
+	 * read on-disk inodes in chunks. then,
+	 * look at each on-disk inode 1 at a time.
+	 * if the number of links is bad, reset it.
+	 */
+
+	irec = findfirst_inode_rec(agno);
+
+	while (irec != NULL)  {
+
+		if (ino_ra && (irec->ino_startnum >= ino_ra->ino_startnum))
+			ino_ra = prefetch_inode_chunks(mp, agno, ino_ra);
+
+		agbno = XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum);
+		bp = libxfs_readbuf(mp->m_dev,
+				XFS_AGB_TO_DADDR(mp, agno, agbno),
+				XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)), 0);
+		if (bp == NULL) {
+			if (!no_modify) {
+				do_error(
+	_("cannot read inode %llu, disk block %lld, cnt %d\n"),
+				XFS_AGINO_TO_INO(mp, agno, irec->ino_startnum),
+				XFS_AGB_TO_DADDR(mp, agno, agbno),
+				(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)));
+				/* NOT REACHED */
+			}
+			do_warn(
+	_("cannot read inode %llu, disk block %lld, cnt %d\n"),
+				XFS_AGINO_TO_INO(mp, agno, irec->ino_startnum),
+				XFS_AGB_TO_DADDR(mp, agno, agbno),
+				(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)));
+
+			irec = next_ino_rec(irec);
+			continue;	/* while */
+		}
+		dirty = 0;
+		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
+			assert(is_inode_confirmed(irec, j));
+
+			if (is_inode_free(irec, j))
+				continue;
+
+			assert(no_modify || is_inode_reached(irec, j));
+			assert(no_modify ||
+					is_inode_referenced(irec, j));
+
+			nrefs = num_inode_references(irec, j);
+
+			ino = XFS_AGINO_TO_INO(mp, agno,
+				irec->ino_startnum + j);
+
+			dip = (xfs_dinode_t *)(XFS_BUF_PTR(bp) +
+					(j << mp->m_sb.sb_inodelog));
+
+			/* Swap the fields we care about to native format */
+			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, ARCH_CONVERT);
+			dip->di_core.di_nlink = INT_GET(dip->di_core.di_nlink, ARCH_CONVERT);
+
+			if (dip->di_core.di_magic != XFS_DINODE_MAGIC) {
+				if (!no_modify) {
+					do_error(
+	_("ino: %llu, bad d_inode magic saw: (0x%x) expecting (0x%x)\n"),
+				ino, dip->di_core.di_magic, XFS_DINODE_MAGIC);
+					/* NOT REACHED */
+				}
+				do_warn(
+	_("ino: %llu, bad d_inode magic saw: (0x%x) expecting (0x%x)\n"),
+				ino, dip->di_core.di_magic, XFS_DINODE_MAGIC);
+				continue;
+			}
+			/*
+			 * compare and set links for all inodes
+			 * but the lost+found inode.  we keep
+			 * that correct as we go.
+			 */
+			if (dip->di_core.di_nlink != nrefs) {
+				if (ino != orphanage_ino) {
+					set_nlinks(&dip->di_core, ino,
+							nrefs, &dirty);
+				}
+			}
+
+			/* Swap the fields back */
+			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, ARCH_CONVERT);
+			dip->di_core.di_nlink = INT_GET(dip->di_core.di_nlink, ARCH_CONVERT);
+		}
+
+		if (dirty)
+			libxfs_writebuf(bp, 0);
+		else
+			libxfs_putbuf(bp);
+
+		irec = next_ino_rec(irec);
+	}
+}
+
+void
+phase7_alt(xfs_mount_t *mp)
+{
+	int		i;
+
+	libxfs_bcache_purge();
+
+	for (i = 0; i < glob_agcount; i++)  {
+		phase7_alt_function(mp, i);
+	}
+}
+
+void
 phase7(xfs_mount_t *mp)
 {
 	ino_tree_node_t		*irec;
@@ -74,6 +201,12 @@ phase7(xfs_mount_t *mp)
 		do_log(_("Phase 7 - verify and correct link counts...\n"));
 	else
 		do_log(_("Phase 7 - verify link counts...\n"));
+
+
+	if (do_prefetch) {
+		phase7_alt(mp);
+		return;
+	}
 
 	tp = libxfs_trans_alloc(mp, XFS_TRANS_REMOVE);
 
