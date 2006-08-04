@@ -383,10 +383,13 @@ fstype(const char *device) {
 
     if (!type) {
 	    /* perhaps the user tries to mount the swap space
-	       on a new disk; warn her before she does mke2fs on it */
+	       on a new disk; warn her before she does mkfs on it */
 	    int pagesize = getpagesize();
 	    int rd;
-	    char buf[32768];
+	    char buf[128 * 1024];	/* 64k is current max pagesize */
+
+	    if (pagesize > sizeof(buf))
+		    abort();
 
 	    rd = pagesize;
 	    if (rd < 8192)

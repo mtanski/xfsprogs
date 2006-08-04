@@ -1,3 +1,7 @@
+[cvs]
+	- Fix buffer sizing issue for large pagesize systems,
+	  affecting mkfs auto-device-type-detection heuristics.
+
 xfsprogs-2.8.9 (18 July 2006)
 	- Fix rpm issue with install targets as uid/gid zero (we now
 	  using symbolic names rather than the numeric versions).
