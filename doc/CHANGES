@@ -1,3 +1,7 @@
+xfsprogs-2.8.9 (18 July 2006)
+	- Fix rpm issue with install targets as uid/gid zero (we now
+	  using symbolic names rather than the numeric versions).
+
 xfsprogs-2.8.8 (14 July 2006)
 	- Fix issues with makedepend on libtool libraries.
 
