@@ -980,19 +980,16 @@ main(
 					_("Must specify log device\n"));
 						usage();
 					}
-
 					if (laflag)
 						conflict('l', lopts, L_AGNUM, L_DEV);
 
 					if (liflag)
 						conflict('l', lopts, L_INTERNAL, L_DEV);
-					
 					ldflag = 1;
 					loginternal = 0;
 					logfile = value;
 					xi.logname = value;
 					break;
-#ifdef HAVE_VOLUME_MANAGER
 				case L_FILE:
 					if (!value)
 						value = "1";
@@ -1005,21 +1002,18 @@ main(
 					if (xi.lisfile)
 						xi.lcreat = 1;
 					break;
-#endif
 				case L_INTERNAL:
 					if (!value)
 						value = "1";
 
-					if (ldflag) 
+					if (ldflag)
 						conflict('l', lopts, L_INTERNAL, L_DEV);
-#ifdef HAVE_VOLUME_MANAGER
 					if (xi.logname)
 						conflict('l', lopts, L_NAME,
 							 L_INTERNAL);
 					if (xi.lisfile)
 						conflict('l', lopts, L_FILE,
 							 L_INTERNAL);
-#endif
 					if (liflag)
 						respec('l', lopts, L_INTERNAL);
 					loginternal = atoi(value);
@@ -1047,7 +1041,6 @@ main(
 					}
 					lsunit = cvtnum(0, 0, value);
 					break;
-#ifdef HAVE_VOLUME_MANAGER
 				case L_NAME:
 					if (!value)
 						reqval('l', lopts, L_NAME);
@@ -1058,7 +1051,6 @@ main(
 						respec('l', lopts, L_NAME);
 					xi.logname = value;
 					break;
-#endif
 				case L_VERSION:
 					if (!value)
 						reqval('l', lopts, L_VERSION);
@@ -1199,7 +1191,6 @@ main(
 						reqval('r', ropts, R_DEV);
 					xi.rtname = value;
 					break;
-#ifdef HAVE_VOLUME_MANAGER
 				case R_FILE:
 					if (!value)
 						value = "1";
@@ -1216,7 +1207,6 @@ main(
 						respec('r', ropts, R_NAME);
 					xi.rtname = value;
 					break;
-#endif
 				case R_SIZE:
 					if (!value)
 						reqval('r', ropts, R_SIZE);
@@ -1406,13 +1396,11 @@ main(
 		inodelog = XFS_DINODE_DFL_LOG;
 		isize = 1 << inodelog;
 	}
-#ifdef HAVE_VOLUME_MANAGER
 	if (xi.lisfile && (!logsize || !xi.logname)) {
 		fprintf(stderr,
 		_("if -l file then -l name and -l size are required\n"));
 		usage();
 	}
-#endif
 	if (logsize) {
 		__uint64_t logbytes;
 
@@ -1430,13 +1418,11 @@ main(
 				(long long)logbytes, blocksize,
 				(long long)(logblocks << blocklog));
 	}
-#ifdef HAVE_VOLUME_MANAGER
 	if (xi.risfile && (!rtsize || !xi.rtname)) {
 		fprintf(stderr,
 		_("if -r file then -r name and -r size are required\n"));
 		usage();
 	}
-#endif
 	if (rtsize) {
 		__uint64_t rtbytes;
 
