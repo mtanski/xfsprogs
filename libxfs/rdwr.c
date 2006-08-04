@@ -416,6 +416,15 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
 }
 
 static void
+libxfs_bflush(struct cache_node *node)
+{
+	xfs_buf_t		*bp = (xfs_buf_t *)node;
+
+	if ((bp != NULL) && (bp->b_flags & LIBXFS_B_DIRTY))
+		libxfs_writebufr(bp);
+}
+
+static void
 libxfs_brelse(struct cache_node *node)
 {
 	xfs_buf_t		*bp = (xfs_buf_t *)node;
@@ -442,9 +451,16 @@ libxfs_bcache_purge(void)
 	cache_purge(libxfs_bcache);
 }
 
+void 
+libxfs_bcache_flush(void)
+{
+	cache_flush(libxfs_bcache);
+}
+
 struct cache_operations libxfs_bcache_operations = {
 	/* .hash */	libxfs_bhash,
 	/* .alloc */	libxfs_balloc,
+	/* .flush */	libxfs_bflush,
 	/* .relse */	libxfs_brelse,
 	/* .compare */	libxfs_bcompare,
 	/* .bulkrelse */ NULL	/* TODO: lio_listio64 interface? */
@@ -649,6 +665,7 @@ libxfs_icache_purge(void)
 struct cache_operations libxfs_icache_operations = {
 	/* .hash */	libxfs_ihash,
 	/* .alloc */	libxfs_ialloc,
+	/* .flush */	NULL,
 	/* .relse */	libxfs_irelse,
 	/* .compare */	libxfs_icompare,
 	/* .bulkrelse */ NULL

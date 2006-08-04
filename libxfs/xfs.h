@@ -97,7 +97,9 @@
 #define xfs_bmapi			libxfs_bmapi
 #define xfs_bmapi_single		libxfs_bmapi_single
 #define xfs_bmap_finish			libxfs_bmap_finish
+#define xfs_bmap_cancel			libxfs_bmap_cancel
 #define xfs_bmap_del_free		libxfs_bmap_del_free
+#define xfs_bmap_last_offset		libxfs_bmap_last_offset
 #define xfs_bunmapi			libxfs_bunmapi
 #define xfs_free_extent			libxfs_free_extent
 #define xfs_rtfree_extent		libxfs_rtfree_extent

@@ -30,6 +30,7 @@ struct cache_node;
 typedef void *cache_key_t;
 typedef void (*cache_walk_t)(struct cache_node *);
 typedef struct cache_node * (*cache_node_alloc_t)(void);
+typedef void (*cache_node_flush_t)(struct cache_node *);
 typedef void (*cache_node_relse_t)(struct cache_node *);
 typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int);
 typedef int (*cache_node_compare_t)(struct cache_node *, cache_key_t);
@@ -38,6 +39,7 @@ typedef unsigned int (*cache_bulk_relse_t)(struct cache *, struct list_head *);
 struct cache_operations {
 	cache_node_hash_t	hash;
 	cache_node_alloc_t	alloc;
+	cache_node_flush_t	flush;
 	cache_node_relse_t	relse;
 	cache_node_compare_t	compare;
 	cache_bulk_relse_t	bulkrelse;	/* optional */
@@ -49,6 +51,7 @@ struct cache {
 	pthread_mutex_t		c_mutex;	/* node count mutex */
 	cache_node_hash_t	hash;		/* node hash function */
 	cache_node_alloc_t	alloc;		/* allocation function */
+	cache_node_flush_t	flush;		/* flush dirty data function */
 	cache_node_relse_t	relse;		/* memory free function */
 	cache_node_compare_t	compare;	/* comparison routine */
 	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
@@ -75,6 +78,7 @@ struct cache *cache_init(unsigned int, struct cache_operations *);
 void cache_destroy(struct cache *);
 void cache_walk(struct cache *, cache_walk_t);
 void cache_purge(struct cache *);
+void cache_flush(struct cache *);
 
 int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
 void cache_node_put(struct cache_node *);

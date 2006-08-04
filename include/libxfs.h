@@ -257,6 +257,7 @@ extern int	libxfs_writebuf_int (xfs_buf_t *, int);
 extern struct cache	*libxfs_bcache;
 extern struct cache_operations	libxfs_bcache_operations;
 extern void	libxfs_bcache_purge (void);
+extern void	libxfs_bcache_flush (void);
 extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 extern void	libxfs_purgebuf (xfs_buf_t *);
@@ -465,7 +466,10 @@ extern int	libxfs_bmapi_single(xfs_trans_t *, xfs_inode_t *, int,
 				xfs_fsblock_t *, xfs_fileoff_t);
 extern int	libxfs_bmap_finish (xfs_trans_t **, xfs_bmap_free_t *,
 				xfs_fsblock_t, int *);
+extern void	libxfs_bmap_cancel(xfs_bmap_free_t *);
 extern int	libxfs_bmap_next_offset (xfs_trans_t *, xfs_inode_t *,
+				xfs_fileoff_t *, int);
+extern int	libxfs_bmap_last_offset(xfs_trans_t *, xfs_inode_t *, 
 				xfs_fileoff_t *, int);
 extern int	libxfs_bunmapi (xfs_trans_t *, xfs_inode_t *, xfs_fileoff_t,
 				xfs_filblks_t, int, xfs_extnum_t,

@@ -60,6 +60,7 @@ cache_init(
 	cache->c_hashsize = hashsize;
 	cache->hash = cache_operations->hash;
 	cache->alloc = cache_operations->alloc;
+	cache->flush = cache_operations->flush;
 	cache->relse = cache_operations->relse;
 	cache->compare = cache_operations->compare;
 	cache->bulkrelse = cache_operations->bulkrelse ?
@@ -422,6 +423,39 @@ cache_purge(
 		cache_abort();
 	}
 #endif
+	/* flush any remaining nodes to disk */
+	cache_flush(cache);
+}
+
+/*
+ * Flush all nodes in the cache to disk. 
+ */
+void
+cache_flush(
+	struct cache *		cache)
+{
+	struct cache_hash *	hash;
+	struct list_head *	head;
+	struct list_head *	pos;
+	struct cache_node *	node;
+	int			i;
+	
+	if (!cache->flush)
+		return;
+	
+	for (i = 0; i < cache->c_hashsize; i++) {
+		hash = &cache->c_hash[i];
+		
+		pthread_mutex_lock(&hash->ch_mutex);
+		head = &hash->ch_list;
+		for (pos = head->next; pos != head; pos = pos->next) {
+			node = (struct cache_node *)pos;
+			pthread_mutex_lock(&node->cn_mutex);
+			cache->flush(node);
+			pthread_mutex_unlock(&node->cn_mutex);
+		}
+		pthread_mutex_unlock(&hash->ch_mutex);
+	}
 }
 
 #define	HASH_REPORT	(3*HASH_CACHE_RATIO)
