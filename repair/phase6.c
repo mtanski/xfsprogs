@@ -1592,7 +1592,7 @@ _("entry \"%s\" in dir %llu points to an already connected dir inode %llu,\n"),
 			add_inode_reached(irec, ino_offset);
 			add_inode_ref(current_irec, current_ino_offset);
 
-			if (!is_inode_refchecked(lino, irec, ino_offset))
+			if (!do_prefetch && !is_inode_refchecked(lino, irec, ino_offset))
 				push_dir(stack, lino);
 		} else  {
 			junkit = 1;
@@ -2302,7 +2302,7 @@ _("entry \"%s\" in dir %llu points to an already connected directory inode %llu,
 		} else if (parent == ip->i_ino)  {
 			add_inode_reached(irec, ino_offset);
 			add_inode_ref(current_irec, current_ino_offset);
-			if (!is_inode_refchecked(inum, irec, ino_offset))
+			if (!do_prefetch && !is_inode_refchecked(inum, irec, ino_offset))
 				push_dir(stack, inum);
 		} else  {
 			junkit = 1;
@@ -2860,7 +2860,7 @@ _("entry \"%s\" in dir %llu references already connected dir ino %llu,\n"),
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
 
-				if (!is_inode_refchecked(lino, irec,
+				if (!do_prefetch && !is_inode_refchecked(lino, irec,
 						ino_offset))
 					push_dir(stack, lino);
 			} else  {
@@ -3275,7 +3275,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
 
-				if (!is_inode_refchecked(lino, irec,
+				if (!do_prefetch && !is_inode_refchecked(lino, irec,
 						ino_offset))
 					push_dir(stack, lino);
 			} else  {
@@ -3815,6 +3815,46 @@ mark_standalone_inodes(xfs_mount_t *mp)
 	}
 }
 
+static void
+traverse_function(xfs_mount_t *mp, xfs_agnumber_t agno)
+{
+	register ino_tree_node_t *irec;
+	int			j;
+	xfs_ino_t		ino;
+	dir_stack_t		stack;
+
+	if (verbose)
+		do_log(_("        - agno = %d\n"), agno);
+
+	dir_stack_init(&stack);
+	irec = findfirst_inode_rec(agno);
+
+	while (irec != NULL)  {
+		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
+			if (!inode_isadir(irec, j))
+				continue;
+
+			ino = XFS_AGINO_TO_INO(mp, agno,
+				irec->ino_startnum + j);
+
+			push_dir(&stack, ino);
+			process_dirstack(mp, &stack);
+		}
+		irec = next_ino_rec(irec);
+	}
+	return;
+}
+
+static void
+traverse_alt(xfs_mount_t *mp)
+{
+	int			i;
+
+	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+		traverse_function(mp, i);
+	}
+}
+
 void
 phase6(xfs_mount_t *mp)
 {
@@ -3908,8 +3948,12 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 	if (!need_root_inode)  {
 		do_log(_("        - traversing filesystem starting at / ... \n"));
 
-		push_dir(&stack, mp->m_sb.sb_rootino);
-		process_dirstack(mp, &stack);
+		if (do_prefetch) {
+			traverse_alt(mp);
+		} else {
+			push_dir(&stack, mp->m_sb.sb_rootino);
+			process_dirstack(mp, &stack);
+		}
 
 		do_log(_("        - traversal finished ... \n"));
 	} else  {
