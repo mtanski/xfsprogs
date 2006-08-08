@@ -1,3 +1,10 @@
+xfsprogs-2.8.11 (08 August 2006)
+	- xfs_repair prefetch optimisations.
+	- Make many tools use direct I/O on Linux if the underlying
+	  device supports it.  Mainly for speeding up xfs_repair as
+	  libxfs does its own internal metadata buffering now.
+	- Fix warnings from mkfs.xfs on ramdisk devices.
+
 xfsprogs-2.8.10 (02 August 2006)
 	- Fix v2 directory rebuilds in phase6 of xfs_repair.
 	- Fix buffer sizing issue for large pagesize systems,
