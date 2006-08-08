@@ -968,28 +968,10 @@ main(
 				case L_AGNUM:
 					if (laflag)
 						respec('l', lopts, L_AGNUM);
-
-					if (ldflag) 
+					if (ldflag)
 						conflict('l', lopts, L_AGNUM, L_DEV);
-
 					logagno = atoi(value);
 					laflag = 1;
-					break;
-				case L_DEV:
-					if (!value) {
-						fprintf(stderr,
-					_("Must specify log device\n"));
-						usage();
-					}
-					if (laflag)
-						conflict('l', lopts, L_AGNUM, L_DEV);
-
-					if (liflag)
-						conflict('l', lopts, L_INTERNAL, L_DEV);
-					ldflag = 1;
-					loginternal = 0;
-					logfile = value;
-					xi.logname = value;
 					break;
 				case L_FILE:
 					if (!value)
@@ -1006,12 +988,8 @@ main(
 				case L_INTERNAL:
 					if (!value)
 						value = "1";
-
 					if (ldflag)
 						conflict('l', lopts, L_INTERNAL, L_DEV);
-					if (xi.logname)
-						conflict('l', lopts, L_NAME,
-							 L_INTERNAL);
 					if (xi.lisfile)
 						conflict('l', lopts, L_FILE,
 							 L_INTERNAL);
@@ -1043,13 +1021,18 @@ main(
 					lsunit = cvtnum(0, 0, value);
 					break;
 				case L_NAME:
+				case L_DEV:
+					if (laflag)
+						conflict('l', lopts, L_AGNUM, L_DEV);
+					if (liflag)
+						conflict('l', lopts, L_INTERNAL, L_DEV);
 					if (!value)
 						reqval('l', lopts, L_NAME);
-					if (loginternal)
-						conflict('l', lopts, L_INTERNAL,
-							 L_NAME);
 					if (xi.logname)
 						respec('l', lopts, L_NAME);
+					ldflag = 1;
+					loginternal = 0;
+					logfile = value;
 					xi.logname = value;
 					break;
 				case L_VERSION:
@@ -1187,11 +1170,6 @@ main(
 						respec('r', ropts, R_EXTSIZE);
 					rtextsize = value;
 					break;
-				case R_DEV:
-					if (!value)
-						reqval('r', ropts, R_DEV);
-					xi.rtname = value;
-					break;
 				case R_FILE:
 					if (!value)
 						value = "1";
@@ -1202,6 +1180,7 @@ main(
 						xi.rcreat = 1;
 					break;
 				case R_NAME:
+				case R_DEV:
 					if (!value)
 						reqval('r', ropts, R_NAME);
 					if (xi.rtname)
