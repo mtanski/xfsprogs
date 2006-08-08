@@ -636,6 +636,7 @@ main(
 	bzero(&xi, sizeof(xi));
 	xi.notvolok = 1;
 	xi.setblksize = 1;
+	xi.isdirect = LIBXFS_DIRECT;
 	xi.isreadonly = LIBXFS_EXCLUSIVELY;
 
 	while ((c = getopt(argc, argv, "b:d:i:l:L:n:Np:qr:s:CfV")) != EOF) {

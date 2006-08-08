@@ -20,9 +20,6 @@
 #include <sys/stat.h>
 #include "init.h"
 
-#define findrawpath(x)	x
-#define findblockpath(x) x
-
 char *progname = "libxfs";	/* default, changed by each tool */
 
 struct cache *libxfs_icache;	/* global inode cache */
@@ -92,16 +89,22 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
 {
 	dev_t		dev;
 	int		fd, d, flags;
-	int		readonly, excl;
+	int		readonly, dio, excl;
 	struct stat64	statb;
 
 	readonly = (xflags & LIBXFS_ISREADONLY);
 	excl = (xflags & LIBXFS_EXCLUSIVELY) && !creat;
+	dio = (xflags & LIBXFS_DIRECT) && !creat && platform_direct_blockdev();
 
+retry:
 	flags = (readonly ? O_RDONLY : O_RDWR) | \
 		(creat ? (O_CREAT|O_TRUNC) : 0) | \
+		(dio ? O_DIRECT : 0) | \
 		(excl ? O_EXCL : 0);
+
 	if ((fd = open(path, flags, 0666)) < 0) {
+		if (errno == EINVAL && --dio == 0)
+			goto retry;
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
@@ -181,13 +184,13 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
 		perror(path);
 		return 0;
 	}
-	if (!(*rawfile = findrawpath(path))) {
+	if (!(*rawfile = platform_findrawpath(path))) {
 		fprintf(stderr, _("%s: "
 				  "can't find a character device matching %s\n"),
 			progname, path);
 		return 0;
 	}
-	if (!(*blockfile = findblockpath(path))) {
+	if (!(*blockfile = platform_findblockpath(path))) {
 		fprintf(stderr, _("%s: "
 				  "can't find a block device matching %s\n"),
 			progname, path);
@@ -235,7 +238,7 @@ libxfs_init(libxfs_init_t *a)
 	(void)getcwd(curdir,MAXPATHLEN);
 	needcd = 0;
 	fd = -1;
-	flags = a->isreadonly;
+	flags = (a->isreadonly | a->isdirect);
 
 	if (a->volname) {
 		if(!check_open(a->volname,flags,&rawfile,&blockfile))
@@ -753,6 +756,12 @@ libxfs_destroy(void)
 	cache_destroy(libxfs_bcache);
 }
 
+int
+libxfs_device_alignment(void)
+{
+	return platform_align_blockdev();
+}
+
 void
 libxfs_report(FILE *fp)
 {
@@ -765,10 +774,4 @@ libxfs_report(FILE *fp)
 	t = time(NULL);
 	c = asctime(localtime(&t));
 	fprintf(fp, "%s", c);
-}
-
-char *
-libxfs_findrawpath(char *path)
-{
-	return platform_findrawpath(path);
 }

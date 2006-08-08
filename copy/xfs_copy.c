@@ -652,6 +652,7 @@ main(int argc, char **argv)
 
 	memset(&xargs, 0, sizeof(xargs));
 	xargs.notvolmsg = "oh no %s";
+	xargs.isdirect = LIBXFS_DIRECT;
 	xargs.isreadonly = LIBXFS_ISREADONLY;
 	xargs.notvolok = 1;
 

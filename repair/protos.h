@@ -17,7 +17,6 @@
  */
 
 void	xfs_init(libxfs_init_t *args);
-void	io_init(void);
 
 int	verify_sb(xfs_sb_t		*sb,
 		int			is_primary_sb);

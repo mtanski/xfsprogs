@@ -130,6 +130,7 @@ xfs_init(libxfs_init_t *args)
 	args->notvolok = 1;
 	args->setblksize = !dangerously;
 
+	args->isdirect = LIBXFS_DIRECT;
 	if (no_modify)
 		args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
 	else if (dangerously)

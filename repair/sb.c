@@ -17,6 +17,7 @@
  */
 
 #include <libxfs.h>
+#include <libxlog.h>
 #include "agheader.h"
 #include "globals.h"
 #include "protos.h"
@@ -98,7 +99,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 
 	do_warn(_("\nattempting to find secondary superblock...\n"));
 
-	sb = (xfs_sb_t *) memalign(MEM_ALIGN, BSIZE);
+	sb = (xfs_sb_t *)memalign(libxfs_device_alignment(), BSIZE);
 	if (!sb) {
 		do_error(
 	_("error finding secondary superblock -- failed to memalign buffer\n"));
@@ -117,11 +118,11 @@ find_secondary_sb(xfs_sb_t *rsb)
 		/*
 		 * read disk 1 MByte at a time.
 		 */
-		if (lseek64(fs_fd, off, SEEK_SET) != off)  {
+		if (lseek64(x.dfd, off, SEEK_SET) != off)  {
 			done = 1;
 		}
 
-		if (!done && (bsize = read(fs_fd, sb, BSIZE)) == 0)  {
+		if (!done && (bsize = read(x.dfd, sb, BSIZE)) == 0)  {
 			done = 1;
 		}
 
@@ -451,19 +452,20 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 	if (no_modify)
 		return;
 
-	if ((buf = calloc(size, 1)) == NULL) {
-		do_error(_("failed to malloc superblock buffer\n"));
+	if ((buf = memalign(libxfs_device_alignment(), size)) == NULL) {
+		do_error(_("failed to memalign superblock buffer\n"));
 		return;
 	}
+	memset(buf, 0, size);
 
-	if (lseek64(fs_fd, 0LL, SEEK_SET) != 0LL) {
+	if (lseek64(x.dfd, 0LL, SEEK_SET) != 0LL) {
 		free(buf);
 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
 	}
 
 	libxfs_xlate_sb(buf, sbp, -1, XFS_SB_ALL_BITS);
 
-	if (write(fs_fd, buf, size) != size) {
+	if (write(x.dfd, buf, size) != size) {
 		free(buf);
 		do_error(_("primary superblock write failed!\n"));
 	}
@@ -480,27 +482,28 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 	int error, rval;
 	void *buf;
 
-	if ((buf = calloc(size, 1)) == NULL) {
+	if ((buf = memalign(libxfs_device_alignment(), size)) == NULL) {
 		do_error(
-	_("error reading superblock %u -- failed to malloc buffer\n"),
+	_("error reading superblock %u -- failed to memalign buffer\n"),
 			agno, off);
 		exit(1);
 	}
+	memset(buf, 0, size);
 
 	/* try and read it first */
 
-	if (lseek64(fs_fd, off, SEEK_SET) != off)  {
+	if (lseek64(x.dfd, off, SEEK_SET) != off)  {
 		do_warn(
 	_("error reading superblock %u -- seek to offset %lld failed\n"),
 			agno, off);
 		return(XR_EOF);
 	}
 
-	if ((rval = read(fs_fd, buf, size)) != size)  {
+	if ((rval = read(x.dfd, buf, size)) != size)  {
 		error = errno;
 		do_warn(
 	_("superblock read failed, offset %lld, size %d, ag %u, rval %d\n"),
-			off, size, rval, agno);
+			off, size, agno, rval);
 		do_error("%s\n", strerror(error));
 	}
 	libxfs_xlate_sb(buf, sbp, 1, XFS_SB_ALL_BITS);

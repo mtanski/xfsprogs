@@ -24,16 +24,6 @@
 #define BDSTRAT_SIZE	(256 * 1024)
 #define min(x, y)	((x) < (y) ? (x) : (y))
 
-static inline void *
-libxfs_memalign(size_t size)
-{
-	static size_t	memalignment;
-
-	if (!memalignment)
-		memalignment = platform_memalignment();
-	return memalign(memalignment, size);
-}
-
 void
 libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 {
@@ -43,7 +33,7 @@ libxfs_device_zero(dev_t dev, xfs_daddr_t start, uint len)
 	int		fd;
 
 	zsize = min(BDSTRAT_SIZE, BBTOB(len));
-	if ((z = libxfs_memalign(zsize)) == NULL) {
+	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
 		fprintf(stderr,
 			_("%s: %s can't memalign %d bytes: %s\n"),
 			progname, __FUNCTION__, (int)zsize, strerror(errno));
@@ -268,7 +258,8 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 		bp->b_blkno = blkno;
 		bp->b_bcount = bytes;
 		bp->b_dev = device;
-		if (!(bp->b_addr = libxfs_memalign(bytes))) {
+		bp->b_addr = memalign(libxfs_device_alignment(), bytes);
+		if (!bp->b_addr) {
 			fprintf(stderr,
 				_("%s: %s can't memalign %d bytes: %s\n"),
 				progname, __FUNCTION__, (int)bytes,

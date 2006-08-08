@@ -35,7 +35,7 @@ alloc_ag_buf(int size)
 {
 	char	*bp;
 
-	bp = (char *)memalign(MEM_ALIGN, size);
+	bp = (char *)memalign(libxfs_device_alignment(), size);
 	if (!bp)
 		do_error(_("could not allocate ag header buffer (%d bytes)\n"),
 			size);
@@ -54,8 +54,6 @@ phase1(xfs_mount_t *mp)
 	xfs_sb_t		*sb;
 	char			*ag_bp;
 	int			rval;
-
-	io_init();
 
 	do_log(_("Phase 1 - find and verify superblock...\n"));
 

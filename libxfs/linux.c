@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 
 extern char *progname;
+static int max_block_alignment;
 
 #ifndef BLKGETSIZE64
 # define BLKGETSIZE64	_IOR(0x12,114,size_t)
@@ -134,6 +135,8 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 	if ((st.st_mode & S_IFMT) == S_IFREG) {
 		*sz = (long long)(st.st_size >> 9);
 		*bsz = BBSIZE;
+		if (BBSIZE > max_block_alignment)
+			max_block_alignment = BBSIZE;
 		return;
 	}
 
@@ -160,6 +163,8 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 			progname, path, strerror(errno));
 		*bsz = BBSIZE;
 	}
+	if (*bsz > max_block_alignment)
+		max_block_alignment = *bsz;
 }
 
 int
@@ -178,7 +183,27 @@ platform_aio_init(int aio_count)
 char *
 platform_findrawpath(char *path)
 {
-	return (path);
+	return path;
+}
+
+char *
+platform_findblockpath(char *path)
+{
+	return path;
+}
+
+int
+platform_direct_blockdev(void)
+{
+	return 1;
+}
+
+int
+platform_align_blockdev(void)
+{
+	if (!max_block_alignment)
+		abort();
+	return max_block_alignment;
 }
 
 size_t

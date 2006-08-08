@@ -85,8 +85,20 @@ platform_findrawpath(char *path)
 	return findrawpath(path);
 }
 
-size_t
-platform_memalignment(void)
+char *
+platform_findblockpath(char *path)
 {
-	return sizeof(void *);
+	return findblockpath(path);
+}
+
+int
+platform_direct_blockdev(void)
+{
+	return 0;
+}
+
+int
+platform_align_blockdev(void)
+{
+	return (sizeof(void *));
 }

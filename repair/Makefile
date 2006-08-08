@@ -13,7 +13,7 @@ HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
 
 CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
 	dinode.c dir.c dir2.c dir_stack.c globals.c incore.c \
-	incore_bmc.c init.c incore_ext.c incore_ino.c io.c phase1.c \
+	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c rt.c sb.c \
 	prefetch.c scan.c versions.c xfs_repair.c
 

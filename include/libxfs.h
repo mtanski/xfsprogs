@@ -68,6 +68,7 @@ typedef struct {
 	char            *logname;       /* pathname of log "subvolume" */
 	char            *rtname;        /* pathname of realtime "subvolume" */
 	int             isreadonly;     /* filesystem is only read in applic */
+	int             isdirect;       /* we can attempt to use direct I/O */
 	int             disfile;        /* data "subvolume" is a regular file */        int             dcreat;         /* try to create data subvolume */
 	int             lisfile;        /* log "subvolume" is a regular file */
 	int             lcreat;         /* try to create log subvolume */
@@ -98,6 +99,7 @@ typedef struct {
 #define LIBXFS_ISINACTIVE	0x0004	/* allow mounted only if mounted ro */
 #define LIBXFS_DANGEROUSLY	0x0008	/* repairing a device mounted ro    */
 #define LIBXFS_EXCLUSIVELY	0x0010	/* disallow other accesses (O_EXCL) */
+#define LIBXFS_DIRECT		0x0020	/* can use direct I/O, not buffered */
 
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
@@ -106,8 +108,8 @@ extern int	libxfs_device_to_fd (dev_t);
 extern dev_t	libxfs_device_open (char *, int, int, int);
 extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
+extern int	libxfs_device_alignment (void);
 extern void	libxfs_report(FILE *);
-extern char	*libxfs_findrawpath(char *);
 
 /* check or write log footer: specify device, log size in blocks & uuid */
 typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);

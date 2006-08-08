@@ -152,17 +152,29 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 int
 platform_aio_init(int aio_count)
 {
-	return (0);		/* aio/lio_listio not available */
+	return 0;		/* aio/lio_listio not available */
 }
 
 char *
 platform_findrawpath(char *path)
 {
-	return (path);
+	return path;
 }
 
-size_t
-platform_memalignment(void)
+char *
+platform_findblockpath(char *path)
 {
-	return sizeof(void *);
+	return path;
+}
+
+int
+platform_direct_blockdev(void)
+{
+	return 0;
+}
+
+int
+platform_align_blockdev(void)
+{
+	return (sizeof(void *));
 }

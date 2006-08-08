@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,10 @@ extern void platform_findsizes (char *path, int fd, long long *sz, int *bsz);
 extern void platform_set_blocksize (int fd, char *path, int blocksize);
 extern void platform_flush_device (int fd, dev_t device);
 extern char *platform_findrawpath(char *path);
-extern int platform_aio_init(int aio_count);
-extern size_t platform_memalignment(void);
+extern char *platform_findrawpath (char *path);
+extern char *platform_findblockpath (char *path);
+extern int platform_direct_blockdev (void);
+extern int platform_align_blockdev (void);
+extern int platform_aio_init (int aio_count);
+
 #endif	/* LIBXFS_INIT_H */

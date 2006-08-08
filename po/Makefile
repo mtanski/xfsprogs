@@ -85,7 +85,6 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/repair/incore_ext.c \
 		$(TOPDIR)/repair/incore_ino.c \
 		$(TOPDIR)/repair/init.c \
-		$(TOPDIR)/repair/io.c \
 		$(TOPDIR)/repair/phase1.c \
 		$(TOPDIR)/repair/phase2.c \
 		$(TOPDIR)/repair/phase3.c \

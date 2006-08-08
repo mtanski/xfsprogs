@@ -273,11 +273,6 @@ process_args(int argc, char **argv)
 
 	if ((fs_name = argv[optind]) == NULL)
 		usage();
-
-	if (!isa_file) {
-		if ((fs_name = libxfs_findrawpath(fs_name)) == NULL)
-			do_error("couldn't find raw device for %s\n", fs_name);
-	}
 }
 
 void

@@ -59,8 +59,6 @@
 #define	NUM_SBS			8	/* max # of sbs to verify */
 #define NUM_AGH_SECTS		4	/* # of components in an ag header */
 
-#define	MEM_ALIGN		128	/* I/O buf alignment - a cache line */
-
 /*
  * secondary sb mask -- if the secondary sb feature bits has a
  * the partial sb mask bit set, then you depend on the fields
