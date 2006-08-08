@@ -108,7 +108,7 @@ libxfs_log_clear(
 	int			sunit,
 	int			fmt)
 {
-	xfs_buf_t		*buf;
+	xfs_buf_t		*bp;
 	int			len;
 
 	if (!device || !fs_uuid)
@@ -120,11 +120,11 @@ libxfs_log_clear(
 	/* then write a log record header */
 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 2;
 	len = MAX(len, 2);
-	buf = libxfs_getbuf(device, start, len);
-	libxfs_log_header(XFS_BUF_PTR(buf),
-			  fs_uuid, version, sunit, fmt, next, buf);
-	libxfs_writebufr(buf);
-	libxfs_putbuf(buf);
+	bp = libxfs_getbufr(device, start, len);
+	libxfs_log_header(XFS_BUF_PTR(bp),
+			  fs_uuid, version, sunit, fmt, next, bp);
+	bp->b_flags |= LIBXFS_B_DIRTY;
+	libxfs_putbufr(bp);
 	return 0;
 }
 
@@ -238,6 +238,60 @@ libxfs_bprint(xfs_buf_t *bp)
 		bp->b_flags, bp->b_node.cn_count);
 }
 
+static void
+libxfs_brelse(struct cache_node *node)
+{
+	xfs_buf_t		*bp = (xfs_buf_t *)node;
+	xfs_buf_log_item_t	*bip;
+	extern xfs_zone_t	*xfs_buf_item_zone;
+
+	if (bp != NULL) {
+		if (bp->b_flags & LIBXFS_B_DIRTY)
+			libxfs_writebufr(bp);
+		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+		if (bip)
+		    libxfs_zone_free(xfs_buf_item_zone, bip);
+		free(bp->b_addr);
+		bp->b_addr = NULL;
+		bp->b_flags = 0;
+		free(bp);
+		bp = NULL;
+	}
+}
+
+static void
+libxfs_initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
+{
+	bp->b_flags = 0;
+	bp->b_blkno = bno;
+	bp->b_bcount = bytes;
+	bp->b_dev = device;
+	bp->b_addr = memalign(libxfs_device_alignment(), bytes);
+	if (!bp->b_addr) {
+		fprintf(stderr,
+			_("%s: %s can't memalign %u bytes: %s\n"),
+			progname, __FUNCTION__, bytes,
+			strerror(errno));
+		exit(1);
+	}
+}
+
+xfs_buf_t *
+libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int len)
+{
+	xfs_buf_t	*bp;
+
+	bp = libxfs_zone_zalloc(xfs_buf_zone);
+	libxfs_initbuf(bp, device, blkno, BBTOB(len));
+	return bp;
+}
+
+void
+libxfs_putbufr(xfs_buf_t *bp)
+{
+	libxfs_brelse((struct cache_node *)bp);
+}
+
 xfs_buf_t *
 libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 {
@@ -254,18 +308,7 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 		fprintf(stderr, "%s: allocated buffer, key=%llu(%llu), %p\n",
 			__FUNCTION__, BBTOB(len), LIBXFS_BBTOOFF64(blkno), blkno, buf);
 #endif
-		bp->b_flags = 0;
-		bp->b_blkno = blkno;
-		bp->b_bcount = bytes;
-		bp->b_dev = device;
-		bp->b_addr = memalign(libxfs_device_alignment(), bytes);
-		if (!bp->b_addr) {
-			fprintf(stderr,
-				_("%s: %s can't memalign %d bytes: %s\n"),
-				progname, __FUNCTION__, (int)bytes,
-				strerror(errno));
-			exit(1);
-		}
+		libxfs_initbuf(bp, device, blkno, bytes);
 	}
 	return bp;
 }
@@ -413,27 +456,6 @@ libxfs_bflush(struct cache_node *node)
 
 	if ((bp != NULL) && (bp->b_flags & LIBXFS_B_DIRTY))
 		libxfs_writebufr(bp);
-}
-
-static void
-libxfs_brelse(struct cache_node *node)
-{
-	xfs_buf_t		*bp = (xfs_buf_t *)node;
-	xfs_buf_log_item_t	*bip;
-	extern xfs_zone_t	*xfs_buf_item_zone;
-
-	if (bp != NULL) {
-		if (bp->b_flags & LIBXFS_B_DIRTY)
-			libxfs_writebufr(bp);
-		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-		if (bip)
-		    libxfs_zone_free(xfs_buf_item_zone, bip);
-		free(bp->b_addr);
-		bp->b_addr = NULL;
-		bp->b_flags = 0;
-		free(bp);
-		bp = NULL;
-	}
 }
 
 void

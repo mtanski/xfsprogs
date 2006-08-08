@@ -262,6 +262,10 @@ extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 extern void	libxfs_purgebuf (xfs_buf_t *);
 
+/* Buffer (Raw) Interfaces */
+extern xfs_buf_t	*libxfs_getbufr (dev_t, xfs_daddr_t, int);
+extern void	libxfs_putbufr (xfs_buf_t *);
+
 extern int libxfs_bhash_size;
 extern int libxfs_ihash_size;
 
