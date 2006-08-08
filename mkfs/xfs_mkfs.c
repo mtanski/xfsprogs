@@ -634,7 +634,6 @@ main(
 	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
-	xi.notvolok = 1;
 	xi.setblksize = 1;
 	xi.isdirect = LIBXFS_DIRECT;
 	xi.isreadonly = LIBXFS_EXCLUSIVELY;

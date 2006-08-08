@@ -99,7 +99,6 @@ init(
 		x.volname = fsdevice;
 	else
 		x.dname = fsdevice;
-	x.notvolok = 1;
 
 	if (!libxfs_init(&x)) {
 		fputs(_("\nfatal error -- couldn't initialize XFS library\n"),

@@ -245,80 +245,9 @@ libxfs_init(libxfs_init_t *a)
 			goto done;
 		needcd = 1;
 		fd = open(rawfile, O_RDONLY);
-#ifdef HAVE_VOLUME_MANAGER
-		xlv_getdev_t getdev;
-		if (ioctl(fd, DIOCGETVOLDEV, &getdev) < 0)
-#else
-		if (1)
-#endif
-		{
-			if (a->notvolok) {
-				dname = a->dname = a->volname;
-				a->volname = NULL;
-				goto voldone;
-			}
-			fprintf(stderr, _("%s: "
-				"%s is not a volume device name\n"),
-				progname, a->volname);
-			if (a->notvolmsg)
-				fprintf(stderr, a->notvolmsg, a->volname);
-			goto done;
-		}
-#ifdef HAVE_VOLUME_MANAGER
-		if (getdev.data_subvol_dev && dname) {
-			fprintf(stderr, _("%s: "
-				"%s has a data subvolume, cannot specify %s\n"),
-				progname, a->volname, dname);
-			goto done;
-		}
-		if (getdev.log_subvol_dev && logname) {
-			fprintf(stderr, _("%s: "
-				"%s has a log subvolume, cannot specify %s\n"),
-				progname, a->volname, logname);
-			goto done;
-		}
-		if (getdev.rt_subvol_dev && rtname) {
-			fprintf(stderr, _("%s: %s has a realtime subvolume, "
-				"cannot specify %s\n"),
-				progname, a->volname, rtname);
-			goto done;
-		}
-		if (!dname && getdev.data_subvol_dev) {
-			strcpy(dpath, "/tmp/libxfsdXXXXXX");
-			(void)mktemp(dpath);
-			if (mknod(dpath, S_IFCHR | 0600,
-				  getdev.data_subvol_dev) < 0) {
-				fprintf(stderr, _("%s: mknod failed: %s\n"),
-					progname, strerror(errno));
-				goto done;
-			}
-			dname = dpath;
-		}
-		if (!logname && getdev.log_subvol_dev) {
-			strcpy(logpath, "/tmp/libxfslXXXXXX");
-			(void)mktemp(logpath);
-			if (mknod(logpath, S_IFCHR | 0600,
-				  getdev.log_subvol_dev) < 0) {
-				fprintf(stderr, _("%s: mknod failed: %s\n"),
-					progname, strerror(errno));
-				goto done;
-			}
-			logname = logpath;
-		}
-		if (!rtname && getdev.rt_subvol_dev) {
-			strcpy(rtpath, "/tmp/libxfsrXXXXXX");
-			(void)mktemp(rtpath);
-			if (mknod(rtpath, S_IFCHR | 0600,
-				  getdev.rt_subvol_dev) < 0) {
-				fprintf(stderr, _("%s: mknod failed: %s\n"),
-					progname, strerror(errno));
-				goto done;
-			}
-			rtname = rtpath;
-		}
-#endif
+		dname = a->dname = a->volname;
+		a->volname = NULL;
 	}
-voldone:
 	if (dname) {
 		if (dname[0] != '/' && needcd)
 			chdir(curdir);

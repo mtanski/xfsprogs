@@ -204,10 +204,7 @@ main(int argc, char **argv)
 	if (x.dname == NULL)
 		usage();
 
-	x.notvolok = 1;
 	x.isreadonly = LIBXFS_ISINACTIVE;
-	x.notvolmsg = "You should never see this message.\n";
-
 	printf("xfs_logprint:\n");
 	if (!libxfs_init(&x))
 		exit(1);

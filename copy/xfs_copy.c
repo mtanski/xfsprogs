@@ -651,10 +651,8 @@ main(int argc, char **argv)
 	/* prepare the libxfs_init structure */
 
 	memset(&xargs, 0, sizeof(xargs));
-	xargs.notvolmsg = "oh no %s";
 	xargs.isdirect = LIBXFS_DIRECT;
 	xargs.isreadonly = LIBXFS_ISREADONLY;
-	xargs.notvolok = 1;
 
 	if (source_is_file)  {
 		xargs.dname = source_name;

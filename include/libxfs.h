@@ -73,8 +73,6 @@ typedef struct {
 	int             lisfile;        /* log "subvolume" is a regular file */
 	int             lcreat;         /* try to create log subvolume */
 	int             risfile;        /* realtime "subvolume" is a reg file */        int             rcreat;         /* try to create realtime subvolume */
-	char            *notvolmsg;     /* format string for not XLV message */
-	int             notvolok;       /* set if not XLV => try data */
 	int		setblksize;	/* attempt to set device blksize */
 				/* output results */
 	dev_t           ddev;           /* device for data subvolume */

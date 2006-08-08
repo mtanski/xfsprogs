@@ -254,7 +254,6 @@ main(int argc, char **argv)
 	xi.dname = datadev;
 	xi.logname = logdev;
 	xi.rtname = rtdev;
-	xi.notvolok = 1;
 	xi.isreadonly = LIBXFS_ISREADONLY;
 
 	if (!libxfs_init(&xi))
