@@ -137,6 +137,7 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 	new->ex_blockcount = new_blockcount;
 	new->ex_state = new_state;
 	new->next = NULL;
+	new->last = NULL;
 
 	return(new);
 }
@@ -313,6 +314,25 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 		/*
 		 * avl tree code doesn't handle dups so insert
 		 * onto linked list in increasing startblock order
+		 *
+		 * when called from mk_incore_fstree, 
+		 * startblock is in increasing order.
+		 * current is an "anchor" node.
+		 * quick check if the new ext goes to the end.
+		 * if so, append at the end, using the last field 
+		 * of the "anchor".
+		 */
+		ASSERT(current->last != NULL);
+		if (startblock > current->last->ex_startblock) {
+			current->last->next = ext;
+			current->last = ext;
+			return;
+		}
+
+		/* 
+		 * scan, to find the proper location for new entry.
+		 * this scan is *very* expensive and gets worse with
+		 * with increasing entries.
 		 */
 		top = prev = current;
 		while (current != NULL &&
@@ -324,6 +344,8 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 		if (top == current)  {
 			ASSERT(top == prev);
 			/*
+			 * new entry should be ahead of current.
+			 * to keep the avl tree intact,
 			 * swap the values of to-be-inserted element
 			 * and the values of the head of the list.
 			 * then insert as the 2nd element on the list.
@@ -356,6 +378,8 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	if (avl_insert(extent_bcnt_ptrs[agno], (avlnode_t *) ext) == NULL)  {
 		do_error(_(":  duplicate bno extent range\n"));
 	}
+
+	ext->last = ext;	/* ext is an "anchor" node */
 
 	return;
 }

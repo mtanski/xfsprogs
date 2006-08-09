@@ -137,6 +137,7 @@ typedef struct extent_tree_node  {
 	extent_state_t		ex_state;	/* see state flags below */
 
 	struct extent_tree_node		*next;	/* for bcnt extent lists */
+	struct extent_tree_node		*last;	/* for bcnt extent list anchors */
 #if 0
 	xfs_ino_t		ex_inode;	/* owner, NULL if free or  */
 						/*	multiply allocated */
