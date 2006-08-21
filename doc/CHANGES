@@ -4,6 +4,7 @@ xfsprogs-2.8.11 (08 August 2006)
 	  device supports it.  Mainly for speeding up xfs_repair as
 	  libxfs does its own internal metadata buffering now.
 	- Fix warnings from mkfs.xfs on ramdisk devices.
+	- Fix issues with symbolic link handling in Makefiles.
 
 xfsprogs-2.8.10 (02 August 2006)
 	- Fix v2 directory rebuilds in phase6 of xfs_repair.
