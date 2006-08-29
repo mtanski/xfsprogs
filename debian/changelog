@@ -1,6 +1,13 @@
+xfsprogs (2.8.12-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 29 Aug 2006 14:28:05 +1000
+
 xfsprogs (2.8.11-1) unstable; urgency=low
 
   * New upstream release.
+  * More efficient use of buffer cache memory (closes: #382935)
 
  -- Nathan Scott <nathans@debian.org>  Tue, 08 Aug 2006 17:06:58 +1000
 
