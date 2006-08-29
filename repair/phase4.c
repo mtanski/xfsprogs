@@ -28,6 +28,7 @@
 #include "bmap.h"
 #include "versions.h"
 #include "dir2.h"
+#include "threads.h"
 
 
 /* ARGSUSED */
@@ -1119,6 +1120,18 @@ quota_sb_check(xfs_mount_t *mp)
 
 
 void
+parallel_p4_process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
+{
+	do_log(_("        - agno = %d\n"), agno);
+	process_aginodes(mp, agno, 0, 1, 0);
+
+	/*
+	 * now recycle the per-AG duplicate extent records
+	 */
+	release_dup_extent_tree(agno);
+}
+
+void
 phase4(xfs_mount_t *mp)
 {
 	ino_tree_node_t		*irec;
@@ -1325,14 +1338,9 @@ phase4(xfs_mount_t *mp)
 		 * and attribute processing is turned OFF since we did that
 		 * already in phase 3.
 		 */
-		do_log(_("        - agno = %d\n"), i);
-		process_aginodes(mp, i, 0, 1, 0);
-
-		/*
-		 * now recycle the per-AG duplicate extent records
-		 */
-		release_dup_extent_tree(i);
+		queue_work(parallel_p4_process_aginodes, mp, i);
 	}
+	wait_for_workers();
 
 	/*
 	 * free up memory used to track trealtime duplicate extents

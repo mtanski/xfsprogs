@@ -26,6 +26,7 @@
 #include "incore.h"
 #include "err_protos.h"
 #include "prefetch.h"
+#include "threads.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
@@ -63,8 +64,12 @@ char *o_opts[] = {
 	"pfdir",
 #define	PREFETCH_AIO_CNT	6
 	"pfaio",
+#define	THREAD_CNT		7
+	"thread",
 	NULL
 };
+
+static void print_runtime(unsigned);
 
 static void
 usage(void)
@@ -187,7 +192,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdP")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdPM")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -228,6 +233,9 @@ process_args(int argc, char **argv)
 				case PREFETCH_AIO_CNT:
 					libxfs_lio_aio_count = (int) strtol(val, 0, 0);
 					break;
+				case THREAD_CNT:
+					thread_count = (int) strtol(val, 0, 0);
+					break;
 				default:
 					unknown('o', val);
 					break;
@@ -255,13 +263,16 @@ process_args(int argc, char **argv)
 			dangerously = 1;
 			break;
 		case 'v':
-			verbose = 1;
+			verbose++;
 			break;
 		case 'V':
 			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case 'P':
 			do_prefetch ^= 1;
+			break;
+		case 'M':
+			do_parallel ^= 1;
 			break;
 		case '?':
 			usage();
@@ -458,7 +469,9 @@ main(int argc, char **argv)
 	xfs_sb_t	*sb;
 	xfs_buf_t	*sbp;
 	xfs_mount_t	xfs_m;
+	time_t		t, start;
 
+	start = time(NULL);
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
@@ -472,6 +485,10 @@ main(int argc, char **argv)
 
 	/* do phase1 to make sure we have a superblock */
 	phase1(temp_mp);
+	if (verbose) {
+		t = time(NULL);
+	        fprintf(stderr, asctime(localtime(&t)));
+	}
 
 	if (no_modify && primary_sb_modified)  {
 		do_warn(_("Primary superblock would have been modified.\n"
@@ -522,18 +539,23 @@ main(int argc, char **argv)
 	}
 
 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
-
 	phase2(mp);
+	if (verbose) {
+		t = time(NULL);
+	        fprintf(stderr, asctime(localtime(&t)));
+	}
 
-	if (verbose)
-		libxfs_report(stderr);
 	phase3(mp);
-	if (verbose)
-		libxfs_report(stderr);
+	if (verbose) {
+		t = time(NULL);
+	        fprintf(stderr, asctime(localtime(&t)));
+	}
 
 	phase4(mp);
-	if (verbose)
-		libxfs_report(stderr);
+	if (verbose) {
+		t = time(NULL);
+	        fprintf(stderr, asctime(localtime(&t)));
+	}
 
 	/* XXX: nathans - something in phase4 ain't playing by */
 	/* the buffer cache rules.. why doesn't IRIX hit this? */
@@ -541,15 +563,26 @@ main(int argc, char **argv)
 
 	if (no_modify)
 		printf(_("No modify flag set, skipping phase 5\n"));
-	else
+	else {
 		phase5(mp);
+		if (verbose) {
+			t = time(NULL);
+			fprintf(stderr, asctime(localtime(&t)));
+		}
+	}
 
 	if (!bad_ino_btree)  {
 		phase6(mp);
-		if (verbose)
-			libxfs_report(stderr);
+		if (verbose) {
+			t = time(NULL);
+			fprintf(stderr, asctime(localtime(&t)));
+		}
 
 		phase7(mp);
+		if (verbose) {
+			t = time(NULL);
+			fprintf(stderr, asctime(localtime(&t)));
+		}
 	} else  {
 		do_warn(
 _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
@@ -609,12 +642,14 @@ _("Warning:  project quota information would be cleared.\n"
 		}
 	}
 
-	if (verbose)
+	if (verbose > 1)
 		libxfs_report(stderr);
 
 	if (no_modify)  {
 		do_log(
 	_("No modify flag set, skipping filesystem flush and exiting.\n"));
+		if (verbose)
+			print_runtime(t - start);
 		if (fs_is_dirty)
 			return(1);
 
@@ -661,6 +696,33 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 	libxfs_device_close(x.ddev);
 
 	do_log(_("done\n"));
+	if (verbose) {
+		print_runtime(t - start);
+	}
+	return (0);
+}
 
-	return(0);
+static void
+print_runtime(unsigned s)
+{
+	unsigned h, m;
+
+	h = s / 3600;
+	s %= 3600;
+	m = s / 60;
+	s %= 60;
+	if (h) {
+		fprintf(stderr, "Run time %d hour%s %d minute%s %d second%s\n",
+			h, h > 1 ? "s" : "",
+			m, m != 1 ? "s" : "",
+			s, s != 1 ? "s" : "");
+	} else if (m) {
+		fprintf(stderr, "Run time %d minute%s %d second%s\n",
+			m, m > 1 ? "s" : "",
+			s, s != 1 ? "s" : "");
+	}
+	else {
+		fprintf(stderr, "Run time %d second%s\n",
+			s, s != 1 ? "s" : "");
+	}
 }

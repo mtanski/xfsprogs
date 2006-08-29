@@ -19,6 +19,7 @@
 #include <libxfs.h>
 #include "dir_stack.h"
 #include "err_protos.h"
+#include "threads.h"
 
 /*
  * a directory stack for holding directories while
@@ -29,6 +30,9 @@
 
 static dir_stack_t	dirstack_freelist;
 static int		dirstack_init = 0;
+static pthread_mutex_t	dirstack_mutex;
+static pthread_mutexattr_t dirstack_mutexattr;
+
 
 void
 dir_stack_init(dir_stack_t *stack)
@@ -38,6 +42,11 @@ dir_stack_init(dir_stack_t *stack)
 
 	if (dirstack_init == 0)  {
 		dirstack_init = 1;
+		PREPAIR_MTX_ATTR_INIT(&dirstack_mutexattr);
+#ifdef PTHREAD_MUTEX_SPINBLOCK_NP
+		PREPAIR_MTX_ATTR_SET(&dirstack_mutexattr, PTHREAD_MUTEX_SPINBLOCK_NP);
+#endif
+		PREPAIR_MTX_LOCK_INIT(&dirstack_mutex, &dirstack_mutexattr);
 		dir_stack_init(&dirstack_freelist);
 	}
 
@@ -85,8 +94,10 @@ push_dir(dir_stack_t *stack, xfs_ino_t ino)
 {
 	dir_stack_elem_t *elem;
 
+	PREPAIR_MTX_LOCK(&dirstack_mutex);
 	if (dirstack_freelist.cnt == 0)  {
 		if ((elem = malloc(sizeof(dir_stack_elem_t))) == NULL)  {
+			PREPAIR_MTX_UNLOCK(&dirstack_mutex);
 			do_error(
 		_("couldn't malloc dir stack element, try more swap\n"));
 			exit(1);
@@ -94,6 +105,7 @@ push_dir(dir_stack_t *stack, xfs_ino_t ino)
 	} else  {
 		elem = dir_stack_pop(&dirstack_freelist);
 	}
+	PREPAIR_MTX_UNLOCK(&dirstack_mutex);
 
 	elem->ino = ino;
 
@@ -116,7 +128,9 @@ pop_dir(dir_stack_t *stack)
 	ino = elem->ino;
 	elem->ino = NULLFSINO;
 
+	PREPAIR_MTX_LOCK(&dirstack_mutex);
 	dir_stack_push(&dirstack_freelist, elem);
+	PREPAIR_MTX_UNLOCK(&dirstack_mutex);
 
 	return(ino);
 }

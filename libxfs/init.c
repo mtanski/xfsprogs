@@ -703,3 +703,9 @@ libxfs_report(FILE *fp)
 	c = asctime(localtime(&t));
 	fprintf(fp, "%s", c);
 }
+
+int
+libxfs_nproc(void)
+{
+	return platform_nproc();
+}

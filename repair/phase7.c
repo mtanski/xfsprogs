@@ -26,6 +26,7 @@
 #include "dinode.h"
 #include "versions.h"
 #include "prefetch.h"
+#include "threads.h"
 
 /* dinoc is a pointer to the IN-CORE dinode core */
 void
@@ -180,8 +181,9 @@ phase7_alt(xfs_mount_t *mp)
 	libxfs_bcache_purge();
 
 	for (i = 0; i < glob_agcount; i++)  {
-		phase7_alt_function(mp, i);
+		queue_work(phase7_alt_function, mp, i);
 	}
+	wait_for_workers();
 }
 
 void

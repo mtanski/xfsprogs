@@ -26,6 +26,7 @@
 #include "dinode.h"
 #include "rt.h"
 #include "versions.h"
+#include "threads.h"
 
 /*
  * we maintain the current slice (path from root to leaf)
@@ -72,6 +73,9 @@ typedef struct bt_status  {
 	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
 } bt_status_t;
 
+static __uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
+static __uint64_t	*sb_ifree_ag;		/* free inodes per ag */
+static __uint64_t	*sb_fdblocks_ag;	/* free data blocks per ag */
 
 int
 mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
@@ -1415,14 +1419,13 @@ keep_fsinos(xfs_mount_t *mp)
 }
 
 void
-phase5(xfs_mount_t *mp)
+phase5_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 {
 	__uint64_t	num_inos;
 	__uint64_t	num_free_inos;
 	bt_status_t	bno_btree_curs;
 	bt_status_t	bcnt_btree_curs;
 	bt_status_t	ino_btree_curs;
-	xfs_agnumber_t	agno;
 	int		extra_blocks = 0;
 	uint		num_freeblocks;
 	xfs_extlen_t	freeblks1;
@@ -1436,35 +1439,10 @@ phase5(xfs_mount_t *mp)
 	extern int	count_bcnt_extents(xfs_agnumber_t);
 #endif
 
-	do_log(_("Phase 5 - rebuild AG headers and trees...\n"));
+	if (verbose)
+		do_log(_("        - agno = %d\n"), agno);
 
-#ifdef XR_BLD_FREE_TRACE
-	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0),
-		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0)
-		);
-	fprintf(stderr, "inobt level 0 (leaf), maxrec = %d, minrec = %d\n",
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 1),
-		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_inobt, 1)
-		);
-	fprintf(stderr, "xr inobt level 0 (leaf), maxrec = %d\n",
-		XR_INOBT_BLOCK_MAXRECS(mp, 0));
-	fprintf(stderr, "xr inobt level 1 (int), maxrec = %d\n",
-		XR_INOBT_BLOCK_MAXRECS(mp, 1));
-	fprintf(stderr, "bnobt level 1, maxrec = %d, minrec = %d\n",
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_alloc, 0),
-		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_alloc, 0));
-	fprintf(stderr, "bnobt level 0 (leaf), maxrec = %d, minrec = %d\n",
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_alloc, 1),
-		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_alloc, 1));
-#endif
-
-	/*
-	 * make sure the root and realtime inodes show up allocated
-	 */
-	keep_fsinos(mp);
-
-	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
+	{
 		/*
 		 * build up incore bno and bcnt extent btrees
 		 */
@@ -1503,8 +1481,8 @@ phase5(xfs_mount_t *mp)
 		init_ino_cursor(mp, agno, &ino_btree_curs,
 				&num_inos, &num_free_inos);
 
-		sb_icount += num_inos;
-		sb_ifree += num_free_inos;
+		sb_icount_ag[agno] += num_inos;
+		sb_ifree_ag[agno] += num_free_inos;
 
 		num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
 		/*
@@ -1512,7 +1490,7 @@ phase5(xfs_mount_t *mp)
 		 * are counted as allocated since the space trees
 		 * always have roots
 		 */
-		sb_fdblocks += num_freeblocks - 2;
+		sb_fdblocks_ag[agno] += num_freeblocks - 2;
 
 		if (num_extents == 0)  {
 			/*
@@ -1554,7 +1532,7 @@ phase5(xfs_mount_t *mp)
 		if (extra_blocks > 0)  {
 			do_warn(_("lost %d blocks in agno %d, sorry.\n"),
 				extra_blocks, agno);
-			sb_fdblocks -= extra_blocks;
+			sb_fdblocks_ag[agno] -= extra_blocks;
 		}
 
 		bcnt_btree_curs = bno_btree_curs;
@@ -1613,6 +1591,67 @@ phase5(xfs_mount_t *mp)
 		release_agbno_extent_tree(agno);
 		release_agbcnt_extent_tree(agno);
 	}
+}
+
+void
+phase5(xfs_mount_t *mp)
+{
+	xfs_agnumber_t agno;
+
+	do_log(_("Phase 5 - rebuild AG headers and trees...\n"));
+
+#ifdef XR_BLD_FREE_TRACE
+	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
+		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0),
+		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0)
+		);
+	fprintf(stderr, "inobt level 0 (leaf), maxrec = %d, minrec = %d\n",
+		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 1),
+		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_inobt, 1)
+		);
+	fprintf(stderr, "xr inobt level 0 (leaf), maxrec = %d\n",
+		XR_INOBT_BLOCK_MAXRECS(mp, 0));
+	fprintf(stderr, "xr inobt level 1 (int), maxrec = %d\n",
+		XR_INOBT_BLOCK_MAXRECS(mp, 1));
+	fprintf(stderr, "bnobt level 1, maxrec = %d, minrec = %d\n",
+		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_alloc, 0),
+		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_alloc, 0));
+	fprintf(stderr, "bnobt level 0 (leaf), maxrec = %d, minrec = %d\n",
+		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_alloc, 1),
+		XFS_BTREE_BLOCK_MINRECS(mp->m_sb.sb_blocksize, xfs_alloc, 1));
+#endif
+	/*
+	 * make sure the root and realtime inodes show up allocated
+	 */
+	keep_fsinos(mp);
+
+	/* allocate per ag counters */
+	sb_icount_ag = calloc(mp->m_sb.sb_agcount, sizeof(__uint64_t));
+	if (sb_icount_ag == NULL)
+		do_error(_("cannot alloc sb_icount_ag buffers\n"));
+
+	sb_ifree_ag = calloc(mp->m_sb.sb_agcount, sizeof(__uint64_t));
+	if (sb_ifree_ag == NULL)
+		do_error(_("cannot alloc sb_ifree_ag buffers\n"));
+
+	sb_fdblocks_ag = calloc(mp->m_sb.sb_agcount, sizeof(__uint64_t));
+	if (sb_fdblocks_ag == NULL)
+		do_error(_("cannot alloc sb_fdblocks_ag buffers\n"));
+
+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
+		queue_work(phase5_function, mp, agno);
+	}
+	wait_for_workers();
+
+	/* aggregate per ag counters */
+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
+		sb_icount += sb_icount_ag[agno];
+		sb_ifree += sb_ifree_ag[agno];
+		sb_fdblocks += sb_fdblocks_ag[agno];
+	}
+	free(sb_icount_ag);
+	free(sb_ifree_ag);
+	free(sb_fdblocks_ag);
 
 	if (mp->m_sb.sb_rblocks)  {
 		do_log(
@@ -1630,4 +1669,5 @@ phase5(xfs_mount_t *mp)
 	sync_sb(mp);
 
 	bad_ino_btree = 0;
+
 }

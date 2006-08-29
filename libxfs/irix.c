@@ -19,6 +19,7 @@
 #include <xfs/libxfs.h>
 #include <aio.h>
 #include <diskinfo.h>
+#include <sys/sysmp.h>
 
 extern char *progname;
 extern __int64_t findsize(char *);
@@ -102,3 +103,10 @@ platform_align_blockdev(void)
 {
 	return (sizeof(void *));
 }
+
+int
+platform_nproc(void)
+{
+	return sysmp(MP_NPROCS);
+}
+

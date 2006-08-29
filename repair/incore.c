@@ -23,6 +23,7 @@
 #include "agheader.h"
 #include "protos.h"
 #include "err_protos.h"
+#include "threads.h"
 
 /*
  * push a block allocation record onto list.  assumes list
@@ -64,6 +65,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 		do_error(_("couldn't allocate block map pointers\n"));
 		return;
 	}
+	PREPAIR_RW_LOCK_ALLOC(per_ag_lock, agno);
 	for (i = 0; i < agno; i++)  {
 		size = roundup((numblocks+(NBBY/XR_BB)-1) / (NBBY/XR_BB),
 		       		sizeof(__uint64_t));
@@ -75,6 +77,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 			return;
 		}
 		bzero(ba_bmap[i], size);
+		PREPAIR_RW_LOCK_INIT(&per_ag_lock[i], NULL);
 	}
 
 	if (rtblocks == 0)  {

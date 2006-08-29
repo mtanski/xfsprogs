@@ -577,6 +577,7 @@ typedef struct  libxfs_lio_req {
 #define	LIBXFS_LIO_TYPE_RAW		0x3
 
 #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
+extern int libxfs_nproc(void);
 
 #include <xfs/xfs_ialloc.h>
 #include <xfs/xfs_rtalloc.h>

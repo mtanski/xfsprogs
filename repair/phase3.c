@@ -24,6 +24,7 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "dinode.h"
+#include "threads.h"
 
 /*
  * walks an unlinked list, returns 1 on an error (bogus pointer) or
@@ -57,6 +58,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				add_aginode_uncertain(agno, current_ino, 1);
 				agbno = XFS_AGINO_TO_AGBNO(mp, current_ino);
 
+				PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 				switch (state = get_agbno_state(mp,
 							agno, agbno))  {
 				case XR_E_UNKNOWN:
@@ -64,8 +66,10 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				case XR_E_FREE1:
 					set_agbno_state(mp, agno, agbno,
 						XR_E_INO);
+					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					break;
 				case XR_E_BAD_STATE:
+					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					do_error(_(
 						"bad state in block map %d\n"),
 						state);
@@ -84,6 +88,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 					 */
 					set_agbno_state(mp, agno, agbno,
 						XR_E_INO);
+					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					break;
 				}
 			}
@@ -144,6 +149,17 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 }
 
 void
+parallel_p3_process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
+{
+	/*
+	 * turn on directory processing (inode discovery) and
+	 * attribute processing (extra_attr_check)
+	 */
+	do_log(_("        - agno = %d\n"), agno);
+	process_aginodes(mp, agno, 1, 0, 1);
+}
+
+void
 phase3(xfs_mount_t *mp)
 {
 	int i, j;
@@ -171,13 +187,9 @@ phase3(xfs_mount_t *mp)
 	    "        - process known inodes and perform inode discovery...\n"));
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		do_log(_("        - agno = %d\n"), i);
-		/*
-		 * turn on directory processing (inode discovery) and
-		 * attribute processing (extra_attr_check)
-		 */
-		process_aginodes(mp, i, 1, 0, 1);
+		queue_work(parallel_p3_process_aginodes, mp, i);
 	}
+	wait_for_workers();
 
 	/*
 	 * process newly discovered inode chunks

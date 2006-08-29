@@ -178,3 +178,9 @@ platform_align_blockdev(void)
 {
 	return (sizeof(void *));
 }
+
+int
+platform_nproc(void)
+{
+	return 1;
+}

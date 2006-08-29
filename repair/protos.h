@@ -44,4 +44,6 @@ char *	err_string(int err_code);
 extern void *ts_attr_freemap(void);
 extern void *ts_dir_freemap(void);
 extern void *ts_dirbuf(void);
+extern void ts_init(void);
+extern void thread_init(void);
 

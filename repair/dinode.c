@@ -30,6 +30,7 @@
 #include "versions.h"
 #include "attr_repair.h"
 #include "bmap.h"
+#include "threads.h"
 
 /*
  * inode clearing routines
@@ -514,6 +515,29 @@ get_bmbt_reclist(
 }
 
 /*
+ * process_bmbt_reclist_int is the most compute intensive
+ * function in repair. The following macros reduce the
+ * the large number of lock/unlock steps it would otherwise
+ * call.
+ */
+#define	PROCESS_BMBT_DECL(type, var)	type var
+
+#define	PROCESS_BMBT_LOCK(agno)							\
+	if (do_parallel && (agno != locked_agno)) {				\
+		if (locked_agno != -1)	/* release old ag lock */		\
+			PREPAIR_RW_UNLOCK_NOTEST(&per_ag_lock[locked_agno]);	\
+		PREPAIR_RW_WRITE_LOCK_NOTEST(&per_ag_lock[agno]);		\
+		locked_agno = agno;						\
+	}
+
+#define	PROCESS_BMBT_UNLOCK_RETURN(val)						\
+	do {									\
+		if (locked_agno != -1) 						\
+			PREPAIR_RW_UNLOCK_NOTEST(&per_ag_lock[locked_agno]);	\
+		return (val);							\
+	} while (0)
+
+/*
  * return 1 if inode should be cleared, 0 otherwise
  * if check_dups should be set to 1, that implies that
  * the primary purpose of this call is to see if the
@@ -552,6 +576,8 @@ process_bmbt_reclist_int(
 	xfs_dfsbno_t		e;
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
+	PROCESS_BMBT_DECL
+				(xfs_agnumber_t, locked_agno=-1);
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -574,7 +600,7 @@ process_bmbt_reclist_int(
 	_("bmap rec out of order, inode %llu entry %d "
 	  "[o s c] [%llu %llu %llu], %d [%llu %llu %llu]\n"),
 				ino, i, o, s, c, i-1, op, sp, cp);
-			return(1);
+			PROCESS_BMBT_UNLOCK_RETURN(1);
 		}
 		op = o;
 		cp = c;
@@ -587,27 +613,27 @@ process_bmbt_reclist_int(
 			do_warn(
 	_("zero length extent (off = %llu, fsbno = %llu) in ino %llu\n"),
 				o, s, ino);
-			return(1);
+			PROCESS_BMBT_UNLOCK_RETURN(1);
 		}
 		if (type == XR_INO_RTDATA) {
 			if (s >= mp->m_sb.sb_rblocks)  {
 				do_warn(
 	_("inode %llu - bad rt extent start block number %llu, offset %llu\n"),
 					ino, s, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 			if (s + c - 1 >= mp->m_sb.sb_rblocks)  {
 				do_warn(
 	_("inode %llu - bad rt extent last block number %llu, offset %llu\n"),
 					ino, s + c - 1, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 			if (s + c - 1 < s)  {
 				do_warn(
 	_("inode %llu - bad rt extent overflows - start %llu, end %llu, "
 	  "offset %llu\n"),
 					ino, s, s + c - 1, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 		} else  {
 			switch (verify_dfsbno_range(mp, s, c)) {
@@ -617,26 +643,26 @@ process_bmbt_reclist_int(
 				do_warn(
 	_("inode %llu - bad extent starting block number %llu, offset %llu\n"),
 					ino, s, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			case XR_DFSBNORANGE_BADEND:
 				do_warn(
 	_("inode %llu - bad extent last block number %llu, offset %llu\n"),
 					ino, s + c - 1, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			case XR_DFSBNORANGE_OVERFLOW:
 				do_warn(
 
 	_("inode %llu - bad extent overflows - start %llu, end %llu, "
 	  "offset %llu\n"),
 					ino, s, s + c - 1, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 			if (o >= fs_max_file_offset)  {
 				do_warn(
 	_("inode %llu - extent offset too large - start %llu, count %llu, "
 	  "offset %llu\n"),
 					ino, s, c, o);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 		}
 
@@ -654,7 +680,7 @@ process_bmbt_reclist_int(
 				do_warn(
 	_("malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"),
 					s, c, mp->m_sb.sb_rextsize);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 
 			/*
@@ -676,7 +702,7 @@ process_bmbt_reclist_int(
 	_("data fork in rt ino %llu claims dup rt extent, off - %llu, "
 	  "start - %llu, count %llu\n"),
 							ino, o, s, c);
-						return(1);
+						PROCESS_BMBT_UNLOCK_RETURN(1);
 					}
 					continue;
 				}
@@ -714,7 +740,7 @@ process_bmbt_reclist_int(
 					do_warn(
 	_("%s fork in rt inode %llu claims used rt block %llu\n"),
 						forkname, ino, ext);
-					return(1);
+					PROCESS_BMBT_UNLOCK_RETURN(1);
 				case XR_E_FREE1:
 				default:
 					do_error(
@@ -748,6 +774,7 @@ process_bmbt_reclist_int(
 		agno = XFS_FSB_TO_AGNO(mp, s);
 		agbno = XFS_FSB_TO_AGBNO(mp, s);
 		e = s + c;
+		PROCESS_BMBT_LOCK(agno);
 		for (b = s; b < e; b++, agbno++)  {
 			if (check_dups == 1)  {
 				/*
@@ -761,7 +788,7 @@ process_bmbt_reclist_int(
 	_("%s fork in ino %llu claims dup extent, off - %llu, "
 	  "start - %llu, cnt %llu\n"),
 						forkname, ino, o, s, c);
-					return(1);
+					PROCESS_BMBT_UNLOCK_RETURN(1);
 				}
 				continue;
 			}
@@ -772,7 +799,7 @@ process_bmbt_reclist_int(
 			 */
 			if (type == XR_INO_RTDATA && whichfork == XFS_ATTR_FORK) {
 			  if (mp->m_sb.sb_agcount < agno)
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 
 			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) 
@@ -809,14 +836,14 @@ process_bmbt_reclist_int(
 				do_warn(
 			_("%s fork in inode %llu claims metadata block %llu\n"),
 					forkname, ino, (__uint64_t) b);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			case XR_E_INUSE:
 			case XR_E_MULT:
 				set_agbno_state(mp, agno, agbno, XR_E_MULT);
 				do_warn(
 			_("%s fork in %s inode %llu claims used block %llu\n"),
 					forkname, ftype, ino, (__uint64_t) b);
-				return(1);
+				PROCESS_BMBT_UNLOCK_RETURN(1);
 			default:
 				do_error(
 			_("illegal state %d in block map %llu\n"),
@@ -827,7 +854,7 @@ process_bmbt_reclist_int(
 		*tot += c;
 	}
 
-	return(0);
+	PROCESS_BMBT_UNLOCK_RETURN(0);
 }
 
 /*

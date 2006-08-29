@@ -43,12 +43,17 @@ ts_alloc(pthread_key_t key, unsigned n, size_t size)
 }
 
 static void
-ts_init(void)
+ts_create(void)
 {
 	/* create thread specific keys */
 	pthread_key_create(&dirbuf_key, NULL);
 	pthread_key_create(&dir_freemap_key, NULL);
 	pthread_key_create(&attr_freemap_key, NULL);
+}
+
+void
+ts_init(void)
+{
 
 	/* allocate thread specific storage */
 	ts_alloc(dirbuf_key, 1, ts_dirbuf_size);
@@ -136,6 +141,7 @@ xfs_init(libxfs_init_t *args)
 	if (!libxfs_init(args))
 		do_error(_("couldn't initialize XFS library\n"));
 
+	ts_create();
 	ts_init();
 	increase_rlimit();
 	if (do_prefetch) {
@@ -143,4 +149,5 @@ xfs_init(libxfs_init_t *args)
 		if (do_prefetch)
 			libxfs_lio_allocate();
 	}
+	thread_init();
 }

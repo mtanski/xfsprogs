@@ -22,8 +22,10 @@
 #include "incore.h"
 #include "agheader.h"
 #include "protos.h"
+#include "threads.h"
 #include "err_protos.h"
 
+static pthread_rwlock_t ino_flist_lock;
 extern avlnode_t	*avl_firstino(avlnode_t *root);
 
 /*
@@ -69,6 +71,7 @@ mk_ino_tree_nodes(xfs_agino_t starting_ino)
 	ino_tree_node_t *new;
 	avlnode_t *node;
 
+	PREPAIR_RW_WRITE_LOCK(&ino_flist_lock);
 	if (ino_flist.cnt == 0)  {
 		ASSERT(ino_flist.list == NULL);
 
@@ -92,6 +95,7 @@ mk_ino_tree_nodes(xfs_agino_t starting_ino)
 	ino_flist.cnt--;
 	node = &new->avl_node;
 	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
+	PREPAIR_RW_UNLOCK(&ino_flist_lock);
 
 	/* initialize node */
 
@@ -115,6 +119,7 @@ free_ino_tree_node(ino_tree_node_t *ino_rec)
 	ino_rec->avl_node.avl_forw = NULL;
 	ino_rec->avl_node.avl_back = NULL;
 
+	PREPAIR_RW_WRITE_LOCK(&ino_flist_lock);
 	if (ino_flist.list != NULL)  {
 		ASSERT(ino_flist.cnt > 0);
 		ino_rec->avl_node.avl_nextino = (avlnode_t *) ino_flist.list;
@@ -132,6 +137,7 @@ free_ino_tree_node(ino_tree_node_t *ino_rec)
 		if (ino_rec->ino_un.plist != NULL)
 			free(ino_rec->ino_un.plist);
 	}
+	PREPAIR_RW_UNLOCK(&ino_flist_lock);
 
 	return;
 }
@@ -643,6 +649,7 @@ incore_ino_init(xfs_mount_t *mp)
 	int i;
 	int agcount = mp->m_sb.sb_agcount;
 
+	PREPAIR_RW_LOCK_INIT(&ino_flist_lock, NULL);
 	if ((inode_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
 		do_error(_("couldn't malloc inode tree descriptor table\n"));

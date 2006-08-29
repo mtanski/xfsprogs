@@ -26,6 +26,7 @@
 #include "dir.h"
 #include "dinode.h"
 #include "prefetch.h"
+#include "threads.h"
 #include "versions.h"
 
 /*
@@ -148,16 +149,19 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		if (check_inode_block(mp, ino) == 0)
 			return(0);
 
+		PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 		switch (state = get_agbno_state(mp, agno, agbno))  {
 		case XR_E_INO:
 			do_warn(
 		_("uncertain inode block %d/%d already known\n"),
 				agno, agbno);
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 			break;
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
 			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -170,12 +174,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, agbno, state);
 			set_agbno_state(mp, agno, agbno, XR_E_MULT);
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 			return(0);
 		default:
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, agbno, state);
 			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 			break;
 		}
 
@@ -425,6 +431,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	 * user data -- we're probably here as a result of a directory
 	 * entry or an iunlinked pointer
 	 */
+	PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 	for (j = 0, cur_agbno = chunk_start_agbno;
 			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
 		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
@@ -447,9 +454,12 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			break;
 		}
 
-		if (j)
+		if (j) {
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 			return(0);
+		}
 	}
+	PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 
 	/*
 	 * ok, chunk is good.  put the record into the tree if required,
@@ -472,6 +482,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 
 	set_inode_used(irec_p, agino - start_agino);
 
+	PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 	for (cur_agbno = chunk_start_agbno;
 			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
 		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
@@ -501,6 +512,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			break;
 		}
 	}
+	PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 
 	return(ino_cnt);
 }
@@ -700,6 +712,7 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 	/*
 	 * mark block as an inode block in the incore bitmap
 	 */
+	PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 	switch (state = get_agbno_state(mp, agno, agbno))  {
 	case XR_E_INO:	/* already marked */
 		break;
@@ -717,6 +730,7 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 			XFS_AGB_TO_FSB(mp, agno, agbno), state);
 		break;
 	}
+	PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 
 	while (!done)  {
 		/*
@@ -869,6 +883,7 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 			ibuf_offset = 0;
 			agbno++;
 
+			PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
 			switch (state = get_agbno_state(mp, agno, agbno))  {
 			case XR_E_INO:	/* already marked */
 				break;
@@ -888,6 +903,7 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 					XFS_AGB_TO_FSB(mp, agno, agbno), state);
 				break;
 			}
+			PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 
 		} else if (irec_offset == XFS_INODES_PER_CHUNK)  {
 			/*
