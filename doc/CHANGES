@@ -1,3 +1,9 @@
+xfsprogs-2.8.12 (29 August 2006)
+	- Multi-thread modifications to xfs_repair.
+	- Updated Polish translation, thanks to Jakub Bogusz.
+	- Change default mkfs realtime extent size setting to
+	  perform better for buffered writes.
+
 xfsprogs-2.8.11 (08 August 2006)
 	- xfs_repair prefetch optimisations.
 	- Make many tools use direct I/O on Linux if the underlying
