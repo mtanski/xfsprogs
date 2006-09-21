@@ -2557,12 +2557,14 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	xfs_dir2_block_tail_t	*btp;
 	xfs_dablk_t		da_bno;
 	freetab_t		*freetab;
+	int			num_bps;
 	int			i;
 	int			isblock;
 	int			isleaf;
 	xfs_fileoff_t		next_da_bno;
 	int			seeval;
 	int			fixit;
+	xfs_dir2_db_t		db;
 
 	*need_dot = 1;
 	freetab = malloc(FREETAB_SIZE(ip->i_d.di_size / mp->m_dirblksize));
@@ -2578,7 +2580,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		freetab->ents[i].v = NULLDATAOFF;
 		freetab->ents[i].s = 0;
 	}
-	bplist = calloc(freetab->naents, sizeof(xfs_dabuf_t*));
+	num_bps = freetab->naents;
+	bplist = calloc(num_bps, sizeof(xfs_dabuf_t*));
 	/* is this a block, leaf, or node directory? */
 	libxfs_dir2_isblock(NULL, ip, &isblock);
 	libxfs_dir2_isleaf(NULL, ip, &isleaf);
@@ -2591,21 +2594,28 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
-		ASSERT(XFS_DIR2_DA_TO_DB(mp, da_bno) < freetab->naents);
 		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
-		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, 
-				&bplist[XFS_DIR2_DA_TO_DB(mp, da_bno)], 
+		db = XFS_DIR2_DA_TO_DB(mp, da_bno);
+		if (db >= num_bps) {
+			/* more data blocks than expected */
+			num_bps = db + 1;
+			bplist = realloc(bplist, num_bps * sizeof(xfs_dabuf_t*));
+			if (!bplist) 
+				do_error(
+		_("realloc failed in longform_dir2_entry_check (%u bytes)\n"),
+					num_bps * sizeof(xfs_dabuf_t*));
+		}
+		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bplist[db], 
 				XFS_DATA_FORK)) {
 			do_warn(_(
 			"can't read data block %u for directory inode %llu\n"),
 				da_bno, ino);
-			*num_illegal++;
+			*num_illegal += 1;
 			continue;	/* try and read all "data" blocks */
 		}
 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
-				stack, irec, ino_offset, 
-				&bplist[XFS_DIR2_DA_TO_DB(mp, da_bno)], hashtab,  
+				stack, irec, ino_offset, &bplist[db], hashtab,
 				&freetab, da_bno, isblock);
 	}
 	fixit = (*num_illegal != 0) || dir2_is_badino(ino);
@@ -2638,6 +2648,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 				libxfs_da_brelse(NULL, bplist[i]);
 	}
 	
+	free(bplist);
 	free(freetab);
 }
 

@@ -1,3 +1,7 @@
+xfsprogs-2.8.x
+	- Fix v2 directory checking with holes and unreadable blocks.
+	- Fix a memory leak in dir2 checking.
+	
 xfsprogs-2.8.12 (29 August 2006)
 	- Multi-thread modifications to xfs_repair.
 	- Updated Polish translation, thanks to Jakub Bogusz.
