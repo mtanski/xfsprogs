@@ -1,7 +1,13 @@
-xfsprogs-2.8.x
+xfsprogs-2.8.13 (21 September 2006)
 	- Fix v2 directory checking with holes and unreadable blocks.
 	- Fix a memory leak in dir2 checking.
-	
+	- Update libdisk/md support to work out the stripe width
+	  based on (# raid-disks - # parity disks) which
+	  doesn't include any spare disks (which we mistakenly did before).
+	  Thanks to Shailendra Tripathi's suggestions.
+	- Get the kernel int types of __u32 and friends from <asm/types.h>
+	  if we can, otherwise define them ourselves.
+
 xfsprogs-2.8.12 (29 August 2006)
 	- Multi-thread modifications to xfs_repair.
 	- Updated Polish translation, thanks to Jakub Bogusz.

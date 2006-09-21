@@ -61,11 +61,11 @@ md_get_subvol_stripe(
 		 */
 		switch (md.level) {
 		case 6:
-			md.nr_disks--;
+			md.raid_disks--;
 			/* fallthrough */
 		case 5:
 		case 4:
-			md.nr_disks--;
+			md.raid_disks--;
 			/* fallthrough */
 		case 1:
 		case 0:
@@ -77,7 +77,7 @@ md_get_subvol_stripe(
 
 		/* Update sizes */
 		*sunit = md.chunk_size >> 9;
-		*swidth = *sunit * md.nr_disks;
+		*swidth = *sunit * md.raid_disks;
 		*sectalign = (md.level == 4 || md.level == 5 || md.level == 6);
 
 		return 1;
