@@ -1,3 +1,7 @@
+xfsprogs-2.8.xx (??)
+	- Fix up the ring command in xfs_db,
+	  thanks to Utako Kusaka
+
 xfsprogs-2.8.13 (21 September 2006)
 	- Fix v2 directory checking with holes and unreadable blocks.
 	- Fix a memory leak in dir2 checking.

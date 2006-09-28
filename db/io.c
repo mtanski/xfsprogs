@@ -352,7 +352,7 @@ ring_f(
 		return 0;
 	}
 
-	index = (int)strtoul(argv[0], NULL, 0);
+	index = (int)strtoul(argv[1], NULL, 0);
 	if (index < 0 || index >= RING_ENTRIES)
 		dbprintf("invalid entry: %d\n", index);
 
