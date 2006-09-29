@@ -25,6 +25,7 @@
 #include "err_protos.h"
 #include "dinode.h"
 #include "threads.h"
+#include "progress.h"
 
 /*
  * walks an unlinked list, returns 1 on an error (bogus pointer) or
@@ -170,6 +171,8 @@ phase3(xfs_mount_t *mp)
 	else
 		do_log(_("        - scan (but don't clear) agi unlinked lists...\n"));
 
+	set_progress_msg(PROG_FMT_AGI_UNLINKED, (__uint64_t) glob_agcount);
+
 	/*
 	 * first, let's look at the possibly bogus inodes
 	 */
@@ -179,22 +182,27 @@ phase3(xfs_mount_t *mp)
 		 */
 		process_agi_unlinked(mp, i);
 		check_uncertain_aginodes(mp, i);
+		PROG_RPT_INC(prog_rpt_done[i], 1);
 	}
+	print_final_rpt();
 
 	/* ok, now that the tree's ok, let's take a good look */
 
 	do_log(_(
 	    "        - process known inodes and perform inode discovery...\n"));
 
+	set_progress_msg(PROG_FMT_PROCESS_INO, (__uint64_t) mp->m_sb.sb_icount);
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		queue_work(parallel_p3_process_aginodes, mp, i);
 	}
 	wait_for_workers();
+	print_final_rpt();
 
 	/*
 	 * process newly discovered inode chunks
 	 */
 	do_log(_("        - process newly discovered inodes...\n"));
+	set_progress_msg(PROG_FMT_NEW_INODES, (__uint64_t) glob_agcount);
 	do  {
 		/*
 		 * have to loop until no ag has any uncertain
@@ -207,6 +215,8 @@ phase3(xfs_mount_t *mp)
 			fprintf(stderr,
 				"\t\t phase 3 - process_uncertain_inodes returns %d\n", j);
 #endif
+			PROG_RPT_INC(prog_rpt_done[i], 1);
 		}
 	} while (j != 0);
+	print_final_rpt();
 }

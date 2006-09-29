@@ -28,6 +28,7 @@
 #include "versions.h"
 #include "bmap.h"
 #include "prefetch.h"
+#include "progress.h"
 
 extern int verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		xfs_agf_t *agf, xfs_agi_t *agi, xfs_agnumber_t i);
@@ -1299,4 +1300,5 @@ scan_ag(
 	} else
 		libxfs_putbuf(sbbuf);
 	free(sb);
+	PROG_RPT_INC(prog_rpt_done[agno], 1);
 }

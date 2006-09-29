@@ -28,6 +28,7 @@
 #include "prefetch.h"
 #include "threads.h"
 #include "versions.h"
+#include "progress.h"
 
 /*
  * validates inode block or chunk, returns # of good inodes
@@ -998,6 +999,7 @@ process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno,
 
 			first_ino_rec = ino_rec;
 		}
+		PROG_RPT_INC(prog_rpt_done[agno], num_inos);
 	}
 }
 

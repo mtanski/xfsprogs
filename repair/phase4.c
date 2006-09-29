@@ -29,6 +29,7 @@
 #include "versions.h"
 #include "dir2.h"
 #include "threads.h"
+#include "progress.h"
 
 
 /* ARGSUSED */
@@ -1154,6 +1155,8 @@ phase4(xfs_mount_t *mp)
 	do_log(_("Phase 4 - check for duplicate blocks...\n"));
 	do_log(_("        - setting up duplicate extent list...\n"));
 
+	set_progress_msg(PROG_FMT_DUP_EXTENT, (__uint64_t) glob_agcount);
+
 	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
 
@@ -1251,7 +1254,9 @@ phase4(xfs_mount_t *mp)
 		 */
 		if (extent_start != 0)
 			add_dup_extent(i, extent_start, extent_len);
+		PROG_RPT_INC(prog_rpt_done[i], 1);
 	}
+	print_final_rpt();
 
 	/*
 	 * initialize realtime bitmap
@@ -1328,6 +1333,7 @@ phase4(xfs_mount_t *mp)
 	set_bmap_fs(mp);
 
 	do_log(_("        - check for inodes claiming duplicate blocks...\n"));
+	set_progress_msg(PROG_FMT_DUP_BLOCKS, (__uint64_t) mp->m_sb.sb_icount);
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		/*
 		 * ok, now process the inodes -- signal 2-pass check per inode.
@@ -1341,6 +1347,7 @@ phase4(xfs_mount_t *mp)
 		queue_work(parallel_p4_process_aginodes, mp, i);
 	}
 	wait_for_workers();
+	print_final_rpt();
 
 	/*
 	 * free up memory used to track trealtime duplicate extents

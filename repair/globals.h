@@ -197,4 +197,7 @@ extern size_t 		ts_attr_freemap_size;
 
 EXTERN pthread_rwlock_t	*per_ag_lock;
 
+EXTERN int report_interval;
+EXTERN __uint64_t *prog_rpt_done;
+
 #endif /* _XFS_REPAIR_GLOBAL_H */

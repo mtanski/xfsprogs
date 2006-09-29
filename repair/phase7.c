@@ -26,6 +26,7 @@
 #include "dinode.h"
 #include "versions.h"
 #include "prefetch.h"
+#include "progress.h"
 #include "threads.h"
 
 /* dinoc is a pointer to the IN-CORE dinode core */
@@ -170,6 +171,7 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 			libxfs_putbuf(bp);
 
 		irec = next_ino_rec(irec);
+		PROG_RPT_INC(prog_rpt_done[agno], XFS_INODES_PER_CHUNK);
 	}
 }
 
@@ -178,12 +180,15 @@ phase7_alt(xfs_mount_t *mp)
 {
 	int		i;
 
+	set_progress_msg(no_modify ? PROGRESS_FMT_VRFY_LINK : PROGRESS_FMT_CORR_LINK,
+		(__uint64_t) mp->m_sb.sb_icount);
 	libxfs_bcache_purge();
 
 	for (i = 0; i < glob_agcount; i++)  {
 		queue_work(phase7_alt_function, mp, i);
 	}
 	wait_for_workers();
+	print_final_rpt();
 }
 
 void

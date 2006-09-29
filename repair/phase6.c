@@ -28,6 +28,7 @@
 #include "err_protos.h"
 #include "dinode.h"
 #include "prefetch.h"
+#include "progress.h"
 #include "versions.h"
 
 static struct cred zerocr;
@@ -3861,9 +3862,12 @@ traverse_alt(xfs_mount_t *mp)
 {
 	int			i;
 
+	set_progress_msg(PROG_FMT_TRAVERSAL, (__uint64_t) glob_agcount);
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		traverse_function(mp, i);
+		PROG_RPT_INC(prog_rpt_done[i], 1);
 	}
+	print_final_rpt();
 }
 
 void

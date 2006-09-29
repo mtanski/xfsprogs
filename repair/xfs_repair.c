@@ -27,6 +27,7 @@
 #include "err_protos.h"
 #include "prefetch.h"
 #include "threads.h"
+#include "progress.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
@@ -68,8 +69,6 @@ char *o_opts[] = {
 	"thread",
 	NULL
 };
-
-static void print_runtime(unsigned);
 
 static void
 usage(void)
@@ -187,12 +186,13 @@ process_args(int argc, char **argv)
 	fs_has_extflgbit_allowed = 1;
 	pre_65_beta = 0;
 	fs_shared_allowed = 1;
+	report_interval = PROG_RPT_DEFAULT;
 
 	/*
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdPM")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdPMt:")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -274,6 +274,10 @@ process_args(int argc, char **argv)
 		case 'M':
 			do_parallel ^= 1;
 			break;
+		case 't':
+			report_interval = (int) strtol(optarg, 0, 0);
+			break;
+			
 		case '?':
 			usage();
 		}
@@ -469,9 +473,8 @@ main(int argc, char **argv)
 	xfs_sb_t	*sb;
 	xfs_buf_t	*sbp;
 	xfs_mount_t	xfs_m;
-	time_t		t, start;
+	char		*msgbuf;
 
-	start = time(NULL);
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
@@ -483,12 +486,12 @@ main(int argc, char **argv)
 	process_args(argc, argv);
 	xfs_init(&x);
 
+	timestamp(PHASE_START, 0, NULL);
+	timestamp(PHASE_END, 0, NULL);
+
 	/* do phase1 to make sure we have a superblock */
 	phase1(temp_mp);
-	if (verbose) {
-		t = time(NULL);
-	        fprintf(stderr, asctime(localtime(&t)));
-	}
+	timestamp(PHASE_END, 1, NULL);
 
 	if (no_modify && primary_sb_modified)  {
 		do_warn(_("Primary superblock would have been modified.\n"
@@ -522,6 +525,16 @@ main(int argc, char **argv)
 	max_symlink_blocks = howmany(MAXPATHLEN - 1, mp->m_sb.sb_blocksize);
 	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
 
+	if (do_parallel && report_interval) {
+		init_progress_rpt();
+		msgbuf = malloc(DURATION_BUF_SIZE);
+		if (msgbuf) {
+			do_log(_("        - reporting progress in intervals of %s\n"),
+			duration(report_interval, msgbuf));
+			free(msgbuf);
+		}
+	}
+
 	/*
 	 * calculate what mkfs would do to this filesystem
 	 */
@@ -540,22 +553,13 @@ main(int argc, char **argv)
 
 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
 	phase2(mp);
-	if (verbose) {
-		t = time(NULL);
-	        fprintf(stderr, asctime(localtime(&t)));
-	}
+	timestamp(PHASE_END, 2, NULL);
 
 	phase3(mp);
-	if (verbose) {
-		t = time(NULL);
-	        fprintf(stderr, asctime(localtime(&t)));
-	}
+	timestamp(PHASE_END, 3, NULL);
 
 	phase4(mp);
-	if (verbose) {
-		t = time(NULL);
-	        fprintf(stderr, asctime(localtime(&t)));
-	}
+	timestamp(PHASE_END, 4, NULL);
 
 	/* XXX: nathans - something in phase4 ain't playing by */
 	/* the buffer cache rules.. why doesn't IRIX hit this? */
@@ -565,24 +569,15 @@ main(int argc, char **argv)
 		printf(_("No modify flag set, skipping phase 5\n"));
 	else {
 		phase5(mp);
-		if (verbose) {
-			t = time(NULL);
-			fprintf(stderr, asctime(localtime(&t)));
-		}
 	}
+	timestamp(PHASE_END, 5, NULL);
 
 	if (!bad_ino_btree)  {
 		phase6(mp);
-		if (verbose) {
-			t = time(NULL);
-			fprintf(stderr, asctime(localtime(&t)));
-		}
+		timestamp(PHASE_END, 6, NULL);
 
 		phase7(mp);
-		if (verbose) {
-			t = time(NULL);
-			fprintf(stderr, asctime(localtime(&t)));
-		}
+		timestamp(PHASE_END, 7, NULL);
 	} else  {
 		do_warn(
 _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
@@ -642,14 +637,14 @@ _("Warning:  project quota information would be cleared.\n"
 		}
 	}
 
-	if (verbose > 1)
-		libxfs_report(stderr);
+	if (do_parallel && report_interval)
+		stop_progress_rpt();
 
 	if (no_modify)  {
 		do_log(
 	_("No modify flag set, skipping filesystem flush and exiting.\n"));
 		if (verbose)
-			print_runtime(t - start);
+			summary_report();
 		if (fs_is_dirty)
 			return(1);
 
@@ -695,34 +690,8 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 		libxfs_device_close(x.logdev);
 	libxfs_device_close(x.ddev);
 
+	if (verbose)
+		summary_report();
 	do_log(_("done\n"));
-	if (verbose) {
-		print_runtime(t - start);
-	}
 	return (0);
-}
-
-static void
-print_runtime(unsigned s)
-{
-	unsigned h, m;
-
-	h = s / 3600;
-	s %= 3600;
-	m = s / 60;
-	s %= 60;
-	if (h) {
-		fprintf(stderr, "Run time %d hour%s %d minute%s %d second%s\n",
-			h, h > 1 ? "s" : "",
-			m, m != 1 ? "s" : "",
-			s, s != 1 ? "s" : "");
-	} else if (m) {
-		fprintf(stderr, "Run time %d minute%s %d second%s\n",
-			m, m > 1 ? "s" : "",
-			s, s != 1 ? "s" : "");
-	}
-	else {
-		fprintf(stderr, "Run time %d second%s\n",
-			s, s != 1 ? "s" : "");
-	}
 }

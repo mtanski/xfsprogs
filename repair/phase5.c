@@ -27,6 +27,7 @@
 #include "rt.h"
 #include "versions.h"
 #include "threads.h"
+#include "progress.h"
 
 /*
  * we maintain the current slice (path from root to leaf)
@@ -1591,6 +1592,7 @@ phase5_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 		release_agbno_extent_tree(agno);
 		release_agbcnt_extent_tree(agno);
 	}
+	PROG_RPT_INC(prog_rpt_done[agno], 1);
 }
 
 void
@@ -1599,6 +1601,7 @@ phase5(xfs_mount_t *mp)
 	xfs_agnumber_t agno;
 
 	do_log(_("Phase 5 - rebuild AG headers and trees...\n"));
+	set_progress_msg(PROG_FMT_REBUILD_AG, (__uint64_t )glob_agcount);
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
@@ -1642,6 +1645,7 @@ phase5(xfs_mount_t *mp)
 		queue_work(phase5_function, mp, agno);
 	}
 	wait_for_workers();
+	print_final_rpt();
 
 	/* aggregate per ag counters */
 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {

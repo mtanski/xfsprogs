@@ -23,6 +23,7 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "incore.h"
+#include "progress.h"
 
 void	set_mp(xfs_mount_t *mpp);
 void	scan_ag(xfs_agnumber_t agno);
@@ -131,12 +132,16 @@ phase2(xfs_mount_t *mp)
 
 	bad_ino_btree = 0;
 
+	set_progress_msg(PROG_FMT_SCAN_AG, (__uint64_t) glob_agcount);
+
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		scan_ag(i);
 #ifdef XR_INODE_TRACE
 		print_inode_list(i);
 #endif
 	}
+
+	print_final_rpt();
 
 	/*
 	 * make sure we know about the root inode chunk
