@@ -77,17 +77,23 @@ do_message(int flags, int code, const char *fmt, ...)
 	va_list	ap;
 	int	eek = 0;
 
-	va_start(ap, fmt);
-	if (flags & LOG)
+	if (flags & LOG) {
+		va_start(ap, fmt);
 		if (vfprintf(logerr, fmt, ap) <= 0)
 			eek = 1;
+		va_end(ap);
+	}
 	if (eek)
 		flags |= ERR;	/* failed, force stderr */
-	if (flags & ERR)
+	if (flags & ERR) {
+		va_start(ap, fmt);
 		vfprintf(stderr, fmt, ap);
-	else if (flags & OUT)
+		va_end(ap);
+	} else if (flags & OUT) {
+		va_start(ap, fmt);
 		vfprintf(stdout, fmt, ap);
-	va_end(ap);
+		va_end(ap);
+	}
 
 	if (flags & PRE) {
 		do_message(flags & ~PRE, 0, ":  %s\n", strerror(code));
