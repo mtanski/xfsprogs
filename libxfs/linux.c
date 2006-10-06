@@ -102,16 +102,20 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 	return sts;
 }
 
-void
-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize)
+int
+platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
 {
+	int error = 0;
+
 	if (major(device) != RAMDISK_MAJOR) {
-		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
-			fprintf(stderr, _("%s: warning - cannot set blocksize "
+		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
+			fprintf(stderr, _("%s: %s - cannot set blocksize "
 					"on block device %s: %s\n"),
-				progname, path, strerror(errno));
+				progname, fatal ? "error": "warning",
+				path, strerror(errno));
 		}
 	}
+	return error;
 }
 
 void

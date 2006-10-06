@@ -36,10 +36,10 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
 	return 1;
 }
 
-void
-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize)
+int
+platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
 {
-	return;
+	return fatal;
 }
 
 void

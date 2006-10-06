@@ -1,6 +1,11 @@
-xfsprogs-2.8.xx (??)
+xfsprogs-2.8.14 (6 October 2006)
 	- Fix up the ring command in xfs_db,
 	  thanks to Utako Kusaka
+	- Set the blocksize on the device to the given sector
+	  size which is _not_ necessarily 512 bytes;
+	  idea suggested by Shailendra Tripathi.
+	- Fix up xfs_copy and its variable argument handling
+	  around vfprintf; xfs_copy was seg faulting on x86_64.
 
 xfsprogs-2.8.13 (21 September 2006)
 	- Fix v2 directory checking with holes and unreadable blocks.

@@ -116,8 +116,16 @@ retry:
 		exit(1);
 	}
 
-	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK)
-		platform_set_blocksize(fd, path, statb.st_rdev, 512);
+	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
+		if (setblksize == 1)
+			/* use the default blocksize */
+			(void)platform_set_blocksize(fd, path, statb.st_rdev, XFS_MIN_SECTORSIZE, 0);
+		else {
+			/* given an explicit blocksize to use */
+			if (platform_set_blocksize(fd, path, statb.st_rdev, setblksize, 1))
+			    exit(1);
+		}
+	}
 
 	/*
 	 * Get the device number from the stat buf - unless

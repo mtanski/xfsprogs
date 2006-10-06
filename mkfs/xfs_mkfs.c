@@ -634,7 +634,6 @@ main(
 	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
-	xi.setblksize = 1;
 	xi.isdirect = LIBXFS_DIRECT;
 	xi.isreadonly = LIBXFS_EXCLUSIVELY;
 
@@ -1505,6 +1504,11 @@ main(
 
 	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
 				&dsunit, &dswidth, &lsunit);
+
+	if (slflag || ssflag)
+		xi.setblksize = sectorsize;
+	else
+		xi.setblksize = 1;
 
 	/*
 	 * Initialize.  This will open the log and rt devices as well.
