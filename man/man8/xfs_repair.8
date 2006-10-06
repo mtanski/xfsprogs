@@ -3,15 +3,17 @@
 xfs_repair \- repair an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_repair\f1 [ \f3\-nLvVd\f1 ] [ \f3\-o\f1 subopt[=value] ]
-	[\f3-l\f1 logdev] [\f3-r\f1 rtdev] xfs_special
+\f3xfs_repair\f1 [ \f3\-dLMnPvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+	[\f3-t\f1 interval] [\f3-l\f1 logdev] [\f3-r\f1 rtdev] xfs_special
 .sp .8v
-\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-nLvVd\f1 ] [ \f3\-o\f1 subopt[=value] ]
-	[\f3-l\f1 logfile] [\f3-r\f1 rtfile] file
+\f3xfs_repair\f1 \f3\-f\f1 [ \f3\-dLMnPvV\f1 ] [ \f3\-o\f1 subopt[=value] ]
+	[\f3-t\f1 interval] [\f3-l\f1 logdev] [\f3-r\f1 rtdev] ... file
 .fi
 .SH DESCRIPTION
 .I xfs_repair
-repairs corrupt or damaged XFS filesystems
+is a parallelized version of
+.IR xfs_repair (1m)
+that repairs corrupt or damaged XFS filesystems
 (see
 .IR xfs (5)).
 The filesystem is specified using the
@@ -47,7 +49,7 @@ to zero the log even if it is dirty (contains metadata changes).
 When using this option the filesystem will likely appear to be corrupt,
 and can cause the loss of user files and/or data.
 .TP
-.B \-l
+\f3-l\f1 \f2logdev\f1
 Specifies the device special file where the filesystem's external
 log resides.
 Only for those filesystems which use an external log.
@@ -56,7 +58,7 @@ See the
 .IR xfs (5)
 for a detailed description of the XFS log.
 .TP
-.B \-r
+\f3-r\f1 \f2rtdev\f1
 Specifies the device special file where the filesystem's realtime
 section resides.
 Only for those filesystems which use a realtime section.
@@ -72,7 +74,7 @@ Specifies that
 should not modify the filesystem but should only scan the
 filesystem and indicate what repairs would have been made.
 .TP
-.B \-o
+\f3-o\f1 \f2subopt[=value]\f1
 Override what the program might conclude about the filesystem
 if left to its own devices.
 .IP
@@ -91,6 +93,45 @@ option is in effect,
 .I xfs_repair
 will assume that the filesystem is an XFS filesystem and
 will ignore an EFS superblock if one is found.
+.IP
+The
+.BI ihash= ihashsize
+suboption modifies the default xfs_repair inode cache hash size. 
+The total number of inode cache entries are limited to 8 times this 
+amount.
+.IP
+The
+.BI bhash= bhashsize
+suboption modifies the default xfs_repair buffer cache hash size. 
+The total number of buffer cache entries are limited to 8 times this 
+amount.
+.IP
+The
+.BI pfino= inode_blocks
+suboption modifies the default size of read ahead xfs_repair inode 
+blocks.
+.IP
+The 
+.BI pfdir= dir_blocks
+suboption modifies the default size of read ahead xfs_repair dir 
+blocks.
+.IP
+The
+.BI thread= thread_count
+suboption modifies the number of xfs_repair parallel threads. 
+.TP
+\f3-t\f1 \f2interval\f1
+Modify reporting interval. During long runs xfs_repair outputs 
+its progress every 15 minutes. Reporting is only activated when 
+xfs_repair is multi-threaded.
+.TP
+.B \-M
+Disable multi-threaded mode. Normally, xfs_repair runs with twice 
+the number of threads as processors.
+.TP
+.B \-P
+Disable read ahead of inode and directory blocks. If applicable, 
+a read ahead of up to 16 additional blocks is done.
 .TP
 .B \-v
 Verbose output.
@@ -295,7 +336,7 @@ blocks that are out of the legal range of the filesystem.
 The message supplies the start, end, and file offset of
 the extent.
 The message is slightly different
-if the extent is a real-time (rt) exent.
+if the extent is a real-time (rt) extent.
 .PP
 bad \f3fork-type\f1 fork in inode \f3xxxx\f1
 .IP
