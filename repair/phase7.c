@@ -65,7 +65,8 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 {
 	register ino_tree_node_t *irec;
 	int			j;
-	int			dirty;
+	int			chunk_dirty;
+	int			inode_dirty;
 	xfs_ino_t		ino;
 	__uint32_t		nrefs;
 	xfs_agblock_t		agbno;
@@ -113,7 +114,7 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 			irec = next_ino_rec(irec);
 			continue;	/* while */
 		}
-		dirty = 0;
+		chunk_dirty = 0;
 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
 			assert(is_inode_confirmed(irec, j));
 
@@ -131,10 +132,21 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 
 			dip = (xfs_dinode_t *)(XFS_BUF_PTR(bp) +
 					(j << mp->m_sb.sb_inodelog));
+			
+			inode_dirty = 0;
 
 			/* Swap the fields we care about to native format */
-			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, ARCH_CONVERT);
-			dip->di_core.di_nlink = INT_GET(dip->di_core.di_nlink, ARCH_CONVERT);
+			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, 
+							ARCH_CONVERT);
+			dip->di_core.di_onlink = INT_GET(dip->di_core.di_onlink, 
+							ARCH_CONVERT);
+			if (INT_GET(dip->di_core.di_version, ARCH_CONVERT) ==
+					XFS_DINODE_VERSION_1) 
+				dip->di_core.di_nlink = dip->di_core.di_onlink;
+			else 
+				dip->di_core.di_nlink = 
+						INT_GET(dip->di_core.di_nlink, 
+							ARCH_CONVERT);
 
 			if (dip->di_core.di_magic != XFS_DINODE_MAGIC) {
 				if (!no_modify) {
@@ -156,16 +168,46 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 			if (dip->di_core.di_nlink != nrefs) {
 				if (ino != orphanage_ino) {
 					set_nlinks(&dip->di_core, ino,
-							nrefs, &dirty);
+							nrefs, &inode_dirty);
 				}
 			}
 
 			/* Swap the fields back */
-			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, ARCH_CONVERT);
-			dip->di_core.di_nlink = INT_GET(dip->di_core.di_nlink, ARCH_CONVERT);
+			dip->di_core.di_magic = INT_GET(dip->di_core.di_magic, 
+					ARCH_CONVERT);
+			if (inode_dirty && INT_GET(dip->di_core.di_version, 
+					ARCH_CONVERT) == XFS_DINODE_VERSION_1) {
+				if (!XFS_SB_VERSION_HASNLINK(&mp->m_sb)) {
+					ASSERT(dip->di_core.di_nlink <= 
+							XFS_MAXLINK_1);
+					dip->di_core.di_nlink = 
+						INT_GET(dip->di_core.di_nlink, 
+							ARCH_CONVERT);
+					dip->di_core.di_onlink = 
+						dip->di_core.di_nlink;
+				} else {
+					/* superblock support v2 nlinks */
+					INT_SET(dip->di_core.di_version, 
+						ARCH_CONVERT, XFS_DINODE_VERSION_2);
+					dip->di_core.di_nlink = 
+						INT_GET(dip->di_core.di_nlink, 
+							ARCH_CONVERT);
+					dip->di_core.di_onlink = 0;
+					memset(&(dip->di_core.di_pad[0]), 0,
+						sizeof(dip->di_core.di_pad));
+				}	
+			} else {
+				dip->di_core.di_nlink = 
+						INT_GET(dip->di_core.di_nlink, 
+							ARCH_CONVERT);
+				dip->di_core.di_onlink = 
+						INT_GET(dip->di_core.di_onlink, 
+							ARCH_CONVERT);
+			}
+			chunk_dirty |= inode_dirty;
 		}
 
-		if (dirty)
+		if (chunk_dirty)
 			libxfs_writebuf(bp, 0);
 		else
 			libxfs_putbuf(bp);
