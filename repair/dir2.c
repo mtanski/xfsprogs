@@ -258,6 +258,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 	xfs_dabuf_t		*bp;
 	int			i;
 	int			nex;
+	xfs_da_blkinfo_t	*info;
 	xfs_da_intnode_t	*node;
 	bmap_ext_t		lbmp;
 
@@ -268,7 +269,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 	 */
 	bno = mp->m_dirleafblk;
 	i = -1;
-	node = NULL;
+	info = NULL;
 	da_cursor->active = 0;
 
 	do {
@@ -291,33 +292,28 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 			goto error_out;
 		}
 
-		node = bp->data;
+		info = bp->data;
 
-		if (INT_GET(node->hdr.info.magic, ARCH_CONVERT) ==
+		if (INT_GET(info->magic, ARCH_CONVERT) ==
 					XFS_DIR2_LEAFN_MAGIC)  {
 			if ( i != -1 ) {
 				do_warn(_("found non-root LEAFN node in inode "
 					  "%llu bno = %u\n"),
 					da_cursor->ino, bno);
 			}
-			if (INT_GET(node->hdr.level, ARCH_CONVERT) >= 1) {
-				do_warn(_("LEAFN node level is %d inode %llu "
-					  "bno = %u\n"),
-					INT_GET(node->hdr.level, ARCH_CONVERT),
-						da_cursor->ino, bno);
-			}
 			*rbno = 0;
 			da_brelse(bp);
 			return(1);
-		} else if (INT_GET(node->hdr.info.magic, ARCH_CONVERT) !=
+		} else if (INT_GET(info->magic, ARCH_CONVERT) !=
 					XFS_DA_NODE_MAGIC)  {
 			da_brelse(bp);
 			do_warn(_("bad dir magic number 0x%x in inode %llu "
 				  "bno = %u\n"),
-				INT_GET(node->hdr.info.magic, ARCH_CONVERT),
+				INT_GET(info->magic, ARCH_CONVERT),
 					da_cursor->ino, bno);
 			goto error_out;
 		}
+		node = (xfs_da_intnode_t*)info;
 		if (INT_GET(node->hdr.count, ARCH_CONVERT) >
 						mp->m_dir_node_ents)  {
 			da_brelse(bp);
@@ -327,7 +323,6 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 				mp->m_dir_node_ents);
 			goto error_out;
 		}
-
 		/*
 		 * maintain level counter
 		 */
@@ -356,7 +351,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		 * set up new bno for next level down
 		 */
 		bno = INT_GET(node->btree[0].before, ARCH_CONVERT);
-	} while (node != NULL && i > 1);
+	} while (info != NULL && i > 1);
 
 	/*
 	 * now return block number and get out
