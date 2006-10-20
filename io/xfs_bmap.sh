@@ -14,7 +14,7 @@ do
 	a)	OPTS=$OPTS" -a";;
 	d)	OPTS=$OPTS" -d";;
 	l)	OPTS=$OPTS" -l";;
-	n)	OPTS=$OPTS" '-n "$OPTARG"'";;
+	n)	OPTS=$OPTS" -n "$OPTARG;;
 	p)	OPTS=$OPTS" -p";;
 	v)	OPTS=$OPTS" -v";;
 	V)	VERSION=true;;
