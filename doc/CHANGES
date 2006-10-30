@@ -1,3 +1,6 @@
+xfsprogs-2.8.16 (30 October 2006)
+	- Fix up an endian problem for nlink setting in phase 7 for xfs_repair.
+	
 xfsprogs-2.8.15 (19 October 2006)
 	- Fix up nlink checks and repairs in phase 7 for xfs_repair.
 	- Remove a bogus LEAFN warning for a single leaf node v2 dir.

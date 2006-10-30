@@ -180,11 +180,12 @@ phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 				if (!XFS_SB_VERSION_HASNLINK(&mp->m_sb)) {
 					ASSERT(dip->di_core.di_nlink <= 
 							XFS_MAXLINK_1);
+					INT_SET(dip->di_core.di_onlink, 
+							ARCH_CONVERT,
+							dip->di_core.di_nlink);
 					dip->di_core.di_nlink = 
 						INT_GET(dip->di_core.di_nlink, 
 							ARCH_CONVERT);
-					dip->di_core.di_onlink = 
-						dip->di_core.di_nlink;
 				} else {
 					/* superblock support v2 nlinks */
 					INT_SET(dip->di_core.di_version, 
