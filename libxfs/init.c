@@ -595,8 +595,8 @@ libxfs_mount(
 		fprintf(stderr, _("%s: data size check failed\n"), progname);
 		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
 			return NULL;
-	}
-	libxfs_putbuf(bp);
+	} else
+		libxfs_putbuf(bp);
 
 	if (mp->m_logdev && mp->m_logdev != mp->m_dev) {
 		d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
@@ -610,7 +610,8 @@ libxfs_mount(
 			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
 				return NULL;
 		}
-		libxfs_putbuf(bp);
+		if (bp)
+			libxfs_putbuf(bp);
 	}
 
 	/* Initialize realtime fields in the mount structure */
