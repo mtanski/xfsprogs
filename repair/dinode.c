@@ -2060,11 +2060,21 @@ process_dinode_int(xfs_mount_t *mp,
 		type = XR_INO_FIFO;
 		break;
 	default:
-		type = XR_INO_UNKNOWN;
-		do_warn(_("Unexpected inode type %#o inode %llu\n"),
-			(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
-		abort();
-		break;
+		retval++;
+		if (!verify_mode)  {
+			do_warn(_("bad inode type %#o inode %llu\n"),
+				(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
+			if (!no_modify)  
+				*dirty += clear_dinode(mp, dino, lino);
+			else 
+				*dirty = 1;
+			*cleared = 1;
+			*used = is_free;
+		} else if (!uncertain)  {
+			do_warn(_("bad inode type %#o inode %llu\n"),
+				(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
+		}
+		return 1;
 	}
 
 	/*

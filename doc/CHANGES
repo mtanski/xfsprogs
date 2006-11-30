@@ -1,6 +1,8 @@
 xfsprogs-2.8.x
-	- Fix up libxfs initialisation with bad filesystem.
-	  Thanks to Utako Kuzaka <utako@tnes.co.jp> for this.
+	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
+	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
+	- Fix up xfs_repair aborting if it finds an inode with an invalid 
+	  inode type.
 
 xfsprogs-2.8.16 (30 October 2006)
 	- Fix up an endian problem for nlink setting in phase 7 for xfs_repair.
@@ -12,7 +14,7 @@ xfsprogs-2.8.15 (19 October 2006)
 	
 xfsprogs-2.8.14 (6 October 2006)
 	- Fix up the ring command in xfs_db,
-	  Thanks to Utako Kuzaka <utako@tnes.co.jp> for this.
+	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
 	- Set the blocksize on the device to the given sector
 	  size which is _not_ necessarily 512 bytes;
 	  idea suggested by Shailendra Tripathi.
