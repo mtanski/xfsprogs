@@ -3,6 +3,7 @@ xfsprogs-2.8.x
 	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
 	- Fix up xfs_repair aborting if it finds an inode with an invalid 
 	  inode type.
+	- Fix up default realtime extent size for large block sizes.
 
 xfsprogs-2.8.16 (30 October 2006)
 	- Fix up an endian problem for nlink setting in phase 7 for xfs_repair.

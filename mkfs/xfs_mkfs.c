@@ -618,7 +618,7 @@ main(
 	liflag = laflag = lsflag = ldflag = lvflag = 0;
 	loginternal = 1;
 	logversion = 1;
-	logagno = logblocks = rtblocks = 0;
+	logagno = logblocks = rtblocks = rtextblocks = 0;
 	Nflag = nlflag = nsflag = nvflag = 0;
 	dirblocklog = dirblocksize = dirversion = 0;
 	qflag = 0;
@@ -1466,12 +1466,14 @@ main(
 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
 			    (rtextbytes <= XFS_MAX_RTEXTSIZE)) {
 				rtextblocks = rswidth;
-			} else {
-				rtextblocks = XFS_DFL_RTEXTSIZE >> blocklog;
-			}
-		} else
-			rtextblocks = XFS_DFL_RTEXTSIZE >> blocklog;
+			} 
+		}
+		if (!rtextblocks) {
+			rtextblocks = (blocksize < XFS_MIN_RTEXTSIZE) ?
+					XFS_MIN_RTEXTSIZE >> blocklog : 1;
+		}
 	}
+	ASSERT(rtextblocks);
 
 	/*
 	 * Check some argument sizes against mins, maxes.
