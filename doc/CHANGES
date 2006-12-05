@@ -4,6 +4,8 @@ xfsprogs-2.8.x
 	- Fix up xfs_repair aborting if it finds an inode with an invalid 
 	  inode type.
 	- Fix up default realtime extent size for large block sizes.
+	- Rename include/list.h to xfs_list.h so that other applications
+	  do not accidentally use it.
 
 xfsprogs-2.8.16 (30 October 2006)
 	- Fix up an endian problem for nlink setting in phase 7 for xfs_repair.
