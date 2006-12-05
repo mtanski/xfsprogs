@@ -24,7 +24,7 @@
 #include <xfs/platform_defs.h>
 
 #include <pthread.h>
-#include <xfs/list.h>
+#include <xfs/xfs_list.h>
 #include <xfs/cache.h>
 
 #include <xfs/xfs_fs.h>
