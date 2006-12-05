@@ -1,4 +1,4 @@
-xfsprogs-2.8.x
+xfsprogs-2.8.17
 	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
 	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
 	- Fix up xfs_repair aborting if it finds an inode with an invalid 
