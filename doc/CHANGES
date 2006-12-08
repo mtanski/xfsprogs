@@ -1,7 +1,11 @@
 xfsprogs-2.8.x
+	- Fix up two issues with xfs_db and bmap. If the data/attr fork is
+	  local, it either infinite loops or crashes. If both are displayed,
+	  the attrs are wrong.
 	- Fix up xfs_io mmap read that read from the wrong offset.
 	- Updated xfs_io man page.
-	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for these.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for the above three
+	  fixes.
 
 xfsprogs-2.8.17
 	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.

@@ -77,7 +77,8 @@ bmap(
 	fmt = (xfs_dinode_fmt_t)XFS_DFORK_FORMAT(dip, whichfork);
 	typ = whichfork == XFS_DATA_FORK ? TYP_BMAPBTD : TYP_BMAPBTA;
 	ASSERT(typtab[typ].typnm == typ);
-	ASSERT(fmt == XFS_DINODE_FMT_EXTENTS || fmt == XFS_DINODE_FMT_BTREE);
+	ASSERT(fmt == XFS_DINODE_FMT_LOCAL || fmt == XFS_DINODE_FMT_EXTENTS ||
+		fmt == XFS_DINODE_FMT_BTREE);
 	if (fmt == XFS_DINODE_FMT_EXTENTS) {
 		nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
 		xp = (xfs_bmbt_rec_64_t *)XFS_DFORK_PTR(dip, whichfork);
@@ -85,7 +86,7 @@ bmap(
 			if (!bmap_one_extent(ep, &curoffset, eoffset, &n, bep))
 				break;
 		}
-	} else {
+	} else if (fmt == XFS_DINODE_FMT_BTREE) {
 		push_cur();
 		bno = NULLFSBLOCK;
 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
@@ -147,7 +148,7 @@ bmap_f(
 	int		afork = 0;
 	bmap_ext_t	be;
 	int		c;
-	xfs_dfiloff_t	co;
+	xfs_dfiloff_t	co, cosave;
 	int		dfork = 0;
 	xfs_dinode_t	*dip;
 	xfs_dfiloff_t	eo;
@@ -205,6 +206,7 @@ bmap_f(
 		co = 0;
 		eo = -1;
 	}
+	cosave = co;
 	for (whichfork = XFS_DATA_FORK;
 	     whichfork <= XFS_ATTR_FORK;
 	     whichfork++) {
@@ -226,6 +228,7 @@ bmap_f(
 				be.blockcount, be.flag);
 			co = be.startoff + be.blockcount;
 		}
+		co = cosave;
 	}
 	return 0;
 }
