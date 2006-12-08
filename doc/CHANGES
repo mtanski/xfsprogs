@@ -1,4 +1,9 @@
-xfsprogs-2.8.x
+xfsprogs-2.8.17 (8 December 2006)
+ 	- <xfs/list.h> is an installed file, we cannot simply rename it,
+ 	  as other applications using it (accidentally or not) may break.
+ 	  The xfs_list.h name was inconsistent with everything else too.
+ 	- Fix "pointer targets in assignment differ in signedness" warnings
+ 	- Update Debian packaging.
 	- Fix up two issues with xfs_db and bmap. If the data/attr fork is
 	  local, it either infinite loops or crashes. If both are displayed,
 	  the attrs are wrong.
@@ -7,7 +12,7 @@ xfsprogs-2.8.x
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for the above three
 	  fixes.
 
-xfsprogs-2.8.17
+xfsprogs-2.8.17 (?)
 	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
 	- Fix up xfs_repair aborting if it finds an inode with an invalid 
