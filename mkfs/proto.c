@@ -313,10 +313,10 @@ newdirent(
 	int	error;
 
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		error = libxfs_dir2_createname(tp, pip, name, namelen,
+		error = libxfs_dir2_createname(tp, pip, (uchar_t*)name, namelen,
 						inum, first, flist, total);
 	else
-		error = libxfs_dir_createname(tp, pip, name, namelen,
+		error = libxfs_dir_createname(tp, pip, (uchar_t*)name, namelen,
 						inum, first, flist, total);
 	if (error)
 		fail(_("directory createname error"), error);

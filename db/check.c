@@ -2299,7 +2299,7 @@ process_data_dir_v2(
 		tag_err += INT_GET(*tagp, ARCH_CONVERT) != (char *)dep - (char *)data;
 		addr = XFS_DIR2_DB_OFF_TO_DATAPTR(mp, db,
 			(char *)dep - (char *)data);
-		hash = libxfs_da_hashname((char *)dep->name, dep->namelen);
+		hash = libxfs_da_hashname((uchar_t *)dep->name, dep->namelen);
 		dir_hash_add(hash, addr);
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
 		count++;

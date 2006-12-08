@@ -287,7 +287,7 @@ xfs_dir_shortform_to_leaf(xfs_da_args_t *iargs)
 		goto out;
 	xfs_da_buf_done(bp);
 
-	args.name = ".";
+	args.name = (const uchar_t *) ".";
 	args.namelen = 1;
 	args.hashval = xfs_dir_hash_dot;
 	args.inumber = dp->i_ino;
@@ -303,7 +303,7 @@ xfs_dir_shortform_to_leaf(xfs_da_args_t *iargs)
 	if (retval)
 		goto out;
 
-	args.name = "..";
+	args.name = (const uchar_t *) "..";
 	args.namelen = 2;
 	args.hashval = xfs_dir_hash_dotdot;
 	args.inumber = inumber;
@@ -313,9 +313,9 @@ xfs_dir_shortform_to_leaf(xfs_da_args_t *iargs)
 
 	sfe = &sf->list[0];
 	for (i = 0; i < INT_GET(sf->hdr.count, ARCH_CONVERT); i++) {
-		args.name = (char *)(sfe->name);
+		args.name = (const uchar_t *)(sfe->name);
 		args.namelen = sfe->namelen;
-		args.hashval = xfs_da_hashname((char *)(sfe->name),
+		args.hashval = xfs_da_hashname((const uchar_t *)(sfe->name),
 					       sfe->namelen);
 		XFS_DIR_SF_GET_DIRINO(&sfe->inumber, &args.inumber);
 		retval = xfs_dir_leaf_addname(&args);
@@ -449,7 +449,7 @@ xfs_dir_leaf_to_shortform(xfs_da_args_t *iargs)
 		if (!entry->nameidx)
 			continue;
 		namest = XFS_DIR_LEAF_NAMESTRUCT(leaf, INT_GET(entry->nameidx, ARCH_CONVERT));
-		args.name = (char *)(namest->name);
+		args.name = (const uchar_t *)(namest->name);
 		args.namelen = entry->namelen;
 		args.hashval = INT_GET(entry->hashval, ARCH_CONVERT);
 		XFS_DIR_SF_GET_DIRINO(&namest->inumber, &args.inumber);

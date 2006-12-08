@@ -452,7 +452,7 @@ libxfs_bmap_next_offset(
  * This was originally in the kernel, but only used in xfs_repair.
  */
 int
-xfs_dir_bogus_removename(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
+xfs_dir_bogus_removename(xfs_trans_t *trans, xfs_inode_t *dp, uchar_t *name,
 		xfs_fsblock_t *firstblock, xfs_bmap_free_t *flist,
 		xfs_extlen_t total, xfs_dahash_t hashval, int namelen)
 {
@@ -510,7 +510,7 @@ int
 xfs_dir2_bogus_removename(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_inode_t	*dp,		/* incore directory inode */
-	char		*name,		/* name of entry to remove */
+	uchar_t		*name,		/* name of entry to remove */
 	xfs_fsblock_t	*first,		/* bmap's firstblock */
 	xfs_bmap_free_t *flist,		/* bmap's freeblock list */
 	xfs_extlen_t	total,		/* bmap's total block count */

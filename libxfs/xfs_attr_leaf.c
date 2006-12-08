@@ -372,11 +372,11 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
 
 	sfe = &sf->list[0];
 	for (i = 0; i < INT_GET(sf->hdr.count, ARCH_CONVERT); i++) {
-		nargs.name = (char *)sfe->nameval;
+		nargs.name = (const uchar_t *)sfe->nameval;
 		nargs.namelen = sfe->namelen;
-		nargs.value = (char *)&sfe->nameval[nargs.namelen];
+		nargs.value = (uchar_t *)&sfe->nameval[nargs.namelen];
 		nargs.valuelen = INT_GET(sfe->valuelen, ARCH_CONVERT);
-		nargs.hashval = xfs_da_hashname((char *)sfe->nameval,
+		nargs.hashval = xfs_da_hashname((const uchar_t *)sfe->nameval,
 						sfe->namelen);
 		nargs.flags = (sfe->flags & XFS_ATTR_SECURE) ? ATTR_SECURE :
 				((sfe->flags & XFS_ATTR_ROOT) ? ATTR_ROOT : 0);
@@ -510,9 +510,9 @@ xfs_attr_leaf_to_shortform(xfs_dabuf_t *bp, xfs_da_args_t *args, int forkoff)
 			continue;
 		ASSERT(entry->flags & XFS_ATTR_LOCAL);
 		name_loc = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);
-		nargs.name = (char *)name_loc->nameval;
+		nargs.name = (const uchar_t *)name_loc->nameval;
 		nargs.namelen = name_loc->namelen;
-		nargs.value = (char *)&name_loc->nameval[nargs.namelen];
+		nargs.value = (uchar_t *)&name_loc->nameval[nargs.namelen];
 		nargs.valuelen = INT_GET(name_loc->valuelen, ARCH_CONVERT);
 		nargs.hashval = INT_GET(entry->hashval, ARCH_CONVERT);
 		nargs.flags = (entry->flags & XFS_ATTR_SECURE) ? ATTR_SECURE :

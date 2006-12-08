@@ -103,9 +103,9 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
 	 * Fill in the arg structure for this request.
 	 */
 	memset((char *)&args, 0, sizeof(args));
-	args.name = name;
+	args.name = (const uchar_t *)name;
 	args.namelen = namelen;
-	args.value = value;
+	args.value = (uchar_t *)value;
 	args.valuelen = valuelen;
 	args.flags = flags;
 	args.hashval = xfs_da_hashname(args.name, args.namelen);
@@ -313,7 +313,7 @@ xfs_attr_remove_int(xfs_inode_t *dp, const char *name, int namelen, int flags)
 	 * Fill in the arg structure for this request.
 	 */
 	memset((char *)&args, 0, sizeof(args));
-	args.name = name;
+	args.name = (const uchar_t *)name;
 	args.namelen = namelen;
 	args.flags = flags;
 	args.hashval = xfs_da_hashname(args.name, args.namelen);
@@ -1289,7 +1289,7 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
 
 	dp = args->dp;
 	mp = dp->i_mount;
-	src = args->value;
+	src = (xfs_caddr_t)args->value;
 
 	/*
 	 * Find a "hole" in the attribute address space large enough for

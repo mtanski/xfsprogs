@@ -52,7 +52,7 @@ hash_f(
 {
 	xfs_dahash_t	hashval;
 
-	hashval = libxfs_da_hashname(argv[1], (int)strlen(argv[1]));
+	hashval = libxfs_da_hashname((uchar_t *)argv[1], (int)strlen(argv[1]));
 	dbprintf("0x%x\n", hashval);
 	return 0;
 }

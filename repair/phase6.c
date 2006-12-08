@@ -338,10 +338,12 @@ dir_createname(xfs_mount_t *mp, xfs_trans_t *tp, xfs_inode_t *pip,
 		xfs_bmap_free_t *flist, xfs_extlen_t total)
 {
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		return libxfs_dir2_createname(tp, pip, name, namelen,
+		return libxfs_dir2_createname(tp, pip,
+				(uchar_t *)name, namelen,
 				inum, first, flist, total);
 	else
-		return libxfs_dir_createname(tp, pip, name, namelen,
+		return libxfs_dir_createname(tp, pip,
+				(uchar_t *)name, namelen,
 				inum, first, flist, total);
 }
 
@@ -350,9 +352,11 @@ dir_lookup(xfs_mount_t *mp, xfs_trans_t *tp, xfs_inode_t *dp, char *name,
 		int namelen, xfs_ino_t *inum)
 {
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		return libxfs_dir2_lookup(tp, dp, name, namelen, inum);
+		return libxfs_dir2_lookup(tp, dp,
+					(uchar_t *)name, namelen, inum);
 	else
-		return libxfs_dir_lookup(tp, dp, name, namelen, inum);
+		return libxfs_dir_lookup(tp, dp,
+					(uchar_t *)name, namelen, inum);
 }
 
 static int
@@ -361,23 +365,12 @@ dir_replace(xfs_mount_t *mp, xfs_trans_t *tp, xfs_inode_t *dp, char *name,
 		xfs_bmap_free_t *flist, xfs_extlen_t total)
 {
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		return libxfs_dir2_replace(tp, dp, name, namelen, inum,
+		return libxfs_dir2_replace(tp, dp,
+				(uchar_t *)name, namelen, inum,
 				firstblock, flist, total);
 	else
-		return libxfs_dir_replace(tp, dp, name, namelen, inum,
-				firstblock, flist, total);
-}
-
-static int
-dir_removename(xfs_mount_t *mp, xfs_trans_t *tp, xfs_inode_t *dp, char *name,
-		int namelen, xfs_ino_t inum, xfs_fsblock_t *firstblock,
-		xfs_bmap_free_t *flist, xfs_extlen_t total)
-{
-	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		return libxfs_dir2_removename(tp, dp, name, namelen, inum,
-				firstblock, flist, total);
-	else
-		return libxfs_dir_removename(tp, dp, name, namelen, inum,
+		return libxfs_dir_replace(tp, dp,
+				(uchar_t *)name, namelen, inum,
 				firstblock, flist, total);
 }
 
@@ -387,10 +380,12 @@ dir_bogus_removename(xfs_mount_t *mp, xfs_trans_t *tp, xfs_inode_t *dp,
 		xfs_extlen_t total, xfs_dahash_t hashval, int namelen)
 {
 	if (XFS_SB_VERSION_HASDIRV2(&mp->m_sb))
-		return libxfs_dir2_bogus_removename(tp, dp, name, firstblock,
+		return libxfs_dir2_bogus_removename(tp, dp,
+				(uchar_t *)name, firstblock,
 				flist, total, hashval, namelen);
 	else
-		return libxfs_dir_bogus_removename(tp, dp, name, firstblock,
+		return libxfs_dir_bogus_removename(tp, dp,
+				(uchar_t *)name, firstblock,
 				flist, total, hashval, namelen);
 }
 
@@ -1863,7 +1858,7 @@ longform_dir2_rebuild(
 		libxfs_trans_ihold(tp, ip);
 
 		XFS_BMAP_INIT(&flist, &firstblock);
-		if ((error = libxfs_dir2_createname(tp, ip, (char*)p->name, 
+		if ((error = libxfs_dir2_createname(tp, ip, (uchar_t *)p->name,
 				p->namelen, p->inum, &firstblock, &flist, 
 				nres))) {
 			do_warn(

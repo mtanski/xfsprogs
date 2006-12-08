@@ -33,8 +33,8 @@ xfs_dahash_t	xfs_dir_hash_dot, xfs_dir_hash_dotdot;
 void
 xfs_dir_startup(void)
 {
-	xfs_dir_hash_dot = xfs_da_hashname(".", 1);
-	xfs_dir_hash_dotdot = xfs_da_hashname("..", 2);
+	xfs_dir_hash_dot = xfs_da_hashname((const uchar_t *) ".", 1);
+	xfs_dir_hash_dotdot = xfs_da_hashname((const uchar_t *) "..", 2);
 }
 
 /*
@@ -99,7 +99,7 @@ xfs_dir_init(xfs_trans_t *trans, xfs_inode_t *dir, xfs_inode_t *parent_dir)
  * Transitions directory from shortform to Btree as necessary.
  */
 STATIC int						/* error */
-xfs_dir_createname(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
+xfs_dir_createname(xfs_trans_t *trans, xfs_inode_t *dp, uchar_t *name,
 		   int namelen, xfs_ino_t inum, xfs_fsblock_t *firstblock,
 		   xfs_bmap_free_t *flist, xfs_extlen_t total)
 {
@@ -165,7 +165,7 @@ xfs_dir_createname(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
  * Transitions directory from Btree to shortform as necessary.
  */
 STATIC int							/* error */
-xfs_dir_removename(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
+xfs_dir_removename(xfs_trans_t *trans, xfs_inode_t *dp, uchar_t *name,
 		   int namelen, xfs_ino_t ino, xfs_fsblock_t *firstblock,
 		   xfs_bmap_free_t *flist, xfs_extlen_t total)
 {
@@ -209,7 +209,7 @@ xfs_dir_removename(xfs_trans_t *trans, xfs_inode_t *dp, char *name,
 }
 
 STATIC int							/* error */
-xfs_dir_lookup(xfs_trans_t *trans, xfs_inode_t *dp, char *name, int namelen,
+xfs_dir_lookup(xfs_trans_t *trans, xfs_inode_t *dp, uchar_t *name, int namelen,
 				   xfs_ino_t *inum)
 {
 	xfs_da_args_t args;
@@ -251,7 +251,7 @@ xfs_dir_lookup(xfs_trans_t *trans, xfs_inode_t *dp, char *name, int namelen,
 }
 
 STATIC int							/* error */
-xfs_dir_replace(xfs_trans_t *trans, xfs_inode_t *dp, char *name, int namelen,
+xfs_dir_replace(xfs_trans_t *trans, xfs_inode_t *dp, uchar_t *name, int namelen,
 				    xfs_ino_t inum, xfs_fsblock_t *firstblock,
 				    xfs_bmap_free_t *flist, xfs_extlen_t total)
 {

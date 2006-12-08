@@ -77,7 +77,7 @@ STATIC int					/* error */
 xfs_dir2_createname(
 	xfs_trans_t		*tp,		/* transaction pointer */
 	xfs_inode_t		*dp,		/* incore directory inode */
-	char			*name,		/* new entry name */
+	uchar_t			*name,		/* new entry name */
 	int			namelen,	/* new entry name length */
 	xfs_ino_t		inum,		/* new entry inode number */
 	xfs_fsblock_t		*first,		/* bmap's firstblock */
@@ -133,7 +133,7 @@ STATIC int				/* error */
 xfs_dir2_lookup(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_inode_t	*dp,		/* incore directory inode */
-	char		*name,		/* lookup name */
+	uchar_t		*name,		/* lookup name */
 	int		namelen,	/* lookup name length */
 	xfs_ino_t	*inum)		/* out: inode number */
 {
@@ -188,7 +188,7 @@ STATIC int				/* error */
 xfs_dir2_removename(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_inode_t	*dp,		/* incore directory inode */
-	char		*name,		/* name of entry to remove */
+	uchar_t		*name,		/* name of entry to remove */
 	int		namelen,	/* name length of entry to remove */
 	xfs_ino_t	ino,		/* inode number of entry to remove */
 	xfs_fsblock_t	*first,		/* bmap's firstblock */
@@ -240,7 +240,7 @@ STATIC int				/* error */
 xfs_dir2_replace(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_inode_t	*dp,		/* incore directory inode */
-	char		*name,		/* name of entry to replace */
+	uchar_t		*name,		/* name of entry to replace */
 	int		namelen,	/* name length of entry to replace */
 	xfs_ino_t	inum,		/* new inode number */
 	xfs_fsblock_t	*first,		/* bmap's firstblock */

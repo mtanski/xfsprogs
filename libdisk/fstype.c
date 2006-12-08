@@ -141,11 +141,11 @@ may_be_swap(const char *s) {
 
 /* rather weak necessary condition */
 static int
-may_be_adfs(const u_char *s) {
-	u_char *p;
+may_be_adfs(const char *s) {
+	char *p;
 	int sum;
 
-	p = (u_char *) s + 511;
+	p = (char *) s + 511;
 	sum = 0;
 	while(--p != s)
 		sum = (sum >> 8) + (sum & 0xff) + *p;
@@ -301,7 +301,7 @@ fstype(const char *device) {
              goto io_error;
 
 	/* only a weak test */
-        if (may_be_adfs((u_char *) &adfssb)
+        if (may_be_adfs((char *) &adfssb)
             && (adfsblksize(adfssb) >= 8 &&
                 adfsblksize(adfssb) <= 10))
              type = "adfs";

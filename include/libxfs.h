@@ -429,33 +429,33 @@ extern void	libxfs_dir_mount (xfs_mount_t *);
 extern void	libxfs_dir2_mount (xfs_mount_t *);
 extern int	libxfs_dir_init (xfs_trans_t *, xfs_inode_t *, xfs_inode_t *);
 extern int	libxfs_dir2_init (xfs_trans_t *, xfs_inode_t *, xfs_inode_t *);
-extern int	libxfs_dir_createname (xfs_trans_t *, xfs_inode_t *, char *,
+extern int	libxfs_dir_createname (xfs_trans_t *, xfs_inode_t *, uchar_t *,
 				int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir2_createname (xfs_trans_t *, xfs_inode_t *, char *,
+extern int	libxfs_dir2_createname (xfs_trans_t *, xfs_inode_t *, uchar_t *,
 				int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
 extern int	libxfs_dir_lookup (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t *);
+				uchar_t *, int, xfs_ino_t *);
 extern int	libxfs_dir2_lookup (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t *);
+				uchar_t *, int, xfs_ino_t *);
 extern int	libxfs_dir_replace (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t, xfs_fsblock_t *,
+				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
 extern int	libxfs_dir2_replace (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t, xfs_fsblock_t *,
+				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
 extern int	libxfs_dir_removename (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t, xfs_fsblock_t *,
+				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
 extern int	libxfs_dir2_removename (xfs_trans_t *, xfs_inode_t *,
-				char *, int, xfs_ino_t, xfs_fsblock_t *,
+				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
 				xfs_bmap_free_t *, xfs_extlen_t);
 extern int	libxfs_dir_bogus_removename (xfs_trans_t *, xfs_inode_t *,
-				char *, xfs_fsblock_t *, xfs_bmap_free_t *,
+				uchar_t *, xfs_fsblock_t *, xfs_bmap_free_t *,
 				xfs_extlen_t, xfs_dahash_t, int);
 extern int	libxfs_dir2_bogus_removename (xfs_trans_t *, xfs_inode_t *,
-				char *, xfs_fsblock_t *, xfs_bmap_free_t *,
+				uchar_t *, xfs_fsblock_t *, xfs_bmap_free_t *,
 				xfs_extlen_t, xfs_dahash_t, int);
 
 
