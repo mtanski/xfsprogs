@@ -1,6 +1,11 @@
+xfsprogs-2.8.x
+	- Fix up xfs_io mmap read that read from the wrong offset.
+	- Updated xfs_io man page.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for these.
+
 xfsprogs-2.8.17
 	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
-	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
 	- Fix up xfs_repair aborting if it finds an inode with an invalid 
 	  inode type.
 	- Fix up default realtime extent size for large block sizes.
@@ -17,7 +22,7 @@ xfsprogs-2.8.15 (19 October 2006)
 	
 xfsprogs-2.8.14 (6 October 2006)
 	- Fix up the ring command in xfs_db,
-	  Thanks to Utako Kuzaka <utako@tnes.nec.co.jp> for this.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
 	- Set the blocksize on the device to the given sector
 	  size which is _not_ necessarily 512 bytes;
 	  idea suggested by Shailendra Tripathi.

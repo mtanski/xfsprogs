@@ -323,26 +323,6 @@ msync_f(
 	return 0;
 }
 
-static int
-read_mapping(
-	char		*dest,
-	off64_t		offset,
-	int		dump,
-	off64_t		dumpoffset,
-	size_t		dumplength)
-{
-	*dest = *(((char *)mapping->addr) + offset);
-
-	if (offset % pagesize == 0) {
-		if (dump == 2)
-			dumpoffset += mapping->offset;
-		if (dump)
-			dump_buffer(dumpoffset, dumplength);
-		return 1;
-	}
-	return 0;
-}
-
 static void
 mread_help(void)
 {
@@ -373,9 +353,9 @@ mread_f(
 	int		argc,
 	char		**argv)
 {
-	off64_t		offset, tmp;
+	off64_t		offset, tmp, dumpoffset, printoffset;
 	ssize_t		length;
-	size_t		dumplen;
+	size_t		dumplen, cnt = 0;
 	char		*bp;
 	void		*start;
 	int		dump = 0, rflag = 0, c;
@@ -422,6 +402,11 @@ mread_f(
 	start = check_mapping_range(mapping, offset, length, 0);
 	if (!start)
 		return 0;
+	dumpoffset = offset - mapping->offset;
+	if (dump == 2)
+		printoffset = offset;
+	else
+		printoffset = dumpoffset;
 
 	if (alloc_buffer(pagesize, 0, 0) < 0)
 		return 0;
@@ -432,28 +417,35 @@ mread_f(
 		dumplen = pagesize;
 
 	if (rflag) {
-		for (tmp = length, c = 0; tmp > 0; tmp--, bp++, c = 1)
-			if (read_mapping(bp, tmp, c? dump:0, offset, dumplen)) {
+		for (tmp = length - 1, c = 0; tmp >= 0; tmp--, c = 1) {
+			*bp = *(((char *)mapping->addr) + dumpoffset + tmp);
+			cnt++;
+			if (c && cnt == dumplen) {
+				if (dump) {
+					dump_buffer(printoffset, dumplen);
+					printoffset += dumplen;
+				}
 				bp = (char *)buffer;
 				dumplen = pagesize;
+				cnt = 0;
+			} else {
+				bp++;
 			}
+		}
 	} else {
-		for (tmp = 0, c = 0; tmp < length; tmp++, bp++, c = 1)
-			if (read_mapping(bp, tmp, c? dump:0, offset, dumplen)) {
+		for (tmp = 0, c = 0; tmp < length; tmp++, c = 1) {
+			*bp = *(((char *)mapping->addr) + dumpoffset + tmp);
+			cnt++;
+			if (c && cnt == dumplen) {
+				if (dump)
+					dump_buffer(printoffset + tmp -
+						(dumplen - 1), dumplen);
 				bp = (char *)buffer;
 				dumplen = pagesize;
+				cnt = 0;
+			} else {
+				bp++;
 			}
-	}
-	/* dump the remaining (partial page) part of the read buffer */
-	if (dump) {
-		if (rflag)
-			dumplen = length % pagesize;
-		else
-			dumplen = tmp % pagesize;
-		if (dumplen) {
-			if (dump == 2)
-				tmp += mapping->offset;
-			dump_buffer(tmp, dumplen);
 		}
 	}
 	return 0;
@@ -571,7 +563,7 @@ mwrite_f(
 		return 0;
 
 	if (rflag) {
-		for (tmp = offset + length; tmp > offset; tmp--)
+		for (tmp = offset + length -1; tmp >= offset; tmp--)
 			((char *)mapping->addr)[tmp] = seed;
 	} else {
 		for (tmp = offset; tmp < offset + length; tmp++)

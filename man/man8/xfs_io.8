@@ -99,7 +99,7 @@ Closes the current open file, marking the next open file as current
 \f3c\f1
 See the \f3close\f1 command.
 .TP
-\f3pread\f1 [ \f2\-b bsize\f1 ] [ \f2\-v\f1 ]
+\f3pread\f1 [ \f2\-b bsize\f1 ] [ \f2\-v\f1 ] \f2offset\f1 \f2length\f1
 Reads a range of bytes in a specified blocksize from the given offset.
 .br
 The \f3\-b\f1 option can be used to set the blocksize into which the
@@ -112,7 +112,7 @@ by default only the count of bytes actually read is dumped.
 \f3r\f1
 See the \f3pread\f1 command.
 .TP
-\f3pwrite\f1 [ \f2\-i file\f1 ] [ \f2\-d\f1 ] [ \f2\-s skip\f1 ] [ \f2\-b size\f1 ] [ \f2\-S seed\f1 ]
+\f3pwrite\f1 [ \f2\-i file\f1 ] [ \f2\-d\f1 ] [ \f2\-s skip\f1 ] [ \f2\-b size\f1 ] [ \f2\-S seed\f1 ] \f2offset\f1 \f2length\f1
 Writes a range of bytes in a specified blocksize from the given offset.
 The bytes written can be either a set pattern or read in from another
 file before writing.
@@ -211,7 +211,7 @@ Unmaps the current memory mapping.
 \f3mu\f1
 See the \f3munmap\f1 command.
 .TP
-\f3mread\f1 [ \-\f2frv\f1 ]
+\f3mread\f1 [ \-\f2frv\f1 ] [ \f2offset\f1 \f2length\f1 ]
 Accesses a segment of the current memory mapping, optionally dumping it to
 the standard output stream (with \f2-v\f1 or \f2-f\f1 option) for inspection.
 The accesses are performed sequentially from the start offset by default,
@@ -224,7 +224,7 @@ offsets relative to the start of the mapping.
 \f3mr\f1
 See the \f3mread\f1 command.
 .TP
-\f3mwrite\f1 [ \f2-r\f1 ] [ \f2-S seed\f1 ]
+\f3mwrite\f1 [ \f2-r\f1 ] [ \f2-S seed\f1 ] [ \f2offset\f1 \f2length\f1 ]
 Stores a byte into memory for a range within a mapping.
 The default stored value is 'X', repeated to fill the range specified,
 but this can be changed using the \f2-S\f1 option.
