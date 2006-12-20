@@ -291,8 +291,6 @@ pwrite_f(
 
 	if (alloc_buffer(bsize, uflag, seed) < 0)
 		return 0;
-	if (align_direct(&offset, &count) < 0)
-		return 0;
 
 	c = IO_READONLY | (dflag ? IO_DIRECT : 0);
 	if (infile && ((fd = openfile(infile, NULL, c, 0)) < 0))
@@ -340,7 +338,8 @@ pwrite_f(
 			tdiv((double)total, t2), tdiv((double)c, t2));
 	}
 done:
-	close(fd);
+	if (infile)
+		close(fd);
 	return 0;
 }
 

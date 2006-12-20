@@ -105,36 +105,6 @@ dump_buffer(
 	}
 }
 
-int
-align_direct(
-	off64_t		*offset,
-	long long	*count)
-{
-	struct dioattr	dio;
-	unsigned int	align;
-
-	if (!(file->flags & IO_DIRECT))
-		return 0;
-
-	if (file->flags & IO_FOREIGN) {
-		dio.d_miniosz = BBSIZE;	/* punt */
-	} else if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
-		perror("XFS_IOC_DIOINFO");
-		return 1;
-	}
-
-	align = (*offset % dio.d_miniosz);
-	if (align) {
-		*offset -= align;
-		*count += align;
-	}
-	align = (*count % dio.d_miniosz);
-	if (align) {
-		*count += (dio.d_miniosz - align);
-	}
-	return 0;
-}
-
 static int
 read_random(
 	int		fd,
@@ -370,8 +340,6 @@ pread_f(
 	}
 
 	if (alloc_buffer(bsize, uflag, 0xabababab) < 0)
-		return 0;
-	if (align_direct(&offset, &count) < 0)
 		return 0;
 
 	gettimeofday(&t1, NULL);
