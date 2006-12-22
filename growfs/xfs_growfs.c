@@ -448,5 +448,5 @@ main(int argc, char **argv)
 	if (geo.rtextsize != ngeo.rtextsize)
 		printf(_("realtime extent size changed from %d to %d\n"),
 			geo.rtextsize, ngeo.rtextsize);
-	exit(0);
+	exit(error);
 }
