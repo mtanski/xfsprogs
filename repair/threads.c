@@ -94,7 +94,7 @@ start_workers(work_queue_t *wq, unsigned thcnt, pthread_attr_t *attrp)
 	init_workers(wq, thcnt);
 
 	if ((work_threads = (pthread_t *)malloc(sizeof(pthread_t) * thcnt)) == NULL)
-		do_error(_("cannot malloc %ld bytes for work_threads array\n"), 
+		do_error(_("cannot malloc %ld bytes for work_threads array\n"),
 				sizeof(pthread_t) * thcnt);
 
 	/*
@@ -119,7 +119,6 @@ void
 thread_init(void)
 {
 	int		status;
-	size_t		stacksize;
 	pthread_attr_t	attr;
 	sigset_t	blocked;
 
@@ -130,14 +129,6 @@ thread_init(void)
 
 	if ((status = pthread_attr_init(&attr)) != 0)
 		do_error(_("status from pthread_attr_init: %d"),status);
-
-	if ((status = pthread_attr_getstacksize(&attr, &stacksize)) != 0)
-		do_error(_("status from pthread_attr_getstacksize: %d"), status);
-
-	stacksize *= 4;
-
-	if ((status = pthread_attr_setstacksize(&attr, stacksize)) != 0)
-		do_error(_("status from pthread_attr_setstacksize: %d"), status);
 
 	if ((status = pthread_setconcurrency(thread_count)) != 0)
 		do_error(_("Status from pthread_setconcurrency(%d): %d"), thread_count, status);
