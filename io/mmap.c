@@ -562,6 +562,7 @@ mwrite_f(
 	if (!start)
 		return 0;
 
+	offset -= mapping->offset;
 	if (rflag) {
 		for (tmp = offset + length -1; tmp >= offset; tmp--)
 			((char *)mapping->addr)[tmp] = seed;
