@@ -78,6 +78,7 @@ bmap_f(
 	int			bmv_iflags = 0;	/* flags for XFS_IOC_GETBMAPX */
 	int			i = 0;
 	int			c;
+	int			egcnt;
 
 	while ((c = getopt(argc, argv, "adln:pv")) != EOF) {
 		switch (c) {
@@ -136,7 +137,7 @@ bmap_f(
 		}
 	}
 
-	map_size = nflag ? nflag+1 : 32;	/* initial guess - 256 */
+	map_size = nflag ? nflag+2 : 32;	/* initial guess - 256 */
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
 		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
@@ -232,9 +233,10 @@ bmap_f(
 			return 0;
 		}
 	}
+	egcnt = nflag ? min(nflag, map->bmv_entries) : map->bmv_entries;
 	printf("%s:\n", file->name);
 	if (!vflag) {
-		for (i = 0; i < map->bmv_entries; i++) {
+		for (i = 0; i < egcnt; i++) {
 			printf("\t%d: [%lld..%lld]: ", i,
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
@@ -288,7 +290,7 @@ bmap_f(
 		 * Go through the extents and figure out the width
 		 * needed for all columns.
 		 */
-		for (i = 0; i < map->bmv_entries; i++) {
+		for (i = 0; i < egcnt; i++) {
 			snprintf(rbuf, sizeof(rbuf), "[%lld..%lld]:",
 				(long long) map[i + 1].bmv_offset,
 				(long long)(map[i + 1].bmv_offset +
@@ -325,7 +327,7 @@ bmap_f(
 			aoff_w, _("AG-OFFSET"),
 			tot_w, _("TOTAL"),
 			flg ? _(" FLAGS") : "");
-		for (i = 0; i < map->bmv_entries; i++) {
+		for (i = 0; i < egcnt; i++) {
 			flg = FLG_NULL;
 			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC) {
 				flg |= FLG_PRE;
