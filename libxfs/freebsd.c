@@ -22,6 +22,7 @@
 #include <sys/mount.h>
 #include <sys/ioctl.h>
 
+int platform_has_uuid = 1;
 extern char *progname;
 
 int

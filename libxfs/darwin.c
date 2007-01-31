@@ -22,6 +22,7 @@
 #include <sys/ioctl.h>
 #include <xfs/libxfs.h>
 
+int platform_has_uuid = 1;
 extern char *progname;
 
 int

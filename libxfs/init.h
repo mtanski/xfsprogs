@@ -34,5 +34,6 @@ extern int platform_direct_blockdev (void);
 extern int platform_align_blockdev (void);
 extern int platform_aio_init (int aio_count);
 extern int platform_nproc(void);
+extern int platform_has_uuid;
 
 #endif	/* LIBXFS_INIT_H */

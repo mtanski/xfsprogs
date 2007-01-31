@@ -258,13 +258,14 @@ xlog_find_head(
 	uint		first_half_cycle, last_half_cycle;
 	uint		stop_on_cycle;
 	int		error, log_bbnum = log->l_logBBsize;
+	extern int	platform_has_uuid;
 
 	/* Is the end of the log device zeroed? */
 	if ((error = xlog_find_zeroed(log, &first_blk)) == -1) {
 		*return_head_blk = first_blk;
 
 		/* Is the whole lot zeroed? */
-		if (!first_blk) {
+		if (!first_blk && platform_has_uuid) {
 			/* Linux XFS shouldn't generate totally zeroed logs -
 			 * mkfs etc write a dummy unmount record to a fresh
 			 * log so we can store the uuid in there

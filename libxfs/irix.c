@@ -21,6 +21,7 @@
 #include <diskinfo.h>
 #include <sys/sysmp.h>
 
+int platform_has_uuid = 0;
 extern char *progname;
 extern __int64_t findsize(char *);
 
