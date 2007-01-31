@@ -3838,8 +3838,12 @@ traverse_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 
 	while (irec != NULL)  {
 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-			if (!inode_isadir(irec, j))
-				continue;
+			if (!inode_isadir(irec, j)) {
+				ino = XFS_AGINO_TO_INO(mp, agno,
+					irec->ino_startnum + j);
+				if (mp->m_sb.sb_rootino != ino)
+					continue;
+			}
 
 			ino = XFS_AGINO_TO_INO(mp, agno,
 				irec->ino_startnum + j);
