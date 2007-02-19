@@ -1,3 +1,7 @@
+xfsprogs-2.8.XX
+	- Fix xfs_quota gracetime reporting.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
+
 xfsprogs-2.8.19 (31 January 2007)
 	- Fix pthread stack size setting in xfs_repair.
 	- Fix xfs_bmap -n option displaying a truncated extent.

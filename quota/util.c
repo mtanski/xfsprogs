@@ -29,7 +29,7 @@
 
 char *
 time_to_string(
-	__uint32_t	origin,
+	time_t		origin,
 	uint		flags)
 {
 	static char	timestamp[32];

@@ -49,7 +49,7 @@ enum {
  */
 extern char *type_to_string(uint __type);
 extern char *form_to_string(uint __form);
-extern char *time_to_string(__uint32_t __time, uint __flags);
+extern char *time_to_string(time_t __time, uint __flags);
 extern char *bbs_to_string(__uint64_t __v, char *__c, uint __size);
 extern char *num_to_string(__uint64_t __v, char *__c, uint __size);
 extern char *pct_to_string(__uint64_t __v, __uint64_t __t, char *__c, uint __s);
