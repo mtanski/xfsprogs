@@ -431,7 +431,7 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	}
 
 	/*
-	 * If we're the last node at our level, check that the last child 
+	 * If we're the last node at our level, check that the last child
 	 * block's forward sibling pointer is NULL.
 	 */
 	if (check_dups == 0 &&
@@ -1295,6 +1295,8 @@ scan_ag(
 	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
 
 	if (sb_dirty && !no_modify) {
+		if (agno == 0)
+			memcpy(&mp->m_sb, sb, sizeof(xfs_sb_t));
 		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, XFS_SB_ALL_BITS);
 		libxfs_writebuf(sbbuf, 0);
 	} else

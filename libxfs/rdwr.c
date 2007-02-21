@@ -305,8 +305,9 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 
 	if (cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp)) {
 #ifdef IO_DEBUG
-		fprintf(stderr, "%s: allocated buffer, key=%llu(%llu), %p\n",
-			__FUNCTION__, BBTOB(len), LIBXFS_BBTOOFF64(blkno), blkno, buf);
+		fprintf(stderr, "%s: allocated %ubytes buffer, key=%llu(%llu), %p\n",
+			__FUNCTION__, BBTOB(len),
+			(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
 #endif
 		libxfs_initbuf(bp, device, blkno, bytes);
 	}
@@ -354,7 +355,7 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *bp, int len, int flags)
 	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "readbufr read %ubytes, blkno=%llu(%llu), %p\n",
-		bytes, LIBXFS_BBTOOFF64(blkno), blkno, bp);
+		bytes, (long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
 #endif
 	if (bp->b_dev == dev &&
 	    bp->b_blkno == blkno &&
@@ -403,7 +404,8 @@ libxfs_writebufr(xfs_buf_t *bp)
 	}
 #ifdef IO_DEBUG
 	fprintf(stderr, "writebufr wrote %ubytes, blkno=%llu(%llu), %p\n",
-		bp->b_bcount, LIBXFS_BBTOOFF64(bp->b_blkno), bp->b_blkno, bp);
+		bp->b_bcount, (long long)LIBXFS_BBTOOFF64(bp->b_blkno),
+		(long long)bp->b_blkno, bp);
 #endif
 	bp->b_flags |= LIBXFS_B_UPTODATE;
 	bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);
@@ -432,7 +434,7 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
 	if (boff + len > bp->b_bcount) {
 		fprintf(stderr, "Badness, iomove out of range!\n"
 			"bp=(bno %llu, bytes %u) range=(boff %u, bytes %u)\n",
-			bp->b_blkno, bp->b_bcount, boff, len);
+			(long long)bp->b_blkno, bp->b_bcount, boff, len);
 		abort();
 	}
 #endif
@@ -464,7 +466,7 @@ libxfs_bcache_purge(void)
 	cache_purge(libxfs_bcache);
 }
 
-void 
+void
 libxfs_bcache_flush(void)
 {
 	cache_flush(libxfs_bcache);
