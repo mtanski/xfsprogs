@@ -1059,8 +1059,12 @@ quotino_check(xfs_mount_t *mp)
 	ino_tree_node_t *irec;
 
 	if (mp->m_sb.sb_uquotino != NULLFSINO && mp->m_sb.sb_uquotino != 0)  {
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_uquotino),
-			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
+		if (verify_inum(mp, mp->m_sb.sb_uquotino))
+			irec = NULL;
+		else
+			irec = find_inode_rec(
+				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_uquotino),
+				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
 
 		if (irec == NULL || is_inode_free(irec,
 				mp->m_sb.sb_uquotino - irec->ino_startnum))  {
@@ -1071,8 +1075,12 @@ quotino_check(xfs_mount_t *mp)
 	}
 
 	if (mp->m_sb.sb_gquotino != NULLFSINO && mp->m_sb.sb_gquotino != 0)  {
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_gquotino),
-			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
+		if (verify_inum(mp, mp->m_sb.sb_gquotino))
+			irec = NULL;
+		else
+			irec = find_inode_rec(
+				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_gquotino),
+				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
 
 		if (irec == NULL || is_inode_free(irec,
 				mp->m_sb.sb_gquotino - irec->ino_startnum))  {
@@ -1322,7 +1330,7 @@ phase4(xfs_mount_t *mp)
 		/*
 		 * now reset the bitmap for all ags
 		 */
-		bzero(ba_bmap[i], 
+		bzero(ba_bmap[i],
 		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
 						sizeof(__uint64_t)));
 		for (j = 0; j < ag_hdr_block; j++)
