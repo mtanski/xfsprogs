@@ -1,6 +1,10 @@
 xfsprogs-2.8.XX
 	- Fix xfs_quota gracetime reporting.
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
+	- Instead of using AC_CHECK_TYPES which isn't supported for
+	  older versions of autoconf, add our own type check in the
+	  m4/package_types.m4 file for __u32.
+	  Suggested by Nathan Scott and discovered by wookey@aleph1.co.uk.
 
 xfsprogs-2.8.19 (31 January 2007)
 	- Fix pthread stack size setting in xfs_repair.

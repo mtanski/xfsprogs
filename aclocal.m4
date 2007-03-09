@@ -307,6 +307,20 @@ AC_DEFUN([AC_TYPE_PSUNSIGNED],
   ])
 
 # 
+# Check if we have a type for __u32
+# 
+AC_DEFUN([AC_TYPE_U32],
+  [ AC_MSG_CHECKING([for __u32 ])
+    AC_TRY_COMPILE([
+#include <asm/types.h>
+#include <stdlib.h>
+#include <stddef.h>
+    ], [
+         __u32  u32;
+    ], AC_DEFINE(HAVE___U32_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
+  ])
+
+# 
 # Check type sizes
 # 
 AC_DEFUN([AC_SIZEOF_POINTERS_AND_LONG],
