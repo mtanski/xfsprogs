@@ -310,6 +310,7 @@ pwrite_f(
 		c = write_backward(offset, &count, &total);
 		break;
 	default:
+		total = 0;
 		ASSERT(0);
 	}
 	if (c < 0)

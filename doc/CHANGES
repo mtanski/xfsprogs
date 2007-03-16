@@ -1,6 +1,10 @@
-xfsprogs-2.8.XX
+xfsprogs-2.8.20 (23 February 2007)
+	- Fix xfs_repair not detecting invalid btree root in inodes.
+	- Fix xfs_repair restoring corrupted superblock after repairing it.
+	- Fix xfs_repair crashing on invalid quota inode values.
 	- Fix xfs_quota gracetime reporting.
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
+	- Fix libxfs IO_DEBUG output.
 	- Instead of using AC_CHECK_TYPES which isn't supported for
 	  older versions of autoconf, add our own type check in the
 	  m4/package_types.m4 file for __u32.
@@ -27,7 +31,7 @@ xfsprogs-2.8.18 (8 December 2006)
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for the above three
 	  fixes.
 
-xfsprogs-2.8.17 (?)
+xfsprogs-2.8.17 (5 December 2006)
 	- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
 	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
 	- Fix up xfs_repair aborting if it finds an inode with an invalid

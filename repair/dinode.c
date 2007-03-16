@@ -307,8 +307,8 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
  * misc. inode-related utility routines
  */
 
-/* 
- * verify_ag_bno is heavily used. In the common case, it 
+/*
+ * verify_ag_bno is heavily used. In the common case, it
  * performs just two number of compares
  */
 static __inline int
@@ -802,7 +802,7 @@ process_bmbt_reclist_int(
 				PROCESS_BMBT_UNLOCK_RETURN(1);
 			}
 
-			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) 
+			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB)
 			 * for common XR_E_UNKNOWN to XR_E_INUSE transition
 			 */
 			if (((agbno & XR_BB_MASK) == 0) && ((s + c - b) >= (XR_BB_UNIT/XR_BB))) {
@@ -1223,6 +1223,8 @@ process_btinode(
 	xfs_bmbt_key_t		*pkey;
 	char			*forkname;
 	int			i;
+	int			level;
+	int			numrecs;
 	bmap_cursor_t		cursor;
 
 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
@@ -1235,13 +1237,11 @@ process_btinode(
 	else
 		forkname = _("attr");
 
-	if (INT_GET(dib->bb_level, ARCH_CONVERT) == 0) {
+	level = INT_GET(dib->bb_level, ARCH_CONVERT);
+	numrecs = INT_GET(dib->bb_numrecs, ARCH_CONVERT);
+
+	if ((level == 0) || (level > XFS_BM_MAXLEVELS(mp, whichfork))) {
 		/*
-		 * This should never happen since a btree inode
-		 * has to have at least one other block in the
-		 * bmap in addition to the root block in the
-		 * inode's data fork.
-		 *
 		 * XXX - if we were going to fix up the inode,
 		 * we'd try to treat the fork as an interior
 		 * node and see if we could get an accurate
@@ -1249,27 +1249,29 @@ process_btinode(
 		 * to by the pointers in the fork.  For now
 		 * though, we just bail (and blow out the inode).
 		 */
-		do_warn(_("bad level 0 in inode %llu bmap btree root block\n"),
+		do_warn(_("bad level %d in inode %llu bmap btree root block\n"),
+			level, XFS_AGINO_TO_INO(mp, agno, ino));
+		return(1);
+	}
+	if (numrecs == 0) {
+		do_warn(_("bad numrecs 0 in inode %llu bmap btree root block\n"),
 			XFS_AGINO_TO_INO(mp, agno, ino));
 		return(1);
 	}
 	/*
 	 * use bmdr/dfork_dsize since the root block is in the data fork
 	 */
-	init_bm_cursor(&cursor, INT_GET(dib->bb_level, ARCH_CONVERT) + 1);
-
-	if (XFS_BMDR_SPACE_CALC(INT_GET(dib->bb_numrecs, ARCH_CONVERT)) >
-			((whichfork == XFS_DATA_FORK) ?
+	if (XFS_BMDR_SPACE_CALC(numrecs) > ((whichfork == XFS_DATA_FORK) ?
 			XFS_DFORK_DSIZE(dip, mp) :
 			XFS_DFORK_ASIZE(dip, mp)))  {
 		do_warn(
 	_("indicated size of %s btree root (%d bytes) greater than space in "
 	  "inode %llu %s fork\n"),
-			forkname, XFS_BMDR_SPACE_CALC(INT_GET(dib->bb_numrecs,
-				ARCH_CONVERT)),
-			lino, forkname);
+			forkname, XFS_BMDR_SPACE_CALC(numrecs), lino, forkname);
 		return(1);
 	}
+
+	init_bm_cursor(&cursor, level + 1);
 
 	pp = XFS_BTREE_PTR_ADDR(
 			XFS_DFORK_SIZE(dip, mp, whichfork),
@@ -1286,7 +1288,7 @@ process_btinode(
 
 	last_key = NULLDFILOFF;
 
-	for (i = 0; i < INT_GET(dib->bb_numrecs, ARCH_CONVERT); i++)  {
+	for (i = 0; i < numrecs; i++)  {
 		/*
 		 * XXX - if we were going to do more to fix up the inode
 		 * btree, we'd do it right here.  For now, if there's a
@@ -1298,8 +1300,8 @@ process_btinode(
 			return(1);
 		}
 
-		if (scan_lbtree((xfs_dfsbno_t)INT_GET(pp[i], ARCH_CONVERT), INT_GET(dib->bb_level, ARCH_CONVERT),
-				    scanfunc_bmap, type, whichfork,
+		if (scan_lbtree((xfs_dfsbno_t)INT_GET(pp[i], ARCH_CONVERT),
+				    level, scanfunc_bmap, type, whichfork,
 				    lino, tot, nex, blkmapp, &cursor,
 				    1, check_dups))
 			return(1);
@@ -1310,8 +1312,7 @@ process_btinode(
 		 * blocks but the parent hasn't been updated
 		 */
 		if (check_dups == 0 &&
-		    cursor.level[INT_GET(dib->bb_level,
-				ARCH_CONVERT)-1].first_key !=
+		    cursor.level[level-1].first_key !=
 		    INT_GET(pkey[i].br_startoff, ARCH_CONVERT))  {
 			if (!no_modify)  {
 				do_warn(
@@ -1319,22 +1320,19 @@ process_btinode(
 	  "%llu %s fork\n"),
 					INT_GET(pkey[i].br_startoff,
 						ARCH_CONVERT),
-					cursor.level[INT_GET(dib->bb_level,
-						ARCH_CONVERT)-1].first_key,
+					cursor.level[level-1].first_key,
 					XFS_AGINO_TO_INO(mp, agno, ino),
 					forkname);
 				*dirty = 1;
 				INT_SET(pkey[i].br_startoff, ARCH_CONVERT,
-					cursor.level[INT_GET(dib->bb_level,
-						ARCH_CONVERT)-1].first_key);
+					cursor.level[level-1].first_key);
 			} else  {
 				do_warn(
 	_("bad key in bmbt root (is %llu, would reset to %llu) in inode "
 	  "%llu %s fork\n"),
 					INT_GET(pkey[i].br_startoff,
 						ARCH_CONVERT),
-					cursor.level[INT_GET(dib->bb_level,
-						ARCH_CONVERT)-1].first_key,
+					cursor.level[level-1].first_key,
 					XFS_AGINO_TO_INO(mp, agno, ino),
 					forkname);
 			}
@@ -1345,8 +1343,7 @@ process_btinode(
 		 */
 		if (check_dups == 0)  {
 			if (last_key != NULLDFILOFF && last_key >=
-			    cursor.level[INT_GET(dib->bb_level,
-					ARCH_CONVERT)-1].first_key)  {
+			    cursor.level[level-1].first_key)  {
 				do_warn(
 		_("out of order bmbt root key %llu in inode %llu %s fork\n"),
 					first_key,
@@ -1354,8 +1351,7 @@ process_btinode(
 					forkname);
 				return(1);
 			}
-			last_key = cursor.level[INT_GET(dib->bb_level,
-						ARCH_CONVERT)-1].first_key;
+			last_key = cursor.level[level-1].first_key;
 		}
 	}
 	/*
@@ -2064,9 +2060,9 @@ process_dinode_int(xfs_mount_t *mp,
 		if (!verify_mode)  {
 			do_warn(_("bad inode type %#o inode %llu\n"),
 				(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
-			if (!no_modify)  
+			if (!no_modify)
 				*dirty += clear_dinode(mp, dino, lino);
-			else 
+			else
 				*dirty = 1;
 			*cleared = 1;
 			*used = is_free;

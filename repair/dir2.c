@@ -1805,6 +1805,7 @@ process_leaf_level_dir2(
 	prev_bno = 0;
 	bmp = NULL;
 	current_hashval = 0;
+	greatest_hashval = 0;
 	buf_dirty = 0;
 
 	do {
