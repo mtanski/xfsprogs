@@ -30,6 +30,13 @@ enum {
 	CLEAR_PROJECT	= 0x4,
 };
 
+#define EXCLUDED_FILE_TYPES(x) \
+	   S_ISCHR((x)) \
+	|| S_ISBLK((x)) \
+	|| S_ISFIFO((x)) \
+	|| S_ISLNK((x)) \
+	|| S_ISSOCK((x))
+
 static void
 project_help(void)
 {
@@ -77,11 +84,20 @@ static int
 check_project(
 	const char		*path,
 	const struct stat	*stat,
-	int			status,
+	int			flag,
 	struct FTW		*data)
 {
 	struct fsxattr		fsx;
 	int			fd;
+
+	if (flag == FTW_NS ){
+		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+		return 0;
+	}
+	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
+		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
+		return 0;
+	}
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
@@ -107,11 +123,20 @@ static int
 clear_project(
 	const char		*path,
 	const struct stat	*stat,
-	int			status,
+	int			flag,
 	struct FTW		*data)
 {
 	struct fsxattr		fsx;
 	int			fd;
+
+	if (flag == FTW_NS ){
+		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+		return 0;
+	}
+	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
+		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
+		return 0;
+	}
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
@@ -137,11 +162,20 @@ static int
 setup_project(
 	const char		*path,
 	const struct stat	*stat,
-	int			status,
+	int			flag,
 	struct FTW		*data)
 {
 	struct fsxattr		fsx;
 	int			fd;
+
+	if (flag == FTW_NS ){
+		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+		return 0;
+	}
+	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
+		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
+		return 0;
+	}
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),

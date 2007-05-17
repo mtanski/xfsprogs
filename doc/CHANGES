@@ -1,3 +1,7 @@
+xfsprogs-2.8.21
+	- Fix xfs_quota project command to stop it operating on speical files. 
+	  Thanks to Leo Baltus.
+
 xfsprogs-2.8.20 (23 February 2007)
 	- Fix xfs_repair not detecting invalid btree root in inodes.
 	- Fix xfs_repair restoring corrupted superblock after repairing it.
