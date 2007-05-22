@@ -118,6 +118,8 @@ char	*lopts[] = {
 	"file",
 #define	L_NAME		10
 	"name",
+#define	L_LAZYSBCNTR	11
+	"lazy-count",
 	NULL
 };
 
@@ -602,6 +604,7 @@ main(
 	libxfs_init_t		xi;
 	int 			xlv_dsunit;
 	int			xlv_dswidth;
+	int			lazy_sb_counters;
 
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
@@ -631,6 +634,7 @@ main(
 	extent_flagging = 1;
 	force_overwrite = 0;
 	worst_freelist = 0;
+	lazy_sb_counters = 0;
 	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
@@ -1081,6 +1085,15 @@ main(
 					lsectorlog =
 						libxfs_highbit32(lsectorsize);
 					lssflag = 1;
+					break;
+				case L_LAZYSBCNTR:
+					if (!value)
+						reqval('l', lopts,
+								L_LAZYSBCNTR);
+					c = atoi(value);
+					if (c < 0 || c > 1)
+						illegal(value, "l lazy-count");
+					lazy_sb_counters = c;
 					break;
 				default:
 					unknown('l', value);
@@ -1914,7 +1927,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
 		   "naming   =version %-14u bsize=%-6u\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-		   "         =%-22s sectsz=%-5u sunit=%d blks\n"
+		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", sectorsize, attrversion,
@@ -1923,7 +1936,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			"", dsunit, dswidth, extent_flagging,
 			dirversion, dirversion == 1 ? blocksize : dirblocksize,
 			logfile, 1 << blocklog, (long long)logblocks,
-			logversion, "", lsectorsize, lsunit,
+			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
 			rtfile, rtextblocks << blocklog,
 			(long long)rtblocks, (long long)rtextents);
 		if (Nflag)
@@ -1985,7 +1998,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		sbp->sb_logsectlog = 0;
 		sbp->sb_logsectsize = 0;
 	}
-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(0, attrversion == 2, 0);
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters, attrversion == 2, 0);
 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(
 			iaflag, dsunit != 0, extent_flagging,
 			dirversion == 2, logversion == 2, attrversion == 1,
@@ -2457,7 +2470,8 @@ usage( void )
 			    sectlog=n|sectsize=num,unwritten=0|1]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
-			    sunit=value|su=num,sectlog=n|sectsize=num]\n\
+			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
+			    lazy-count=0|1]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
 /* naming */		[-n log=n|size=num,version=n]\n\
 /* prototype file */	[-p fname]\n\

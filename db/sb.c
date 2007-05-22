@@ -608,6 +608,8 @@ version_string(
 		strcat(s, ",MOREBITS");
 	if (XFS_SB_VERSION_HASATTR2(sbp))
 		strcat(s, ",ATTR2");
+	if (XFS_SB_VERSION_LAZYSBCOUNT(sbp))
+		strcat(s, ",LAZYSBCOUNT");
 	return s;
 }
 

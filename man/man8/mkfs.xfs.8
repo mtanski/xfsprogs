@@ -335,8 +335,9 @@ The valid suboptions are:
 \f3logdev=\f1\f2device\f1,
 \f3size=\f1\f2value\f1,
 \f3version=\f1\f2[1|2]\f1,
-\f3sunit=\f1\f2value\f1, and
-\f3su=\f1\f2value\f1.
+\f3sunit=\f1\f2value\f1,
+\f3su=\f1\f2value\f1 and
+\f3lazy-count=\f1\f2[0|1]\f1.
 .IP
 The
 .B internal
@@ -415,6 +416,24 @@ The suboption value has to be specified in bytes,
 This value must be a multiple of the filesystem block size.
 Version 2 logs are automatically selected if the log \f3su\f1
 suboption is specified.
+.IP
+The
+.B lazy-count
+suboption changes the method of logging various persistent counters
+in the superblock.  Under metadata intensive workloads, these
+counters are updated and logged frequently enough that the
+superblock updates become a serialisation point in the filesystem.
+.IP
+With
+.BR lazy-count=1 ,
+the superblock is not modified or logged on every change of the
+persistent counters. Instead, enough information is kept in
+other parts of the filesystem to be able to maintain the persistent
+counter values without needed to keep them in the superblock.
+This gives significant improvements in performance on some configurations.
+The default value is 0 (off) so you must specify
+.B lazy-count=1
+if you want to make use of this feature.
 .TP
 .B \-n
 Naming options.

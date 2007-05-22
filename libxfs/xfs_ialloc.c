@@ -1128,6 +1128,7 @@ xfs_ialloc_read_agi(
 	pag = &mp->m_perag[agno];
 	if (!pag->pagi_init) {
 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+		pag->pagi_count = be32_to_cpu(agi->agi_count);
 		pag->pagi_init = 1;
 	} else {
 		/*
@@ -1135,6 +1136,7 @@ xfs_ialloc_read_agi(
 		 * we are in the middle of a forced shutdown.
 		 */
 		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+			pag->pagi_count == be32_to_cpu(agi->agi_count) ||
 			XFS_FORCED_SHUTDOWN(mp));
 	}
 
@@ -1149,5 +1151,24 @@ xfs_ialloc_read_agi(
 
 	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
 	*bpp = bp;
+	return 0;
+}
+
+/*
+ * Read in the agi to initialise the per-ag data in the mount structure
+ */
+int
+xfs_ialloc_pagi_init(
+	xfs_mount_t	*mp,		/* file system mount structure */
+	xfs_trans_t	*tp,		/* transaction pointer */
+	xfs_agnumber_t	agno)		/* allocation group number */
+{
+	xfs_buf_t	*bp = NULL;
+	int		error;
+
+	if ((error = xfs_ialloc_read_agi(mp, tp, agno, &bp)))
+		return error;
+	if (bp)
+		xfs_trans_brelse(tp, bp);
 	return 0;
 }

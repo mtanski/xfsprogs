@@ -59,6 +59,7 @@ report_info(
 	char		*logname,
 	char		*rtname,
 	int		unwritten,
+	int		lazycount,
 	int		dirversion,
 	int		logversion,
 	int		attrversion)
@@ -70,7 +71,7 @@ report_info(
 	    "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
 	    "naming   =version %-14u bsize=%-6u\n"
 	    "log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
-	    "         =%-22s sectsz=%-5u sunit=%u blks\n"
+	    "         =%-22s sectsz=%-5u sunit=%u blks, lazy-count=%u\n"
 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
 
 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
@@ -81,7 +82,7 @@ report_info(
   		dirversion, geo.dirblocksize,
 		isint ? _("internal") : logname ? logname : _("external"),
 			geo.blocksize, geo.logblocks, logversion,
-		"", geo.logsectsize, geo.logsunit / geo.blocksize,
+		"", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
 		!geo.rtblocks ? _("none") : rtname ? rtname : _("external"),
 		geo.rtextsize * geo.blocksize, (unsigned long long)geo.rtblocks,
 			(unsigned long long)geo.rtextents);
@@ -115,6 +116,7 @@ main(int argc, char **argv)
 	int			rflag;	/* -r flag */
 	long long		rsize;	/* new rt size in fs blocks */
 	int			unwritten; /* unwritten extent flag */
+	int			lazycount; /* lazy superblock counters */
 	int			xflag;	/* -x flag */
 	char			*fname;	/* mount point name */
 	char			*datadev; /* data device name */
@@ -235,6 +237,7 @@ main(int argc, char **argv)
 	}
 	isint = geo.logstart > 0;
 	unwritten = geo.flags & XFS_FSOP_GEOM_FLAGS_EXTFLG ? 1 : 0;
+	lazycount = geo.flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
 	dirversion = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? 2 : 1;
 	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
 	attrversion = geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
@@ -242,7 +245,8 @@ main(int argc, char **argv)
 
 	if (nflag) {
 		report_info(geo, datadev, isint, logdev, rtdev,
-				unwritten, dirversion, logversion, attrversion);
+				unwritten, lazycount, dirversion, logversion,
+				attrversion);
 		exit(0);
 	}
 
@@ -278,7 +282,8 @@ main(int argc, char **argv)
 	}
 
 	report_info(geo, datadev, isint, logdev, rtdev,
-			unwritten, dirversion, logversion, attrversion);
+			unwritten, lazycount, dirversion, logversion,
+			attrversion);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :

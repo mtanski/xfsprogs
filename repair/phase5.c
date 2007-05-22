@@ -333,6 +333,10 @@ write_cursor(bt_status_t *curs)
 #endif
 		if (curs->level[i].prev_buf_p != NULL)  {
 			ASSERT(curs->level[i].prev_agbno != NULLAGBLOCK);
+#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
+			fprintf(stderr, "writing bt prev block %u\n",
+						curs->level[i].prev_agbno);
+#endif
 			libxfs_writebuf(curs->level[i].prev_buf_p, 0);
 		}
 		libxfs_writebuf(curs->level[i].buf_p, 0);
@@ -1284,6 +1288,24 @@ build_agf_agfl(xfs_mount_t	*mp,
 	INT_SET(agf->agf_levels[XFS_BTNUM_CNT], ARCH_CONVERT,
 			bcnt_bt->num_levels);
 	INT_SET(agf->agf_freeblks, ARCH_CONVERT, freeblks);
+
+	/*
+	 * Count and record the number of btree blocks consumed if required.
+	 */
+	if (XFS_SB_VERSION_LAZYSBCOUNT(&mp->m_sb)) {
+		/*
+		 * Don't count the root blocks as they are already
+		 * accounted for.
+		 */
+		INT_SET(agf->agf_btreeblks, ARCH_CONVERT,
+			(bno_bt->num_tot_blocks - bno_bt->num_free_blocks) +
+			(bcnt_bt->num_tot_blocks - bcnt_bt->num_free_blocks) -
+			2);
+#ifdef XR_BLD_FREE_TRACE
+		fprintf(stderr, "agf->agf_btreeblks = %u\n",
+				INT_GET(agf->agf_btreeblks, ARCH_CONVERT));
+#endif
+	}
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "bno root = %u, bcnt root = %u, indices = %u %u\n",

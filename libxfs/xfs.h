@@ -86,6 +86,7 @@
 
 #define xfs_mount_common		libxfs_mount_common
 #define xfs_initialize_perag		libxfs_initialize_perag
+#define xfs_initialize_perag_data	libxfs_initialize_perag_data
 #define xfs_rtmount_init		libxfs_rtmount_init
 #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
 #define xfs_idata_realloc		libxfs_idata_realloc
@@ -352,10 +353,10 @@ static inline int __do_div(unsigned long long *n, unsigned base)
  */
 
 /* xfs_alloc.c */
-int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *);
+int  xfs_alloc_get_freelist (xfs_trans_t *, xfs_buf_t *, xfs_agblock_t *, int);
 void xfs_alloc_log_agf (xfs_trans_t *, xfs_buf_t *, int);
 int  xfs_alloc_put_freelist (xfs_trans_t *, xfs_buf_t *, xfs_buf_t *,
-			xfs_agblock_t);
+			xfs_agblock_t, int);
 int  xfs_alloc_read_agf (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t,
 			int, xfs_buf_t **);
 int  xfs_alloc_vextent (xfs_alloc_arg_t *);
@@ -372,6 +373,7 @@ int  xfs_dialloc (xfs_trans_t *, xfs_ino_t, mode_t, int, xfs_buf_t **,
 void xfs_ialloc_log_agi (xfs_trans_t *, xfs_buf_t *, int);
 int  xfs_ialloc_read_agi (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t,
 			xfs_buf_t **);
+int  xfs_ialloc_pagi_init (xfs_mount_t *, xfs_trans_t *, xfs_agnumber_t);
 int  xfs_dilocate (xfs_mount_t *, xfs_trans_t *, xfs_ino_t, xfs_fsblock_t *,
 			int *, int *, uint);
 

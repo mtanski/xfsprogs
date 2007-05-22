@@ -197,6 +197,7 @@ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
 extern void	libxfs_mount_common (xfs_mount_t *, xfs_sb_t *);
 extern xfs_agnumber_t	libxfs_initialize_perag (xfs_mount_t *, xfs_agnumber_t);
+extern int	libxfs_initialize_perag_data (xfs_mount_t *, xfs_agnumber_t);
 extern void	libxfs_umount (xfs_mount_t *);
 extern int	libxfs_rtmount_init (xfs_mount_t *);
 extern void	libxfs_rtmount_destroy (xfs_mount_t *);

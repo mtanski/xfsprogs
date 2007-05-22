@@ -110,6 +110,9 @@ typedef struct dirhash {
 
 static xfs_extlen_t	agffreeblks;
 static xfs_extlen_t	agflongest;
+static __uint64_t	agf_aggr_freeblks;	/* aggregate count over all */
+static __uint32_t	agfbtreeblks;
+static int		lazycount;
 static xfs_agino_t	agicount;
 static xfs_agino_t	agifreecount;
 static xfs_fsblock_t	*blist;
@@ -852,6 +855,12 @@ blockget_f(
 		if (!sflag)
 			dbprintf("sb_fdblocks %lld, counted %lld\n",
 				mp->m_sb.sb_fdblocks, fdblocks);
+		error++;
+	}
+	if (lazycount && mp->m_sb.sb_fdblocks != agf_aggr_freeblks) {
+		if (!sflag)
+			dbprintf("sb_fdblocks %lld, aggregate AGF count %lld\n",
+				mp->m_sb.sb_fdblocks, agf_aggr_freeblks);
 		error++;
 	}
 	if (mp->m_sb.sb_frextents != frextents) {
@@ -3886,6 +3895,7 @@ scan_ag(
 	xfs_sb_t	*sb=&tsb;
 
 	agffreeblks = agflongest = 0;
+	agfbtreeblks = -2;
 	agicount = agifreecount = 0;
 	push_cur();
 	set_cur(&typtab[TYP_SB],
@@ -3913,6 +3923,9 @@ scan_ag(
 				sb->sb_versionnum, agno);
 		error++;
 		sbver_err++;
+	}
+	if (!lazycount && XFS_SB_VERSION_LAZYSBCOUNT(sb)) {
+		lazycount = 1;
 	}
 	if (agno == 0 && sb->sb_inprogress != 0) {
 		if (!sflag)
@@ -4010,6 +4023,15 @@ scan_ag(
 				agflongest, agno);
 		error++;
 	}
+	if (lazycount &&
+	    INT_GET(agf->agf_btreeblks, ARCH_CONVERT) != agfbtreeblks) {
+		if (!sflag)
+			dbprintf("agf_btreeblks %u, counted %u in ag %u\n",
+				INT_GET(agf->agf_btreeblks, ARCH_CONVERT),
+				agfbtreeblks, agno);
+		error++;
+	}
+	agf_aggr_freeblks += agffreeblks + agfbtreeblks;
 	if (INT_GET(agi->agi_count, ARCH_CONVERT) != agicount) {
 		if (!sflag)
 			dbprintf("agi_count %u, counted %u in ag %u\n",
@@ -4086,6 +4108,7 @@ scan_freelist(
 		error++;
 	}
 	fdblocks += count;
+	agf_aggr_freeblks += count;
 	pop_cur();
 }
 
@@ -4242,6 +4265,7 @@ scanfunc_bno(
 		return;
 	}
 	fdblocks++;
+	agfbtreeblks++;
 	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
 		if (!sflag)
 			dbprintf("expected level %d got %d in btbno block "
@@ -4317,6 +4341,7 @@ scanfunc_cnt(
 		return;
 	}
 	fdblocks++;
+	agfbtreeblks++;
 	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
 		if (!sflag)
 			dbprintf("expected level %d got %d in btcnt block "

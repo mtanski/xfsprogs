@@ -649,6 +649,20 @@ libxfs_mount(
 		libxfs_iput(mp->m_rootip, 0);
 		return NULL;
 	}
+
+	/*
+	 * mkfs calls mount before the AGF/AGI structures are written.
+	 */
+	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO &&
+	    XFS_SB_VERSION_LAZYSBCOUNT(&mp->m_sb)) {
+		error = libxfs_initialize_perag_data(mp, sbp->sb_agcount);
+		if (error) {
+			fprintf(stderr, _("%s: cannot init perag data (%d)\n"),
+				progname, error);
+			return NULL;
+		}
+	}
+
 	return mp;
 }
 

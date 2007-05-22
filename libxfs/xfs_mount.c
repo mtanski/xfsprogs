@@ -313,3 +313,56 @@ xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount)
 	}
 	return index;
 }
+
+/*
+ * xfs_initialize_perag_data
+ *
+ * Read in each per-ag structure so we can count up the number of
+ * allocated inodes, free inodes and used filesystem blocks as this
+ * information is no longer persistent in the superblock. Once we have
+ * this information, write it into the in-core superblock structure.
+ */
+STATIC int
+xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
+{
+	xfs_agnumber_t	index;
+	xfs_perag_t	*pag;
+	xfs_sb_t	*sbp = &mp->m_sb;
+	__uint64_t	ifree = 0;
+	__uint64_t	ialloc = 0;
+	__uint64_t	bfree = 0;
+	__uint64_t	bfreelst = 0;
+	__uint64_t	btree = 0;
+	int		error;
+	int		s;
+
+	for (index = 0; index < agcount; index++) {
+		/*
+		 * read the agf, then the agi. This gets us
+		 * all the information we need and populates the
+		 * per-ag structures for us.
+		 */
+		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
+		if (error)
+			return error;
+
+		error = xfs_ialloc_pagi_init(mp, NULL, index);
+		if (error)
+			return error;
+		pag = &mp->m_perag[index];
+		ifree += pag->pagi_freecount;
+		ialloc += pag->pagi_count;
+		bfree += pag->pagf_freeblks;
+		bfreelst += pag->pagf_flcount;
+		btree += pag->pagf_btreeblks;
+	}
+	/*
+	 * Overwrite incore superblock counters with just-read data
+	 */
+	s = XFS_SB_LOCK(mp);
+	sbp->sb_ifree = ifree;
+	sbp->sb_icount = ialloc;
+	sbp->sb_fdblocks = bfree + bfreelst + btree;
+	XFS_SB_UNLOCK(mp, s);
+	return 0;
+}
