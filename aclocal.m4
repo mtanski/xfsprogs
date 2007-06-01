@@ -317,7 +317,7 @@ AC_DEFUN([AC_TYPE_U32],
 #include <stddef.h>
     ], [
          __u32  u32;
-    ], AC_DEFINE(HAVE___U32_T) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
+    ], AC_DEFINE(HAVE___U32) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
   ])
 
 # 
