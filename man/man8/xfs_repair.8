@@ -96,49 +96,49 @@ will ignore an EFS superblock if one is found.
 .IP
 The
 .BI ihash= ihashsize
-suboption modifies the default xfs_repair inode cache hash size. 
-The total number of inode cache entries are limited to 8 times this 
+suboption modifies the default xfs_repair inode cache hash size.
+The total number of inode cache entries are limited to 8 times this
 amount.
 .IP
 The
 .BI bhash= bhashsize
-suboption modifies the default xfs_repair buffer cache hash size. 
-The total number of buffer cache entries are limited to 8 times this 
+suboption modifies the default xfs_repair buffer cache hash size.
+The total number of buffer cache entries are limited to 8 times this
 amount.
 .IP
 The
 .BI pfino= inode_blocks
-suboption modifies the default size of read ahead xfs_repair inode 
+suboption modifies the default size of read ahead xfs_repair inode
 blocks.
 .IP
-The 
+The
 .BI pfdir= dir_blocks
-suboption modifies the default size of read ahead xfs_repair dir 
+suboption modifies the default size of read ahead xfs_repair dir
 blocks.
 .IP
 The
 .BI thread= thread_count
-suboption modifies the number of xfs_repair parallel threads. 
+suboption modifies the number of xfs_repair parallel threads.
 .TP
 \f3-t\f1 \f2interval\f1
-Modify reporting interval. During long runs xfs_repair outputs 
-its progress every 15 minutes. Reporting is only activated when 
+Modify reporting interval. During long runs xfs_repair outputs
+its progress every 15 minutes. Reporting is only activated when
 xfs_repair is multi-threaded.
 .TP
 .B \-M
-Disable multi-threaded mode. Normally, xfs_repair runs with twice 
+Disable multi-threaded mode. Normally, xfs_repair runs with twice
 the number of threads as processors.
 .TP
 .B \-P
-Disable read ahead of inode and directory blocks. If applicable, 
+Disable read ahead of inode and directory blocks. If applicable,
 a read ahead of up to 16 additional blocks is done.
 .TP
 .B \-v
 Verbose output.
 .TP
 .B \-d
-Repair dangerously. Allow xfs_repair to repair an XFS filesystem 
-mounted read only. This is typically done on a root fileystem from 
+Repair dangerously. Allow xfs_repair to repair an XFS filesystem
+mounted read only. This is typically done on a root fileystem from
 single user mode, immediately followed by a reboot.
 .SS Checks Performed
 Inconsistencies corrected include the following:
@@ -434,9 +434,17 @@ maps, particularly lost blocks or subtly corrupted maps (trees).
 The no-modify mode can generate repeated warnings about
 the same problems because it cannot fix the problems as they
 are encountered.
+.PP
+If a filesystem fails to be repaired, a metadump image can be generated
+with
+.BR xfs_metadump (8)
+and be sent to an XFS maintainer to be analysed and
+.B xfs_repair
+fixed and/or improved.
 .SH SEE ALSO
 dd(1),
 mkfs.xfs(8),
 umount(8),
 xfs_check(8),
+xfs_metadump(8),
 xfs(5).

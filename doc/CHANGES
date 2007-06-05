@@ -1,4 +1,5 @@
-xfsprogs-2.8.22
+xfsprogs-2.9.0 (5 June 2007)
+	- Added new tools: xfs_metadump and xfs_mdrestore.
 	- Fix up the HAVE___U32 fix from 2.8.20
 	  Thanks to Eric Sandeen for pointing this out.
 

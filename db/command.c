@@ -40,6 +40,7 @@
 #include "inode.h"
 #include "input.h"
 #include "io.h"
+#include "metadump.h"
 #include "output.h"
 #include "print.h"
 #include "quit.h"
@@ -131,6 +132,7 @@ init_commands(void)
 	inode_init();
 	input_init();
 	io_init();
+	metadump_init();
 	output_init();
 	print_init();
 	quit_init();

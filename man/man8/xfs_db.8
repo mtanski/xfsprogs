@@ -367,6 +367,10 @@ If no \f2label\f1 is given, the current filesystem label is printed.
 Start logging output to \f2filename\f1, stop logging,
 or print the current logging status.
 .TP
+\f3metadump\f1 [ \f3-egow\f1 ] \f2filename\f1
+Dumps metadata to a file. See
+.BR xfs_metadump "(8) for more information."
+.TP
 \f3ncheck\f1 [ \f3\-s\f1 ] [ \f3\-i\f1 \f2ino\f1 ] ...
 Print name-inode pairs.
 A \f3blockget \-n\f1 command must be run first to gather the information.
@@ -1239,6 +1243,7 @@ xfs_admin(8),
 xfs_check(8),
 xfs_copy(8),
 xfs_logprint(8),
+xfs_metadump(8),
 xfs_ncheck(8),
 xfs_repair(8),
 mount(8),
