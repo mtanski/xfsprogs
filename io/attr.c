@@ -46,10 +46,11 @@ static struct xflags {
 	{ XFS_XFLAG_NOSYMLINKS,		"n", "nosymlinks"	},
 	{ XFS_XFLAG_EXTSIZE,		"e", "extsize"		},
 	{ XFS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
-	{ XFS_XFLAG_NODEFRAG,	    	"f", "no-defrag"	},
+	{ XFS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
+	{ XFS_XFLAG_FILESTREAM,		"S", "filestream"	},
 	{ 0, NULL, NULL }
 };
-#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEf"
+#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfS"
 
 static void
 lsattr_help(void)
@@ -72,6 +73,7 @@ lsattr_help(void)
 " e -- for non-realtime files, observe the inode extent size value\n"
 " E -- children created in this directory inherit the extent size value\n"
 " f -- do not include this file when defragmenting the filesystem\n"
+" S -- enable filestreams allocator for this directory\n"
 "\n"
 " Options:\n"
 " -R -- recursively descend (useful when current file is a directory)\n"
@@ -106,6 +108,7 @@ chattr_help(void)
 " +/-e -- set/clear the extent-size flag\n"
 " +/-E -- set/clear the extent-size inheritance flag\n"
 " +/-f -- set/clear the no-defrag flag\n"
+" +/-S -- set/clear the filestreams allocator flag\n"
 " Note1: user must have certain capabilities to modify immutable/append-only.\n"
 " Note2: immutable/append-only files cannot be deleted; removing these files\n"
 "        requires the immutable/append-only flag to be cleared first.\n"

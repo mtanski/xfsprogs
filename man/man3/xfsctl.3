@@ -204,7 +204,7 @@ the directory will inherit the parents project ID.  New
 directories also inherit the project inheritance bit.
 .TP
 .SM "Bit 10 (0x400) \- XFS_XFLAG_NOSYMLINKS"
-Can only be set on a directory and disallows creation of 
+Can only be set on a directory and disallows creation of
 symbolic links in that directory.
 .TP
 .SM "Bit 11 (0x800) \- XFS_XFLAG_EXTSIZE"
@@ -222,9 +222,17 @@ below).
 Can only be set on a directory.
 .TP
 .SM "Bit 13 (0x2000) \- XFS_XFLAG_NODEFRAG"
-The file should be skipped during a defragment operation. When
-applied to a directory, new files and directories created will
+No defragment file bit - the file should be skipped during a defragmentation
+operation. When applied to a directory, new files and directories created will
 inherit the no\-defrag bit.
+.TP
+.SM "Bit 14 (0x4000) \- XFS_XFLAG_FILESTREAM"
+Filestream allocator bit - allows a directory to reserve an allocation
+group for exclusive use by files created within that directory. Files
+being written in other directories will not use the same allocation
+group and so files within different directories will not interleave
+extents on disk. The reservation is only active while files are being
+created and written into the directory.
 .TP
 .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
 The file has extended attributes associated with it.
@@ -375,7 +383,7 @@ removed from the file.  The file size does not change.
 .\" .B biosz_flags
 .\" field will be set to 1 if the current read or write value has been
 .\" explicitly set.
-.\" 
+.\"
 .\" .TP
 .\" .B XFS_IOC_SETBIOSIZE
 .\" This command sets information about the preferred buffered I/O size
@@ -389,7 +397,7 @@ removed from the file.  The file size does not change.
 .\" synchronous I/Os or if only a small amount of the file is accessed
 .\" using small random I/Os, resulting in little or no use of the
 .\" additional data read in near the random I/Os.
-.\" 
+.\"
 .\" To explicitly set the preferred I/O sizes, the
 .\" .B biosz_flags
 .\" field should be set to zero and the
@@ -408,7 +416,7 @@ removed from the file.  The file size does not change.
 .\" and
 .\" .B dfl_biosz_write
 .\" fields are ignored.
-.\" 
+.\"
 .\" If biosizes have already been explicitly set due to a prior use
 .\" of
 .\" .BR XFS_IOC_SETBIOSIZE ,
@@ -420,13 +428,13 @@ removed from the file.  The file size does not change.
 .\" .B biosz_flags
 .\" is set to 1, the system will use the new values
 .\" regardless of whether the new sizes are larger or smaller than the old.
-.\" 
+.\"
 .\" To reset the biosize values to the defaults for the filesystem
 .\" that the file resides in, the
 .\" .B biosz_flags
 .\" field should be set to 2.
 .\" The remainder of the fields will be ignored in that case.
-.\" 
+.\"
 .\" Changes made by
 .\" .B XFS_IOC_SETBIOSIZE
 .\" are transient.
