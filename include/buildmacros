@@ -10,6 +10,7 @@ BUILDRULES = $(TOPDIR)/include/buildrules
 # during the "dist" phase (packaging).
 
 LDFLAGS += $(LOADERFLAGS) $(LLDFLAGS)
+LTLDFLAGS += $(LOADERFLAGS)
 LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
 
 MAKEOPTS = --no-print-directory
