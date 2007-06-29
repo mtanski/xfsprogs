@@ -75,6 +75,7 @@ bmap_f(
 	int			lflag = 0;
 	int			nflag = 0;
 	int			vflag = 0;
+	int			is_rt = 0;
 	int			bmv_iflags = 0;	/* flags for XFS_IOC_GETBMAPX */
 	int			i = 0;
 	int			c;
@@ -133,7 +134,7 @@ bmap_f(
 			 * ag info not applicable to rt, continue
 			 * without ag output.
 			 */
-			vflag = 0;
+			is_rt = 1;
 		}
 	}
 
@@ -280,10 +281,14 @@ bmap_f(
 
 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
 		tot_w = MINTOT_WIDTH;
-		bbperag = (off64_t)fsgeo.agblocks *
-			  (off64_t)fsgeo.blocksize / BBSIZE;
-		sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
-		swidth = (fsgeo.swidth * fsgeo.blocksize) / BBSIZE;
+		if (is_rt)
+			sunit = swidth = bbperag = 0;
+		else {
+			bbperag = (off64_t)fsgeo.agblocks *
+				  (off64_t)fsgeo.blocksize / BBSIZE;
+			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
+			swidth = (fsgeo.swidth * fsgeo.blocksize) / BBSIZE;
+		}
 		flg = sunit;
 
 		/*
@@ -306,25 +311,31 @@ bmap_f(
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
-				agno = map[i + 1].bmv_block / bbperag;
-				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				snprintf(abuf, sizeof(abuf), "(%lld..%lld)",
-					(long long)agoff,  (long long)
-					(agoff + map[i + 1].bmv_length - 1LL));
-				foff_w = max(foff_w, strlen(rbuf));
 				boff_w = max(boff_w, strlen(bbuf));
-				aoff_w = max(aoff_w, strlen(abuf));
+				if (!is_rt) {
+					agno = map[i + 1].bmv_block / bbperag;
+					agoff = map[i + 1].bmv_block -
+							(agno * bbperag);
+					snprintf(abuf, sizeof(abuf),
+						"(%lld..%lld)",
+						(long long)agoff,
+						(long long)(agoff +
+						 map[i + 1].bmv_length - 1LL));
+					aoff_w = max(aoff_w, strlen(abuf));
+				} else
+					aoff_w = 0;
+				foff_w = max(foff_w, strlen(rbuf));
 				tot_w = max(tot_w,
 					numlen(map[i+1].bmv_length));
 			}
 		}
-		agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount));
+		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount));
 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
 			_("EXT"),
 			foff_w, _("FILE-OFFSET"),
-			boff_w, _("BLOCK-RANGE"),
-			agno_w, _("AG"),
-			aoff_w, _("AG-OFFSET"),
+			boff_w, is_rt ? _("RT-BLOCK-RANGE") : _("BLOCK-RANGE"),
+			agno_w, is_rt ? "" : _("AG"),
+			aoff_w, is_rt ? "" : _("AG-OFFSET"),
 			tot_w, _("TOTAL"),
 			flg ? _(" FLAGS") : "");
 		for (i = 0; i < egcnt; i++) {
@@ -369,18 +380,23 @@ bmap_f(
 					(long long) map[i + 1].bmv_block,
 					(long long)(map[i + 1].bmv_block +
 						map[i + 1].bmv_length - 1LL));
-				agno = map[i + 1].bmv_block / bbperag;
-				agoff = map[i + 1].bmv_block - (agno * bbperag);
-				snprintf(abuf, sizeof(abuf), "(%lld..%lld)",
-					(long long)agoff,  (long long)
-					(agoff + map[i + 1].bmv_length - 1LL));
-				printf("%4d: %-*s %-*s %*d %-*s %*lld",
-					i,
-					foff_w, rbuf,
-					boff_w, bbuf,
-					agno_w, agno,
-					aoff_w, abuf,
-					tot_w, (long long)map[i+1].bmv_length);
+				printf("%4d: %-*s %-*s", i, foff_w, rbuf,
+					boff_w, bbuf);
+				if (!is_rt) {
+					agno = map[i + 1].bmv_block / bbperag;
+					agoff = map[i + 1].bmv_block -
+							(agno * bbperag);
+					snprintf(abuf, sizeof(abuf),
+						"(%lld..%lld)",
+						(long long)agoff,
+						(long long)(agoff +
+						 map[i + 1].bmv_length - 1LL));
+					printf(" %*d %-*s", agno_w, agno,
+						aoff_w, abuf);
+				} else
+					printf("  ");
+				printf(" %*lld", tot_w,
+					(long long)map[i+1].bmv_length);
 				if (flg == FLG_NULL) {
 					printf("\n");
 				} else {
