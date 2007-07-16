@@ -1,7 +1,7 @@
 
 #include <libxfs.h>
-#include "progress.h"
 #include "globals.h"
+#include "progress.h"
 #include "err_protos.h"
 #include <signal.h>
 
@@ -96,7 +96,7 @@ typedef struct phase_times_s {
 	time_t		start;
 	time_t		end;
 	time_t		duration;
-	__uint64_t	item_counts[4];	
+	__uint64_t	item_counts[4];
 } phase_times_t;
 static phase_times_t phase_times[8];
 
@@ -177,7 +177,7 @@ progress_rpt_thread (void *p)
 	/*
 	 * Specify a repeating timer that fires each MSG_INTERVAL seconds.
 	 */
-	
+
 	timespec.it_value.tv_sec = msgp->interval;
 	timespec.it_value.tv_nsec = 0;
 	timespec.it_interval.tv_sec = msgp->interval;
@@ -285,7 +285,7 @@ int
 set_progress_msg (int report, __uint64_t total)
 {
 
-	if (!do_parallel)
+	if (!ag_stride)
 		return (0);
 
 	if (pthread_mutex_lock(&global_msgs.mutex))
@@ -314,8 +314,8 @@ print_final_rpt(void)
 	__uint64_t sum;
 	msg_block_t 	*msgp = &global_msgs;
 	char		msgbuf[DURATION_BUF_SIZE];
-	
-	if (!do_parallel)
+
+	if (!ag_stride)
 		return 0;
 
 	if (pthread_mutex_lock(&global_msgs.mutex))
@@ -378,6 +378,9 @@ timestamp(int end, int phase, char *buf)
 
 	time_t    now;
 	struct tm *tmp;
+
+	if (verbose > 1)
+		cache_report(stderr, "libxfs_bcache", libxfs_bcache);
 
 	now = time(NULL);
 
@@ -461,7 +464,7 @@ duration(int length, char *buf)
 			}
 			strcat(buf, temp);
 		}
-			
+
 	}
 	if (length >= ONEMINUTE) {
 		minutes = (length - sum) / ONEMINUTE;
@@ -488,7 +491,7 @@ duration(int length, char *buf)
 			strcat(buf, _(", "));
 		strcat(buf, temp);
 	}
-		
+
 	return(buf);
 }
 

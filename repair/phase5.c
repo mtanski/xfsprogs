@@ -1441,8 +1441,10 @@ keep_fsinos(xfs_mount_t *mp)
 		set_inode_used(irec, i);
 }
 
-void
-phase5_function(xfs_mount_t *mp, xfs_agnumber_t agno)
+static void
+phase5_func(
+	xfs_mount_t	*mp,
+	xfs_agnumber_t	agno)
 {
 	__uint64_t	num_inos;
 	__uint64_t	num_free_inos;
@@ -1620,7 +1622,7 @@ phase5_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 void
 phase5(xfs_mount_t *mp)
 {
-	xfs_agnumber_t agno;
+	xfs_agnumber_t		agno;
 
 	do_log(_("Phase 5 - rebuild AG headers and trees...\n"));
 	set_progress_msg(PROG_FMT_REBUILD_AG, (__uint64_t )glob_agcount);
@@ -1663,10 +1665,9 @@ phase5(xfs_mount_t *mp)
 	if (sb_fdblocks_ag == NULL)
 		do_error(_("cannot alloc sb_fdblocks_ag buffers\n"));
 
-	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
-		queue_work(phase5_function, mp, agno);
-	}
-	wait_for_workers();
+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+		phase5_func(mp, agno);
+
 	print_final_rpt();
 
 	/* aggregate per ag counters */

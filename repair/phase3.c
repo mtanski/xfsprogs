@@ -26,6 +26,7 @@
 #include "dinode.h"
 #include "threads.h"
 #include "progress.h"
+#include "prefetch.h"
 
 /*
  * walks an unlinked list, returns 1 on an error (bogus pointer) or
@@ -59,7 +60,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				add_aginode_uncertain(agno, current_ino, 1);
 				agbno = XFS_AGINO_TO_AGBNO(mp, current_ino);
 
-				PREPAIR_RW_WRITE_LOCK(&per_ag_lock[agno]);
+				pthread_mutex_lock(&ag_locks[agno]);
 				switch (state = get_agbno_state(mp,
 							agno, agbno))  {
 				case XR_E_UNKNOWN:
@@ -67,14 +68,11 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				case XR_E_FREE1:
 					set_agbno_state(mp, agno, agbno,
 						XR_E_INO);
-					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					break;
 				case XR_E_BAD_STATE:
-					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					do_error(_(
 						"bad state in block map %d\n"),
 						state);
-					abort();
 					break;
 				default:
 					/*
@@ -89,9 +87,9 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 					 */
 					set_agbno_state(mp, agno, agbno,
 						XR_E_INO);
-					PREPAIR_RW_UNLOCK(&per_ag_lock[agno]);
 					break;
 				}
+				pthread_mutex_unlock(&ag_locks[agno]);
 			}
 			current_ino = dip->di_next_unlinked;
 		} else  {
@@ -149,21 +147,67 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 		libxfs_putbuf(bp);
 }
 
-void
-parallel_p3_process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
+static void
+process_ag_func(
+	work_queue_t		*wq,
+	xfs_agnumber_t 		agno,
+	void			*arg)
 {
 	/*
 	 * turn on directory processing (inode discovery) and
 	 * attribute processing (extra_attr_check)
 	 */
+	wait_for_inode_prefetch(arg);
 	do_log(_("        - agno = %d\n"), agno);
-	process_aginodes(mp, agno, 1, 0, 1);
+	process_aginodes(wq->mp, arg, agno, 1, 0, 1);
+	cleanup_inode_prefetch(arg);
+}
+
+static void
+process_ags(
+	xfs_mount_t		*mp)
+{
+	int 			i, j;
+	xfs_agnumber_t 		agno;
+	work_queue_t		*queues;
+	prefetch_args_t		*pf_args[2];
+
+	queues = malloc(thread_count * sizeof(work_queue_t));
+
+	if (ag_stride) {
+		/*
+		 * create one worker thread for each segment of the volume
+		 */
+		for (i = 0, agno = 0; i < thread_count; i++) {
+			create_work_queue(&queues[i], mp, 1);
+			pf_args[0] = NULL;
+			for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+					j++, agno++) {
+				pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+				queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
+			}
+		}
+		/*
+		 * wait for workers to complete
+		 */
+		for (i = 0; i < thread_count; i++)
+			destroy_work_queue(&queues[i]);
+	} else {
+		queues[0].mp = mp;
+		pf_args[0] = start_inode_prefetch(0, 0, NULL);
+		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 0,
+					pf_args[i & 1]);
+			process_ag_func(&queues[0], i, pf_args[i & 1]);
+		}
+	}
+	free(queues);
 }
 
 void
 phase3(xfs_mount_t *mp)
 {
-	int i, j;
+	int 			i, j;
 
 	do_log(_("Phase 3 - for each AG...\n"));
 	if (!no_modify)
@@ -192,16 +236,9 @@ phase3(xfs_mount_t *mp)
 	    "        - process known inodes and perform inode discovery...\n"));
 
 	set_progress_msg(PROG_FMT_PROCESS_INO, (__uint64_t) mp->m_sb.sb_icount);
-	if (ag_stride) {
-		int 	steps = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
-		for (i = 0; i < steps; i++)
-			for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride)
-				queue_work(parallel_p3_process_aginodes, mp, j);
-	} else {
-		for (i = 0; i < mp->m_sb.sb_agcount; i++)
-			parallel_p3_process_aginodes(mp, i);
-	}
-	wait_for_workers();
+
+	process_ags(mp);
+
 	print_final_rpt();
 
 	/*

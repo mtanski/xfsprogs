@@ -8,14 +8,15 @@ include $(TOPDIR)/include/builddefs
 LTCOMMAND = xfs_repair
 
 HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
-	dir2.h dir_stack.h err_protos.h globals.h incore.h protos.h rt.h \
-	progress.h scan.h versions.h prefetch.h threads.h
+	dir2.h err_protos.h globals.h incore.h protos.h rt.h \
+	progress.h scan.h versions.h prefetch.h radix-tree.h threads.h
 
 CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
-	dinode.c dir.c dir2.c dir_stack.c globals.c incore.c \
+	dinode.c dir.c dir2.c globals.c incore.c \
 	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
-	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c rt.c sb.c \
-	progress.c prefetch.c scan.c threads.c versions.c xfs_repair.c
+	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
+	progress.c prefetch.c radix-tree.c rt.c sb.c scan.c threads.c \
+	versions.c xfs_repair.c
 
 LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
@@ -39,6 +40,7 @@ include $(BUILDRULES)
 # -DXR_BLD_INO_TRACE	building on-disk inode allocation btrees
 # -DXR_BLD_ADD_EXTENT	track phase 5 block extent creation
 # -DXR_BCKPTR_DBG	parent list debugging info
+# -DXR_PF_TRACE		prefetch trace
 #
 #CFLAGS += ...
 

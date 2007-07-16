@@ -514,28 +514,121 @@ get_bmbt_reclist(
 	return(NULLDFSBNO);
 }
 
-/*
- * process_bmbt_reclist_int is the most compute intensive
- * function in repair. The following macros reduce the
- * the large number of lock/unlock steps it would otherwise
- * call.
- */
-#define	PROCESS_BMBT_DECL(type, var)	type var
 
-#define	PROCESS_BMBT_LOCK(agno)							\
-	if (do_parallel && (agno != locked_agno)) {				\
-		if (locked_agno != -1)	/* release old ag lock */		\
-			PREPAIR_RW_UNLOCK_NOTEST(&per_ag_lock[locked_agno]);	\
-		PREPAIR_RW_WRITE_LOCK_NOTEST(&per_ag_lock[agno]);		\
-		locked_agno = agno;						\
+static int
+process_rt_rec(
+	xfs_mount_t		*mp,
+	xfs_bmbt_rec_32_t	*rp,
+	xfs_ino_t		ino,
+	xfs_drfsbno_t		*tot,
+	int			check_dups)
+{
+	xfs_dfsbno_t		b;
+	xfs_drtbno_t		ext;
+	xfs_dfilblks_t		c;		/* count */
+	xfs_dfsbno_t		s;		/* start */
+	xfs_dfiloff_t		o;		/* offset */
+	int			state;
+	int			flag;		/* extent flag */
+	int			pwe;		/* partially-written extent */
+
+	convert_extent(rp, &o, &s, &c, &flag);
+
+	/*
+	 * check numeric validity of the extent
+	 */
+	if (s >= mp->m_sb.sb_rblocks)  {
+		do_warn(_("inode %llu - bad rt extent start block number "
+				"%llu, offset %llu\n"), ino, s, o);
+		return 1;
+	}
+	if (s + c - 1 >= mp->m_sb.sb_rblocks)  {
+		do_warn(_("inode %llu - bad rt extent last block number %llu, "
+				"offset %llu\n"), ino, s + c - 1, o);
+		return 1;
+	}
+	if (s + c - 1 < s)  {
+		do_warn(_("inode %llu - bad rt extent overflows - start %llu, "
+				"end %llu, offset %llu\n"),
+				ino, s, s + c - 1, o);
+		return 1;
 	}
 
-#define	PROCESS_BMBT_UNLOCK_RETURN(val)						\
-	do {									\
-		if (locked_agno != -1) 						\
-			PREPAIR_RW_UNLOCK_NOTEST(&per_ag_lock[locked_agno]);	\
-		return (val);							\
-	} while (0)
+	/*
+	 * verify that the blocks listed in the record
+	 * are multiples of an extent
+	 */
+	if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) == 0 &&
+			(s % mp->m_sb.sb_rextsize != 0 ||
+			 c % mp->m_sb.sb_rextsize != 0)) {
+		do_warn(_("malformed rt inode extent [%llu %llu] (fs rtext "
+				"size = %u)\n"), s, c, mp->m_sb.sb_rextsize);
+		return 1;
+	}
+
+	/*
+	 * set the appropriate number of extents
+	 */
+	for (b = s; b < s + c; b += mp->m_sb.sb_rextsize)  {
+		ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;
+		pwe = XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) && flag &&
+				(b % mp->m_sb.sb_rextsize != 0);
+
+		if (check_dups == 1)  {
+			if (search_rt_dup_extent(mp, ext) && !pwe)  {
+				do_warn(_("data fork in rt ino %llu claims "
+						"dup rt extent, off - %llu, "
+						"start - %llu, count %llu\n"),
+						ino, o, s, c);
+				return 1;
+			}
+			continue;
+		}
+
+		state = get_rtbno_state(mp, ext);
+
+		switch (state)  {
+			case XR_E_FREE:
+			case XR_E_UNKNOWN:
+				set_rtbno_state(mp, ext, XR_E_INUSE);
+				break;
+
+			case XR_E_BAD_STATE:
+				do_error(_("bad state in rt block map %llu\n"),
+						ext);
+
+			case XR_E_FS_MAP:
+			case XR_E_INO:
+			case XR_E_INUSE_FS:
+				do_error(_("data fork in rt inode %llu found "
+						"metadata block %llu in rt bmap\n"),
+						ino, ext);
+
+			case XR_E_INUSE:
+				if (pwe)
+					break;
+
+			case XR_E_MULT:
+				set_rtbno_state(mp, ext, XR_E_MULT);
+				do_warn(_("data fork in rt inode %llu claims "
+						"used rt block %llu\n"),
+						ino, ext);
+				return 1;
+
+			case XR_E_FREE1:
+			default:
+				do_error(_("illegal state %d in rt block map "
+						"%llu\n"), state, b);
+		}
+	}
+
+	/*
+	 * bump up the block counter
+	 */
+	*tot += c;
+
+	return 0;
+}
 
 /*
  * return 1 if inode should be cleared, 0 otherwise
@@ -560,7 +653,6 @@ process_bmbt_reclist_int(
 	int			whichfork)
 {
 	xfs_dfsbno_t		b;
-	xfs_drtbno_t		ext;
 	xfs_dfilblks_t		c;		/* count */
 	xfs_dfilblks_t		cp = 0;		/* prev count */
 	xfs_dfsbno_t		s;		/* start */
@@ -572,12 +664,11 @@ process_bmbt_reclist_int(
 	int			i;
 	int			state;
 	int			flag;		/* extent flag */
-	int			pwe;		/* partially-written extent */
 	xfs_dfsbno_t		e;
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
-	PROCESS_BMBT_DECL
-				(xfs_agnumber_t, locked_agno=-1);
+	xfs_agnumber_t		locked_agno = -1;
+	int			error = 1;
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -596,11 +687,10 @@ process_bmbt_reclist_int(
 		else
 			*last_key = o;
 		if (i > 0 && op + cp > o)  {
-			do_warn(
-	_("bmap rec out of order, inode %llu entry %d "
-	  "[o s c] [%llu %llu %llu], %d [%llu %llu %llu]\n"),
+			do_warn(_("bmap rec out of order, inode %llu entry %d "
+	  			"[o s c] [%llu %llu %llu], %d [%llu %llu %llu]\n"),
 				ino, i, o, s, c, i-1, op, sp, cp);
-			PROCESS_BMBT_UNLOCK_RETURN(1);
+			goto done;
 		}
 		op = o;
 		cp = c;
@@ -610,150 +700,18 @@ process_bmbt_reclist_int(
 		 * check numeric validity of the extent
 		 */
 		if (c == 0)  {
-			do_warn(
-	_("zero length extent (off = %llu, fsbno = %llu) in ino %llu\n"),
-				o, s, ino);
-			PROCESS_BMBT_UNLOCK_RETURN(1);
-		}
-		if (type == XR_INO_RTDATA) {
-			if (s >= mp->m_sb.sb_rblocks)  {
-				do_warn(
-	_("inode %llu - bad rt extent start block number %llu, offset %llu\n"),
-					ino, s, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
-			if (s + c - 1 >= mp->m_sb.sb_rblocks)  {
-				do_warn(
-	_("inode %llu - bad rt extent last block number %llu, offset %llu\n"),
-					ino, s + c - 1, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
-			if (s + c - 1 < s)  {
-				do_warn(
-	_("inode %llu - bad rt extent overflows - start %llu, end %llu, "
-	  "offset %llu\n"),
-					ino, s, s + c - 1, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
-		} else  {
-			switch (verify_dfsbno_range(mp, s, c)) {
-			case XR_DFSBNORANGE_VALID:
-				break;
-			case XR_DFSBNORANGE_BADSTART:
-				do_warn(
-	_("inode %llu - bad extent starting block number %llu, offset %llu\n"),
-					ino, s, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			case XR_DFSBNORANGE_BADEND:
-				do_warn(
-	_("inode %llu - bad extent last block number %llu, offset %llu\n"),
-					ino, s + c - 1, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			case XR_DFSBNORANGE_OVERFLOW:
-				do_warn(
-
-	_("inode %llu - bad extent overflows - start %llu, end %llu, "
-	  "offset %llu\n"),
-					ino, s, s + c - 1, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
-			if (o >= fs_max_file_offset)  {
-				do_warn(
-	_("inode %llu - extent offset too large - start %llu, count %llu, "
-	  "offset %llu\n"),
-					ino, s, c, o);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
+			do_warn(_("zero length extent (off = %llu, "
+				"fsbno = %llu) in ino %llu\n"), o, s, ino);
+			goto done;
 		}
 
-		/*
-		 * realtime file data fork
-		 */
-		if (type == XR_INO_RTDATA && whichfork == XFS_DATA_FORK)  {
+		if (type == XR_INO_RTDATA && whichfork == XFS_DATA_FORK) {
 			/*
-			 * XXX - verify that the blocks listed in the record
-			 * are multiples of an extent
+			 * realtime bitmaps don't use AG locks, so returning
+			 * immediately is fine for this code path.
 			 */
-			if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) == 0
-			   && (s % mp->m_sb.sb_rextsize != 0 ||
-					c % mp->m_sb.sb_rextsize != 0))  {
-				do_warn(
-	_("malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"),
-					s, c, mp->m_sb.sb_rextsize);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
-			}
-
-			/*
-			 * XXX - set the appropriate number of extents
-			 */
-			for (b = s; b < s + c; b += mp->m_sb.sb_rextsize)  {
-				ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;
-				if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) &&
-				    flag && (b % mp->m_sb.sb_rextsize != 0)) {
-					pwe = 1;
-				} else {
-					pwe = 0;
-				}
-
-				if (check_dups == 1)  {
-					if (search_rt_dup_extent(mp, ext) &&
-					    !pwe)  {
-						do_warn(
-	_("data fork in rt ino %llu claims dup rt extent, off - %llu, "
-	  "start - %llu, count %llu\n"),
-							ino, o, s, c);
-						PROCESS_BMBT_UNLOCK_RETURN(1);
-					}
-					continue;
-				}
-
-				state = get_rtbno_state(mp, ext);
-
-				switch (state)  {
-				case XR_E_FREE:
-/* XXX - turn this back on after we
-	run process_rtbitmap() in phase2
-					do_warn(
-			_("%s fork in rt ino %llu claims free rt block %llu\n"),
-						forkname, ino, ext);
-*/
-					/* fall through ... */
-				case XR_E_UNKNOWN:
-					set_rtbno_state(mp, ext, XR_E_INUSE);
-					break;
-				case XR_E_BAD_STATE:
-					do_error(
-				_("bad state in rt block map %llu\n"), ext);
-					abort();
-					break;
-				case XR_E_FS_MAP:
-				case XR_E_INO:
-				case XR_E_INUSE_FS:
-					do_error(
-	_("%s fork in rt inode %llu found metadata block %llu in %s bmap\n"),
-						forkname, ino, ext, ftype);
-				case XR_E_INUSE:
-					if (pwe)
-						break;
-				case XR_E_MULT:
-					set_rtbno_state(mp, ext, XR_E_MULT);
-					do_warn(
-	_("%s fork in rt inode %llu claims used rt block %llu\n"),
-						forkname, ino, ext);
-					PROCESS_BMBT_UNLOCK_RETURN(1);
-				case XR_E_FREE1:
-				default:
-					do_error(
-				_("illegal state %d in %s block map %llu\n"),
-						state, ftype, b);
-				}
-			}
-
-			/*
-			 * bump up the block counter
-			 */
-			*tot += c;
-
+			if (process_rt_rec(mp, rp, ino, tot, check_dups))
+				return 1;
 			/*
 			 * skip rest of loop processing since that's
 			 * all for regular file forks and attr forks
@@ -761,10 +719,38 @@ process_bmbt_reclist_int(
 			continue;
 		}
 
-
 		/*
 		 * regular file data fork or attribute fork
 		 */
+		switch (verify_dfsbno_range(mp, s, c)) {
+			case XR_DFSBNORANGE_VALID:
+				break;
+
+			case XR_DFSBNORANGE_BADSTART:
+				do_warn(_("inode %llu - bad extent starting "
+					"block number %llu, offset %llu\n"),
+					ino, s, o);
+				goto done;
+
+			case XR_DFSBNORANGE_BADEND:
+				do_warn(_("inode %llu - bad extent last block "
+					"number %llu, offset %llu\n"),
+					ino, s + c - 1, o);
+				goto done;
+
+			case XR_DFSBNORANGE_OVERFLOW:
+				do_warn(_("inode %llu - bad extent overflows - "
+					"start %llu, end %llu, offset %llu\n"),
+					ino, s, s + c - 1, o);
+				goto done;
+		}
+		if (o >= fs_max_file_offset)  {
+			do_warn(_("inode %llu - extent offset too large - "
+				"start %llu, count %llu, offset %llu\n"),
+				ino, s, c, o);
+			goto done;
+		}
+
 		if (blkmapp && *blkmapp)
 			blkmap_set_ext(blkmapp, o, s, c);
 		/*
@@ -774,35 +760,36 @@ process_bmbt_reclist_int(
 		agno = XFS_FSB_TO_AGNO(mp, s);
 		agbno = XFS_FSB_TO_AGBNO(mp, s);
 		e = s + c;
-		PROCESS_BMBT_LOCK(agno);
-		for (b = s; b < e; b++, agbno++)  {
-			if (check_dups == 1)  {
-				/*
-				 * if we're just checking the bmap for dups,
-				 * return if we find one, otherwise, continue
-				 * checking each entry without setting the
-				 * block bitmap
-				 */
-				if (search_dup_extent(mp, agno, agbno)) {
-					do_warn(
-	_("%s fork in ino %llu claims dup extent, off - %llu, "
-	  "start - %llu, cnt %llu\n"),
-						forkname, ino, o, s, c);
-					PROCESS_BMBT_UNLOCK_RETURN(1);
-				}
-				continue;
-			}
+		if (agno != locked_agno) {
+			if (locked_agno != -1)
+				pthread_mutex_unlock(&ag_locks[locked_agno]);
+			pthread_mutex_lock(&ag_locks[agno]);
+			locked_agno = agno;
+		}
 
-			/* FIX FOR BUG 653709 -- EKN
-			 * realtime attribute fork, should be valid block number
-			 * in regular data space, not realtime partion.
+		if (check_dups) {
+			/*
+			 * if we're just checking the bmap for dups,
+			 * return if we find one, otherwise, continue
+			 * checking each entry without setting the
+			 * block bitmap
 			 */
-			if (type == XR_INO_RTDATA && whichfork == XFS_ATTR_FORK) {
-			  if (mp->m_sb.sb_agcount < agno)
-				PROCESS_BMBT_UNLOCK_RETURN(1);
+			for (b = s; b < e; b++, agbno++)  {
+				if (search_dup_extent(mp, agno, agbno)) {
+					do_warn(_("%s fork in ino %llu claims "
+						"dup extent, off - %llu, "
+						"start - %llu, cnt %llu\n"),
+						forkname, ino, o, s, c);
+					goto done;
+				}
 			}
+			*tot += c;
+			continue;
+		}
 
-			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB)
+		for (b = s; b < e; b++, agbno++)  {
+			/*
+			 * Process in chunks of 16 (XR_BB_UNIT/XR_BB)
 			 * for common XR_E_UNKNOWN to XR_E_INUSE transition
 			 */
 			if (((agbno & XR_BB_MASK) == 0) && ((s + c - b) >= (XR_BB_UNIT/XR_BB))) {
@@ -816,45 +803,49 @@ process_bmbt_reclist_int(
 			}
 
 			state = get_agbno_state(mp, agno, agbno);
+
 			switch (state)  {
 			case XR_E_FREE:
 			case XR_E_FREE1:
-				do_warn(
-			_("%s fork in ino %llu claims free block %llu\n"),
+				do_warn(_("%s fork in ino %llu claims free "
+					"block %llu\n"),
 					forkname, ino, (__uint64_t) b);
 				/* fall through ... */
 			case XR_E_UNKNOWN:
 				set_agbno_state(mp, agno, agbno, XR_E_INUSE);
 				break;
+
 			case XR_E_BAD_STATE:
 				do_error(_("bad state in block map %llu\n"), b);
-				abort();
-				break;
+
 			case XR_E_FS_MAP:
 			case XR_E_INO:
 			case XR_E_INUSE_FS:
-				do_warn(
-			_("%s fork in inode %llu claims metadata block %llu\n"),
+				do_warn(_("%s fork in inode %llu claims "
+					"metadata block %llu\n"),
 					forkname, ino, (__uint64_t) b);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
+				goto done;
+
 			case XR_E_INUSE:
 			case XR_E_MULT:
 				set_agbno_state(mp, agno, agbno, XR_E_MULT);
-				do_warn(
-			_("%s fork in %s inode %llu claims used block %llu\n"),
+				do_warn(_("%s fork in %s inode %llu claims "
+					"used block %llu\n"),
 					forkname, ftype, ino, (__uint64_t) b);
-				PROCESS_BMBT_UNLOCK_RETURN(1);
+				goto done;
+
 			default:
-				do_error(
-			_("illegal state %d in block map %llu\n"),
+				do_error(_("illegal state %d in block map %llu\n"),
 					state, b);
-				abort();
 			}
 		}
 		*tot += c;
 	}
-
-	PROCESS_BMBT_UNLOCK_RETURN(0);
+	error = 0;
+done:
+	if (locked_agno != -1)
+		pthread_mutex_unlock(&ag_locks[locked_agno]);
+	return error;
 }
 
 /*

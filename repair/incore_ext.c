@@ -95,9 +95,9 @@ static ba_rec_t		*rt_ba_list;
 /*
  * locks.
  */
-static pthread_rwlock_t ext_flist_lock;
-static pthread_rwlock_t rt_ext_tree_lock;
-static pthread_rwlock_t rt_ext_flist_lock;
+static pthread_mutex_t	ext_flist_lock;
+static pthread_mutex_t	rt_ext_tree_lock;
+static pthread_mutex_t	rt_ext_flist_lock;
 
 /*
  * extent tree stuff is avl trees of duplicate extents,
@@ -112,7 +112,7 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 	extent_tree_node_t *new;
 	extent_alloc_rec_t *rec;
 
-	PREPAIR_RW_WRITE_LOCK(&ext_flist_lock);
+	pthread_mutex_lock(&ext_flist_lock);
 	if (ext_flist.cnt == 0)  {
 		ASSERT(ext_flist.list == NULL);
 
@@ -139,7 +139,7 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 	ext_flist.list = (extent_tree_node_t *) new->avl_node.avl_nextino;
 	ext_flist.cnt--;
 	new->avl_node.avl_nextino = NULL;
-	PREPAIR_RW_UNLOCK(&ext_flist_lock);
+	pthread_mutex_unlock(&ext_flist_lock);
 
 	/* initialize node */
 
@@ -155,11 +155,11 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 void
 release_extent_tree_node(extent_tree_node_t *node)
 {
-	PREPAIR_RW_WRITE_LOCK(&ext_flist_lock);
+	pthread_mutex_lock(&ext_flist_lock);
 	node->avl_node.avl_nextino = (avlnode_t *) ext_flist.list;
 	ext_flist.list = node;
 	ext_flist.cnt++;
-	PREPAIR_RW_UNLOCK(&ext_flist_lock);
+	pthread_mutex_unlock(&ext_flist_lock);
 
 	return;
 }
@@ -327,11 +327,11 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 		 * avl tree code doesn't handle dups so insert
 		 * onto linked list in increasing startblock order
 		 *
-		 * when called from mk_incore_fstree, 
+		 * when called from mk_incore_fstree,
 		 * startblock is in increasing order.
 		 * current is an "anchor" node.
 		 * quick check if the new ext goes to the end.
-		 * if so, append at the end, using the last field 
+		 * if so, append at the end, using the last field
 		 * of the "anchor".
 		 */
 		ASSERT(current->last != NULL);
@@ -341,7 +341,7 @@ add_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 			return;
 		}
 
-		/* 
+		/*
 		 * scan, to find the proper location for new entry.
 		 * this scan is *very* expensive and gets worse with
 		 * with increasing entries.
@@ -670,7 +670,7 @@ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
 	rt_extent_tree_node_t *new;
 	rt_extent_alloc_rec_t *rec;
 
-	PREPAIR_RW_WRITE_LOCK(&rt_ext_flist_lock);
+	pthread_mutex_lock(&rt_ext_flist_lock);
 	if (rt_ext_flist.cnt == 0)  {
 		ASSERT(rt_ext_flist.list == NULL);
 
@@ -697,7 +697,7 @@ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
 	rt_ext_flist.list = (rt_extent_tree_node_t *) new->avl_node.avl_nextino;
 	rt_ext_flist.cnt--;
 	new->avl_node.avl_nextino = NULL;
-	PREPAIR_RW_UNLOCK(&rt_ext_flist_lock);
+	pthread_mutex_unlock(&rt_ext_flist_lock);
 
 	/* initialize node */
 
@@ -776,7 +776,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 	xfs_drtbno_t new_startblock;
 	xfs_extlen_t new_blockcount;
 
-	PREPAIR_RW_WRITE_LOCK(&rt_ext_tree_lock);
+	pthread_mutex_lock(&rt_ext_tree_lock);
 	avl64_findranges(rt_ext_tree_ptr, startblock - 1,
 		startblock + blockcount + 1,
 		(avl64node_t **) &first, (avl64node_t **) &last);
@@ -794,7 +794,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 			do_error(_("duplicate extent range\n"));
 		}
 
-		PREPAIR_RW_UNLOCK(&rt_ext_tree_lock);
+		pthread_mutex_unlock(&rt_ext_tree_lock);
 		return;
 	}
 
@@ -819,7 +819,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 		 */
 		if (ext->rt_startblock <= startblock &&
 				ext->rt_blockcount >= blockcount) {
-			PREPAIR_RW_UNLOCK(&rt_ext_tree_lock);
+			pthread_mutex_unlock(&rt_ext_tree_lock);
 			return;
 		}
 		/*
@@ -849,7 +849,7 @@ add_rt_dup_extent(xfs_drtbno_t startblock, xfs_extlen_t blockcount)
 		do_error(_("duplicate extent range\n"));
 	}
 
-	PREPAIR_RW_UNLOCK(&rt_ext_tree_lock);
+	pthread_mutex_unlock(&rt_ext_tree_lock);
 	return;
 }
 
@@ -862,12 +862,12 @@ search_rt_dup_extent(xfs_mount_t *mp, xfs_drtbno_t bno)
 {
 	int ret;
 
-	PREPAIR_RW_READ_LOCK(&rt_ext_tree_lock);
+	pthread_mutex_lock(&rt_ext_tree_lock);
 	if (avl64_findrange(rt_ext_tree_ptr, bno) != NULL)
 		ret = 1;
 	else
 		ret = 0;
-	PREPAIR_RW_UNLOCK(&rt_ext_tree_lock);
+	pthread_mutex_unlock(&rt_ext_tree_lock);
 	return(ret);
 }
 
@@ -897,9 +897,9 @@ incore_ext_init(xfs_mount_t *mp)
 
 	ba_list = NULL;
 	rt_ba_list = NULL;
-	PREPAIR_RW_LOCK_INIT(&ext_flist_lock, NULL);
-	PREPAIR_RW_LOCK_INIT(&rt_ext_tree_lock, NULL);
-	PREPAIR_RW_LOCK_INIT(&rt_ext_flist_lock, NULL);
+	pthread_mutex_init(&ext_flist_lock, NULL);
+	pthread_mutex_init(&rt_ext_tree_lock, NULL);
+	pthread_mutex_init(&rt_ext_flist_lock, NULL);
 
 	if ((extent_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)

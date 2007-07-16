@@ -27,7 +27,6 @@
 #include "scan.h"
 #include "versions.h"
 #include "bmap.h"
-#include "prefetch.h"
 #include "progress.h"
 
 extern int verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
@@ -1147,9 +1146,6 @@ scan_ag(
 
 	agi_dirty = agf_dirty = sb_dirty = 0;
 
-	if (do_prefetch)
-		prefetch_sb(mp, agno);
-
 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1), 0);
 	if (!sbbuf)  {
@@ -1240,9 +1236,6 @@ scan_ag(
 	}
 
 	scan_freelist(agf);
-
-	if (do_prefetch)
-		 prefetch_roots(mp, agno, agf, agi);
 
 	if (INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT) != 0 &&
 	    verify_agbno(mp, agno,

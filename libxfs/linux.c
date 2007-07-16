@@ -20,11 +20,11 @@
 #include <xfs/libxfs.h>
 #include <mntent.h>
 #include <sys/stat.h>
-#include <aio.h>
 #undef ustat
 #include <sys/ustat.h>
 #include <sys/mount.h>
 #include <sys/ioctl.h>
+#include <sys/sysinfo.h>
 
 int platform_has_uuid = 1;
 extern char *progname;
@@ -174,19 +174,6 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 		max_block_alignment = *bsz;
 }
 
-int
-platform_aio_init(int aio_count)
-{
-	struct aioinit lcl_aio_init;
-
-	memset(&lcl_aio_init, 0, sizeof(lcl_aio_init));
-	lcl_aio_init.aio_threads = aio_count;
-	lcl_aio_init.aio_numusers = aio_count;
-
-	aio_init(&lcl_aio_init);
-	return (1);		/* aio/lio_listio available */
-}
-
 char *
 platform_findrawpath(char *path)
 {
@@ -217,4 +204,17 @@ int
 platform_nproc(void)
 {
 	return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
+unsigned long
+platform_physmem(void)
+{
+	struct sysinfo  si;
+
+	if (sysinfo(&si) < 0) {
+		fprintf(stderr, _("%s: can't determine memory size\n"),
+			progname);
+		exit(1);
+	}
+	return (si.totalram >> 10) * si.mem_unit;	/* kilobytes */
 }

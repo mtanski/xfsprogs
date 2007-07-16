@@ -16,6 +16,10 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef XFS_REPAIR_INCORE_H
+#define XFS_REPAIR_INCORE_H
+
+#include "avl.h"
 /*
  * contains definition information.  implementation (code)
  * is spread out in separate files.
@@ -603,7 +607,7 @@ get_inode_disk_nlinks(ino_tree_node_t *ino_rec, int ino_offset)
 #define add_inode_refchecked(ino, ino_rec, ino_offset) \
 		XFS_INOPROC_SET_PROC((ino_rec), (ino_offset))
 #define is_inode_refchecked(ino, ino_rec, ino_offset) \
-		(XFS_INOPROC_IS_PROC(ino_rec, ino_offset) == 0LL ? 0 : 1)
+		(XFS_INOPROC_IS_PROC(ino_rec, ino_offset) != 0LL)
 #else
 void add_inode_refchecked(xfs_ino_t ino,
 			ino_tree_node_t *ino_rec, int ino_offset);
@@ -647,3 +651,5 @@ typedef struct bm_cursor  {
 } bmap_cursor_t;
 
 void init_bm_cursor(bmap_cursor_t *cursor, int num_level);
+
+#endif /* XFS_REPAIR_INCORE_H */

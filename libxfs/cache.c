@@ -31,7 +31,6 @@
 #define CACHE_DEBUG 1
 #undef CACHE_ABORT
 /* #define CACHE_ABORT 1 */
-#define	HASH_CACHE_RATIO	8
 
 static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
 
@@ -275,7 +274,8 @@ cache_shake(
 struct cache_node *
 cache_node_allocate(
 	struct cache *		cache,
-	struct cache_hash *	hashlist)
+	struct cache_hash *	hashlist,
+	cache_key_t		key)
 {
 	unsigned int		nodesfree;
 	struct cache_node *	node;
@@ -290,7 +290,7 @@ cache_node_allocate(
 	pthread_mutex_unlock(&cache->c_mutex);
 	if (!nodesfree)
 		return NULL;
-	if (!(node = cache->alloc())) {	/* uh-oh */
+	if (!(node = cache->alloc(key))) {	/* uh-oh */
 		pthread_mutex_lock(&cache->c_mutex);
 		cache->c_count--;
 		pthread_mutex_unlock(&cache->c_mutex);
@@ -300,6 +300,13 @@ cache_node_allocate(
 	list_head_init(&node->cn_list);
 	node->cn_count = 1;
 	return node;
+}
+
+int
+cache_overflowed(
+	struct cache *		cache)
+{
+	return (cache->c_maxcount == cache->c_max);
 }
 
 /*
@@ -341,7 +348,7 @@ cache_node_get(
 		break;
 	}
 	if (pos == head) {
-		node = cache_node_allocate(cache, hash);
+		node = cache_node_allocate(cache, hash, key);
 		if (!node) {
 			priority = cache_shake(cache, hash, priority);
 			goto restart;
@@ -428,7 +435,7 @@ cache_purge(
 }
 
 /*
- * Flush all nodes in the cache to disk. 
+ * Flush all nodes in the cache to disk.
  */
 void
 cache_flush(
@@ -439,13 +446,13 @@ cache_flush(
 	struct list_head *	pos;
 	struct cache_node *	node;
 	int			i;
-	
+
 	if (!cache->flush)
 		return;
-	
+
 	for (i = 0; i < cache->c_hashsize; i++) {
 		hash = &cache->c_hash[i];
-		
+
 		pthread_mutex_lock(&hash->ch_mutex);
 		head = &hash->ch_list;
 		for (pos = head->next; pos != head; pos = pos->next) {
@@ -505,10 +512,10 @@ cache_report(FILE *fp, const char *name, struct cache * cache)
 		total += i*hash_bucket_lengths[i];
 		if (hash_bucket_lengths[i] == 0)
 			continue;
-		fprintf(fp, "Hash buckets with  %2d entries %5ld (%3ld%%)\n", 
+		fprintf(fp, "Hash buckets with  %2d entries %5ld (%3ld%%)\n",
 			i, hash_bucket_lengths[i], (i*hash_bucket_lengths[i]*100)/cache->c_count);
 	}
 	if (hash_bucket_lengths[i])	/* last report bucket is the overflow bucket */
-		fprintf(fp, "Hash buckets with >%2d entries %5ld (%3ld%%)\n", 
+		fprintf(fp, "Hash buckets with >%2d entries %5ld (%3ld%%)\n",
 			i-1, hash_bucket_lengths[i], ((cache->c_count-total)*100)/cache->c_count);
 }

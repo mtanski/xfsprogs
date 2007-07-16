@@ -25,9 +25,7 @@
 #include "err_protos.h"
 #include "dinode.h"
 #include "versions.h"
-#include "prefetch.h"
 #include "progress.h"
-#include "threads.h"
 
 /* dinoc is a pointer to the IN-CORE dinode core */
 static void
@@ -116,57 +114,6 @@ update_inode_nlinks(
 	}
 }
 
-static void
-phase7_alt_function(xfs_mount_t *mp, xfs_agnumber_t agno)
-{
-	ino_tree_node_t 	*irec;
-	int			j;
-	__uint32_t		nrefs;
-
-	/*
-	 * using the nlink values memorised during phase3/4, compare to the
-	 * nlink counted in phase 6, and if different, update on-disk.
-	 */
-
-	irec = findfirst_inode_rec(agno);
-
-	while (irec != NULL)  {
-		for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-			assert(is_inode_confirmed(irec, j));
-
-			if (is_inode_free(irec, j))
-				continue;
-
-			assert(no_modify || is_inode_reached(irec, j));
-			assert(no_modify || is_inode_referenced(irec, j));
-
-			nrefs = num_inode_references(irec, j);
-
- 			if (get_inode_disk_nlinks(irec, j) != nrefs)
- 				update_inode_nlinks(mp, XFS_AGINO_TO_INO(mp,
- 						agno, irec->ino_startnum + j),
- 						nrefs);
-		}
-		irec = next_ino_rec(irec);
-		PROG_RPT_INC(prog_rpt_done[agno], XFS_INODES_PER_CHUNK);
-	}
-}
-
-static void
-phase7_alt(xfs_mount_t *mp)
-{
-	int		i;
-
-	set_progress_msg(no_modify ? PROGRESS_FMT_VRFY_LINK : PROGRESS_FMT_CORR_LINK,
-		(__uint64_t) mp->m_sb.sb_icount);
-
-	for (i = 0; i < glob_agcount; i++)  {
-		queue_work(phase7_alt_function, mp, i);
-	}
-	wait_for_workers();
-	print_final_rpt();
-}
-
 void
 phase7(xfs_mount_t *mp)
 {
@@ -179,11 +126,6 @@ phase7(xfs_mount_t *mp)
 		do_log(_("Phase 7 - verify and correct link counts...\n"));
 	else
 		do_log(_("Phase 7 - verify link counts...\n"));
-
-	if (do_prefetch) {
-		phase7_alt(mp);
-		return;
-	}
 
 	/*
 	 * for each ag, look at each inode 1 at a time. If the number of

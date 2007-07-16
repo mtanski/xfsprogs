@@ -1,45 +1,59 @@
 #ifndef _XFS_REPAIR_PREFETCH_H
 #define	_XFS_REPAIR_PREFETCH_H
 
-struct blkmap;
-struct da_bt_cursor;
-struct xfs_mount;
+#include <semaphore.h>
+#include "incore.h"
+#include "radix-tree.h"
 
-extern 	int do_prefetch;
 
-struct ino_tree_node *prefetch_inode_chunks(
-	struct xfs_mount *,
-	xfs_agnumber_t,
-	struct ino_tree_node *);
+extern int 	do_prefetch;
 
-extern void prefetch_dir1(
-	struct xfs_mount	*mp,
-	xfs_dablk_t		bno,
-	struct da_bt_cursor	*da_cursor);
+#define PF_THREAD_COUNT	4
 
-extern void prefetch_dir2(
-	struct xfs_mount	*mp,
-	struct blkmap		*blkmap);
+typedef struct prefetch_args {
+	pthread_mutex_t		lock;
+	pthread_t		queuing_thread;
+	pthread_t		io_threads[PF_THREAD_COUNT];
+	struct radix_tree_root	primary_io_queue;
+	struct radix_tree_root	secondary_io_queue;
+	pthread_cond_t		start_reading;
+	pthread_cond_t		start_processing;
+	int			agno;
+	int			dirs_only;
+	volatile int		can_start_reading;
+	volatile int		can_start_processing;
+	volatile int		prefetch_done;
+	volatile int		queuing_done;
+	volatile int		inode_bufs_queued;
+	volatile xfs_fsblock_t	last_bno_read;
+	sem_t			ra_count;
+	struct prefetch_args	*next_args;
+} prefetch_args_t;
 
-extern void prefetch_p6_dir1(
-	struct xfs_mount	*mp,
-	xfs_ino_t		ino,
-	struct xfs_inode	*ip,
-	xfs_dablk_t		da_bno,
-	xfs_fsblock_t		*fblockp);
 
-extern void prefetch_p6_dir2(
-	struct xfs_mount	*mp,
-	struct xfs_inode	*ip);
 
-extern void prefetch_sb(
-	struct xfs_mount	*mp,
-	xfs_agnumber_t		agno);
+void
+init_prefetch(
+	xfs_mount_t		*pmp);
 
-extern void prefetch_roots(
-	struct xfs_mount 	*mp,
-	xfs_agnumber_t 		agno,
-	xfs_agf_t		*agf,
-	xfs_agi_t		*agi);
+prefetch_args_t *
+start_inode_prefetch(
+	xfs_agnumber_t		agno,
+	int			dirs_only,
+	prefetch_args_t		*prev_args);
+
+void
+wait_for_inode_prefetch(
+	prefetch_args_t		*args);
+
+void
+cleanup_inode_prefetch(
+	prefetch_args_t		*args);
+
+
+#ifdef XR_PF_TRACE
+#define pftrace(msg...)	_pftrace(__FUNCTION__, ## msg)
+void	_pftrace(const char *, const char *, ...);
+#endif
 
 #endif /* _XFS_REPAIR_PREFETCH_H */

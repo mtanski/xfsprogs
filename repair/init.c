@@ -22,7 +22,11 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "pthread.h"
+#include "avl.h"
+#include "dir.h"
+#include "incore.h"
 #include "prefetch.h"
+#include "radix-tree.h"
 #include <sys/resource.h>
 
 static pthread_key_t dirbuf_key;
@@ -144,9 +148,5 @@ xfs_init(libxfs_init_t *args)
 	ts_create();
 	ts_init();
 	increase_rlimit();
-	if (do_prefetch) {
-		do_prefetch = libxfs_lio_init();
-		if (do_prefetch)
-			libxfs_lio_allocate();
-	}
+	radix_tree_init();
 }

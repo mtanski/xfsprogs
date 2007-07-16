@@ -61,11 +61,12 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 	size_t size = 0;
 
 	ba_bmap = (__uint64_t**)malloc(agno*sizeof(__uint64_t *));
-	if (!ba_bmap)  {
+	if (!ba_bmap)
 		do_error(_("couldn't allocate block map pointers\n"));
-		return;
-	}
-	PREPAIR_RW_LOCK_ALLOC(per_ag_lock, agno);
+	ag_locks = malloc(agno * sizeof(pthread_mutex_t));
+	if (!ag_locks)
+		do_error(_("couldn't allocate block map locks\n"));
+
 	for (i = 0; i < agno; i++)  {
 		size = roundup((numblocks+(NBBY/XR_BB)-1) / (NBBY/XR_BB),
 		       		sizeof(__uint64_t));
@@ -77,7 +78,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 			return;
 		}
 		bzero(ba_bmap[i], size);
-		PREPAIR_RW_LOCK_INIT(&per_ag_lock[i], NULL);
+		pthread_mutex_init(&ag_locks[i], NULL);
 	}
 
 	if (rtblocks == 0)  {

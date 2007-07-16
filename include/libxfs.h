@@ -190,8 +190,8 @@ typedef struct xfs_mount {
 #define LIBXFS_MOUNT_32BITINOOPT	0x0008
 #define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
 
-#define LIBXFS_IHASHSIZE(sbp)		(1<<16)	/* tweak based on icount? */
-#define LIBXFS_BHASHSIZE(sbp)		(1<<16)	/* ditto, on blocks used? */
+#define LIBXFS_IHASHSIZE(sbp)		(1<<10)
+#define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
 
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
@@ -216,10 +216,17 @@ typedef struct xfs_buf {
 	xfs_daddr_t		b_blkno;
 	unsigned		b_bcount;
 	dev_t			b_dev;
+	pthread_mutex_t		b_lock;
 	void			*b_fsprivate;
 	void			*b_fsprivate2;
 	void			*b_fsprivate3;
 	char			*b_addr;
+#ifdef XFS_BUF_TRACING
+	struct list_head	b_lock_list;
+	const char		*b_func;
+	const char		*b_file;
+	int			b_line;
+#endif
 } xfs_buf_t;
 
 enum xfs_buf_flags_t {	/* b_flags bits */
@@ -247,25 +254,49 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
 #define XFS_BUF_SET_FSPRIVATE3(bp,val)	(bp)->b_fsprivate3 = (void *)(val)
 
-extern xfs_buf_t	*libxfs_getsb (xfs_mount_t *, int);
-extern xfs_buf_t	*libxfs_readbuf (dev_t, xfs_daddr_t, int, int);
-extern int	libxfs_readbufr (dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
-extern int	libxfs_writebuf (xfs_buf_t *, int);
-extern int	libxfs_writebufr (xfs_buf_t *);
-extern int	libxfs_writebuf_int (xfs_buf_t *, int);
-
 /* Buffer Cache Interfaces */
+
 extern struct cache	*libxfs_bcache;
 extern struct cache_operations	libxfs_bcache_operations;
-extern void	libxfs_bcache_purge (void);
-extern void	libxfs_bcache_flush (void);
-extern xfs_buf_t	*libxfs_getbuf (dev_t, xfs_daddr_t, int);
+
+#ifdef XFS_BUF_TRACING
+
+#define libxfs_readbuf(dev, daddr, len, flags) \
+		libxfs_trace_readbuf(__FUNCTION__, __FILE__, __LINE__, (dev), (daddr), (len), (flags))
+#define libxfs_writebuf(buf, flags) \
+		libxfs_trace_writebuf(__FUNCTION__, __FILE__, __LINE__, (buf), (flags))
+#define libxfs_getbuf(dev, daddr, len) \
+		libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, (dev), (daddr), (len))
+#define libxfs_putbuf(buf) \
+		libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
+
+extern xfs_buf_t *libxfs_trace_readbuf(const char *, const char *, int, dev_t, xfs_daddr_t, int, int);
+extern int	libxfs_trace_writebuf(const char *, const char *, int, xfs_buf_t *, int);
+extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int, dev_t, xfs_daddr_t, int);
+extern void	libxfs_trace_putbuf (const char *, const char *, int, xfs_buf_t *);
+
+#else
+
+extern xfs_buf_t *libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
+extern int	libxfs_writebuf(xfs_buf_t *, int);
+extern xfs_buf_t *libxfs_getbuf(dev_t, xfs_daddr_t, int);
 extern void	libxfs_putbuf (xfs_buf_t *);
-extern void	libxfs_purgebuf (xfs_buf_t *);
+
+#endif
+
+extern xfs_buf_t *libxfs_getsb(xfs_mount_t *, int);
+extern void	libxfs_bcache_purge(void);
+extern void	libxfs_bcache_flush(void);
+extern void	libxfs_purgebuf(xfs_buf_t *);
+extern int	libxfs_bcache_overflowed(void);
+extern int	libxfs_bcache_usage(void);
 
 /* Buffer (Raw) Interfaces */
-extern xfs_buf_t	*libxfs_getbufr (dev_t, xfs_daddr_t, int);
-extern void	libxfs_putbufr (xfs_buf_t *);
+extern xfs_buf_t *libxfs_getbufr(dev_t, xfs_daddr_t, int);
+extern void	libxfs_putbufr(xfs_buf_t *);
+
+extern int	libxfs_writebuf_int(xfs_buf_t *, int);
+extern int	libxfs_readbufr(dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
 
 extern int libxfs_bhash_size;
 extern int libxfs_ihash_size;
@@ -556,29 +587,10 @@ extern unsigned int	libxfs_log2_roundup(unsigned int i);
 extern void cmn_err(int, char *, ...);
 enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
 
-/* lio interface */
-/* lio_listio(3) interface (POSIX linked asynchronous I/O) */
-extern int libxfs_lio_ino_count;
-extern int libxfs_lio_dir_count;
-extern int libxfs_lio_aio_count;
-
-extern int libxfs_lio_init(void);
-extern void libxfs_lio_allocate(void);
-extern void *libxfs_get_lio_buffer(int type);
-extern void libxfs_put_lio_buffer(void *buffer);
-extern int libxfs_readbuf_list(dev_t dev, int nent, void *voidp, int type);
-
-typedef struct  libxfs_lio_req {
-	xfs_daddr_t	blkno;
-	int		len;	/* bbs */
-} libxfs_lio_req_t;
-
-#define	LIBXFS_LIO_TYPE_INO		0x1
-#define	LIBXFS_LIO_TYPE_DIR		0x2
-#define	LIBXFS_LIO_TYPE_RAW		0x3
 
 #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
-extern int libxfs_nproc(void);
+extern int		libxfs_nproc(void);
+extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 
 #include <xfs/xfs_ialloc.h>
 #include <xfs/xfs_rtalloc.h>

@@ -119,9 +119,4 @@ typedef enum {B_FALSE, B_TRUE}	boolean_t;
 #define _BOOLEAN_T_DEFINED	1
 #endif
 
-#ifdef __USE_GNU
-typedef struct aiocb64 aiocb64_t;
-#define	_AIOCB64_T_DEFINED	1
-#endif
-
 #endif	/* __XFS_LINUX_H__ */

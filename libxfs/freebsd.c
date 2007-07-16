@@ -149,13 +149,6 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 	*bsz = (int)ssize;
 }
 
-/* ARGSUSED */
-int
-platform_aio_init(int aio_count)
-{
-	return 0;		/* aio/lio_listio not available */
-}
-
 char *
 platform_findrawpath(char *path)
 {
@@ -183,5 +176,27 @@ platform_align_blockdev(void)
 int
 platform_nproc(void)
 {
-	return 1;
+	int		ncpu;
+	size_t		len = sizeof(ncpu);
+	static int	mib[2] = {CTL_HW, HW_NCPU};
+
+	if (sysctl(mib, 2, &ncpu, &len, NULL, 0) < 0)
+		ncpu = 1;
+
+	return ncpu;
+}
+
+unsigned long
+platform_physmem(void)
+{
+	unsigned long	physmem;
+	size_t		len = sizeof(physmem);
+	static int	mib[2] = {CTL_HW, HW_PHYSMEM};
+
+	if (sysctl(mib, 2, &physmem, &len, NULL, 0) < 0) {
+		fprintf(stderr, _("%s: can't determine memory size\n"),
+			progname);
+		exit(1);
+	}
+	return physmem >> 10;
 }

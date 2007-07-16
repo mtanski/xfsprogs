@@ -732,3 +732,9 @@ libxfs_nproc(void)
 {
 	return platform_nproc();
 }
+
+unsigned long
+libxfs_physmem(void)
+{
+	return platform_physmem();
+}

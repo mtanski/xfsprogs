@@ -25,7 +25,7 @@
 #include "threads.h"
 #include "err_protos.h"
 
-static pthread_rwlock_t ino_flist_lock;
+static pthread_mutex_t	ino_flist_lock;
 extern avlnode_t	*avl_firstino(avlnode_t *root);
 
 /*
@@ -259,7 +259,7 @@ mk_ino_tree_nodes(
 	ino_tree_node_t 	*ino_rec;
 	avlnode_t 		*node;
 
-	PREPAIR_RW_WRITE_LOCK(&ino_flist_lock);
+	pthread_mutex_lock(&ino_flist_lock);
 	if (ino_flist.cnt == 0)  {
 		ASSERT(ino_flist.list == NULL);
 
@@ -283,7 +283,7 @@ mk_ino_tree_nodes(
 	ino_flist.cnt--;
 	node = &ino_rec->avl_node;
 	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
-	PREPAIR_RW_UNLOCK(&ino_flist_lock);
+	pthread_mutex_unlock(&ino_flist_lock);
 
 	/* initialize node */
 
@@ -311,7 +311,7 @@ free_ino_tree_node(ino_tree_node_t *ino_rec)
 	ino_rec->avl_node.avl_forw = NULL;
 	ino_rec->avl_node.avl_back = NULL;
 
-	PREPAIR_RW_WRITE_LOCK(&ino_flist_lock);
+	pthread_mutex_lock(&ino_flist_lock);
 	if (ino_flist.list != NULL)  {
 		ASSERT(ino_flist.cnt > 0);
 		ino_rec->avl_node.avl_nextino = (avlnode_t *) ino_flist.list;
@@ -333,9 +333,7 @@ free_ino_tree_node(ino_tree_node_t *ino_rec)
 		free(ino_rec->ino_un.ex_data);
 
 	}
-	PREPAIR_RW_UNLOCK(&ino_flist_lock);
-
-	return;
+	pthread_mutex_unlock(&ino_flist_lock);
 }
 
 /*
@@ -403,8 +401,6 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 	 * set cache entry
 	 */
 	last_rec[agno] = ino_rec;
-
-	return;
 }
 
 /*
@@ -452,8 +448,6 @@ void
 clear_uncertain_ino_cache(xfs_agnumber_t agno)
 {
 	last_rec[agno] = NULL;
-
-	return;
 }
 
 
@@ -521,8 +515,6 @@ void
 free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
 {
 	free_ino_tree_node(ino_rec);
-
-	return;
 }
 
 void
@@ -534,7 +526,6 @@ find_inode_rec_range(xfs_agnumber_t agno, xfs_agino_t start_ino,
 
 	avl_findranges(inode_tree_ptrs[agno], start_ino,
 		end_ino, (avlnode_t **) first, (avlnode_t **) last);
-	return;
 }
 
 /*
@@ -716,8 +707,6 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 #endif
 	irec->ino_un.plist->pentries[target] = parent;
 	irec->ino_un.plist->pmask |= (1LL << offset);
-
-	return;
 }
 
 xfs_ino_t
@@ -810,7 +799,7 @@ incore_ino_init(xfs_mount_t *mp)
 	int i;
 	int agcount = mp->m_sb.sb_agcount;
 
-	PREPAIR_RW_LOCK_INIT(&ino_flist_lock, NULL);
+	pthread_mutex_init(&ino_flist_lock, NULL);
 	if ((inode_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
 		do_error(_("couldn't malloc inode tree descriptor table\n"));
@@ -842,8 +831,6 @@ incore_ino_init(xfs_mount_t *mp)
 	bzero(last_rec, sizeof(ino_tree_node_t *) * agcount);
 
 	full_ino_ex_data = 0;
-
-	return;
 }
 
 #ifdef XR_INO_REF_DEBUG
@@ -853,8 +840,6 @@ add_inode_refchecked(xfs_ino_t ino, ino_tree_node_t *ino_rec, int ino_offset)
 	XFS_INOPROC_SET_PROC((ino_rec), (ino_offset));
 
 	ASSERT(is_inode_refchecked(ino, ino_rec, ino_offset));
-
-	return;
 }
 
 int

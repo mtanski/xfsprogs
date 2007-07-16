@@ -644,18 +644,17 @@ buf_item_done(
 	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
 
 	hold = (bip->bli_flags & XFS_BLI_HOLD);
-	if (bip->bli_flags & (XFS_BLI_DIRTY|XFS_BLI_STALE)) {
+	if (bip->bli_flags & XFS_BLI_DIRTY) {
 #ifdef XACT_DEBUG
 		fprintf(stderr, "flushing/staling buffer %p (hold=%d)\n",
 			bp, hold);
 #endif
-		if (bip->bli_flags & XFS_BLI_DIRTY)
-			libxfs_writebuf_int(bp, 0);
-		if (hold)
-			bip->bli_flags &= ~XFS_BLI_HOLD;
-		else
-			libxfs_putbuf(bp);
+		libxfs_writebuf_int(bp, 0);
 	}
+	if (hold)
+		bip->bli_flags &= ~XFS_BLI_HOLD;
+	else
+		libxfs_putbuf(bp);
 	/* release the buf item */
 	kmem_zone_free(xfs_buf_item_zone, bip);
 }

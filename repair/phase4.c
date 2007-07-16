@@ -30,6 +30,7 @@
 #include "dir2.h"
 #include "threads.h"
 #include "progress.h"
+#include "prefetch.h"
 
 
 /*
@@ -114,17 +115,70 @@ quota_sb_check(xfs_mount_t *mp)
 }
 
 
-void
-parallel_p4_process_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
+static void
+process_ag_func(
+	work_queue_t		*wq,
+	xfs_agnumber_t 		agno,
+	void			*arg)
 {
+	wait_for_inode_prefetch(arg);
 	do_log(_("        - agno = %d\n"), agno);
-	process_aginodes(mp, agno, 0, 1, 0);
+	process_aginodes(wq->mp, arg, agno, 0, 1, 0);
+	cleanup_inode_prefetch(arg);
 
 	/*
 	 * now recycle the per-AG duplicate extent records
 	 */
 	release_dup_extent_tree(agno);
 }
+
+static void
+process_ags(
+	xfs_mount_t		*mp)
+{
+	int 			i, j;
+	work_queue_t		*queues;
+	prefetch_args_t		*pf_args[2];
+
+	queues = malloc(thread_count * sizeof(work_queue_t));
+
+	if (!libxfs_bcache_overflowed()) {
+		queues[0].mp = mp;
+		create_work_queue(&queues[0], mp, libxfs_nproc());
+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+			queue_work(&queues[0], process_ag_func, i, NULL);
+		destroy_work_queue(&queues[0]);
+	} else {
+		if (ag_stride) {
+			/*
+			 * create one worker thread for each segment of the volume
+			 */
+			for (i = 0; i < thread_count; i++) {
+				create_work_queue(&queues[i], mp, 1);
+				pf_args[0] = NULL;
+				for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride) {
+					pf_args[0] = start_inode_prefetch(j, 0, pf_args[0]);
+					queue_work(&queues[i], process_ag_func, j, pf_args[0]);
+				}
+			}
+			/*
+			 * wait for workers to complete
+			 */
+			for (i = 0; i < thread_count; i++)
+				destroy_work_queue(&queues[i]);
+		} else {
+			queues[0].mp = mp;
+			pf_args[0] = start_inode_prefetch(0, 0, NULL);
+			for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+				pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+						0, pf_args[i & 1]);
+				process_ag_func(&queues[0], i, pf_args[i & 1]);
+			}
+		}
+	}
+	free(queues);
+}
+
 
 void
 phase4(xfs_mount_t *mp)
@@ -328,17 +382,7 @@ phase4(xfs_mount_t *mp)
 	 * and attribute processing is turned OFF since we did that
 	 * already in phase 3.
 	 */
-	if (ag_stride) {
-		int 	steps = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
-		for (i = 0; i < steps; i++)
-			for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride)
-				queue_work(parallel_p4_process_aginodes, mp, j);
-	} else {
-		for (i = 0; i < mp->m_sb.sb_agcount; i++)
-			parallel_p4_process_aginodes(mp, i);
-	}
-
-	wait_for_workers();
+	process_ags(mp);
 	print_final_rpt();
 
 	/*

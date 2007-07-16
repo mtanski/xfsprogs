@@ -32,8 +32,8 @@ extern char *platform_findrawpath (char *path);
 extern char *platform_findblockpath (char *path);
 extern int platform_direct_blockdev (void);
 extern int platform_align_blockdev (void);
-extern int platform_aio_init (int aio_count);
 extern int platform_nproc(void);
+extern unsigned long platform_physmem(void);	/* in kilobytes */
 extern int platform_has_uuid;
 
 #endif	/* LIBXFS_INIT_H */

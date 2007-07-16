@@ -59,16 +59,13 @@ char *o_opts[] = {
 	"ihash",
 #define	BHASH_SIZE	3
 	"bhash",
-#define	PREFETCH_INO_CNT	4
-	"pfino",
-#define	PREFETCH_DIR_CNT	5
-	"pfdir",
-#define	PREFETCH_AIO_CNT	6
-	"pfaio",
-#define	AG_STRIDE		7
+#define	AG_STRIDE	4
 	"ag_stride",
 	NULL
 };
+
+static int	ihash_option_used;
+static int	bhash_option_used;
 
 static void
 usage(void)
@@ -187,8 +184,7 @@ process_args(int argc, char **argv)
 	pre_65_beta = 0;
 	fs_shared_allowed = 1;
 	ag_stride = 0;
-	thread_count = 0;
-	do_parallel = 0;
+	thread_count = 1;
 	report_interval = PROG_RPT_DEFAULT;
 
 	/*
@@ -223,18 +219,11 @@ process_args(int argc, char **argv)
 					break;
 				case IHASH_SIZE:
 					libxfs_ihash_size = (int) strtol(val, 0, 0);
+					ihash_option_used = 1;
 					break;
 				case BHASH_SIZE:
 					libxfs_bhash_size = (int) strtol(val, 0, 0);
-					break;
-				case PREFETCH_INO_CNT:
-					libxfs_lio_ino_count = (int) strtol(val, 0, 0);
-					break;
-				case PREFETCH_DIR_CNT:
-					libxfs_lio_dir_count = (int) strtol(val, 0, 0);
-					break;
-				case PREFETCH_AIO_CNT:
-					libxfs_lio_aio_count = (int) strtol(val, 0, 0);
+					bhash_option_used = 1;
 					break;
 				case AG_STRIDE:
 					ag_stride = (int) strtol(val, 0, 0);
@@ -272,10 +261,7 @@ process_args(int argc, char **argv)
 			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case 'P':
-			do_prefetch ^= 1;
-			break;
-		case 'M':
-			do_parallel ^= 1;
+			do_prefetch = 0;
 			break;
 		case 't':
 			report_interval = (int) strtol(optarg, 0, 0);
@@ -483,11 +469,18 @@ main(int argc, char **argv)
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
+#ifdef XR_PF_TRACE
+	pf_trace_file = fopen("/tmp/xfs_repair_prefetch.trace", "w");
+	setvbuf(pf_trace_file, NULL, _IOLBF, 1024);
+#endif
+
 	temp_mp = &xfs_m;
 	setbuf(stdout, NULL);
 
 	process_args(argc, argv);
 	xfs_init(&x);
+
+	msgbuf = malloc(DURATION_BUF_SIZE);
 
 	timestamp(PHASE_START, 0, NULL);
 	timestamp(PHASE_END, 0, NULL);
@@ -529,19 +522,80 @@ main(int argc, char **argv)
 	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
 
 	if (ag_stride) {
-		do_parallel = 1;
-		thread_count = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
+		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
 		thread_init();
 	}
 
-	if (do_parallel && report_interval) {
+	if (ag_stride && report_interval) {
 		init_progress_rpt();
-		msgbuf = malloc(DURATION_BUF_SIZE);
 		if (msgbuf) {
 			do_log(_("        - reporting progress in intervals of %s\n"),
 			duration(report_interval, msgbuf));
-			free(msgbuf);
 		}
+	}
+
+	/*
+	 * Adjust libxfs cache sizes based on system memory,
+	 * filesystem size and inode count.
+	 *
+	 * We'll set the cache size based on 3/4s the memory minus
+	 * space used by the inode AVL tree and block usage map.
+	 *
+	 * Inode AVL tree space is approximately 4 bytes per inode,
+	 * block usage map is currently 1 byte for 2 blocks.
+	 *
+	 * We assume most blocks will be inode clusters.
+	 *
+	 * Calculations are done in kilobyte units.
+	 */
+
+	if (!bhash_option_used) {
+		unsigned long 	mem_used;
+		unsigned long	phys_mem;
+
+		libxfs_icache_purge();
+		libxfs_bcache_purge();
+		cache_destroy(libxfs_icache);
+		cache_destroy(libxfs_bcache);
+
+		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
+					(mp->m_sb.sb_dblocks >> (10 + 1));
+		phys_mem = libxfs_physmem() * 3 / 4;
+
+		if (verbose > 1)
+			do_log(_("        - icount = %llu, imem = %lu, "
+				"dblock = %llu, dmem = %lu\n"),
+				mp->m_sb.sb_icount, mp->m_sb.sb_icount >> (10 - 2),
+				mp->m_sb.sb_dblocks, mp->m_sb.sb_dblocks >> (10 + 1));
+
+		if (phys_mem <= mem_used) {
+			/*
+			 * Turn off prefetch and minimise libxfs cache if
+			 * physical memory is deemed insufficient
+			 */
+			do_prefetch = 0;
+			libxfs_bhash_size = 64;
+		} else {
+			phys_mem -= mem_used;
+			if (phys_mem >= (1 << 30))
+				phys_mem = 1 << 30;
+			libxfs_bhash_size = phys_mem / (HASH_CACHE_RATIO *
+					(mp->m_inode_cluster_size >> 10));
+			if (libxfs_bhash_size < 512)
+				libxfs_bhash_size = 512;
+		}
+
+		if (verbose)
+			do_log(_("        - block cache size set to %d entries\n"),
+				libxfs_bhash_size * HASH_CACHE_RATIO);
+
+		if (!ihash_option_used)
+			libxfs_ihash_size = libxfs_bhash_size;
+
+		libxfs_icache = cache_init(libxfs_ihash_size,
+						&libxfs_icache_operations);
+		libxfs_bcache = cache_init(libxfs_bhash_size,
+						&libxfs_bcache_operations);
 	}
 
 	/*
@@ -564,15 +618,14 @@ main(int argc, char **argv)
 	phase2(mp);
 	timestamp(PHASE_END, 2, NULL);
 
+	if (do_prefetch)
+		init_prefetch(mp);
+
 	phase3(mp);
 	timestamp(PHASE_END, 3, NULL);
 
 	phase4(mp);
 	timestamp(PHASE_END, 4, NULL);
-
-	/* XXX: nathans - something in phase4 ain't playing by */
-	/* the buffer cache rules.. why doesn't IRIX hit this? */
-	libxfs_bcache_flush();
 
 	if (no_modify)
 		printf(_("No modify flag set, skipping phase 5\n"));
@@ -584,8 +637,6 @@ main(int argc, char **argv)
 	if (!bad_ino_btree)  {
 		phase6(mp);
 		timestamp(PHASE_END, 6, NULL);
-
-		libxfs_bcache_flush();
 
 		phase7(mp);
 		timestamp(PHASE_END, 7, NULL);
@@ -648,7 +699,7 @@ _("Warning:  project quota information would be cleared.\n"
 		}
 	}
 
-	if (do_parallel && report_interval)
+	if (ag_stride && report_interval)
 		stop_progress_rpt();
 
 	if (no_modify)  {
@@ -661,12 +712,6 @@ _("Warning:  project quota information would be cleared.\n"
 
 		return(0);
 	}
-
-	/*
-	 * Done, flush all cached buffers and inodes.
-	 */
-	libxfs_icache_purge();
-	libxfs_bcache_purge();
 
 	/*
 	 * Clear the quota flags if they're on.
@@ -694,6 +739,11 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 
 	libxfs_writebuf(sbp, 0);
 
+	/*
+	 * Done, flush all cached buffers and inodes.
+	 */
+	libxfs_bcache_flush();
+
 	libxfs_umount(mp);
 	if (x.rtdev)
 		libxfs_device_close(x.rtdev);
@@ -704,5 +754,8 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 	if (verbose)
 		summary_report();
 	do_log(_("done\n"));
+#ifdef XR_PF_TRACE
+	fclose(pf_trace_file);
+#endif
 	return (0);
 }

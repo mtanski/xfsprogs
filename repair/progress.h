@@ -21,8 +21,8 @@
 #define	PROG_FMT_REBUILD_AG	9	/* Phase 5 */
 
 #define	PROG_FMT_TRAVERSAL	10	/* Phase 6 */
-#define	PROG_FMT_TRAVERSSUB	11	
-#define	PROG_FMT_DISCONINODE	12	
+#define	PROG_FMT_TRAVERSSUB	11
+#define	PROG_FMT_DISCONINODE	12
 
 #define	PROGRESS_FMT_CORR_LINK	13	/* Phase 7 */
 #define	PROGRESS_FMT_VRFY_LINK 	14
@@ -38,6 +38,6 @@ extern char *timestamp(int end, int phase, char *buf);
 extern char *duration(int val, char *buf);
 extern int do_parallel;
 
-#define	PROG_RPT_INC(a,b) if (do_parallel && prog_rpt_done) (a) += (b)
+#define	PROG_RPT_INC(a,b) if (ag_stride && prog_rpt_done) (a) += (b)
 
 #endif	/* _XFS_REPAIR_PROGRESS_RPT_H_ */

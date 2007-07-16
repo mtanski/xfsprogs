@@ -148,7 +148,7 @@ EXTERN xfs_agblock_t	inobt_root;
 /* configuration vars -- fs geometry dependent */
 
 EXTERN int		inodes_per_block;
-EXTERN int		inodes_per_cluster;	/* inodes per inode buffer */
+EXTERN int		inodes_per_cluster;
 EXTERN unsigned int	glob_agcount;
 EXTERN int		chunks_pblock;	/* # of 64-ino chunks per allocation */
 EXTERN int		max_symlink_blocks;
@@ -192,11 +192,16 @@ extern size_t 		ts_dirbuf_size;
 extern size_t 		ts_dir_freemap_size;
 extern size_t 		ts_attr_freemap_size;
 
-EXTERN pthread_rwlock_t	*per_ag_lock;
+EXTERN pthread_mutex_t	*ag_locks;
 
-EXTERN int report_interval;
-EXTERN __uint64_t *prog_rpt_done;
+EXTERN int 		report_interval;
+EXTERN __uint64_t 	*prog_rpt_done;
+
+#ifdef XR_PF_TRACE
+EXTERN FILE		*pf_trace_file;
+#endif
 
 EXTERN int		ag_stride;
+EXTERN int		thread_count;
 
 #endif /* _XFS_REPAIR_GLOBAL_H */

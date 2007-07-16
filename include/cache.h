@@ -18,6 +18,8 @@
 #ifndef __CACHE_H__
 #define __CACHE_H__
 
+#define	HASH_CACHE_RATIO	8
+
 /*
  * Simple, generic implementation of a cache (arbitrary data).
  * Provides a hash table with a capped number of cache entries.
@@ -28,8 +30,9 @@ struct cache_hash;
 struct cache_node;
 
 typedef void *cache_key_t;
+
 typedef void (*cache_walk_t)(struct cache_node *);
-typedef struct cache_node * (*cache_node_alloc_t)(void);
+typedef struct cache_node * (*cache_node_alloc_t)(cache_key_t);
 typedef void (*cache_node_flush_t)(struct cache_node *);
 typedef void (*cache_node_relse_t)(struct cache_node *);
 typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int);
@@ -84,5 +87,6 @@ int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
 void cache_node_put(struct cache_node *);
 int cache_node_purge(struct cache *, cache_key_t, struct cache_node *);
 void cache_report(FILE *fp, const char *, struct cache *);
+int cache_overflowed(struct cache *);
 
 #endif	/* __CACHE_H__ */

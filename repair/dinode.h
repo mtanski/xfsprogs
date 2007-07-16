@@ -18,6 +18,8 @@
 #ifndef _XR_DINODE_H
 #define _XR_DINODE_H
 
+#include "prefetch.h"
+
 struct blkmap;
 
 int
@@ -116,6 +118,7 @@ process_uncertain_aginodes(xfs_mount_t		*mp,
 				xfs_agnumber_t	agno);
 void
 process_aginodes(xfs_mount_t	*mp,
+		prefetch_args_t	*pf_args,
 		xfs_agnumber_t	agno,
 		int		check_dirs,
 		int		check_dups,

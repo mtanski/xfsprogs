@@ -17,7 +17,6 @@
  */
 
 #include <xfs/libxfs.h>
-#include <aio.h>
 #include <diskinfo.h>
 #include <sys/sysmp.h>
 
@@ -68,19 +67,6 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 	*bsz = BBSIZE;
 }
 
-int
-platform_aio_init(int aio_count)
-{
-	struct aioinit aio_init;
-
-	memset(&aio_init, 0, sizeof(aio_init));
-	aio_init.aio_threads = aio_count;
-	aio_init.aio_numusers = aio_count;
-
-	aio_sgi_init64(&aio_init);
-	return (1);		/* aio/lio_listio available */
-}
-
 char *
 platform_findrawpath(char *path)
 {
@@ -111,3 +97,15 @@ platform_nproc(void)
 	return sysmp(MP_NPROCS);
 }
 
+unsigned long
+platform_physmem(void)
+{
+	struct rminfo ri;
+
+	if (sysmp(MP_SAGET, MPSA_RMINFO, &ri, sizeof(ri)) < 0)
+		fprintf(stderr, _("%s: can't determine memory size\n"),
+			progname);
+		exit(1);
+	}
+	return (ri.physmem >> 10) * getpagesize();	/* kilobytes */
+}
