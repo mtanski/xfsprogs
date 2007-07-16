@@ -412,7 +412,7 @@ calc_default_ag_geometry(
 	 * based on the prefered AG size, not vice-versa - the
 	 * count can be increased by growfs, so prefer to use
 	 * smaller counts at mkfs time.
-	 * 
+	 *
 	 * This scales us up smoothly between min/max AG sizes.
 	 */
 	if (dblocks > GIGABYTES(512, blocklog))
@@ -477,7 +477,7 @@ validate_ag_geometry(
 	_("too few allocation groups for size = %lld\n"), (long long)agsize);
 		fprintf(stderr,
 	_("need at least %lld allocation groups\n"),
-		(long long)(dblocks / XFS_AG_MAX_BLOCKS(blocklog) + 
+		(long long)(dblocks / XFS_AG_MAX_BLOCKS(blocklog) +
 			(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
 		usage();
 	}
@@ -504,6 +504,75 @@ validate_ag_geometry(
 			(long long)agcount, (long long)XFS_MAX_AGNUMBER + 1);
 		usage();
 	}
+}
+
+static void
+zero_old_xfs_structures(
+	libxfs_init_t		*xi,
+	xfs_sb_t		*new_sb)
+{
+	void 			*buf;
+	xfs_sb_t 		sb;
+	__uint32_t		bsize;
+	int			i;
+	xfs_off_t		off;
+
+	/*
+	 * read in existing filesystem superblock, use it's geometry
+	 * settings and zero the existing secondary superblocks.
+	 */
+	buf = memalign(libxfs_device_alignment(), new_sb->sb_sectsize);
+	if (!buf) {
+		fprintf(stderr,
+	_("error reading existing superblock -- failed to memalign buffer\n"));
+		return;
+	}
+	bzero(buf, new_sb->sb_sectsize);
+
+	if (pread(xi->dfd, buf, new_sb->sb_sectsize, 0) != new_sb->sb_sectsize) {
+		fprintf(stderr, _("existing superblock read failed: %s\n"),
+			strerror(errno));
+		free(buf);
+		return;
+	}
+	libxfs_xlate_sb(buf, &sb, 1, XFS_SB_ALL_BITS);
+
+	/*
+	 * perform same basic superblock validation to make sure we
+	 * actually zero secondary blocks
+	 */
+	if (sb.sb_magicnum != XFS_SB_MAGIC || sb.sb_blocksize == 0)
+		goto done;
+
+	for (bsize = 1, i = 0; bsize < sb.sb_blocksize &&
+			i < sizeof(sb.sb_blocksize) * NBBY; i++)
+		bsize <<= 1;
+
+	if (i < XFS_MIN_BLOCKSIZE_LOG || i > XFS_MAX_BLOCKSIZE_LOG ||
+			i != sb.sb_blocklog)
+		goto done;
+
+	if (sb.sb_dblocks > ((__uint64_t)sb.sb_agcount * sb.sb_agblocks) ||
+			sb.sb_dblocks < ((__uint64_t)(sb.sb_agcount - 1) *
+					 sb.sb_agblocks + XFS_MIN_AG_BLOCKS))
+		goto done;
+
+	/*
+	 * block size and basic geometry seems alright, zero the secondaries,
+	 * but don't go beyond the end of the new filesystem.
+	 */
+	bzero(buf, new_sb->sb_sectsize);
+	off = 0;
+	for (i = 1; i < sb.sb_agcount; i++)  {
+		off += sb.sb_agblocks;
+		if (off >= new_sb->sb_dblocks)
+			break;
+		if (pwrite64(xi->dfd, buf, new_sb->sb_sectsize,
+					off << sb.sb_blocklog) == -1)
+			break;
+	}
+done:
+	free(buf);
 }
 
 int
@@ -1479,7 +1548,7 @@ main(
 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
 			    (rtextbytes <= XFS_MAX_RTEXTSIZE)) {
 				rtextblocks = rswidth;
-			} 
+			}
 		}
 		if (!rtextblocks) {
 			rtextblocks = (blocksize < XFS_MIN_RTEXTSIZE) ?
@@ -1587,7 +1656,7 @@ main(
 	else if (!dsize) {
 		fprintf(stderr, _("can't get size of data subvolume\n"));
 		usage();
-	} 
+	}
 	if (dblocks < XFS_MIN_DATA_BLOCKS) {
 		fprintf(stderr,
 	_("size %lld of data subvolume is too small, minimum %d blocks\n"),
@@ -1661,7 +1730,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		logblocks = MAX(logblocks,
 				MAX(XFS_DFL_LOG_SIZE,
 					max_tr_res * XFS_DFL_LOG_FACTOR));
-		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS); 
+		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
 		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
 		}
@@ -1743,20 +1812,20 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	 * If dsunit is a multiple of fs blocksize, then check that is a
 	 * multiple of the agsize too
 	 */
-	if (dsunit && !(BBTOB(dsunit) % blocksize) && 
+	if (dsunit && !(BBTOB(dsunit) % blocksize) &&
 	    dswidth && !(BBTOB(dswidth) % blocksize)) {
 
 		/* convert from 512 byte blocks to fs blocksize */
 		dsunit = DTOBT(dsunit);
 		dswidth = DTOBT(dswidth);
 
-		/* 
+		/*
 		 * agsize is not a multiple of dsunit
 		 */
 		if ((agsize % dsunit) != 0) {
 			/*
-			 * Round up to stripe unit boundary. Also make sure 
-			 * that agsize is still larger than 
+			 * Round up to stripe unit boundary. Also make sure
+			 * that agsize is still larger than
 			 * XFS_AG_MIN_BLOCKS(blocklog)
 		 	 */
 			tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
@@ -1770,7 +1839,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
 			    !daflag) {
 				agsize = tmp_agsize;
-				agcount = dblocks/agsize + 
+				agcount = dblocks/agsize +
 						(dblocks % agsize != 0);
 				if (dasize || daflag)
 					fprintf(stderr,
@@ -1779,7 +1848,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			} else {
 				if (nodsflag) {
 					dsunit = dswidth = 0;
-				} else { 
+				} else {
 					fprintf(stderr,
 _("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
 						(long long)agsize, dsunit);
@@ -1789,7 +1858,7 @@ _("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
 		}
 		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
 			/* This is a non-optimal configuration because all AGs
-			 * start on the same disk in the stripe.  Changing 
+			 * start on the same disk in the stripe.  Changing
 			 * the AG size by one sunit will guarantee that this
 			 * does not happen.
 			 */
@@ -1826,12 +1895,12 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	} else {
 		if (nodsflag)
 			dsunit = dswidth = 0;
-		else { 
+		else {
 			fprintf(stderr,
 				_("%s: Stripe unit(%d) or stripe width(%d) is "
 				"not a multiple of the block size(%d)\n"),
-				progname, BBTOB(dsunit), BBTOB(dswidth), 
-				blocksize); 	
+				progname, BBTOB(dsunit), BBTOB(dswidth),
+				blocksize);
 			exit(1);
 		}
 	}
@@ -2005,6 +2074,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
 			sbp->sb_features2 != 0);
 
+	if (force_overwrite)
+		zero_old_xfs_structures(&xi, sbp);
+
 	/*
 	 * Zero out the beginning of the device, to obliterate any old
 	 * filesystem signatures out there.  This should take care of
@@ -2039,7 +2111,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
  	 * (MD sb is ~64k from the end, take out a wider swath to be sure)
 	 */
 	if (!xi.disfile) {
-		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(WHACK_SIZE)), 
+		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(WHACK_SIZE)),
 				    BTOBB(WHACK_SIZE));
 		bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2101,7 +2173,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		INT_SET(agf->agf_longest, ARCH_CONVERT, nbmblocks);
 		if (loginternal && agno == logagno) {
 			INT_MOD(agf->agf_freeblks, ARCH_CONVERT, -logblocks);
-			INT_SET(agf->agf_longest, ARCH_CONVERT, agsize - 
+			INT_SET(agf->agf_longest, ARCH_CONVERT, agsize -
 				XFS_FSB_TO_AGBNO(mp, logstart) - logblocks);
 		}
 		if (XFS_MIN_FREELIST(agf, mp) > worst_freelist)
@@ -2153,7 +2225,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				 * Have to insert two records
 				 * Insert pad record for stripe align of log
 				 */
-				INT_SET(arec->ar_blockcount, ARCH_CONVERT, 
+				INT_SET(arec->ar_blockcount, ARCH_CONVERT,
 					(xfs_extlen_t)(XFS_FSB_TO_AGBNO(
 						mp, logstart)
 				  	- (INT_GET(arec->ar_startblock,
@@ -2169,12 +2241,12 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 						ARCH_CONVERT));
 				arec = nrec;
 				INT_MOD(block->bb_numrecs, ARCH_CONVERT, 1);
-			} 
+			}
 			/*
 			 * Change record start to after the internal log
 			 */
 			INT_MOD(arec->ar_startblock, ARCH_CONVERT, logblocks);
-		} 
+		}
 		INT_SET(arec->ar_blockcount, ARCH_CONVERT,
 			(xfs_extlen_t)(agsize -
 				INT_GET(arec->ar_startblock, ARCH_CONVERT)));
@@ -2212,7 +2284,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				INT_MOD(block->bb_numrecs, ARCH_CONVERT, 1);
 			}
 			INT_MOD(arec->ar_startblock, ARCH_CONVERT, logblocks);
-		}	
+		}
 		INT_SET(arec->ar_blockcount, ARCH_CONVERT, (xfs_extlen_t)
 			(agsize - INT_GET(arec->ar_startblock, ARCH_CONVERT)));
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
