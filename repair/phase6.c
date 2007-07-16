@@ -745,6 +745,7 @@ mk_root_dir(xfs_mount_t *mp)
 	int		i;
 	int		error;
 	const mode_t	mode = 0755;
+	ino_tree_node_t	*irec;
 
 	tp = libxfs_trans_alloc(mp, 0);
 	ip = NULL;
@@ -788,6 +789,11 @@ mk_root_dir(xfs_mount_t *mp)
 	dir_init(mp, tp, ip, ip);
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
+
+	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
+	set_inode_isadir(irec, XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino) -
+				irec->ino_startnum);
 }
 
 /*
@@ -3802,29 +3808,20 @@ traverse_ags(
 	xfs_mount_t 		*mp)
 {
 	int			i;
-	work_queue_t		*queues;
+	work_queue_t		queue;
 	prefetch_args_t		*pf_args[2];
 
-	queues = malloc(thread_count * sizeof(work_queue_t));
-	queues[0].mp = mp;
-
-	if (!libxfs_bcache_overflowed()) {
-		/*create_work_queue(&queues[0], mp, libxfs_nproc());
-		for (i = 0; i < glob_agcount; i++)
-			queue_work(&queues[0], traverse_function, i, NULL);
-		destroy_work_queue(&queues[0]);*/
-		for (i = 0; i < glob_agcount; i++)
-			traverse_function(&queues[0], i, NULL);
-	} else {
-		/* TODO: AG stride support */
-		pf_args[0] = start_inode_prefetch(0, 1, NULL);
-		for (i = 0; i < glob_agcount; i++) {
-			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
-					pf_args[i & 1]);
-			traverse_function(&queues[0], i, pf_args[i & 1]);
-		}
+	/*
+	 * we always do prefetch for phase 6 as it will fill in the gaps
+	 * not read during phase 3 prefetch.
+	 */
+	queue.mp = mp;
+	pf_args[0] = start_inode_prefetch(0, 1, NULL);
+	for (i = 0; i < glob_agcount; i++) {
+		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+				pf_args[i & 1]);
+		traverse_function(&queue, i, pf_args[i & 1]);
 	}
-	free(queues);
 }
 
 void
@@ -3901,7 +3898,7 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 
 	mark_standalone_inodes(mp);
 
-	do_log(_("        - traversing filesystem ... \n"));
+	do_log(_("        - traversing filesystem ...\n"));
 
 	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
@@ -3919,8 +3916,8 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 	 */
 	traverse_ags(mp);
 
-	do_log(_("        - traversals finished ... \n"));
-	do_log(_("        - moving disconnected inodes to %s ... \n"),
+	do_log(_("        - traversal finished ...\n"));
+	do_log(_("        - moving disconnected inodes to %s ...\n"),
 		ORPHANAGE);
 
 	/*

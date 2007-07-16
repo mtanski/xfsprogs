@@ -34,14 +34,27 @@ static int		pf_max_fsbs;
 static int		pf_batch_bytes;
 static int		pf_batch_fsbs;
 
-#define B_INODE		0x1000000
-#define B_META		0x2000000
+static void		pf_read_inode_dirs(prefetch_args_t *, xfs_buf_t *);
+
+/* buffer priorities for the libxfs cache */
+
+#define B_DIR_BMAP	15
+#define B_DIR_META_2	13	/* metadata in secondary queue */
+#define B_DIR_META_H	11	/* metadata fetched for PF_META_ONLY */
+#define B_DIR_META_S	9	/* single block of metadata */
+#define B_DIR_META	7
+#define B_DIR_INODE	6
+#define B_BMAP		5
+#define B_INODE		4
+
+#define B_IS_INODE(b)	(((b) & 1) == 0)
+#define B_IS_META(b)	(((b) & 1) != 0)
 
 #define DEF_BATCH_BYTES	0x10000
 
 #define MAX_BUFS	128
 
-#define IO_THRESHOLD	(MAX_BUFS * PF_THREAD_COUNT)
+#define IO_THRESHOLD	(MAX_BUFS * 2)
 
 typedef enum pf_which {
 	PF_PRIMARY,
@@ -89,16 +102,19 @@ pf_queue_io(
 	bp = libxfs_getbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
 			XFS_FSB_TO_BB(mp, blen));
 	if (bp->b_flags & LIBXFS_B_UPTODATE) {
+		if (B_IS_INODE(flag))
+			pf_read_inode_dirs(args, bp);
+		XFS_BUF_SET_PRIORITY(bp, XFS_BUF_PRIORITY(bp) + 8);
 		libxfs_putbuf(bp);
 		return;
 	}
-	bp->b_flags |= flag;
+	XFS_BUF_SET_PRIORITY(bp, flag);
 
 	pthread_mutex_lock(&args->lock);
 
 	if (fsbno > args->last_bno_read) {
 		radix_tree_insert(&args->primary_io_queue, fsbno, bp);
-		if (flag == B_META)
+		if (B_IS_META(flag))
 			radix_tree_tag_set(&args->primary_io_queue, fsbno, 0);
 		else {
 			args->inode_bufs_queued++;
@@ -108,7 +124,7 @@ pf_queue_io(
 #ifdef XR_PF_TRACE
 		pftrace("getbuf %c %p (%llu) in AG %d (fsbno = %lu) added to "
 			"primary queue (inode_bufs_queued = %d, last_bno = %lu)",
-			flag == B_INODE ? 'I' : 'M', bp,
+			B_IS_INODE(flag) ? 'I' : 'M', bp,
 			(long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
 			args->inode_bufs_queued, args->last_bno_read);
 #endif
@@ -116,11 +132,12 @@ pf_queue_io(
 #ifdef XR_PF_TRACE
 		pftrace("getbuf %c %p (%llu) in AG %d (fsbno = %lu) added to "
 			"secondary queue (last_bno = %lu)",
-			flag == B_INODE ? 'I' : 'M', bp,
+			B_IS_INODE(flag) ? 'I' : 'M', bp,
 			(long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
 			args->last_bno_read);
 #endif
-		ASSERT(flag == B_META);
+		ASSERT(B_IS_META(flag));
+		XFS_BUF_SET_PRIORITY(bp, B_DIR_META_2);
 		radix_tree_insert(&args->secondary_io_queue, fsbno, bp);
 	}
 
@@ -163,7 +180,7 @@ pf_read_bmbt_reclist(
 #ifdef XR_PF_TRACE
 			pftrace("queuing dir extent in AG %d", args->agno);
 #endif
-			pf_queue_io(args, s, 1, B_META);
+			pf_queue_io(args, s, 1, B_DIR_META);
 			c--;
 			s++;
 		}
@@ -193,6 +210,8 @@ pf_scan_lbtree(
 			XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp)
 		return 0;
+
+	XFS_BUF_SET_PRIORITY(bp, isadir ? B_DIR_BMAP : B_BMAP);
 
 	rc = (*func)((xfs_btree_lblock_t *)XFS_BUF_PTR(bp), level - 1, isadir, args);
 
@@ -307,6 +326,8 @@ pf_read_inode_dirs(
 {
 	xfs_dinode_t		*dino;
 	int			icnt = 0;
+	int			hasdir = 0;
+	int			isadir;
 	xfs_dinode_core_t	*dinoc;
 
 	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
@@ -317,9 +338,14 @@ pf_read_inode_dirs(
 		 * We are only prefetching directory contents in extents
 		 * and btree nodes for other inodes
 		 */
-		if (dinoc->di_format <= XFS_DINODE_FMT_LOCAL ||
-				(dinoc->di_format == XFS_DINODE_FMT_EXTENTS &&
-				 (be16_to_cpu(dinoc->di_mode) & S_IFMT) != S_IFDIR))
+		isadir = (be16_to_cpu(dinoc->di_mode) & S_IFMT) == S_IFDIR;
+		hasdir |= isadir;
+
+		if (dinoc->di_format <= XFS_DINODE_FMT_LOCAL)
+			continue;
+
+		if (!isadir && (dinoc->di_format == XFS_DINODE_FMT_EXTENTS ||
+				args->dirs_only))
 			continue;
 
 		/*
@@ -350,11 +376,12 @@ pf_read_inode_dirs(
 				pf_read_exinode(args, dino);
 				break;
 			case XFS_DINODE_FMT_BTREE:
-				pf_read_btinode(args, dino, (be16_to_cpu(
-					dinoc->di_mode) & S_IFMT) == S_IFDIR);
+				pf_read_btinode(args, dino, isadir);
 				break;
 		}
 	}
+	if (hasdir)
+		XFS_BUF_SET_PRIORITY(bp, B_DIR_INODE);
 }
 
 /*
@@ -434,7 +461,7 @@ pf_batch_read(
 
 		if (which == PF_PRIMARY) {
 			for (inode_bufs = 0, i = 0; i < num; i++) {
-				if (bplist[i]->b_flags & B_INODE)
+				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
 					inode_bufs++;
 			}
 			args->inode_bufs_queued -= inode_bufs;
@@ -470,14 +497,20 @@ pf_batch_read(
 				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
 				bplist[i]->b_flags |= LIBXFS_B_UPTODATE;
 				len -= size;
-				if (bplist[i]->b_flags & B_INODE)
+				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
 					pf_read_inode_dirs(args, bplist[i]);
+				else if (which == PF_META_ONLY)
+					XFS_BUF_SET_PRIORITY(bplist[i],
+								B_DIR_META_H);
+				else if (which == PF_PRIMARY && num == 1)
+					XFS_BUF_SET_PRIORITY(bplist[i],
+								B_DIR_META_S);
 			}
 		}
 		for (i = 0; i < num; i++) {
 #ifdef XR_PF_TRACE
 			pftrace("putbuf %c %p (%llu) in AG %d",
-				bplist[i]->b_flags & B_INODE ? 'I' : 'M',
+				B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])) ? 'I' : 'M',
 				bplist[i], (long long)XFS_BUF_ADDR(bplist[i]),
 				args->agno);
 #endif
@@ -623,7 +656,9 @@ pf_queuing_worker(
 
 		do {
 			pf_queue_io(args, XFS_AGB_TO_FSB(mp, args->agno, bno),
-					blks_per_cluster, B_INODE);
+					blks_per_cluster,
+					(cur_irec->ino_isa_dir != 0) ?
+						B_DIR_INODE : B_INODE);
 			bno += blks_per_cluster;
 			num_inos += inos_per_cluster;
 		} while (num_inos < XFS_IALLOC_INODES(mp));

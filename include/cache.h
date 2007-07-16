@@ -20,13 +20,14 @@
 
 #define	HASH_CACHE_RATIO	8
 
+#define CACHE_MAX_PRIORITY	15
+
 /*
  * Simple, generic implementation of a cache (arbitrary data).
  * Provides a hash table with a capped number of cache entries.
  */
 
 struct cache;
-struct cache_hash;
 struct cache_node;
 
 typedef void *cache_key_t;
@@ -48,6 +49,27 @@ struct cache_operations {
 	cache_bulk_relse_t	bulkrelse;	/* optional */
 };
 
+struct cache_hash {
+	struct list_head	ch_list;	/* hash chain head */
+	unsigned int		ch_count;	/* hash chain length */
+	pthread_mutex_t		ch_mutex;	/* hash chain mutex */
+};
+
+struct cache_mru {
+	struct list_head	cm_list;	/* MRU head */
+	unsigned int		cm_count;	/* MRU length */
+	pthread_mutex_t		cm_mutex;	/* MRU lock */
+};
+
+struct cache_node {
+	struct list_head	cn_hash;	/* hash chain */
+	struct list_head	cn_mru;		/* MRU chain */
+	unsigned int		cn_count;	/* reference count */
+	unsigned int		cn_hashidx;	/* hash chain index */
+	int			cn_priority;	/* priority, -1 = free list */
+	pthread_mutex_t		cn_mutex;	/* node mutex */
+};
+
 struct cache {
 	unsigned int		c_maxcount;	/* max cache nodes */
 	unsigned int		c_count;	/* count of nodes */
@@ -60,21 +82,10 @@ struct cache {
 	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
 	unsigned int		c_hashsize;	/* hash bucket count */
 	struct cache_hash	*c_hash;	/* hash table buckets */
+	struct cache_mru	c_mrus[CACHE_MAX_PRIORITY + 1];
 	unsigned long long	c_misses;	/* cache misses */
 	unsigned long long	c_hits;		/* cache hits */
 	unsigned int 		c_max;		/* max nodes ever used */
-};
-
-struct cache_hash {
-	struct list_head	ch_list;	/* hash chain head */
-	unsigned int		ch_count;	/* hash chain length */
-	pthread_mutex_t		ch_mutex;	/* hash chain mutex */
-};
-
-struct cache_node {
-	struct list_head	cn_list;	/* hash chain */
-	unsigned int		cn_count;	/* reference count */
-	pthread_mutex_t		cn_mutex;	/* refcount mutex */
 };
 
 struct cache *cache_init(unsigned int, struct cache_operations *);
@@ -85,6 +96,8 @@ void cache_flush(struct cache *);
 
 int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
 void cache_node_put(struct cache_node *);
+void cache_node_set_priority(struct cache *, struct cache_node *, int);
+int cache_node_get_priority(struct cache_node *);
 int cache_node_purge(struct cache *, cache_key_t, struct cache_node *);
 void cache_report(FILE *fp, const char *, struct cache *);
 int cache_overflowed(struct cache *);

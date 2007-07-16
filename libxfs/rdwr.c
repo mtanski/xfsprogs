@@ -257,7 +257,11 @@ libxfs_getsb(xfs_mount_t *mp, int flags)
 				XFS_FSS_TO_BB(mp, 1), flags);
 }
 
-xfs_zone_t	*xfs_buf_zone;
+xfs_zone_t			*xfs_buf_zone;
+
+static struct cache_mru		xfs_buf_freelist =
+	{{&xfs_buf_freelist.cm_list, &xfs_buf_freelist.cm_list},
+	 0, PTHREAD_MUTEX_INITIALIZER };
 
 typedef struct {
 	dev_t		device;
@@ -308,7 +312,8 @@ libxfs_initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
 	bp->b_blkno = bno;
 	bp->b_bcount = bytes;
 	bp->b_dev = device;
-	bp->b_addr = memalign(libxfs_device_alignment(), bytes);
+	if (!bp->b_addr)
+		bp->b_addr = memalign(libxfs_device_alignment(), bytes);
 	if (!bp->b_addr) {
 		fprintf(stderr,
 			_("%s: %s can't memalign %u bytes: %s\n"),
@@ -323,18 +328,44 @@ libxfs_initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
 }
 
 xfs_buf_t *
-libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int len)
+libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
 {
 	xfs_buf_t	*bp;
+	int		blen = BBTOB(bblen);
 
-	bp = libxfs_zone_zalloc(xfs_buf_zone);
+	/*
+	 * first look for a buffer that can be used as-is,
+	 * if one cannot be found, see if there is a buffer,
+	 * and if so, free it's buffer and set b_addr to NULL
+	 * before calling libxfs_initbuf.
+	 */
+	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+	if (!list_empty(&xfs_buf_freelist.cm_list)) {
+		list_for_each_entry(bp, &xfs_buf_freelist.cm_list, b_node.cn_mru) {
+			if (bp->b_bcount == blen) {
+				list_del_init(&bp->b_node.cn_mru);
+				break;
+			}
+		}
+		if (&bp->b_node.cn_mru == &xfs_buf_freelist.cm_list) {
+			bp = list_entry(xfs_buf_freelist.cm_list.next,
+					xfs_buf_t, b_node.cn_mru);
+			list_del_init(&bp->b_node.cn_mru);
+			free(bp->b_addr);
+			bp->b_addr = NULL;
+		}
+	} else
+		bp = libxfs_zone_zalloc(xfs_buf_zone);
+	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+
 	if (bp != NULL)
-		libxfs_initbuf(bp, device, blkno, BBTOB(len));
+		libxfs_initbuf(bp, device, blkno, blen);
 #ifdef IO_DEBUG
 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
 		pthread_self(), __FUNCTION__, BBTOB(len),
 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
 #endif
+
 	return bp;
 }
 
@@ -358,6 +389,8 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 	miss = cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp);
 	if (bp) {
 		pthread_mutex_lock(&bp->b_lock);
+		cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
+			cache_node_get_priority((struct cache_node *)bp) - 4);
 #ifdef XFS_BUF_TRACING
 		pthread_mutex_lock(&libxfs_bcache->c_mutex);
 		lock_buf_count++;
@@ -525,34 +558,46 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
 }
 
 static void
+libxfs_brelse(struct cache_node *node)
+{
+	xfs_buf_t		*bp = (xfs_buf_t *)node;
+
+	if (bp != NULL) {
+		if (bp->b_flags & LIBXFS_B_DIRTY)
+			libxfs_writebufr(bp);
+		pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+		list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
+		pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+	}
+}
+
+static void
+libxfs_bulkrelse(
+	struct cache 		*cache,
+	struct list_head 	*list)
+{
+	xfs_buf_t		*bp;
+
+	if (list_empty(list))
+		return;
+
+	list_for_each_entry(bp, list, b_node.cn_mru) {
+		if (bp->b_flags & LIBXFS_B_DIRTY)
+			libxfs_writebufr(bp);
+	}
+
+	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+	__list_splice(list, &xfs_buf_freelist.cm_list);
+	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+}
+
+static void
 libxfs_bflush(struct cache_node *node)
 {
 	xfs_buf_t		*bp = (xfs_buf_t *)node;
 
 	if ((bp != NULL) && (bp->b_flags & LIBXFS_B_DIRTY))
 		libxfs_writebufr(bp);
-}
-
-static void
-libxfs_brelse(struct cache_node *node)
-{
-	xfs_buf_t		*bp = (xfs_buf_t *)node;
-	xfs_buf_log_item_t	*bip;
-	extern xfs_zone_t	*xfs_buf_item_zone;
-
-	if (bp != NULL) {
-		if (bp->b_flags & LIBXFS_B_DIRTY)
-			libxfs_writebufr(bp);
-		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-		if (bip)
-			libxfs_zone_free(xfs_buf_item_zone, bip);
-		free(bp->b_addr);
-		pthread_mutex_destroy(&bp->b_lock);
-		bp->b_addr = NULL;
-		bp->b_flags = 0;
-		free(bp);
-		bp = NULL;
-	}
 }
 
 void
@@ -586,7 +631,7 @@ struct cache_operations libxfs_bcache_operations = {
 	/* .flush */	libxfs_bflush,
 	/* .relse */	libxfs_brelse,
 	/* .compare */	libxfs_bcompare,
-	/* .bulkrelse */ NULL	/* TODO: lio_listio64 interface? */
+	/* .bulkrelse */libxfs_bulkrelse
 };
 
 

@@ -1,3 +1,20 @@
+xfsprogs-2.9.2 (16 July 2007)
+	- Next major round of xfs_repair performance improvements:
+		- Cache disk nlink values in Phase 3 for Phase 7.
+		- Do multithreaded prefetch/processing based on AG stride
+		  option (ie. for concats).
+		- Don't trash lost+found at the start of Phase 4, eliminates
+		  repeated "moving disconnected inode to lost+found" with
+		  successive xfs_repair runs.
+		- Do multi-threaded sequential metadata prefetch.
+		  Method based on Agami patches posted for 2.7.18 xfsprogs.
+		- Improve the libxfs cache with priority tagging to keep
+		  blocks around that have unfavourable I/O characteristics.
+	- Make mkfs.xfs -f zero the old secondary superblocks before writing
+	  the new superblocks.
+	- Fix up xfs_info and xfs_quota's -c handling with global commands.
+	- Improve xfs_bmap -vp output to always show the FLAGS column.
+
 xfsprogs-2.9.1 (28 June 2007)
 	- Added filestreams support to xfs_io.
 	- Fix up libattr Makefile to append to LTLDFLAGS. Thanks to

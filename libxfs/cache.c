@@ -32,6 +32,8 @@
 #undef CACHE_ABORT
 /* #define CACHE_ABORT 1 */
 
+#define CACHE_SHAKE_COUNT	64
+
 static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
 
 struct cache *
@@ -70,6 +72,12 @@ cache_init(
 		list_head_init(&cache->c_hash[i].ch_list);
 		cache->c_hash[i].ch_count = 0;
 		pthread_mutex_init(&cache->c_hash[i].ch_mutex, NULL);
+	}
+
+	for (i = 0; i <= CACHE_MAX_PRIORITY; i++) {
+		list_head_init(&cache->c_mrus[i].cm_list);
+		cache->c_mrus[i].cm_count = 0;
+		pthread_mutex_init(&cache->c_mrus[i].cm_mutex, NULL);
 	}
 	return cache;
 }
@@ -127,93 +135,15 @@ cache_destroy(
 		list_head_destroy(&cache->c_hash[i].ch_list);
 		pthread_mutex_destroy(&cache->c_hash[i].ch_mutex);
 	}
+	for (i = 0; i <= CACHE_MAX_PRIORITY; i++) {
+		list_head_destroy(&cache->c_mrus[i].cm_list);
+		pthread_mutex_destroy(&cache->c_mrus[i].cm_mutex);
+	}
 	pthread_mutex_destroy(&cache->c_mutex);
 	free(cache->c_hash);
 	free(cache);
 }
 
-static int
-cache_shake_node(
-	struct cache *		cache,
-	cache_key_t		key,
-	struct cache_node *	node)
-{
-	struct list_head *	head;
-	struct list_head *	pos;
-	struct list_head *	n;
-	struct cache_hash *	hash;
-	int			count = -1;
-
-	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
-	head = &hash->ch_list;
-	pthread_mutex_lock(&hash->ch_mutex);
-	for (pos = head->next, n = pos->next;
-	     pos != head;
-	     pos = n, n = pos->next) {
-		if ((struct cache_node *)pos != node)
-			continue;
-		pthread_mutex_lock(&node->cn_mutex);
-		count = node->cn_count;
-		pthread_mutex_unlock(&node->cn_mutex);
-		if (count != 0)
-			break;
-		pthread_mutex_destroy(&node->cn_mutex);
-		list_del_init(&node->cn_list);
-		hash->ch_count--;
-		cache->relse(node);
-		break;
-	}
-	pthread_mutex_unlock(&hash->ch_mutex);
-	return count;
-}
-
-/*
- * We've hit the limit on cache size, so we need to start reclaiming
- * nodes we've used.  This reclaims from the one given hash bucket
- * only.  Returns the number of freed up nodes, its left to the
- * caller to updates the global counter of used nodes for the cache.
- * The hash chain lock is held for the hash list argument, must be
- * dropped before returning.
- * We walk backwards through the hash (remembering we keep recently
- * used nodes toward the front) until we hit an in-use node.  We'll
- * stop there if its a low priority call but keep going if its not.
- */
-static unsigned int
-cache_shake_hash(
-	struct cache *		cache,
-	struct cache_hash *	hash,
-	unsigned int		priority)
-{
-	struct list_head	temp;
-	struct list_head *	head;
-	struct list_head *	pos;
-	struct list_head *	n;
-	struct cache_node *	node;
-	unsigned int		inuse = 0;
-
-	list_head_init(&temp);
-	head = &hash->ch_list;
-	for (pos = head->prev, n = pos->prev;
-	     pos != head;
-	     pos = n, n = pos->prev) {
-		node = (struct cache_node *)pos;
-		pthread_mutex_lock(&node->cn_mutex);
-		if (!(inuse = (node->cn_count > 0))) {
-			hash->ch_count--;
-			list_move_tail(&node->cn_list, &temp);
-		}
-		pthread_mutex_unlock(&node->cn_mutex);
-		if (inuse && !priority)
-			break;
-	}
-	pthread_mutex_unlock(&hash->ch_mutex);
-	return cache->bulkrelse(cache, &temp);
-}
-
-/*
- * Generic implementation of bulk release, which just iterates over
- * the list calling the single node relse routine for each node.
- */
 static unsigned int
 cache_generic_bulkrelse(
 	struct cache *		cache,
@@ -223,65 +153,101 @@ cache_generic_bulkrelse(
 	unsigned int		count = 0;
 
 	while (!list_empty(list)) {
-		node = (struct cache_node *)list->next;
+		node = list_entry(list->next, struct cache_node, cn_mru);
 		pthread_mutex_destroy(&node->cn_mutex);
-		list_del_init(&node->cn_list);
+		list_del_init(&node->cn_mru);
 		cache->relse(node);
 		count++;
 	}
+
 	return count;
 }
 
 /*
  * We've hit the limit on cache size, so we need to start reclaiming
- * nodes we've used.  Start by shaking this hash chain only, unless
- * the shake priority has been increased already.
- * The hash chain lock is held for the hash list argument, must be
- * dropped before returning.
+ * nodes we've used. The MRU specified by the priority is shaken.
  * Returns new priority at end of the call (in case we call again).
  */
 static unsigned int
 cache_shake(
 	struct cache *		cache,
-	struct cache_hash *	hash,
-	unsigned int		priority)
+	unsigned int		priority,
+	int			all)
 {
+	struct cache_mru	*mru;
+	struct cache_hash *	hash;
+	struct list_head	temp;
+	struct list_head *	head;
+	struct list_head *	pos;
+	struct list_head *	n;
+	struct cache_node *	node;
 	unsigned int		count;
-	unsigned int		i;
 
-	if (!priority) {	/* do just one */
-		count = cache_shake_hash(cache, hash, priority);
-	} else {	/* use a bigger hammer */
-		pthread_mutex_unlock(&hash->ch_mutex);
-		for (count = 0, i = 0; i < cache->c_hashsize; i++) {
-			hash = &cache->c_hash[i];
-			pthread_mutex_lock(&hash->ch_mutex);
-			count += cache_shake_hash(cache, hash, priority - 1);
+	ASSERT(priority <= CACHE_MAX_PRIORITY);
+	if (priority > CACHE_MAX_PRIORITY)
+		priority = 0;
+
+	mru = &cache->c_mrus[priority];
+	count = 0;
+	list_head_init(&temp);
+	head = &mru->cm_list;
+
+	pthread_mutex_lock(&mru->cm_mutex);
+	for (pos = head->prev, n = pos->prev; pos != head;
+						pos = n, n = pos->prev) {
+		node = list_entry(pos, struct cache_node, cn_mru);
+
+		if (pthread_mutex_trylock(&node->cn_mutex) != 0)
+			continue;
+
+		hash = cache->c_hash + node->cn_hashidx;
+		if (node->cn_count > 0 ||
+				pthread_mutex_trylock(&hash->ch_mutex) != 0) {
+			pthread_mutex_unlock(&node->cn_mutex);
+			continue;
 		}
+		ASSERT(node->cn_priority == priority);
+		node->cn_priority = -1;
+
+		list_move(&node->cn_mru, &temp);
+		list_del_init(&node->cn_hash);
+		hash->ch_count--;
+		mru->cm_count--;
+		pthread_mutex_unlock(&hash->ch_mutex);
+		pthread_mutex_unlock(&node->cn_mutex);
+
+		count++;
+		if (!all && count == CACHE_SHAKE_COUNT)
+			break;
 	}
-	if (count) {
+	pthread_mutex_unlock(&mru->cm_mutex);
+
+	if (count > 0) {
+		cache->bulkrelse(cache, &temp);
+
 		pthread_mutex_lock(&cache->c_mutex);
 		cache->c_count -= count;
 		pthread_mutex_unlock(&cache->c_mutex);
 	}
-	return ++priority;
+
+	return (count == CACHE_SHAKE_COUNT) ? priority : ++priority;
 }
 
 /*
  * Allocate a new hash node (updating atomic counter in the process),
  * unless doing so will push us over the maximum cache size.
  */
-struct cache_node *
+static struct cache_node *
 cache_node_allocate(
 	struct cache *		cache,
-	struct cache_hash *	hashlist,
 	cache_key_t		key)
 {
 	unsigned int		nodesfree;
 	struct cache_node *	node;
 
 	pthread_mutex_lock(&cache->c_mutex);
-	if ((nodesfree = (cache->c_count < cache->c_maxcount))) {
+	nodesfree = (cache->c_count < cache->c_maxcount);
+	if (nodesfree) {
 		cache->c_count++;
 		if (cache->c_count > cache->c_max)
 			cache->c_max = cache->c_count;
@@ -290,15 +256,16 @@ cache_node_allocate(
 	pthread_mutex_unlock(&cache->c_mutex);
 	if (!nodesfree)
 		return NULL;
-	if (!(node = cache->alloc(key))) {	/* uh-oh */
+	node = cache->alloc(key);
+	if (node == NULL) {	/* uh-oh */
 		pthread_mutex_lock(&cache->c_mutex);
 		cache->c_count--;
 		pthread_mutex_unlock(&cache->c_mutex);
 		return NULL;
 	}
 	pthread_mutex_init(&node->cn_mutex, NULL);
-	list_head_init(&node->cn_list);
 	node->cn_count = 1;
+	node->cn_priority = 0;
 	return node;
 }
 
@@ -325,42 +292,69 @@ cache_node_get(
 {
 	struct cache_node *	node = NULL;
 	struct cache_hash *	hash;
+	struct cache_mru *	mru;
 	struct list_head *	head;
 	struct list_head *	pos;
+	unsigned int		hashidx;
 	int			priority = 0;
-	int			allocated = 0;
 
-	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
+	hashidx = cache->hash(key, cache->c_hashsize);
+	hash = cache->c_hash + hashidx;
 	head = &hash->ch_list;
 
-  restart:
-	pthread_mutex_lock(&hash->ch_mutex);
-	for (pos = head->next; pos != head; pos = pos->next) {
-		node = (struct cache_node *)pos;
-		if (cache->compare(node, key) == 0)
-			continue;
-		pthread_mutex_lock(&node->cn_mutex);
-		node->cn_count++;
-		pthread_mutex_unlock(&node->cn_mutex);
-		pthread_mutex_lock(&cache->c_mutex);
-		cache->c_hits++;
-		pthread_mutex_unlock(&cache->c_mutex);
-		break;
-	}
-	if (pos == head) {
-		node = cache_node_allocate(cache, hash, key);
-		if (!node) {
-			priority = cache_shake(cache, hash, priority);
-			goto restart;
+	for (;;) {
+		pthread_mutex_lock(&hash->ch_mutex);
+		for (pos = head->next; pos != head; pos = pos->next) {
+			node = list_entry(pos, struct cache_node, cn_hash);
+			if (!cache->compare(node, key))
+				continue;
+			/*
+			* node found, bump node's reference count, move it to the
+			* top of its MRU list, and update stats.
+			*/
+			pthread_mutex_lock(&node->cn_mutex);
+			node->cn_count++;
+
+			mru = &cache->c_mrus[node->cn_priority];
+			pthread_mutex_lock(&mru->cm_mutex);
+			list_move(&node->cn_mru, &mru->cm_list);
+			pthread_mutex_unlock(&mru->cm_mutex);
+
+			pthread_mutex_unlock(&node->cn_mutex);
+			pthread_mutex_unlock(&hash->ch_mutex);
+
+			pthread_mutex_lock(&cache->c_mutex);
+			cache->c_hits++;
+			pthread_mutex_unlock(&cache->c_mutex);
+
+			*nodep = node;
+			return 0;
 		}
-		allocated = 1;
-		hash->ch_count++;	/* new entry */
+		pthread_mutex_unlock(&hash->ch_mutex);
+		/*
+		 * not found, allocate a new entry
+		 */
+		node = cache_node_allocate(cache, key);
+		if (node)
+			break;
+		priority = cache_shake(cache, priority, 0);
 	}
-	/* looked at it, move to hash list head */
-	list_move(&node->cn_list, &hash->ch_list);
+
+	node->cn_hashidx = hashidx;
+
+	/* add new node to appropriate hash and lowest priority MRU */
+	mru = &cache->c_mrus[0];
+	pthread_mutex_lock(&mru->cm_mutex);
+	pthread_mutex_lock(&hash->ch_mutex);
+	hash->ch_count++;
+	mru->cm_count++;
+	list_add(&node->cn_hash, &hash->ch_list);
+	list_add(&node->cn_mru, &mru->cm_list);
 	pthread_mutex_unlock(&hash->ch_mutex);
+	pthread_mutex_unlock(&mru->cm_mutex);
+
 	*nodep = node;
-	return allocated;
+	return 1;
 }
 
 void
@@ -379,6 +373,56 @@ cache_node_put(
 	pthread_mutex_unlock(&node->cn_mutex);
 }
 
+void
+cache_node_set_priority(
+	struct cache *		cache,
+	struct cache_node *	node,
+	int			priority)
+{
+	struct cache_mru *	mru;
+
+	if (priority < 0)
+		priority = 0;
+	else if (priority > CACHE_MAX_PRIORITY)
+		priority = CACHE_MAX_PRIORITY;
+
+	pthread_mutex_lock(&node->cn_mutex);
+
+	ASSERT(node->cn_count > 0);
+	if (priority == node->cn_priority) {
+		pthread_mutex_unlock(&node->cn_mutex);
+		return;
+	}
+	mru = &cache->c_mrus[node->cn_priority];
+	pthread_mutex_lock(&mru->cm_mutex);
+	list_del_init(&node->cn_mru);
+	mru->cm_count--;
+	pthread_mutex_unlock(&mru->cm_mutex);
+
+	mru = &cache->c_mrus[priority];
+	pthread_mutex_lock(&mru->cm_mutex);
+	list_add(&node->cn_mru, &mru->cm_list);
+	node->cn_priority = priority;
+	mru->cm_count++;
+	pthread_mutex_unlock(&mru->cm_mutex);
+
+	pthread_mutex_unlock(&node->cn_mutex);
+}
+
+int
+cache_node_get_priority(
+	struct cache_node *	node)
+{
+	int			priority;
+
+	pthread_mutex_lock(&node->cn_mutex);
+	priority = node->cn_priority;
+	pthread_mutex_unlock(&node->cn_mutex);
+
+	return priority;
+}
+
+
 /*
  * Purge a specific node from the cache.  Reference count must be zero.
  */
@@ -388,27 +432,60 @@ cache_node_purge(
 	cache_key_t		key,
 	struct cache_node *	node)
 {
-	int			refcount;
+	struct list_head *	head;
+	struct list_head *	pos;
+	struct list_head *	n;
+	struct cache_hash *	hash;
+	struct cache_mru *	mru;
+	int			count = -1;
 
-	refcount = cache_shake_node(cache, key, node);
-	if (refcount == 0) {
+	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
+	head = &hash->ch_list;
+	pthread_mutex_lock(&hash->ch_mutex);
+	for (pos = head->next, n = pos->next; pos != head;
+						pos = n, n = pos->next) {
+		if ((struct cache_node *)pos != node)
+			continue;
+
+		pthread_mutex_lock(&node->cn_mutex);
+		count = node->cn_count;
+		if (count != 0) {
+			pthread_mutex_unlock(&node->cn_mutex);
+			break;
+		}
+		mru = &cache->c_mrus[node->cn_priority];
+		pthread_mutex_lock(&mru->cm_mutex);
+		list_del_init(&node->cn_mru);
+		mru->cm_count--;
+		pthread_mutex_unlock(&mru->cm_mutex);
+
+		pthread_mutex_unlock(&node->cn_mutex);
+		pthread_mutex_destroy(&node->cn_mutex);
+		list_del_init(&node->cn_hash);
+		hash->ch_count--;
+		cache->relse(node);
+		break;
+	}
+	pthread_mutex_unlock(&hash->ch_mutex);
+
+	if (count == 0) {
 		pthread_mutex_lock(&cache->c_mutex);
 		cache->c_count--;
 		pthread_mutex_unlock(&cache->c_mutex);
 	}
 #ifdef CACHE_DEBUG
-	if (refcount >= 1) {
+	if (count >= 1) {
 		fprintf(stderr, "%s: refcount was %u, not zero (node=%p)\n",
-				__FUNCTION__, refcount, node);
+				__FUNCTION__, count, node);
 		cache_abort();
 	}
-	if (refcount == -1) {
+	if (count == -1) {
 		fprintf(stderr, "%s: purge node not found! (node=%p)\n",
 			__FUNCTION__, node);
 		cache_abort();
 	}
 #endif
-	return (refcount == 0);
+	return (count == 0);
 }
 
 /*
@@ -418,20 +495,20 @@ void
 cache_purge(
 	struct cache *		cache)
 {
-	struct cache_hash *	hash;
+	int			i;
 
-	hash = &cache->c_hash[0];
-	pthread_mutex_lock(&hash->ch_mutex);
-	cache_shake(cache, hash, (unsigned int)-1);
+	for (i = 0; i <= CACHE_MAX_PRIORITY; i++)
+		cache_shake(cache, i, 1);
+
 #ifdef CACHE_DEBUG
 	if (cache->c_count != 0) {
+		/* flush referenced nodes to disk */
+		cache_flush(cache);
 		fprintf(stderr, "%s: shake on cache %p left %u nodes!?\n",
 				__FUNCTION__, cache, cache->c_count);
 		cache_abort();
 	}
 #endif
-	/* flush any remaining nodes to disk */
-	cache_flush(cache);
 }
 
 /*
@@ -465,15 +542,18 @@ cache_flush(
 	}
 }
 
-#define	HASH_REPORT	(3*HASH_CACHE_RATIO)
+#define	HASH_REPORT	(3 * HASH_CACHE_RATIO)
 void
-cache_report(FILE *fp, const char *name, struct cache * cache)
+cache_report(
+	FILE 			*fp,
+	const char 		*name,
+	struct cache 		*cache)
 {
-	int i;
-	unsigned long count, index, total;
-	unsigned long hash_bucket_lengths[HASH_REPORT+2];
+	int 			i;
+	unsigned long 		count, index, total;
+	unsigned long 		hash_bucket_lengths[HASH_REPORT + 2];
 
-	if ((cache->c_hits+cache->c_misses) == 0)
+	if ((cache->c_hits + cache->c_misses) == 0)
 		return;
 
 	/* report cache summary */
@@ -492,8 +572,14 @@ cache_report(FILE *fp, const char *name, struct cache * cache)
 			cache->c_hashsize,
 			cache->c_hits,
 			cache->c_misses,
-			(double) (cache->c_hits*100/(cache->c_hits+cache->c_misses))
+			(double)cache->c_hits * 100 /
+				(cache->c_hits + cache->c_misses)
 	);
+
+	for (i = 0; i <= CACHE_MAX_PRIORITY; i++)
+		fprintf(fp, "MRU %d entries = %6u (%3u%%)\n",
+			i, cache->c_mrus[i].cm_count,
+			cache->c_mrus[i].cm_count * 100 / cache->c_count);
 
 	/* report hash bucket lengths */
 	bzero(hash_bucket_lengths, sizeof(hash_bucket_lengths));
@@ -508,14 +594,16 @@ cache_report(FILE *fp, const char *name, struct cache * cache)
 	}
 
 	total = 0;
-	for (i = 0; i < HASH_REPORT+1; i++) {
-		total += i*hash_bucket_lengths[i];
+	for (i = 0; i < HASH_REPORT + 1; i++) {
+		total += i * hash_bucket_lengths[i];
 		if (hash_bucket_lengths[i] == 0)
 			continue;
-		fprintf(fp, "Hash buckets with  %2d entries %5ld (%3ld%%)\n",
-			i, hash_bucket_lengths[i], (i*hash_bucket_lengths[i]*100)/cache->c_count);
+		fprintf(fp, "Hash buckets with  %2d entries %6ld (%3ld%%)\n",
+			i, hash_bucket_lengths[i],
+			(i * hash_bucket_lengths[i] * 100) / cache->c_count);
 	}
 	if (hash_bucket_lengths[i])	/* last report bucket is the overflow bucket */
-		fprintf(fp, "Hash buckets with >%2d entries %5ld (%3ld%%)\n",
-			i-1, hash_bucket_lengths[i], ((cache->c_count-total)*100)/cache->c_count);
+		fprintf(fp, "Hash buckets with >%2d entries %6ld (%3ld%%)\n",
+			i - 1, hash_bucket_lengths[i],
+			((cache->c_count - total) * 100) / cache->c_count);
 }

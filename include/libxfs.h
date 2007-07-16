@@ -254,6 +254,13 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
 #define XFS_BUF_SET_FSPRIVATE3(bp,val)	(bp)->b_fsprivate3 = (void *)(val)
 
+#define XFS_BUF_SET_PRIORITY(bp,pri)	cache_node_set_priority( \
+						libxfs_bcache, \
+						(struct cache_node *)(bp), \
+						(pri))
+#define XFS_BUF_PRIORITY(bp)		(cache_node_get_priority( \
+						(struct cache_node *)(bp)))
+
 /* Buffer Cache Interfaces */
 
 extern struct cache	*libxfs_bcache;
