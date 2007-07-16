@@ -149,5 +149,4 @@ xfs_init(libxfs_init_t *args)
 		if (do_prefetch)
 			libxfs_lio_allocate();
 	}
-	thread_init();
 }

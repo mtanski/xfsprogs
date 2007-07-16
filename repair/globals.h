@@ -200,4 +200,6 @@ EXTERN pthread_rwlock_t	*per_ag_lock;
 EXTERN int report_interval;
 EXTERN __uint64_t *prog_rpt_done;
 
+EXTERN int		ag_stride;
+
 #endif /* _XFS_REPAIR_GLOBAL_H */

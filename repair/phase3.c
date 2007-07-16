@@ -192,8 +192,14 @@ phase3(xfs_mount_t *mp)
 	    "        - process known inodes and perform inode discovery...\n"));
 
 	set_progress_msg(PROG_FMT_PROCESS_INO, (__uint64_t) mp->m_sb.sb_icount);
-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		queue_work(parallel_p3_process_aginodes, mp, i);
+	if (ag_stride) {
+		int 	steps = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
+		for (i = 0; i < steps; i++)
+			for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride)
+				queue_work(parallel_p3_process_aginodes, mp, j);
+	} else {
+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+			parallel_p3_process_aginodes(mp, i);
 	}
 	wait_for_workers();
 	print_final_rpt();

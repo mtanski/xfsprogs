@@ -65,8 +65,8 @@ char *o_opts[] = {
 	"pfdir",
 #define	PREFETCH_AIO_CNT	6
 	"pfaio",
-#define	THREAD_CNT		7
-	"thread",
+#define	AG_STRIDE		7
+	"ag_stride",
 	NULL
 };
 
@@ -186,6 +186,9 @@ process_args(int argc, char **argv)
 	fs_has_extflgbit_allowed = 1;
 	pre_65_beta = 0;
 	fs_shared_allowed = 1;
+	ag_stride = 0;
+	thread_count = 0;
+	do_parallel = 0;
 	report_interval = PROG_RPT_DEFAULT;
 
 	/*
@@ -233,8 +236,8 @@ process_args(int argc, char **argv)
 				case PREFETCH_AIO_CNT:
 					libxfs_lio_aio_count = (int) strtol(val, 0, 0);
 					break;
-				case THREAD_CNT:
-					thread_count = (int) strtol(val, 0, 0);
+				case AG_STRIDE:
+					ag_stride = (int) strtol(val, 0, 0);
 					break;
 				default:
 					unknown('o', val);
@@ -524,6 +527,12 @@ main(int argc, char **argv)
 	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
 	max_symlink_blocks = howmany(MAXPATHLEN - 1, mp->m_sb.sb_blocksize);
 	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
+
+	if (ag_stride) {
+		do_parallel = 1;
+		thread_count = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
+		thread_init();
+	}
 
 	if (do_parallel && report_interval) {
 		init_progress_rpt();

@@ -1342,18 +1342,26 @@ phase4(xfs_mount_t *mp)
 
 	do_log(_("        - check for inodes claiming duplicate blocks...\n"));
 	set_progress_msg(PROG_FMT_DUP_BLOCKS, (__uint64_t) mp->m_sb.sb_icount);
-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		/*
-		 * ok, now process the inodes -- signal 2-pass check per inode.
-		 * first pass checks if the inode conflicts with a known
-		 * duplicate extent.  if so, the inode is cleared and second
-		 * pass is skipped.  second pass sets the block bitmap
-		 * for all blocks claimed by the inode.  directory
-		 * and attribute processing is turned OFF since we did that
-		 * already in phase 3.
-		 */
-		queue_work(parallel_p4_process_aginodes, mp, i);
+
+	/*
+	 * ok, now process the inodes -- signal 2-pass check per inode.
+	 * first pass checks if the inode conflicts with a known
+	 * duplicate extent.  if so, the inode is cleared and second
+	 * pass is skipped.  second pass sets the block bitmap
+	 * for all blocks claimed by the inode.  directory
+	 * and attribute processing is turned OFF since we did that
+	 * already in phase 3.
+	 */
+	if (ag_stride) {
+		int 	steps = (mp->m_sb.sb_agcount + ag_stride - 1) / ag_stride;
+		for (i = 0; i < steps; i++)
+			for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride)
+				queue_work(parallel_p4_process_aginodes, mp, j);
+	} else {
+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+			parallel_p4_process_aginodes(mp, i);
 	}
+
 	wait_for_workers();
 	print_final_rpt();
 
