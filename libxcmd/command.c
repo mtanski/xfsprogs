@@ -70,20 +70,15 @@ command_usage(
 
 int
 command(
+	const cmdinfo_t	*ct,
 	int		argc,
 	char		**argv)
 {
-	char		*cmd;
-	const cmdinfo_t	*ct;
+	char		*cmd = argv[0];
 
-	cmd = argv[0];
-	ct = find_command(cmd);
-	if (!ct) {
-		fprintf(stderr, _("command \"%s\" not found\n"), cmd);
-		return 0;
-	}
 	if (!check_command(ct))
 		return 0;
+
 	if (argc-1 < ct->argmin || (ct->argmax != -1 && argc-1 > ct->argmax)) {
 		if (ct->argmax == -1)
 			fprintf(stderr,
@@ -148,26 +143,35 @@ add_args_command(
 void
 command_loop(void)
 {
-	int	c, i, j = 0, done = 0;
-	char	*input;
-	char	**v;
+	int		c, i, j = 0, done = 0;
+	char		*input;
+	char		**v;
+	const cmdinfo_t	*ct;
 
 	for (i = 0; !done && i < ncmdline; i++) {
-		while (!done && (j = args_command(j))) {
-			input = strdup(cmdline[i]);
-			if (!input) {
-				fprintf(stderr,
-					_("cannot strdup command '%s': %s\n"),
-					cmdline[i], strerror(errno));
-				exit(1);
-			}
-			v = breakline(input, &c);
-			if (c)
-				done = command(c, v);
-			free(v);
-			free(input);
+		input = strdup(cmdline[i]);
+		if (!input) {
+			fprintf(stderr,
+				_("cannot strdup command '%s': %s\n"),
+				cmdline[i], strerror(errno));
+			exit(1);
 		}
-		j = 0;	/* reset */
+		v = breakline(input, &c);
+		if (c) {
+			ct = find_command(v[0]);
+			if (ct) {
+				if (ct->flags & CMD_FLAG_GLOBAL)
+					done = command(ct, c, v);
+				else {
+					j = 0;
+					while (!done && (j = args_command(j)))
+						done = command(ct, c, v);
+				}
+			} else
+				fprintf(stderr, _("command \"%s\" not found\n"),
+					v[0]);
+		}
+		doneline(input, v);
 	}
 	if (cmdline) {
 		free(cmdline);
@@ -177,8 +181,14 @@ command_loop(void)
 		if ((input = fetchline()) == NULL)
 			break;
 		v = breakline(input, &c);
-		if (c)
-			done = command(c, v);
+		if (c) {
+			ct = find_command(v[0]);
+			if (ct)
+				done = command(ct, c, v);
+			else
+				fprintf(stderr, _("command \"%s\" not found\n"),
+					v[0]);
+		}
 		doneline(input, v);
 	}
 }

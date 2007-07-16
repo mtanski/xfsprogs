@@ -88,7 +88,7 @@ help_init(void)
 	help_cmd.cfunc = help_f;
 	help_cmd.argmin = 0;
 	help_cmd.argmax = 1;
-	help_cmd.flags = -1;
+	help_cmd.flags = CMD_FLAG_GLOBAL;
 	help_cmd.args = _("[command]");
 	help_cmd.oneline = _("help for one or all commands");
 

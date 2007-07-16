@@ -122,6 +122,7 @@ path_init(void)
 	path_cmd.cfunc = path_f;
 	path_cmd.argmin = 0;
 	path_cmd.argmax = 1;
+	path_cmd.flags = CMD_FLAG_GLOBAL;
 	path_cmd.oneline = _("set current path, or show the list of paths");
 
 	print_cmd.name = _("print");
@@ -129,6 +130,7 @@ path_init(void)
 	print_cmd.cfunc = print_f;
 	print_cmd.argmin = 0;
 	print_cmd.argmax = 0;
+	print_cmd.flags = CMD_FLAG_GLOBAL;
 	print_cmd.oneline = _("list known mount points and projects");
 
 	if (expert)
