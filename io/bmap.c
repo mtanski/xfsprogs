@@ -74,6 +74,7 @@ bmap_f(
 	int			aflag = 0;
 	int			lflag = 0;
 	int			nflag = 0;
+	int			pflag = 0;
 	int			vflag = 0;
 	int			is_rt = 0;
 	int			bmv_iflags = 0;	/* flags for XFS_IOC_GETBMAPX */
@@ -99,6 +100,7 @@ bmap_f(
 			break;
 		case 'p':
 		/* report unwritten preallocated blocks */
+			pflag = 1;
 			bmv_iflags |= BMV_IF_PREALLOC;
 			break;
 		case 'v':	/* Verbose output */
@@ -289,7 +291,7 @@ bmap_f(
 			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
 			swidth = (fsgeo.swidth * fsgeo.blocksize) / BBSIZE;
 		}
-		flg = sunit;
+		flg = sunit | pflag;
 
 		/*
 		 * Go through the extents and figure out the width
@@ -397,14 +399,14 @@ bmap_f(
 					printf("  ");
 				printf(" %*lld", tot_w,
 					(long long)map[i+1].bmv_length);
-				if (flg == FLG_NULL) {
+				if (flg == FLG_NULL && !pflag) {
 					printf("\n");
 				} else {
 					printf(" %-*.*o\n", NFLG, NFLG, flg);
 				}
 			}
 		}
-		if (flg && vflag > 1) {
+		if ((flg || pflag) && vflag > 1) {
 			printf(_(" FLAG Values:\n"));
 			printf(_("    %*.*o Unwritten preallocated extent\n"),
 				NFLG+1, NFLG+1, FLG_PRE);
