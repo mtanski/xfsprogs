@@ -50,6 +50,193 @@ typedef struct ino_flist_s  {
 
 static ino_flist_t ino_flist;	/* free list must be initialized before use */
 
+/* memory optimised nlink counting for all inodes */
+
+static void nlink_grow_8_to_16(ino_tree_node_t *irec);
+static void nlink_grow_16_to_32(ino_tree_node_t *irec);
+
+static void
+disk_nlink_32_set(ino_tree_node_t *irec, int ino_offset, __uint32_t nlinks)
+{
+	((__uint32_t*)irec->disk_nlinks)[ino_offset] = nlinks;
+}
+
+static __uint32_t
+disk_nlink_32_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return ((__uint32_t*)irec->disk_nlinks)[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_32_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return ((__uint32_t*)irec->ino_un.ex_data->counted_nlinks)[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_32_inc(ino_tree_node_t *irec, int ino_offset)
+{
+	return ++(((__uint32_t*)irec->ino_un.ex_data->counted_nlinks)[ino_offset]);
+}
+
+static __uint32_t
+counted_nlink_32_dec(ino_tree_node_t *irec, int ino_offset)
+{
+	__uint32_t *nlinks = (__uint32_t*)irec->ino_un.ex_data->counted_nlinks;
+
+	ASSERT(nlinks[ino_offset] > 0);
+	return --(nlinks[ino_offset]);
+}
+
+
+static void
+disk_nlink_16_set(ino_tree_node_t *irec, int ino_offset, __uint32_t nlinks)
+{
+	if (nlinks >= 0x10000) {
+		nlink_grow_16_to_32(irec);
+		disk_nlink_32_set(irec, ino_offset, nlinks);
+	} else
+		((__uint16_t*)irec->disk_nlinks)[ino_offset] = nlinks;
+}
+
+static __uint32_t
+disk_nlink_16_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return ((__uint16_t*)irec->disk_nlinks)[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_16_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return ((__uint16_t*)irec->ino_un.ex_data->counted_nlinks)[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_16_inc(ino_tree_node_t *irec, int ino_offset)
+{
+	__uint16_t *nlinks = (__uint16_t*)irec->ino_un.ex_data->counted_nlinks;
+
+	if (nlinks[ino_offset] == 0xffff) {
+		nlink_grow_16_to_32(irec);
+		return counted_nlink_32_inc(irec, ino_offset);
+	}
+	return ++(nlinks[ino_offset]);
+}
+
+static __uint32_t
+counted_nlink_16_dec(ino_tree_node_t *irec, int ino_offset)
+{
+	__uint16_t *nlinks = (__uint16_t*)irec->ino_un.ex_data->counted_nlinks;
+
+	ASSERT(nlinks[ino_offset] > 0);
+	return --(nlinks[ino_offset]);
+}
+
+
+static void
+disk_nlink_8_set(ino_tree_node_t *irec, int ino_offset, __uint32_t nlinks)
+{
+	if (nlinks >= 0x100) {
+		nlink_grow_8_to_16(irec);
+		disk_nlink_16_set(irec, ino_offset, nlinks);
+	} else
+		irec->disk_nlinks[ino_offset] = nlinks;
+}
+
+static __uint32_t
+disk_nlink_8_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return irec->disk_nlinks[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_8_get(ino_tree_node_t *irec, int ino_offset)
+{
+	return irec->ino_un.ex_data->counted_nlinks[ino_offset];
+}
+
+static __uint32_t
+counted_nlink_8_inc(ino_tree_node_t *irec, int ino_offset)
+{
+	if (irec->ino_un.ex_data->counted_nlinks[ino_offset] == 0xff) {
+		nlink_grow_8_to_16(irec);
+		return counted_nlink_16_inc(irec, ino_offset);
+	}
+	return ++(irec->ino_un.ex_data->counted_nlinks[ino_offset]);
+}
+
+static __uint32_t
+counted_nlink_8_dec(ino_tree_node_t *irec, int ino_offset)
+{
+	ASSERT(irec->ino_un.ex_data->counted_nlinks[ino_offset] > 0);
+	return --(irec->ino_un.ex_data->counted_nlinks[ino_offset]);
+}
+
+
+static nlink_ops_t nlinkops[] = {
+	{sizeof(__uint8_t) * XFS_INODES_PER_CHUNK,
+		disk_nlink_8_set, disk_nlink_8_get,
+		counted_nlink_8_get, counted_nlink_8_inc, counted_nlink_8_dec},
+	{sizeof(__uint16_t) * XFS_INODES_PER_CHUNK,
+		disk_nlink_16_set, disk_nlink_16_get,
+		counted_nlink_16_get, counted_nlink_16_inc, counted_nlink_16_dec},
+	{sizeof(__uint32_t) * XFS_INODES_PER_CHUNK,
+		disk_nlink_32_set, disk_nlink_32_get,
+		counted_nlink_32_get, counted_nlink_32_inc, counted_nlink_32_dec},
+};
+
+static void
+nlink_grow_8_to_16(ino_tree_node_t *irec)
+{
+	__uint16_t	*new_nlinks;
+	int		i;
+
+	new_nlinks = malloc(sizeof(__uint16_t) * XFS_INODES_PER_CHUNK);
+	if (new_nlinks == NULL)
+		do_error(_("could not allocate expanded nlink array\n"));
+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
+		new_nlinks[i] = irec->disk_nlinks[i];
+	free(irec->disk_nlinks);
+	irec->disk_nlinks = (__uint8_t*)new_nlinks;
+
+	if (full_ino_ex_data) {
+		new_nlinks = malloc(sizeof(__uint16_t) * XFS_INODES_PER_CHUNK);
+		if (new_nlinks == NULL)
+			do_error(_("could not allocate expanded nlink array\n"));
+		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
+			new_nlinks[i] = irec->ino_un.ex_data->counted_nlinks[i];
+		free(irec->ino_un.ex_data->counted_nlinks);
+		irec->ino_un.ex_data->counted_nlinks = (__uint8_t*)new_nlinks;
+	}
+	irec->nlinkops = &nlinkops[1];
+}
+
+static void
+nlink_grow_16_to_32(ino_tree_node_t *irec)
+{
+	__uint32_t	*new_nlinks;
+	int		i;
+
+	new_nlinks = malloc(sizeof(__uint32_t) * XFS_INODES_PER_CHUNK);
+	if (new_nlinks == NULL)
+		do_error(_("could not allocate expanded nlink array\n"));
+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
+		new_nlinks[i] = ((__int16_t*)&irec->disk_nlinks)[i];
+	free(irec->disk_nlinks);
+	irec->disk_nlinks = (__uint8_t*)new_nlinks;
+
+	if (full_ino_ex_data) {
+		new_nlinks = malloc(sizeof(__uint32_t) * XFS_INODES_PER_CHUNK);
+		if (new_nlinks == NULL)
+			do_error(_("could not allocate expanded nlink array\n"));
+		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
+			new_nlinks[i] = ((__int16_t*)&irec->ino_un.ex_data->counted_nlinks)[i];
+		free(irec->ino_un.ex_data->counted_nlinks);
+		irec->ino_un.ex_data->counted_nlinks = (__uint8_t*)new_nlinks;
+	}
+	irec->nlinkops = &nlinkops[2];
+}
+
 /*
  * next is the uncertain inode list -- a sorted (in ascending order)
  * list of inode records sorted on the starting inode number.  There
@@ -65,47 +252,52 @@ static ino_flist_t ino_flist;	/* free list must be initialized before use */
  */
 /* ARGSUSED */
 static ino_tree_node_t *
-mk_ino_tree_nodes(xfs_agino_t starting_ino)
+mk_ino_tree_nodes(
+	xfs_agino_t		starting_ino)
 {
-	int i;
-	ino_tree_node_t *new;
-	avlnode_t *node;
+	int 			i;
+	ino_tree_node_t 	*ino_rec;
+	avlnode_t 		*node;
 
 	PREPAIR_RW_WRITE_LOCK(&ino_flist_lock);
 	if (ino_flist.cnt == 0)  {
 		ASSERT(ino_flist.list == NULL);
 
-		if ((new = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
+		if ((ino_rec = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
 					== NULL)
 			do_error(_("inode map malloc failed\n"));
 
 		for (i = 0; i < ALLOC_NUM_INOS; i++)  {
-			new->avl_node.avl_nextino =
+			ino_rec->avl_node.avl_nextino =
 				(avlnode_t *) ino_flist.list;
-			ino_flist.list = new;
+			ino_flist.list = ino_rec;
 			ino_flist.cnt++;
-			new++;
+			ino_rec++;
 		}
 	}
 
 	ASSERT(ino_flist.list != NULL);
 
-	new = ino_flist.list;
-	ino_flist.list = (ino_tree_node_t *) new->avl_node.avl_nextino;
+	ino_rec = ino_flist.list;
+	ino_flist.list = (ino_tree_node_t *) ino_rec->avl_node.avl_nextino;
 	ino_flist.cnt--;
-	node = &new->avl_node;
+	node = &ino_rec->avl_node;
 	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
 	PREPAIR_RW_UNLOCK(&ino_flist_lock);
 
 	/* initialize node */
 
-	new->ino_startnum = 0;
-	new->ino_confirmed = 0;
-	new->ino_isa_dir = 0;
-	new->ir_free = (xfs_inofree_t) - 1;
-	new->ino_un.backptrs = NULL;
+	ino_rec->ino_startnum = 0;
+	ino_rec->ino_confirmed = 0;
+	ino_rec->ino_isa_dir = 0;
+	ino_rec->ir_free = (xfs_inofree_t) - 1;
+	ino_rec->ino_un.ex_data = NULL;
+	ino_rec->nlinkops = &nlinkops[0];
+	ino_rec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
+	if (ino_rec->disk_nlinks == NULL)
+		do_error(_("could not allocate nlink array\n"));
 
-	return(new);
+	return(ino_rec);
 }
 
 /*
@@ -131,11 +323,15 @@ free_ino_tree_node(ino_tree_node_t *ino_rec)
 	ino_flist.list = ino_rec;
 	ino_flist.cnt++;
 
-	if (ino_rec->ino_un.backptrs != NULL)  {
-		if (full_backptrs && ino_rec->ino_un.backptrs->parents != NULL)
-			free(ino_rec->ino_un.backptrs->parents);
-		if (ino_rec->ino_un.plist != NULL)
-			free(ino_rec->ino_un.plist);
+	free(ino_rec->disk_nlinks);
+
+	if (ino_rec->ino_un.ex_data != NULL)  {
+		if (full_ino_ex_data) {
+			free(ino_rec->ino_un.ex_data->parents);
+			free(ino_rec->ino_un.ex_data->counted_nlinks);
+		}
+		free(ino_rec->ino_un.ex_data);
+
 	}
 	PREPAIR_RW_UNLOCK(&ino_flist_lock);
 
@@ -443,7 +639,7 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	__uint64_t	bitmask;
 	parent_entry_t	*tmp;
 
-	ASSERT(full_backptrs == 0);
+	ASSERT(full_ino_ex_data == 0);
 
 	if (irec->ino_un.plist == NULL)  {
 		irec->ino_un.plist =
@@ -532,8 +728,8 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
 	int		i;
 	int		target;
 
-	if (full_backptrs)
-		ptbl = irec->ino_un.backptrs->parents;
+	if (full_ino_ex_data)
+		ptbl = irec->ino_un.ex_data->parents;
 	else
 		ptbl = irec->ino_un.plist;
 
@@ -555,73 +751,38 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
 	return(0LL);
 }
 
-backptrs_t *
-get_backptr(void)
+static void
+alloc_ex_data(ino_tree_node_t *irec)
 {
-	backptrs_t *ptr;
+	parent_list_t 	*ptbl;
 
-	if ((ptr = malloc(sizeof(backptrs_t))) == NULL)
-		do_error(_("could not malloc back pointer table\n"));
+	ptbl = irec->ino_un.plist;
+	irec->ino_un.ex_data  = (ino_ex_data_t *)calloc(1, sizeof(ino_ex_data_t));
+	if (irec->ino_un.ex_data == NULL)
+		do_error(_("could not malloc inode extra data\n"));
 
-	bzero(ptr, sizeof(backptrs_t));
+	irec->ino_un.ex_data->parents = ptbl;
+	irec->ino_un.ex_data->counted_nlinks = calloc(1, irec->nlinkops->nlink_size);
 
-	return(ptr);
+	if (irec->ino_un.ex_data->counted_nlinks == NULL)
+		do_error(_("could not malloc inode extra data\n"));
 }
 
 void
-add_ino_backptrs(xfs_mount_t *mp)
+add_ino_ex_data(xfs_mount_t *mp)
 {
-#ifdef XR_BCKPTR_DBG
-	xfs_ino_t ino;
-	int j, k;
-#endif /* XR_BCKPTR_DBG */
-	ino_tree_node_t *ino_rec;
-	parent_list_t *tmp;
-	xfs_agnumber_t i;
+	ino_tree_node_t	*ino_rec;
+	xfs_agnumber_t	i;
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		ino_rec = findfirst_inode_rec(i);
 
 		while (ino_rec != NULL)  {
-			tmp = ino_rec->ino_un.plist;
-			ino_rec->ino_un.backptrs = get_backptr();
-			ino_rec->ino_un.backptrs->parents = tmp;
-
-#ifdef XR_BCKPTR_DBG
-			if (tmp != NULL)  {
-				k = 0;
-				for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-					ino = XFS_AGINO_TO_INO(mp, i,
-						ino_rec->ino_startnum + j);
-					if (ino == 25165846)  {
-						do_warn("THERE 1 !!!\n");
-					}
-					if (tmp->pentries[j] != 0)  {
-						k++;
-						do_warn(
-						"inode %llu - parent %llu\n",
-							ino,
-							tmp->pentries[j]);
-						if (ino == 25165846)  {
-							do_warn("THERE!!!\n");
-						}
-					}
-				}
-
-				if (k != tmp->cnt)  {
-					do_warn(
-					"ERROR - count = %d, counted %d\n",
-						tmp->cnt, k);
-				}
-			}
-#endif /* XR_BCKPTR_DBG */
+			alloc_ex_data(ino_rec);
 			ino_rec = next_ino_rec(ino_rec);
 		}
 	}
-
-	full_backptrs = 1;
-
-	return;
+	full_ino_ex_data = 1;
 }
 
 static __psunsigned_t
@@ -680,7 +841,7 @@ incore_ino_init(xfs_mount_t *mp)
 
 	bzero(last_rec, sizeof(ino_tree_node_t *) * agcount);
 
-	full_backptrs = 0;
+	full_ino_ex_data = 0;
 
 	return;
 }

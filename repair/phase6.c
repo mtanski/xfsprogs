@@ -94,7 +94,7 @@ typedef struct freetab {
 static int
 dir_hash_add(
 	dir_hash_tab_t		*hashtab,
-	__uint32_t		addr,	
+	__uint32_t		addr,
 	xfs_ino_t		inum,
 	int			namelen,
 	uchar_t			*name)
@@ -105,9 +105,9 @@ dir_hash_add(
 	dir_hash_ent_t		*p;
 	int			dup;
 	short			junk;
-	
+
 	ASSERT(!hashtab->names_duped);
-	
+
 	junk = name[0] == '/';
 	byaddr = DIR_HASH_FUNC(hashtab, addr);
 	dup = 0;
@@ -116,7 +116,7 @@ dir_hash_add(
 		hash = libxfs_da_hashname(name, namelen);
 		byhash = DIR_HASH_FUNC(hashtab, hash);
 
-		/* 
+		/*
 		 * search hash bucket for existing name.
 		 */
 		for (p = hashtab->byhash[byhash]; p; p = p->nextbyhash) {
@@ -129,20 +129,20 @@ dir_hash_add(
 			}
 		}
 	}
-	
+
 	if ((p = malloc(sizeof(*p))) == NULL)
 		do_error(_("malloc failed in dir_hash_add (%u bytes)\n"),
 			sizeof(*p));
-	
+
 	p->nextbyaddr = hashtab->byaddr[byaddr];
 	hashtab->byaddr[byaddr] = p;
-	if (hashtab->last) 
+	if (hashtab->last)
 		hashtab->last->nextbyorder = p;
 	else
 		hashtab->first = p;
 	p->nextbyorder = NULL;
 	hashtab->last = p;
-	
+
 	if (!(p->junkit = junk)) {
 		p->hashval = hash;
 		p->nextbyhash = hashtab->byhash[byhash];
@@ -153,12 +153,12 @@ dir_hash_add(
 	p->seen = 0;
 	p->namelen = namelen;
 	p->name = name;
-	
+
 	return !dup;
 }
 
 /*
- * checks to see if any data entries are not in the leaf blocks 
+ * checks to see if any data entries are not in the leaf blocks
  */
 static int
 dir_hash_unseen(
@@ -242,9 +242,9 @@ dir_hash_init(
 	if ((hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1)) == NULL)
 		do_error(_("calloc failed in dir_hash_init\n"));
 	hashtab->size = hsize;
-	hashtab->byhash = (dir_hash_ent_t**)((char *)hashtab + 
+	hashtab->byhash = (dir_hash_ent_t**)((char *)hashtab +
 		sizeof(dir_hash_tab_t));
-	hashtab->byaddr = (dir_hash_ent_t**)((char *)hashtab + 
+	hashtab->byaddr = (dir_hash_ent_t**)((char *)hashtab +
 		sizeof(dir_hash_tab_t) + sizeof(dir_hash_ent_t*) * hsize);
 	return hashtab;
 }
@@ -308,10 +308,10 @@ dir_hash_dup_names(dir_hash_tab_t *hashtab)
 {
 	uchar_t			*name;
 	dir_hash_ent_t		*p;
-	
+
 	if (hashtab->names_duped)
 		return;
-	
+
 	for (p = hashtab->first; p; p = p->nextbyorder) {
 		name = malloc(p->namelen);
 		memcpy(name, p->name, p->namelen);
@@ -1539,9 +1539,9 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 
 		/*
 		 * check for duplicate names in directory.
-		 */ 
-		if (!dir_hash_add(hashtab, (da_bno << mp->m_sb.sb_blocklog) + 
-						entry->nameidx, 
+		 */
+		if (!dir_hash_add(hashtab, (da_bno << mp->m_sb.sb_blocklog) +
+						entry->nameidx,
 				lino, entry->namelen, namest->name)) {
 			do_warn(
 		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
@@ -1694,8 +1694,8 @@ _("bad magic # (0x%x) for dir ino %llu leaf block (bno %u fsbno %llu)\n"),
 		}
 
 		if (!skipit)
-			lf_block_dir_entry_check(mp, ino, leaf, &dirty, 
-					num_illegal, need_dot, stack, irec, 
+			lf_block_dir_entry_check(mp, ino, leaf, &dirty,
+					num_illegal, need_dot, stack, irec,
 					ino_offset, hashtab, da_bno);
 
 		da_bno = INT_GET(leaf->hdr.info.forw, ARCH_CONVERT);
@@ -1746,7 +1746,7 @@ _("can't map leaf block %d in dir %llu, xfs_bmapi returns %d, nmap = %d\n"),
  * lost+found on the next run
  */
 
-static void 
+static void
 longform_dir2_rebuild(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,
@@ -1765,17 +1765,17 @@ longform_dir2_rebuild(
 	dir_hash_ent_t		*p;
 	int			committed;
 	int			done;
-	
-	/* 
+
+	/*
 	 * trash directory completely and rebuild from scratch using the
 	 * name/inode pairs in the hash table
 	 */
-	 
+
 	do_warn(_("rebuilding directory inode %llu\n"), ino);
-	
-	/* 
+
+	/*
 	 * first attempt to locate the parent inode, if it can't be found,
-	 * we'll use the lost+found inode 
+	 * we'll use the lost+found inode
 	 */
 	byhash = DIR_HASH_FUNC(hashtab, libxfs_da_hashname((uchar_t*)"..", 2));
 	parentino = orphanage_ino;
@@ -1787,7 +1787,7 @@ longform_dir2_rebuild(
 	}
 
 	XFS_BMAP_INIT(&flist, &firstblock);
-		
+
 	tp = libxfs_trans_alloc(mp, 0);
 	nres = XFS_REMOVE_SPACE_RES(mp);
 	error = libxfs_trans_reserve(tp, nres, XFS_REMOVE_LOG_RES(mp), 0,
@@ -1796,12 +1796,12 @@ longform_dir2_rebuild(
 		res_failed(error);
 	libxfs_trans_ijoin(tp, ip, 0);
 	libxfs_trans_ihold(tp, ip);
-	
-	if ((error = libxfs_bmap_last_offset(tp, ip, &lastblock, 
+
+	if ((error = libxfs_bmap_last_offset(tp, ip, &lastblock,
 						XFS_DATA_FORK)))
-		do_error(_("xfs_bmap_last_offset failed -- error - %d\n"), 
+		do_error(_("xfs_bmap_last_offset failed -- error - %d\n"),
 			error);
-	
+
 	/* re-init the directory to shortform */
 	if ((error = libxfs_trans_iget(mp, tp, parentino, 0, 0, &pip))) {
 		do_warn(
@@ -1816,8 +1816,8 @@ longform_dir2_rebuild(
 	}
 
 	/* free all data, leaf, node and freespace blocks */
-	
-	if ((error = libxfs_bunmapi(tp, ip, 0, lastblock, 
+
+	if ((error = libxfs_bunmapi(tp, ip, 0, lastblock,
 			XFS_BMAPI_METADATA, 0, &firstblock, &flist,
 			&done))) {
 		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
@@ -1825,27 +1825,27 @@ longform_dir2_rebuild(
 					XFS_TRANS_ABORT);
 		return;
 	}
-		
+
 	ASSERT(done);
 
 	libxfs_dir2_init(tp, ip, pip);
-	
+
 	error = libxfs_bmap_finish(&tp, &flist, firstblock, &committed);
-				
-	libxfs_trans_commit(tp, 
+
+	libxfs_trans_commit(tp,
 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
-		
+
 	/* go through the hash list and re-add the inodes */
 
 	for (p = hashtab->first; p; p = p->nextbyorder) {
-		
-		if (p->name[0] == '/' || (p->name[0] == '.' && (p->namelen == 1 
+
+		if (p->name[0] == '/' || (p->name[0] == '.' && (p->namelen == 1
 				|| (p->namelen == 2 && p->name[1] == '.'))))
 			continue;
-		
+
 		tp = libxfs_trans_alloc(mp, 0);
 		nres = XFS_CREATE_SPACE_RES(mp, p->namelen);
-		if ((error = libxfs_trans_reserve(tp, nres, 
+		if ((error = libxfs_trans_reserve(tp, nres,
 				XFS_CREATE_LOG_RES(mp), 0,
 				XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT))) {
 			do_warn(
@@ -1859,7 +1859,7 @@ longform_dir2_rebuild(
 
 		XFS_BMAP_INIT(&flist, &firstblock);
 		if ((error = libxfs_dir2_createname(tp, ip, (uchar_t *)p->name,
-				p->namelen, p->inum, &firstblock, &flist, 
+				p->namelen, p->inum, &firstblock, &flist,
 				nres))) {
 			do_warn(
 _("name create failed in ino %llu (%d), filesystem may be out of space\n"),
@@ -1869,7 +1869,7 @@ _("name create failed in ino %llu (%d), filesystem may be out of space\n"),
 			break;
 		}
 
-		if ((error = libxfs_bmap_finish(&tp, &flist, firstblock, 
+		if ((error = libxfs_bmap_finish(&tp, &flist, firstblock,
 				&committed))) {
 			do_warn(
 	_("bmap finish failed (%d), filesystem may be out of space\n"),
@@ -1879,9 +1879,9 @@ _("name create failed in ino %llu (%d), filesystem may be out of space\n"),
 						XFS_TRANS_ABORT);
 			break;
 		}
-			
 
-		libxfs_trans_commit(tp, 
+
+		libxfs_trans_commit(tp,
 				XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
 	}
 }
@@ -2155,7 +2155,7 @@ longform_dir2_entry_check_data(
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
 		inum = INT_GET(dep->inumber, ARCH_CONVERT);
 		lastfree = 0;
-		if (!dir_hash_add(hashtab, addr, inum, dep->namelen, 
+		if (!dir_hash_add(hashtab, addr, inum, dep->namelen,
 				dep->name)) {
 			do_warn(
 		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
@@ -2419,12 +2419,12 @@ longform_dir2_check_node(
 	xfs_fileoff_t		next_da_bno;
 	int			seeval = 0;
 	int			used;
-	
+
 	for (da_bno = mp->m_dirleafblk, next_da_bno = 0;
 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirfreeblk;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
-		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK)) 
+		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
 		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bp,
 				XFS_DATA_FORK)) {
@@ -2461,17 +2461,17 @@ longform_dir2_check_node(
 		seeval = dir_hash_see_all(hashtab, leaf->ents, INT_GET(leaf->hdr.count, ARCH_CONVERT),
 			INT_GET(leaf->hdr.stale, ARCH_CONVERT));
 		libxfs_da_brelse(NULL, bp);
-		if (seeval != DIR_HASH_CK_OK) 
+		if (seeval != DIR_HASH_CK_OK)
 			return 1;
 	}
-	if (dir_hash_check(hashtab, ip, seeval)) 
+	if (dir_hash_check(hashtab, ip, seeval))
 		return 1;
-	
+
 	for (da_bno = mp->m_dirfreeblk, next_da_bno = 0;
 	     next_da_bno != NULLFILEOFF;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
-		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK)) 
+		if (libxfs_bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
 		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bp,
 				XFS_DATA_FORK)) {
@@ -2597,12 +2597,12 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 			/* more data blocks than expected */
 			num_bps = db + 1;
 			bplist = realloc(bplist, num_bps * sizeof(xfs_dabuf_t*));
-			if (!bplist) 
+			if (!bplist)
 				do_error(
 		_("realloc failed in longform_dir2_entry_check (%u bytes)\n"),
 					num_bps * sizeof(xfs_dabuf_t*));
 		}
-		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bplist[db], 
+		if (libxfs_da_read_bufr(NULL, ip, da_bno, -1, &bplist[db],
 				XFS_DATA_FORK)) {
 			do_warn(_(
 			"can't read data block %u for directory inode %llu\n"),
@@ -2621,8 +2621,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		block = bplist[0]->data;
 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
 		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
-		seeval = dir_hash_see_all(hashtab, blp, 
-				INT_GET(btp->count, ARCH_CONVERT), 
+		seeval = dir_hash_see_all(hashtab, blp,
+				INT_GET(btp->count, ARCH_CONVERT),
 				INT_GET(btp->stale, ARCH_CONVERT));
 		if (dir_hash_check(hashtab, ip, seeval))
 			fixit |= 1;
@@ -2633,17 +2633,17 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	}
 	if (!no_modify && fixit) {
 		dir_hash_dup_names(hashtab);
-		for (i = 0; i < freetab->naents; i++) 
+		for (i = 0; i < freetab->naents; i++)
 			if (bplist[i])
 				libxfs_da_brelse(NULL, bplist[i]);
 		longform_dir2_rebuild(mp, ino, ip, hashtab);
 		*num_illegal = 0;
 	} else {
-		for (i = 0; i < freetab->naents; i++) 
+		for (i = 0; i < freetab->naents; i++)
 			if (bplist[i])
 				libxfs_da_brelse(NULL, bplist[i]);
 	}
-	
+
 	free(bplist);
 	free(freetab);
 }
@@ -2798,7 +2798,7 @@ _("entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"),
 		ASSERT(irec != NULL);
 
 		ino_offset = XFS_INO_TO_AGINO(mp, lino) - irec->ino_startnum;
-		
+
 		/*
 		 * if it's a free inode, blow out the entry.
 		 * by now, any inode that we think is free
@@ -2820,12 +2820,12 @@ _("entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"),
 				do_warn(_("would junk entry \"%s\"\n"),
 					fname);
 			}
-		} else if (!dir_hash_add(hashtab, 
+		} else if (!dir_hash_add(hashtab,
 				(xfs_dir2_dataptr_t)(sf_entry - &sf->list[0]),
 				lino, sf_entry->namelen, sf_entry->name)) {
 			/*
 			 * check for duplicate names in directory.
-			 */ 
+			 */
 			do_warn(
 		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
 				fname, lino, ino);
@@ -3244,7 +3244,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				lino, sfep->namelen, sfep->name)) {
 			/*
 			 * check for duplicate names in directory.
-			 */ 
+			 */
 			do_warn(
 		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
 				fname, lino, ino);
@@ -3890,7 +3890,7 @@ phase6(xfs_mount_t *mp)
 
 	incore_ext_teardown(mp);
 
-	add_ino_backptrs(mp);
+	add_ino_ex_data(mp);
 
 	/*
 	 * verify existence of root directory - if we have to
@@ -4031,10 +4031,10 @@ _("        - skipping filesystem traversal from / ... \n"));
 	}
 
 	do_log(_("        - traversals finished ... \n"));
-	
+
 	/* flush all dirty data before doing lost+found search */
 	libxfs_bcache_flush();
-	
+
 	do_log(_("        - moving disconnected inodes to lost+found ... \n"));
 
 	/*

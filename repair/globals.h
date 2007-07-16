@@ -166,12 +166,12 @@ EXTERN xfs_suminfo_t	*sumcompute;
 
 /* inode tree records have full or partial backptr fields ? */
 
-EXTERN int		full_backptrs;	/*
-					 * if 1, use backptrs_t component
-					 * of ino_un union, if 0, use
-					 * parent_list_t component.  see
-					 * incore.h for more details
-					 */
+EXTERN int		full_ino_ex_data;/*
+					  * if 1, use ino_ex_data_t component
+					  * of ino_un union, if 0, use
+					  * parent_list_t component.  see
+					  * incore.h for more details
+					  */
 
 #define ORPHANAGE	"lost+found"
 

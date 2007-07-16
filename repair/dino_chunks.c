@@ -779,6 +779,15 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 					do_warn(_("would correct imap\n"));
 			}
 			set_inode_used(ino_rec, irec_offset);
+
+			/*
+			 * store on-disk nlink count for comparing in phase 7
+			 */
+			set_inode_disk_nlinks(ino_rec, irec_offset,
+				dino->di_core.di_version > XFS_DINODE_VERSION_1
+					? be32_to_cpu(dino->di_core.di_nlink)
+					: be16_to_cpu(dino->di_core.di_onlink));
+
 		} else  {
 			set_inode_free(ino_rec, irec_offset);
 		}

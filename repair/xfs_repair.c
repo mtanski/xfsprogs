@@ -169,7 +169,7 @@ process_args(int argc, char **argv)
 	isa_file = 0;
 	zap_log = 0;
 	dumpcore = 0;
-	full_backptrs = 0;
+	full_ino_ex_data = 0;
 	delete_attr_ok = 1;
 	force_geo = 0;
 	assume_xfs = 0;
@@ -277,7 +277,7 @@ process_args(int argc, char **argv)
 		case 't':
 			report_interval = (int) strtol(optarg, 0, 0);
 			break;
-			
+
 		case '?':
 			usage();
 		}
@@ -563,7 +563,7 @@ main(int argc, char **argv)
 
 	/* XXX: nathans - something in phase4 ain't playing by */
 	/* the buffer cache rules.. why doesn't IRIX hit this? */
-	libxfs_bcache_purge();
+	libxfs_bcache_flush();
 
 	if (no_modify)
 		printf(_("No modify flag set, skipping phase 5\n"));
@@ -575,6 +575,8 @@ main(int argc, char **argv)
 	if (!bad_ino_btree)  {
 		phase6(mp);
 		timestamp(PHASE_END, 6, NULL);
+
+		libxfs_bcache_flush();
 
 		phase7(mp);
 		timestamp(PHASE_END, 7, NULL);

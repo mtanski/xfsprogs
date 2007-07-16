@@ -328,6 +328,8 @@ void		incore_ext_teardown(xfs_mount_t *mp);
 
 typedef xfs_ino_t parent_entry_t;
 
+struct nlink_ops;
+
 typedef struct parent_list  {
 	__uint64_t		pmask;
 	parent_entry_t		*pentries;
@@ -336,12 +338,12 @@ typedef struct parent_list  {
 #endif
 } parent_list_t;
 
-typedef struct backptrs  {
+typedef struct ino_ex_data  {
 	__uint64_t		ino_reached;	/* bit == 1 if reached */
 	__uint64_t		ino_processed;	/* reference checked bit mask */
-	__uint32_t		nlinks[XFS_INODES_PER_CHUNK];
 	parent_list_t		*parents;
-} backptrs_t;
+	__uint8_t		*counted_nlinks;/* counted nlinks in P6 */
+} ino_ex_data_t;
 
 typedef struct ino_tree_node  {
 	avlnode_t		avl_node;
@@ -349,14 +351,26 @@ typedef struct ino_tree_node  {
 	xfs_inofree_t		ir_free;	/* inode free bit mask */
 	__uint64_t		ino_confirmed;	/* confirmed bitmask */
 	__uint64_t		ino_isa_dir;	/* bit == 1 if a directory */
+	struct nlink_ops	*nlinkops;	/* pointer to current nlink ops */
+	__uint8_t		*disk_nlinks;	/* on-disk nlinks, set in P3 */
 	union  {
-		backptrs_t	*backptrs;
-		parent_list_t	*plist;
+		ino_ex_data_t	*ex_data;	/* phases 6,7 */
+		parent_list_t	*plist;		/* phases 2-5 */
 	} ino_un;
 } ino_tree_node_t;
 
+typedef struct nlink_ops {
+	const int	nlink_size;
+	void		(*disk_nlink_set)(ino_tree_node_t *, int, __uint32_t);
+	__uint32_t	(*disk_nlink_get)(ino_tree_node_t *, int);
+	__uint32_t	(*counted_nlink_get)(ino_tree_node_t *, int);
+	__uint32_t	(*counted_nlink_inc)(ino_tree_node_t *, int);
+	__uint32_t	(*counted_nlink_dec)(ino_tree_node_t *, int);
+} nlink_ops_t;
+
+
 #define INOS_PER_IREC		(sizeof(__uint64_t) * NBBY)
-void				add_ino_backptrs(xfs_mount_t *mp);
+void		add_ino_ex_data(xfs_mount_t *mp);
 
 /*
  * return an inode record to the free inode record pool
@@ -428,13 +442,13 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
 #define	XFS_INOPROC_MASKN(i,n)	((__uint64_t)((1 << (n)) - 1) << (i))
 
 #define	XFS_INOPROC_IS_PROC(rp, i) \
-	(((rp)->ino_un.backptrs->ino_processed & XFS_INOPROC_MASK((i))) == 0LL \
+	(((rp)->ino_un.ex_data->ino_processed & XFS_INOPROC_MASK((i))) == 0LL \
 		? 0 : 1)
 #define	XFS_INOPROC_SET_PROC(rp, i) \
-	((rp)->ino_un.backptrs->ino_processed |= XFS_INOPROC_MASK((i)))
+	((rp)->ino_un.ex_data->ino_processed |= XFS_INOPROC_MASK((i)))
 /*
 #define	XFS_INOPROC_CLR_PROC(rp, i) \
-	((rp)->ino_un.backptrs->ino_processed &= ~XFS_INOPROC_MASK((i)))
+	((rp)->ino_un.ex_data->ino_processed &= ~XFS_INOPROC_MASK((i)))
 */
 
 /*
@@ -457,12 +471,12 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
 #define	XFS_INO_RCHD_MASK(i)	((__uint64_t)1 << (i))
 
 #define	XFS_INO_RCHD_IS_RCHD(rp, i) \
-	(((rp)->ino_un.backptrs->ino_reached & XFS_INO_RCHD_MASK((i))) == 0LL \
+	(((rp)->ino_un.ex_data->ino_reached & XFS_INO_RCHD_MASK((i))) == 0LL \
 		? 0 : 1)
 #define	XFS_INO_RCHD_SET_RCHD(rp, i) \
-		((rp)->ino_un.backptrs->ino_reached |= XFS_INO_RCHD_MASK((i)))
+		((rp)->ino_un.ex_data->ino_reached |= XFS_INO_RCHD_MASK((i)))
 #define	XFS_INO_RCHD_CLR_RCHD(rp, i) \
-		((rp)->ino_un.backptrs->ino_reached &= ~XFS_INO_RCHD_MASK((i)))
+		((rp)->ino_un.ex_data->ino_reached &= ~XFS_INO_RCHD_MASK((i)))
 /*
  * set/clear/test is inode a directory inode
  */
@@ -519,16 +533,16 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
 static inline int
 is_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
 	return(XFS_INO_RCHD_IS_RCHD(ino_rec, ino_offset));
 }
 
 static inline void
 add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
 
-	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
+	(*ino_rec->nlinkops->counted_nlink_inc)(ino_rec, ino_offset);
 	XFS_INO_RCHD_SET_RCHD(ino_rec, ino_offset);
 
 	ASSERT(is_inode_reached(ino_rec, ino_offset));
@@ -537,33 +551,46 @@ add_inode_reached(ino_tree_node_t *ino_rec, int ino_offset)
 static inline void
 add_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
 
-	ino_rec->ino_un.backptrs->nlinks[ino_offset]++;
+	(*ino_rec->nlinkops->counted_nlink_inc)(ino_rec, ino_offset);
 }
 
 static inline void
 drop_inode_ref(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	ASSERT(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
 
-	if (--ino_rec->ino_un.backptrs->nlinks[ino_offset] == 0)
+	if ((*ino_rec->nlinkops->counted_nlink_dec)(ino_rec, ino_offset) == 0)
 		XFS_INO_RCHD_CLR_RCHD(ino_rec, ino_offset);
 }
 
 static inline int
 is_inode_referenced(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	return(ino_rec->ino_un.backptrs->nlinks[ino_offset] > 0);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
+
+	return (*ino_rec->nlinkops->counted_nlink_get)(ino_rec, ino_offset) > 0;
 }
 
 static inline __uint32_t
 num_inode_references(ino_tree_node_t *ino_rec, int ino_offset)
 {
-	ASSERT(ino_rec->ino_un.backptrs != NULL);
-	return(ino_rec->ino_un.backptrs->nlinks[ino_offset]);
+	ASSERT(ino_rec->ino_un.ex_data != NULL);
+
+	return (*ino_rec->nlinkops->counted_nlink_get)(ino_rec, ino_offset);
+}
+
+static inline void
+set_inode_disk_nlinks(ino_tree_node_t *ino_rec, int ino_offset, __uint32_t nlinks)
+{
+	(*ino_rec->nlinkops->disk_nlink_set)(ino_rec, ino_offset, nlinks);
+}
+
+static inline __uint32_t
+get_inode_disk_nlinks(ino_tree_node_t *ino_rec, int ino_offset)
+{
+	return (*ino_rec->nlinkops->disk_nlink_get)(ino_rec, ino_offset);
 }
 
 /*
@@ -589,9 +616,6 @@ int is_inode_refchecked(xfs_ino_t ino,
  */
 void		set_inode_parent(ino_tree_node_t *irec, int ino_offset,
 					xfs_ino_t ino);
-#if 0
-void		clear_inode_parent(ino_tree_node_t *irec, int offset);
-#endif
 xfs_ino_t	get_inode_parent(ino_tree_node_t *irec, int ino_offset);
 
 /*
