@@ -1952,12 +1952,6 @@ _("entry #%d, bno %d in directory %llu references group quota inode %llu\n"),
 				_("\twould clear ino number in entry %d...\n"),
 					i);
 			}
-		} else if (lino == old_orphanage_ino)  {
-			/*
-			 * do nothing, silently ignore it, entry has
-			 * already been marked TBD since old_orphanage_ino
-			 * is set non-zero.
-			 */
 		} else if ((irec_p = find_inode_rec(
 				XFS_INO_TO_AGNO(mp, lino),
 				XFS_INO_TO_AGINO(mp, lino))) != NULL)  {

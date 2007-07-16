@@ -96,11 +96,8 @@ update_inode_nlinks(
 
 	/*
 	 * compare and set links for all inodes
-	 * but the lost+found inode.  we keep
-	 * that correct as we go.
 	 */
-	if (ino != orphanage_ino)
-		set_nlinks(&ip->i_d, ino, nlinks, &dirty);
+	set_nlinks(&ip->i_d, ino, nlinks, &dirty);
 
 	if (!dirty)  {
 		libxfs_trans_iput(tp, ip, 0);

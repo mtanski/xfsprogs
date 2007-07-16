@@ -1440,13 +1440,6 @@ process_dir2_data(
 		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_gquotino) {
 			clearino = 1;
 			clearreason = _("group quota");
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == old_orphanage_ino) {
-			/*
-			 * Do nothing, silently ignore it, entry has already
-			 * been marked TBD since old_orphanage_ino is set
-			 * non-zero.
-			 */
-			clearino = 0;
 		} else if ((irec_p = find_inode_rec(
 				XFS_INO_TO_AGNO(mp, INT_GET(dep->inumber,
 					ARCH_CONVERT)),

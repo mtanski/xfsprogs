@@ -182,9 +182,6 @@ EXTERN __uint64_t	sb_ifree;	/* free inodes */
 EXTERN __uint64_t	sb_fdblocks;	/* free data blocks */
 EXTERN __uint64_t	sb_frextents;	/* free realtime extents */
 
-EXTERN xfs_ino_t	orphanage_ino;
-EXTERN xfs_ino_t	old_orphanage_ino;
-
 /* superblock geometry info */
 
 EXTERN xfs_extlen_t	sb_inoalignmt;

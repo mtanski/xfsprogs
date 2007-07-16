@@ -31,9 +31,10 @@
 #include "progress.h"
 #include "versions.h"
 
-static struct cred zerocr;
-static struct fsxattr zerofsx;
-static int orphanage_entered;
+static struct cred		zerocr;
+static struct fsxattr 		zerofsx;
+static xfs_ino_t		orphanage_ino;
+static xfs_inode_t		*orphanage_ip;
 
 /*
  * Data structures and routines to keep track of directory entries
@@ -808,6 +809,24 @@ mk_orphanage(xfs_mount_t *mp)
 	const int	mode = 0755;
 	int		nres;
 
+	/*
+	 * check for an existing lost+found first, if it exists, return
+	 * it's inode. Otherwise, we can create it. Bad lost+found inodes
+	 * would have been cleared in phase3 and phase4.
+	 */
+
+	if ((i = libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
+		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+			i, ORPHANAGE);
+
+	if (dir_lookup(mp, NULL, pip, ORPHANAGE, strlen(ORPHANAGE),
+			&ino) == 0)
+		return ino;
+
+	/*
+	 * could not be found, create it
+	 */
+
 	tp = libxfs_trans_alloc(mp, 0);
 	XFS_BMAP_INIT(&flist, &first);
 
@@ -820,9 +839,9 @@ mk_orphanage(xfs_mount_t *mp)
 	 * use iget/ijoin instead of trans_iget because the ialloc
 	 * wrapper can commit the transaction and start a new one
 	 */
-	if ((i = libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
+/*	if ((i = libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
 		do_error(_("%d - couldn't iget root inode to make %s\n"),
-			i, ORPHANAGE);
+			i, ORPHANAGE);*/
 
 	error = libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
 					1, 0, &zerocr, &zerofsx, &ip);
@@ -843,18 +862,19 @@ mk_orphanage(xfs_mount_t *mp)
 	 */
 	if ((error = dir_createname(mp, tp, pip, ORPHANAGE,
 			strlen(ORPHANAGE), ip->i_ino, &first, &flist, nres))) {
-		do_warn(
-		_("can't make %s, createname error %d, will try later\n"),
+		do_error(
+		_("can't make %s, createname error %d\n"),
 			ORPHANAGE, error);
-		orphanage_entered = 0;
-	} else
-		orphanage_entered = 1;
+	}
 
 	/*
 	 * bump up the link count in the root directory to account
 	 * for .. in the new directory
 	 */
 	pip->i_d.di_nlink++;
+	add_inode_ref(find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
+
 
 	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
 	dir_init(mp, tp, ip, pip);
@@ -870,36 +890,45 @@ mk_orphanage(xfs_mount_t *mp)
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
 
-	/* need libxfs_iput here? - nathans TODO - possible memory leak? */
-
 	return(ino);
 }
 
 /*
- * move a file to the orphange.  the orphanage is guaranteed
- * at this point to only have file in it whose name == file inode #
+ * move a file to the orphange.
  */
-void
-mv_orphanage(xfs_mount_t	*mp,
-		xfs_ino_t	dir_ino,	/* orphange inode # */
-		xfs_ino_t	ino,		/* inode # to be moved */
-		int		isa_dir)	/* 1 if inode is a directory */
+static void
+mv_orphanage(
+	xfs_mount_t		*mp,
+	xfs_ino_t		ino,		/* inode # to be moved */
+	int			isa_dir)	/* 1 if inode is a directory */
 {
-	xfs_ino_t	entry_ino_num;
-	xfs_inode_t	*dir_ino_p;
-	xfs_inode_t	*ino_p;
-	xfs_trans_t	*tp;
-	xfs_fsblock_t	first;
-	xfs_bmap_free_t	flist;
-	int		err;
-	int		committed;
-	char		fname[MAXPATHLEN + 1];
-	int		nres;
+	xfs_ino_t		entry_ino_num;
+	xfs_inode_t		*ino_p;
+	xfs_trans_t		*tp;
+	xfs_fsblock_t		first;
+	xfs_bmap_free_t		flist;
+	int			err;
+	int			committed;
+	char			fname[MAXPATHLEN + 1];
+	int			fnamelen;
+	int			nres;
+	int			incr;
+	ino_tree_node_t		*irec;
+	int			ino_offset = 0;
 
-	snprintf(fname, sizeof(fname), "%llu", (unsigned long long)ino);
+	fnamelen = snprintf(fname, sizeof(fname), "%llu",
+			(unsigned long long)ino);
 
-	if ((err = libxfs_iget(mp, NULL, dir_ino, 0, &dir_ino_p, 0)))
-		do_error(_("%d - couldn't iget orphanage inode\n"), err);
+	ASSERT(orphanage_ip != NULL);
+	/*
+	 * Make sure the filename is unique in the lost+found
+	 */
+	incr = 0;
+	while (dir_lookup(mp, NULL, orphanage_ip, fname, fnamelen,
+			&entry_ino_num) == 0) {
+		fnamelen = snprintf(fname, sizeof(fname), "%llu.%d",
+				(unsigned long long)ino, ++incr);
+	}
 
 	tp = libxfs_trans_alloc(mp, 0);
 
@@ -907,10 +936,15 @@ mv_orphanage(xfs_mount_t	*mp,
 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
 
 	if (isa_dir)  {
-		nres = XFS_DIRENTER_SPACE_RES(mp, strlen(fname)) +
+		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, orphanage_ino),
+				XFS_INO_TO_AGINO(mp, orphanage_ino));
+		if (irec)
+			ino_offset = XFS_INO_TO_AGINO(mp, orphanage_ino) -
+					irec->ino_startnum;
+		nres = XFS_DIRENTER_SPACE_RES(mp, fnamelen) +
 		       XFS_DIRENTER_SPACE_RES(mp, 2);
-		if ((err = dir_lookup(mp, tp, ino_p, "..", 2,
-				&entry_ino_num))) {
+		err = dir_lookup(mp, tp, ino_p, "..", 2, &entry_ino_num);
+		if (err) {
 			ASSERT(err == ENOENT);
 
 			if ((err = libxfs_trans_reserve(tp, nres,
@@ -921,22 +955,25 @@ mv_orphanage(xfs_mount_t	*mp,
 	_("space reservation failed (%d), filesystem may be out of space\n"),
 					err);
 
-			libxfs_trans_ijoin(tp, dir_ino_p, 0);
+			libxfs_trans_ijoin(tp, orphanage_ip, 0);
 			libxfs_trans_ijoin(tp, ino_p, 0);
 
 			XFS_BMAP_INIT(&flist, &first);
-			if ((err = dir_createname(mp, tp, dir_ino_p, fname,
-						strlen(fname), ino, &first,
+			if ((err = dir_createname(mp, tp, orphanage_ip, fname,
+						fnamelen, ino, &first,
 						&flist, nres)))
 				do_error(
 	_("name create failed in %s (%d), filesystem may be out of space\n"),
 					ORPHANAGE, err);
 
-			dir_ino_p->i_d.di_nlink++;
-			libxfs_trans_log_inode(tp, dir_ino_p, XFS_ILOG_CORE);
+			if (irec)
+				add_inode_ref(irec, ino_offset);
+			else
+				orphanage_ip->i_d.di_nlink++;
+			libxfs_trans_log_inode(tp, orphanage_ip, XFS_ILOG_CORE);
 
 			if ((err = dir_createname(mp, tp, ino_p, "..", 2,
-						dir_ino, &first, &flist, nres)))
+						orphanage_ino, &first, &flist, nres)))
 				do_error(
 	_("creation of .. entry failed (%d), filesystem may be out of space\n"),
 					err);
@@ -960,28 +997,31 @@ mv_orphanage(xfs_mount_t	*mp,
 	_("space reservation failed (%d), filesystem may be out of space\n"),
 					err);
 
-			libxfs_trans_ijoin(tp, dir_ino_p, 0);
+			libxfs_trans_ijoin(tp, orphanage_ip, 0);
 			libxfs_trans_ijoin(tp, ino_p, 0);
 
 			XFS_BMAP_INIT(&flist, &first);
 
-			if ((err = dir_createname(mp, tp, dir_ino_p, fname,
-						strlen(fname), ino, &first,
+			if ((err = dir_createname(mp, tp, orphanage_ip, fname,
+						fnamelen, ino, &first,
 						&flist, nres)))
 				do_error(
 	_("name create failed in %s (%d), filesystem may be out of space\n"),
 					ORPHANAGE, err);
 
-			dir_ino_p->i_d.di_nlink++;
-			libxfs_trans_log_inode(tp, dir_ino_p, XFS_ILOG_CORE);
+			if (irec)
+				add_inode_ref(irec, ino_offset);
+			else
+				orphanage_ip->i_d.di_nlink++;
+			libxfs_trans_log_inode(tp, orphanage_ip, XFS_ILOG_CORE);
 
 			/*
 			 * don't replace .. value if it already points
 			 * to us.  that'll pop a libxfs/kernel ASSERT.
 			 */
-			if (entry_ino_num != dir_ino)  {
+			if (entry_ino_num != orphanage_ino)  {
 				if ((err = dir_replace(mp, tp, ino_p, "..",
-							2, dir_ino, &first,
+							2, orphanage_ino, &first,
 							&flist, nres)))
 					do_error(
 	_("name replace op failed (%d), filesystem may be out of space\n"),
@@ -997,6 +1037,7 @@ mv_orphanage(xfs_mount_t	*mp,
 			libxfs_trans_commit(tp,
 				XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC, 0);
 		}
+
 	} else  {
 		/*
 		 * use the remove log reservation as that's
@@ -1004,19 +1045,19 @@ mv_orphanage(xfs_mount_t	*mp,
 		 * links, we're not doing the inode allocation
 		 * also accounted for in the create
 		 */
-		nres = XFS_DIRENTER_SPACE_RES(mp, strlen(fname));
+		nres = XFS_DIRENTER_SPACE_RES(mp, fnamelen);
 		if ((err = libxfs_trans_reserve(tp, nres, XFS_REMOVE_LOG_RES(mp), 0,
 				XFS_TRANS_PERM_LOG_RES, XFS_REMOVE_LOG_COUNT)))
 			do_error(
 	_("space reservation failed (%d), filesystem may be out of space\n"),
 				err);
 
-		libxfs_trans_ijoin(tp, dir_ino_p, 0);
+		libxfs_trans_ijoin(tp, orphanage_ip, 0);
 		libxfs_trans_ijoin(tp, ino_p, 0);
 
 		XFS_BMAP_INIT(&flist, &first);
-		if ((err = dir_createname(mp, tp, dir_ino_p, fname,
-				strlen(fname), ino, &first, &flist, nres)))
+		if ((err = dir_createname(mp, tp, orphanage_ip, fname,
+				fnamelen, ino, &first, &flist, nres)))
 			do_error(
 	_("name create failed in %s (%d), filesystem may be out of space\n"),
 				ORPHANAGE, err);
@@ -1365,6 +1406,24 @@ _("couldn't remove bogus entry \"%s\" in\n\tdirectory inode %llu, errno = %d\n")
 	return(1);
 }
 
+static int
+entry_junked(
+	const char 	*msg,
+	const char	*iname,
+	xfs_ino_t	ino1,
+	xfs_ino_t	ino2)
+{
+	do_warn(msg, iname, ino1, ino2);
+	if (!no_modify) {
+		if (verbose)
+			do_warn(_(", marking entry to be junked\n"));
+		else
+			do_warn("\n");
+	} else
+		do_warn(_(", would junk entry\n"));
+	return !no_modify;
+}
+
 /*
  * process a leaf block, also checks for .. entry
  * and corrects it to match what we think .. should be
@@ -1442,9 +1501,9 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		 * take care of it then.
 		 */
 		if (entry->namelen == 2 && namest->name[0] == '.' &&
-				namest->name[1] == '.')  {
+				namest->name[1] == '.')
 			continue;
-		}
+
 		ASSERT(no_modify || !verify_inum(mp, lino));
 
 		/*
@@ -1464,17 +1523,6 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		}
 
 		/*
-		 * special case the "lost+found" entry if pointing
-		 * to where we think lost+found should be.  if that's
-		 * the case, that's the one we created in phase 6.
-		 * just skip it.  no need to process it and it's ..
-		 * link is already accounted for.
-		 */
-
-		if (lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
-			continue;
-
-		/*
 		 * skip entries with bogus inumbers if we're in no modify mode
 		 */
 		if (no_modify && verify_inum(mp, lino))
@@ -1488,18 +1536,12 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 
 		if (irec == NULL)  {
 			nbad++;
-			do_warn(
-	_("entry \"%s\" in dir inode %llu points to non-existent inode, "),
-				fname, ino);
-
-			if (!no_modify)  {
+			if (entry_junked(_("entry \"%s\" in dir inode %llu "
+					"points to non-existent inode %llu"),
+					fname, ino, lino)) {
 				namest->name[0] = '/';
 				*dirty = 1;
-				do_warn(_("marking entry to be junked\n"));
-			} else  {
-				do_warn(_("would junk entry\n"));
 			}
-
 			continue;
 		}
 
@@ -1511,53 +1553,53 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		 * really is free.
 		 */
 		if (is_inode_free(irec, ino_offset))  {
-			/*
-			 * don't complain if this entry points to the old
-			 * and now-free lost+found inode
-			 */
-			if (verbose || no_modify || lino != old_orphanage_ino)
-				do_warn(
-		_("entry \"%s\" in dir inode %llu points to free inode %llu"),
-					fname, ino, lino);
 			nbad++;
-
-			if (!no_modify)  {
-				if (verbose || lino != old_orphanage_ino)
-					do_warn(
-					_(", marking entry to be junked\n"));
-
-				else
-					do_warn("\n");
+			if (entry_junked(_("entry \"%s\" in dir inode %llu "
+					"points to free inode %llu"),
+					fname, ino, lino)) {
 				namest->name[0] = '/';
 				*dirty = 1;
-			} else  {
-				do_warn(_(", would junk entry\n"));
 			}
-
 			continue;
 		}
-
+		/*
+		 * check if this inode is lost+found dir in the root
+		 */
+		if (ino == mp->m_sb.sb_rootino && strcmp(fname, ORPHANAGE) == 0) {
+			/* root inode, "lost+found", if it's not a directory,
+			 * trash it, otherwise, assign it */
+			if (!inode_isadir(irec, ino_offset)) {
+				nbad++;
+				if (entry_junked(_("%s (ino %llu) in root "
+						"(%llu) is not a directory"),
+						ORPHANAGE, lino, ino)) {
+					namest->name[0] = '/';
+					*dirty = 1;
+				}
+				continue;
+			}
+			/*
+			 * if this is a dup, it will be picked up below,
+			 * otherwise, mark it as the orphanage for later.
+			 */
+			if (!orphanage_ino)
+				orphanage_ino = lino;
+		}
 		/*
 		 * check for duplicate names in directory.
 		 */
 		if (!dir_hash_add(hashtab, (da_bno << mp->m_sb.sb_blocklog) +
-						entry->nameidx,
-				lino, entry->namelen, namest->name)) {
-			do_warn(
-		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
-				fname, lino, ino);
+				entry->nameidx, lino, entry->namelen,
+				namest->name)) {
 			nbad++;
-			if (!no_modify) {
-				if (verbose)
-					do_warn(
-					_(", marking entry to be junked\n"));
-				else
-					do_warn("\n");
+			if (entry_junked(_("entry \"%s\" (ino %llu) in dir "
+					"%llu is a duplicate name"),
+					fname, lino, ino)) {
 				namest->name[0] = '/';
 				*dirty = 1;
-			} else {
-				do_warn(_(", would junk entry\n"));
 			}
+			if (lino == orphanage_ino)
+				orphanage_ino = 0;
 			continue;
 		}
 		/*
@@ -1598,13 +1640,14 @@ _("entry \"%s\" in dir ino %llu not consistent with .. value (%llu) in ino %llu,
 		}
 
 		if (junkit)  {
+			if (lino == orphanage_ino)
+				orphanage_ino = 0;
 			junkit = 0;
 			nbad++;
-
 			if (!no_modify)  {
 				namest->name[0] = '/';
 				*dirty = 1;
-				if (verbose || lino != old_orphanage_ino)
+				if (verbose)
 					do_warn(
 					_("\twill clear entry \"%s\"\n"),
 						fname);
@@ -2155,22 +2198,7 @@ longform_dir2_entry_check_data(
 		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
 		inum = INT_GET(dep->inumber, ARCH_CONVERT);
 		lastfree = 0;
-		if (!dir_hash_add(hashtab, addr, inum, dep->namelen,
-				dep->name)) {
-			do_warn(
-		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
-				fname, inum, ip->i_ino);
-			if (!no_modify) {
-				if (verbose)
-					do_warn(
-					_(", marking entry to be junked\n"));
-				else
-					do_warn("\n");
-			} else {
-				do_warn(_(", would junk entry\n"));
-			}
-			dep->name[0] = '/';
-		}
+
 		/*
 		 * skip bogus entries (leading '/').  they'll be deleted
 		 * later.  must still log it, else we leak references to
@@ -2182,10 +2210,81 @@ longform_dir2_entry_check_data(
 				libxfs_dir2_data_log_entry(tp, bp, dep);
 			continue;
 		}
-		junkit = 0;
 		bcopy(dep->name, fname, dep->namelen);
 		fname[dep->namelen] = '\0';
 		ASSERT(inum != NULLFSINO);
+
+		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, inum),
+					XFS_INO_TO_AGINO(mp, inum));
+		if (irec == NULL)  {
+			nbad++;
+			if (entry_junked(_("entry \"%s\" in directory inode "
+					"%llu points to non-existent inode %llu"),
+					fname, ip->i_ino, inum)) {
+				dep->name[0] = '/';
+				libxfs_dir2_data_log_entry(tp, bp, dep);
+			}
+			continue;
+		}
+		ino_offset = XFS_INO_TO_AGINO(mp, inum) - irec->ino_startnum;
+
+		/*
+		 * if it's a free inode, blow out the entry.
+		 * by now, any inode that we think is free
+		 * really is free.
+		 */
+		if (is_inode_free(irec, ino_offset))  {
+			nbad++;
+			if (entry_junked(_("entry \"%s\" in directory inode "
+					"%llu points to free inode %llu"),
+					fname, ip->i_ino, inum)) {
+				dep->name[0] = '/';
+				libxfs_dir2_data_log_entry(tp, bp, dep);
+			}
+			continue;
+		}
+
+		/*
+		 * check if this inode is lost+found dir in the root
+		 */
+		if (inum == mp->m_sb.sb_rootino && strcmp(fname, ORPHANAGE) == 0) {
+			/*
+			 * if it's not a directory, trash it
+			 */
+			if (!inode_isadir(irec, ino_offset)) {
+				nbad++;
+				if (entry_junked(_("%s (ino %llu) in root "
+						"(%llu) is not a directory"),
+						ORPHANAGE, inum, ip->i_ino)) {
+					dep->name[0] = '/';
+					libxfs_dir2_data_log_entry(tp, bp, dep);
+				}
+				continue;
+			}
+			/*
+			 * if this is a dup, it will be picked up below,
+			 * otherwise, mark it as the orphanage for later.
+			 */
+			if (!orphanage_ino)
+				orphanage_ino = inum;
+		}
+		/*
+		 * check for duplicate names in directory.
+		 */
+		if (!dir_hash_add(hashtab, addr, inum, dep->namelen,
+				dep->name)) {
+			nbad++;
+			if (entry_junked(_("entry \"%s\" (ino %llu) in dir "
+					"%llu is a duplicate name"),
+					fname, inum, ip->i_ino)) {
+				dep->name[0] = '/';
+				libxfs_dir2_data_log_entry(tp, bp, dep);
+			}
+			if (inum == orphanage_ino)
+				orphanage_ino = 0;
+			continue;
+		}
+
 		/*
 		 * skip the '..' entry since it's checked when the
 		 * directory is reached by something else.  if it never
@@ -2212,67 +2311,10 @@ longform_dir2_entry_check_data(
 			continue;
 		}
 		/*
-		 * special case the "lost+found" entry if pointing
-		 * to where we think lost+found should be.  if that's
-		 * the case, that's the one we created in phase 6.
-		 * just skip it.  no need to process it and it's ..
-		 * link is already accounted for.
-		 */
-		if (inum == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
-			continue;
-		/*
 		 * skip entries with bogus inumbers if we're in no modify mode
 		 */
 		if (no_modify && verify_inum(mp, inum))
 			continue;
-		/*
-		 * ok, now handle the rest of the cases besides '.' and '..'
-		 */
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, inum),
-					XFS_INO_TO_AGINO(mp, inum));
-		if (irec == NULL)  {
-			nbad++;
-			do_warn(_("entry \"%s\" in directory inode %llu points "
-				  "to non-existent inode, "),
-				fname, ip->i_ino);
-			if (!no_modify)  {
-				dep->name[0] = '/';
-				libxfs_dir2_data_log_entry(tp, bp, dep);
-				do_warn(_("marking entry to be junked\n"));
-			} else  {
-				do_warn(_("would junk entry\n"));
-			}
-			continue;
-		}
-		ino_offset = XFS_INO_TO_AGINO(mp, inum) - irec->ino_startnum;
-		/*
-		 * if it's a free inode, blow out the entry.
-		 * by now, any inode that we think is free
-		 * really is free.
-		 */
-		if (is_inode_free(irec, ino_offset))  {
-			/*
-			 * don't complain if this entry points to the old
-			 * and now-free lost+found inode
-			 */
-			if (verbose || no_modify || inum != old_orphanage_ino)
-				do_warn(
-	_("entry \"%s\" in directory inode %llu points to free inode %llu"),
-					fname, ip->i_ino, inum);
-			nbad++;
-			if (!no_modify)  {
-				if (verbose || inum != old_orphanage_ino)
-					do_warn(
-					_(", marking entry to be junked\n"));
-				else
-					do_warn("\n");
-				dep->name[0] = '/';
-				libxfs_dir2_data_log_entry(tp, bp, dep);
-			} else  {
-				do_warn(_(", would junk entry\n"));
-			}
-			continue;
-		}
 		/*
 		 * check easy case first, regular inode, just bump
 		 * the link count and continue
@@ -2283,6 +2325,7 @@ longform_dir2_entry_check_data(
 		}
 		parent = get_inode_parent(irec, ino_offset);
 		ASSERT(parent != 0);
+		junkit = 0;
 		/*
 		 * bump up the link counts in parent and child
 		 * directory but if the link doesn't agree with
@@ -2293,7 +2336,7 @@ longform_dir2_entry_check_data(
 		if (is_inode_reached(irec, ino_offset))  {
 			junkit = 1;
 			do_warn(
-_("entry \"%s\" in dir %llu points to an already connected directory inode %llu,\n"),
+_("entry \"%s\" in dir %llu points to an already connected directory inode %llu\n"),
 				fname, ip->i_ino, inum);
 		} else if (parent == ip->i_ino)  {
 			add_inode_reached(irec, ino_offset);
@@ -2303,16 +2346,18 @@ _("entry \"%s\" in dir %llu points to an already connected directory inode %llu,
 		} else  {
 			junkit = 1;
 			do_warn(
-_("entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino %llu,\n"),
+_("entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino %llu\n"),
 				fname, ip->i_ino, parent, inum);
 		}
 		if (junkit)  {
+			if (inum == orphanage_ino)
+				orphanage_ino = 0;
 			junkit = 0;
 			nbad++;
 			if (!no_modify)  {
 				dep->name[0] = '/';
 				libxfs_dir2_data_log_entry(tp, bp, dep);
-				if (verbose || inum != old_orphanage_ino)
+				if (verbose)
 					do_warn(
 					_("\twill clear entry \"%s\"\n"),
 						fname);
@@ -2767,36 +2812,14 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 		ASSERT(no_modify || lino != NULLFSINO);
 		ASSERT(no_modify || !verify_inum(mp, lino));
 
-		/*
-		 * special case the "lost+found" entry if it's pointing
-		 * to where we think lost+found should be.  if that's
-		 * the case, that's the one we created in phase 6.
-		 * just skip it.  no need to process it and its ..
-		 * link is already accounted for.  Also skip entries
-		 * with bogus inode numbers if we're in no modify mode.
-		 */
-
-		if ((lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0)
-				|| (no_modify && verify_inum(mp, lino))) {
-			next_sfe = (xfs_dir_sf_entry_t *)
-				((__psint_t) sf_entry +
-				XFS_DIR_SF_ENTSIZE_BYENTRY(sf_entry));
-			continue;
-		}
-
 		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
-
-		if (irec == NULL && no_modify)  {
-			do_warn(
-_("entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"),
+		if (irec == NULL) {
+			do_warn(_("entry \"%s\" in shortform dir %llu "
+				"references non-existent ino %llu"),
 				fname, ino, lino);
-			do_warn(_("would junk entry\n"));
-			continue;
+			goto do_junkit;
 		}
-
-		ASSERT(irec != NULL);
-
 		ino_offset = XFS_INO_TO_AGINO(mp, lino) - irec->ino_startnum;
 
 		/*
@@ -2804,42 +2827,41 @@ _("entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"),
 		 * by now, any inode that we think is free
 		 * really is free.
 		 */
-		if (is_inode_free(irec, ino_offset))  {
+		if (!is_inode_free(irec, ino_offset))  {
+			do_warn(_("entry \"%s\" in shortform dir inode %llu "
+				"points to free inode %llu"), fname, ino, lino);
+			goto do_junkit;
+		}
+		/*
+		 * check if this inode is lost+found dir in the root
+		 */
+		if (ino == mp->m_sb.sb_rootino && strcmp(fname, ORPHANAGE) == 0) {
 			/*
-			 * don't complain if this entry points to the old
-			 * and now-free lost+found inode
+			 * if it's not a directory, trash it
 			 */
-			if (verbose || no_modify || lino != old_orphanage_ino)
-				do_warn(
-_("entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"),
-					fname, ino, lino);
-
-			if (!no_modify)  {
-				junkit = 1;
-			} else  {
-				do_warn(_("would junk entry \"%s\"\n"),
-					fname);
+			if (!inode_isadir(irec, ino_offset)) {
+				do_warn(_("%s (ino %llu) in root (%llu) is not "
+					"a directory"), ORPHANAGE, lino, ino);
+				goto do_junkit;
 			}
-		} else if (!dir_hash_add(hashtab,
+			/*
+			 * if this is a dup, it will be picked up below,
+			 * otherwise, mark it as the orphanage for later.
+			 */
+			if (!orphanage_ino)
+				orphanage_ino = lino;
+		}
+		/*
+		 * check for duplicate names in directory.
+		 */
+		if (!dir_hash_add(hashtab,
 				(xfs_dir2_dataptr_t)(sf_entry - &sf->list[0]),
 				lino, sf_entry->namelen, sf_entry->name)) {
-			/*
-			 * check for duplicate names in directory.
-			 */
-			do_warn(
-		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
-				fname, lino, ino);
-			if (!no_modify) {
-				junkit = 1;
-				if (verbose)
-					do_warn(
-					_(", marking entry to be junked\n"));
-				else
-					do_warn("\n");
-			} else {
-				do_warn(_(", would junk entry\n"));
-			}
-		} else if (!inode_isadir(irec, ino_offset))  {
+			do_warn(_("entry \"%s\" (ino %llu) in dir %llu is a "
+				"duplicate name"), fname, lino, ino);
+			goto do_junkit;
+		}
+		if (!inode_isadir(irec, ino_offset))  {
 			/*
 			 * check easy case first, regular inode, just bump
 			 * the link count and continue
@@ -2860,8 +2882,8 @@ _("entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"),
 			 */
 			if (is_inode_reached(irec, ino_offset))  {
 				junkit = 1;
-				do_warn(
-_("entry \"%s\" in dir %llu references already connected dir ino %llu,\n"),
+				do_warn(_("entry \"%s\" in dir %llu references "
+					"already connected dir ino %llu,\n"),
 					fname, ino, lino);
 			} else if (parent == ino)  {
 				add_inode_reached(irec, ino_offset);
@@ -2872,13 +2894,16 @@ _("entry \"%s\" in dir %llu references already connected dir ino %llu,\n"),
 					push_dir(stack, lino);
 			} else  {
 				junkit = 1;
-				do_warn(
-_("entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino %llu,\n"),
+				do_warn(_("entry \"%s\" in dir %llu not "
+					"consistent with .. value (%llu) in "
+					"dir ino %llu"),
 					fname, ino, parent, lino);
 			}
 		}
-
 		if (junkit)  {
+do_junkit:
+			if (lino == orphanage_ino)
+				orphanage_ino = 0;
 			if (!no_modify)  {
 				tmp_elen = XFS_DIR_SF_ENTSIZE_BYENTRY(sf_entry);
 				tmp_sfe = (xfs_dir_sf_entry_t *)
@@ -2910,12 +2935,12 @@ _("entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino %llu,
 
 				*ino_dirty = 1;
 
-				if (verbose || lino != old_orphanage_ino)
-					do_warn(
-			_("junking entry \"%s\" in directory inode %llu\n"),
-						fname, lino);
+				if (verbose)
+					do_warn(_("junking entry\n"));
+				else
+					do_warn("\n");
 			} else  {
-				do_warn(_("would junk entry \"%s\"\n"), fname);
+				do_warn(_("would junk entry\n"), fname);
 			}
 		}
 
@@ -3174,23 +3199,6 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		ASSERT(no_modify || !verify_inum(mp, lino));
 
 		/*
-		 * special case the "lost+found" entry if it's pointing
-		 * to where we think lost+found should be.  if that's
-		 * the case, that's the one we created in phase 6.
-		 * just skip it.  no need to process it and its ..
-		 * link is already accounted for.
-		 */
-
-		if (lino == orphanage_ino && strcmp(fname, ORPHANAGE) == 0) {
-			if (lino > XFS_DIR2_MAX_SHORT_INUM)
-				i8++;
-			next_sfep = (xfs_dir2_sf_entry_t *)
-				((__psint_t) sfep +
-				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep));
-			continue;
-		}
-
-		/*
 		 * Also skip entries with bogus inode numbers if we're
 		 * in no modify mode.
 		 */
@@ -3205,15 +3213,12 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
 
-		if (irec == NULL && no_modify)  {
+		if (irec == NULL)  {
 			do_warn(_("entry \"%s\" in shortform directory %llu "
-				  "references non-existent inode %llu\n"),
+				  "references non-existent inode %llu"),
 				fname, ino, lino);
-			do_warn(_("would junk entry\n"));
-			continue;
+			goto do_junkit;
 		}
-
-		ASSERT(irec != NULL);
 
 		ino_offset = XFS_INO_TO_AGINO(mp, lino) - irec->ino_startnum;
 
@@ -3223,42 +3228,41 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		 * really is free.
 		 */
 		if (is_inode_free(irec, ino_offset))  {
+			do_warn(_("entry \"%s\" in shortform directory "
+				  "inode %llu points to free inode %llu"),
+				fname, ino, lino);
+			goto do_junkit;
+		}
+		/*
+		 * check if this inode is lost+found dir in the root
+		 */
+		if (ino == mp->m_sb.sb_rootino && strcmp(fname, ORPHANAGE) == 0) {
 			/*
-			 * don't complain if this entry points to the old
-			 * and now-free lost+found inode
+			 * if it's not a directory, trash it
 			 */
-			if (verbose || no_modify || lino != old_orphanage_ino)
-				do_warn(_("entry \"%s\" in shortform directory "
-					  "inode %llu points to free inode "
-					  "%llu\n"),
-					fname, ino, lino);
-
-			if (!no_modify)  {
-				junkit = 1;
-			} else  {
-				do_warn(_("would junk entry \"%s\"\n"),
-					fname);
+			if (!inode_isadir(irec, ino_offset)) {
+				do_warn(_("%s (ino %llu) in root (%llu) is not "
+					"a directory"), ORPHANAGE, lino, ino);
+				goto do_junkit;
 			}
-		} else if (!dir_hash_add(hashtab, (xfs_dir2_dataptr_t)
+			/*
+			 * if this is a dup, it will be picked up below,
+			 * otherwise, mark it as the orphanage for later.
+			 */
+			if (!orphanage_ino)
+				orphanage_ino = lino;
+		}
+		/*
+		 * check for duplicate names in directory.
+		 */
+		if (!dir_hash_add(hashtab, (xfs_dir2_dataptr_t)
 					(sfep - XFS_DIR2_SF_FIRSTENTRY(sfp)),
 				lino, sfep->namelen, sfep->name)) {
-			/*
-			 * check for duplicate names in directory.
-			 */
-			do_warn(
-		_("entry \"%s\" (ino %llu) in dir %llu is a duplicate name"),
-				fname, lino, ino);
-			if (!no_modify) {
-				junkit = 1;
-				if (verbose)
-					do_warn(
-					_(", marking entry to be junked\n"));
-				else
-					do_warn("\n");
-			} else {
-				do_warn(_(", would junk entry\n"));
-			}
-		} else if (!inode_isadir(irec, ino_offset))  {
+			do_warn(_("entry \"%s\" (ino %llu) in dir %llu is a "
+				"duplicate name"), fname, lino, ino);
+			goto do_junkit;
+		}
+		if (!inode_isadir(irec, ino_offset))  {
 			/*
 			 * check easy case first, regular inode, just bump
 			 * the link count
@@ -3295,6 +3299,9 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		}
 
 		if (junkit)  {
+do_junkit:
+			if (lino == orphanage_ino)
+				orphanage_ino = 0;
 			if (!no_modify)  {
 				tmp_elen = XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep);
 				tmp_sfep = (xfs_dir2_sf_entry_t *)
@@ -3326,12 +3333,12 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 
 				*ino_dirty = 1;
 
-				if (verbose || lino != old_orphanage_ino)
-					do_warn(_("junking entry \"%s\" in "
-						  "directory inode %llu\n"),
-						fname, lino);
+				if (verbose)
+					do_warn(_("junking entry\n"));
+				else
+					do_warn("\n");
 			} else  {
-				do_warn(_("would junk entry \"%s\"\n"), fname);
+				do_warn(_("would junk entry\n"));
 			}
 		} else if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
@@ -3465,25 +3472,6 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 			 * guaranteed by phase 3 and/or below.
 			 */
 			add_inode_reached(irec, ino_offset);
-			/*
-			 * account for link for the orphanage
-			 * "lost+found".  if we're running in
-			 * modify mode and it already existed,
-			 * we deleted it so it's '..' reference
-			 * never got counted.  so add it here if
-			 * we're going to create lost+found.
-			 *
-			 * if we're running in no_modify mode,
-			 * we never deleted lost+found and we're
-			 * not going to create it so do nothing.
-			 *
-			 * either way, the counts will match when
-			 * we look at the root inode's nlinks
-			 * field and compare that to our incore
-			 * count in phase 7.
-			 */
-			if (!no_modify)
-				add_inode_ref(irec, ino_offset);
 		}
 
 		add_inode_refchecked(ino, irec, ino_offset);
@@ -3561,36 +3549,6 @@ process_dirstack(xfs_mount_t *mp, dir_stack_t *stack)
 		dir_hash_done(hashtab);
 
 		hashval = 0;
-
-		if (!no_modify && !orphanage_entered &&
-		    ino == mp->m_sb.sb_rootino) {
-			do_warn(_("re-entering %s into root directory\n"),
-				ORPHANAGE);
-			tp = libxfs_trans_alloc(mp, 0);
-			nres = XFS_MKDIR_SPACE_RES(mp, strlen(ORPHANAGE));
-			error = libxfs_trans_reserve(tp, nres,
-					XFS_MKDIR_LOG_RES(mp), 0,
-					XFS_TRANS_PERM_LOG_RES,
-					XFS_MKDIR_LOG_COUNT);
-			if (error)
-				res_failed(error);
-			libxfs_trans_ijoin(tp, ip, 0);
-			libxfs_trans_ihold(tp, ip);
-			XFS_BMAP_INIT(&flist, &first);
-			if ((error = dir_createname(mp, tp, ip, ORPHANAGE,
-						strlen(ORPHANAGE),
-						orphanage_ino, &first, &flist,
-						nres)))
-				do_error(_("can't make %s entry in root inode "
-					   "%llu, createname error %d\n"),
-					ORPHANAGE, ino, error);
-			libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-			error = libxfs_bmap_finish(&tp, &flist, first, &committed);
-			ASSERT(error == 0);
-			libxfs_trans_commit(tp,
-				XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_SYNC, 0);
-			orphanage_entered = 1;
-		}
 
 		/*
 		 * if we have to create a .. for /, do it now *before*
@@ -3823,6 +3781,51 @@ mark_standalone_inodes(xfs_mount_t *mp)
 }
 
 static void
+check_for_orphaned_inodes(
+	xfs_mount_t		*mp,
+	ino_tree_node_t		*irec)
+{
+	int			i;
+	int			err;
+	xfs_ino_t		ino;
+
+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
+		ASSERT(is_inode_confirmed(irec, i));
+		if (is_inode_free(irec, i))
+			continue;
+
+		if (!is_inode_reached(irec, i)) {
+			ASSERT(inode_isadir(irec, i) ||
+				num_inode_references(irec, i) == 0);
+			ino = XFS_AGINO_TO_INO(mp, i, i + irec->ino_startnum);
+			if (inode_isadir(irec, i))
+				do_warn(_("disconnected dir inode %llu, "), ino);
+			else
+				do_warn(_("disconnected inode %llu, "), ino);
+			if (!no_modify)  {
+			    	if (!orphanage_ino)
+					orphanage_ino = mk_orphanage(mp);
+				if (!orphanage_ip) {
+					err = libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip, 0);
+					if (err)
+						do_error(_("%d - couldn't iget orphanage inode\n"), err);
+				}
+				do_warn(_("moving to %s\n"), ORPHANAGE);
+				mv_orphanage(mp, ino, inode_isadir(irec, i));
+			} else  {
+				do_warn(_("would move to %s\n"), ORPHANAGE);
+			}
+			/*
+			 * for read-only case, even though the inode isn't
+			 * really reachable, set the flag (and bump our link
+			 * count) anyway to fool phase 7
+			 */
+			add_inode_reached(irec, i);
+		}
+	}
+}
+
+static void
 traverse_function(xfs_mount_t *mp, xfs_agnumber_t agno)
 {
 	register ino_tree_node_t *irec;
@@ -3877,9 +3880,11 @@ phase6(xfs_mount_t *mp)
 	dir_stack_t		stack;
 	int			i;
 	int			j;
+	xfs_ino_t		orphanage_ino;
 
 	bzero(&zerocr, sizeof(struct cred));
 	bzero(&zerofsx, sizeof(struct fsxattr));
+	orphanage_ino = 0;
 
 	do_log(_("Phase 6 - check inode connectivity...\n"));
 
@@ -3941,15 +3946,6 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 			do_warn(
 			_("Warning:  realtime bitmap may be inconsistent\n"));
 		}
-	}
-
-	/*
-	 * make orphanage (it's guaranteed to not exist now)
-	 */
-	if (!no_modify)  {
-		do_log(_("        - ensuring existence of %s directory\n"),
-			ORPHANAGE);
-		orphanage_ino = mk_orphanage(mp);
 	}
 
 	dir_stack_init(&stack);
@@ -4031,59 +4027,16 @@ _("        - skipping filesystem traversal from / ... \n"));
 	}
 
 	do_log(_("        - traversals finished ... \n"));
-
-	/* flush all dirty data before doing lost+found search */
-	libxfs_bcache_flush();
-
-	do_log(_("        - moving disconnected inodes to lost+found ... \n"));
+	do_log(_("        - moving disconnected inodes to %s ... \n"),
+		ORPHANAGE);
 
 	/*
 	 * move all disconnected inodes to the orphanage
 	 */
 	for (i = 0; i < glob_agcount; i++)  {
 		irec = findfirst_inode_rec(i);
-
-		if (irec == NULL)
-			continue;
-
 		while (irec != NULL)  {
-			for (j = 0; j < XFS_INODES_PER_CHUNK; j++)  {
-				ASSERT(is_inode_confirmed(irec, j));
-				if (is_inode_free(irec, j))
-					continue;
-				if (!is_inode_reached(irec, j)) {
-					ASSERT(inode_isadir(irec, j) ||
-						num_inode_references(irec, j)
-						== 0);
-					ino = XFS_AGINO_TO_INO(mp, i,
-						j + irec->ino_startnum);
-					if (inode_isadir(irec, j))
-						do_warn(
-					_("disconnected dir inode %llu, "),
-							ino);
-					else
-						do_warn(
-					_("disconnected inode %llu, "),
-							ino);
-					if (!no_modify)  {
-						do_warn(_("moving to %s\n"),
-							ORPHANAGE);
-						mv_orphanage(mp, orphanage_ino,
-							ino,
-							inode_isadir(irec, j));
-					} else  {
-						do_warn(_("would move to %s\n"),
-							ORPHANAGE);
-					}
-					/*
-					 * for read-only case, even though
-					 * the inode isn't really reachable,
-					 * set the flag (and bump our link
-					 * count) anyway to fool phase 7
-					 */
-					add_inode_reached(irec, j);
-				}
-			}
+			check_for_orphaned_inodes(mp, irec);
 			irec = next_ino_rec(irec);
 		}
 	}

@@ -824,7 +824,8 @@ xfs_fs_repair_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "  This is a bug.\n");
-	fprintf(stderr, "Please report it to xfs@oss.sgi.com.\n");
+	fprintf(stderr, "Please capture the filesystem metadata with "
+			"xfs_metadump and\nreport it to xfs@oss.sgi.com.\n");
 	va_end(ap);
 }
 

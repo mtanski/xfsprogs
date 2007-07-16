@@ -63,7 +63,6 @@ phase1(xfs_mount_t *mp)
 	need_rbmino = 0;
 	need_rsumino = 0;
 	lost_quotas = 0;
-	old_orphanage_ino = (xfs_ino_t) 0;
 
 	/*
 	 * get AG 0 into ag header buf

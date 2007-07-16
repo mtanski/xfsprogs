@@ -762,18 +762,14 @@ process_inode_chunk(xfs_mount_t *mp, xfs_agnumber_t agno, int num_inos,
 		 */
 		if (is_used)  {
 			if (is_inode_free(ino_rec, irec_offset))  {
-				if (verbose || no_modify ||
-				    XFS_AGINO_TO_INO(mp, agno, agino) !=
-							old_orphanage_ino)  {
+				if (verbose || no_modify)  {
 					do_warn(_("imap claims in-use inode "
 						  "%llu is free, "),
 						XFS_AGINO_TO_INO(mp, agno,
 						agino));
 				}
 
-				if (verbose || (!no_modify &&
-				    XFS_AGINO_TO_INO(mp, agno, agino) !=
-						old_orphanage_ino))
+				if (verbose || !no_modify)
 					do_warn(_("correcting imap\n"));
 				else
 					do_warn(_("would correct imap\n"));
