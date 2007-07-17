@@ -2,54 +2,52 @@
 .SH NAME
 xfsctl \- control XFS filesystems and individual files
 .SH C SYNOPSIS
-.nf
 .B #include <xfs/xfs.h>
+.HP
+.BI "int\ xfsctl(const char *" path ", int " fd ", int " cmd ", void *" ptr );
 .PP
-.B "int xfsctl (const char *path, int fd, int cmd, void *ptr);
-.PP
-.B "int platform_test_xfs_fd (int fd);
-.B "int platform_test_xfs_path (const char *path);
-.Op
+.BI "int platform_test_xfs_fd(int " fd );
+.br
+.BI "int platform_test_xfs_path(const char *" path );
 .SH DESCRIPTION
 Some functionality specific to the XFS filesystem is accessible to
 applications through platform-specific system call interfaces.
 These operations can be divided into two sections \- operations
 that operate on individual files, and operations that operate on
-the filesystem itself.
-Care should be taken when issuing
-.I xfsctl
+the filesystem itself. Care should be taken when issuing
+.BR xfsctl ()
 calls to ensure the target path and file descriptor (both must
 be supplied) do indeed represent a file from an XFS filesystem.
 The
-.IR statfs (2)
+.BR statfs (2)
 and
-.IR fstatfs (2)
+.BR fstatfs (2)
 system calls can be used to determine whether or not an arbitrary
 path or file descriptor belong to an XFS filesystem.
 These are not portable however, so the routines
-.I platform_test_xfs_fd
+.BR platform_test_xfs_fd ()
 and
-.I platform_test_xfs_path
+.BR platform_test_xfs_path ()
 provide a platform-independent mechanism.
-
-.SS FILE OPERATIONS
+.SS File Operations
 In order to effect an operation on an individual file, the pathname
 and descriptor arguments passed to
-.I xfsctl
+.B xfsctl
 identifies the file being operated on.
 The final argument described below refers to the final argument of
-.IR xfsctl .
+.BR xfsctl .
 All of the data structures and macros mentioned below are defined in the
-<xfs/xfs_fs.h> header file.
+.RI < xfs/xfs_fs.h >
+header file.
 .PP
-.nf
-.B XFS_IOC_FREESP
-.B XFS_IOC_FREESP64
 .B XFS_IOC_ALLOCSP
-.fi
+.br
+.B XFS_IOC_ALLOCSP64
+.br
+.B XFS_IOC_FREESP
 .PD 0
 .TP
-.B XFS_IOC_ALLOCSP64
+.B XFS_IOC_FREESP64
 Alter storage space associated with a section of the ordinary
 file specified.  The section is specified by a variable of type
 .BR xfs_flock64_t ,
@@ -61,31 +59,24 @@ contains the following members:
 is 0, 1, or 2 to indicate that the relative offset
 .B l_start
 will be measured from the start of the file, the current position, or
-the end of the file, respectively.
+the end of the file, respectively (i.e.,
 .B l_start
 is the offset from the position specified in
-.BR l_whence .
-.B l_len
-is the size of the section.  An
-.B l_len
-value of zero frees up to the end of the file; in this case, the end of
-file (i.e., file size) is set to the beginning of the section freed.
-Any data previously written into this section is no longer accessible.
-If the section specified is beyond the current end of file, the file
+.BR l_whence ).
+If the offset specified is before the current end of file, any data
+previously written into this section is no longer accessible.
+If the offset specified is beyond the current end of file, the file
 is grown and filled with zeroes.
 The
 .B l_len
-field is currently ignored,
-and should be set to zero.
+field is currently ignored, and should be set to zero.
 
+.BR XFS_IOC_ALLOCSP ,
+.BR XFS_IOC_ALLOCSP64 ,
 .B XFS_IOC_FREESP
 and
-.BR XFS_IOC_FREESP64
-are identical, as are the
-.B XFS_IOC_ALLOCSP
-and
-.BR XFS_IOC_ALLOCSP64
-operations.
+.B XFS_IOC_FREESP64
+operations are all identical.
 
 .TP
 .B XFS_IOC_FSSETDM
@@ -134,9 +125,9 @@ also be an integer multiple of this amount.
 is the maximum I/O request size which can be performed on the file
 descriptor.
 If an I/O request does not meet these constraints, the
-.IR read (2)
+.BR read (2)
 or
-.IR write (2)
+.BR write (2)
 will fail with EINVAL.
 All I/O requests are kept consistent with any data brought into
 the cache with an access through a non-direct I/O file descriptor.
@@ -320,9 +311,7 @@ Identical to
 except that information about the attribute fork of the file is returned.
 
 .PP
-.nf
 .B XFS_IOC_RESVSP
-.fi
 .TP
 .B XFS_IOC_RESVSP64
 This command is used to allocate space to a file.
@@ -335,13 +324,11 @@ performance will be negatively affected when writing to preallocated space,
 since extra filesystem transactions are required to convert extent flags on
 the range of the file written.
 If
-.IR xfs_info (8)
+.BR xfs_info (8)
 reports unwritten=1, then the filesystem was made to flag unwritten extents.
 
 .PP
-.nf
 .B XFS_IOC_UNRESVSP
-.fi
 .TP
 .B XFS_IOC_UNRESVSP64
 This command is used to free space from a file.
@@ -462,14 +449,14 @@ removed from the file.  The file size does not change.
 These are all interfaces that are used to implement various
 .I libhandle
 functions (see
-.IR open_by_handle (3)).
+.BR open_by_handle (3)).
 They are all subject to change and should not be called directly
 by applications.
 
-.SS FILESYSTEM OPERATIONS
+.SS Filesystem Operations
 In order to effect one of the following operations, the pathname
 and descriptor arguments passed to
-.I xfsctl
+.BR xfsctl ()
 can be any open file in the XFS filesystem in question.
 
 .PP
@@ -610,7 +597,7 @@ The remainder of these operations will not be described further
 as they are not of general use to applications.
 
 .SH SEE ALSO
-fstatfs(2),
-statfs(2),
-xfs(5),
-xfs_info(8).
+.BR fstatfs (2),
+.BR statfs (2),
+.BR xfs (5),
+.BR xfs_info (8).
