@@ -6,7 +6,6 @@
 #include "incore.h"
 #include "dir.h"
 #include "dir2.h"
-#include "dir_stack.h"
 #include "protos.h"
 #include "err_protos.h"
 #include "dinode.h"
