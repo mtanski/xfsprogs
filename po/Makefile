@@ -80,7 +80,6 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/repair/dinode.c \
 		$(TOPDIR)/repair/dir.c \
 		$(TOPDIR)/repair/dir2.c \
-		$(TOPDIR)/repair/dir_stack.c \
 		$(TOPDIR)/repair/incore.c \
 		$(TOPDIR)/repair/incore_ext.c \
 		$(TOPDIR)/repair/incore_ino.c \
@@ -92,9 +91,12 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/repair/phase5.c \
 		$(TOPDIR)/repair/phase6.c \
 		$(TOPDIR)/repair/phase7.c \
+		$(TOPDIR)/repair/prefetch.c \
+		$(TOPDIR)/repair/progress.c \
 		$(TOPDIR)/repair/rt.c \
 		$(TOPDIR)/repair/sb.c \
 		$(TOPDIR)/repair/scan.c \
+		$(TOPDIR)/repair/threads.c \
 		$(TOPDIR)/repair/versions.c \
 		$(TOPDIR)/repair/xfs_repair.c \
 		$(TOPDIR)/rtcp/xfs_rtcp.c
