@@ -266,7 +266,6 @@ process_args(int argc, char **argv)
 		case 't':
 			report_interval = (int) strtol(optarg, 0, 0);
 			break;
-
 		case '?':
 			usage();
 		}
@@ -497,7 +496,8 @@ main(int argc, char **argv)
 	}
 
 	/* prepare the mount structure */
-	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR, 1, 0);
+	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR,
+				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0);
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
 	sb = &xfs_m.m_sb;
 	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, XFS_SB_ALL_BITS);
@@ -511,6 +511,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 	libxfs_putbuf(sbp);
+	libxfs_purgebuf(sbp);
 
 	/*
 	 * set XFS-independent status vars from the mount/sb structure

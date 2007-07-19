@@ -44,6 +44,8 @@ typedef struct log {
 	int		l_grant_write_cycle;	/* */
 	int		l_grant_write_bytes;	/* */
 	uint		l_sectbb_log;   /* log2 of sector size in bbs */
+	uint		l_sectbb_mask;  /* sector size (in BBs)
+					 * alignment mask */
 } xlog_t;
 
 #include <xfs/xfs_log_recover.h>
@@ -79,13 +81,6 @@ extern void xlog_warn(char *fmt,...);
 extern void xlog_exit(char *fmt,...);
 extern void xlog_panic(char *fmt,...);
 
-#define xlog_get_bp(log,bbs)	libxfs_getbufr(x.logdev, (xfs_daddr_t)-1, (bbs))
-#define xlog_put_bp(bp)		libxfs_putbufr(bp)
-#define xlog_bread(log,blkno,bbs,bp)	\
-	(libxfs_readbufr(x.logdev,	\
-			(log)->l_logBBstart+(blkno), bp, (bbs), 1), 0)
-#define xlog_align(log,blkno,nbblks,bp)	XFS_BUF_PTR(bp)
-
 #define kmem_zalloc(size, foo)			calloc(size,1)
 #define kmem_alloc(size, foo)			calloc(size,1)
 #define kmem_free(ptr, foo)			free(ptr)
@@ -98,6 +93,10 @@ extern int	print_record_header;
 
 /* libxfs parameters */
 extern libxfs_init_t	x;
+
+extern struct xfs_buf *xlog_get_bp(xlog_t *, int);
+extern void	 xlog_put_bp(struct xfs_buf *);
+extern int	 xlog_bread(xlog_t *, xfs_daddr_t, int, struct xfs_buf *);
 
 extern int  xlog_find_zeroed(xlog_t *log, xfs_daddr_t *blk_no);
 extern int  xlog_find_cycle_start(xlog_t *log, xfs_buf_t *bp,

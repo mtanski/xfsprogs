@@ -22,6 +22,84 @@
 #define xlog_clear_stale_blocks(log, tail_lsn)		(0)
 #define xfs_readonly_buftarg(buftarg)			(0)
 
+
+/*
+ * Sector aligned buffer routines for buffer create/read/write/access
+ */
+
+#define XLOG_SECTOR_ROUNDUP_BBCOUNT(log, bbs)	\
+	( ((log)->l_sectbb_mask && (bbs & (log)->l_sectbb_mask)) ? \
+	((bbs + (log)->l_sectbb_mask + 1) & ~(log)->l_sectbb_mask) : (bbs) )
+#define XLOG_SECTOR_ROUNDDOWN_BLKNO(log, bno)	((bno) & ~(log)->l_sectbb_mask)
+
+xfs_buf_t *
+xlog_get_bp(
+	xlog_t		*log,
+	int		num_bblks)
+{
+	ASSERT(num_bblks > 0);
+
+	if (log->l_sectbb_log) {
+		if (num_bblks > 1)
+			num_bblks += XLOG_SECTOR_ROUNDUP_BBCOUNT(log, 1);
+		num_bblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, num_bblks);
+	}
+	return libxfs_getbufr(log->l_dev, (xfs_daddr_t)-1, num_bblks);
+}
+
+void
+xlog_put_bp(
+	xfs_buf_t	*bp)
+{
+	libxfs_putbufr(bp);
+}
+
+
+/*
+ * nbblks should be uint, but oh well.  Just want to catch that 32-bit length.
+ */
+int
+xlog_bread(
+	xlog_t		*log,
+	xfs_daddr_t	blk_no,
+	int		nbblks,
+	xfs_buf_t	*bp)
+{
+	if (log->l_sectbb_log) {
+		blk_no = XLOG_SECTOR_ROUNDDOWN_BLKNO(log, blk_no);
+		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
+	}
+
+	ASSERT(nbblks > 0);
+	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
+	ASSERT(bp);
+
+	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
+
+	return libxfs_readbufr(log->l_dev, XFS_BUF_ADDR(bp), bp, nbblks, 0);
+}
+
+
+static xfs_caddr_t
+xlog_align(
+	xlog_t		*log,
+	xfs_daddr_t	blk_no,
+	int		nbblks,
+	xfs_buf_t	*bp)
+{
+	xfs_caddr_t	ptr;
+
+	if (!log->l_sectbb_log)
+		return XFS_BUF_PTR(bp);
+
+	ptr = XFS_BUF_PTR(bp) + BBTOB((int)blk_no & log->l_sectbb_mask);
+	ASSERT(XFS_BUF_SIZE(bp) >=
+		BBTOB(nbblks + (blk_no & log->l_sectbb_mask)));
+	return ptr;
+}
+
+
 /*
  * This routine finds (to an approximation) the first block in the physical
  * log which contains the given cycle.  It uses a binary search algorithm.

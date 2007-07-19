@@ -50,6 +50,16 @@ zero_log(xfs_mount_t *mp)
 	log.l_logBBsize = x.logBBsize;
 	log.l_logBBstart = x.logBBstart;
 	log.l_mp = mp;
+	if (XFS_SB_VERSION_HASSECTOR(&mp->m_sb)) {
+		log.l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
+		ASSERT(log.l_sectbb_log <= mp->m_sectbb_log);
+		/* for larger sector sizes, must have v2 or external log */
+		ASSERT(log.l_sectbb_log == 0 ||
+			log.l_logBBstart == 0 ||
+			XFS_SB_VERSION_HASLOGV2(&mp->m_sb));
+		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
+	}
+	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
 
 	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk, 0))) {
 		do_warn(_("zero_log: cannot find log head/tail "

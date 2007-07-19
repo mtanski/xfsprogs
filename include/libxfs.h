@@ -243,9 +243,9 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
 #define XFS_BUF_TARGET(bp)		((bp)->b_dev)
 #define XFS_BUF_SET_PTR(bp,p,cnt)	((bp)->b_addr = (char *)(p)); \
-						XFS_BUF_SETCOUNT(bp,cnt)
+						XFS_BUF_SET_COUNT(bp,cnt)
 #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_blkno = (blk))
-#define XFS_BUF_SETCOUNT(bp,cnt)	((bp)->b_bcount = (cnt))
+#define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
 
 #define XFS_BUF_FSPRIVATE(bp,type)	((type)(bp)->b_fsprivate)
 #define XFS_BUF_SET_FSPRIVATE(bp,val)	(bp)->b_fsprivate = (void *)(val)
@@ -512,7 +512,7 @@ extern int	libxfs_bmap_finish (xfs_trans_t **, xfs_bmap_free_t *,
 extern void	libxfs_bmap_cancel(xfs_bmap_free_t *);
 extern int	libxfs_bmap_next_offset (xfs_trans_t *, xfs_inode_t *,
 				xfs_fileoff_t *, int);
-extern int	libxfs_bmap_last_offset(xfs_trans_t *, xfs_inode_t *, 
+extern int	libxfs_bmap_last_offset(xfs_trans_t *, xfs_inode_t *,
 				xfs_fileoff_t *, int);
 extern int	libxfs_bunmapi (xfs_trans_t *, xfs_inode_t *, xfs_fileoff_t,
 				xfs_filblks_t, int, xfs_extnum_t,
