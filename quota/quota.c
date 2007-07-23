@@ -202,10 +202,12 @@ getusername(
 	int		numeric)
 {
 	static char	buffer[32];
-	struct passwd	*u;
 
-	if (!numeric && (u = getpwuid(uid)))
-		return u->pw_name;
+	if (!numeric) {
+		struct passwd	*u = getpwuid(uid);
+		if (u)
+			return u->pw_name;
+	}
 	snprintf(buffer, sizeof(buffer), "#%u", uid);
 	return &buffer[0];
 }
@@ -247,10 +249,12 @@ getgroupname(
 	int		numeric)
 {
 	static char	buffer[32];
-	struct group	*g;
 
-	if (!numeric && (g = getgrgid(gid)))
-		return g->gr_name;
+	if (!numeric) {
+		struct group	*g = getgrgid(gid);
+		if (g)
+			return g->gr_name;
+	}
 	snprintf(buffer, sizeof(buffer), "#%u", gid);
 	return &buffer[0];
 }
@@ -310,10 +314,12 @@ getprojectname(
 	int		numeric)
 {
 	static char	buffer[32];
-	fs_project_t	*p;
 
-	if ((p = getprprid(prid)))
-		return p->pr_name;
+	if (!numeric) {
+		fs_project_t	*p = getprprid(prid);
+		if (p)
+			return p->pr_name;
+	}
 	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
 	return &buffer[0];
 }
@@ -447,7 +453,7 @@ quota_init(void)
 	quota_cmd.cfunc = quota_f;
 	quota_cmd.argmin = 0;
 	quota_cmd.argmax = -1;
-	quota_cmd.args = _("[-bir] [-gpu] [-hnv] [-f file] [id|name]...");
+	quota_cmd.args = _("[-bir] [-gpu] [-hnNv] [-f file] [id|name]...");
 	quota_cmd.oneline = _("show usage and limits");
 	quota_cmd.help = quota_help;
 
