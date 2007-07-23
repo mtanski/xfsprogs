@@ -234,7 +234,7 @@ state_f(
 
 	if (flags & ALL_MOUNTS_FLAG)
 		state_quotafile(fp, type, NULL, flags);
-	else if (fs_path->fs_flags & FS_MOUNT_POINT)
+	else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
 		state_quotafile(fp, type, fs_path->fs_dir, flags);
 
 	if (fname)
