@@ -525,7 +525,7 @@ state_init(void)
 	state_cmd.cfunc = state_f;
 	state_cmd.argmin = 0;
 	state_cmd.argmax = -1;
-	state_cmd.args = _("[-gpu] [-f file]");
+	state_cmd.args = _("[-gpu] [-a] [-v] [-f file]");
 	state_cmd.oneline = _("get overall quota state information");
 	state_cmd.help = state_help;
 
