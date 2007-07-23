@@ -170,6 +170,9 @@ command.
 ] [
 .B \-hnNv
 ] [
+.B \-f
+.I file
+] [
 .I ID
 |
 .I name
@@ -183,9 +186,29 @@ The
 .B \-h
 option reports in a "human-readable" format similar to the
 .BR df (1)
-command.
-.TP
-.BR free " [ " \-bir " ] [ " \-hN " ]"
+command. The
+.B \-n
+option reports the numeric IDs rather than the name. The
+.B \-N
+option omits the header. The
+.B \-v
+option outputs verbose information. The
+.B \-f
+option sends the output to
+.I file
+instead of stdout.
+.HP
+.B
+free
+[
+.B \-bir
+] [
+.B \-hN
+] [
+.B \-f
+.I file
+]
+.br
 Reports filesystem usage, much like the
 .BR df (1)
 utility.
@@ -198,7 +221,13 @@ block space, and shows used, free, and total available.
 If project quota are in use (see the DIRECTORY TREE QUOTA section below),
 it will also report utilisation for those projects (directory trees). The
 .B \-h
-option reports in a "human-readable" format,
+option reports in a "human-readable" format. The
+.B \-N
+option omits the header. The
+.B \-f
+option outputs the report to
+.I file
+instead of stdout.
 .HP
 .B help
 [
@@ -294,8 +323,19 @@ The patch list can come from several places \- the command line,
 the mount table, and the
 .I /etc/projects
 file.
-.TP
-.BR report " [ " \-gpu " ] [ " \-bir " ] [ " \-ahnNt " ]"
+.HP
+.B report
+[
+.B \-gpu
+] [
+.B \-bir
+] [
+.B \-ahntLNU
+] [
+.B \-f
+.I file
+]
+.br
 Report filesystem quota information.
 This reports all quota usage for a filesystem, for the specified
 quota type
@@ -306,13 +346,45 @@ It reports blocks in 1KB units by default. The
 .B \-h
 option reports in a "human-readable" format similar to the
 .BR df (1)
-command.
-.TP
-.BR state " [ " \-gpu " ]"
+command. The
+.B \-f
+option outputs the report to
+.I file
+instead of stdout. The
+.B \-a
+option reports on all filesystems. The
+.B \-n
+option outputs the numeric ID instead of the name. The
+.B \-L
+and
+.B \-U
+options specify lower and upper ID bounds to report on. The
+.B \-N
+option reports information without the header line. The
+.B \-t
+option performs a terse report.
+.HP
+.B
+state
+[
+.B \-gpu
+] [
+.B \-av
+] [
+.B \-f
+.I file
+]
+.br
 Report overall quota state information.
 This reports on the state of quota accounting, quota enforcement,
 and the number of extents being used by quota metadata within the
-filesystem.
+filesystem. The
+.B \-f
+option outputs state information to
+.I file
+instead of stdout. The
+.B \-a
+option reports state on all filesystems and not just the current path.
 .HP
 .B
 limit
@@ -440,13 +512,37 @@ Restore quota limits from a backup
 The file must be in the format produced by the
 .B dump
 command.
-.TP
-.BR quot " [ " \-gpu " ] [ " \-bir " ] [ " \-av " ] [ " \-c " ]"
+.HP
+.B
+quot
+[
+.B \-gpu
+] [
+.B \-bir
+] [
+.B \-acnv
+] [
+.B \-f
+.I file
+]
+.br
 Summarize filesystem ownership, by user, group or project.
 This command uses a special XFS "bulkstat" interface to quickly scan
 an entire filesystem and report usage information.
 This command can be used even when filesystem quota are not enabled,
-as it is a full-filesystem scan (it may also take a long time...).
+as it is a full-filesystem scan (it may also take a long time...). The
+.B \-a
+option displays information on all filesystems. The
+.B \-c
+option displays a histogram instead of a report. The
+.B \-n
+option displays numeric IDs rather than names. The
+.B \-v
+option displays verbose information. The
+.B \-f
+option send the output to
+.I file
+instead of stdout.
 .HP
 .B project
 [
