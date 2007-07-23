@@ -1,4 +1,17 @@
-xfsprogs-2.9.2 (16 July 2007)
+xfsprogs-2.9.3 (23 July 2007)
+	- Make xfs_repair support > 512 byte sector sizes.
+	- Fixed include Makefile for new common header (xfs_metadump.h).
+	- Fixed xfs_quota state command segfaulting with no mounted
+	  XFS filesystems.
+	- Fixed xfs_quota printing out unusual message with "path n" command
+	  with no mounted XFS filesystems.
+	- Fixed "quota -n" command with project IDs.
+	- Improved "free" output when project quotas are defined, but
+	  haven't been enable on the filesystem.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for the above four
+	  fixes.
+
+xfsprogs-2.9.2 (18 July 2007)
 	- Next major round of xfs_repair performance improvements:
 		- Cache disk nlink values in Phase 3 for Phase 7.
 		- Do multithreaded prefetch/processing based on AG stride
@@ -14,6 +27,7 @@ xfsprogs-2.9.2 (16 July 2007)
 	  the new superblocks.
 	- Fix up xfs_info and xfs_quota's -c handling with global commands.
 	- Improve xfs_bmap -vp output to always show the FLAGS column.
+	- Update man pages.
 
 xfsprogs-2.9.1 (28 June 2007)
 	- Added filestreams support to xfs_io.
