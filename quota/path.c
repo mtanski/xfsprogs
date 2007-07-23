@@ -99,6 +99,11 @@ path_f(
 {
 	int	i;
 
+	if (fs_count == 0) {
+		printf(_("No paths are available\n"));
+		return 0;
+	}
+
 	if (argc <= 1)
 		return pathlist_f();
 
