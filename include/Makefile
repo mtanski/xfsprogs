@@ -26,8 +26,9 @@ HFILES = cache.h handle.h jdm.h libxfs.h libxlog.h list.h parent.h xfs.h xqm.h \
 	xfs_dir2_node.h xfs_dir2_sf.h xfs_dir_leaf.h xfs_dir_sf.h \
 	xfs_extfree_item.h xfs_fs.h xfs_ialloc.h xfs_ialloc_btree.h \
 	xfs_imap.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
-	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_mount.h xfs_quota.h \
-	xfs_rtalloc.h xfs_sb.h xfs_trans.h xfs_trans_space.h xfs_types.h
+	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadata.h \
+	xfs_mount.h xfs_quota.hxfs_rtalloc.h xfs_sb.h \
+	xfs_trans.h xfs_trans_space.h xfs_types.h
 
 HFILES += $(PKG_PLATFORM).h swab.h
 PHFILES = darwin.h freebsd.h irix.h linux.h

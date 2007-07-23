@@ -571,24 +571,28 @@ libxfs_brelse(struct cache_node *node)
 	}
 }
 
-static void
+static unsigned int
 libxfs_bulkrelse(
 	struct cache 		*cache,
 	struct list_head 	*list)
 {
 	xfs_buf_t		*bp;
+	int			count = 0;
 
 	if (list_empty(list))
-		return;
+		return 0 ;
 
 	list_for_each_entry(bp, list, b_node.cn_mru) {
 		if (bp->b_flags & LIBXFS_B_DIRTY)
 			libxfs_writebufr(bp);
+		count++;
 	}
 
 	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
 	__list_splice(list, &xfs_buf_freelist.cm_list);
 	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+
+	return count;
 }
 
 static void

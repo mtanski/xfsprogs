@@ -205,7 +205,7 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
 	}
 	if (!readonly && !inactive && platform_check_ismounted(path, *blockfile, NULL, 1))
 		return 0;
-	
+
 	if (inactive && check_isactive(path, *blockfile, ((readonly|dangerously)?1:0)))
 		return 0;
 
