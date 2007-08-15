@@ -137,6 +137,7 @@ process_ags(
 	xfs_mount_t		*mp)
 {
 	int 			i, j;
+	xfs_agnumber_t 		agno;
 	work_queue_t		*queues;
 	prefetch_args_t		*pf_args[2];
 
@@ -153,12 +154,13 @@ process_ags(
 			/*
 			 * create one worker thread for each segment of the volume
 			 */
-			for (i = 0; i < thread_count; i++) {
+			for (i = 0, agno = 0; i < thread_count; i++) {
 				create_work_queue(&queues[i], mp, 1);
 				pf_args[0] = NULL;
-				for (j = i; j < mp->m_sb.sb_agcount; j += ag_stride) {
-					pf_args[0] = start_inode_prefetch(j, 0, pf_args[0]);
-					queue_work(&queues[i], process_ag_func, j, pf_args[0]);
+				for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+						j++, agno++) {
+					pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+					queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
 				}
 			}
 			/*
