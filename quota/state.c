@@ -250,10 +250,6 @@ enable_enforcement(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat = { 0 };
-
-	qstat.qs_version = FS_QSTAT_VERSION;
-	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -261,7 +257,7 @@ enable_enforcement(
 		return;
 	}
 	dir = mount->fs_name;
-	if (xfsquotactl(XFS_QUOTAON, dir, type, 0, (void *)&qstat) < 0)
+	if (xfsquotactl(XFS_QUOTAON, dir, type, 0, (void *)&qflags) < 0)
 		perror("XFS_QUOTAON");
 	else if (flags & VERBOSE_FLAG)
 		state_quotafile_mount(stdout, type, mount, flags);
@@ -275,10 +271,6 @@ disable_enforcement(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat = { 0 };
-
-	qstat.qs_version = FS_QSTAT_VERSION;
-	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -286,7 +278,7 @@ disable_enforcement(
 		return;
 	}
 	dir = mount->fs_name;
-	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qstat) < 0)
+	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0)
 		perror("XFS_QUOTAOFF");
 	else if (flags & VERBOSE_FLAG)
 		state_quotafile_mount(stdout, type, mount, flags);
@@ -300,10 +292,6 @@ quotaoff(
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat = { 0 };
-
-	qstat.qs_version = FS_QSTAT_VERSION;
-	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -311,24 +299,31 @@ quotaoff(
 		return;
 	}
 	dir = mount->fs_name;
-	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qstat) < 0)
+	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0)
 		perror("XFS_QUOTAOFF");
 	else if (flags & VERBOSE_FLAG)
 		state_quotafile_mount(stdout, type, mount, flags);
+}
+
+static int
+remove_qtype_extents(
+	char		*dir,
+	uint		type)
+{
+	int	error = 0;
+
+	if ((error = xfsquotactl(XFS_QUOTARM, dir, type, 0, (void *)&type)) < 0)
+		perror("XFS_QUOTARM");
+	return error;
 }
 
 static void
 remove_extents(
 	char		*dir,
 	uint		type,
-	uint		qflags,
 	uint		flags)
 {
 	fs_path_t	*mount;
-	fs_quota_stat_t	qstat = { 0 };
-
-	qstat.qs_version = FS_QSTAT_VERSION;
-	qstat.qs_flags = qflags;
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
@@ -336,9 +331,18 @@ remove_extents(
 		return;
 	}
 	dir = mount->fs_name;
-	if (xfsquotactl(XFS_QUOTARM, dir, type, 0, (void *)&qstat) < 0)
-		perror("XFS_QUOTARM");
-	else if (flags & VERBOSE_FLAG)
+	if (type & XFS_USER_QUOTA) {
+		if (remove_qtype_extents(dir, XFS_USER_QUOTA) < 0) 
+			return;
+	}
+	if (type & XFS_GROUP_QUOTA) {
+		if (remove_qtype_extents(dir, XFS_GROUP_QUOTA) < 0) 
+			return;
+	} else if (type & XFS_PROJ_QUOTA) {
+		if (remove_qtype_extents(dir, XFS_PROJ_QUOTA) < 0) 
+			return;
+	}
+	if (flags & VERBOSE_FLAG)
 		state_quotafile_mount(stdout, type, mount, flags);
 }
 
@@ -374,7 +378,7 @@ enable_f(
 	if (argc != optind)
 		return command_usage(&enable_cmd);
 
-	if (!flags) {
+	if (!type) {
 		type |= XFS_USER_QUOTA;
 		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
@@ -395,15 +399,15 @@ disable_f(
 		switch (c) {
 		case 'g':
 			type |= XFS_GROUP_QUOTA;
-			qflags |= XFS_QUOTA_GDQ_ACCT;
+			qflags |= XFS_QUOTA_GDQ_ENFD;
 			break;
 		case 'p':
 			type |= XFS_PROJ_QUOTA;
-			qflags |= XFS_QUOTA_PDQ_ACCT;
+			qflags |= XFS_QUOTA_PDQ_ENFD;
 			break;
 		case 'u':
 			type |= XFS_USER_QUOTA;
-			qflags |= XFS_QUOTA_UDQ_ACCT;
+			qflags |= XFS_QUOTA_UDQ_ENFD;
 			break;
 		case 'v':
 			flags |= VERBOSE_FLAG;
@@ -416,9 +420,9 @@ disable_f(
 	if (argc != optind)
 		return command_usage(&disable_cmd);
 
-	if (!flags) {
+	if (!type) {
 		type |= XFS_USER_QUOTA;
-		qflags |= XFS_QUOTA_UDQ_ACCT;
+		qflags |= XFS_QUOTA_UDQ_ENFD;
 	}
 
 	if (fs_path->fs_flags & FS_MOUNT_POINT)
@@ -458,7 +462,7 @@ off_f(
 	if (argc != optind)
 		return command_usage(&off_cmd);
 
-	if (!flags) {
+	if (!type) {
 		type |= XFS_USER_QUOTA;
 		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
@@ -473,21 +477,18 @@ remove_f(
 	int		argc,
 	char		**argv)
 {
-	int		c, flags = 0, qflags = 0, type = 0;
+	int		c, flags = 0, type = 0;
 
 	while ((c = getopt(argc, argv, "gpuv")) != EOF) {
 		switch (c) {
 		case 'g':
 			type |= XFS_GROUP_QUOTA;
-			qflags |= XFS_QUOTA_GDQ_ACCT | XFS_QUOTA_GDQ_ENFD;
 			break;
 		case 'p':
 			type |= XFS_PROJ_QUOTA;
-			qflags |= XFS_QUOTA_PDQ_ACCT | XFS_QUOTA_PDQ_ENFD;
 			break;
 		case 'u':
 			type |= XFS_USER_QUOTA;
-			qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 			break;
 		case 'v':
 			flags |= VERBOSE_FLAG;
@@ -500,13 +501,12 @@ remove_f(
 	if (argc != optind)
 		return command_usage(&remove_cmd);
 
-	if (!flags) {
+	if (!type) {
 		type |= XFS_USER_QUOTA;
-		qflags |= XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD;
 	}
 
 	if (fs_path->fs_flags & FS_MOUNT_POINT)
-		remove_extents(fs_path->fs_dir, type, qflags, flags);
+		remove_extents(fs_path->fs_dir, type, flags);
 	return 0;
 }
 

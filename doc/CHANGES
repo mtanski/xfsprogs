@@ -1,3 +1,7 @@
+xfsprogs-2.9.4 (15 AUG 2007)
+	- Fixed xfs_quota disable, enable, off and remove commands.
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this. 
+
 xfsprogs-2.9.3 (23 July 2007)
 	- Make xfs_repair support > 512 byte sector sizes.
 	- Fixed include Makefile for new common header (xfs_metadump.h).
