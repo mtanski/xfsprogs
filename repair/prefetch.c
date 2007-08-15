@@ -176,12 +176,14 @@ pf_read_bmbt_reclist(
 		cp = c;
 
 		while (c) {
+			unsigned int	len;
 #ifdef XR_PF_TRACE
 			pftrace("queuing dir extent in AG %d", args->agno);
 #endif
-			pf_queue_io(args, s, 1, B_DIR_META);
-			c--;
-			s++;
+			len = (c > mp->m_dirblkfsbs) ? mp->m_dirblkfsbs : c;
+			pf_queue_io(args, s, len, B_DIR_META);
+			c -= len;
+			s += len;
 		}
 	}
 	return 1;

@@ -88,19 +88,10 @@ da_read_buf(
 	xfs_buf_t	*bparray[4];
 	xfs_buf_t	**bplist;
 	xfs_dabuf_t	*dabuf;
-	int		i, j;
+	int		i;
 	int		off;
-	int		nblocks;
 
-	/*
-	 * due to limitations in libxfs_cache, we need to read the
-	 * blocks in fsblock size chunks
-	 */
-
-	for (i = 0, nblocks = 0; i < nex; i++)
-		nblocks += bmp[i].blockcount;
-
-	if (nblocks > (sizeof(bparray)/sizeof(xfs_buf_t *))) {
+	if (nex > (sizeof(bparray)/sizeof(xfs_buf_t *))) {
 		bplist = calloc(nex, sizeof(*bplist));
 		if (bplist == NULL) {
 			do_error(_("couldn't malloc dir2 buffer list\n"));
@@ -111,39 +102,31 @@ da_read_buf(
 		/* common case avoids calloc/free */
 		bplist = bparray;
 	}
-	for (i = 0, j = 0; j < nex; j++) {
-		xfs_dfsbno_t	bno;
-		int		c;
-
-		bno = bmp[j].startblock;
-		for (c = 0; c < bmp[j].blockcount; c++, bno++) {
+	for (i = 0; i < nex; i++) {
 #ifdef XR_PF_TRACE
-			pftrace("about to read off %llu",
-				(long long)XFS_FSB_TO_DADDR(mp, bno));
+		pftrace("about to read off %llu (len = %d)",
+			(long long)XFS_FSB_TO_DADDR(mp, bmp[i].startblock),
+			XFS_FSB_TO_BB(mp, bmp[i].blockcount));
 #endif
-			bplist[i] = libxfs_readbuf(mp->m_dev,
-					XFS_FSB_TO_DADDR(mp, bno),
-					XFS_FSB_TO_BB(mp, 1), 0);
-			if (!bplist[i])
-				goto failed;
+		bplist[i] = libxfs_readbuf(mp->m_dev,
+				XFS_FSB_TO_DADDR(mp, bmp[i].startblock),
+				XFS_FSB_TO_BB(mp, bmp[i].blockcount), 0);
+		if (!bplist[i])
+			goto failed;
 #ifdef XR_PF_TRACE
-			pftrace("readbuf %p (%llu, %d)", bplist[i],
-				(long long)XFS_BUF_ADDR(bplist[i]),
-				XFS_BUF_COUNT(bplist[i]));
+		pftrace("readbuf %p (%llu, %d)", bplist[i],
+			(long long)XFS_BUF_ADDR(bplist[i]),
+			XFS_BUF_COUNT(bplist[i]));
 #endif
-			i++;
-		}
 	}
-	ASSERT(i == nblocks);
-
-	dabuf = malloc(XFS_DA_BUF_SIZE(nblocks));
+	dabuf = malloc(XFS_DA_BUF_SIZE(nex));
 	if (dabuf == NULL) {
 		do_error(_("couldn't malloc dir2 buffer header\n"));
 		exit(1);
 	}
 	dabuf->dirty = 0;
 	dabuf->nbuf = nex;
-	if (nblocks == 1) {
+	if (nex == 1) {
 		bp = bplist[0];
 		dabuf->bbcount = (short)BTOBB(XFS_BUF_COUNT(bp));
 		dabuf->data = XFS_BUF_PTR(bp);
@@ -158,7 +141,7 @@ da_read_buf(
 			do_error(_("couldn't malloc dir2 buffer data\n"));
 			exit(1);
 		}
-		for (i = off = 0; i < nblocks; i++, off += XFS_BUF_COUNT(bp)) {
+		for (i = off = 0; i < nex; i++, off += XFS_BUF_COUNT(bp)) {
 			bp = bplist[i];
 			bcopy(XFS_BUF_PTR(bp), (char *)dabuf->data + off,
 				XFS_BUF_COUNT(bp));
@@ -168,7 +151,7 @@ da_read_buf(
 		free(bplist);
 	return dabuf;
 failed:
-	for (i = 0; i < nblocks; i++)
+	for (i = 0; i < nex; i++)
 		libxfs_putbuf(bplist[i]);
 	if (bplist != bparray)
 		free(bplist);
