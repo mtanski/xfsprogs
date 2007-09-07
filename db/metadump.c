@@ -42,7 +42,7 @@ static void	metadump_help(void);
 
 static const cmdinfo_t	metadump_cmd =
 	{ "metadump", NULL, metadump_f, 0, -1, 0,
-		"[-e] [-g] [-w] [-o] filename",
+		"[-e] [-g] [-m max_extent] [-w] [-o] filename",
 		"dump metadata to a file", metadump_help };
 
 static FILE		*outf;		/* metadump file */
@@ -58,6 +58,7 @@ static xfs_ino_t	cur_ino;
 
 static int		show_progress = 0;
 static int		stop_on_read_error = 0;
+static int		max_extent_size = 20;
 static int		dont_obfuscate = 0;
 static int		show_warnings = 0;
 static int		progress_since_warning = 0;
@@ -76,9 +77,10 @@ metadump_help(void)
 " The 'metadump' command dumps the known metadata to a compact file suitable\n"
 " for compressing and sending to an XFS maintainer for corruption analysis \n"
 " or xfs_repair failures.\n\n"
-" There are 3 options:\n"
+" Options:\n"
 "   -e -- Ignore read errors and keep going\n"
 "   -g -- Display dump progress\n"
+"   -m -- Specify max extent size in blocks to copy (default = 20 blocks)\n"
 "   -o -- Don't obfuscate names and extended attributes\n"
 "   -w -- Show warnings of bad metadata information\n"
 "\n");
@@ -206,19 +208,20 @@ scan_btree(
 
 static int
 valid_bno(
-	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
-	xfs_agblock_t		agbno,
-	typnm_t			btype)
+	xfs_agblock_t		agbno)
 {
-	if (bno > 0 && bno <= mp->m_sb.sb_agblocks)
+	if (agno < (mp->m_sb.sb_agcount - 1) && agbno > 0 &&
+			agbno <= mp->m_sb.sb_agblocks)
+		return 1;
+	if (agno == (mp->m_sb.sb_agcount - 1) && agbno > 0 &&
+			agbno <= (mp->m_sb.sb_dblocks -
+			 (mp->m_sb.sb_agcount - 1) * mp->m_sb.sb_agblocks))
 		return 1;
 
-	if (show_warnings)
-		print_warning("invalid block number (%u) in %s block %u/%u",
-				bno, typtab[btype].name, agno, agbno);
 	return 0;
 }
+
 
 static int
 scanfunc_freesp(
@@ -231,24 +234,30 @@ scanfunc_freesp(
 {
 	xfs_alloc_ptr_t		*pp;
 	int			i;
-	int			nrecs;
+	int			numrecs;
 
 	if (level == 0)
 		return 1;
 
-	nrecs = be16_to_cpu(bthdr->bb_numrecs);
-	if (nrecs > mp->m_alloc_mxr[1]) {
+	numrecs = be16_to_cpu(bthdr->bb_numrecs);
+	if (numrecs > mp->m_alloc_mxr[1]) {
 		if (show_warnings)
-			print_warning("invalid nrecs (%u) in %s block %u/%u",
-					nrecs, typtab[btype].name, agno, agbno);
+			print_warning("invalid numrecs (%u) in %s block %u/%u",
+				numrecs, typtab[btype].name, agno, agbno);
 		return 1;
 	}
 
 	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, bthdr, 1,
 			mp->m_alloc_mxr[1]);
-	for (i = 0; i < nrecs; i++) {
-		if (!valid_bno(be32_to_cpu(pp[i]), agno, agbno, btype))
+	for (i = 0; i < numrecs; i++) {
+		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
+			if (show_warnings)
+				print_warning("invalid block number (%u/%u) "
+					"in %s block %u/%u",
+					agno, be32_to_cpu(pp[i]),
+					typtab[btype].name, agno, agbno);
 			continue;
+		}
 		if (!scan_btree(agno, be32_to_cpu(pp[i]), level, btype, arg,
 				scanfunc_freesp))
 			return 0;
@@ -492,7 +501,7 @@ obfuscate_sf_dir(
 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
 		if (show_warnings)
-			print_warning("invalid size for dir inode %llu",
+			print_warning("invalid size in dir inode %llu",
 					(long long)cur_ino);
 	}
 
@@ -539,10 +548,18 @@ static void
 obfuscate_sf_symlink(
 	xfs_dinode_t		*dip)
 {
-	int			i;
+	int			len;
 
-	for (i = 0; i < dip->di_core.di_size; i++)
-		dip->di_u.di_symlink[i] = random() % 127 + 1;
+	len = dip->di_core.di_size;
+	if (len > XFS_DFORK_DSIZE(dip, mp)) {
+		if (show_warnings)
+			print_warning("invalid size (%d) in symlink inode %llu",
+					len, (long long)cur_ino);
+		len = XFS_DFORK_DSIZE(dip, mp);
+	}
+
+	while (len > 0)
+		dip->di_u.di_symlink[--len] = random() % 127 + 1;
 }
 
 static void
@@ -858,11 +875,13 @@ process_bmbt_reclist(
 	typnm_t			btype)
 {
 	int			i;
-	xfs_dfiloff_t		o;
+	xfs_dfiloff_t		o, op;
 	xfs_dfsbno_t		s;
-	xfs_dfilblks_t		c;
+	xfs_dfilblks_t		c, cp;
 	int			f;
 	xfs_dfiloff_t		last;
+	xfs_agnumber_t		agno;
+	xfs_agblock_t		agbno;
 
 	if (btype == TYP_DATA)
 		return 1;
@@ -873,14 +892,63 @@ process_bmbt_reclist(
 	for (i = 0; i < numrecs; i++, rp++) {
 		convert_extent(rp, &o, &s, &c, &f);
 
+		/*
+		 * ignore extents that are clearly bogus, and if a bogus
+		 * one is found, stop processing remaining extents
+		 */
+		if (i > 0 && op + cp > o) {
+			if (show_warnings)
+				print_warning("bmap extent %d in %s ino %llu "
+					"starts at %llu, previous extent "
+					"ended at %llu", i,
+					typtab[btype].name, (long long)cur_ino,
+					o, op + cp - 1);
+			break;
+		}
+
+		if (c > max_extent_size) {
+			/*
+			 * since we are only processing non-data extents,
+			 * large numbers of blocks in a metadata extent is
+			 * extremely rare and more than likely to be corrupt.
+			 */
+			if (show_warnings)
+				print_warning("suspicious count %u in bmap "
+					"extent %d in %s ino %llu", c, i,
+					typtab[btype].name, (long long)cur_ino);
+			break;
+		}
+
+		op = o;
+		cp = c;
+
+		agno = XFS_FSB_TO_AGNO(mp, s);
+		agbno = XFS_FSB_TO_AGBNO(mp, s);
+
+		if (!valid_bno(agno, agbno)) {
+			if (show_warnings)
+				print_warning("invalid block number %u/%u "
+					"(%llu) in bmap extent %d in %s ino "
+					"%llu", agno, agbno, s, i,
+					typtab[btype].name, (long long)cur_ino);
+			break;
+		}
+
+		if (!valid_bno(agno, agbno + c - 1)) {
+			if (show_warnings)
+				print_warning("bmap extent %i in %s inode %llu "
+					"overflows AG (end is %u/%u)", i,
+					typtab[btype].name, (long long)cur_ino,
+					agno, agbno + c - 1);
+			break;
+		}
+
 		push_cur();
 		set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
 				DB_RING_IGN, NULL);
 		if (iocur_top->data == NULL) {
-			print_warning("cannot read %s block %u/%u",
-					typtab[btype].name,
-					XFS_FSB_TO_AGNO(mp, s),
-					XFS_FSB_TO_AGBNO(mp, s));
+			print_warning("cannot read %s block %u/%u (%llu)",
+					typtab[btype].name, agno, agbno, s);
 			if (stop_on_read_error)
 				return 0;
 		} else {
@@ -1054,12 +1122,21 @@ process_exinode(
 	typnm_t			itype)
 {
 	int			whichfork;
+	xfs_extnum_t		nex;
 
 	whichfork = (itype == TYP_ATTR) ? XFS_ATTR_FORK : XFS_DATA_FORK;
 
-	return process_bmbt_reclist(
-			(xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork),
-			XFS_DFORK_NEXTENTS_HOST(dip, whichfork), itype);
+	nex = XFS_DFORK_NEXTENTS_HOST(dip, whichfork);
+	if (nex < 0 || nex > XFS_DFORK_SIZE_HOST(dip, mp, whichfork) /
+				sizeof(xfs_bmbt_rec_t)) {
+		if (show_warnings)
+			print_warning("bad number of extents %d in inode %lld",
+				nex, (long long)cur_ino);
+		return 1;
+	}
+
+	return process_bmbt_reclist((xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip,
+					whichfork), nex, itype);
 }
 
 static int
@@ -1108,7 +1185,6 @@ process_inode(
 	success = 1;
 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
 
-
 	/* copy appropriate data fork metadata */
 	switch (dip->di_core.di_mode & S_IFMT) {
 		case S_IFDIR:
@@ -1118,13 +1194,15 @@ process_inode(
 		case S_IFLNK:
 			success = process_inode_data(dip, TYP_SYMLINK);
 			break;
-		default:
+		case S_IFREG:
 			success = process_inode_data(dip, TYP_DATA);
+			break;
+		default: ;
 	}
 	clear_nametable();
 
-	/* copy extended attributes if they exist */
-	if (success && dip->di_core.di_forkoff) {
+	/* copy extended attributes if they exist and forkoff is valid */
+	if (success && XFS_CFORK_DSIZE(&dip->di_core, mp) < XFS_LITINO(mp)) {
 		attr_data.remote_val_count = 0;
 		switch (dip->di_core.di_aformat) {
 			case XFS_DINODE_FMT_LOCAL:
@@ -1165,6 +1243,15 @@ copy_inode_chunk(
 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
 	off = XFS_INO_TO_OFFSET(mp, agino);
 
+	if (agino == 0 || agino == NULLAGINO || !valid_bno(agno, agbno) ||
+			!valid_bno(agno, XFS_AGINO_TO_AGBNO(mp,
+					agino + XFS_INODES_PER_CHUNK - 1))) {
+		if (show_warnings)
+			print_warning("bad inode number %llu (%u/%u)",
+				XFS_AGINO_TO_INO(mp, agno, agino), agno, agino);
+		return 1;
+	}
+
 	push_cur();
 	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
 			XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
@@ -1175,10 +1262,25 @@ copy_inode_chunk(
 	}
 
 	/*
+	 * check for basic assumptions about inode chunks, and if any
+	 * assumptions fail, don't process the inode chunk.
+	 */
+
+	if ((mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK && off != 0) ||
+			(mp->m_sb.sb_inopblock > XFS_INODES_PER_CHUNK &&
+					off % XFS_INODES_PER_CHUNK != 0) ||
+			(XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&
+					agbno % mp->m_sb.sb_inoalignmt != 0)) {
+		if (show_warnings)
+			print_warning("badly aligned inode (start = %llu)",
+					XFS_AGINO_TO_INO(mp, agno, agino));
+		goto skip_processing;
+	}
+
+	/*
 	 * scan through inodes and copy any btree extent lists, directory
 	 * contents and extended attributes.
 	 */
-
 	for (i = 0; i < XFS_INODES_PER_CHUNK; i++) {
 		xfs_dinode_t            *dip;
 
@@ -1191,7 +1293,7 @@ copy_inode_chunk(
 		if (!process_inode(agno, agino + i, dip))
 			return 0;
 	}
-
+skip_processing:
 	if (!write_buf(iocur_top))
 		return 0;
 
@@ -1219,24 +1321,48 @@ scanfunc_ino(
 	xfs_inobt_rec_t		*rp;
 	xfs_inobt_ptr_t		*pp;
 	int			i;
+	int			numrecs;
+
+	numrecs = be16_to_cpu(bthdr->bb_numrecs);
 
 	if (level == 0) {
+		if (numrecs > mp->m_inobt_mxr[0]) {
+			if (show_warnings)
+				print_warning("invalid numrecs %d in %s "
+					"block %u/%u", numrecs,
+					typtab[btype].name, agno, agbno);
+			numrecs = mp->m_inobt_mxr[0];
+		}
 		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_inobt,
 				bthdr, 1, mp->m_inobt_mxr[0]);
-		for (i = 0; i < be16_to_cpu(bthdr->bb_numrecs); i++, rp++) {
+		for (i = 0; i < numrecs; i++, rp++) {
 			if (!copy_inode_chunk(agno, rp))
 				return 0;
 		}
-	} else {
-		pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt,
-				bthdr, 1, mp->m_inobt_mxr[1]);
-		for (i = 0; i < be16_to_cpu(bthdr->bb_numrecs); i++) {
-			if (!valid_bno(be32_to_cpu(pp[i]), agno, agbno, btype))
-				continue;
-			if (!scan_btree(agno, be32_to_cpu(pp[i]), level,
-					btype, arg, scanfunc_ino))
-				return 0;
+		return 1;
+	}
+
+	if (numrecs > mp->m_inobt_mxr[1]) {
+		if (show_warnings)
+			print_warning("invalid numrecs %d in %s block %u/%u",
+				numrecs, typtab[btype].name, agno, agbno);
+		numrecs = mp->m_inobt_mxr[1];
+	}
+
+	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt,
+			bthdr, 1, mp->m_inobt_mxr[1]);
+	for (i = 0; i < numrecs; i++) {
+		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
+			if (show_warnings)
+				print_warning("invalid block number (%u/%u) "
+					"in %s block %u/%u",
+					agno, be32_to_cpu(pp[i]),
+					typtab[btype].name, agno, agbno);
+			continue;
 		}
+		if (!scan_btree(agno, be32_to_cpu(pp[i]), level,
+				btype, arg, scanfunc_ino))
+			return 0;
 	}
 	return 1;
 }
@@ -1441,6 +1567,7 @@ metadump_f(
 	xfs_agnumber_t	agno;
 	int		c;
 	int		start_iocur_sp;
+	char		*p;
 
 	exitcode = 1;
 	show_progress = 0;
@@ -1453,13 +1580,21 @@ metadump_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "egow")) != EOF) {
+	while ((c = getopt(argc, argv, "egm:ow")) != EOF) {
 		switch (c) {
 			case 'e':
 				stop_on_read_error = 1;
 				break;
 			case 'g':
 				show_progress = 1;
+				break;
+			case 'm':
+				max_extent_size = (int)strtol(optarg, &p, 0);
+				if (*p != '\0' || max_extent_size <= 0) {
+					print_warning("bad max extent size %s",
+							optarg);
+					return 0;
+				}
 				break;
 			case 'o':
 				dont_obfuscate = 1;
