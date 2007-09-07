@@ -18,7 +18,7 @@ CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
 	progress.c prefetch.c radix-tree.c rt.c sb.c scan.c threads.c \
 	versions.c xfs_repair.c
 
-LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
+LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
 LLDFLAGS = -static
 

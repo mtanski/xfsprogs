@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
 LTCOMMAND = xfs_mdrestore
 CFILES = xfs_mdrestore.c
 
-LLDLIBS = $(LIBXFS) $(LIBRT)
+LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static
 

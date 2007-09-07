@@ -1,6 +1,10 @@
-xfsprogs-2.9.4 (15 AUG 2007)
+xfsprogs-2.9.4 (7 Sep 2007)
+	- Fixed xfs_repair segfaulting with directory block size different
+	  to the filesystem blocksize.
 	- Fixed xfs_quota disable, enable, off and remove commands.
-	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this. 
+	  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for this.
+	- Improved the robustness of xfs_metadump.
+	- Fix link issues with pthread library.
 
 xfsprogs-2.9.3 (23 July 2007)
 	- Make xfs_repair support > 512 byte sector sizes.

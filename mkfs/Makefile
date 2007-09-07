@@ -9,9 +9,9 @@ LTCOMMAND = mkfs.xfs
 FSTYP = fstyp
 
 HFILES = xfs_mkfs.h
-CFILES = maxtrres.c proto.c xfs_mkfs.c 
+CFILES = maxtrres.c proto.c xfs_mkfs.c
 
-LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK) $(LIBRT)
+LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
 LLDFLAGS = -static
 
