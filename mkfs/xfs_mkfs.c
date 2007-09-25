@@ -558,15 +558,12 @@ zero_old_xfs_structures(
 		goto done;
 
 	/*
-	 * block size and basic geometry seems alright, zero the secondaries,
-	 * but don't go beyond the end of the new filesystem.
+	 * block size and basic geometry seems alright, zero the secondaries.
 	 */
 	bzero(buf, new_sb->sb_sectsize);
 	off = 0;
 	for (i = 1; i < sb.sb_agcount; i++)  {
 		off += sb.sb_agblocks;
-		if (off >= new_sb->sb_dblocks)
-			break;
 		if (pwrite64(xi->dfd, buf, new_sb->sb_sectsize,
 					off << sb.sb_blocklog) == -1)
 			break;
@@ -2115,6 +2112,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				    BTOBB(WHACK_SIZE));
 		bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+		libxfs_purgebuf(buf);
 	}
 
 	/*
