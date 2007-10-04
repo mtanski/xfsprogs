@@ -39,11 +39,12 @@ filesystem's metadata and indexes to where the blocks were copied from.
 .PP
 By default,
 .B xfs_metadump
-obfuscates most directory names and extended attribute names to allow the dumps
-to be sent without revealing confidential information. Extended attribute
-values are zeroed and no data is copied. The only exceptions are directory
-or attribute names that are 4 or less characters in length. Also directory
-names that span extents (this can only occur with the
+obfuscates most file (regular file, directory and symbolic link) names
+and extended attribute names to allow the dumps to be sent without
+revealing confidential information. Extended attribute values are zeroed
+and no data is copied. The only exceptions are file or attribute names
+that are 4 or less characters in length. Also file names that span extents
+(this can only occur with the
 .BR mkfs.xfs (8)
 options where
 .B \-n

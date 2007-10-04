@@ -1,3 +1,11 @@
+xfsprogs-2.9.x
+	- Changed mkfs.xfs -f to wipe all old AG headers, not just the ones
+	  up to the end of the new filesystem size.
+	- Purged the end of device whack buffer in mkfs.xfs to prevent a
+	  warning in certain device sizes.
+	- Man page fixes. Thanks to Utako Kusaka <u-kusaka@wm.jp.nec.com>
+	  for this.
+
 xfsprogs-2.9.4 (7 Sep 2007)
 	- Fixed xfs_repair segfaulting with directory block size different
 	  to the filesystem blocksize.

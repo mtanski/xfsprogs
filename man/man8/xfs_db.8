@@ -153,30 +153,30 @@ See the
 command.
 .TP
 .BI ablock " filoff"
-Set current address to the offset .
-I filoff
+Set current address to the offset
+.I filoff
 (a filesystem block number) in the attribute area of the current inode.
 .TP
 .BI "addr [" field-expression ]
 Set current address to the value of the
 .IR field-expression .
 This is used to "follow" a reference in one structure to the object
-being referred to. If no argument is given the current address is printed.
+being referred to. If no argument is given, the current address is printed.
 .TP
 .BI "agf [" agno ]
 Set current address to the AGF block for allocation group
 .IR agno .
-If no argument is given use the current allocation group.
+If no argument is given, use the current allocation group.
 .TP
 .BI "agfl [" agno ]
 Set current address to the AGFL block for allocation group
 .IR agno .
-If no argument is given use the current allocation group.
+If no argument is given, use the current allocation group.
 .TP
 .BI "agi [" agno ]
 Set current address to the AGI block for allocation group
 .IR agno .
-If no argument is given use the current allocation group.
+If no argument is given, use the current allocation group.
 .TP
 .B b
 See the
@@ -413,8 +413,8 @@ Set current address to the daddr (512 byte block) given by
 .IR d .
 If no value for
 .I d
-is given the current address is printed, expressed as a daddr.
-The type is set to .
+is given, the current address is printed, expressed as a daddr.
+The type is set to
 .B data
 (uninterpreted).
 .TP
@@ -641,7 +641,7 @@ Set current address to SB header in allocation group
 .IR agno .
 If no
 .I agno
-is given use the current allocation group number.
+is given, use the current allocation group number.
 .TP
 .BI "source " source-file
 Process commands from
@@ -789,7 +789,7 @@ number of blocks held in the AGF Btrees.
 .PD
 .RE
 .TP
-.B agf
+.B agfl
 The AGFL block contains block numbers for use of the block allocator;
 it is in the fourth 512-byte block of each allocation group.
 Each entry in the active list is a block number within the allocation group
