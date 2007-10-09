@@ -10,6 +10,11 @@ do
 	a|A)	AUTO=true;;
 	esac
 done
+eval DEV=\${$#}
+if [ ! -e $DEV ]; then
+	echo "$0: $DEV does not exist"
+	exit 8
+fi
 if $AUTO; then
 	echo "$0: XFS file system."
 else
