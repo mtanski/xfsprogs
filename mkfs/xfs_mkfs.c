@@ -56,25 +56,23 @@ char	*dopts[] = {
 	"sunit",
 #define D_SWIDTH	5
 	"swidth",
-#define D_UNWRITTEN	6
-	"unwritten",
-#define D_AGSIZE	7
+#define D_AGSIZE	6
 	"agsize",
-#define D_SU		8
+#define D_SU		7
 	"su",
-#define D_SW		9
+#define D_SW		8
 	"sw",
-#define D_SECTLOG	10
+#define D_SECTLOG	9
 	"sectlog",
-#define D_SECTSIZE	11
+#define D_SECTSIZE	10
 	"sectsize",
-#define D_NOALIGN	12
+#define D_NOALIGN	11
 	"noalign",
-#define D_RTINHERIT	13
+#define D_RTINHERIT	12
 	"rtinherit",
-#define D_PROJINHERIT	14
+#define D_PROJINHERIT	13
 	"projinherit",
-#define D_EXTSZINHERIT	15
+#define D_EXTSZINHERIT	14
 	"extszinherit",
 	NULL
 };
@@ -376,14 +374,38 @@ validate_log_size(__uint64_t logblocks, int blocklog, int min_logblocks)
 	}
 }
 
+static int
+calc_default_imaxpct(
+	int		blocklog,
+	__uint64_t	dblocks)
+{
+	/*
+	 * This returns the % of the disk space that is used for
+	 * inodes, it changes relatively to the FS size:
+	 *  - over  50 TB, use 1%,
+	 *  - 1TB - 50 TB, use 5%,
+	 *  - under  1 TB, use XFS_DFL_IMAXIMUM_PCT (25%).
+	 */
+
+	if (dblocks < TERABYTES(1, blocklog)) {
+		return XFS_DFL_IMAXIMUM_PCT;
+	} else if (dblocks < TERABYTES(50, blocklog)) {
+		return 5;
+	}
+
+	return 1;
+}
+
+
 void
 calc_default_ag_geometry(
 	int		blocklog,
 	__uint64_t	dblocks,
+	int		multidisk,
 	__uint64_t	*agsize,
 	__uint64_t	*agcount)
 {
-	__uint64_t	blocks;
+	__uint64_t	blocks = 0;
 	__uint64_t	count = 0;
 	int		shift = 0;
 
@@ -415,6 +437,17 @@ calc_default_ag_geometry(
 	 *
 	 * This scales us up smoothly between min/max AG sizes.
 	 */
+
+	if (!multidisk) {
+		if (dblocks >= TERABYTES(4, blocklog)) {
+                        blocks = XFS_AG_MAX_BLOCKS(blocklog);
+                        goto done;
+                }
+                count = 4;
+
+                goto done;
+        }
+
 	if (dblocks > GIGABYTES(512, blocklog))
 		shift = 5;
 	else if (dblocks > GIGABYTES(8, blocklog))
@@ -426,8 +459,12 @@ calc_default_ag_geometry(
 	blocks = dblocks >> shift;
 
 done:
+	ASSERT (count || blocks);
 	if (!count)
 		count = dblocks / blocks + (dblocks % blocks != 0);
+	if (!blocks)
+		blocks = dblocks / count;
+
 	*agsize = blocks;
 	*agcount = count;
 }
@@ -604,7 +641,6 @@ main(
 	int			dsw;
 	int			dsunit;
 	int			dswidth;
-	int			extent_flagging;
 	int			force_overwrite;
 	struct fsxattr		fsx;
 	int			iaflag;
@@ -677,7 +713,7 @@ main(
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	attrversion = 0;
+	attrversion = 2;
 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
@@ -686,7 +722,7 @@ main(
 	ilflag = imflag = ipflag = isflag = 0;
 	liflag = laflag = lsflag = ldflag = lvflag = 0;
 	loginternal = 1;
-	logversion = 1;
+	logversion = 2;
 	logagno = logblocks = rtblocks = rtextblocks = 0;
 	Nflag = nlflag = nsflag = nvflag = 0;
 	dirblocklog = dirblocksize = dirversion = 0;
@@ -697,7 +733,6 @@ main(
 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
 	nodsflag = norsflag = 0;
-	extent_flagging = 1;
 	force_overwrite = 0;
 	worst_freelist = 0;
 	lazy_sb_counters = 0;
@@ -876,14 +911,6 @@ main(
 						conflict('d', dopts, D_SWIDTH,
 							 D_NOALIGN);
 					nodsflag = 1;
-					break;
-				case D_UNWRITTEN:
-					if (!value)
-						reqval('d', dopts, D_UNWRITTEN);
-					c = atoi(value);
-					if (c < 0 || c > 1)
-						illegal(value, "d unwritten");
-					extent_flagging = c;
 					break;
 				case D_SECTLOG:
 					if (!value)
@@ -1768,10 +1795,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		agsize /= blocksize;
 		agcount = dblocks / agsize + (dblocks % agsize != 0);
 
-	} else if (daflag)	/* User-specified AG size */
+	} else if (daflag)	/* User-specified AG count */
 		agsize = dblocks / agcount + (dblocks % agcount != 0);
-	else
-		calc_default_ag_geometry(blocklog, dblocks, &agsize, &agcount);
+	else {
+		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
+					  &xlv_dsunit, &xlv_dswidth, &sectoralign),
+			calc_default_ag_geometry(blocklog, dblocks, xlv_dsunit | xlv_dswidth,
+						 &agsize, &agcount);
+	}
 
 	/*
 	 * If the last AG is too small, reduce the filesystem size
@@ -1990,7 +2021,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
 		   "         =%-22s sectsz=%-5u attr=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
-		   "         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
+		   "         =%-22s sunit=%-6u swidth=%u blks\n"
 		   "naming   =version %-14u bsize=%-6u\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
@@ -1998,8 +2029,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", sectorsize, attrversion,
 			"", blocksize, (long long)dblocks,
-				imflag ? imaxpct : XFS_DFL_IMAXIMUM_PCT,
-			"", dsunit, dswidth, extent_flagging,
+			       calc_default_imaxpct(blocklog, dblocks),
+			"", dsunit, dswidth,
 			dirversion, dirversion == 1 ? blocksize : dirblocksize,
 			logfile, 1 << blocklog, (long long)logblocks,
 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
@@ -2035,7 +2066,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		(__uint8_t)(rtextents ?
 			libxfs_highbit32((unsigned int)rtextents) : 0);
 	sbp->sb_inprogress = 1;	/* mkfs is in progress */
-	sbp->sb_imax_pct = imflag ? imaxpct : XFS_DFL_IMAXIMUM_PCT;
+	sbp->sb_imax_pct = calc_default_imaxpct(blocklog, dblocks);
 	sbp->sb_icount = 0;
 	sbp->sb_ifree = 0;
 	sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
@@ -2066,7 +2097,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	}
 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters, attrversion == 2, 0);
 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(
-			iaflag, dsunit != 0, extent_flagging,
+			iaflag, dsunit != 0,
 			dirversion == 2, logversion == 2, attrversion == 1,
 			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
 			sbp->sb_features2 != 0);
@@ -2537,7 +2568,7 @@ usage( void )
 /* blocksize */		[-b log=n|size=num]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
 			    (sunit=value,swidth=value|su=num,sw=num),\n\
-			    sectlog=n|sectsize=num,unwritten=0|1]\n\
+			    sectlog=n|sectsize=num\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\

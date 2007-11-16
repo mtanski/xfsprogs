@@ -5,6 +5,7 @@ xfsprogs-2.9.x
 	  warning in certain device sizes.
 	- Man page fixes. Thanks to Utako Kusaka <u-kusaka@wm.jp.nec.com>
 	  for this.
+	- Disable the ability to turn off unwritten extents in mkfs.
 
 xfsprogs-2.9.4 (7 Sep 2007)
 	- Fixed xfs_repair segfaulting with directory block size different

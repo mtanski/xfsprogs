@@ -240,22 +240,6 @@ will automatically query the logical volume for appropriate
 and
 .B swidth
 values.
-.TP
-.BI unwritten[= value ]
-This is used to specify whether unwritten extents are flagged as such,
-or not.
-The
-.I value
-is either 0 or 1, with 1 signifying that unwritten
-extent flagging should occur.
-If the suboption is omitted, unwritten extent flagging is enabled.
-If unwritten extents are flagged, filesystem write performance
-will be negatively affected for preallocated file extents, since
-extra filesystem transactions are required to convert extent flags
-for the range of the file written.
-This suboption should be disabled if the filesystem
-needs to be used on operating system versions which do not support the
-flagging capability.
 .RE
 .TP
 .B \-f
