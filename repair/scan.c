@@ -541,6 +541,8 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 
 			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			if (!verify_agbno(mp, agno, e - 1))
+				continue;
 			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
 			     b < e; b++)  {
 				if (get_agbno_state(mp, agno, b)
@@ -691,6 +693,8 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 
 			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
 				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			if (!verify_agbno(mp, agno, e - 1))
+				continue;
 			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
 			     b < e; b++)  {
 				state = get_agbno_state(mp, agno, b);
