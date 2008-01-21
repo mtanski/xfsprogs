@@ -16,10 +16,10 @@ do
 		;;
 	esac
 done
-set -- extra $@
+set -- extra "$@"
 shift $OPTIND
 case $# in
-	1)	xfs_growfs -p xfs_info -n $OPTS $1
+	1)	xfs_growfs -p xfs_info -n $OPTS "$1"
 		status=$?
 		;;
 	*)	echo $USAGE 1>&2
