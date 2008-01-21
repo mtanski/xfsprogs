@@ -1,4 +1,9 @@
-xfsprogs-2.9.x
+xfsprogs-2.9.5 (21 Jan 2007)
+	- Updated mkfs.xfs defaults.
+	- Make xfs_info handle mount points with spaces.
+	- Improve xfs_repair's handling of invalid freespace btree extents.
+	- Rebuild directories in xfs_repair if "." and ".." aren't the first
+	  two directory entries. This guarantees a directory is deletable.
 	- Changed mkfs.xfs -f to wipe all old AG headers, not just the ones
 	  up to the end of the new filesystem size.
 	- Purged the end of device whack buffer in mkfs.xfs to prevent a
