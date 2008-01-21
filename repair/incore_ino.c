@@ -621,49 +621,61 @@ print_uncertain_inode_list(xfs_agnumber_t agno)
  * is the Nth bit set in the mask is stored in the Nth location in
  * the array where N starts at 0.
  */
+
 void
-set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
+set_inode_parent(
+	ino_tree_node_t		*irec,
+	int			offset,
+	xfs_ino_t		parent)
 {
-	int		i;
-	int		cnt;
-	int		target;
-	__uint64_t	bitmask;
-	parent_entry_t	*tmp;
+	parent_list_t		*ptbl;
+	int			i;
+	int			cnt;
+	int			target;
+	__uint64_t		bitmask;
+	parent_entry_t		*tmp;
 
-	ASSERT(full_ino_ex_data == 0);
+	if (full_ino_ex_data)
+		ptbl = irec->ino_un.ex_data->parents;
+	else
+		ptbl = irec->ino_un.plist;
 
-	if (irec->ino_un.plist == NULL)  {
-		irec->ino_un.plist =
-			(parent_list_t*)malloc(sizeof(parent_list_t));
-		if (!irec->ino_un.plist)
+	if (ptbl == NULL)  {
+		ptbl = (parent_list_t *)malloc(sizeof(parent_list_t));
+		if (!ptbl)
 			do_error(_("couldn't malloc parent list table\n"));
 
-		irec->ino_un.plist->pmask = 1LL << offset;
-		irec->ino_un.plist->pentries =
-			(xfs_ino_t*)memalign(sizeof(xfs_ino_t), sizeof(xfs_ino_t));
-		if (!irec->ino_un.plist->pentries)
+		if (full_ino_ex_data)
+			irec->ino_un.ex_data->parents = ptbl;
+		else
+			irec->ino_un.plist = ptbl;
+
+		ptbl->pmask = 1LL << offset;
+		ptbl->pentries = (xfs_ino_t*)memalign(sizeof(xfs_ino_t),
+							sizeof(xfs_ino_t));
+		if (!ptbl->pentries)
 			do_error(_("couldn't memalign pentries table\n"));
 #ifdef DEBUG
-		irec->ino_un.plist->cnt = 1;
+		ptbl->cnt = 1;
 #endif
-		irec->ino_un.plist->pentries[0] = parent;
+		ptbl->pentries[0] = parent;
 
 		return;
 	}
 
-	if (irec->ino_un.plist->pmask & (1LL << offset))  {
+	if (ptbl->pmask & (1LL << offset))  {
 		bitmask = 1LL;
 		target = 0;
 
 		for (i = 0; i < offset; i++)  {
-			if (irec->ino_un.plist->pmask & bitmask)
+			if (ptbl->pmask & bitmask)
 				target++;
 			bitmask <<= 1;
 		}
 #ifdef DEBUG
-		ASSERT(target < irec->ino_un.plist->cnt);
+		ASSERT(target < ptbl->cnt);
 #endif
-		irec->ino_un.plist->pentries[target] = parent;
+		ptbl->pentries[target] = parent;
 
 		return;
 	}
@@ -672,7 +684,7 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	cnt = target = 0;
 
 	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-		if (irec->ino_un.plist->pmask & bitmask)  {
+		if (ptbl->pmask & bitmask)  {
 			cnt++;
 			if (i < offset)
 				target++;
@@ -682,7 +694,7 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	}
 
 #ifdef DEBUG
-	ASSERT(cnt == irec->ino_un.plist->cnt);
+	ASSERT(cnt == ptbl->cnt);
 #endif
 	ASSERT(cnt >= target);
 
@@ -690,23 +702,23 @@ set_inode_parent(ino_tree_node_t *irec, int offset, xfs_ino_t parent)
 	if (!tmp)
 		do_error(_("couldn't memalign pentries table\n"));
 
-	(void) bcopy(irec->ino_un.plist->pentries, tmp,
+	(void) bcopy(ptbl->pentries, tmp,
 			target * sizeof(parent_entry_t));
 
 	if (cnt > target)
-		(void) bcopy(irec->ino_un.plist->pentries + target,
+		(void) bcopy(ptbl->pentries + target,
 				tmp + target + 1,
 				(cnt - target) * sizeof(parent_entry_t));
 
-	free(irec->ino_un.plist->pentries);
+	free(ptbl->pentries);
 
-	irec->ino_un.plist->pentries = tmp;
+	ptbl->pentries = tmp;
 
 #ifdef DEBUG
-	irec->ino_un.plist->cnt++;
+	ptbl->cnt++;
 #endif
-	irec->ino_un.plist->pentries[target] = parent;
-	irec->ino_un.plist->pmask |= (1LL << offset);
+	ptbl->pentries[target] = parent;
+	ptbl->pmask |= (1LL << offset);
 }
 
 xfs_ino_t

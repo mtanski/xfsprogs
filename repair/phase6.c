@@ -1624,16 +1624,25 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		 */
 		if (is_inode_reached(irec, ino_offset))  {
 			junkit = 1;
-			do_warn(
-_("entry \"%s\" in dir %llu points to an already connected dir inode %llu,\n"),
+			do_warn(_("entry \"%s\" in dir %llu points to an "
+				"already connected dir inode %llu,\n"),
 				fname, ino, lino);
 		} else if (parent == ino)  {
 			add_inode_reached(irec, ino_offset);
 			add_inode_ref(current_irec, current_ino_offset);
-		} else  {
+		} else if (parent == NULLFSINO) {
+			/* ".." was missing, but this entry refers to it,
+			   so, set it as the parent and mark for rebuild */
+			do_warn(_("entry \"%s\" in dir ino %llu doesn't have a"
+				" .. entry, will set it in ino %llu.\n"),
+				fname, ino, lino);
+			set_inode_parent(irec, ino_offset, ino);
+			add_inode_reached(irec, ino_offset);
+			add_inode_ref(current_irec, current_ino_offset);
+		} else {
 			junkit = 1;
-			do_warn(
-_("entry \"%s\" in dir ino %llu not consistent with .. value (%llu) in ino %llu,\n"),
+			do_warn(_("entry \"%s\" in dir ino %llu not consistent"
+				" with .. value (%llu) in ino %llu,\n"),
 				fname, ino, parent, lino);
 		}
 
@@ -1788,10 +1797,12 @@ _("can't map leaf block %d in dir %llu, xfs_bmapi returns %d, nmap = %d\n"),
 
 static void
 longform_dir2_rebuild(
-	xfs_mount_t	*mp,
-	xfs_ino_t	ino,
-	xfs_inode_t	*ip,
-	dir_hash_tab_t	*hashtab)
+	xfs_mount_t		*mp,
+	xfs_ino_t		ino,
+	xfs_inode_t		*ip,
+	ino_tree_node_t		*irec,
+	int			ino_offset,
+	dir_hash_tab_t		*hashtab)
 {
 	int			error;
 	int			nres;
@@ -1800,7 +1811,6 @@ longform_dir2_rebuild(
 	xfs_fsblock_t		firstblock;
 	xfs_bmap_free_t		flist;
 	xfs_inode_t		pip;
-	int			byhash;
 	dir_hash_ent_t		*p;
 	int			committed;
 	int			done;
@@ -1813,19 +1823,14 @@ longform_dir2_rebuild(
 	do_warn(_("rebuilding directory inode %llu\n"), ino);
 
 	/*
-	 * first attempt to locate the parent inode, if it can't be found,
-	 * set it to the root inode and it'll be adjusted or fixed later
-	 * if incorrect (the inode number here needs to be valid for the
-	 * libxfs_dir2_init() call).
+	 * first attempt to locate the parent inode, if it can't be
+	 * found, set it to the root inode and it'll be moved to the
+	 * orphanage later (the inode number here needs to be valid
+	 * for the libxfs_dir2_init() call).
 	 */
-	byhash = DIR_HASH_FUNC(hashtab, libxfs_da_hashname((uchar_t*)"..", 2));
-	pip.i_ino = mp->m_sb.sb_rootino;
-	for (p = hashtab->byhash[byhash]; p; p = p->nextbyhash) {
-		if (p->namelen == 2 && p->name[0] == '.' && p->name[1] == '.') {
-			pip.i_ino = p->inum;
-			break;
-		}
-	}
+	pip.i_ino = get_inode_parent(irec, ino_offset);
+	if (pip.i_ino == NULLFSINO)
+		pip.i_ino = mp->m_sb.sb_rootino;
 
 	XFS_BMAP_INIT(&flist, &firstblock);
 
@@ -2273,11 +2278,25 @@ longform_dir2_entry_check_data(
 		 * skip the '..' entry since it's checked when the
 		 * directory is reached by something else.  if it never
 		 * gets reached, it'll be moved to the orphanage and we'll
-		 * take care of it then.
+		 * take care of it then. If it doesn't exist at all, the
+		 * directory needs to be rebuilt first before being added
+		 * to the orphanage.
 		 */
 		if (dep->namelen == 2 && dep->name[0] == '.' &&
-		    dep->name[1] == '.')
+				dep->name[1] == '.') {
+			if (da_bno != 0) {
+				/* ".." should be in the first block */
+				nbad++;
+				if (entry_junked(_("entry \"%s\" (ino %llu) "
+						"in dir %llu is not in the "
+						"the first block"), fname,
+						inum, ip->i_ino)) {
+					dep->name[0] = '/';
+					libxfs_dir2_data_log_entry(tp, bp, dep);
+				}
+			}
 			continue;
+		}
 		ASSERT(no_modify || !verify_inum(mp, inum));
 		/*
 		 * special case the . entry.  we know there's only one
@@ -2291,6 +2310,16 @@ longform_dir2_entry_check_data(
 		if (ip->i_ino == inum)  {
 			ASSERT(dep->name[0] == '.' && dep->namelen == 1);
 			add_inode_ref(current_irec, current_ino_offset);
+			if (da_bno != 0 || dep != (xfs_dir2_data_entry_t *)d->u) {
+				/* "." should be the first entry */
+				nbad++;
+				if (entry_junked(_("entry \"%s\" in dir %llu is "
+						"not the first entry"),
+						fname, inum, ip->i_ino)) {
+					dep->name[0] = '/';
+					libxfs_dir2_data_log_entry(tp, bp, dep);
+				}
+			}
 			*need_dot = 0;
 			continue;
 		}
@@ -2323,6 +2352,15 @@ longform_dir2_entry_check_data(
 _("entry \"%s\" in dir %llu points to an already connected directory inode %llu\n"),
 				fname, ip->i_ino, inum);
 		} else if (parent == ip->i_ino)  {
+			add_inode_reached(irec, ino_offset);
+			add_inode_ref(current_irec, current_ino_offset);
+		} else if (parent == NULLFSINO) {
+			/* ".." was missing, but this entry refers to it,
+			   so, set it as the parent and mark for rebuild */
+			do_warn(_("entry \"%s\" in dir ino %llu doesn't have a"
+				" .. entry, will set it in ino %llu.\n"),
+				fname, ip->i_ino, inum);
+			set_inode_parent(irec, ino_offset, ip->i_ino);
 			add_inode_reached(irec, ino_offset);
 			add_inode_ref(current_irec, current_ino_offset);
 		} else  {
@@ -2637,7 +2675,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 				irec, ino_offset, &bplist[db], hashtab,
 				&freetab, da_bno, isblock);
 	}
-	fixit = (*num_illegal != 0) || dir2_is_badino(ino);
+	fixit = (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
 
 	/* check btree and freespace */
 	if (isblock) {
@@ -2659,8 +2697,9 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		for (i = 0; i < freetab->naents; i++)
 			if (bplist[i])
 				libxfs_da_brelse(NULL, bplist[i]);
-		longform_dir2_rebuild(mp, ino, ip, hashtab);
+		longform_dir2_rebuild(mp, ino, ip, irec, ino_offset, hashtab);
 		*num_illegal = 0;
+		*need_dot = 0;
 	} else {
 		for (i = 0; i < freetab->naents; i++)
 			if (bplist[i])
@@ -2863,6 +2902,15 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 					"already connected dir ino %llu,\n"),
 					fname, ino, lino);
 			} else if (parent == ino)  {
+				add_inode_reached(irec, ino_offset);
+				add_inode_ref(current_irec, current_ino_offset);
+			} else if (parent == NULLFSINO) {
+				/* ".." was missing, but this entry refers to it,
+				so, set it as the parent and mark for rebuild */
+				do_warn(_("entry \"%s\" in dir ino %llu doesn't have a"
+					" .. entry, will set it in ino %llu.\n"),
+					fname, ino, lino);
+				set_inode_parent(irec, ino_offset, ino);
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
 			} else  {
@@ -3255,6 +3303,15 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 					  "%llu,\n"),
 					fname, ino, lino);
 			} else if (parent == ino)  {
+				add_inode_reached(irec, ino_offset);
+				add_inode_ref(current_irec, current_ino_offset);
+			} else if (parent == NULLFSINO) {
+				/* ".." was missing, but this entry refers to it,
+				so, set it as the parent and mark for rebuild */
+				do_warn(_("entry \"%s\" in dir ino %llu doesn't have a"
+					" .. entry, will set it in ino %llu.\n"),
+					fname, ino, lino);
+				set_inode_parent(irec, ino_offset, ino);
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
 			} else  {
