@@ -875,9 +875,9 @@ process_bmbt_reclist(
 	typnm_t			btype)
 {
 	int			i;
-	xfs_dfiloff_t		o, op;
+	xfs_dfiloff_t		o, op = NULLDFILOFF;
 	xfs_dfsbno_t		s;
-	xfs_dfilblks_t		c, cp;
+	xfs_dfilblks_t		c, cp = NULLDFILOFF;
 	int			f;
 	xfs_dfiloff_t		last;
 	xfs_agnumber_t		agno;
