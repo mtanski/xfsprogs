@@ -412,7 +412,9 @@ calc_default_ag_geometry(
 	/*
 	 * First handle the extremes - the points at which we will
 	 * always use the maximum AG size, the points at which we
-	 * always use the minimum, and a "small-step" for 16-128Mb.
+	 * always use the minimum, and a "small-step" for 16-128MB.
+	 *
+	 * These apply regardless of storage configuration.
 	 */
 	if (dblocks >= TERABYTES(32, blocklog)) {
 		blocks = XFS_AG_MAX_BLOCKS(blocklog);
@@ -427,6 +429,8 @@ calc_default_ag_geometry(
 	}
 
 	/*
+	 * Sizes between 128MB and 32TB:
+	 *
 	 * For the remainder we choose an AG size based on the
 	 * number of data blocks available, trying to keep the
 	 * number of AGs relatively small (especially compared
@@ -435,7 +439,9 @@ calc_default_ag_geometry(
 	 * count can be increased by growfs, so prefer to use
 	 * smaller counts at mkfs time.
 	 *
-	 * This scales us up smoothly between min/max AG sizes.
+	 * For a single underlying storage device less than 4TB
+	 * in size, just use 4 AGs, otherwise (for JBOD/RAIDs)
+	 * scale up smoothly between min/max AG sizes.
 	 */
 
 	if (!multidisk) {
@@ -443,12 +449,8 @@ calc_default_ag_geometry(
                         blocks = XFS_AG_MAX_BLOCKS(blocklog);
                         goto done;
                 }
-                count = 4;
-
-                goto done;
-        }
-
-	if (dblocks > GIGABYTES(512, blocklog))
+                shift = 2;
+        } else if (dblocks > GIGABYTES(512, blocklog))
 		shift = 5;
 	else if (dblocks > GIGABYTES(8, blocklog))
 		shift = 4;
@@ -456,14 +458,17 @@ calc_default_ag_geometry(
 		shift = 3;
 	else
 		ASSERT(0);
-	blocks = dblocks >> shift;
+	/*
+	 * If dblocks is not evenly divisible by the number of
+	 * desired AGs, round "blocks" up so we don't lose the
+	 * last bit of the filesystem. The same principle applies
+	 * to the AG count, so we don't lose the last AG!
+	 */
+	blocks = (dblocks >> shift) + ((dblocks & xfs_mask32lo(shift)) != 0);
 
 done:
-	ASSERT (count || blocks);
 	if (!count)
 		count = dblocks / blocks + (dblocks % blocks != 0);
-	if (!blocks)
-		blocks = dblocks / count;
 
 	*agsize = blocks;
 	*agcount = count;
@@ -735,7 +740,7 @@ main(
 	nodsflag = norsflag = 0;
 	force_overwrite = 0;
 	worst_freelist = 0;
-	lazy_sb_counters = 0;
+	lazy_sb_counters = 1;
 	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
@@ -1391,7 +1396,7 @@ main(
 
 	sectoralign = 0;
 	xlv_dsunit = xlv_dswidth = 0;
-	if (!nodsflag && !xi.disfile)
+	if (!xi.disfile)
 		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
 				&xlv_dsunit, &xlv_dswidth, &sectoralign);
 	if (sectoralign) {
@@ -1797,12 +1802,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 
 	} else if (daflag)	/* User-specified AG count */
 		agsize = dblocks / agcount + (dblocks % agcount != 0);
-	else {
-		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
-					  &xlv_dsunit, &xlv_dswidth, &sectoralign),
-			calc_default_ag_geometry(blocklog, dblocks, xlv_dsunit | xlv_dswidth,
-						 &agsize, &agcount);
-	}
+	else
+		calc_default_ag_geometry(blocklog, dblocks,
+				xlv_dsunit | xlv_dswidth, &agsize, &agcount);
 
 	/*
 	 * If the last AG is too small, reduce the filesystem size
@@ -1817,24 +1819,28 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 
 	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
 
-	if (!nodsflag && dsunit) {
-		if (xlv_dsunit && xlv_dsunit != dsunit) {
-			fprintf(stderr,
-				_("%s: Specified data stripe unit %d is not "
-				"the same as the volume stripe unit %d\n"),
-				progname, dsunit, xlv_dsunit);
+	if (!nodsflag) {
+		if (dsunit) {
+			if (xlv_dsunit && xlv_dsunit != dsunit) {
+				fprintf(stderr,
+					_("%s: Specified data stripe unit %d "
+					"is not the same as the volume stripe "
+					"unit %d\n"),
+					progname, dsunit, xlv_dsunit);
+			}
+			if (xlv_dswidth && xlv_dswidth != dswidth) {
+				fprintf(stderr,
+					_("%s: Specified data stripe width %d "
+					"is not the same as the volume stripe "
+					"width %d\n"),
+					progname, dswidth, xlv_dswidth);
+			}
+		} else {
+			dsunit = xlv_dsunit;
+			dswidth = xlv_dswidth;
+			nodsflag = 1;
 		}
-		if (xlv_dswidth && xlv_dswidth != dswidth) {
-			fprintf(stderr,
-				_("%s: Specified data stripe width %d is not "
-				"the same as the volume stripe width %d\n"),
-				progname, dswidth, xlv_dswidth);
-		}
-	} else {
-		dsunit = xlv_dsunit;
-		dswidth = xlv_dswidth;
-		nodsflag = 1;
-	}
+	} /* else dsunit & dswidth can't be set if nodsflag is set */
 
 	/*
 	 * If dsunit is a multiple of fs blocksize, then check that is a
