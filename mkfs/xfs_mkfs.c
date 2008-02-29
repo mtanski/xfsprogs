@@ -703,6 +703,7 @@ main(
 	int			sectoralign;
 	int			sectorlog;
 	unsigned int		sectorsize;
+	__uint64_t		sector_mask;
 	int			slflag;
 	int			ssflag;
 	__uint64_t		tmp_agsize;
@@ -1637,12 +1638,17 @@ main(
 	 * Ok, Linux only has a 1024-byte resolution on device _size_,
 	 * and the sizes below are in basic 512-byte blocks,
 	 * so if we have (size % 2), on any partition, we can't get
-	 * to the last 512 bytes.  Just chop it down by a block.
+	 * to the last 512 bytes.  The same issue exists for larger
+	 * sector sizes - we cannot write past the last sector.
+	 *
+	 * So, we reduce the size (in basic blocks) to a perfect
+	 * multiple of the sector size, or 1024, whichever is larger.
 	 */
 
-	xi.dsize -= (xi.dsize % 2);
-	xi.rtsize -= (xi.rtsize % 2);
-	xi.logBBsize -= (xi.logBBsize % 2);
+	sector_mask = (__uint64_t)-1 << (MAX(sectorlog, 10) - BBSHIFT);
+	xi.dsize &= sector_mask;
+	xi.rtsize &= sector_mask;
+	xi.logBBsize &= (__uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
 
 	if (!force_overwrite) {
 		if (check_overwrite(dfile) ||
