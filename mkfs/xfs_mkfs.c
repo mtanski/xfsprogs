@@ -731,7 +731,7 @@ main(
 	nodsflag = norsflag = 0;
 	force_overwrite = 0;
 	worst_freelist = 0;
-	lazy_sb_counters = 1;
+	lazy_sb_counters = 0;
 	bzero(&fsx, sizeof(fsx));
 
 	bzero(&xi, sizeof(xi));
