@@ -406,31 +406,20 @@ calc_default_ag_geometry(
 	__uint64_t	*agcount)
 {
 	__uint64_t	blocks = 0;
-	__uint64_t	count = 0;
 	int		shift = 0;
 
 	/*
-	 * First handle the extremes - the points at which we will
-	 * always use the maximum AG size, the points at which we
-	 * always use the minimum, and a "small-step" for 16-128MB.
+	 * First handle the high extreme - the point at which we will
+	 * always use the maximum AG size.
 	 *
-	 * These apply regardless of storage configuration.
+	 * This applies regardless of storage configuration.
 	 */
 	if (dblocks >= TERABYTES(32, blocklog)) {
 		blocks = XFS_AG_MAX_BLOCKS(blocklog);
 		goto done;
-	} else if (dblocks < MEGABYTES(16, blocklog)) {
-		blocks = dblocks;
-		count = 1;
-		goto done;
-	} else if (dblocks < MEGABYTES(128, blocklog)) {
-		blocks = MEGABYTES(16, blocklog);
-		goto done;
 	}
 
 	/*
-	 * Sizes between 128MB and 32TB:
-	 *
 	 * For the remainder we choose an AG size based on the
 	 * number of data blocks available, trying to keep the
 	 * number of AGs relatively small (especially compared
@@ -439,25 +428,29 @@ calc_default_ag_geometry(
 	 * count can be increased by growfs, so prefer to use
 	 * smaller counts at mkfs time.
 	 *
-	 * For a single underlying storage device less than 4TB
-	 * in size, just use 4 AGs, otherwise (for JBOD/RAIDs)
-	 * scale up smoothly between min/max AG sizes.
+	 * For a single underlying storage device between 128MB
+	 * and 4TB in size, just use 4 AGs, otherwise scale up
+	 * smoothly between min/max AG sizes.
 	 */
 
-	if (!multidisk) {
+	if (!multidisk && dblocks >= MEGABYTES(128, blocklog)) {
 		if (dblocks >= TERABYTES(4, blocklog)) {
-                        blocks = XFS_AG_MAX_BLOCKS(blocklog);
-                        goto done;
-                }
-                shift = 2;
-        } else if (dblocks > GIGABYTES(512, blocklog))
+			blocks = XFS_AG_MAX_BLOCKS(blocklog);
+			goto done;
+		}
+		shift = 2;
+	} else if (dblocks > GIGABYTES(512, blocklog))
 		shift = 5;
 	else if (dblocks > GIGABYTES(8, blocklog))
 		shift = 4;
 	else if (dblocks >= MEGABYTES(128, blocklog))
 		shift = 3;
+	else if (dblocks >= MEGABYTES(64, blocklog))
+		shift = 2;
+	else if (dblocks >= MEGABYTES(32, blocklog))
+		shift = 1;
 	else
-		ASSERT(0);
+		shift = 0;
 	/*
 	 * If dblocks is not evenly divisible by the number of
 	 * desired AGs, round "blocks" up so we don't lose the
@@ -467,11 +460,8 @@ calc_default_ag_geometry(
 	blocks = (dblocks >> shift) + ((dblocks & xfs_mask32lo(shift)) != 0);
 
 done:
-	if (!count)
-		count = dblocks / blocks + (dblocks % blocks != 0);
-
 	*agsize = blocks;
-	*agcount = count;
+	*agcount = dblocks / blocks + (dblocks % blocks != 0);
 }
 
 static void
