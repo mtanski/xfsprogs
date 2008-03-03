@@ -4,10 +4,10 @@
 #
 
 AUTO=false
-while getopts ":aA" c
+while getopts ":aAy" c
 do
 	case $c in
-	a|A)	AUTO=true;;
+	a|A|y)	AUTO=true;;
 	esac
 done
 eval DEV=\${$#}

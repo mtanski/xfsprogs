@@ -1,3 +1,10 @@
+xfsprogs-2.9.7 (1 Mar 2008)
+	- Lazy superblock counters not yet the default with mkfs.xfs.
+	- Add -y (another no-op) fsck option.
+	- Resolve mkfs allocation group count issue with small devices.
+	- Fix mkfs to sector align the device size so zeroing the end
+	  of the device doesn't fail.
+
 xfsprogs-2.9.6 (7 Feb 2008)
 	- Fix regression introduced by changing the mkfs.xfs defaults.
 	- Made lazy superblock counters the default with mkfs.xfs.
