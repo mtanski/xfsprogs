@@ -302,12 +302,28 @@ bits.
 .TP
 .BI maxpct= value
 This specifies the maximum percentage of space in the filesystem that
-can be allocated to inodes. The default
-.I value
-is 25%. Setting the
-.I value
-to 0 means that essentially all of the filesystem can
-become inode blocks.
+can be allocated to inodes. The default 
+.I value 
+is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
+for filesystems over 50TB.
+.IP
+In the default inode allocation mode, inode blocks are chosen such
+that inode numbers will not exceed 32 bits, which restricts the inode
+blocks to the lower portion of the filesystem. The data block
+allocator will avoid these low blocks to accommodate the specified
+maxpct, so a high value may result in a filesystem with nothing but
+inodes in a significant portion of the lower blocks of the filesystem.
+(This restriction is not present when the filesystem is mounted with
+the 
+.I "inode64" 
+option on 64-bit platforms).
+.IP
+Setting the value to 0 means that essentially all of the filesystem
+can become inode blocks, subject to inode32 restrictions.
+.IP
+This value can be modified with 
+.Ixfs_growfs(8)
+.
 .TP
 .BI align[= value ]
 This is used to specify that inode allocation is or is not aligned. The
@@ -324,19 +340,15 @@ filesystem needs to be mountable by a version of IRIX
 that does not have the inode alignment feature
 (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
 .TP
-.BI attr[= value ]
-This is used to specify the version of extended attribute inline allocation
-policy to be used.
-By default, this is zero.  Once extended attributes are used for the
-first time, the version will be set to either one or two.
-The current version (two) uses a more efficient algorithm for managing
-the available inline inode space than version one does, however, for
-backward compatibility reasons (and in the absence of the
-.B attr=2
-mkfs option, or the
-.B attr2
-mount option), version one will be selected
-by default when attributes are first used on a filesystem.
+.BI attr= value 
+This is used to specify the version of extended attribute inline
+allocation policy to be used.  By default, this is 2, which uses an
+efficient algorithm for managing the available inline inode space
+between attribute and extent data.
+.IP
+The previous version 1, which has fixed regions for attribute and
+extent data, is kept for backwards compatibility with kernels older
+than version 2.6.16.
 .RE
 .TP
 .BI \-l " log_section_options"
@@ -387,17 +399,13 @@ With some combinations of filesystem block size, inode size,
 and directory block size, the minimum log size is larger than 512 blocks.
 .TP
 .BI version= value
-This specifies the version of the log. The
-.I value
-is either 1 or 2. Specifying
-.B version=2
-enables the
-.B sunit
-suboption, and allows the logbsize to be increased beyond 32K.
-Version 2 logs are automatically selected if a log stripe unit
-is specified.  See
-.BR sunit " and " su
-suboptions, below.
+This specifies the version of the log. The current default is 2,
+which allows for larger log buffer sizes, as well as supporting
+stripe-aligned log writes (see the sunit and su options, below).
+.IP
+The previous version 1, which is limited to 32k log buffers and does
+not support stripe-aligned writes, is kept for backwards compatibility
+with very old 2.4 kernels.
 .TP
 .BI sunit= value
 This specifies the alignment to be used for log writes. The
