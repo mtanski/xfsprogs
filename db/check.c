@@ -869,6 +869,15 @@ blockget_f(
 				mp->m_sb.sb_frextents, frextents);
 		error++;
 	}
+	if (mp->m_sb.sb_bad_features2 != 0 &&
+			mp->m_sb.sb_bad_features2 != mp->m_sb.sb_features2) {
+		if (!sflag)
+			dbprintf("sb_features2 (0x%x) not same as "
+				"sb_bad_features2 (0x%x)\n",
+				mp->m_sb.sb_features2,
+				mp->m_sb.sb_bad_features2);
+		error++;
+	}
 	if ((sbversion & XFS_SB_VERSION_ATTRBIT) &&
 	    !XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
 		if (!sflag)

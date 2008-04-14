@@ -91,6 +91,20 @@ phase1(xfs_mount_t *mp)
 		primary_sb_modified = 1;
 	}
 
+	/*
+	 * Check bad_features2 and make sure features2 the same as
+	 * bad_features (ORing the two together). Leave bad_features2
+	 * set so older kernels can still use it and not mount unsupported
+	 * filesystems when it reads bad_features2.
+	 */
+	if (sb->sb_bad_features2 != 0 &&
+			sb->sb_bad_features2 != sb->sb_features2) {
+		sb->sb_features2 |= sb->sb_bad_features2;
+		sb->sb_bad_features2 = sb->sb_features2;
+		primary_sb_modified = 1;
+		do_warn(_("superblock has a features2 mismatch, correcting\n"));
+	}
+
 	if (primary_sb_modified)  {
 		if (!no_modify)  {
 			do_warn(_("writing modified primary superblock\n"));
