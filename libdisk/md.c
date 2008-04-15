@@ -21,11 +21,18 @@
 
 int
 mnt_is_md_subvol(
-	dev_t		dev)
+	dev_t		dev,
+	enum md_type	*type)
 {
+	*type = MD_TYPE_MD;
 	if (major(dev) == MD_MAJOR)
 		return 1;
-	return get_driver_block_major("md", major(dev));
+	if (get_driver_block_major("md", major(dev)))
+		return 1;
+	*type = MD_TYPE_MDP;
+	if (get_driver_block_major("mdp", major(dev)))
+		return 1;
+	return 0;
 }
 
 int
@@ -37,23 +44,49 @@ md_get_subvol_stripe(
 	int		*sectalign,
 	struct stat64	*sb)
 {
-	if (mnt_is_md_subvol(sb->st_rdev)) {
+	char		*pc;
+	char		*dfile2 = NULL;
+	enum md_type	md_type;
+
+	if (mnt_is_md_subvol(sb->st_rdev, &md_type)) {
 		struct md_array_info	md;
 		int			fd;
 
+		if (md_type == MD_TYPE_MDP) {
+			pc = strrchr(dfile, 'd');
+			if (pc)
+				pc = strchr(pc, 'p');
+			if (!pc) {
+				fprintf(stderr,
+					_("Error getting MD array device from %s\n"),
+					dfile);
+				exit(1);
+			}
+			dfile2 = malloc(pc - dfile + 1);
+			if (dfile2 == NULL) {
+				fprintf(stderr,
+					_("Couldn't malloc device string\n"));
+				exit(1);
+			}
+			strncpy(dfile2, dfile, pc - dfile);
+			dfile2[pc - dfile + 1] = '\0';
+		}
 		/* Open device */
-		fd = open(dfile, O_RDONLY);
-		if (fd == -1)
+		fd = open(dfile2 ? dfile2 : dfile, O_RDONLY);
+		if (fd == -1) {
+			free(dfile2);
 			return 0;
+		}
 
 		/* Is this thing on... */
 		if (ioctl(fd, GET_ARRAY_INFO, &md)) {
 			fprintf(stderr,
 				_("Error getting MD array info from %s\n"),
-				dfile);
+				dfile2 ? dfile2 : dfile);
 			exit(1);
 		}
 		close(fd);
+		free(dfile2);
 
 		/*
 		 * Ignore levels we don't want aligned (e.g. linear)

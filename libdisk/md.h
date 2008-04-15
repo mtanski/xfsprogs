@@ -57,3 +57,11 @@ struct md_array_info {
 	__uint32_t chunk_size;	  /*  1 chunk size in bytes		  */
 
 };
+
+/*
+ * MDP = partitionable RAID arrays
+ */
+enum md_type {
+	MD_TYPE_MD,
+	MD_TYPE_MDP
+};
