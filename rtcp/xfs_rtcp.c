@@ -328,7 +328,7 @@ rtcp( char *source, char *target, int fextsize)
 
 	iosz =  dioattr.d_miniosz;
 	fbuf = memalign( dioattr.d_mem, iosz);
-	bzero (fbuf, iosz);
+	memset(fbuf, 0, iosz);
 
 	/*
 	 * read the entire source file
@@ -365,7 +365,7 @@ rtcp( char *source, char *target, int fextsize)
 			return( -1 );
 		}
 
-		bzero( fbuf, iosz);
+		memset( fbuf, 0, iosz);
 	}
 
 	close(fromfd);

@@ -702,12 +702,10 @@ set_inode_parent(
 	if (!tmp)
 		do_error(_("couldn't memalign pentries table\n"));
 
-	(void) bcopy(ptbl->pentries, tmp,
-			target * sizeof(parent_entry_t));
+	memmove(tmp, ptbl->pentries, target * sizeof(parent_entry_t));
 
 	if (cnt > target)
-		(void) bcopy(ptbl->pentries + target,
-				tmp + target + 1,
+		memmove(tmp + target + 1, ptbl->pentries + target,
 				(cnt - target) * sizeof(parent_entry_t));
 
 	free(ptbl->pentries);
@@ -840,7 +838,7 @@ incore_ino_init(xfs_mount_t *mp)
 	if ((last_rec = malloc(sizeof(ino_tree_node_t *) * agcount)) == NULL)
 		do_error(_("couldn't malloc uncertain inode cache area\n"));
 
-	bzero(last_rec, sizeof(ino_tree_node_t *) * agcount);
+	memset(last_rec, 0, sizeof(ino_tree_node_t *) * agcount);
 
 	full_ino_ex_data = 0;
 }

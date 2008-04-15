@@ -184,7 +184,7 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
 
  * the inprogress fields, version numbers, and counters
  * are allowed to differ as well as all fields after the
- * counters to cope with the pre-6.5 mkfs non-bzeroed
+ * counters to cope with the pre-6.5 mkfs non-zeroed
  * secondary superblock sectors.
  */
 
@@ -233,7 +233,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	 * (e.g. were pre-6.5 beta) could leave garbage in the secondary
 	 * superblock sectors.  Anything stamping the shared fs bit or better
 	 * into the secondaries is ok and should generate clean secondary
-	 * superblock sectors.  so only run the bzero check on the
+	 * superblock sectors.  so only run the zero check on the
 	 * potentially garbaged secondaries.
 	 */
 	if (pre_65_beta ||
@@ -275,7 +275,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 				do_warn(
 		_("zeroing unused portion of %s superblock (AG #%u)\n"),
 					!i ? _("primary") : _("secondary"), i);
-				bzero((void *)((__psint_t)sb + size),
+				memset((void *)((__psint_t)sb + size), 0,
 					mp->m_sb.sb_sectsize - size);
 			} else
 				do_warn(
@@ -286,7 +286,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 
 	/*
 	 * now look for the fields we can manipulate directly.
-	 * if we did a bzero and that bzero could have included
+	 * if we did a zero and that zero could have included
 	 * the field in question, just silently reset it.  otherwise,
 	 * complain.
 	 *

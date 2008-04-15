@@ -78,7 +78,7 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 	dest->sb_fdblocks = 0;
 	dest->sb_frextents = 0;
 
-	bzero(source->sb_fname, 12);
+	memset(source->sb_fname, 0, 12);
 }
 
 /*
@@ -106,7 +106,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 		exit(1);
 	}
 
-	bzero(&bufsb, sizeof(xfs_sb_t));
+	memset(&bufsb, 0, sizeof(xfs_sb_t));
 	retval = 0;
 	dirty = 0;
 	bsize = 0;
@@ -145,7 +145,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			 * found one.  now verify it by looking
 			 * for other secondaries.
 			 */
-			bcopy(&bufsb, rsb, sizeof(xfs_sb_t));
+			memmove(rsb, &bufsb, sizeof(xfs_sb_t));
 			rsb->sb_inprogress = 0;
 			clear_sunit = 1;
 
@@ -579,7 +579,7 @@ free_geo(fs_geo_list_t *list)
 void
 get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 {
-	bzero(geo, sizeof(fs_geometry_t));
+	memset(geo, 0, sizeof(fs_geometry_t));
 
 	/*
 	 * blindly set fields that we know are always good
@@ -646,7 +646,7 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 	 * superblock fields located after sb_widthfields get set
 	 * into the geometry structure only if we can determine
 	 * from the features enabled in this superblock whether
-	 * or not the sector was bzero'd at mkfs time.
+	 * or not the sector was zero'd at mkfs time.
 	 */
 	if ((!pre_65_beta && (sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK)) ||
 	    (pre_65_beta && (sbp->sb_versionnum & XR_ALPHA_SECSB_VNMASK))) {

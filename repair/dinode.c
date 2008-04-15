@@ -297,7 +297,7 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	/* and clear the forks */
 
 	if (dirty && !no_modify)
-		bzero(&dino->di_u, XFS_LITINO(mp));
+		memset(&dino->di_u, 0, XFS_LITINO(mp));
 
 	return(dirty);
 }
@@ -1596,8 +1596,8 @@ process_symlink(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino,
 		 * local symlink, just copy the symlink out of the
 		 * inode into the data area
 		 */
-		bcopy((char *)XFS_DFORK_DPTR(dino),
-			symlink, INT_GET(dinoc->di_size, ARCH_CONVERT));
+		memmove(symlink, (char *)XFS_DFORK_DPTR(dino),
+			INT_GET(dinoc->di_size, ARCH_CONVERT));
 	} else {
 		/*
 		 * stored in a meta-data file, have to bmap one block
@@ -1622,7 +1622,7 @@ process_symlink(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino,
 			buf_data = (char *)XFS_BUF_PTR(bp);
 			size = MIN(INT_GET(dinoc->di_size, ARCH_CONVERT)
 				- amountdone, (int)XFS_FSB_TO_BB(mp, 1)*BBSIZE);
-			bcopy(buf_data, cptr, size);
+			memmove(cptr, buf_data, size);
 			cptr += size;
 			amountdone += size;
 			i++;

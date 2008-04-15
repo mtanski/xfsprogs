@@ -559,7 +559,7 @@ zero_old_xfs_structures(
 	_("error reading existing superblock -- failed to memalign buffer\n"));
 		return;
 	}
-	bzero(buf, new_sb->sb_sectsize);
+	memset(buf, 0, new_sb->sb_sectsize);
 
 	if (pread(xi->dfd, buf, new_sb->sb_sectsize, 0) != new_sb->sb_sectsize) {
 		fprintf(stderr, _("existing superblock read failed: %s\n"),
@@ -592,7 +592,7 @@ zero_old_xfs_structures(
 	/*
 	 * block size and basic geometry seems alright, zero the secondaries.
 	 */
-	bzero(buf, new_sb->sb_sectsize);
+	memset(buf, 0, new_sb->sb_sectsize);
 	off = 0;
 	for (i = 1; i < sb.sb_agcount; i++)  {
 		off += sb.sb_agblocks;
@@ -732,9 +732,9 @@ main(
 	force_overwrite = 0;
 	worst_freelist = 0;
 	lazy_sb_counters = 0;
-	bzero(&fsx, sizeof(fsx));
+	memset(&fsx, 0, sizeof(fsx));
 
-	bzero(&xi, sizeof(xi));
+	memset(&xi, 0, sizeof(xi));
 	xi.isdirect = LIBXFS_DIRECT;
 	xi.isreadonly = LIBXFS_EXCLUSIVELY;
 
@@ -1965,7 +1965,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	bsize = 1 << (blocklog - BBSHIFT);
 	mp = &mbuf;
 	sbp = &mp->m_sb;
-	bzero(mp, sizeof(xfs_mount_t));
+	memset(mp, 0, sizeof(xfs_mount_t));
 	sbp->sb_blocklog = (__uint8_t)blocklog;
 	sbp->sb_sectlog = (__uint8_t)sectorlog;
 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
@@ -2121,13 +2121,13 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
 	 */
 	buf = libxfs_getbuf(xi.ddev, 0, BTOBB(WHACK_SIZE));
-	bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
+	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	libxfs_purgebuf(buf);
 
 	/* OK, now write the superblock */
 	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
-	bzero(XFS_BUF_PTR(buf), sectorsize);
+	memset(XFS_BUF_PTR(buf), 0, sectorsize);
 	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
@@ -2150,7 +2150,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	if (!xi.disfile) {
 		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(WHACK_SIZE)),
 				    BTOBB(WHACK_SIZE));
-		bzero(XFS_BUF_PTR(buf), WHACK_SIZE);
+		memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		libxfs_purgebuf(buf);
 	}
@@ -2179,7 +2179,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		buf = libxfs_getbuf(xi.ddev,
 				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1));
-		bzero(XFS_BUF_PTR(buf), sectorsize);
+		memset(XFS_BUF_PTR(buf), 0, sectorsize);
 		libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
@@ -2190,7 +2190,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 				XFS_FSS_TO_BB(mp, 1));
 		agf = XFS_BUF_TO_AGF(buf);
-		bzero(agf, sectorsize);
+		memset(agf, 0, sectorsize);
 		if (agno == agcount - 1)
 			agsize = dblocks - (xfs_drfsbno_t)(agno * agsize);
 		INT_SET(agf->agf_magicnum, ARCH_CONVERT, XFS_AGF_MAGIC);
@@ -2225,7 +2225,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 				XFS_FSS_TO_BB(mp, 1));
 		agi = XFS_BUF_TO_AGI(buf);
-		bzero(agi, sectorsize);
+		memset(agi, 0, sectorsize);
 		INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
 		INT_SET(agi->agi_versionnum, ARCH_CONVERT, XFS_AGI_VERSION);
 		INT_SET(agi->agi_seqno, ARCH_CONVERT, agno);
@@ -2247,7 +2247,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
-		bzero(block, blocksize);
+		memset(block, 0, blocksize);
 		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_ABTB_MAGIC);
 		INT_SET(block->bb_level, ARCH_CONVERT, 0);
 		INT_SET(block->bb_numrecs, ARCH_CONVERT, 1);
@@ -2297,7 +2297,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
-		bzero(block, blocksize);
+		memset(block, 0, blocksize);
 		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_ABTC_MAGIC);
 		INT_SET(block->bb_level, ARCH_CONVERT, 0);
 		INT_SET(block->bb_numrecs, ARCH_CONVERT, 1);
@@ -2334,7 +2334,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
-		bzero(block, blocksize);
+		memset(block, 0, blocksize);
 		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
 		INT_SET(block->bb_level, ARCH_CONVERT, 0);
 		INT_SET(block->bb_numrecs, ARCH_CONVERT, 0);
@@ -2348,7 +2348,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	 */
 	buf = libxfs_getbuf(mp->m_dev,
 		(xfs_daddr_t)XFS_FSB_TO_BB(mp, dblocks - 1LL), bsize);
-	bzero(XFS_BUF_PTR(buf), blocksize);
+	memset(XFS_BUF_PTR(buf), 0, blocksize);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/*
@@ -2357,7 +2357,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	if (mp->m_rtdev && rtblocks > 0) {
 		buf = libxfs_getbuf(mp->m_rtdev,
 				XFS_FSB_TO_BB(mp, rtblocks - 1LL), bsize);
-		bzero(XFS_BUF_PTR(buf), blocksize);
+		memset(XFS_BUF_PTR(buf), 0, blocksize);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 
@@ -2368,7 +2368,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		xfs_alloc_arg_t	args;
 		xfs_trans_t	*tp;
 
-		bzero(&args, sizeof(args));
+		memset(&args, 0, sizeof(args));
 		args.tp = tp = libxfs_trans_alloc(mp, 0);
 		args.mp = mp;
 		args.agno = agno;

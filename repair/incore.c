@@ -77,7 +77,7 @@ setup_bmap(xfs_agnumber_t agno, xfs_agblock_t numblocks, xfs_drtbno_t rtblocks)
 				numblocks);
 			return;
 		}
-		bzero(ba_bmap[i], size);
+		memset(ba_bmap[i], 0, size);
 		pthread_mutex_init(&ag_locks[i], NULL);
 	}
 

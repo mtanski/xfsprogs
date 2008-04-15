@@ -275,7 +275,7 @@ process_rtsummary(xfs_mount_t	*mp,
 			continue;
 		}
 		bytes = bp->b_un.b_addr;
-		bcopy(bytes, (char *)sumfile + sumbno * mp->m_sb.sb_blocksize,
+		memmove((char *)sumfile + sumbno * mp->m_sb.sb_blocksize, bytes,
 			mp->m_sb.sb_blocksize);
 		libxfs_putbuf(bp);
 	}

@@ -98,7 +98,7 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 	 * extents of free blocks.  At this point, we know
 	 * that blocks in the bitmap are either set to an
 	 * "in use" state or set to unknown (0) since the
-	 * bmaps were bzero'ed in phase 4 and only blocks
+	 * bmaps were zero'ed in phase 4 and only blocks
 	 * being used by inodes, inode bmaps, ag headers,
 	 * and the files themselves were put into the bitmap.
 	 *
@@ -686,7 +686,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 		 * initialize block header
 		 */
 		bt_hdr = XFS_BUF_TO_ALLOC_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, magic);
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, level);
@@ -763,7 +763,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		 * initialize block header
 		 */
 		bt_hdr = XFS_BUF_TO_ALLOC_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, magic);
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, i);
@@ -794,7 +794,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		 * block initialization, lay in block header
 		 */
 		bt_hdr = XFS_BUF_TO_ALLOC_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, magic);
 		bt_hdr->bb_level = 0;
@@ -1043,7 +1043,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 		 * initialize block header
 		 */
 		bt_hdr = XFS_BUF_TO_INOBT_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, level);
@@ -1082,7 +1082,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE);
 	agi = XFS_BUF_TO_AGI(agi_buf);
-	bzero(agi, mp->m_sb.sb_sectsize);
+	memset(agi, 0, mp->m_sb.sb_sectsize);
 
 	INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
 	INT_SET(agi->agi_versionnum, ARCH_CONVERT, XFS_AGI_VERSION);
@@ -1146,7 +1146,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		 * initialize block header
 		 */
 		bt_hdr = XFS_BUF_TO_INOBT_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
 		INT_SET(bt_hdr->bb_level, ARCH_CONVERT, i);
@@ -1174,7 +1174,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		 * block initialization, lay in block header
 		 */
 		bt_hdr = XFS_BUF_TO_INOBT_BLOCK(lptr->buf_p);
-		bzero(bt_hdr, mp->m_sb.sb_blocksize);
+		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 
 		INT_SET(bt_hdr->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
 		bt_hdr->bb_level = 0;
@@ -1261,7 +1261,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE);
 	agf = XFS_BUF_TO_AGF(agf_buf);
-	bzero(agf, mp->m_sb.sb_sectsize);
+	memset(agf, 0, mp->m_sb.sb_sectsize);
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "agf = 0x%x, agf_buf->b_un.b_addr = 0x%x\n",
@@ -1327,7 +1327,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
 				mp->m_sb.sb_sectsize/BBSIZE);
 		agfl = XFS_BUF_TO_AGFL(agfl_buf);
-		bzero(agfl, mp->m_sb.sb_sectsize);
+		memset(agfl, 0, mp->m_sb.sb_sectsize);
 		/*
 		 * ok, now grab as many blocks as we can
 		 */

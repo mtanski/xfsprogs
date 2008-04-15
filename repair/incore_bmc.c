@@ -29,7 +29,7 @@ init_bm_cursor(bmap_cursor_t *cursor, int num_levels)
 {
 	int i;
 
-	bzero(cursor, sizeof(bmap_cursor_t));
+	memset(cursor, 0, sizeof(bmap_cursor_t));
 	cursor->ino = NULLFSINO;
 	cursor->num_levels = num_levels;
 

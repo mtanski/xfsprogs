@@ -362,7 +362,7 @@ phase4(xfs_mount_t *mp)
 		/*
 		 * now reset the bitmap for all ags
 		 */
-		bzero(ba_bmap[i],
+		memset(ba_bmap[i], 0,
 		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
 						sizeof(__uint64_t)));
 		for (j = 0; j < ag_hdr_block; j++)

@@ -84,7 +84,7 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
 int
 valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 {
-	/* for proper alignment issues, get the structs and bcopy the values */
+	/* for proper alignment issues, get the structs and memmove the values */
 	xfs_mac_label_t macl;
 	xfs_acl_t thisacl;
 	void *valuep;
@@ -94,8 +94,8 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			(strncmp(namevalue, SGI_ACL_DEFAULT,
 				SGI_ACL_DEFAULT_SIZE) == 0)) {
 		if (value == NULL) {
-			bzero(&thisacl, sizeof(xfs_acl_t));
-			bcopy(namevalue+namelen, &thisacl, valuelen);
+			memset(&thisacl, 0, sizeof(xfs_acl_t));
+			memmove(&thisacl, namevalue+namelen, valuelen);
 			valuep = &thisacl;
 		} else
 			valuep = value;
@@ -108,8 +108,8 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 		}
 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
 		if (value == NULL) {
-			bzero(&macl, sizeof(xfs_mac_label_t));
-			bcopy(namevalue+namelen, &macl, valuelen);
+			memset(&macl, 0, sizeof(xfs_mac_label_t));
+			memmove(&macl, namevalue+namelen, valuelen);
 			valuep = &macl;
 		} else
 			valuep = value;
@@ -358,7 +358,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 		}
 		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
 		length = MIN(XFS_BUF_COUNT(bp), valuelen - amountdone);
-		bcopy(XFS_BUF_PTR(bp), value, length);
+		memmove(value, XFS_BUF_PTR(bp), length);
 		amountdone += length;
 		value += length;
 		i++;
@@ -805,7 +805,7 @@ process_node_attr(
 	 * the way.  Then walk the leaf blocks left-to-right, calling
 	 * a parent-verification routine each time we traverse a block.
 	 */
-	bzero(&da_cursor, sizeof(da_bt_cursor_t));
+	memset(&da_cursor, 0, sizeof(da_bt_cursor_t));
 	da_cursor.active = 0;
 	da_cursor.type = 0;
 	da_cursor.ino = ino;

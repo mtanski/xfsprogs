@@ -64,7 +64,7 @@
  * the partial sb mask bit set, then you depend on the fields
  * in it up to and including sb_inoalignmt but the unused part of the
  * sector may have trash in it.  If the sb has any bits set that are in
- * the good mask, then the entire sb and sector are good (was bzero'ed
+ * the good mask, then the entire sb and sector are good (was zero'ed
  * by mkfs).  The third mask is for filesystems made by pre-6.5 campus
  * alpha mkfs's.  Those are rare so we'll check for those under
  * a special option.

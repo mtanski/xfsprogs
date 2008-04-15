@@ -234,7 +234,7 @@ newfile(
 	if (dolocal && len <= XFS_IFORK_DSIZE(ip)) {
 		libxfs_idata_realloc(ip, len, XFS_DATA_FORK);
 		if (buf)
-			bcopy(buf, ip->i_df.if_u1.if_data, len);
+			memmove(ip->i_df.if_u1.if_data, buf, len);
 		ip->i_d.di_size = len;
 		ip->i_df.if_flags &= ~XFS_IFEXTENTS;
 		ip->i_df.if_flags |= XFS_IFINLINE;
@@ -257,9 +257,9 @@ newfile(
 		d = XFS_FSB_TO_DADDR(mp, map.br_startblock);
 		bp = libxfs_trans_get_buf(logit ? tp : 0, mp->m_dev, d,
 			nb << mp->m_blkbb_log, 0);
-		bcopy(buf, XFS_BUF_PTR(bp), len);
+		memmove(XFS_BUF_PTR(bp), buf, len);
 		if (len < XFS_BUF_COUNT(bp))
-			bzero(XFS_BUF_PTR(bp) + len, XFS_BUF_COUNT(bp) - len);
+			memset(XFS_BUF_PTR(bp) + len, 0, XFS_BUF_COUNT(bp) - len);
 		if (logit)
 			libxfs_trans_log_buf(tp, bp, 0, XFS_BUF_COUNT(bp) - 1);
 		else
@@ -376,7 +376,7 @@ parseproto(
 	cred_t		creds;
 	char		*value;
 
-	bzero(&creds, sizeof(creds));
+	memset(&creds, 0, sizeof(creds));
 	mstr = getstr(pp);
 	switch (mstr[0]) {
 	case '-':
@@ -635,8 +635,8 @@ rtinit(
 	tp = libxfs_trans_alloc(mp, 0);
 	if ((i = libxfs_trans_reserve(tp, MKFS_BLOCKRES_INODE, 0, 0, 0, 0)))
 		res_failed(i);
-	bzero(&creds, sizeof(creds));
-	bzero(&fsxattrs, sizeof(fsxattrs));
+	memset(&creds, 0, sizeof(creds));
+	memset(&fsxattrs, 0, sizeof(fsxattrs));
 	error = libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
 					&creds, &fsxattrs, &rbmip);
 	if (error) {

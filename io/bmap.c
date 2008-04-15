@@ -179,7 +179,7 @@ bmap_f(
 
 	do {	/* loop a miximum of two times */
 
-		bzero(map, sizeof(*map));	/* zero header */
+		memset(map, 0, sizeof(*map));	/* zero header */
 
 		map->bmv_length = -1;
 		map->bmv_count = map_size;

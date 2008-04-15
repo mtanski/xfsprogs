@@ -430,7 +430,7 @@ mk_rbmino(xfs_mount_t *mp)
 			error);
 	}
 
-	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
+	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = S_IFREG;
@@ -550,7 +550,7 @@ _("can't access block %llu (fsbno %llu) of realtime bitmap inode %llu\n"),
 			return(1);
 		}
 
-		bcopy(bmp, XFS_BUF_PTR(bp), mp->m_sb.sb_blocksize);
+		memmove(XFS_BUF_PTR(bp), bmp, mp->m_sb.sb_blocksize);
 
 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
 
@@ -619,7 +619,7 @@ _("can't access block %llu (fsbno %llu) of realtime summary inode %llu\n"),
 			return(1);
 		}
 
-		bcopy(smp, XFS_BUF_PTR(bp), mp->m_sb.sb_blocksize);
+		memmove(XFS_BUF_PTR(bp), smp, mp->m_sb.sb_blocksize);
 
 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
 
@@ -663,7 +663,7 @@ mk_rsumino(xfs_mount_t *mp)
 			error);
 	}
 
-	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
+	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = S_IFREG;
@@ -762,7 +762,7 @@ mk_root_dir(xfs_mount_t *mp)
 	/*
 	 * take care of the core -- initialization from xfs_ialloc()
 	 */
-	bzero(&ip->i_d, sizeof(xfs_dinode_core_t));
+	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = (__uint16_t) mode|S_IFDIR;
@@ -1361,7 +1361,7 @@ _("can't map block %d in directory %llu, xfs_bmapi returns %d, nmap = %d\n"),
 	/*
 	 * snag the info we need out of the directory then release all buffers
 	 */
-	bcopy(namest->name, fname, entry->namelen);
+	memmove(fname, namest->name, entry->namelen);
 	fname[entry->namelen] = '\0';
 	*hashval = INT_GET(entry->hashval, ARCH_CONVERT);
 	namelen = entry->namelen;
@@ -1490,7 +1490,7 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		junkit = 0;
 
 		XFS_DIR_SF_GET_DIRINO(&namest->inumber, &lino);
-		bcopy(namest->name, fname, entry->namelen);
+		memmove(fname, namest->name, entry->namelen);
 		fname[entry->namelen] = '\0';
 
 		ASSERT(lino != NULLFSINO);
@@ -1948,7 +1948,7 @@ dir2_kill_block(
 	libxfs_trans_ijoin(tp, ip, 0);
 	libxfs_trans_ihold(tp, ip);
 	libxfs_da_bjoin(tp, bp);
-	bzero(&args, sizeof(args));
+	memset(&args, 0, sizeof(args));
 	XFS_BMAP_INIT(&flist, &firstblock);
 	args.dp = ip;
 	args.trans = tp;
@@ -2199,7 +2199,7 @@ longform_dir2_entry_check_data(
 			continue;
 		}
 
-		bcopy(dep->name, fname, dep->namelen);
+		memmove(fname, dep->name, dep->namelen);
 		fname[dep->namelen] = '\0';
 		ASSERT(inum != NULLFSINO);
 
@@ -2822,7 +2822,7 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 			}
 		}
 
-		bcopy(sf_entry->name, fname, sf_entry->namelen);
+		memmove(fname, sf_entry->name, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
 
 		ASSERT(no_modify || lino != NULLFSINO);
@@ -2937,7 +2937,7 @@ do_junkit:
 				memmove(sf_entry, tmp_sfe, tmp_len);
 
 				INT_MOD(sf->hdr.count, ARCH_CONVERT, -1);
-				bzero((void *) ((__psint_t) sf_entry + tmp_len),
+				memset((void *) ((__psint_t) sf_entry + tmp_len), 0,
 						tmp_elen);
 
 				/*
@@ -3041,7 +3041,7 @@ prune_sf_dir_entry(xfs_mount_t *mp, xfs_ino_t ino, xfs_inode_t *ip)
 
 		XFS_DIR_SF_GET_DIRINO(&sf_entry->inumber, &lino);
 
-		bcopy(sf_entry->name, fname, sf_entry->namelen);
+		memmove(fname, sf_entry->name, sf_entry->namelen);
 		fname[sf_entry->namelen] = '\0';
 
 		if (sf_entry->name[0] == '/')  {
@@ -3057,7 +3057,7 @@ prune_sf_dir_entry(xfs_mount_t *mp, xfs_ino_t ino, xfs_inode_t *ip)
 				memmove(sf_entry, tmp_sfe, tmp_len);
 
 				INT_MOD(sf->hdr.count, ARCH_CONVERT, -1);
-				bzero((void *) ((__psint_t) sf_entry + tmp_len),
+				memset((void *) ((__psint_t) sf_entry + tmp_len), 0,
 						tmp_elen);
 
 				/*
@@ -3212,7 +3212,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			}
 		}
 
-		bcopy(sfep->name, fname, sfep->namelen);
+		memmove(fname, sfep->name, sfep->namelen);
 		fname[sfep->namelen] = '\0';
 
 		ASSERT(no_modify || (lino != NULLFSINO && lino != 0));
@@ -3339,7 +3339,7 @@ do_junkit:
 				memmove(sfep, tmp_sfep, tmp_len);
 
 				INT_MOD(sfp->hdr.count, ARCH_CONVERT, -1);
-				bzero((void *) ((__psint_t) sfep + tmp_len),
+				memset((void *) ((__psint_t) sfep + tmp_len), 0,
 						tmp_elen);
 
 				/*
@@ -3887,8 +3887,8 @@ phase6(xfs_mount_t *mp)
 	ino_tree_node_t		*irec;
 	int			i;
 
-	bzero(&zerocr, sizeof(struct cred));
-	bzero(&zerofsx, sizeof(struct fsxattr));
+	memset(&zerocr, 0, sizeof(struct cred));
+	memset(&zerofsx, 0, sizeof(struct fsxattr));
 	orphanage_ino = 0;
 
 	do_log(_("Phase 6 - check inode connectivity...\n"));

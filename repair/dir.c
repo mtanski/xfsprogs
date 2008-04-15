@@ -334,7 +334,7 @@ process_shortform_dir(
 		 * happened.
 		 */
 		if (junkit)  {
-			bcopy(sf_entry->name, name, namelen);
+			memmove(name, sf_entry->name, namelen);
 			name[namelen] = '\0';
 
 			if (!no_modify)  {
@@ -352,7 +352,7 @@ process_shortform_dir(
 
 				INT_MOD(sf->hdr.count, ARCH_CONVERT, -1);
 				num_entries--;
-				bzero((void *) ((__psint_t) sf_entry + tmp_len),
+				memset((void *) ((__psint_t) sf_entry + tmp_len), 0,
 					tmp_elen);
 
 				/*
@@ -505,7 +505,7 @@ size_t ts_dir_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
 void
 init_da_freemap(da_freemap_t *dir_freemap)
 {
-	bzero(dir_freemap, sizeof(da_freemap_t) * DA_BMAP_SIZE);
+	memset(dir_freemap, 0, sizeof(da_freemap_t) * DA_BMAP_SIZE);
 }
 
 /*
@@ -738,7 +738,7 @@ test(xfs_mount_t *mp)
 	da_hole_map_t	holemap;
 
 	init_da_freemap(dir_freemap);
-	bzero(&holemap, sizeof(da_hole_map_t));
+	memset(&holemap, 0, sizeof(da_hole_map_t));
 
 	set_da_freemap(mp, dir_freemap, 0, 50);
 	set_da_freemap(mp, dir_freemap, 100, 126);
@@ -1510,9 +1510,9 @@ junk_zerolen_dir_leaf_entries(
 				memmove(entry, entry + 1, (INT_GET(hdr->count, ARCH_CONVERT) - i) *
 					sizeof(xfs_dir_leaf_entry_t));
 			}
-			bzero((void *) ((__psint_t) entry +
+			memset((void *) ((__psint_t) entry +
 				(INT_GET(leaf->hdr.count, ARCH_CONVERT) - i - 1) *
-				sizeof(xfs_dir_leaf_entry_t)),
+				sizeof(xfs_dir_leaf_entry_t)), 0,
 				sizeof(xfs_dir_leaf_entry_t));
 
 			start = (__psint_t) &leaf->entries[INT_GET(hdr->count, ARCH_CONVERT)] -
@@ -1609,9 +1609,9 @@ junk_zerolen_dir_leaf_entries(
 						(INT_GET(leaf->hdr.count, ARCH_CONVERT) - i - 1) *
 						sizeof(xfs_dir_leaf_entry_t));
 				}
-				bzero((void *) ((__psint_t) entry +
+				memset((void *) ((__psint_t) entry +
 					(INT_GET(leaf->hdr.count, ARCH_CONVERT) - i - 1) *
-					sizeof(xfs_dir_leaf_entry_t)),
+					sizeof(xfs_dir_leaf_entry_t)), 0,
 					sizeof(xfs_dir_leaf_entry_t));
 
 				/*
@@ -1794,11 +1794,11 @@ _("nameidx %d for entry #%d, bno %d, ino %llu > fs blocksize, deleting entry\n")
 					    sizeof(xfs_dir_leaf_entry_t))  {
 						memmove(entry, entry + 1,
 							bytes);
-						bzero((void *)
-						((__psint_t) entry + bytes),
+						memset((void *)
+						((__psint_t) entry + bytes), 0,
 						sizeof(xfs_dir_leaf_entry_t));
 					} else  {
-						bzero(entry,
+						memset(entry, 0,
 						sizeof(xfs_dir_leaf_entry_t));
 					}
 
@@ -2030,11 +2030,11 @@ _("entry references free inode %llu in directory %llu, would clear entry\n"),
 				 */
 				if (bytes > sizeof(xfs_dir_leaf_entry_t))  {
 					memmove(entry, entry + 1, bytes);
-					bzero((void *)
-						((__psint_t) entry + bytes),
+					memset((void *)
+						((__psint_t) entry + bytes), 0,
 						sizeof(xfs_dir_leaf_entry_t));
 				} else  {
-					bzero(entry,
+					memset(entry, 0,
 						sizeof(xfs_dir_leaf_entry_t));
 				}
 
@@ -2099,7 +2099,7 @@ _("dir entry slot %d in block %u conflicts with used space in dir inode %llu\n")
 		 * making it impossible for the stored length
 		 * value to be out of range.
 		 */
-		bcopy(namest->name, fname, entry->namelen);
+		memmove(fname, namest->name, entry->namelen);
 		fname[entry->namelen] = '\0';
 		hashval = libxfs_da_hashname((uchar_t *) fname, entry->namelen);
 
@@ -2428,7 +2428,7 @@ _("- would reset namebytes cnt from %d to %d in block %u of dir inode %llu\n"),
 	 * (XFS_DIR_LEAF_MAPSIZE (3) * biggest regions)
 	 * and see if they match what's in the block
 	 */
-	bzero(&holemap, sizeof(da_hole_map_t));
+	memset(&holemap, 0, sizeof(da_hole_map_t));
 	process_da_freemap(mp, dir_freemap, &holemap);
 
 	if (zero_len_entries)  {
@@ -2485,7 +2485,7 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 			/*
 			 * copy leaf block header
 			 */
-			bcopy(&leaf->hdr, &new_leaf->hdr,
+			memmove(&new_leaf->hdr, &leaf->hdr,
 				sizeof(xfs_dir_leaf_hdr_t));
 
 			/*
@@ -2531,8 +2531,8 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 				d_entry->namelen = s_entry->namelen;
 				d_entry->pad2 = 0;
 
-				bcopy((char *) leaf + INT_GET(s_entry->nameidx, ARCH_CONVERT),
-					first_byte, bytes);
+				memmove(first_byte, (char *) leaf + INT_GET(s_entry->nameidx, ARCH_CONVERT),
+					bytes);
 
 				num_entries++;
 				d_entry++;
@@ -2544,7 +2544,7 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 			/*
 			 * zero space between end of table and top of heap
 			 */
-			bzero(d_entry, (__psint_t) first_byte
+			memset(d_entry, 0, (__psint_t) first_byte
 					- (__psint_t) d_entry);
 
 			/*
@@ -2580,7 +2580,7 @@ _("- existing hole info for block %d, dir inode %llu (base, size) - \n"),
 			/*
 			 * final step, copy block back
 			 */
-			bcopy(new_leaf, leaf, mp->m_sb.sb_blocksize);
+			memmove(leaf, new_leaf, mp->m_sb.sb_blocksize);
 
 			*buf_dirty = 1;
 		} else  {
@@ -2816,7 +2816,7 @@ process_node_dir(
 	 * the way.  Then walk the leaf blocks left-to-right, calling
 	 * a parent-verification routine each time we traverse a block.
 	 */
-	bzero(&da_cursor, sizeof(da_bt_cursor_t));
+	memset(&da_cursor, 0, sizeof(da_bt_cursor_t));
 
 	da_cursor.active = 0;
 	da_cursor.type = 0;

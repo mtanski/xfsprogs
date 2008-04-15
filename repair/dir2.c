@@ -143,7 +143,7 @@ da_read_buf(
 		}
 		for (i = off = 0; i < nex; i++, off += XFS_BUF_COUNT(bp)) {
 			bp = bplist[i];
-			bcopy(XFS_BUF_PTR(bp), (char *)dabuf->data + off,
+			memmove((char *)dabuf->data + off, XFS_BUF_PTR(bp),
 				XFS_BUF_COUNT(bp));
 		}
 	}
@@ -170,7 +170,7 @@ da_buf_clean(
 		dabuf->dirty = 0;
 		for (i=off=0; i < dabuf->nbuf; i++, off += XFS_BUF_COUNT(bp)) {
 			bp = dabuf->bps[i];
-			bcopy((char *)dabuf->data + off, XFS_BUF_PTR(bp),
+			memmove(XFS_BUF_PTR(bp), (char *)dabuf->data + off,
 				XFS_BUF_COUNT(bp));
 		}
 	}
@@ -208,10 +208,10 @@ da_bwrite(
 			do_error(_("couldn't malloc dir2 buffer list\n"));
 			exit(1);
 		}
-		bcopy(dabuf->bps, bplist, nbuf * sizeof(*bplist));
+		memmove(bplist, dabuf->bps, nbuf * sizeof(*bplist));
 		for (i = off = 0; i < nbuf; i++, off += XFS_BUF_COUNT(bp)) {
 			bp = bplist[i];
-			bcopy((char *)dabuf->data + off, XFS_BUF_PTR(bp),
+			memmove(XFS_BUF_PTR(bp), (char *)dabuf->data + off,
 				XFS_BUF_COUNT(bp));
 		}
 	}
@@ -244,7 +244,7 @@ da_brelse(
 			do_error(_("couldn't malloc dir2 buffer list\n"));
 			exit(1);
 		}
-		bcopy(dabuf->bps, bplist, nbuf * sizeof(*bplist));
+		memmove(bplist, dabuf->bps, nbuf * sizeof(*bplist));
 	}
 	da_buf_done(dabuf);
 	for (i = 0; i < nbuf; i++) {
@@ -1101,7 +1101,7 @@ process_sf_dir2(
 		 * happened.
 		 */
 		if (junkit)  {
-			bcopy(sfep->name, name, namelen);
+			memmove(name, sfep->name, namelen);
 			name[namelen] = '\0';
 
 			if (!no_modify)  {
@@ -1120,7 +1120,7 @@ process_sf_dir2(
 
 				INT_MOD(sfp->hdr.count, ARCH_CONVERT, -1);
 				num_entries--;
-				bzero((void *) ((__psint_t) sfep + tmp_len),
+				memset((void *) ((__psint_t) sfep + tmp_len), 0,
 					tmp_elen);
 
 				/*
@@ -1944,7 +1944,7 @@ process_node_dir2(
 	 * Then walk the leaf blocks left-to-right, calling a parent
 	 * verification routine each time we traverse a block.
 	 */
-	bzero(&da_cursor, sizeof(da_cursor));
+	memset(&da_cursor, 0, sizeof(da_cursor));
 	da_cursor.ino = ino;
 	da_cursor.dip = dip;
 	da_cursor.blkmap = blkmap;

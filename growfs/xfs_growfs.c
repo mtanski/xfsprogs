@@ -251,7 +251,7 @@ main(int argc, char **argv)
 	 * Need root access from here on (using raw devices)...
 	 */
 
-	bzero(&xi, sizeof(xi));
+	memset(&xi, 0, sizeof(xi));
 	xi.dname = datadev;
 	xi.logname = logdev;
 	xi.rtname = rtdev;

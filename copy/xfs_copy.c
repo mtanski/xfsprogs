@@ -912,7 +912,7 @@ main(int argc, char **argv)
 
 		/* save what we need (agf) in the btree buffer */
 
-		bcopy(ag_hdr.xfs_agf, btree_buf.data, source_sectorsize);
+		memmove(btree_buf.data, ag_hdr.xfs_agf, source_sectorsize);
 		ag_hdr.xfs_agf = (xfs_agf_t *) btree_buf.data;
 		btree_buf.length = source_blocksize;
 

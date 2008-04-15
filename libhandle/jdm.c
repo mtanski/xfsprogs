@@ -47,7 +47,7 @@ jdm_fill_filehandle( filehandle_t *handlep,
 {
 	handlep->fh_fshandle = *fshandlep;
 	handlep->fh_sz_following = FILEHANDLE_SZ_FOLLOWING;
-	bzero(handlep->fh_pad, FILEHANDLE_SZ_PAD);
+	memset(handlep->fh_pad, 0, FILEHANDLE_SZ_PAD);
 	handlep->fh_gen = statp->bs_gen;
 	handlep->fh_ino = statp->bs_ino;
 }
