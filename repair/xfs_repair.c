@@ -17,6 +17,7 @@
  */
 
 #include <xfs/libxlog.h>
+#include <sys/resource.h>
 #include "avl.h"
 #include "avl64.h"
 #include "globals.h"
@@ -66,12 +67,13 @@ char *o_opts[] = {
 
 static int	ihash_option_used;
 static int	bhash_option_used;
+static long	max_mem_specified;	/* in megabytes */
 
 static void
 usage(void)
 {
 	do_warn(
-_("Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"),
+_("Usage: %s [-nLvV] [-m memMB] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"),
 		progname);
 	exit(1);
 }
@@ -191,7 +193,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:r:LnDvVdPMt:")) != EOF)  {
+	while ((c = getopt(argc, argv, "o:fl:m:r:LnDvVdPt:")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -222,6 +224,9 @@ process_args(int argc, char **argv)
 					ihash_option_used = 1;
 					break;
 				case BHASH_SIZE:
+					if (max_mem_specified)
+						do_abort(
+			_("-o bhash option cannot be used with -m option\n"));
 					libxfs_bhash_size = (int) strtol(val, 0, 0);
 					bhash_option_used = 1;
 					break;
@@ -244,6 +249,12 @@ process_args(int argc, char **argv)
 			break;
 		case 'f':
 			isa_file = 1;
+			break;
+		case 'm':
+			if (bhash_option_used)
+				do_abort(_("-m option cannot be used with "
+						"-o bhash option\n"));
+			max_mem_specified = strtol(optarg, 0, 0);
 			break;
 		case 'L':
 			zap_log = 1;
@@ -550,9 +561,10 @@ main(int argc, char **argv)
 	 * Calculations are done in kilobyte units.
 	 */
 
-	if (!bhash_option_used) {
+	if (!bhash_option_used || max_mem_specified) {
 		unsigned long 	mem_used;
-		unsigned long	phys_mem;
+		unsigned long	max_mem;
+		struct rlimit	rlim;
 
 		libxfs_icache_purge();
 		libxfs_bcache_purge();
@@ -560,27 +572,46 @@ main(int argc, char **argv)
 		cache_destroy(libxfs_bcache);
 
 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
-					(mp->m_sb.sb_dblocks >> (10 + 1));
-		phys_mem = libxfs_physmem() * 3 / 4;
+					(mp->m_sb.sb_dblocks >> (10 + 1)) +
+					50000;	/* rough estimate of 50MB overhead */
+		max_mem = max_mem_specified ? max_mem_specified * 1024 :
+						libxfs_physmem() * 3 / 4;
+
+		if (getrlimit(RLIMIT_AS, &rlim) != -1 &&
+					rlim.rlim_cur != RLIM_INFINITY) {
+			rlim.rlim_cur = rlim.rlim_max;
+			setrlimit(RLIMIT_AS, &rlim);
+			/* use approximately 80% of rlimit to avoid overrun */
+			max_mem = MIN(max_mem, rlim.rlim_cur / 1280);
+		} else
+			max_mem = MIN(max_mem, (LONG_MAX >> 10) + 1);
 
 		if (verbose > 1)
-			do_log(_("        - icount = %llu, imem = %lu, "
-				"dblock = %llu, dmem = %lu\n"),
-				mp->m_sb.sb_icount, mp->m_sb.sb_icount >> (10 - 2),
-				mp->m_sb.sb_dblocks, mp->m_sb.sb_dblocks >> (10 + 1));
+			do_log(_("        - max_mem = %lu, icount = %llu, "
+				"imem = %llu, dblock = %llu, dmem = %llu\n"),
+				max_mem, mp->m_sb.sb_icount,
+				mp->m_sb.sb_icount >> (10 - 2),
+				mp->m_sb.sb_dblocks,
+				mp->m_sb.sb_dblocks >> (10 + 1));
 
-		if (phys_mem <= mem_used) {
+		if (max_mem <= mem_used) {
 			/*
 			 * Turn off prefetch and minimise libxfs cache if
 			 * physical memory is deemed insufficient
 			 */
+			if (max_mem_specified)
+				do_abort(_("Required memory for repair is "
+					"greater that the maximum specified "
+					"with the -m option. Please increase "
+					"it to at least %lu.\n"),
+					mem_used / 1024);
 			do_prefetch = 0;
 			libxfs_bhash_size = 64;
 		} else {
-			phys_mem -= mem_used;
-			if (phys_mem >= (1 << 30))
-				phys_mem = 1 << 30;
-			libxfs_bhash_size = phys_mem / (HASH_CACHE_RATIO *
+			max_mem -= mem_used;
+			if (max_mem >= (1 << 30))
+				max_mem = 1 << 30;
+			libxfs_bhash_size = max_mem / (HASH_CACHE_RATIO *
 					(mp->m_inode_cluster_size >> 10));
 			if (libxfs_bhash_size < 512)
 				libxfs_bhash_size = 512;

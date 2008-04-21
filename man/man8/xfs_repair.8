@@ -6,6 +6,9 @@ xfs_repair \- repair an XFS filesystem
 [
 .B \-dfLnPv
 ] [
+.B \-m
+.I maxmem
+] [
 .B \-o
 .I subopt\c
 [\c
@@ -85,6 +88,18 @@ No modify mode. Specifies that
 .B xfs_repair
 should not modify the filesystem but should only scan the
 filesystem and indicate what repairs would have been made.
+.TP
+.BI \-m " maxmem"
+Specifies the approximate maximum amount of memory, in megabytes, to use for
+.BR xfs_repair .
+.B xfs_repair
+has its own internal block cache which will scale out up to the lesser of the
+process's virtual address limit or about 75% of the system's physical RAM.
+This option overrides these limits.
+.IP
+.B NOTE:
+These memory limits are only approximate and may use more than the specified
+limit.
 .HP
 .B \-o
 .I subopt\c
