@@ -105,6 +105,32 @@ phase1(xfs_mount_t *mp)
 		do_warn(_("superblock has a features2 mismatch, correcting\n"));
 	}
 
+	/*
+	 * apply any version changes or conversions after the primary
+	 * superblock has been verified or repaired
+	 *
+	 * Send output to stdout as do_log and everything else in repair
+	 * is sent to stderr and there is no "quiet" option. xfs_admin
+	 * will filter stderr but not stdout. This situation must be improved.
+	 */
+	if (convert_lazy_count) {
+		if (lazy_count && !xfs_sb_version_haslazysbcount(sb)) {
+			sb->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
+			sb->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+			primary_sb_modified = 1;
+			printf(_("Enabling lazy-counters\n"));
+		} else
+		if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
+			sb->sb_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+			printf(_("Disabling lazy-counters\n"));
+			primary_sb_modified = 1;
+		} else {
+			printf(_("Lazy-counters are already %s\n"),
+				lazy_count ? _("enabled") : _("disabled"));
+			exit(0); /* no conversion required, exit */
+		}
+	}
+
 	if (primary_sb_modified)  {
 		if (!no_modify)  {
 			do_warn(_("writing modified primary superblock\n"));

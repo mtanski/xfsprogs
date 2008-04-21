@@ -1,3 +1,14 @@
+xfsprogs-2.9.8 (21 April 2008)
+	- Add support for sb_features2 in wrong location in mkfs.xfs,
+	  xfs_repair and xfs_db.
+	- Improve memory limits for libxfs cache in xfs_repair and added
+	  a -m option to manually limit usage of xfs_repair.
+	- Add -c option to xfs_admin to turn lazy-counters on/off.
+	- Added support for mdp in libdisk/mkfs.xfs, thanks to
+	  Hubert Verstraete.
+	- Add -p option to fsck.xfs, thanks to Markus Rothe.
+	- Cleanup sys v3 bzero/bcopy calls, thanks to Nigel Kukard.
+
 xfsprogs-2.9.7 (1 Mar 2008)
 	- Lazy superblock counters not yet the default with mkfs.xfs.
 	- Add -y (another no-op) fsck option.

@@ -48,7 +48,7 @@ extern void	incore_init(xfs_mount_t *);
  */
 
 /*
- * -o (user-supplied override options)
+ * -o: user-supplied override options
  */
 
 char *o_opts[] = {
@@ -65,6 +65,17 @@ char *o_opts[] = {
 	NULL
 };
 
+/*
+ * -c: conversion options
+ */
+
+char *c_opts[] = {
+#define CONVERT_LAZY_COUNT	0
+	"lazycount",
+	NULL
+};
+
+
 static int	ihash_option_used;
 static int	bhash_option_used;
 static long	max_mem_specified;	/* in megabytes */
@@ -72,9 +83,23 @@ static long	max_mem_specified;	/* in megabytes */
 static void
 usage(void)
 {
-	do_warn(
-_("Usage: %s [-nLvV] [-m memMB] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"),
-		progname);
+	do_warn(_(
+"Usage: %s [options] device\n"
+"\n"
+"Options:\n"
+"  -f           The device is a file\n"
+"  -L           Force log zeroing. Do this as a last resort.\n"
+"  -l logdev    Specifies the device where the external log resides.\n"
+"  -m maxmem    Maximum amount of memory to be used in megabytes.\n"
+"  -n           No modify mode, just checks the filesystem for damage.\n"
+"  -P           Disables prefetching.\n"
+"  -r rtdev     Specifies the device where the realtime section resides.\n"
+"  -v           Verbose output.\n"
+"  -c subopts   Change filesystem parameters - use xfs_admin.\n"
+"  -o subopts   Override default behaviour, refer to man page.\n"
+"  -t interval  Reporting interval in minutes.\n"
+"  -d           Repair dangerously.\n"
+"  -V           Reports version and exits.\n"), progname);
 	exit(1);
 }
 
@@ -89,7 +114,7 @@ err_string(int err_code)
 		err_message[XR_BAD_MAGIC] = _("bad magic number");
 		err_message[XR_BAD_BLOCKSIZE] = _("bad blocksize field");
 		err_message[XR_BAD_BLOCKLOG] = _("bad blocksize log field");
-		err_message[XR_BAD_VERSION] = _("bad version number");
+		err_message[XR_BAD_VERSION] = _("bad or unsupported version");
 		err_message[XR_BAD_INPROGRESS] =
 			_("filesystem mkfs-in-progress bit set");
 		err_message[XR_BAD_FS_SIZE_DATA] =
@@ -193,7 +218,7 @@ process_args(int argc, char **argv)
 	 * XXX have to add suboption processing here
 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
 	 */
-	while ((c = getopt(argc, argv, "o:fl:m:r:LnDvVdPt:")) != EOF)  {
+	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPt:")) != EOF)  {
 		switch (c) {
 		case 'D':
 			dumpcore = 1;
@@ -235,6 +260,22 @@ process_args(int argc, char **argv)
 					break;
 				default:
 					unknown('o', val);
+					break;
+				}
+			}
+			break;
+		case 'c':
+			p = optarg;
+			while (*p) {
+				char *val;
+
+				switch (getsubopt(&p, (constpp)c_opts, &val)) {
+				case CONVERT_LAZY_COUNT:
+					lazy_count = (int)strtol(val, 0, 0);
+					convert_lazy_count = 1;
+					break;
+				default:
+					unknown('c', val);
 					break;
 				}
 			}

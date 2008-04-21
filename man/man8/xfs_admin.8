@@ -6,6 +6,8 @@ xfs_admin \- change parameters of an XFS filesystem
 [
 .B \-eflu
 ] [
+.BR "\-c 0" | 1
+] [
 .B \-L
 .I label
 ] [
@@ -53,6 +55,18 @@ Print the current filesystem label.
 .B \-u
 Print the current filesystem UUID (Universally Unique IDentifier).
 .TP
+.BR "\-c 0" | 1
+Enable (1) or disable (0) lazy-counters in the filesystem.
+This operation may take quite a bit of time on large filesystems as the
+entire filesystem needs to be scanned when this option is changed.
+.IP
+With lazy-counters enabled, the superblock is not modified or logged on
+every change of the free-space and inode counters. Instead, enough
+information is kept in other parts of the filesystem to be able to
+maintain the counter values without needing to keep them in the
+superblock. This gives significant improvements in performance on some
+configurations and metadata intensive workloads.
+.TP
 .BI \-L " label"
 Set the filesystem label to
 .IR label .
@@ -90,4 +104,5 @@ rather than its block special device name.
 .BR mount (8),
 .BR xfs_db (8),
 .BR xfs_growfs (8),
+.BR xfs_repair (8),
 .BR xfs (5).

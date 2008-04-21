@@ -9,6 +9,8 @@ xfs_repair \- repair an XFS filesystem
 .B \-m
 .I maxmem
 ] [
+.BI \-c " subopt" = value
+] [
 .B \-o
 .I subopt\c
 [\c
@@ -100,6 +102,11 @@ This option overrides these limits.
 .B NOTE:
 These memory limits are only approximate and may use more than the specified
 limit.
+.TP
+.BI \-c " subopt" = value
+Change filesystem parameters. Refer to
+.BR xfs_admin (8)
+for information on changing filesystem parameters.
 .HP
 .B \-o
 .I subopt\c
@@ -532,6 +539,7 @@ fixed and/or improved.
 .BR dd (1),
 .BR mkfs.xfs (8),
 .BR umount (8),
+.BR xfs_admin (8),
 .BR xfs_check (8),
 .BR xfs_metadump (8),
 .BR xfs (5).

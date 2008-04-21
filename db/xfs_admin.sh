@@ -3,20 +3,23 @@
 # Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
 #
 
-OPTS=""
-USAGE="Usage: xfs_admin [-efjluV] [-L label] [-U uuid] special"
+status=0
+DB_OPTS=""
+REPAIR_OPTS=""
+USAGE="Usage: xfs_admin [-efjluV] [-c 0|1] [-L label] [-U uuid] device"
 
-while getopts "efjluL:U:V" c
+while getopts "efjluc:L:U:V" c
 do
 	case $c in
-	e)	OPTS=$OPTS" -c 'version extflg'";;
-	f)	OPTS=$OPTS" -f";;
-	j)	OPTS=$OPTS" -c 'version log2'";;
-	l)	OPTS=$OPTS" -r -c label";;
-	L)	OPTS=$OPTS" -c 'label "$OPTARG"'";;
-	u)	OPTS=$OPTS" -r -c uuid";;
-	U)	OPTS=$OPTS" -c 'uuid "$OPTARG"'";;
-	V)	OPTS=$OPTS" -V";;
+	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
+	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'";;
+	f)	DB_OPTS=$DB_OPTS" -f";;
+	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
+	l)	DB_OPTS=$DB_OPTS" -r -c label";;
+	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
+	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
+	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
+	V)	DB_OPTS=$DB_OPTS" -V";;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;
@@ -25,8 +28,25 @@ done
 set -- extra $@
 shift $OPTIND
 case $# in
-	1)	eval xfs_db -x -p xfs_admin $OPTS $1
-		status=$?
+	1)	if [ -n "$DB_OPTS" ]
+		then
+			eval xfs_db -x -p xfs_admin $DB_OPTS $1
+			status=$?
+		fi
+		if [ -n "$REPAIR_OPTS" ]
+		then
+			# Hide normal repair output which is sent to stderr
+			# assuming the filesystem is fine when a user is
+			# running xfs_admin.
+			# Ideally, we need to improve the output behaviour
+			# of repair for this purpose (say a "quiet" mode).
+			eval xfs_repair $REPAIR_OPTS $1 2> /dev/null
+			status=`expr $? + $status`
+			if [ $status -ne 0 ]
+			then
+				echo "Conversion failed, is the filesystem unmounted?"
+			fi
+		fi
 		;;
 	*)	echo $USAGE 1>&2
 		exit 2
