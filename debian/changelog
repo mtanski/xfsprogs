@@ -1,3 +1,9 @@
+xfsprogs (2.9.8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Tue, 22 Apr 2008 13:04:05 +1000
+
 xfsprogs (2.9.7-1) unstable; urgency=high
 
   * New upstream release.
