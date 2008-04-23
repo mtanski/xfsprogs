@@ -1,6 +1,13 @@
 xfsprogs (2.9.8-1) unstable; urgency=low
 
-  * New upstream release.
+  * New upstream release
+  * xfsprogs and xfsprogs-udeb depend on ${misc:Depends}
+  * Add Homepage control header
+  * Add watch file
+  * Fix the following lintian issues:
+    W: xfsprogs source: package-uses-deprecated-debhelper-compat-version 1
+    W: xfsprogs source: ancient-standards-version 3.5.9 (current is 3.7.3)
+    W: xfslibs-dev: package-contains-empty-directory usr/share/doc/xfsprogs/
 
  -- Anibal Monsalve Salazar <anibal@debian.org>  Tue, 22 Apr 2008 13:04:05 +1000
 

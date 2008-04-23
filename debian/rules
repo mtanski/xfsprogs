@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+export DH_VERBOSE=1
+
 package = xfsprogs
 develop = xfslibs-dev
 bootpkg = xfsprogs-udeb
@@ -22,7 +24,6 @@ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
 diopts  = $(options) \
 	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no" ;
 checkdir = test -f debian/rules
-checkver = rm -f debian/compat && echo 5 > debian/compat
 
 build: built
 built: dibuild config
@@ -55,20 +56,19 @@ clean:
 	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
 	$(MAKE) distclean
 	-rm -rf $(dirme) $(dirdev) $(dirdi)
-	-rm -f debian/*substvars debian/files* debian/*.debhelper debian/compat
+	-rm -f debian/*substvars debian/files* debian/*.debhelper
 
 binary-indep:
 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
-	$(checkver)
 	-rm -rf $(dirme) $(dirdev) $(dirdi)
 	$(pkgme)  $(MAKE) -C . install
 	$(pkgdev) $(MAKE) -C . install-dev
 	$(pkgdi)  $(MAKE) -C debian install-d-i
 	$(pkgme)  $(MAKE) -C build src-manifest
-
+	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
 	dh_installdocs
 	dh_installchangelogs
 	dh_strip
