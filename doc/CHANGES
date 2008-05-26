@@ -1,3 +1,6 @@
+xfsprogs-2.10.0 (26 May 2008)
+	- Add ASCII case-insensitive support to xfsprogs.
+
 xfsprogs-2.9.8 (21 April 2008)
 	- Add support for sb_features2 in wrong location in mkfs.xfs,
 	  xfs_repair and xfs_db.

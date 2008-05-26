@@ -678,6 +678,7 @@ main(
 	xfs_alloc_rec_t		*nrec;
 	int			nsflag;
 	int			nvflag;
+	int			nci;
 	int			Nflag;
 	char			*p;
 	char			*protofile;
@@ -720,8 +721,9 @@ main(
 	loginternal = 1;
 	logversion = 2;
 	logagno = logblocks = rtblocks = rtextblocks = 0;
-	Nflag = nlflag = nsflag = nvflag = 0;
-	dirblocklog = dirblocksize = dirversion = 0;
+	Nflag = nlflag = nsflag = nvflag = nci = 0;
+	dirblocklog = dirblocksize = 0;
+	dirversion = XFS_DFL_DIR_VERSION;
 	qflag = 0;
 	imaxpct = inodelog = inopblock = isize = 0;
 	iaflag = XFS_IFLAG_ALIGN;
@@ -1236,9 +1238,14 @@ main(
 						reqval('n', nopts, N_VERSION);
 					if (nvflag)
 						respec('n', nopts, N_VERSION);
-					dirversion = atoi(value);
-					if (dirversion < 1 || dirversion > 2)
-						illegal(value, "n version");
+					if (!strcasecmp(value, "ci")) {
+						nci = 1; /* ASCII CI mode */
+					} else {
+						dirversion = atoi(value);
+						if (dirversion != 2)
+							illegal(value,
+								"n version");
+					}
 					nvflag = 1;
 					break;
 				default:
@@ -1412,33 +1419,19 @@ main(
 		logversion = 2;
 	}
 
-	if (!nvflag)
-		dirversion = (nsflag || nlflag) ? 2 : XFS_DFL_DIR_VERSION;
-	switch (dirversion) {
-	case 1:
-		if ((nsflag || nlflag) && dirblocklog != blocklog) {
+	if (nsflag || nlflag) {
+		if (dirblocksize < blocksize ||
+					dirblocksize > XFS_MAX_BLOCKSIZE) {
 			fprintf(stderr, _("illegal directory block size %d\n"),
 				dirblocksize);
 			usage();
 		}
-		break;
-	case 2:
-		if (nsflag || nlflag) {
-			if (dirblocksize < blocksize ||
-			    dirblocksize > XFS_MAX_BLOCKSIZE) {
-				fprintf(stderr,
-					_("illegal directory block size %d\n"),
-					dirblocksize);
-				usage();
-			}
-		} else {
-			if (blocksize < (1 << XFS_MIN_REC_DIRSIZE))
-				dirblocklog = XFS_MIN_REC_DIRSIZE;
-			else
-				dirblocklog = blocklog;
-			dirblocksize = 1 << dirblocklog;
-		}
-		break;
+	} else {
+		if (blocksize < (1 << XFS_MIN_REC_DIRSIZE))
+			dirblocklog = XFS_MIN_REC_DIRSIZE;
+		else
+			dirblocklog = blocklog;
+		dirblocksize = 1 << dirblocklog;
 	}
 
 	if (daflag && dasize) {
@@ -2024,7 +2017,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sectsz=%-5u attr=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
-		   "naming   =version %-14u bsize=%-6u\n"
+		   "naming   =version %-14u bsize=%-6u mixed-case=%c\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
@@ -2033,7 +2026,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			"", blocksize, (long long)dblocks,
 			       calc_default_imaxpct(blocklog, dblocks),
 			"", dsunit, dswidth,
-			dirversion, dirversion == 1 ? blocksize : dirblocksize,
+			dirversion, dirblocksize, nci ? 'N' : 'Y',
 			logfile, 1 << blocklog, (long long)logblocks,
 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
 			rtfile, rtextblocks << blocklog,
@@ -2078,8 +2071,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_qflags = 0;
 	sbp->sb_unit = dsunit;
 	sbp->sb_width = dswidth;
-	if (dirversion == 2)
-		sbp->sb_dirblklog = dirblocklog - blocklog;
+	sbp->sb_dirblklog = dirblocklog - blocklog;
 	if (logversion == 2) {	/* This is stored in bytes */
 		lsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
 		sbp->sb_logsunit = lsunit;
@@ -2097,12 +2089,13 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		sbp->sb_logsectlog = 0;
 		sbp->sb_logsectsize = 0;
 	}
-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters, attrversion == 2, 0);
-	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(
-			iaflag, dsunit != 0,
-			dirversion == 2, logversion == 2, attrversion == 1,
-			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
-			sbp->sb_features2 != 0);
+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters,
+					attrversion == 2, 0);
+	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(iaflag, dsunit != 0,
+					logversion == 2, attrversion == 1,
+					(sectorsize != BBSIZE ||
+							lsectorsize != BBSIZE),
+					nci, sbp->sb_features2 != 0);
 	/*
 	 * Due to a structure alignment issue, sb_features2 ended up in one
 	 * of two locations, the second "incorrect" location represented by

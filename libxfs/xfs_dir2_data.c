@@ -126,7 +126,7 @@ xfs_dir2_data_check(
 			addr = XFS_DIR2_DB_OFF_TO_DATAPTR(mp, mp->m_dirdatablk,
 				(xfs_dir2_data_aoff_t)
 				((char *)dep - (char *)d));
-			hash = xfs_da_hashname((char *)dep->name, dep->namelen);
+			hash = mp->m_dirnameops->hashname(dep->name, dep->namelen);
 			for (i = 0; i < INT_GET(btp->count, ARCH_CONVERT); i++) {
 				if (INT_GET(lep[i].address, ARCH_CONVERT) == addr &&
 				    INT_GET(lep[i].hashval, ARCH_CONVERT) == hash)

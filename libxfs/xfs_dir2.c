@@ -23,6 +23,57 @@
 
 #include <xfs.h>
 
+extern const struct xfs_nameops xfs_default_nameops;
+
+/*
+ * V1/OLDCI case-insensitive support for directories that was used in IRIX.
+ *
+ * This is ASCII only case support, ie. A-Z.
+ */
+static xfs_dahash_t
+xfs_ascii_ci_hashname(
+	const uchar_t	*name,
+	int		len)
+{
+	xfs_dahash_t	hash;
+	int		i;
+
+	for (i = 0, hash = 0; i < len; i++)
+		hash = tolower(name[i]) ^ rol32(hash, 7);
+
+	return hash;
+}
+
+static enum xfs_dacmp
+xfs_ascii_ci_compname(
+	const uchar_t	*name1,
+	int		len1,
+	const uchar_t	*name2,
+	int 		len2)
+{
+	enum xfs_dacmp	result;
+	int		i;
+
+	if (len1 != len2)
+		return XFS_CMP_DIFFERENT;
+
+	result = XFS_CMP_EXACT;
+	for (i = 0; i < len1; i++) {
+		if (name1[i] == name2[i])
+			continue;
+		if (tolower(name1[i]) != tolower(name2[i]))
+			return XFS_CMP_DIFFERENT;
+		result = XFS_CMP_CASE;
+	}
+
+	return result;
+}
+
+static const struct xfs_nameops xfs_ascii_ci_nameops = {
+	.hashname	= xfs_ascii_ci_hashname,
+	.compname	= xfs_ascii_ci_compname,
+};
+
 
 /*
  * Initialize directory-related fields in the mount structure.
@@ -46,6 +97,10 @@ xfs_dir2_mount(
 		(mp->m_dirblksize - (uint)sizeof(xfs_da_node_hdr_t)) /
 		(uint)sizeof(xfs_da_node_entry_t);
 	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
+	if (xfs_sb_version_hasasciici(&mp->m_sb))
+		mp->m_dirnameops = &xfs_ascii_ci_nameops;
+	else
+		mp->m_dirnameops = &xfs_default_nameops;
 }
 
 /*
@@ -98,7 +153,7 @@ xfs_dir2_createname(
 	 */
 	args.name = name;
 	args.namelen = namelen;
-	args.hashval = xfs_da_hashname(name, namelen);
+	args.hashval = dp->i_mount->m_dirnameops->hashname(name, namelen);
 	args.inumber = inum;
 	args.dp = dp;
 	args.firstblock = first;
@@ -149,7 +204,7 @@ xfs_dir2_lookup(
 	 */
 	args.name = name;
 	args.namelen = namelen;
-	args.hashval = xfs_da_hashname(name, namelen);
+	args.hashval = dp->i_mount->m_dirnameops->hashname(name, namelen);
 	args.inumber = 0;
 	args.dp = dp;
 	args.firstblock = NULL;
@@ -206,7 +261,7 @@ xfs_dir2_removename(
 	 */
 	args.name = name;
 	args.namelen = namelen;
-	args.hashval = xfs_da_hashname(name, namelen);
+	args.hashval = dp->i_mount->m_dirnameops->hashname(name, namelen);
 	args.inumber = ino;
 	args.dp = dp;
 	args.firstblock = first;
@@ -261,7 +316,7 @@ xfs_dir2_replace(
 	 */
 	args.name = name;
 	args.namelen = namelen;
-	args.hashval = xfs_da_hashname(name, namelen);
+	args.hashval = dp->i_mount->m_dirnameops->hashname(name, namelen);
 	args.inumber = inum;
 	args.dp = dp;
 	args.firstblock = first;

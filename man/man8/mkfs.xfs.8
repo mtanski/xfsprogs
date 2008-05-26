@@ -302,8 +302,8 @@ bits.
 .TP
 .BI maxpct= value
 This specifies the maximum percentage of space in the filesystem that
-can be allocated to inodes. The default 
-.I value 
+can be allocated to inodes. The default
+.I value
 is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
 for filesystems over 50TB.
 .IP
@@ -314,14 +314,14 @@ allocator will avoid these low blocks to accommodate the specified
 maxpct, so a high value may result in a filesystem with nothing but
 inodes in a significant portion of the lower blocks of the filesystem.
 (This restriction is not present when the filesystem is mounted with
-the 
-.I "inode64" 
+the
+.I "inode64"
 option on 64-bit platforms).
 .IP
 Setting the value to 0 means that essentially all of the filesystem
 can become inode blocks, subject to inode32 restrictions.
 .IP
-This value can be modified with 
+This value can be modified with
 .Ixfs_growfs(8)
 .
 .TP
@@ -340,7 +340,7 @@ filesystem needs to be mountable by a version of IRIX
 that does not have the inode alignment feature
 (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
 .TP
-.BI attr= value 
+.BI attr= value
 This is used to specify the version of extended attribute inline
 allocation policy to be used.  By default, this is 2, which uses an
 efficient algorithm for managing the available inline inode space
@@ -489,10 +489,17 @@ filesystem block size.
 .BI version= value
 The naming (directory) version
 .I value
-can be either 1 or 2, defaulting to 2 if unspecified.
-With version 2 directories,
-the directory block size can be any power of 2 size
-from the filesystem block size up to 65536.
+can be either 2 or 'ci', defaulting to 2 if unspecified.
+With version 2 directories, the directory block size can be
+any power of 2 size from the filesystem block size up to 65536.
+.IP
+The
+.B version=ci
+option enables ASCII only case-insensitive filename lookup and version
+2 directories. Filenames are case-preserving, that is, the names
+are stored in directories using the case they were created with.
+.IP
+Note: Version 1 directories are not supported.
 .RE
 .TP
 .BI \-p " protofile"

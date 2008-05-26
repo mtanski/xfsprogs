@@ -1540,6 +1540,18 @@ xfs_da_hashname(const uchar_t *name, int namelen)
 	}
 }
 
+enum xfs_dacmp
+xfs_da_compname(const uchar_t *name1, int len1, const uchar_t *name2, int len2)
+{
+	return (len1 == len2 && memcmp(name1, name2, len1) == 0) ?
+					XFS_CMP_EXACT : XFS_CMP_DIFFERENT;
+}
+
+const struct xfs_nameops xfs_default_nameops = {
+	.hashname	= xfs_da_hashname,
+	.compname	= xfs_da_compname
+};
+
 /*
  * Add a block to the btree ahead of the file.
  * Return the new block number to the caller.

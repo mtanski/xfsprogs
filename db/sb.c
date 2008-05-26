@@ -605,6 +605,8 @@ version_string(
 		strcat(s, ",EXTFLG");
 	if (XFS_SB_VERSION_HASSECTOR(sbp))
 		strcat(s, ",SECTOR");
+	if (xfs_sb_version_hasasciici(sbp))
+		strcat(s, ",ASCII_CI");
 	if (XFS_SB_VERSION_HASMOREBITS(sbp))
 		strcat(s, ",MOREBITS");
 	if (XFS_SB_VERSION_HASATTR2(sbp))

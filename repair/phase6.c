@@ -93,6 +93,7 @@ typedef struct freetab {
  */
 static int
 dir_hash_add(
+	xfs_mount_t		*mp,
 	dir_hash_tab_t		*hashtab,
 	__uint32_t		addr,
 	xfs_ino_t		inum,
@@ -113,7 +114,7 @@ dir_hash_add(
 	dup = 0;
 
 	if (!junk) {
-		hash = libxfs_da_hashname(name, namelen);
+		hash = mp->m_dirnameops->hashname(name, namelen);
 		byhash = DIR_HASH_FUNC(hashtab, hash);
 
 		/*
@@ -1589,7 +1590,7 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		/*
 		 * check for duplicate names in directory.
 		 */
-		if (!dir_hash_add(hashtab, (da_bno << mp->m_sb.sb_blocklog) +
+		if (!dir_hash_add(mp, hashtab, (da_bno << mp->m_sb.sb_blocklog) +
 				entry->nameidx, lino, entry->namelen,
 				namest->name)) {
 			nbad++;
@@ -2260,7 +2261,7 @@ longform_dir2_entry_check_data(
 		/*
 		 * check for duplicate names in directory.
 		 */
-		if (!dir_hash_add(hashtab, addr, inum, dep->namelen,
+		if (!dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
 				dep->name)) {
 			nbad++;
 			if (entry_junked(_("entry \"%s\" (ino %llu) in dir "
@@ -2870,7 +2871,7 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 		/*
 		 * check for duplicate names in directory.
 		 */
-		if (!dir_hash_add(hashtab,
+		if (!dir_hash_add(mp, hashtab,
 				(xfs_dir2_dataptr_t)(sf_entry - &sf->list[0]),
 				lino, sf_entry->namelen, sf_entry->name)) {
 			do_warn(_("entry \"%s\" (ino %llu) in dir %llu is a "
@@ -3275,7 +3276,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		/*
 		 * check for duplicate names in directory.
 		 */
-		if (!dir_hash_add(hashtab, (xfs_dir2_dataptr_t)
+		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
 					(sfep - XFS_DIR2_SF_FIRSTENTRY(sfp)),
 				lino, sfep->namelen, sfep->name)) {
 			do_warn(_("entry \"%s\" (ino %llu) in dir %llu is a "

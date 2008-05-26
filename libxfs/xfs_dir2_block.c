@@ -1046,8 +1046,9 @@ xfs_dir2_sf_to_block(
 		tagp = XFS_DIR2_DATA_ENTRY_TAG_P(dep);
 		INT_SET(*tagp, ARCH_CONVERT, (xfs_dir2_data_off_t)((char *)dep - (char *)block));
 		xfs_dir2_data_log_entry(tp, bp, dep);
-		INT_SET(blp[2 + i].hashval, ARCH_CONVERT, xfs_da_hashname((const uchar_t *)sfep->name, sfep->namelen));
-		INT_SET(blp[2 + i].address, ARCH_CONVERT, XFS_DIR2_BYTE_TO_DATAPTR(mp,
+		blp[2 + i].hashval = cpu_to_be32(mp->m_dirnameops->hashname(
+						sfep->name, sfep->namelen));
+		blp[2 + i].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
 						 (char *)dep - (char *)block));
 		offset = (int)((char *)(tagp + 1) - (char *)block);
 		if (++i == INT_GET(sfp->hdr.count, ARCH_CONVERT))

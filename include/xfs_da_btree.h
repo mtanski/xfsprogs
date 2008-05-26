@@ -103,6 +103,15 @@ typedef struct xfs_da_node_entry xfs_da_node_entry_t;
  *========================================================================*/
 
 /*
+ * Search comparison results
+ */
+enum xfs_dacmp {
+	XFS_CMP_DIFFERENT,	/* names are completely different */
+	XFS_CMP_EXACT,		/* names are exactly the same */
+	XFS_CMP_CASE		/* names are same but differ in case */
+};
+
+/*
  * Structure to ease passing around component names.
  */
 typedef struct xfs_da_args {
@@ -131,6 +140,7 @@ typedef struct xfs_da_args {
 	unsigned char	rename;		/* T/F: this is an atomic rename op */
 	unsigned char	addname;	/* T/F: this is an add operation */
 	unsigned char	oknoent;	/* T/F: ok to return ENOENT, else die */
+	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
 } xfs_da_args_t;
 
 /*
@@ -205,6 +215,14 @@ typedef struct xfs_da_state {
 		(uint)(XFS_DA_LOGOFF(BASE, ADDR)), \
 		(uint)(XFS_DA_LOGOFF(BASE, ADDR)+(SIZE)-1)
 
+/*
+ * Name ops for directory and/or attr name operations
+ */
+struct xfs_nameops {
+	xfs_dahash_t	(*hashname)(const uchar_t *, int);
+	enum xfs_dacmp	(*compname)(const uchar_t *, int, const uchar_t *, int);
+};
+
 
 #ifdef __KERNEL__
 /*========================================================================
@@ -253,6 +271,9 @@ int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
 					  xfs_dabuf_t *dead_buf);
 
 uint xfs_da_hashname(const uchar_t *name_string, int name_length);
+enum xfs_dacmp xfs_da_compname(const uchar_t *name1, int len1,
+				const uchar_t *name2, int len2);
+
 uint xfs_da_log2_roundup(uint i);
 xfs_da_state_t *xfs_da_state_alloc(void);
 void xfs_da_state_free(xfs_da_state_t *state);
