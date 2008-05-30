@@ -91,6 +91,14 @@ No modify mode. Specifies that
 should not modify the filesystem but should only scan the
 filesystem and indicate what repairs would have been made.
 .TP
+.B \-P
+Disable prefetching of inode and directory blocks. Use this option if
+you find
+.B xfs_repair
+gets stuck and stops proceeding. Interrupting a stuck
+.B xfs_repair
+is safe.
+.TP
 .BI \-m " maxmem"
 Specifies the approximate maximum amount of memory, in megabytes, to use for
 .BR xfs_repair .
@@ -145,9 +153,6 @@ Modify reporting interval. During long runs
 .B xfs_repair
 outputs its progress every 15 minutes. Reporting is only activated when
 ag_stride is enabled.
-.TP
-.B \-P
-Disable prefetching of inode and directory blocks.
 .TP
 .B \-v
 Verbose output.

@@ -135,6 +135,7 @@ xfs_init(libxfs_init_t *args)
 		/* XXX assume data file also means rt file */
 	}
 
+	args->usebuflock = do_prefetch;
 	args->setblksize = !dangerously;
 	args->isdirect = LIBXFS_DIRECT;
 	if (no_modify)

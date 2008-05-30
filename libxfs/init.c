@@ -28,6 +28,8 @@ int libxfs_ihash_size;		/* #buckets in icache */
 struct cache *libxfs_bcache;	/* global buffer cache */
 int libxfs_bhash_size;		/* #buckets in bcache */
 
+int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+
 static void manage_zones(int);	/* setup global zones */
 
 /*
@@ -335,6 +337,7 @@ libxfs_init(libxfs_init_t *a)
 	if (!libxfs_bhash_size)
 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
+	use_xfs_buf_lock = a->usebuflock;
 	manage_zones(0);
 	rval = 1;
 done:

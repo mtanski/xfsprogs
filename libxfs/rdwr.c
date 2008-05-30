@@ -375,6 +375,8 @@ struct list_head	lock_buf_list = {&lock_buf_list, &lock_buf_list};
 int			lock_buf_count = 0;
 #endif
 
+extern int     use_xfs_buf_lock;
+
 xfs_buf_t *
 libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 {
@@ -388,7 +390,8 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 
 	miss = cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp);
 	if (bp) {
-		pthread_mutex_lock(&bp->b_lock);
+		if (use_xfs_buf_lock)
+			pthread_mutex_lock(&bp->b_lock);
 		cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
 			cache_node_get_priority((struct cache_node *)bp) - 4);
 #ifdef XFS_BUF_TRACING
@@ -417,7 +420,8 @@ libxfs_putbuf(xfs_buf_t *bp)
 	list_del_init(&bp->b_lock_list);
 	pthread_mutex_unlock(&libxfs_bcache->c_mutex);
 #endif
-	pthread_mutex_unlock(&bp->b_lock);
+	if (use_xfs_buf_lock)
+		pthread_mutex_unlock(&bp->b_lock);
 	cache_node_put((struct cache_node *)bp);
 }
 

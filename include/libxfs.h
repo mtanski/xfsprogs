@@ -69,11 +69,14 @@ typedef struct {
 	char            *rtname;        /* pathname of realtime "subvolume" */
 	int             isreadonly;     /* filesystem is only read in applic */
 	int             isdirect;       /* we can attempt to use direct I/O */
-	int             disfile;        /* data "subvolume" is a regular file */        int             dcreat;         /* try to create data subvolume */
+	int             disfile;        /* data "subvolume" is a regular file */
+	int             dcreat;         /* try to create data subvolume */
 	int             lisfile;        /* log "subvolume" is a regular file */
 	int             lcreat;         /* try to create log subvolume */
-	int             risfile;        /* realtime "subvolume" is a reg file */        int             rcreat;         /* try to create realtime subvolume */
+	int             risfile;        /* realtime "subvolume" is a reg file */
+	int             rcreat;         /* try to create realtime subvolume */
 	int		setblksize;	/* attempt to set device blksize */
+	int		usebuflock;	/* lock xfs_buf_t's - for MT usage */
 				/* output results */
 	dev_t           ddev;           /* device for data subvolume */
 	dev_t           logdev;         /* device for log subvolume */
