@@ -572,7 +572,8 @@ main(int argc, char **argv)
 
 	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
 	max_symlink_blocks = howmany(MAXPATHLEN - 1, mp->m_sb.sb_blocksize);
-	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
+	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
+			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
 
 	if (ag_stride) {
 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;

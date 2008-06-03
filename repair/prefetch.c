@@ -600,7 +600,6 @@ pf_queuing_worker(
 	ino_tree_node_t		*irec;
 	ino_tree_node_t		*cur_irec;
 	int			blks_per_cluster;
-	int			inos_per_cluster;
 	xfs_agblock_t		bno;
 	int			i;
 	int			err;
@@ -608,7 +607,6 @@ pf_queuing_worker(
 	blks_per_cluster =  XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
 	if (blks_per_cluster == 0)
 		blks_per_cluster = 1;
-	inos_per_cluster = blks_per_cluster * mp->m_sb.sb_inopblock;
 
 	for (i = 0; i < PF_THREAD_COUNT; i++) {
 		err = pthread_create(&args->io_threads[i], NULL,
@@ -661,7 +659,7 @@ pf_queuing_worker(
 					(cur_irec->ino_isa_dir != 0) ?
 						B_DIR_INODE : B_INODE);
 			bno += blks_per_cluster;
-			num_inos += inos_per_cluster;
+			num_inos += inodes_per_cluster;
 		} while (num_inos < XFS_IALLOC_INODES(mp));
 	}
 
@@ -738,6 +736,7 @@ start_inode_prefetch(
 	prefetch_args_t		*prev_args)
 {
 	prefetch_args_t		*args;
+	long			max_queue;
 
 	if (!do_prefetch || agno >= mp->m_sb.sb_agcount)
 		return NULL;
@@ -757,8 +756,12 @@ start_inode_prefetch(
 	 * and not any other associated metadata like directories
 	 */
 
-	sem_init(&args->ra_count, 0, libxfs_bcache->c_maxcount / thread_count /
-		(XFS_IALLOC_BLOCKS(mp) / (XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog)) / 8);
+	max_queue = libxfs_bcache->c_maxcount / thread_count / 8;
+	if (XFS_INODE_CLUSTER_SIZE(mp) > mp->m_sb.sb_blocksize)
+		max_queue = max_queue * (XFS_INODE_CLUSTER_SIZE(mp) >>
+				mp->m_sb.sb_blocklog) / XFS_IALLOC_BLOCKS(mp);
+
+	sem_init(&args->ra_count, 0, max_queue);
 
 	if (!prev_args) {
 		if (!pf_create_prefetch_thread(args))
