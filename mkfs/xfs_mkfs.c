@@ -2017,7 +2017,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sectsz=%-5u attr=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
-		   "naming   =version %-14u bsize=%-6u mixed-case=%c\n"
+		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
@@ -2026,7 +2026,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			"", blocksize, (long long)dblocks,
 			       calc_default_imaxpct(blocklog, dblocks),
 			"", dsunit, dswidth,
-			dirversion, dirblocksize, nci ? 'N' : 'Y',
+			dirversion, dirblocksize, nci,
 			logfile, 1 << blocklog, (long long)logblocks,
 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
 			rtfile, rtextblocks << blocklog,
@@ -2576,7 +2576,7 @@ usage( void )
 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
 			    lazy-count=0|1]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
-/* naming */		[-n log=n|size=num,version=n]\n\
+/* naming */		[-n log=n|size=num,version=2|ci]\n\
 /* prototype file */	[-p fname]\n\
 /* quiet */		[-q]\n\
 /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
