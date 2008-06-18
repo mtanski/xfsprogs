@@ -1,3 +1,7 @@
+xfsprogs-2.10.1
+	- Add ondisk dir2 sf support (by packing) for ARM old ABI.
+	- Courtesy of Eric Sandeen.
+
 xfsprogs-2.10.0 (26 May 2008)
 	- Add ASCII case-insensitive support to xfsprogs.
 
