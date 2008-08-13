@@ -593,7 +593,6 @@ process_inode_chunk(
 	xfs_agino_t		agino;
 	xfs_agblock_t		agbno;
 	int			dirty = 0;
-	int			cleared = 0;
 	int			isa_dir = 0;
 	int			blks_per_cluster;
 	int			cluster_count;
@@ -777,8 +776,7 @@ process_inode_chunk(
 
 		status = process_dinode(mp, dino, agno, agino,
 				is_inode_free(ino_rec, irec_offset),
-				&ino_dirty, &cleared, &is_used,
-				ino_discovery, check_dups,
+				&ino_dirty, &is_used,ino_discovery, check_dups,
 				extra_attr_check, &isa_dir, &parent);
 
 		ASSERT(is_used != 3);
