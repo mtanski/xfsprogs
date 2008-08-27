@@ -27,6 +27,8 @@
 #include "sig.h"
 #include "xfs_metadump.h"
 
+#define DEFAULT_MAX_EXT_SIZE	1000
+
 /* copy all metadata structures to/from a file */
 
 static int	metadump_f(int argc, char **argv);
@@ -58,7 +60,7 @@ static xfs_ino_t	cur_ino;
 
 static int		show_progress = 0;
 static int		stop_on_read_error = 0;
-static int		max_extent_size = 20;
+static int		max_extent_size = DEFAULT_MAX_EXT_SIZE;
 static int		dont_obfuscate = 0;
 static int		show_warnings = 0;
 static int		progress_since_warning = 0;
@@ -80,10 +82,10 @@ metadump_help(void)
 " Options:\n"
 "   -e -- Ignore read errors and keep going\n"
 "   -g -- Display dump progress\n"
-"   -m -- Specify max extent size in blocks to copy (default = 20 blocks)\n"
+"   -m -- Specify max extent size in blocks to copy (default = %d blocks)\n"
 "   -o -- Don't obfuscate names and extended attributes\n"
 "   -w -- Show warnings of bad metadata information\n"
-"\n");
+"\n", DEFAULT_MAX_EXT_SIZE);
 }
 
 static void
