@@ -152,38 +152,39 @@ pf_read_bmbt_reclist(
 	int			numrecs)
 {
 	int			i;
-	xfs_dfsbno_t		s;		/* start */
-	xfs_dfilblks_t		c;		/* count */
-	xfs_dfiloff_t		o;		/* offset */
+	xfs_bmbt_irec_t		irec;
 	xfs_dfilblks_t		cp = 0;		/* prev count */
 	xfs_dfiloff_t		op = 0;		/* prev offset */
-	int			flag;		/* extent flag */
 
 	for (i = 0; i < numrecs; i++, rp++) {
-		convert_extent((xfs_bmbt_rec_32_t*)rp, &o, &s, &c, &flag);
+		libxfs_bmbt_disk_get_all(rp, &irec);
 
-		if (((i > 0) && (op + cp > o)) || (c == 0) ||
-				(o >= fs_max_file_offset))
+		if (((i > 0) && (op + cp > irec.br_startoff)) ||
+				(irec.br_blockcount == 0) ||
+				(irec.br_startoff >= fs_max_file_offset))
 			return 0;
 
-		if (!verify_dfsbno(mp, s) || !verify_dfsbno(mp, s + c - 1))
+		if (!verify_dfsbno(mp, irec.br_startblock) || !verify_dfsbno(mp,
+				irec.br_startblock + irec.br_blockcount - 1))
 			return 0;
 
-		if (!args->dirs_only && ((o + c) >= mp->m_dirfreeblk))
+		if (!args->dirs_only && ((irec.br_startoff +
+				irec.br_blockcount) >= mp->m_dirfreeblk))
 			break;	/* only Phase 6 reads the free blocks */
 
-		op = o;
-		cp = c;
+		op = irec.br_startoff;
+		cp = irec.br_blockcount;
 
-		while (c) {
+		while (irec.br_blockcount) {
 			unsigned int	len;
 #ifdef XR_PF_TRACE
 			pftrace("queuing dir extent in AG %d", args->agno);
 #endif
-			len = (c > mp->m_dirblkfsbs) ? mp->m_dirblkfsbs : c;
-			pf_queue_io(args, s, len, B_DIR_META);
-			c -= len;
-			s += len;
+			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
+					mp->m_dirblkfsbs : irec.br_blockcount;
+			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
+			irec.br_blockcount -= len;
+			irec.br_startblock += len;
 		}
 	}
 	return 1;
