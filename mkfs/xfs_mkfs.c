@@ -819,7 +819,7 @@ main(
 					xi.disfile = atoi(value);
 					if (xi.disfile < 0 || xi.disfile > 1)
 						illegal(value, "d file");
-					if (xi.disfile)
+					if (xi.disfile && !Nflag)
 						xi.dcreat = 1;
 					break;
 				case D_NAME:
