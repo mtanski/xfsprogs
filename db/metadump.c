@@ -186,22 +186,26 @@ scan_btree(
 				typnm_t			btype,
 				void			*arg))
 {
+	int		rval = 0;
+
 	push_cur();
 	set_cur(&typtab[btype], XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb,
 			DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read %s block %u/%u", typtab[btype].name,
 				agno, agbno);
-		return !stop_on_read_error;
+		rval = !stop_on_read_error;
+		goto pop_out;
 	}
 	if (!write_buf(iocur_top))
-		return 0;
+		goto pop_out;
 
 	if (!(*func)(iocur_top->data, agno, agbno, level - 1, btype, arg))
-		return 0;
-
+		goto pop_out;
+	rval = 1;
+pop_out:
 	pop_cur();
-	return 1;
+	return rval;
 }
 
 /* free space tree copy routines */
@@ -949,8 +953,10 @@ process_bmbt_reclist(
 		if (iocur_top->data == NULL) {
 			print_warning("cannot read %s block %u/%u (%llu)",
 					typtab[btype].name, agno, agbno, s);
-			if (stop_on_read_error)
+			if (stop_on_read_error) {
+				pop_cur();
 				return 0;
+			}
 		} else {
 			if (!dont_obfuscate)
 			    switch (btype) {
@@ -973,8 +979,10 @@ process_bmbt_reclist(
 
 				default: ;
 			    }
-			if (!write_buf(iocur_top))
+			if (!write_buf(iocur_top)) {
+				pop_cur();
 				return 0;
+			}
 		}
 		pop_cur();
 	}
@@ -1238,6 +1246,7 @@ copy_inode_chunk(
 	int			off;
 	xfs_agblock_t		agbno;
 	int			i;
+	int			rval = 0;
 
 	agino = be32_to_cpu(rp->ir_startino);
 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
@@ -1258,7 +1267,8 @@ copy_inode_chunk(
 			DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read inode block %u/%u", agno, agbno);
-		return !stop_on_read_error;
+		rval = !stop_on_read_error;
+		goto pop_out;
 	}
 
 	/*
@@ -1291,11 +1301,11 @@ copy_inode_chunk(
 				((off + i) << mp->m_sb.sb_inodelog));
 
 		if (!process_inode(agno, agino + i, dip))
-			return 0;
+			goto pop_out;
 	}
 skip_processing:
 	if (!write_buf(iocur_top))
-		return 0;
+		goto pop_out;
 
 	inodes_copied += XFS_INODES_PER_CHUNK;
 
@@ -1303,10 +1313,10 @@ skip_processing:
 		print_progress("Copied %u of %u inodes (%u of %u AGs)",
 				inodes_copied, mp->m_sb.sb_icount, agno,
 				mp->m_sb.sb_agcount);
-
+	rval = 1;
+pop_out:
 	pop_cur();
-
-	return 1;
+	return rval;
 }
 
 static int
@@ -1401,61 +1411,66 @@ scan_ag(
 {
 	xfs_agf_t	*agf;
 	xfs_agi_t	*agi;
+	int		stack_count = 0;
+	int		rval = 0;
 
 	/* copy the superblock of the AG */
 	push_cur();
+	stack_count++;
 	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if (!iocur_top->data) {
 		print_warning("cannot read superblock for ag %u", agno);
 		if (stop_on_read_error)
-			return 0;
+			goto pop_out;
 	} else {
 		if (!write_buf(iocur_top))
-			return 0;
+			goto pop_out;
 	}
 
 	/* copy the AG free space btree root */
 	push_cur();
+	stack_count++;
 	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agf = iocur_top->data;
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read agf block for ag %u", agno);
 		if (stop_on_read_error)
-			return 0;
+			goto pop_out;
 	} else {
 		if (!write_buf(iocur_top))
-			return 0;
+			goto pop_out;
 	}
 
 	/* copy the AG inode btree root */
 	push_cur();
+	stack_count++;
 	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agi = iocur_top->data;
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read agi block for ag %u", agno);
 		if (stop_on_read_error)
-			return 0;
+			goto pop_out;
 	} else {
 		if (!write_buf(iocur_top))
-			return 0;
+			goto pop_out;
 	}
 
 	/* copy the AG free list header */
 	push_cur();
+	stack_count++;
 	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read agfl block for ag %u", agno);
 		if (stop_on_read_error)
-			return 0;
+			goto pop_out;
 	} else {
 		if (!write_buf(iocur_top))
-			return 0;
+			goto pop_out;
 	}
-	pop_cur();
 
 	/* copy AG free space btrees */
 	if (agf) {
@@ -1463,22 +1478,21 @@ scan_ag(
 			print_progress("Copying free space trees of AG %u",
 					agno);
 		if (!copy_free_bno_btree(agno, agf))
-			return 0;
+			goto pop_out;
 		if (!copy_free_cnt_btree(agno, agf))
-			return 0;
+			goto pop_out;
 	}
 
 	/* copy inode btrees and the inodes and their associated metadata */
 	if (agi) {
 		if (!copy_inodes(agno, agi))
-			return 0;
+			goto pop_out;
 	}
-
-	pop_cur();
-	pop_cur();
-	pop_cur();
-
-	return 1;
+	rval = 1;
+pop_out:
+	while (stack_count--)
+		pop_cur();
+	return rval;
 }
 
 static int
@@ -1492,6 +1506,7 @@ copy_ino(
 	xfs_dinode_t		*dip;
 	xfs_dinode_core_t	tdic;
 	int			offset;
+	int			rval = 0;
 
 	if (ino == 0)
 		return 1;
@@ -1515,7 +1530,8 @@ copy_ino(
 	if (iocur_top->data == NULL) {
 		print_warning("cannot read %s inode %lld",
 				typtab[itype].name, (long long)ino);
-		return !stop_on_read_error;
+		rval = !stop_on_read_error;
+		goto pop_out;
 	}
 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
 
@@ -1524,7 +1540,10 @@ copy_ino(
 	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
 
 	cur_ino = ino;
-	return process_inode_data(dip, itype);
+	rval = process_inode_data(dip, itype);
+pop_out:
+	pop_cur();
+	return rval;
 }
 
 
@@ -1553,6 +1572,7 @@ copy_log(void)
 	set_cur(&typtab[TYP_LOG], XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
+		pop_cur();
 		print_warning("cannot read log");
 		return !stop_on_read_error;
 	}
