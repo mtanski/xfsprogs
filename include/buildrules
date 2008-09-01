@@ -36,7 +36,7 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
 endif
 
 ifdef POTHEAD
-%.pot: $(XGETTEXTFILES)
+$(POTHEAD): $(XGETTEXTFILES)
 	$(XGETTEXT) --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
 
 # Generate temp .po files, to check whether translations need updating.
