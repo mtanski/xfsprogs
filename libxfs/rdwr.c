@@ -393,7 +393,8 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 		if (use_xfs_buf_lock)
 			pthread_mutex_lock(&bp->b_lock);
 		cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
-			cache_node_get_priority((struct cache_node *)bp) - 4);
+			cache_node_get_priority((struct cache_node *)bp) -
+						CACHE_PREFETCH_PRIORITY);
 #ifdef XFS_BUF_TRACING
 		pthread_mutex_lock(&libxfs_bcache->c_mutex);
 		lock_buf_count++;
@@ -422,7 +423,7 @@ libxfs_putbuf(xfs_buf_t *bp)
 #endif
 	if (use_xfs_buf_lock)
 		pthread_mutex_unlock(&bp->b_lock);
-	cache_node_put((struct cache_node *)bp);
+	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
 }
 
 void
@@ -794,7 +795,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
 void
 libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 {
-	cache_node_put((struct cache_node *)ip);
+	cache_node_put(libxfs_icache, (struct cache_node *)ip);
 }
 
 static struct cache_node *

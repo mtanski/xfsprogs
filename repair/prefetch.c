@@ -35,19 +35,36 @@ static int		pf_batch_fsbs;
 
 static void		pf_read_inode_dirs(prefetch_args_t *, xfs_buf_t *);
 
-/* buffer priorities for the libxfs cache */
+/*
+ * Buffer priorities for the libxfs cache
+ *
+ * Directory metadata is ranked higher than other metadata as it's used
+ * in phases 3, 4 and 6, while other metadata is only used in 3 & 4.
+ */
 
-#define B_DIR_BMAP	15
-#define B_DIR_META_2	13	/* metadata in secondary queue */
-#define B_DIR_META_H	11	/* metadata fetched for PF_META_ONLY */
-#define B_DIR_META_S	9	/* single block of metadata */
-#define B_DIR_META	7
-#define B_DIR_INODE	6
-#define B_BMAP		5
-#define B_INODE		4
+/* intermediate directory btree nodes - can't be queued */
+#define B_DIR_BMAP	CACHE_PREFETCH_PRIORITY + 7
+/* directory metadata in secondary queue */
+#define B_DIR_META_2	CACHE_PREFETCH_PRIORITY + 6
+/* dir metadata that had to fetched from the primary queue to avoid stalling */
+#define B_DIR_META_H	CACHE_PREFETCH_PRIORITY + 5
+/* single block of directory metadata (can't batch read) */
+#define B_DIR_META_S	CACHE_PREFETCH_PRIORITY + 4
+/* dir metadata with more than one block fetched in a single I/O */
+#define B_DIR_META	CACHE_PREFETCH_PRIORITY + 3
+/* inode clusters with directory inodes */
+#define B_DIR_INODE	CACHE_PREFETCH_PRIORITY + 2
+/* intermediate extent btree nodes */
+#define B_BMAP		CACHE_PREFETCH_PRIORITY + 1
+/* inode clusters without any directory entries */
+#define B_INODE		CACHE_PREFETCH_PRIORITY
 
-#define B_IS_INODE(b)	(((b) & 1) == 0)
-#define B_IS_META(b)	(((b) & 1) != 0)
+/*
+ * Test if bit 0 or 2 is set in the "priority tag" of the buffer to see if
+ * the buffer is for an inode or other metadata.
+ */
+#define B_IS_INODE(f)	(((f) & 5) == 0)
+#define B_IS_META(f)	(((f) & 5) != 0)
 
 #define DEF_BATCH_BYTES	0x10000
 

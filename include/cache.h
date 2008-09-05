@@ -20,6 +20,17 @@
 
 #define	HASH_CACHE_RATIO	8
 
+/*
+ * Cache priorities range from BASE to MAX.
+ *
+ * For prefetch support, the top half of the range starts at
+ * CACHE_PREFETCH_PRIORITY and everytime the buffer is fetched
+ * and is at or above this priority level, it is reduced to
+ * below this level (refer to libxfs_getbuf).
+ */
+
+#define CACHE_BASE_PRIORITY	0
+#define CACHE_PREFETCH_PRIORITY	8
 #define CACHE_MAX_PRIORITY	15
 
 /*
@@ -95,7 +106,7 @@ void cache_purge(struct cache *);
 void cache_flush(struct cache *);
 
 int cache_node_get(struct cache *, cache_key_t, struct cache_node **);
-void cache_node_put(struct cache_node *);
+void cache_node_put(struct cache *, struct cache_node *);
 void cache_node_set_priority(struct cache *, struct cache_node *, int);
 int cache_node_get_priority(struct cache_node *);
 int cache_node_purge(struct cache *, cache_key_t, struct cache_node *);

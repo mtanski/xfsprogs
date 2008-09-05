@@ -201,11 +201,11 @@ cache_shake(
 			continue;
 
 		hash = cache->c_hash + node->cn_hashidx;
-		if (node->cn_count > 0 ||
-				pthread_mutex_trylock(&hash->ch_mutex) != 0) {
+		if (pthread_mutex_trylock(&hash->ch_mutex) != 0) {
 			pthread_mutex_unlock(&node->cn_mutex);
 			continue;
 		}
+		ASSERT(node->cn_count == 0);
 		ASSERT(node->cn_priority == priority);
 		node->cn_priority = -1;
 
@@ -264,6 +264,7 @@ cache_node_allocate(
 		return NULL;
 	}
 	pthread_mutex_init(&node->cn_mutex, NULL);
+	list_head_init(&node->cn_mru);
 	node->cn_count = 1;
 	node->cn_priority = 0;
 	return node;
@@ -309,16 +310,21 @@ cache_node_get(
 			if (!cache->compare(node, key))
 				continue;
 			/*
-			* node found, bump node's reference count, move it to the
-			* top of its MRU list, and update stats.
-			*/
+			 * node found, bump node's reference count, remove it
+			 * from its MRU list, and update stats.
+			 */
 			pthread_mutex_lock(&node->cn_mutex);
-			node->cn_count++;
 
-			mru = &cache->c_mrus[node->cn_priority];
-			pthread_mutex_lock(&mru->cm_mutex);
-			list_move(&node->cn_mru, &mru->cm_list);
-			pthread_mutex_unlock(&mru->cm_mutex);
+			if (node->cn_count == 0) {
+				ASSERT(node->cn_priority >= 0);
+				ASSERT(!list_empty(&node->cn_mru));
+				mru = &cache->c_mrus[node->cn_priority];
+				pthread_mutex_lock(&mru->cm_mutex);
+				mru->cm_count--;
+				list_del_init(&node->cn_mru);
+				pthread_mutex_unlock(&mru->cm_mutex);
+			}
+			node->cn_count++;
 
 			pthread_mutex_unlock(&node->cn_mutex);
 			pthread_mutex_unlock(&hash->ch_mutex);
@@ -342,16 +348,11 @@ cache_node_get(
 
 	node->cn_hashidx = hashidx;
 
-	/* add new node to appropriate hash and lowest priority MRU */
-	mru = &cache->c_mrus[0];
-	pthread_mutex_lock(&mru->cm_mutex);
+	/* add new node to appropriate hash */
 	pthread_mutex_lock(&hash->ch_mutex);
 	hash->ch_count++;
-	mru->cm_count++;
 	list_add(&node->cn_hash, &hash->ch_list);
-	list_add(&node->cn_mru, &mru->cm_list);
 	pthread_mutex_unlock(&hash->ch_mutex);
-	pthread_mutex_unlock(&mru->cm_mutex);
 
 	*nodep = node;
 	return 1;
@@ -359,8 +360,11 @@ cache_node_get(
 
 void
 cache_node_put(
+	struct cache *		cache,
 	struct cache_node *	node)
 {
+	struct cache_mru *	mru;
+
 	pthread_mutex_lock(&node->cn_mutex);
 #ifdef CACHE_DEBUG
 	if (node->cn_count < 1) {
@@ -368,8 +372,23 @@ cache_node_put(
 				__FUNCTION__, node->cn_count, node);
 		cache_abort();
 	}
+	if (!list_empty(&node->cn_mru)) {
+		fprintf(stderr, "%s: node put on node (%p) in MRU list\n",
+				__FUNCTION__, node);
+		cache_abort();
+	}
 #endif
 	node->cn_count--;
+
+	if (node->cn_count == 0) {
+		/* add unreferenced node to appropriate MRU for shaker */
+		mru = &cache->c_mrus[node->cn_priority];
+		pthread_mutex_lock(&mru->cm_mutex);
+		mru->cm_count++;
+		list_add(&node->cn_mru, &mru->cm_list);
+		pthread_mutex_unlock(&mru->cm_mutex);
+	}
+
 	pthread_mutex_unlock(&node->cn_mutex);
 }
 
@@ -379,33 +398,14 @@ cache_node_set_priority(
 	struct cache_node *	node,
 	int			priority)
 {
-	struct cache_mru *	mru;
-
 	if (priority < 0)
 		priority = 0;
 	else if (priority > CACHE_MAX_PRIORITY)
 		priority = CACHE_MAX_PRIORITY;
 
 	pthread_mutex_lock(&node->cn_mutex);
-
 	ASSERT(node->cn_count > 0);
-	if (priority == node->cn_priority) {
-		pthread_mutex_unlock(&node->cn_mutex);
-		return;
-	}
-	mru = &cache->c_mrus[node->cn_priority];
-	pthread_mutex_lock(&mru->cm_mutex);
-	list_del_init(&node->cn_mru);
-	mru->cm_count--;
-	pthread_mutex_unlock(&mru->cm_mutex);
-
-	mru = &cache->c_mrus[priority];
-	pthread_mutex_lock(&mru->cm_mutex);
-	list_add(&node->cn_mru, &mru->cm_list);
 	node->cn_priority = priority;
-	mru->cm_count++;
-	pthread_mutex_unlock(&mru->cm_mutex);
-
 	pthread_mutex_unlock(&node->cn_mutex);
 }
 
