@@ -36,6 +36,40 @@ static struct fsxattr 		zerofsx;
 static xfs_ino_t		orphanage_ino;
 
 /*
+ * Data structures used to keep track of directories where the ".."
+ * entries are updated. These must be rebuilt after the initial pass
+ */
+typedef struct dotdot_update {
+	struct dotdot_update	*next;
+	ino_tree_node_t		*irec;
+	xfs_agnumber_t		agno;
+	int			ino_offset;
+} dotdot_update_t;
+
+static dotdot_update_t		*dotdot_update_list;
+static int			dotdot_update;
+
+static void
+add_dotdot_update(
+	xfs_agnumber_t		agno,
+	ino_tree_node_t		*irec,
+	int			ino_offset)
+{
+	dotdot_update_t		*dir = malloc(sizeof(dotdot_update_t));
+
+	if (!dir)
+		do_error(_("malloc failed add_dotdot_update (%u bytes)\n"),
+			sizeof(dotdot_update_t));
+
+	dir->next = dotdot_update_list;
+	dir->irec = irec;
+	dir->agno = agno;
+	dir->ino_offset = ino_offset;
+
+	dotdot_update_list = dir;
+}
+
+/*
  * Data structures and routines to keep track of directory entries
  * and whether their leaf entry has been seen. Also used for name
  * duplicate checking and rebuilding step if required.
@@ -2276,6 +2310,13 @@ longform_dir2_entry_check_data(
 		}
 
 		/*
+		 * if just scanning to rebuild a directory due to a ".."
+		 * update, just continue
+		 */
+		if (dotdot_update)
+			continue;
+
+		/*
 		 * skip the '..' entry since it's checked when the
 		 * directory is reached by something else.  if it never
 		 * gets reached, it'll be moved to the orphanage and we'll
@@ -2364,6 +2405,8 @@ _("entry \"%s\" in dir %llu points to an already connected directory inode %llu\
 			set_inode_parent(irec, ino_offset, ip->i_ino);
 			add_inode_reached(irec, ino_offset);
 			add_inode_ref(current_irec, current_ino_offset);
+			add_dotdot_update(XFS_INO_TO_AGNO(mp, inum), irec,
+								ino_offset);
 		} else  {
 			junkit = 1;
 			do_warn(
@@ -2613,9 +2656,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 			dir_hash_tab_t	*hashtab)
 {
 	xfs_dir2_block_t	*block;
-	xfs_dir2_leaf_entry_t	*blp;
 	xfs_dabuf_t		**bplist;
-	xfs_dir2_block_tail_t	*btp;
 	xfs_dablk_t		da_bno;
 	freetab_t		*freetab;
 	int			num_bps;
@@ -2678,22 +2719,29 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	}
 	fixit = (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
 
-	/* check btree and freespace */
-	if (isblock) {
-		block = bplist[0]->data;
-		btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-		blp = XFS_DIR2_BLOCK_LEAF_P(btp);
-		seeval = dir_hash_see_all(hashtab, blp,
-				INT_GET(btp->count, ARCH_CONVERT),
-				INT_GET(btp->stale, ARCH_CONVERT));
-		if (dir_hash_check(hashtab, ip, seeval))
-			fixit |= 1;
-	} else if (isleaf) {
-		fixit |= longform_dir2_check_leaf(mp, ip, hashtab, freetab);
-	} else {
-		fixit |= longform_dir2_check_node(mp, ip, hashtab, freetab);
+	if (!dotdot_update) {
+		/* check btree and freespace */
+		if (isblock) {
+			xfs_dir2_block_tail_t	*btp;
+			xfs_dir2_leaf_entry_t	*blp;
+
+			block = bplist[0]->data;
+			btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
+			blp = XFS_DIR2_BLOCK_LEAF_P(btp);
+			seeval = dir_hash_see_all(hashtab, blp,
+						be32_to_cpu(btp->count),
+						be32_to_cpu(btp->stale));
+			if (dir_hash_check(hashtab, ip, seeval))
+				fixit |= 1;
+		} else if (isleaf) {
+			fixit |= longform_dir2_check_leaf(mp, ip, hashtab,
+								freetab);
+		} else {
+			fixit |= longform_dir2_check_node(mp, ip, hashtab,
+								freetab);
+		}
 	}
-	if (!no_modify && fixit) {
+	if (!no_modify && (fixit || dotdot_update)) {
 		dir_hash_dup_names(hashtab);
 		for (i = 0; i < freetab->naents; i++)
 			if (bplist[i])
@@ -3141,6 +3189,23 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	ASSERT(ip->i_d.di_size <= ifp->if_bytes);
 
 	/*
+	 * if just rebuild a directory due to a "..", update and return
+	 */
+	if (dotdot_update) {
+		parent = get_inode_parent(current_irec, current_ino_offset);
+		if (no_modify) {
+			do_warn(_("would set .. in sf dir inode %llu to %llu\n"),
+				ino, parent);
+		} else {
+			do_warn(_("setting .. in sf dir inode %llu to %llu\n"),
+				ino, parent);
+			XFS_DIR2_SF_PUT_INUMBER(sfp, &parent, &sfp->hdr.parent);
+			*ino_dirty = 1;
+		}
+		return;
+	}
+
+	/*
 	 * no '.' entry in shortform dirs, just bump up ref count by 1
 	 * '..' was already (or will be) accounted for and checked when
 	 * the directory is reached or will be taken care of when the
@@ -3151,7 +3216,8 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	/*
 	 * Initialise i8 counter -- the parent inode number counts as well.
 	 */
-	i8 = (XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent) > XFS_DIR2_MAX_SHORT_INUM);
+	i8 = (XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent) >
+						XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
 	 * now run through entries, stop at first bad entry, don't need
@@ -3283,6 +3349,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				"duplicate name"), fname, lino, ino);
 			goto do_junkit;
 		}
+
 		if (!inode_isadir(irec, ino_offset))  {
 			/*
 			 * check easy case first, regular inode, just bump
@@ -3315,6 +3382,8 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				set_inode_parent(irec, ino_offset, ino);
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
+				add_dotdot_update(XFS_INO_TO_AGNO(mp, lino),
+							irec, ino_offset);
 			} else  {
 				junkit = 1;
 				do_warn(_("entry \"%s\" in directory inode %llu"
@@ -3432,10 +3501,11 @@ do_junkit:
 static void
 process_dir_inode(
 	xfs_mount_t 		*mp,
-	xfs_ino_t		ino,
+	xfs_agnumber_t		agno,
 	ino_tree_node_t		*irec,
 	int			ino_offset)
 {
+	xfs_ino_t		ino;
 	xfs_bmap_free_t		flist;
 	xfs_fsblock_t		first;
 	xfs_inode_t		*ip;
@@ -3445,13 +3515,15 @@ process_dir_inode(
 	int			need_dot, committed;
 	int			dirty, num_illegal, error, nres;
 
+	ino = XFS_AGINO_TO_INO(mp, agno, irec->ino_startnum + ino_offset);
+
 	/*
 	 * open up directory inode, check all entries,
 	 * then call prune_dir_entries to remove all
 	 * remaining illegal directory entries.
 	 */
 
-	ASSERT(!is_inode_refchecked(ino, irec, ino_offset));
+	ASSERT(!is_inode_refchecked(ino, irec, ino_offset) || dotdot_update);
 
 	error = libxfs_iget(mp, NULL, ino, 0, &ip, 0);
 	if (error) {
@@ -3853,12 +3925,29 @@ traverse_function(
 
 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
 			if (inode_isadir(irec, i))
-				process_dir_inode(wq->mp,
-					XFS_AGINO_TO_INO(wq->mp, agno,
-					irec->ino_startnum + i), irec, i);
+				process_dir_inode(wq->mp, agno, irec, i);
 		}
 	}
 	cleanup_inode_prefetch(pf_args);
+}
+
+static void
+update_missing_dotdot_entries(
+	xfs_mount_t		*mp)
+{
+	dotdot_update_t		*dir;
+
+	/*
+	 * these entries parents were updated, rebuild them again
+	 * set dotdot_update flag so processing routines do not count links
+	 */
+	dotdot_update = 1;
+	while (dotdot_update_list) {
+		dir = dotdot_update_list;
+		dotdot_update_list = dir->next;
+		process_dir_inode(mp, dir->agno, dir->irec, dir->ino_offset);
+		free(dir);
+	}
 }
 
 static void
@@ -3973,6 +4062,11 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 	 * then process all inodes by walking incore inode tree
 	 */
 	traverse_ags(mp);
+
+	/*
+	 * any directories that had updated ".." entries, rebuild them now
+	 */
+	update_missing_dotdot_entries(mp);
 
 	do_log(_("        - traversal finished ...\n"));
 	do_log(_("        - moving disconnected inodes to %s ...\n"),

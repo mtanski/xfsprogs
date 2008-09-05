@@ -1,6 +1,18 @@
-xfsprogs-2.10.1
-	- Add ondisk dir2 sf support (by packing) for ARM old ABI.
-	- Courtesy of Eric Sandeen.
+xfsprogs-2.10.1 (5 September 2008)
+	- Improve xfs_repair -P option to disable xfs_buf_t locking.
+	- Fix inode cluster I/O size for > 8KB block size filesystems.
+	- Fix up ASCII CI output for mkfs.xfs and xfs_growfs.
+	- Fix buffer handling in error cases in xfs_db (includes xfs_check
+	  and xfs_metadump).
+	- Add packed on-disk shortform directory for ARM's old ABI, thanks to
+	  Eric Sandeen.
+	- Increase default valid block count for a directory extent in
+	  xfs_metadump (from 20 to 1000).
+	- Fix up mkfs.xfs -N option with "-d file" so it doesn't resize the
+	  target file (thanks to Michal Marek).
+	- Improve libxfs cache handling with (un)referenced blocks.
+	- Check that directory size is not too big in xfs_repair.
+	- Improve xfs_repair to restore bad or missing ".." entries.
 
 xfsprogs-2.10.0 (26 May 2008)
 	- Add ASCII case-insensitive support to xfsprogs.
