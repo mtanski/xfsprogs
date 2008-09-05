@@ -1908,6 +1908,11 @@ process_check_inode_sizes(
 				dinoc->di_format, size, lino);
 			return 1;
 		}
+		if (size > XFS_DIR2_LEAF_OFFSET) {
+			do_warn(_("directory inode %llu has bad size %lld\n"),
+				lino, size);
+			return 1;
+		}
 		break;
 
 	case XR_INO_SYMLINK:
