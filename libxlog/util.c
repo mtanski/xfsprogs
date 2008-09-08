@@ -48,24 +48,24 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
 {
     if (print_record_header)
 	printf(_("\nLOG REC AT LSN cycle %d block %d (0x%x, 0x%x)\n"),
-	       CYCLE_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
-	       BLOCK_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
-	       CYCLE_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)),
-	       BLOCK_LSN(INT_GET(head->h_lsn, ARCH_CONVERT)));
+	       CYCLE_LSN(be64_to_cpu(head->h_lsn)),
+	       BLOCK_LSN(be64_to_cpu(head->h_lsn)),
+	       CYCLE_LSN(be64_to_cpu(head->h_lsn)),
+	       BLOCK_LSN(be64_to_cpu(head->h_lsn)));
 
-    if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
+    if (be32_to_cpu(head->h_magicno) != XLOG_HEADER_MAGIC_NUM) {
 
 	printf(_("* ERROR: bad magic number in log header: 0x%x\n"),
-		INT_GET(head->h_magicno, ARCH_CONVERT));
+		be32_to_cpu(head->h_magicno));
 
     } else if (header_check_uuid(mp, head)) {
 
 	/* failed - fall through */
 
-    } else if (INT_GET(head->h_fmt, ARCH_CONVERT) != XLOG_FMT) {
+    } else if (be32_to_cpu(head->h_fmt) != XLOG_FMT) {
 
 	printf(_("* ERROR: log format incompatible (log=%d, ours=%d)\n"),
-		INT_GET(head->h_fmt, ARCH_CONVERT), XLOG_FMT);
+		be32_to_cpu(head->h_fmt), XLOG_FMT);
 
     } else {
 	/* everything is ok */

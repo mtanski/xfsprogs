@@ -28,7 +28,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <ctype.h>
 #include <sys/types.h>
 
 #undef HAVE___U32
@@ -45,9 +48,19 @@ typedef unsigned long long int	__u64;
 typedef signed long long int	__s64;
 #endif
 
-typedef __u16			__be16;
-typedef __u32			__be32;
-typedef __u64			__be64;
+#ifdef __CHECKER__
+#define __bitwise		__attribute__((bitwise))
+#define __force			__attribute__((force))
+#else
+#define __bitwise
+#define __force
+#endif
+
+typedef __u16	__bitwise	__be16;
+typedef __u32	__bitwise	__be32;
+typedef __u64	__bitwise	__be64;
+
+typedef struct filldir		filldir_t;
 
 #if defined(__linux__)
 #include <xfs/linux.h>
@@ -124,7 +137,7 @@ typedef unsigned long long __psunsigned_t;
 #include <locale.h>
 
 #ifdef DEBUG
-# define ASSERT		assert
+# define ASSERT(EX)	assert(EX)
 #else
 # define ASSERT(EX)	((void) 0)
 #endif

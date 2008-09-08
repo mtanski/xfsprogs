@@ -33,7 +33,7 @@ verify_dfsbno(xfs_mount_t	*mp,
 
 void
 convert_extent(
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	xfs_dfiloff_t		*op,	/* starting offset (blockno in file) */
 	xfs_dfsbno_t		*sp,	/* starting block (fs blockno) */
 	xfs_dfilblks_t		*cp,	/* blockcount */
@@ -41,7 +41,7 @@ convert_extent(
 
 int
 process_bmbt_reclist(xfs_mount_t	*mp,
-		xfs_bmbt_rec_32_t	*rp,
+		xfs_bmbt_rec_t		*rp,
 		int			numrecs,
 		int			type,
 		xfs_ino_t		ino,
@@ -54,7 +54,7 @@ process_bmbt_reclist(xfs_mount_t	*mp,
 int
 scan_bmbt_reclist(
 	xfs_mount_t		*mp,
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	int			numrecs,
 	int			type,
 	xfs_ino_t		ino,

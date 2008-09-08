@@ -245,18 +245,18 @@ process_args(int argc, char **argv)
 					pre_65_beta = 1;
 					break;
 				case IHASH_SIZE:
-					libxfs_ihash_size = (int) strtol(val, 0, 0);
+					libxfs_ihash_size = (int)strtol(val, NULL, 0);
 					ihash_option_used = 1;
 					break;
 				case BHASH_SIZE:
 					if (max_mem_specified)
 						do_abort(
 			_("-o bhash option cannot be used with -m option\n"));
-					libxfs_bhash_size = (int) strtol(val, 0, 0);
+					libxfs_bhash_size = (int)strtol(val, NULL, 0);
 					bhash_option_used = 1;
 					break;
 				case AG_STRIDE:
-					ag_stride = (int) strtol(val, 0, 0);
+					ag_stride = (int)strtol(val, NULL, 0);
 					break;
 				default:
 					unknown('o', val);
@@ -271,7 +271,7 @@ process_args(int argc, char **argv)
 
 				switch (getsubopt(&p, (constpp)c_opts, &val)) {
 				case CONVERT_LAZY_COUNT:
-					lazy_count = (int)strtol(val, 0, 0);
+					lazy_count = (int)strtol(val, NULL, 0);
 					convert_lazy_count = 1;
 					break;
 				default:
@@ -295,7 +295,7 @@ process_args(int argc, char **argv)
 			if (bhash_option_used)
 				do_abort(_("-m option cannot be used with "
 						"-o bhash option\n"));
-			max_mem_specified = strtol(optarg, 0, 0);
+			max_mem_specified = strtol(optarg, NULL, 0);
 			break;
 		case 'L':
 			zap_log = 1;
@@ -316,7 +316,7 @@ process_args(int argc, char **argv)
 			do_prefetch = 0;
 			break;
 		case 't':
-			report_interval = (int) strtol(optarg, 0, 0);
+			report_interval = (int)strtol(optarg, NULL, 0);
 			break;
 		case '?':
 			usage();
@@ -411,10 +411,10 @@ calc_mkfs(xfs_mount_t *mp)
 	/*
 	 * ditto the location of the first inode chunks in the fs ('/')
 	 */
-	if (XFS_SB_VERSION_HASDALIGN(&mp->m_sb) && do_inoalign)  {
+	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
 		first_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp, roundup(fino_bno,
 					mp->m_sb.sb_unit), 0);
-	} else if (XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&
+	} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
 					mp->m_sb.sb_inoalignmt > 1)  {
 		first_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp,
 					roundup(fino_bno,
@@ -510,7 +510,7 @@ main(int argc, char **argv)
 {
 	xfs_mount_t	*temp_mp;
 	xfs_mount_t	*mp;
-	xfs_sb_t	*sb;
+	xfs_dsb_t	*dsb;
 	xfs_buf_t	*sbp;
 	xfs_mount_t	xfs_m;
 	char		*msgbuf;
@@ -551,10 +551,9 @@ main(int argc, char **argv)
 	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR,
 				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0);
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
-	sb = &xfs_m.m_sb;
-	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
 
-	mp = libxfs_mount(&xfs_m, sb, x.ddev, x.logdev, x.rtdev, 0);
+	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
 
 	if (!mp)  {
 		fprintf(stderr,
@@ -794,21 +793,22 @@ _("Warning:  project quota information would be cleared.\n"
 	if (!sbp)
 		do_error(_("couldn't get superblock\n"));
 
-	sb = XFS_BUF_TO_SBP(sbp);
+	dsb = XFS_BUF_TO_SBP(sbp);
 
-	if (sb->sb_qflags & (XFS_UQUOTA_CHKD|XFS_OQUOTA_CHKD))  {
-		do_warn(
-	_("Note - quota info will be regenerated on next quota mount.\n"));
-		sb->sb_qflags &= ~(XFS_UQUOTA_CHKD|XFS_OQUOTA_CHKD);
+	if (be16_to_cpu(dsb->sb_qflags) & (XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)) {
+		do_warn(_("Note - quota info will be regenerated on next "
+			"quota mount.\n"));
+		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
+							XFS_OQUOTA_CHKD));
 	}
 
 	if (clear_sunit) {
 		do_warn(
 _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
   "Please set with mount -o sunit=<value>,swidth=<value>\n"),
-			sb->sb_unit, sb->sb_width);
-		sb->sb_unit = 0;
-		sb->sb_width = 0;
+			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
+		dsb->sb_unit = 0;
+		dsb->sb_width = 0;
 	}
 
 	libxfs_writebuf(sbp, 0);

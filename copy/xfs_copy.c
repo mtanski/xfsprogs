@@ -236,7 +236,7 @@ killall(void)
 }
 
 void
-handler()
+handler(int sig)
 {
 	pid_t	pid = getpid();
 	int	status, i;
@@ -453,13 +453,13 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 	read_wbuf(fd, buf, mp);
 	ASSERT(buf->length >= length);
 
-	ag->xfs_sb = (xfs_sb_t *) (buf->data + diff);
-	ASSERT(INT_GET(ag->xfs_sb->sb_magicnum, ARCH_CONVERT)==XFS_SB_MAGIC);
+	ag->xfs_sb = (xfs_dsb_t *) (buf->data + diff);
+	ASSERT(be32_to_cpu(ag->xfs_sb->sb_magicnum) == XFS_SB_MAGIC);
 	ag->xfs_agf = (xfs_agf_t *) (buf->data + diff + sectorsize);
-	ASSERT(INT_GET(ag->xfs_agf->agf_magicnum, ARCH_CONVERT)==XFS_AGF_MAGIC);
-	ag->xfs_agi = (xfs_agi_t *) (buf->data + diff + 2*sectorsize);
-	ASSERT(INT_GET(ag->xfs_agi->agi_magicnum, ARCH_CONVERT)==XFS_AGI_MAGIC);
-	ag->xfs_agfl = (xfs_agfl_t *) (buf->data + diff + 3*sectorsize);
+	ASSERT(be32_to_cpu(ag->xfs_agf->agf_magicnum) == XFS_AGF_MAGIC);
+	ag->xfs_agi = (xfs_agi_t *) (buf->data + diff + 2 * sectorsize);
+	ASSERT(be32_to_cpu(ag->xfs_agi->agi_magicnum) == XFS_AGI_MAGIC);
+	ag->xfs_agfl = (xfs_agfl_t *) (buf->data + diff + 3 * sectorsize);
 }
 
 
@@ -677,7 +677,7 @@ main(int argc, char **argv)
 	sbp = libxfs_readbuf(xargs.ddev, XFS_SB_DADDR, 1, 0);
 	memset(&mbuf, 0, sizeof(xfs_mount_t));
 	sb = &mbuf.m_sb;
-	libxfs_xlate_sb(XFS_BUF_PTR(sbp), sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
 
 	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
 	if (mp == NULL) {
@@ -797,7 +797,7 @@ main(int argc, char **argv)
 				}
 			}
 		} else  {
-			char	*lb[XFS_MAX_SECTORSIZE] = { 0 };
+			char	*lb[XFS_MAX_SECTORSIZE] = { NULL };
 			off64_t	off;
 
 			/* ensure device files are sufficiently large */
@@ -908,7 +908,7 @@ main(int argc, char **argv)
 		/* set the in_progress bit for the first AG */
 
 		if (agno == 0)
-			INT_SET(ag_hdr.xfs_sb->sb_inprogress, ARCH_CONVERT, 1);
+			ag_hdr.xfs_sb->sb_inprogress = 1;
 
 		/* save what we need (agf) in the btree buffer */
 
@@ -922,16 +922,14 @@ main(int argc, char **argv)
 
 		/* traverse btree until we get to the leftmost leaf node */
 
-		bno = INT_GET(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi],
-			ARCH_CONVERT);
+		bno = be32_to_cpu(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi]);
 		current_level = 0;
-		btree_levels = INT_GET(
-			ag_hdr.xfs_agf->agf_levels[XFS_BTNUM_BNOi],
-			ARCH_CONVERT);
+		btree_levels = be32_to_cpu(ag_hdr.xfs_agf->
+						agf_levels[XFS_BTNUM_BNOi]);
 
 		ag_end = XFS_AGB_TO_DADDR(mp, agno,
-			INT_GET(ag_hdr.xfs_agf->agf_length,ARCH_CONVERT) - 1)
-			+ source_blocksize/BBSIZE;
+				be32_to_cpu(ag_hdr.xfs_agf->agf_length) - 1)
+				+ source_blocksize / BBSIZE;
 
 		for (;;) {
 			/* none of this touches the w_buf buffer */
@@ -948,16 +946,14 @@ main(int argc, char **argv)
 			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
 					+ pos - btree_buf.position);
 
-			ASSERT(INT_GET(block->bb_magic,ARCH_CONVERT) ==
-				XFS_ABTB_MAGIC);
+			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
 
-			if (INT_GET(block->bb_level,ARCH_CONVERT) == 0)
+			if (be16_to_cpu(block->bb_level) == 0)
 				break;
 
-			ptr = XFS_BTREE_PTR_ADDR(sourceb_blocksize, xfs_alloc,
-				block, 1, mp->m_alloc_mxr[1]),
-
-			bno = INT_GET(ptr[0], ARCH_CONVERT);
+			ptr = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, 
+							mp->m_alloc_mxr[1]);
+			bno = be32_to_cpu(ptr[0]);
 		}
 
 		/* align first data copy but don't overwrite ag header */
@@ -972,7 +968,7 @@ main(int argc, char **argv)
 		/* handle the rest of the ag */
 
 		for (;;) {
-			if (INT_GET(block->bb_level,ARCH_CONVERT) != 0)  {
+			if (be16_to_cpu(block->bb_level) != 0)  {
 				do_log(
 			_("WARNING:  source filesystem inconsistent.\n"));
 				do_log(
@@ -980,12 +976,9 @@ main(int argc, char **argv)
 				exit(1);
 			}
 
-			rec_ptr = XFS_BTREE_REC_ADDR(source_blocksize,
-				xfs_alloc, block, 1, mp->m_alloc_mxr[0]);
-
-			for (i = 0;
-			     i < INT_GET(block->bb_numrecs,ARCH_CONVERT);
-			     i++, rec_ptr++)  {
+			rec_ptr = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+			for (i = 0; i < be16_to_cpu(block->bb_numrecs);
+							i++, rec_ptr++)  {
 				/* calculate in daddr's */
 
 				begin = next_begin;
@@ -1004,9 +997,9 @@ main(int argc, char **argv)
 				 * range bigger than required
 				 */
 
-				sizeb = XFS_AGB_TO_DADDR(mp, agno,
-					INT_GET(rec_ptr->ar_startblock,
-						ARCH_CONVERT)) - begin;
+				sizeb = XFS_AGB_TO_DADDR(mp, agno, 
+					be32_to_cpu(rec_ptr->ar_startblock)) - 
+						begin;
 				size = roundup(sizeb <<BBSHIFT, wbuf_miniosize);
 				if (size > 0)  {
 					/* copy extent */
@@ -1042,24 +1035,20 @@ main(int argc, char **argv)
 				/* round next starting point down */
 
 				new_begin = XFS_AGB_TO_DADDR(mp, agno,
-						INT_GET(rec_ptr->ar_startblock,
-							ARCH_CONVERT) +
-					 	INT_GET(rec_ptr->ar_blockcount,
-							ARCH_CONVERT));
+						be32_to_cpu(rec_ptr->ar_startblock) +
+					 	be32_to_cpu(rec_ptr->ar_blockcount));
 				next_begin = rounddown(new_begin,
 						w_buf.min_io_size >> BBSHIFT);
 			}
 
-			if (INT_GET(block->bb_rightsib,ARCH_CONVERT) ==
-			    NULLAGBLOCK)
+			if (be32_to_cpu(block->bb_rightsib) == NULLAGBLOCK)
 				break;
 
 			/* read in next btree record block */
 
 			btree_buf.position = pos = (xfs_off_t)
-				XFS_AGB_TO_DADDR(mp, agno,
-					INT_GET(block->bb_rightsib,
-						ARCH_CONVERT)) << BBSHIFT;
+				XFS_AGB_TO_DADDR(mp, agno, be32_to_cpu(
+						block->bb_rightsib)) << BBSHIFT;
 			btree_buf.length = source_blocksize;
 
 			/* let read_wbuf handle alignment */
@@ -1069,8 +1058,7 @@ main(int argc, char **argv)
 			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
 					+ pos - btree_buf.position);
 
-			ASSERT(INT_GET(block->bb_magic,ARCH_CONVERT) ==
-				XFS_ABTB_MAGIC);
+			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
 		}
 
 		/*
@@ -1208,7 +1196,7 @@ write_log_header(int fd, wbuf *buf, xfs_mount_t *mp)
 	}
 
 	offset = libxfs_log_header(p, &buf->owner->uuid,
-			XFS_SB_VERSION_HASLOGV2(&mp->m_sb) ? 2 : 1,
+			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
 			mp->m_sb.sb_logsunit, XLOG_FMT,
 			next_log_chunk, buf);
 	do_write(buf->owner);

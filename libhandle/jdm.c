@@ -70,7 +70,7 @@ jdm_getfshandle( char *mntpnt )
 	ASSERT( sizeofmember( filehandle_t, fh_pad ) == FILEHANDLE_SZ_PAD );
 	ASSERT( FILEHANDLE_SZ_PAD == sizeof( int16_t ));
 
-	fshandlep = 0; /* for lint */
+	fshandlep = NULL; /* for lint */
 	fshandlesz = sizeof( *fshandlep );
 
 	if (!realpath( mntpnt, resolved ))

@@ -56,7 +56,7 @@ endif # _BUILDRULES_INCLUDED_
 
 $(_FORCE):
 
-.PHONY : depend
+.PHONY : depend install-qa
 
 DEPENDSCRIPT := $(MAKEDEPEND) $(DEPENDFLAGS) -f - -- $(CFLAGS) -- $(CFILES) | \
 	$(SED) \

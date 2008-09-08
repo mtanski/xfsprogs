@@ -46,7 +46,8 @@ xfs_log_print_trans(
 	xfs_daddr_t	head_blk, tail_blk;
 	int		error;
 
-	if ((error = xlog_find_tail(log, &head_blk, &tail_blk, 0))) {
+	error = xlog_find_tail(log, &head_blk, &tail_blk);
+	if (error) {
 		fprintf(stderr, "%s: failed to find head and tail, error: %d\n",
 			progname, error);
 		exit(1);

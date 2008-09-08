@@ -62,6 +62,7 @@ perform_restore(
 	int			block_size;
 	int			max_indicies;
 	int			cur_index;
+	int			mb_count;
 	xfs_metablock_t		tmb;
 	xfs_sb_t		sb;
 	__int64_t		bytes_read;
@@ -85,11 +86,9 @@ perform_restore(
 	if (metablock == NULL)
 		fatal("memory allocation failure\n");
 
-	metablock->mb_count = be16_to_cpu(tmb.mb_count);
-	metablock->mb_blocklog = tmb.mb_blocklog;
-
-	if (metablock->mb_count == 0 || metablock->mb_count > max_indicies)
-		fatal("bad block count: %u\n", metablock->mb_count);
+	mb_count = be16_to_cpu(tmb.mb_count);
+	if (mb_count == 0 || mb_count > max_indicies)
+		fatal("bad block count: %u\n", mb_count);
 
 	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
 	block_buffer = (char *)metablock + block_size;
@@ -101,16 +100,16 @@ perform_restore(
 		fatal("first block is not the primary superblock\n");
 
 
-	if (fread(block_buffer, metablock->mb_count << metablock->mb_blocklog,
+	if (fread(block_buffer, mb_count << tmb.mb_blocklog,
 			1, src_f) != 1)
 		fatal("error reading from file: %s\n", strerror(errno));
 
-	libxfs_xlate_sb(block_buffer, &sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(&sb, (xfs_dsb_t *)block_buffer);
 
 	if (sb.sb_magicnum != XFS_SB_MAGIC)
 		fatal("bad magic number for primary superblock\n");
 
-	((xfs_sb_t*)block_buffer)->sb_inprogress = 1;
+	((xfs_dsb_t*)block_buffer)->sb_inprogress = 1;
 
 	if (is_target_file)  {
 		/* ensure regular files are correctly sized */
@@ -121,7 +120,7 @@ perform_restore(
 	} else  {
 		/* ensure device is sufficiently large enough */
 
-		char		*lb[XFS_MAX_SECTORSIZE] = { 0 };
+		char		*lb[XFS_MAX_SECTORSIZE] = { NULL };
 		off64_t		off;
 
 		off = sb.sb_dblocks * sb.sb_blocksize - sizeof(lb);
@@ -136,31 +135,29 @@ perform_restore(
 		if (show_progress && (bytes_read & ((1 << 20) - 1)) == 0)
 			print_progress("%lld MB read\n", bytes_read >> 20);
 
-		for (cur_index = 0; cur_index < metablock->mb_count; cur_index++) {
+		for (cur_index = 0; cur_index < mb_count; cur_index++) {
 			if (pwrite64(dst_fd, &block_buffer[cur_index <<
-						metablock->mb_blocklog],
-					block_size,
+					tmb.mb_blocklog], block_size,
 					be64_to_cpu(block_index[cur_index]) <<
 						BBSHIFT) < 0)
 				fatal("error writing block %llu: %s\n",
 					be64_to_cpu(block_index[cur_index]) << BBSHIFT,
 					strerror(errno));
 		}
-		if (metablock->mb_count < max_indicies)
+		if (mb_count < max_indicies)
 			break;
 
 		if (fread(metablock, block_size, 1, src_f) != 1)
 			fatal("error reading from file: %s\n", strerror(errno));
 
-		if (metablock->mb_count == 0)
+		mb_count = be16_to_cpu(metablock->mb_count);
+		if (mb_count == 0)
 			break;
+		if (mb_count > max_indicies)
+			fatal("bad block count: %u\n", mb_count);
 
-		metablock->mb_count = be16_to_cpu(metablock->mb_count);
-		if (metablock->mb_count > max_indicies)
-			fatal("bad block count: %u\n", metablock->mb_count);
-
-		if (fread(block_buffer, metablock->mb_count <<
-				 metablock->mb_blocklog, 1, src_f) != 1)
+		if (fread(block_buffer, mb_count << tmb.mb_blocklog, 
+								1, src_f) != 1)
 			fatal("error reading from file: %s\n", strerror(errno));
 
 		bytes_read += block_size;
@@ -171,7 +168,7 @@ perform_restore(
 
 	memset(block_buffer, 0, sb.sb_sectsize);
 	sb.sb_inprogress = 0;
-	libxfs_xlate_sb(block_buffer, &sb, 0, XFS_SB_ALL_BITS);
+	libxfs_sb_to_disk((xfs_dsb_t *)block_buffer, &sb, XFS_SB_ALL_BITS);
 	if (pwrite(dst_fd, block_buffer, sb.sb_sectsize, 0) < 0)
 		fatal("error writing primary superblock: %s\n", strerror(errno));
 

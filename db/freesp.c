@@ -208,22 +208,17 @@ scan_ag(
 	xfs_agf_t	*agf;
 
 	push_cur();
-	set_cur(&typtab[TYP_AGF],
-		XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
-		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+				XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agf = iocur_top->data;
 	scan_freelist(agf);
 	if (countflag)
-		scan_sbtree(agf,
-			INT_GET(agf->agf_roots[XFS_BTNUM_CNT], ARCH_CONVERT),
-			TYP_CNTBT,
-			INT_GET(agf->agf_levels[XFS_BTNUM_CNT], ARCH_CONVERT),
+		scan_sbtree(agf, be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
+			TYP_CNTBT, be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
 			scanfunc_cnt);
 	else
-		scan_sbtree(agf,
-			INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT),
-			TYP_BNOBT,
-			INT_GET(agf->agf_levels[XFS_BTNUM_BNO], ARCH_CONVERT),
+		scan_sbtree(agf, be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]),
+			TYP_BNOBT, be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]),
 			scanfunc_bno);
 	pop_cur();
 }
@@ -232,23 +227,22 @@ static void
 scan_freelist(
 	xfs_agf_t	*agf)
 {
-	xfs_agnumber_t	seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
 	xfs_agfl_t	*agfl;
 	xfs_agblock_t	bno;
 	int		i;
 
-	if (INT_GET(agf->agf_flcount, ARCH_CONVERT) == 0)
+	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
 	push_cur();
-	set_cur(&typtab[TYP_AGFL],
-		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
-		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
+				XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agfl = iocur_top->data;
-	i = INT_GET(agf->agf_flfirst, ARCH_CONVERT);
+	i = be32_to_cpu(agf->agf_flfirst);
 	for (;;) {
-		bno = INT_GET(agfl->agfl_bno[i], ARCH_CONVERT);
+		bno = be32_to_cpu(agfl->agfl_bno[i]);
 		addtohist(seqno, bno, 1);
-		if (i == INT_GET(agf->agf_fllast, ARCH_CONVERT))
+		if (i == be32_to_cpu(agf->agf_fllast))
 			break;
 		if (++i == XFS_AGFL_SIZE(mp))
 			i = 0;
@@ -267,7 +261,7 @@ scan_sbtree(
 				int			level,
 				xfs_agf_t		*agf))
 {
-	xfs_agnumber_t	seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
 
 	push_cur();
 	set_cur(&typtab[typ], XFS_AGB_TO_DADDR(mp, seqno, root),
@@ -294,19 +288,16 @@ scanfunc_bno(
 	xfs_alloc_rec_t		*rp;
 
 	if (level == 0) {
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
-			1, mp->m_alloc_mxr[0]);
-		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-			addtohist(INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
-				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
+		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+			addtohist(be32_to_cpu(agf->agf_seqno),
+					be32_to_cpu(rp[i].ar_startblock),
+					be32_to_cpu(rp[i].ar_blockcount));
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
-		mp->m_alloc_mxr[1]);
-	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_sbtree(agf, INT_GET(pp[i], ARCH_CONVERT), typ, level,
-			    scanfunc_bno);
+	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+		scan_sbtree(agf, be32_to_cpu(pp[i]), typ, level, scanfunc_bno);
 }
 
 static void
@@ -322,19 +313,16 @@ scanfunc_cnt(
 	xfs_alloc_rec_t		*rp;
 
 	if (level == 0) {
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
-			1, mp->m_alloc_mxr[0]);
-		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-			addtohist(INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT),
-				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT));
+		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+			addtohist(be32_to_cpu(agf->agf_seqno),
+					be32_to_cpu(rp[i].ar_startblock),
+					be32_to_cpu(rp[i].ar_blockcount));
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
-		mp->m_alloc_mxr[1]);
-	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_sbtree(agf, INT_GET(pp[i], ARCH_CONVERT), typ, level,
-			    scanfunc_cnt);
+	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+		scan_sbtree(agf, be32_to_cpu(pp[i]), typ, level, scanfunc_cnt);
 }
 
 static void

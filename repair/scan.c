@@ -145,10 +145,11 @@ scanfunc_bmap(
 	int			err;
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmbt_key_t		*pkey;
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 	xfs_dfiloff_t		first_key;
 	xfs_dfiloff_t		last_key;
 	char			*forkname;
+	int			numrecs;
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -162,18 +163,16 @@ scanfunc_bmap(
 	 * another inode are claiming the same block but that's
 	 * highly unlikely.
 	 */
-	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_BMAP_MAGIC) {
-		do_warn(
-		_("bad magic # %#x in inode %llu (%s fork) bmbt block %llu\n"),
-			INT_GET(block->bb_magic, ARCH_CONVERT),
+	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
+		do_warn(_("bad magic # %#x in inode %llu (%s fork) bmbt "
+			"block %llu\n"), be32_to_cpu(block->bb_magic),
 			ino, forkname, bno);
 		return(1);
 	}
-	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
-		do_warn(
-_("expected level %d got %d in inode %llu, (%s fork) bmbt block %llu\n"),
-			level, INT_GET(block->bb_level, ARCH_CONVERT),
-			ino, forkname, bno);
+	if (be16_to_cpu(block->bb_level) != level) {
+		do_warn(_("expected level %d got %d in inode %llu, (%s fork) "
+			"bmbt block %llu\n"), level,
+			be16_to_cpu(block->bb_level), ino, forkname, bno);
 		return(1);
 	}
 
@@ -198,13 +197,12 @@ _("bad fwd (right) sibling pointer (saw %llu parent block says %llu)\n"
 					bm_cursor->level[level].fsbno);
 				return(1);
 			}
-			if (INT_GET(block->bb_leftsib, ARCH_CONVERT) !=
+			if (be64_to_cpu(block->bb_leftsib) !=
 					bm_cursor->level[level].fsbno)  {
 				do_warn(
 _("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
   "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					INT_GET(block->bb_leftsib,
-						ARCH_CONVERT),
+					be64_to_cpu(block->bb_leftsib),
 					bm_cursor->level[level].fsbno,
 					ino, forkname, bno);
 				return(1);
@@ -214,13 +212,11 @@ _("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
 			 * This is the first or only block on this level.
 			 * Check that the left sibling pointer is NULL
 			 */
-			if (INT_GET(block->bb_leftsib, ARCH_CONVERT) !=
-					NULLDFSBNO)  {
+			if (be64_to_cpu(block->bb_leftsib) != NULLDFSBNO)  {
 				do_warn(
 _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
   "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					INT_GET(block->bb_leftsib,
-						ARCH_CONVERT),
+					be64_to_cpu(block->bb_leftsib),
 					ino, forkname, bno);
 				return(1);
 			}
@@ -231,9 +227,9 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		 */
 		bm_cursor->level[level].fsbno = bno;
 		bm_cursor->level[level].left_fsbno =
-			INT_GET(block->bb_leftsib, ARCH_CONVERT);
+					be64_to_cpu(block->bb_leftsib);
 		bm_cursor->level[level].right_fsbno =
-			INT_GET(block->bb_rightsib, ARCH_CONVERT);
+					be64_to_cpu(block->bb_rightsib);
 
 		switch (get_fsbno_state(mp, bno))  {
 		case XR_E_UNKNOWN:
@@ -297,30 +293,26 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		}
 	}
 	(*tot)++;
+	numrecs = be16_to_cpu(block->bb_numrecs);
+
 	if (level == 0) {
-		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
-			mp->m_bmap_dmxr[0] ||
-		    (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-			mp->m_bmap_dmnr[0])) {
+		if (numrecs > mp->m_bmap_dmxr[0] || (isroot == 0 && numrecs <
+							mp->m_bmap_dmnr[0])) {
 				do_warn(
 	_("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n"),
-				ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
-				mp->m_bmap_dmnr[0], mp->m_bmap_dmxr[0]);
+					ino, numrecs, mp->m_bmap_dmnr[0],
+					mp->m_bmap_dmxr[0]);
 			return(1);
 		}
-		rp = (xfs_bmbt_rec_32_t *)
-			XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt,
-			block, 1, mp->m_bmap_dmxr[0]);
-		*nex += INT_GET(block->bb_numrecs, ARCH_CONVERT);
+		rp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+		*nex += numrecs;
 		/*
 		 * XXX - if we were going to fix up the btree record,
 		 * we'd do it right here.  For now, if there's a problem,
 		 * we'll bail out and presumably clear the inode.
 		 */
 		if (check_dups == 0)  {
-			err = process_bmbt_reclist(mp, rp,
-					INT_GET(block->bb_numrecs,
-						ARCH_CONVERT),
+			err = process_bmbt_reclist(mp, rp, numrecs,
 					type, ino, tot, blkmapp,
 					&first_key, &last_key,
 					whichfork);
@@ -351,41 +343,36 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 
 			return(0);
 		} else
-			return(scan_bmbt_reclist(mp, rp, INT_GET(block->bb_numrecs, ARCH_CONVERT),
+			return(scan_bmbt_reclist(mp, rp, numrecs,
 						type, ino, tot, whichfork));
 	}
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[1] ||
-	    (isroot == 0 &&
-	     INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_bmap_dmnr[1])) {
+	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
+							mp->m_bmap_dmnr[1])) {
 		do_warn(
 	_("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n"),
-			ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
-			mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
+			ino, numrecs, mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
 		return(1);
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-		mp->m_bmap_dmxr[1]);
-	pkey = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-		mp->m_bmap_dmxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+	pkey = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
 
 	last_key = NULLDFILOFF;
 
-	for (i = 0, err = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)  {
+	for (i = 0, err = 0; i < numrecs; i++)  {
 		/*
 		 * XXX - if we were going to fix up the interior btree nodes,
 		 * we'd do it right here.  For now, if there's a problem,
 		 * we'll bail out and presumably clear the inode.
 		 */
-		if (!verify_dfsbno(mp, INT_GET(pp[i], ARCH_CONVERT)))  {
+		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
 			do_warn(_("bad bmap btree ptr 0x%llx in ino %llu\n"),
-				INT_GET(pp[i], ARCH_CONVERT), ino);
+				be64_to_cpu(pp[i]), ino);
 			return(1);
 		}
 
-		err = scan_lbtree(INT_GET(pp[i], ARCH_CONVERT),
-				level, scanfunc_bmap, type, whichfork,
-				ino, tot, nex, blkmapp, bm_cursor, 0,
-				check_dups);
+		err = scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap,
+				type, whichfork, ino, tot, nex, blkmapp,
+				bm_cursor, 0, check_dups);
 		if (err)
 			return(1);
 
@@ -401,30 +388,26 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 		 * our child and those are guaranteed to be set by the
 		 * call to scan_lbtree() above.
 		 */
-		if (check_dups == 0 &&
-		    INT_GET(pkey[i].br_startoff, ARCH_CONVERT) !=
+		if (check_dups == 0 && be64_to_cpu(pkey[i].br_startoff) !=
 					bm_cursor->level[level-1].first_key)  {
 			if (!no_modify)  {
 				do_warn(
 		_("correcting bt key (was %llu, now %llu) in inode %llu\n"
 		  "\t\t%s fork, btree block %llu\n"),
-					INT_GET(pkey[i].br_startoff,
-						ARCH_CONVERT),
+					be64_to_cpu(pkey[i].br_startoff),
 					bm_cursor->level[level-1].first_key,
 					ino,
 					forkname, bno);
 				*dirty = 1;
-				INT_SET(pkey[i].br_startoff, ARCH_CONVERT,
+				pkey[i].br_startoff = cpu_to_be64(
 					bm_cursor->level[level-1].first_key);
 			} else  {
 				do_warn(
 	_("bad btree key (is %llu, should be %llu) in inode %llu\n"
 	  "\t\t%s fork, btree block %llu\n"),
-					INT_GET(pkey[i].br_startoff,
-						ARCH_CONVERT),
+					be64_to_cpu(pkey[i].br_startoff),
 					bm_cursor->level[level-1].first_key,
-					ino,
-					forkname, bno);
+					ino, forkname, bno);
 			}
 		}
 	}
@@ -434,14 +417,13 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	 * block's forward sibling pointer is NULL.
 	 */
 	if (check_dups == 0 &&
-		bm_cursor->level[level].right_fsbno == NULLDFSBNO &&
-		bm_cursor->level[level - 1].right_fsbno != NULLDFSBNO)  {
+			bm_cursor->level[level].right_fsbno == NULLDFSBNO &&
+			bm_cursor->level[level - 1].right_fsbno != NULLDFSBNO) {
 		do_warn(
 	_("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
 	  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
 			bm_cursor->level[level - 1].right_fsbno,
-			ino, forkname,
-			bm_cursor->level[level - 1].fsbno);
+			ino, forkname, bm_cursor->level[level - 1].fsbno);
 		return(1);
 	}
 
@@ -450,10 +432,9 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	 */
 	if (check_dups == 0)  {
 		bm_cursor->level[level].first_key =
-				INT_GET(pkey[0].br_startoff, ARCH_CONVERT);
-		i = INT_GET(block->bb_numrecs, ARCH_CONVERT) - 1;
+				be64_to_cpu(pkey[0].br_startoff);
 		bm_cursor->level[level].last_key =
-				INT_GET(pkey[i].br_startoff, ARCH_CONVERT);
+				be64_to_cpu(pkey[numrecs - 1].br_startoff);
 	}
 
 	return(0);
@@ -478,17 +459,16 @@ scanfunc_bno(
 	int			numrecs;
 	int			state;
 
-	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_ABTB_MAGIC) {
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
 		do_warn(_("bad magic # %#x in btbno block %d/%d\n"),
-			INT_GET(block->bb_magic, ARCH_CONVERT), agno, bno);
+			be32_to_cpu(block->bb_magic), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
 	}
-	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
+	if (be16_to_cpu(block->bb_level) != level) {
 		do_warn(_("expected level %d got %d in btbno block %d/%d\n"),
-			level, INT_GET(block->bb_level, ARCH_CONVERT),
-			agno, bno);
+			level, be16_to_cpu(block->bb_level), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
@@ -511,16 +491,15 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 		return;
 	}
 
-	if (level == 0) {
-		numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	numrecs = be16_to_cpu(block->bb_numrecs);
 
-		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
-		    mp->m_alloc_mxr[0])  {
+	if (level == 0) {
+
+		if (numrecs > mp->m_alloc_mxr[0])  {
 			numrecs = mp->m_alloc_mxr[0];
 			hdr_errors++;
 		}
-		if (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-		    mp->m_alloc_mnr[0])  {
+		if (isroot == 0 && numrecs < mp->m_alloc_mnr[0])  {
 			numrecs = mp->m_alloc_mnr[0];
 			hdr_errors++;
 		}
@@ -528,22 +507,21 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 		if (hdr_errors)
 			suspect++;
 
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
-			1, mp->m_alloc_mxr[0]);
+		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
 		for (i = 0; i < numrecs; i++) {
-			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) == 0 ||
-			    INT_GET(rp[i].ar_startblock, ARCH_CONVERT) == 0 ||
+			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
+			    be32_to_cpu(rp[i].ar_startblock) == 0 ||
 			    !verify_agbno(mp, agno,
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT)) ||
-			    INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) >
+				be32_to_cpu(rp[i].ar_startblock)) ||
+			    be32_to_cpu(rp[i].ar_blockcount) >
 					MAXEXTLEN)
 				continue;
 
-			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
-				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			e = be32_to_cpu(rp[i].ar_startblock) +
+				be32_to_cpu(rp[i].ar_blockcount);
 			if (!verify_agbno(mp, agno, e - 1))
 				continue;
-			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
+			for (b = be32_to_cpu(rp[i].ar_startblock);
 			     b < e; b++)  {
 				if (get_agbno_state(mp, agno, b)
 							== XR_E_UNKNOWN)
@@ -563,16 +541,13 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 	/*
 	 * interior record
 	 */
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
-		mp->m_alloc_mxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
 
-	numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[1])  {
+	if (numrecs > mp->m_alloc_mxr[1])  {
 		numrecs = mp->m_alloc_mxr[1];
 		hdr_errors++;
 	}
-	if (isroot == 0 &&
-	    INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1])  {
+	if (isroot == 0 && numrecs < mp->m_alloc_mnr[1])  {
 		numrecs = mp->m_alloc_mnr[1];
 		hdr_errors++;
 	}
@@ -601,10 +576,10 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 		 * pointer mismatch, try and extract as much data
 		 * as possible.
 		 */
-		if (INT_GET(pp[i], ARCH_CONVERT) != 0 &&
-		    verify_agbno(mp, agno, INT_GET(pp[i], ARCH_CONVERT)))
-			scan_sbtree(INT_GET(pp[i], ARCH_CONVERT),
-					level, agno, suspect, scanfunc_bno, 0);
+		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+							be32_to_cpu(pp[i])))
+			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+					suspect, scanfunc_bno, 0);
 	}
 }
 
@@ -630,17 +605,16 @@ scanfunc_cnt(
 	block = (xfs_alloc_block_t *)ablock;
 	hdr_errors = 0;
 
-	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_ABTC_MAGIC) {
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
 		do_warn(_("bad magic # %#x in btcnt block %d/%d\n"),
-			INT_GET(block->bb_magic, ARCH_CONVERT), agno, bno);
+			be32_to_cpu(block->bb_magic), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
 	}
-	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
+	if (be16_to_cpu(block->bb_level) != level) {
 		do_warn(_("expected level %d got %d in btcnt block %d/%d\n"),
-			level, INT_GET(block->bb_level, ARCH_CONVERT),
-			agno, bno);
+			level, be16_to_cpu(block->bb_level), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
@@ -663,16 +637,14 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 		return;
 	}
 
-	if (level == 0) {
-		numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	numrecs = be16_to_cpu(block->bb_numrecs);
 
-		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
-		    mp->m_alloc_mxr[0])  {
+	if (level == 0) {
+		if (numrecs > mp->m_alloc_mxr[0])  {
 			numrecs = mp->m_alloc_mxr[0];
 			hdr_errors++;
 		}
-		if (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-		    mp->m_alloc_mnr[0])  {
+		if (isroot == 0 && numrecs < mp->m_alloc_mnr[0])  {
 			numrecs = mp->m_alloc_mnr[0];
 			hdr_errors++;
 		}
@@ -680,23 +652,21 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 		if (hdr_errors)
 			suspect++;
 
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block,
-			1, mp->m_alloc_mxr[0]);
+		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
 		for (i = 0; i < numrecs; i++) {
-			if (INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) == 0 ||
-			    INT_GET(rp[i].ar_startblock, ARCH_CONVERT) == 0 ||
-			    !verify_agbno(mp, agno,
-				INT_GET(rp[i].ar_startblock, ARCH_CONVERT)) ||
-			    INT_GET(rp[i].ar_blockcount, ARCH_CONVERT) >
-						MAXEXTLEN)
+			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
+					be32_to_cpu(rp[i].ar_startblock) == 0 ||
+					!verify_agbno(mp, agno, be32_to_cpu(
+							rp[i].ar_startblock)) ||
+			    		be32_to_cpu(rp[i].ar_blockcount) >
+							MAXEXTLEN)
 				continue;
 
-			e = INT_GET(rp[i].ar_startblock, ARCH_CONVERT) +
-				INT_GET(rp[i].ar_blockcount, ARCH_CONVERT);
+			e = be32_to_cpu(rp[i].ar_startblock) +
+				be32_to_cpu(rp[i].ar_blockcount);
 			if (!verify_agbno(mp, agno, e - 1))
 				continue;
-			for (b = INT_GET(rp[i].ar_startblock, ARCH_CONVERT);
-			     b < e; b++)  {
+			for (b = be32_to_cpu(rp[i].ar_startblock); b < e; b++) {
 				state = get_agbno_state(mp, agno, b);
 				/*
 				 * no warning messages -- we'll catch
@@ -724,16 +694,13 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 	/*
 	 * interior record
 	 */
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, block, 1,
-		mp->m_alloc_mxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
 
-	numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_alloc_mxr[1])  {
+	if (numrecs > mp->m_alloc_mxr[1])  {
 		numrecs = mp->m_alloc_mxr[1];
 		hdr_errors++;
 	}
-	if (isroot == 0 &&
-	    INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_alloc_mnr[1])  {
+	if (isroot == 0 && numrecs < mp->m_alloc_mnr[1])  {
 		numrecs = mp->m_alloc_mnr[1];
 		hdr_errors++;
 	}
@@ -752,11 +719,12 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 		else suspect++;
 	}
 
-	for (i = 0; i < numrecs; i++)
-		if (INT_GET(pp[i], ARCH_CONVERT) != 0 &&
-		    verify_agbno(mp, agno, INT_GET(pp[i], ARCH_CONVERT)))
-			scan_sbtree(INT_GET(pp[i], ARCH_CONVERT), level, agno,
-				suspect, scanfunc_cnt, 0);
+	for (i = 0; i < numrecs; i++) {
+		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+							be32_to_cpu(pp[i])))
+			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+					suspect, scanfunc_cnt, 0);
+	}
 }
 
 /*
@@ -803,18 +771,17 @@ scanfunc_ino(
 	block = (xfs_inobt_block_t *)ablock;
 	hdr_errors = 0;
 
-	if (INT_GET(block->bb_magic, ARCH_CONVERT) != XFS_IBT_MAGIC) {
+	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
 		do_warn(_("bad magic # %#x in inobt block %d/%d\n"),
-			INT_GET(block->bb_magic, ARCH_CONVERT), agno, bno);
+			be32_to_cpu(block->bb_magic), agno, bno);
 		hdr_errors++;
 		bad_ino_btree = 1;
 		if (suspect)
 			return;
 	}
-	if (INT_GET(block->bb_level, ARCH_CONVERT) != level) {
+	if (be16_to_cpu(block->bb_level) != level) {
 		do_warn(_("expected level %d got %d in inobt block %d/%d\n"),
-			level, INT_GET(block->bb_level, ARCH_CONVERT),
-			agno, bno);
+			level, be16_to_cpu(block->bb_level), agno, bno);
 		hdr_errors++;
 		bad_ino_btree = 1;
 		if (suspect)
@@ -840,7 +807,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			state, agno, bno, suspect);
 	}
 
-	numrecs = INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	numrecs = be16_to_cpu(block->bb_numrecs);
 
 	/*
 	 * leaf record in btree
@@ -848,13 +815,11 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 	if (level == 0) {
 		/* check for trashed btree block */
 
-		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
-		    mp->m_inobt_mxr[0])  {
+		if (numrecs > mp->m_inobt_mxr[0])  {
 			numrecs = mp->m_inobt_mxr[0];
 			hdr_errors++;
 		}
-		if (isroot == 0 && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-		    mp->m_inobt_mnr[0])  {
+		if (isroot == 0 && numrecs < mp->m_inobt_mnr[0])  {
 			numrecs = mp->m_inobt_mnr[0];
 			hdr_errors++;
 		}
@@ -866,8 +831,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			suspect++;
 		}
 
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block,
-			1, mp->m_inobt_mxr[0]);
+		rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, 1);
 
 		/*
 		 * step through the records, each record points to
@@ -878,7 +842,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 		 * the block.  skip processing of bogus records.
 		 */
 		for (i = 0; i < numrecs; i++) {
-			ino = INT_GET(rp[i].ir_startino, ARCH_CONVERT);
+			ino = be32_to_cpu(rp[i].ir_startino);
 			off = XFS_AGINO_TO_OFFSET(mp, ino);
 			agbno = XFS_AGINO_TO_AGBNO(mp, ino);
 			lino = XFS_AGINO_TO_INO(mp, agno, ino);
@@ -1029,11 +993,11 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 				}
 			}
 
-			if (nfree != INT_GET(rp[i].ir_freecount, ARCH_CONVERT)) {
-				do_warn(
-_("ir_freecount/free mismatch, inode chunk %d/%d, freecount %d nfree %d\n"),
-					agno, ino, INT_GET(rp[i].ir_freecount,
-						ARCH_CONVERT), nfree);
+			if (nfree != be32_to_cpu(rp[i].ir_freecount)) {
+				do_warn(_("ir_freecount/free mismatch, inode "
+					"chunk %d/%d, freecount %d nfree %d\n"),
+					agno, ino,
+					be32_to_cpu(rp[i].ir_freecount), nfree);
 			}
 		}
 
@@ -1046,18 +1010,16 @@ _("ir_freecount/free mismatch, inode chunk %d/%d, freecount %d nfree %d\n"),
 	/*
 	 * interior record, continue on
 	 */
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_inobt_mxr[1])  {
+	if (numrecs > mp->m_inobt_mxr[1])  {
 		numrecs = mp->m_inobt_mxr[1];
 		hdr_errors++;
 	}
-	if (isroot == 0 &&
-	    INT_GET(block->bb_numrecs, ARCH_CONVERT) < mp->m_inobt_mnr[1])  {
+	if (isroot == 0 && numrecs < mp->m_inobt_mnr[1])  {
 		numrecs = mp->m_inobt_mnr[1];
 		hdr_errors++;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block, 1,
-		mp->m_inobt_mxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, 1, mp->m_inobt_mxr[1]);
 
 	/*
 	 * don't pass bogus tree flag down further if this block
@@ -1075,10 +1037,10 @@ _("ir_freecount/free mismatch, inode chunk %d/%d, freecount %d nfree %d\n"),
 	}
 
 	for (i = 0; i < numrecs; i++)  {
-		if (INT_GET(pp[i], ARCH_CONVERT) != 0 &&
-		    verify_agbno(mp, agno, INT_GET(pp[i], ARCH_CONVERT)))
-			scan_sbtree(INT_GET(pp[i], ARCH_CONVERT), level,
-					agno, suspect, scanfunc_ino, 0);
+		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+							be32_to_cpu(pp[i])))
+			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+					suspect, scanfunc_ino, 0);
 	}
 }
 
@@ -1093,42 +1055,41 @@ scan_freelist(
 	int		i;
 
 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-	    XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
-		set_agbno_state(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT),
-			XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
-	if (INT_GET(agf->agf_flcount, ARCH_CONVERT) == 0)
+			XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+			XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
+		set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+				XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
-	agflbuf = libxfs_readbuf(mp->m_dev,
-			XFS_AG_DADDR(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT),
+	agflbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp,
+				be32_to_cpu(agf->agf_seqno),
 				XFS_AGFL_DADDR(mp)), XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agflbuf)  {
 		do_abort(_("can't read agfl block for ag %d\n"),
-			INT_GET(agf->agf_seqno, ARCH_CONVERT));
+			be32_to_cpu(agf->agf_seqno));
 		return;
 	}
 	agfl = XFS_BUF_TO_AGFL(agflbuf);
-	i = INT_GET(agf->agf_flfirst, ARCH_CONVERT);
+	i = be32_to_cpu(agf->agf_flfirst);
 	count = 0;
 	for (;;) {
-		bno = INT_GET(agfl->agfl_bno[i], ARCH_CONVERT);
-		if (verify_agbno(mp, INT_GET(agf->agf_seqno,ARCH_CONVERT), bno))
-			set_agbno_state(mp,
-				INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				bno, XR_E_FREE);
+		bno = be32_to_cpu(agfl->agfl_bno[i]);
+		if (verify_agbno(mp, be32_to_cpu(agf->agf_seqno), bno))
+			set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+					bno, XR_E_FREE);
 		else
 			do_warn(_("bad agbno %u in agfl, agno %d\n"),
-				bno, INT_GET(agf->agf_seqno, ARCH_CONVERT));
+				bno, be32_to_cpu(agf->agf_seqno));
 		count++;
-		if (i == INT_GET(agf->agf_fllast, ARCH_CONVERT))
+		if (i == be32_to_cpu(agf->agf_fllast))
 			break;
 		if (++i == XFS_AGFL_SIZE(mp))
 			i = 0;
 	}
-	if (count != INT_GET(agf->agf_flcount, ARCH_CONVERT)) {
+	if (count != be32_to_cpu(agf->agf_flcount)) {
 		do_warn(_("freeblk count %d != flcount %d in ag %d\n"), count,
-			INT_GET(agf->agf_flcount, ARCH_CONVERT),
-			INT_GET(agf->agf_seqno, ARCH_CONVERT));
+			be32_to_cpu(agf->agf_flcount),
+			be32_to_cpu(agf->agf_seqno));
 	}
 	libxfs_putbuf(agflbuf);
 }
@@ -1163,7 +1124,7 @@ scan_ag(
 		libxfs_putbuf(sbbuf);
 		return;
 	}
-	libxfs_xlate_sb(XFS_BUF_TO_SBP(sbbuf), sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
 
 	agfbuf = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
@@ -1241,39 +1202,33 @@ scan_ag(
 
 	scan_freelist(agf);
 
-	if (INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT) != 0 &&
-	    verify_agbno(mp, agno,
-			INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT)))
-		scan_sbtree(
-			INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT),
-			INT_GET(agf->agf_levels[XFS_BTNUM_BNO], ARCH_CONVERT),
-			agno, 0, scanfunc_bno, 1);
+	if (be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]) != 0 && verify_agbno(mp,
+			agno, be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO])))
+		scan_sbtree(be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]),
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]),
+				agno, 0, scanfunc_bno, 1);
 	else
 		do_warn(_("bad agbno %u for btbno root, agno %d\n"),
-			INT_GET(agf->agf_roots[XFS_BTNUM_BNO], ARCH_CONVERT),
+			be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]),
 			agno);
 
-	if (INT_GET(agf->agf_roots[XFS_BTNUM_CNT], ARCH_CONVERT) != 0 &&
-	    verify_agbno(mp, agno,
-			INT_GET(agf->agf_roots[XFS_BTNUM_CNT], ARCH_CONVERT)))
-		scan_sbtree(
-			INT_GET(agf->agf_roots[XFS_BTNUM_CNT], ARCH_CONVERT),
-			INT_GET(agf->agf_levels[XFS_BTNUM_CNT], ARCH_CONVERT),
-			agno, 0, scanfunc_cnt, 1);
+	if (be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]) != 0 && verify_agbno(mp,
+			agno, be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT])))
+		scan_sbtree(be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
+				agno, 0, scanfunc_cnt, 1);
 	else
 		do_warn(_("bad agbno %u for btbcnt root, agno %d\n"),
-			INT_GET(agf->agf_roots[XFS_BTNUM_CNT], ARCH_CONVERT),
+			be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
 			agno);
 
-	if (INT_GET(agi->agi_root, ARCH_CONVERT) != 0 &&
-	    verify_agbno(mp, agno, INT_GET(agi->agi_root, ARCH_CONVERT)))
-		scan_sbtree(
-			INT_GET(agi->agi_root, ARCH_CONVERT),
-			INT_GET(agi->agi_level, ARCH_CONVERT),
-			agno, 0, scanfunc_ino, 1);
+	if (be32_to_cpu(agi->agi_root) != 0 && verify_agbno(mp, agno,
+						be32_to_cpu(agi->agi_root)))
+		scan_sbtree(be32_to_cpu(agi->agi_root),
+			be32_to_cpu(agi->agi_level), agno, 0, scanfunc_ino, 1);
 	else
 		do_warn(_("bad agbno %u for inobt root, agno %d\n"),
-			INT_GET(agi->agi_root, ARCH_CONVERT), agno);
+			be32_to_cpu(agi->agi_root), agno);
 
 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
 
@@ -1294,7 +1249,7 @@ scan_ag(
 	if (sb_dirty && !no_modify) {
 		if (agno == 0)
 			memcpy(&mp->m_sb, sb, sizeof(xfs_sb_t));
-		libxfs_xlate_sb(XFS_BUF_PTR(sbbuf), sb, -1, XFS_SB_ALL_BITS);
+		libxfs_sb_to_disk(XFS_BUF_TO_SBP(sbbuf), sb, XFS_SB_ALL_BITS);
 		libxfs_writebuf(sbbuf, 0);
 	} else
 		libxfs_putbuf(sbbuf);

@@ -78,9 +78,9 @@ inobt_key_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 /*ARGSUSED*/
@@ -95,9 +95,8 @@ inobt_key_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	kp = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0));
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	kp = XFS_BTREE_KEY_ADDR(xfs_inobt, block, idx);
 	return bitize((int)((char *)kp - (char *)block));
 }
 
@@ -111,9 +110,9 @@ inobt_ptr_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 /*ARGSUSED*/
@@ -128,8 +127,8 @@ inobt_ptr_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block, idx,
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, idx,
 		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 0));
 	return bitize((int)((char *)pp - (char *)block));
 }
@@ -144,9 +143,9 @@ inobt_rec_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) > 0)
+	if (be16_to_cpu(block->bb_level) > 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 /*ARGSUSED*/
@@ -161,9 +160,8 @@ inobt_rec_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) == 0);
-	rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_inobt, 1));
+	ASSERT(be16_to_cpu(block->bb_level) == 0);
+	rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, idx);
 	return bitize((int)((char *)rp - (char *)block));
 }
 

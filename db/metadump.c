@@ -253,8 +253,7 @@ scanfunc_freesp(
 		return 1;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_alloc, bthdr, 1,
-			mp->m_alloc_mxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, bthdr, 1, mp->m_alloc_mxr[1]);
 	for (i = 0; i < numrecs; i++) {
 		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
 			if (show_warnings)
@@ -424,7 +423,7 @@ generate_obfuscated_name(
 	int			i;
 	int			dup;
 	xfs_dahash_t		newhash;
-	uchar_t			newname[namelen];
+	uchar_t			newname[NAME_MAX];
 
 	if (is_special_dirent(ino, namelen, name))
 		return;
@@ -499,11 +498,11 @@ obfuscate_sf_dir(
 {
 	xfs_dir2_sf_t		*sfp;
 	xfs_dir2_sf_entry_t	*sfep;
-	int			ino_dir_size;
+	__uint64_t		ino_dir_size;
 	int			i;
 
 	sfp = &dip->di_u.di_dir2sf;
-	ino_dir_size = dip->di_core.di_size;
+	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
 		if (show_warnings)
@@ -511,7 +510,7 @@ obfuscate_sf_dir(
 					(long long)cur_ino);
 	}
 
-	sfep = XFS_DIR2_SF_FIRSTENTRY(sfp);
+	sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0; (i < sfp->hdr.count) &&
 			((char *)sfep - (char *)sfp < ino_dir_size); i++) {
 
@@ -530,7 +529,7 @@ obfuscate_sf_dir(
 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
 					 (char *)sfp);
 		} else if ((char *)sfep - (char *)sfp +
-				XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep) >
+				xfs_dir2_sf_entsize_byentry(sfp, sfep) >
 				ino_dir_size) {
 			if (show_warnings)
 				print_warning("entry length in dir inode %llu "
@@ -541,12 +540,12 @@ obfuscate_sf_dir(
 					 (char *)sfp);
 		}
 
-		generate_obfuscated_name(XFS_DIR2_SF_GET_INUMBER(sfp,
-				XFS_DIR2_SF_INUMBERP(sfep)), namelen,
+		generate_obfuscated_name(xfs_dir2_sf_get_inumber(sfp,
+				xfs_dir2_sf_inumberp(sfep)), namelen,
 				&sfep->name[0]);
 
 		sfep = (xfs_dir2_sf_entry_t *)((char *)sfep +
-				XFS_DIR2_SF_ENTSIZE_BYNAME(sfp, namelen));
+				xfs_dir2_sf_entsize_byname(sfp, namelen));
 	}
 }
 
@@ -554,9 +553,9 @@ static void
 obfuscate_sf_symlink(
 	xfs_dinode_t		*dip)
 {
-	int			len;
+	__uint64_t		len;
 
-	len = dip->di_core.di_size;
+	len = be64_to_cpu(dip->di_core.di_size);
 	if (len > XFS_DFORK_DSIZE(dip, mp)) {
 		if (show_warnings)
 			print_warning("invalid size (%d) in symlink inode %llu",
@@ -668,9 +667,9 @@ obfuscate_dir_data_blocks(
 				xfs_dir2_leaf_entry_t	*blp;
 				xfs_dir2_block_tail_t	*btp;
 
-				btp = XFS_DIR2_BLOCK_TAIL_P(mp,
+				btp = xfs_dir2_block_tail_p(mp,
 						(xfs_dir2_block_t *)block);
-				blp = XFS_DIR2_BLOCK_LEAF_P(btp);
+				blp = xfs_dir2_block_leaf_p(btp);
 				if ((char *)blp > (char *)btp)
 					blp = (xfs_dir2_leaf_entry_t *)btp;
 
@@ -726,7 +725,7 @@ obfuscate_dir_data_blocks(
 					dir_data.bad_block = 1;
 					break;
 				}
-				if (be16_to_cpu(*XFS_DIR2_DATA_UNUSED_TAG_P(dup)) !=
+				if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
 						dir_offset) {
 					dir_data.bad_block = 1;
 					break;
@@ -739,7 +738,7 @@ obfuscate_dir_data_blocks(
 			}
 
 			dep = (xfs_dir2_data_entry_t *)ptr;
-			length = XFS_DIR2_DATA_ENTSIZE(dep->namelen);
+			length = xfs_dir2_data_entsize(dep->namelen);
 
 			if (dir_offset + length > dir_data.end_of_data ||
 					ptr + length > endptr) {
@@ -749,7 +748,7 @@ obfuscate_dir_data_blocks(
 						(long long)cur_ino);
 				break;
 			}
-			if (be16_to_cpu(*XFS_DIR2_DATA_ENTRY_TAG_P(dep)) !=
+			if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) !=
 					dir_offset) {
 				dir_data.bad_block = 1;
 				break;
@@ -1003,7 +1002,6 @@ scanfunc_bmap(
 {
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_t		*rp;
 	int			nrecs;
 
 	nrecs = be16_to_cpu(bthdr->bb_numrecs);
@@ -1016,10 +1014,8 @@ scanfunc_bmap(
 					typtab[btype].name, agno, agbno);
 			return 1;
 		}
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sqb_blocksize, xfs_bmbt, bthdr,
-					1, mp->m_bmap_dmxr[0]);
-
-		return process_bmbt_reclist(rp, nrecs, *(typnm_t*)arg);
+		return process_bmbt_reclist(XFS_BTREE_REC_ADDR(xfs_bmbt, 
+					bthdr, 1), nrecs, *(typnm_t*)arg);
 	}
 
 	if (nrecs > mp->m_bmap_dmxr[1]) {
@@ -1028,8 +1024,7 @@ scanfunc_bmap(
 					nrecs, typtab[btype].name, agno, agbno);
 		return 1;
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, bthdr, 1,
-				mp->m_bmap_dmxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, bthdr, 1, mp->m_bmap_dmxr[1]);
 	for (i = 0; i < nrecs; i++) {
 		xfs_agnumber_t	ag;
 		xfs_agblock_t	bno;
@@ -1060,7 +1055,6 @@ process_btinode(
 	xfs_bmdr_block_t	*dib;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_t		*rp;
 	int			level;
 	int			nrecs;
 	int			maxrecs;
@@ -1082,14 +1076,9 @@ process_btinode(
 		return 1;
 	}
 
-	if (level == 0) {
-		rp = XFS_BTREE_REC_ADDR(XFS_DFORK_SIZE(dip, mp, whichfork),
-				xfs_bmdr, dib, 1, XFS_BTREE_BLOCK_MAXRECS(
-					XFS_DFORK_SIZE(dip, mp, whichfork),
-					xfs_bmdr, 1));
-
-		return process_bmbt_reclist(rp, nrecs, itype);
-	}
+	if (level == 0) 
+		return process_bmbt_reclist(XFS_BTREE_REC_ADDR(xfs_bmdr, 
+							dib, 1), nrecs, itype);
 
 	maxrecs = XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp, whichfork),
 			xfs_bmdr, 0);
@@ -1101,8 +1090,7 @@ process_btinode(
 		return 1;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr,
-			dib, 1, maxrecs);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1, maxrecs);
 	for (i = 0; i < nrecs; i++) {
 		xfs_agnumber_t	ag;
 		xfs_agblock_t	bno;
@@ -1136,9 +1124,9 @@ process_exinode(
 
 	whichfork = (itype == TYP_ATTR) ? XFS_ATTR_FORK : XFS_DATA_FORK;
 
-	nex = XFS_DFORK_NEXTENTS_HOST(dip, whichfork);
-	if (nex < 0 || nex > XFS_DFORK_SIZE_HOST(dip, mp, whichfork) /
-				sizeof(xfs_bmbt_rec_t)) {
+	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+	if (nex < 0 || nex > XFS_DFORK_SIZE(dip, mp, whichfork) /
+						sizeof(xfs_bmbt_rec_t)) {
 		if (show_warnings)
 			print_warning("bad number of extents %d in inode %lld",
 				nex, (long long)cur_ino);
@@ -1185,18 +1173,13 @@ process_inode(
 	xfs_agino_t 		agino,
 	xfs_dinode_t 		*dip)
 {
-	xfs_dinode_core_t       odic;
 	int			success;
-
-	/* convert the core */
-	memcpy(&odic, &dip->di_core, sizeof(xfs_dinode_core_t));
-	libxfs_xlate_dinode_core((xfs_caddr_t)&odic, &dip->di_core, 1);
 
 	success = 1;
 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
 
 	/* copy appropriate data fork metadata */
-	switch (dip->di_core.di_mode & S_IFMT) {
+	switch (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) {
 		case S_IFDIR:
 			memset(&dir_data, 0, sizeof(dir_data));
 			success = process_inode_data(dip, TYP_DIR2);
@@ -1212,7 +1195,7 @@ process_inode(
 	clear_nametable();
 
 	/* copy extended attributes if they exist and forkoff is valid */
-	if (success && XFS_CFORK_DSIZE(&dip->di_core, mp) < XFS_LITINO(mp)) {
+	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
 		attr_data.remote_val_count = 0;
 		switch (dip->di_core.di_aformat) {
 			case XFS_DINODE_FMT_LOCAL:
@@ -1230,10 +1213,6 @@ process_inode(
 		}
 		clear_nametable();
 	}
-
-	/* restore the core back to it's original endianess */
-	memcpy(&dip->di_core, &odic, sizeof(xfs_dinode_core_t));
-
 	return success;
 }
 
@@ -1281,7 +1260,7 @@ copy_inode_chunk(
 	if ((mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK && off != 0) ||
 			(mp->m_sb.sb_inopblock > XFS_INODES_PER_CHUNK &&
 					off % XFS_INODES_PER_CHUNK != 0) ||
-			(XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&
+			(xfs_sb_version_hasalign(&mp->m_sb) &&
 					agbno % mp->m_sb.sb_inoalignmt != 0)) {
 		if (show_warnings)
 			print_warning("badly aligned inode (start = %llu)",
@@ -1345,8 +1324,7 @@ scanfunc_ino(
 					typtab[btype].name, agno, agbno);
 			numrecs = mp->m_inobt_mxr[0];
 		}
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_inobt,
-				bthdr, 1, mp->m_inobt_mxr[0]);
+		rp = XFS_BTREE_REC_ADDR(xfs_inobt, bthdr, 1);
 		for (i = 0; i < numrecs; i++, rp++) {
 			if (!copy_inode_chunk(agno, rp))
 				return 0;
@@ -1361,8 +1339,7 @@ scanfunc_ino(
 		numrecs = mp->m_inobt_mxr[1];
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt,
-			bthdr, 1, mp->m_inobt_mxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, bthdr, 1, mp->m_inobt_mxr[1]);
 	for (i = 0; i < numrecs; i++) {
 		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
 			if (show_warnings)
@@ -1505,8 +1482,6 @@ copy_ino(
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
 	xfs_agino_t		agino;
-	xfs_dinode_t		*dip;
-	xfs_dinode_core_t	tdic;
 	int			offset;
 	int			rval = 0;
 
@@ -1537,12 +1512,8 @@ copy_ino(
 	}
 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
 
-	dip = iocur_top->data;
-	libxfs_xlate_dinode_core((xfs_caddr_t)&dip->di_core, &tdic, 1);
-	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
-
 	cur_ino = ino;
-	rval = process_inode_data(dip, itype);
+	rval = process_inode_data(iocur_top->data, itype);
 pop_out:
 	pop_cur();
 	return rval;

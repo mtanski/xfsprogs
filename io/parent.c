@@ -242,7 +242,7 @@ parent_check(void)
         fsfd = file->fd;
 
 	fshandlep = jdm_getfshandle(mntpt);
-	if (fshandlep == 0) {
+	if (fshandlep == NULL) {
 		fprintf(stderr, _("unable to open \"%s\" for jdm: %s\n"),
 		      mntpt,
 		      strerror(errno));

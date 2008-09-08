@@ -251,23 +251,17 @@ process_btinode(
 	xfs_bmbt_rec_32_t	*rp;
 
 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
-	if (INT_GET(dib->bb_level, ARCH_CONVERT) == 0) {
-		rp = (xfs_bmbt_rec_32_t *)XFS_BTREE_REC_ADDR(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-			xfs_bmdr, dib, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp,
-					whichfork),
-				xfs_bmdr, 1));
-		process_bmbt_reclist(rp, INT_GET(dib->bb_numrecs, ARCH_CONVERT), extmapp);
+	if (be16_to_cpu(dib->bb_level) == 0) {
+		rp = (xfs_bmbt_rec_32_t *)XFS_BTREE_REC_ADDR(xfs_bmdr, dib, 1);
+		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), extmapp);
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(XFS_DFORK_SIZE(dip, mp, whichfork),
-		xfs_bmdr, dib, 1,
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1,
 		XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp, whichfork),
 					xfs_bmdr, 0));
-	for (i = 0; i < INT_GET(dib->bb_numrecs, ARCH_CONVERT); i++)
-		scan_lbtree((xfs_fsblock_t)INT_GET(pp[i], ARCH_CONVERT), INT_GET(dib->bb_level, ARCH_CONVERT), scanfunc_bmap,
-			extmapp,
+	for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
+		scan_lbtree(be64_to_cpu(pp[i]), be16_to_cpu(dib->bb_level), 
+			scanfunc_bmap, extmapp,
 			whichfork == XFS_DATA_FORK ? TYP_BMAPBTD : TYP_BMAPBTA);
 }
 
@@ -280,7 +274,7 @@ process_exinode(
 	xfs_bmbt_rec_32_t	*rp;
 
 	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
-	process_bmbt_reclist(rp, XFS_DFORK_NEXTENTS_HOST(dip, whichfork), extmapp);
+	process_bmbt_reclist(rp, XFS_DFORK_NEXTENTS(dip, whichfork), extmapp);
 }
 
 static void
@@ -291,7 +285,7 @@ process_fork(
 	extmap_t	*extmap;
 	int		nex;
 
-	nex = XFS_DFORK_NEXTENTS_HOST(dip, whichfork);
+	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
 	if (!nex)
 		return;
 	extmap = extmap_alloc(nex);
@@ -322,13 +316,13 @@ process_inode(
 	int			skipd;
 
 	dic = &dip->di_core;
-	ino = XFS_AGINO_TO_INO(mp, INT_GET(agf->agf_seqno, ARCH_CONVERT), agino);
-	switch (dic->di_mode & S_IFMT) {
+	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
+	switch (be16_to_cpu(dic->di_mode) & S_IFMT) {
 	case S_IFDIR:
 		skipd = !dflag;
 		break;
 	case S_IFREG:
-		if (!rflag && (dic->di_flags & XFS_DIFLAG_REALTIME))
+		if (!rflag && (be16_to_cpu(dic->di_flags) & XFS_DIFLAG_REALTIME))
 			skipd = 1;
 		else if (!Rflag &&
 			 (ino == mp->m_sb.sb_rbmino ||
@@ -386,10 +380,8 @@ scan_ag(
 		pop_cur();
 		return;
 	}
-	scan_sbtree(agf,
-		INT_GET(agi->agi_root, ARCH_CONVERT),
-		INT_GET(agi->agi_level, ARCH_CONVERT),
-		scanfunc_ino, TYP_INOBT);
+	scan_sbtree(agf, be32_to_cpu(agi->agi_root), 
+			be32_to_cpu(agi->agi_level), scanfunc_ino, TYP_INOBT);
 	pop_cur();
 	pop_cur();
 }
@@ -423,7 +415,7 @@ scan_sbtree(
 	scan_sbtree_f_t	func,
 	typnm_t		btype)
 {
-	xfs_agnumber_t	seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
 
 	push_cur();
 	set_cur(&typtab[btype], XFS_AGB_TO_DADDR(mp, seqno, root),
@@ -446,19 +438,18 @@ scanfunc_bmap(
 	xfs_bmbt_block_t	*block = (xfs_bmbt_block_t *)ablock;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 
 	if (level == 0) {
-		rp = (xfs_bmbt_rec_32_t *)
-			XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt,
-			block, 1, mp->m_bmap_dmxr[0]);
-		process_bmbt_reclist(rp, INT_GET(block->bb_numrecs, ARCH_CONVERT), extmapp);
+		rp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+		process_bmbt_reclist((xfs_bmbt_rec_32_t *)rp, 
+				be16_to_cpu(block->bb_numrecs), extmapp);
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-		mp->m_bmap_dmxr[0]);
-	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_lbtree(INT_GET(pp[i], ARCH_CONVERT), level, scanfunc_bmap, extmapp, btype);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[0]);
+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+		scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, extmapp, 
+									btype);
 }
 
 static void
@@ -469,7 +460,7 @@ scanfunc_ino(
 {
 	xfs_agino_t		agino;
 	xfs_inobt_block_t	*block = (xfs_inobt_block_t *)ablock;
-	xfs_agnumber_t		seqno = INT_GET(agf->agf_seqno, ARCH_CONVERT);
+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
 	int			i;
 	int			j;
 	int			off;
@@ -477,10 +468,9 @@ scanfunc_ino(
 	xfs_inobt_rec_t		*rp;
 
 	if (level == 0) {
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block,
-			1, mp->m_inobt_mxr[0]);
-		for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++) {
-			agino = INT_GET(rp[i].ir_startino, ARCH_CONVERT);
+		rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, 1);
+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
+			agino = be32_to_cpu(rp[i].ir_startino);
 			off = XFS_INO_TO_OFFSET(mp, agino);
 			push_cur();
 			set_cur(&typtab[TYP_INODE],
@@ -494,27 +484,18 @@ scanfunc_ino(
 				continue;
 			}
 			for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-				xfs_dinode_t            *dip;
-				xfs_dinode_core_t       tdic;
-
-				dip=(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog));
-
-				/* convert the core, then copy it back into the inode */
-				libxfs_xlate_dinode_core( (xfs_caddr_t)
-					&dip->di_core, &tdic, 1);
-				memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
-
 				if (XFS_INOBT_IS_FREE_DISK(&rp[i], j))
 					continue;
-				process_inode(agf, agino + j,
-					(xfs_dinode_t *)((char *)iocur_top->data + ((off + j) << mp->m_sb.sb_inodelog)));
+				process_inode(agf, agino + j, (xfs_dinode_t *)
+					((char *)iocur_top->data + 
+					((off + j) << mp->m_sb.sb_inodelog)));
 			}
 			pop_cur();
 		}
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_inobt, block, 1,
-		mp->m_inobt_mxr[1]);
-	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)
-		scan_sbtree(agf, INT_GET(pp[i], ARCH_CONVERT), level, scanfunc_ino, TYP_INOBT);
+	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, 1, mp->m_inobt_mxr[1]);
+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+		scan_sbtree(agf, be32_to_cpu(pp[i]), level, scanfunc_ino, 
+								TYP_INOBT);
 }

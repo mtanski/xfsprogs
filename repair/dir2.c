@@ -249,7 +249,8 @@ da_brelse(
 	da_buf_done(dabuf);
 	for (i = 0; i < nbuf; i++) {
 #ifdef XR_PF_TRACE
-		pftrace("putbuf %p (%llu)", bplist[i], (long long)XFS_BUF_ADDR(bplist[i]));
+		pftrace("putbuf %p (%llu)", bplist[i],
+					(long long)XFS_BUF_ADDR(bplist[i]));
 #endif
 		libxfs_putbuf(bplist[i]);
 	}
@@ -309,8 +310,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 
 		info = bp->data;
 
-		if (INT_GET(info->magic, ARCH_CONVERT) ==
-					XFS_DIR2_LEAFN_MAGIC)  {
+		if (be16_to_cpu(info->magic) == XFS_DIR2_LEAFN_MAGIC)  {
 			if ( i != -1 ) {
 				do_warn(_("found non-root LEAFN node in inode "
 					  "%llu bno = %u\n"),
@@ -319,22 +319,20 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 			*rbno = 0;
 			da_brelse(bp);
 			return(1);
-		} else if (INT_GET(info->magic, ARCH_CONVERT) !=
-					XFS_DA_NODE_MAGIC)  {
+		} else if (be16_to_cpu(info->magic) != XFS_DA_NODE_MAGIC)  {
 			da_brelse(bp);
 			do_warn(_("bad dir magic number 0x%x in inode %llu "
 				  "bno = %u\n"),
-				INT_GET(info->magic, ARCH_CONVERT),
+				be16_to_cpu(info->magic),
 					da_cursor->ino, bno);
 			goto error_out;
 		}
 		node = (xfs_da_intnode_t*)info;
-		if (INT_GET(node->hdr.count, ARCH_CONVERT) >
-						mp->m_dir_node_ents)  {
+		if (be16_to_cpu(node->hdr.count) > mp->m_dir_node_ents)  {
 			da_brelse(bp);
 			do_warn(_("bad record count in inode %llu, count = %d, "
 				  "max = %d\n"), da_cursor->ino,
-				INT_GET(node->hdr.count, ARCH_CONVERT),
+				be16_to_cpu(node->hdr.count),
 				mp->m_dir_node_ents);
 			goto error_out;
 		}
@@ -342,10 +340,9 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		 * maintain level counter
 		 */
 		if (i == -1)
-			i = da_cursor->active =
-				INT_GET(node->hdr.level, ARCH_CONVERT);
+			i = da_cursor->active = be16_to_cpu(node->hdr.level);
 		else  {
-			if (INT_GET(node->hdr.level, ARCH_CONVERT) == i - 1)  {
+			if (be16_to_cpu(node->hdr.level) == i - 1)  {
 				i--;
 			} else  {
 				do_warn(_("bad directory btree for directory "
@@ -357,7 +354,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		}
 
 		da_cursor->level[i].hashval =
-			INT_GET(node->btree[0].hashval, ARCH_CONVERT);
+					be32_to_cpu(node->btree[0].hashval);
 		da_cursor->level[i].bp = bp;
 		da_cursor->level[i].bno = bno;
 		da_cursor->level[i].index = 0;
@@ -365,7 +362,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		/*
 		 * set up new bno for next level down
 		 */
-		bno = INT_GET(node->btree[0].before, ARCH_CONVERT);
+		bno = be32_to_cpu(node->btree[0].before);
 	} while (info != NULL && i > 1);
 
 	/*
@@ -460,27 +457,27 @@ verify_final_dir2_path(xfs_mount_t	*mp,
 	 * that all entries are used, encountered and expected hashvals
 	 * match, etc.
 	 */
-	if (entry != INT_GET(node->hdr.count, ARCH_CONVERT) - 1)  {
+	if (entry != be16_to_cpu(node->hdr.count) - 1)  {
 		do_warn(
 		_("directory block used/count inconsistency - %d / %hu\n"),
-			entry, INT_GET(node->hdr.count, ARCH_CONVERT));
+			entry, be16_to_cpu(node->hdr.count));
 		bad++;
 	}
 	/*
 	 * hash values monotonically increasing ???
 	 */
 	if (cursor->level[this_level].hashval >=
-	    INT_GET(node->btree[entry].hashval, ARCH_CONVERT))  {
+				be32_to_cpu(node->btree[entry].hashval))  {
 		do_warn(_("directory/attribute block hashvalue inconsistency, "
 			  "expected > %u / saw %u\n"),
 			cursor->level[this_level].hashval,
-			INT_GET(node->btree[entry].hashval, ARCH_CONVERT));
+			be32_to_cpu(node->btree[entry].hashval));
 		bad++;
 	}
-	if (INT_GET(node->hdr.info.forw, ARCH_CONVERT) != 0)  {
+	if (be32_to_cpu(node->hdr.info.forw) != 0)  {
 		do_warn(_("bad directory/attribute forward block pointer, "
 			  "expected 0, saw %u\n"),
-			INT_GET(node->hdr.info.forw, ARCH_CONVERT));
+			be32_to_cpu(node->hdr.info.forw));
 		bad++;
 	}
 	if (bad)  {
@@ -498,18 +495,17 @@ verify_final_dir2_path(xfs_mount_t	*mp,
 	 * ok, now check descendant block number against this level
 	 */
 	if (cursor->level[p_level].bno !=
-	    INT_GET(node->btree[entry].before, ARCH_CONVERT))  {
+				be32_to_cpu(node->btree[entry].before))
 		return(1);
-	}
 
 	if (cursor->level[p_level].hashval !=
-	    INT_GET(node->btree[entry].hashval, ARCH_CONVERT))  {
+				be32_to_cpu(node->btree[entry].hashval))  {
 		if (!no_modify)  {
 			do_warn(_("correcting bad hashval in non-leaf dir "
 				  "block\n\tin (level %d) in inode %llu.\n"),
 				this_level, cursor->ino);
-			INT_SET(node->btree[entry].hashval, ARCH_CONVERT,
-				cursor->level[p_level].hashval);
+			node->btree[entry].hashval = cpu_to_be32(
+						cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {
 			do_warn(_("would correct bad hashval in non-leaf dir "
@@ -534,15 +530,14 @@ verify_final_dir2_path(xfs_mount_t	*mp,
 	/*
 	 * bail out if this is the root block (top of tree)
 	 */
-	if (this_level >= cursor->active)  {
+	if (this_level >= cursor->active)  
 		return(0);
-	}
 	/*
 	 * set hashvalue to correctl reflect the now-validated
 	 * last entry in this block and continue upwards validation
 	 */
 	cursor->level[this_level].hashval =
-		INT_GET(node->btree[entry].hashval, ARCH_CONVERT);
+		be32_to_cpu(node->btree[entry].hashval);
 
 	return(verify_final_dir2_path(mp, cursor, this_level));
 }
@@ -614,14 +609,14 @@ verify_dir2_path(xfs_mount_t	*mp,
 	 * block and move on to the next block.
 	 * and update cursor value for said level
 	 */
-	if (entry >= INT_GET(node->hdr.count, ARCH_CONVERT))  {
+	if (entry >= be16_to_cpu(node->hdr.count))  {
 		/*
 		 * update the hash value for this level before
 		 * validating it.  bno value should be ok since
 		 * it was set when the block was first read in.
 		 */
 		cursor->level[this_level].hashval =
-			INT_GET(node->btree[entry - 1].hashval, ARCH_CONVERT);
+			be32_to_cpu(node->btree[entry - 1].hashval);
 
 		/*
 		 * keep track of greatest block # -- that gets
@@ -639,7 +634,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 		/*
 		 * ok, now get the next buffer and check sibling pointers
 		 */
-		dabno = INT_GET(node->hdr.info.forw, ARCH_CONVERT);
+		dabno = be32_to_cpu(node->hdr.info.forw);
 		ASSERT(dabno != 0);
 		nex = blkmap_getn(cursor->blkmap, dabno, mp->m_dirblkfsbs,
 			&bmp, &lbmp);
@@ -667,33 +662,31 @@ verify_dir2_path(xfs_mount_t	*mp,
 		 * entry count, verify level
 		 */
 		bad = 0;
-		if (XFS_DA_NODE_MAGIC !=
-		    INT_GET(newnode->hdr.info.magic, ARCH_CONVERT))  {
+		if (XFS_DA_NODE_MAGIC != be16_to_cpu(newnode->hdr.info.magic)) {
 			do_warn(_("bad magic number %x in block %u for "
 				  "directory inode %llu\n"),
-				INT_GET(newnode->hdr.info.magic, ARCH_CONVERT),
+				be16_to_cpu(newnode->hdr.info.magic),
 				dabno, cursor->ino);
 			bad++;
 		}
-		if (INT_GET(newnode->hdr.info.back, ARCH_CONVERT) !=
-		    cursor->level[this_level].bno)  {
+		if (be32_to_cpu(newnode->hdr.info.back) !=
+					cursor->level[this_level].bno)  {
 			do_warn(_("bad back pointer in block %u for directory "
 				  "inode %llu\n"),
 				dabno, cursor->ino);
 			bad++;
 		}
-		if (INT_GET(newnode->hdr.count, ARCH_CONVERT) >
-						mp->m_dir_node_ents)  {
+		if (be16_to_cpu(newnode->hdr.count) > mp->m_dir_node_ents)  {
 			do_warn(_("entry count %d too large in block %u for "
 				  "directory inode %llu\n"),
-				INT_GET(newnode->hdr.count, ARCH_CONVERT),
+				be16_to_cpu(newnode->hdr.count),
 				dabno, cursor->ino);
 			bad++;
 		}
-		if (INT_GET(newnode->hdr.level, ARCH_CONVERT) != this_level)  {
+		if (be16_to_cpu(newnode->hdr.level) != this_level)  {
 			do_warn(_("bad level %d in block %u for directory "
 				  "inode %llu\n"),
-				INT_GET(newnode->hdr.level, ARCH_CONVERT),
+				be16_to_cpu(newnode->hdr.level),
 				dabno, cursor->ino);
 			bad++;
 		}
@@ -716,7 +709,7 @@ verify_dir2_path(xfs_mount_t	*mp,
 		cursor->level[this_level].dirty = 0;
 		cursor->level[this_level].bno = dabno;
 		cursor->level[this_level].hashval =
-			INT_GET(newnode->btree[0].hashval, ARCH_CONVERT);
+			be32_to_cpu(newnode->btree[0].hashval);
 		node = newnode;
 
 		entry = cursor->level[this_level].index = 0;
@@ -725,21 +718,20 @@ verify_dir2_path(xfs_mount_t	*mp,
 	 * ditto for block numbers
 	 */
 	if (cursor->level[p_level].bno !=
-	    INT_GET(node->btree[entry].before, ARCH_CONVERT))  {
+				be32_to_cpu(node->btree[entry].before))
 		return(1);
-	}
 	/*
 	 * ok, now validate last hashvalue in the descendant
 	 * block against the hashval in the current entry
 	 */
 	if (cursor->level[p_level].hashval !=
-	    INT_GET(node->btree[entry].hashval, ARCH_CONVERT))  {
+				be32_to_cpu(node->btree[entry].hashval))  {
 		if (!no_modify)  {
 			do_warn(_("correcting bad hashval in interior dir "
 				  "block\n\tin (level %d) in inode %llu.\n"),
 				this_level, cursor->ino);
-			INT_SET(node->btree[entry].hashval, ARCH_CONVERT,
-				cursor->level[p_level].hashval);
+			node->btree[entry].hashval = cpu_to_be32(
+					cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {
 			do_warn(_("would correct bad hashval in interior dir "
@@ -780,24 +772,23 @@ process_sf_dir2_fixi8(
 		exit(1);
 	}
 	memmove(oldsfp, newsfp, oldsize);
-	INT_SET(newsfp->hdr.count, ARCH_CONVERT,
-			INT_GET(oldsfp->hdr.count, ARCH_CONVERT));
+	newsfp->hdr.count = oldsfp->hdr.count;
 	newsfp->hdr.i8count = 0;
-	ino = XFS_DIR2_SF_GET_INUMBER(oldsfp, &oldsfp->hdr.parent);
-	XFS_DIR2_SF_PUT_INUMBER(newsfp, &ino, &newsfp->hdr.parent);
-	oldsfep = XFS_DIR2_SF_FIRSTENTRY(oldsfp);
-	newsfep = XFS_DIR2_SF_FIRSTENTRY(newsfp);
+	ino = xfs_dir2_sf_get_inumber(oldsfp, &oldsfp->hdr.parent);
+	xfs_dir2_sf_put_inumber(newsfp, &ino, &newsfp->hdr.parent);
+	oldsfep = xfs_dir2_sf_firstentry(oldsfp);
+	newsfep = xfs_dir2_sf_firstentry(newsfp);
 	while ((int)((char *)oldsfep - (char *)oldsfp) < oldsize) {
 		newsfep->namelen = oldsfep->namelen;
-		XFS_DIR2_SF_PUT_OFFSET(newsfep,
-			XFS_DIR2_SF_GET_OFFSET(oldsfep));
+		xfs_dir2_sf_put_offset(newsfep,
+			xfs_dir2_sf_get_offset(oldsfep));
 		memmove(newsfep->name, oldsfep->name, newsfep->namelen);
-		ino = XFS_DIR2_SF_GET_INUMBER(oldsfp,
-			XFS_DIR2_SF_INUMBERP(oldsfep));
-		XFS_DIR2_SF_PUT_INUMBER(newsfp, &ino,
-			XFS_DIR2_SF_INUMBERP(newsfep));
-		oldsfep = XFS_DIR2_SF_NEXTENTRY(oldsfp, oldsfep);
-		newsfep = XFS_DIR2_SF_NEXTENTRY(newsfp, newsfep);
+		ino = xfs_dir2_sf_get_inumber(oldsfp,
+			xfs_dir2_sf_inumberp(oldsfep));
+		xfs_dir2_sf_put_inumber(newsfp, &ino,
+			xfs_dir2_sf_inumberp(newsfep));
+		oldsfep = xfs_dir2_sf_nextentry(oldsfp, oldsfep);
+		newsfep = xfs_dir2_sf_nextentry(newsfp, newsfep);
 	}
 	*next_sfep = newsfep;
 	free(oldsfp);
@@ -815,13 +806,14 @@ process_sf_dir2_fixoff(
 	xfs_dir2_sf_entry_t	*sfep;
 	xfs_dir2_sf_t		*sfp;
 
-	for (i = 0, sfp = &dip->di_u.di_dir2sf,
-		sfep = XFS_DIR2_SF_FIRSTENTRY(sfp),
-		offset = XFS_DIR2_DATA_FIRST_OFFSET;
-	     i < INT_GET(sfp->hdr.count, ARCH_CONVERT);
-	     i++, sfep = XFS_DIR2_SF_NEXTENTRY(sfp, sfep)) {
-		XFS_DIR2_SF_PUT_OFFSET(sfep, offset);
-		offset += XFS_DIR2_DATA_ENTSIZE(sfep->namelen);
+	sfp = &dip->di_u.di_dir2sf;
+	sfep = xfs_dir2_sf_firstentry(sfp);
+	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+
+	for (i = 0; i < sfp->hdr.count; i++) {
+		xfs_dir2_sf_put_offset(sfep, offset);
+		offset += xfs_dir2_data_entsize(sfep->namelen);
+		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
 	}
 }
 
@@ -869,7 +861,7 @@ process_sf_dir2(
 	sfp = &dip->di_u.di_dir2sf;
 	max_size = XFS_DFORK_DSIZE(dip, mp);
 	num_entries = sfp->hdr.count;
-	ino_dir_size = INT_GET(dip->di_core.di_size, ARCH_CONVERT);
+	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
 	bad_offset = *repair = 0;
 
@@ -878,22 +870,21 @@ process_sf_dir2(
 	/*
 	 * Initialize i8 based on size of parent inode number.
 	 */
-	i8 = (XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent)
+	i8 = (xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent)
 		> XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
 	 * check for bad entry count
 	 */
-	if (num_entries * XFS_DIR2_SF_ENTSIZE_BYNAME(sfp, 1) +
-		    XFS_DIR2_SF_HDR_SIZE(0) > max_size ||
-	    num_entries == 0)
+	if (num_entries * xfs_dir2_sf_entsize_byname(sfp, 1) +
+		    xfs_dir2_sf_hdr_size(0) > max_size || num_entries == 0)
 		num_entries = 0xFF;
 
 	/*
 	 * run through entries, stop at first bad entry, don't need
 	 * to check for .. since that's encoded in its own field
 	 */
-	sfep = next_sfep = XFS_DIR2_SF_FIRSTENTRY(sfp);
+	sfep = next_sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0;
 	     i < num_entries && ino_dir_size > (char *)next_sfep - (char *)sfp;
 	     i++) {
@@ -901,8 +892,7 @@ process_sf_dir2(
 		sfep = next_sfep;
 		junkit = 0;
 		bad_sfnamelen = 0;
-		lino = XFS_DIR2_SF_GET_INUMBER(sfp,
-				XFS_DIR2_SF_INUMBERP(sfep));
+		lino = xfs_dir2_sf_get_inumber(sfp, xfs_dir2_sf_inumberp(sfep));
 		/*
 		 * if entry points to self, junk it since only '.' or '..'
 		 * should do that and shortform dirs don't contain either
@@ -1017,8 +1007,8 @@ process_sf_dir2(
 				break;
 			}
 		} else if ((__psint_t) sfep - (__psint_t) sfp +
-				+ XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep)
-				> ino_dir_size)  {
+				xfs_dir2_sf_entsize_byentry(sfp, sfep)
+							> ino_dir_size)  {
 			bad_sfnamelen = 1;
 
 			if (i == num_entries - 1)  {
@@ -1081,14 +1071,14 @@ process_sf_dir2(
 			junkit = 1;
 		}
 
-		if (XFS_DIR2_SF_GET_OFFSET(sfep) < offset) {
+		if (xfs_dir2_sf_get_offset(sfep) < offset) {
 			do_warn(_("entry contains offset out of order in "
 				  "shortform dir %llu\n"),
 				ino);
 			bad_offset = 1;
 		}
-		offset = XFS_DIR2_SF_GET_OFFSET(sfep) +
-			 XFS_DIR2_DATA_ENTSIZE(namelen);
+		offset = xfs_dir2_sf_get_offset(sfep) +
+						xfs_dir2_data_entsize(namelen);
 
 		/*
 		 * junk the entry by copying up the rest of the
@@ -1106,9 +1096,8 @@ process_sf_dir2(
 
 			if (!no_modify)  {
 				tmp_elen =
-					XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp, sfep);
-				INT_MOD(dip->di_core.di_size, ARCH_CONVERT,
-					-(tmp_elen));
+					xfs_dir2_sf_entsize_byentry(sfp, sfep);
+				be64_add_cpu(&dip->di_core.di_size, -tmp_elen);
 				ino_dir_size -= tmp_elen;
 
 				tmp_sfep = (xfs_dir2_sf_entry_t *)
@@ -1118,7 +1107,7 @@ process_sf_dir2(
 
 				memmove(sfep, tmp_sfep, tmp_len);
 
-				INT_MOD(sfp->hdr.count, ARCH_CONVERT, -1);
+				sfp->hdr.count -= 1;
 				num_entries--;
 				memset((void *) ((__psint_t) sfep + tmp_len), 0,
 					tmp_elen);
@@ -1160,25 +1149,25 @@ process_sf_dir2(
 		next_sfep = (tmp_sfep == NULL)
 			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
 				+ ((!bad_sfnamelen)
-					? XFS_DIR2_SF_ENTSIZE_BYENTRY(sfp,
+					? xfs_dir2_sf_entsize_byentry(sfp,
 						sfep)
-					: XFS_DIR2_SF_ENTSIZE_BYNAME(sfp,
+					: xfs_dir2_sf_entsize_byname(sfp,
 						namelen)))
 			: tmp_sfep;
 	}
 
 	/* sync up sizes and entry counts */
 
-	if (INT_GET(sfp->hdr.count, ARCH_CONVERT) != i) {
+	if (sfp->hdr.count != i) {
 		if (no_modify) {
 			do_warn(_("would have corrected entry count "
 				  "in directory %llu from %d to %d\n"),
-				ino, INT_GET(sfp->hdr.count, ARCH_CONVERT), i);
+				ino, sfp->hdr.count, i);
 		} else {
 			do_warn(_("corrected entry count in directory %llu, "
 				  "was %d, now %d\n"),
-				ino, INT_GET(sfp->hdr.count, ARCH_CONVERT), i);
-			INT_SET(sfp->hdr.count, ARCH_CONVERT, i);
+				ino, sfp->hdr.count, i);
+			sfp->hdr.count = i;
 			*dino_dirty = 1;
 			*repair = 1;
 		}
@@ -1216,17 +1205,14 @@ process_sf_dir2(
 				(__int64_t)((__psint_t)next_sfep -
 					    (__psint_t)sfp));
 
-			INT_SET(dip->di_core.di_size, ARCH_CONVERT,
-				(xfs_fsize_t)((__psint_t)next_sfep -
-					      (__psint_t)sfp));
+			dip->di_core.di_size = cpu_to_be64(
+					(__psint_t)next_sfep - (__psint_t)sfp);
 			*dino_dirty = 1;
 			*repair = 1;
 		}
 	}
-	if (offset +
-		(INT_GET(sfp->hdr.count, ARCH_CONVERT) + 2) *
-			sizeof(xfs_dir2_leaf_entry_t) +
-	    sizeof(xfs_dir2_block_tail_t) > mp->m_dirblksize) {
+	if (offset + (sfp->hdr.count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
+			sizeof(xfs_dir2_block_tail_t) > mp->m_dirblksize) {
 		do_warn(_("directory %llu offsets too high\n"), ino);
 		bad_offset = 1;
 	}
@@ -1248,7 +1234,7 @@ process_sf_dir2(
 	/*
 	 * check parent (..) entry
 	 */
-	*parent = XFS_DIR2_SF_GET_INUMBER(sfp, &sfp->hdr.parent);
+	*parent = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
 
 	/*
 	 * if parent entry is bogus, null it out.  we'll fix it later .
@@ -1262,7 +1248,7 @@ process_sf_dir2(
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR2_SF_PUT_INUMBER(sfp, &zero, &sfp->hdr.parent);
+			xfs_dir2_sf_put_inumber(sfp, &zero, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1277,7 +1263,7 @@ process_sf_dir2(
 				  "was %llu, now %llu\n"),
 				ino, *parent, ino);
 			*parent = ino;
-			XFS_DIR2_SF_PUT_INUMBER(sfp, parent, &sfp->hdr.parent);
+			xfs_dir2_sf_put_inumber(sfp, parent, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1297,7 +1283,7 @@ process_sf_dir2(
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			XFS_DIR2_SF_PUT_INUMBER(sfp, &zero, &sfp->hdr.parent);
+			xfs_dir2_sf_put_inumber(sfp, &zero, &sfp->hdr.parent);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1342,25 +1328,26 @@ process_dir2_data(
 	int			lastfree;
 	int			nm_illegal;
 	char			*ptr;
+	xfs_ino_t		ent_ino;
 
 	d = bp->data;
 	bf = d->hdr.bestfree;
 	ptr = (char *)d->u;
 	badbest = lastfree = freeseen = 0;
-	if (INT_GET(bf[0].length, ARCH_CONVERT) == 0) {
-		badbest |= INT_GET(bf[0].offset, ARCH_CONVERT) != 0;
+	if (be16_to_cpu(bf[0].length) == 0) {
+		badbest |= be16_to_cpu(bf[0].offset) != 0;
 		freeseen |= 1 << 0;
 	}
-	if (INT_GET(bf[1].length, ARCH_CONVERT) == 0) {
-		badbest |= INT_GET(bf[1].offset, ARCH_CONVERT) != 0;
+	if (be16_to_cpu(bf[1].length) == 0) {
+		badbest |= be16_to_cpu(bf[1].offset) != 0;
 		freeseen |= 1 << 1;
 	}
-	if (INT_GET(bf[2].length, ARCH_CONVERT) == 0) {
-		badbest |= INT_GET(bf[2].offset, ARCH_CONVERT) != 0;
+	if (be16_to_cpu(bf[2].length) == 0) {
+		badbest |= be16_to_cpu(bf[2].offset) != 0;
 		freeseen |= 1 << 2;
 	}
-	badbest |= INT_GET(bf[0].length, ARCH_CONVERT) < INT_GET(bf[1].length, ARCH_CONVERT);
-	badbest |= INT_GET(bf[1].length, ARCH_CONVERT) < INT_GET(bf[2].length, ARCH_CONVERT);
+	badbest |= be16_to_cpu(bf[0].length) < be16_to_cpu(bf[1].length);
+	badbest |= be16_to_cpu(bf[1].length) < be16_to_cpu(bf[2].length);
 	while (ptr < endptr) {
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		/*
@@ -1368,13 +1355,13 @@ process_dir2_data(
 		 * If we find it, account for that, else make sure it doesn't
 		 * need to be there.
 		 */
-		if (INT_GET(dup->freetag, ARCH_CONVERT) == XFS_DIR2_DATA_FREE_TAG) {
-			if (ptr + INT_GET(dup->length, ARCH_CONVERT) > endptr ||
-			    INT_GET(dup->length, ARCH_CONVERT) == 0 ||
-			    (INT_GET(dup->length, ARCH_CONVERT) & (XFS_DIR2_DATA_ALIGN - 1)))
+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+			if (ptr + be16_to_cpu(dup->length) > endptr ||
+			    be16_to_cpu(dup->length) == 0 ||
+			    (be16_to_cpu(dup->length) & (XFS_DIR2_DATA_ALIGN - 1)))
 				break;
-			if (INT_GET(*XFS_DIR2_DATA_UNUSED_TAG_P(dup),
-				    ARCH_CONVERT) != (char *)dup - (char *)d)
+			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+							(char *)dup - (char *)d)
 				break;
 			badbest |= lastfree != 0;
 			dfp = xfs_dir2_data_freefind(d, dup);
@@ -1383,19 +1370,19 @@ process_dir2_data(
 				badbest |= (freeseen & (1 << i)) != 0;
 				freeseen |= 1 << i;
 			} else
-				badbest |= INT_GET(dup->length, ARCH_CONVERT) >
-					INT_GET(bf[2].length, ARCH_CONVERT);
-			ptr += INT_GET(dup->length, ARCH_CONVERT);
+				badbest |= be16_to_cpu(dup->length) >
+					be16_to_cpu(bf[2].length);
+			ptr += be16_to_cpu(dup->length);
 			lastfree = 1;
 			continue;
 		}
 		dep = (xfs_dir2_data_entry_t *)ptr;
-		if (ptr + XFS_DIR2_DATA_ENTSIZE(dep->namelen) > endptr)
+		if (ptr + xfs_dir2_data_entsize(dep->namelen) > endptr)
 			break;
-		if (INT_GET(*XFS_DIR2_DATA_ENTRY_TAG_P(dep), ARCH_CONVERT) !=
-		    (char *)dep - (char *)d)
+		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) !=
+		    				(char *)dep - (char *)d)
 			break;
-		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
+		ptr += xfs_dir2_data_entsize(dep->namelen);
 		lastfree = 0;
 	}
 	/*
@@ -1417,83 +1404,85 @@ process_dir2_data(
 	 */
 	while (ptr < endptr) {
 		dup = (xfs_dir2_data_unused_t *)ptr;
-		if (INT_GET(dup->freetag, ARCH_CONVERT) ==
-		    XFS_DIR2_DATA_FREE_TAG) {
-			ptr += INT_GET(dup->length, ARCH_CONVERT);
+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+			ptr += be16_to_cpu(dup->length);
 			continue;
 		}
 		dep = (xfs_dir2_data_entry_t *)ptr;
+		ent_ino = be64_to_cpu(dep->inumber);
+		clearino = 1;
+		clearreason = NULL;
 		/*
 		 * We may have to blow out an entry because of bad inode
 		 * numbers.  Do NOT touch the name until after we've computed
 		 * the hashvalue and done a namecheck() on the name.
+		 *
+		 * Conditions must either set clearino to zero or set 
+		 * clearreason why it's being cleared.
 		 */
-		if (!ino_discovery &&
-		    INT_GET(dep->inumber, ARCH_CONVERT) == BADFSINO) {
+		if (!ino_discovery && ent_ino == BADFSINO) {
 			/*
 			 * Don't do a damned thing.  We already found this
 			 * (or did it ourselves) during phase 3.
 			 */
 			clearino = 0;
-		} else if (verify_inum(mp, INT_GET(dep->inumber, ARCH_CONVERT))) {
+		} else if (verify_inum(mp, ent_ino)) {
 			/*
 			 * Bad inode number.  Clear the inode number and the
 			 * entry will get removed later.  We don't trash the
 			 * directory since it's still structurally intact.
 			 */
-			clearino = 1;
 			clearreason = _("invalid");
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_rbmino) {
-			clearino = 1;
+		} else if (ent_ino == mp->m_sb.sb_rbmino) {
 			clearreason = _("realtime bitmap");
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_rsumino) {
-			clearino = 1;
+		} else if (ent_ino == mp->m_sb.sb_rsumino) {
 			clearreason = _("realtime summary");
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_uquotino) {
-			clearino = 1;
+		} else if (ent_ino == mp->m_sb.sb_uquotino) {
 			clearreason = _("user quota");
-		} else if (INT_GET(dep->inumber, ARCH_CONVERT) == mp->m_sb.sb_gquotino) {
-			clearino = 1;
+		} else if (ent_ino == mp->m_sb.sb_gquotino) {
 			clearreason = _("group quota");
-		} else if ((irec_p = find_inode_rec(
-				XFS_INO_TO_AGNO(mp, INT_GET(dep->inumber,
-					ARCH_CONVERT)),
-				XFS_INO_TO_AGINO(mp, INT_GET(dep->inumber,
-					ARCH_CONVERT)))) != NULL) {
-			/*
-			 * Inode recs should have only confirmed inodes in them.
-			 */
-			ino_off = XFS_INO_TO_AGINO(mp, INT_GET(dep->inumber,
-					ARCH_CONVERT)) - irec_p->ino_startnum;
-			ASSERT(is_inode_confirmed(irec_p, ino_off));
-			/*
-			 * If inode is marked free and we're in inode discovery
-			 * mode, leave the entry alone for now.  If the inode
-			 * turns out to be used, we'll figure that out when we
-			 * scan it.  If the inode really is free, we'll hit this
-			 * code again in phase 4 after we've finished inode
-			 * discovery and blow out the entry then.
-			 */
-			if (!ino_discovery && is_inode_free(irec_p, ino_off)) {
-				clearino = 1;
-				clearreason = _("free");
-			} else
-				clearino = 0;
-		} else if (ino_discovery) {
-			add_inode_uncertain(mp, INT_GET(dep->inumber, ARCH_CONVERT), 0);
-			clearino = 0;
 		} else {
-			clearino = 1;
-			clearreason = _("non-existent");
+			irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, ent_ino),
+						XFS_INO_TO_AGINO(mp, ent_ino));
+			if (irec_p == NULL) {
+				if (ino_discovery) {
+					add_inode_uncertain(mp, ent_ino, 0);
+					clearino = 0;
+				} else 
+					clearreason = _("non-existent");
+			} else {
+				/*
+				 * Inode recs should have only confirmed
+				 * inodes in them.
+				 */
+				ino_off = XFS_INO_TO_AGINO(mp, ent_ino)
+							- irec_p->ino_startnum;
+				ASSERT(is_inode_confirmed(irec_p, ino_off));
+				/*
+				 * If inode is marked free and we're in inode
+				 * discovery mode, leave the entry alone for
+				 * now.  If the inode turns out to be used,
+				 * we'll figure that out when we scan it.
+				 * If the inode really is free, we'll hit this
+				 * code again in phase 4 after we've finished
+				 * inode discovery and blow out the entry then.
+				 */
+				if (!ino_discovery && is_inode_free(irec_p,
+								ino_off))
+					clearreason = _("free");
+				else
+					clearino = 0;
+			}
 		}
+		ASSERT((clearino == 0 && clearreason == NULL) ||
+			(clearino != 0 && clearreason != NULL));
 		if (clearino)
 			do_warn(_("entry \"%*.*s\" at block %u offset %d in "
 				  "directory inode %llu references %s inode "
 				  "%llu\n"),
 				dep->namelen, dep->namelen, dep->name,
 				da_bno, (char *)ptr - (char *)d, ino,
-				clearreason,
-				INT_GET(dep->inumber, ARCH_CONVERT));
+				clearreason, ent_ino);
 		/*
 		 * If the name length is 0 (illegal) make it 1 and blast
 		 * the entry.
@@ -1514,7 +1503,8 @@ process_dir2_data(
 				do_warn(_("\tclearing inode number in entry at "
 					  "offset %d...\n"),
 					(char *)ptr - (char *)d);
-				INT_SET(dep->inumber, ARCH_CONVERT, BADFSINO);
+				dep->inumber = cpu_to_be64(BADFSINO);
+				ent_ino = BADFSINO;
 				bp->dirty = 1;
 			} else {
 				do_warn(_("\twould clear inode number in entry "
@@ -1527,7 +1517,7 @@ process_dir2_data(
 		 * discovery is turned on).  Otherwise, we'd complain a lot
 		 * during phase 4.
 		 */
-		junkit = INT_GET(dep->inumber, ARCH_CONVERT) == BADFSINO;
+		junkit = ent_ino == BADFSINO;
 		nm_illegal = namecheck((char *)dep->name, dep->namelen);
 		if (ino_discovery && nm_illegal) {
 			do_warn(_("entry at block %u offset %d in directory "
@@ -1539,8 +1529,7 @@ process_dir2_data(
 		/*
 		 * Now we can mark entries with BADFSINO's bad.
 		 */
-		if (!no_modify &&
-		    INT_GET(dep->inumber, ARCH_CONVERT) == BADFSINO) {
+		if (!no_modify && ent_ino == BADFSINO) {
 			dep->name[0] = '/';
 			bp->dirty = 1;
 			junkit = 0;
@@ -1552,14 +1541,14 @@ process_dir2_data(
 		    dep->name[0] == '.' && dep->name[1] == '.') {
 			if (!*dotdot) {
 				(*dotdot)++;
-				*parent = INT_GET(dep->inumber, ARCH_CONVERT);
+				*parent = ent_ino;
 				/*
 				 * What if .. == .?  Legal only in the root
 				 * inode.  Blow out entry and set parent to
 				 * NULLFSINO otherwise.
 				 */
-				if (ino == INT_GET(dep->inumber, ARCH_CONVERT) &&
-				    ino != mp->m_sb.sb_rootino) {
+				if (ino == ent_ino &&
+						ino != mp->m_sb.sb_rootino) {
 					*parent = NULLFSINO;
 					do_warn(_("bad .. entry in directory "
 						  "inode %llu, points to self: "),
@@ -1570,15 +1559,15 @@ process_dir2_data(
 				 * We have to make sure that . == .. in the
 				 * root inode.
 				 */
-				else if (ino != INT_GET(dep->inumber, ARCH_CONVERT) &&
-					   ino == mp->m_sb.sb_rootino) {
+				else if (ino != ent_ino &&
+						ino == mp->m_sb.sb_rootino) {
 					do_warn(_("bad .. entry in root "
 						  "directory inode %llu, was "
 						  "%llu: "),
-						ino, INT_GET(dep->inumber, ARCH_CONVERT));
+						ino, ent_ino);
 					if (!no_modify) {
 						do_warn(_("correcting\n"));
-						INT_SET(dep->inumber, ARCH_CONVERT, ino);
+						dep->inumber = cpu_to_be64(ino);
 						bp->dirty = 1;
 					} else {
 						do_warn(_("would correct\n"));
@@ -1604,13 +1593,13 @@ process_dir2_data(
 		else if (dep->namelen == 1 && dep->name[0] == '.') {
 			if (!*dot) {
 				(*dot)++;
-				if (INT_GET(dep->inumber, ARCH_CONVERT) != ino) {
+				if (ent_ino != ino) {
 					do_warn(_("bad . entry in directory "
 						  "inode %llu, was %llu: "),
-						ino, INT_GET(dep->inumber, ARCH_CONVERT));
+						ino, ent_ino);
 					if (!no_modify) {
 						do_warn(_("correcting\n"));
-						INT_SET(dep->inumber, ARCH_CONVERT, ino);
+						dep->inumber = cpu_to_be64(ino);
 						bp->dirty = 1;
 					} else {
 						do_warn(_("would correct\n"));
@@ -1626,7 +1615,7 @@ process_dir2_data(
 		/*
 		 * All other entries -- make sure only . references self.
 		 */
-		else if (INT_GET(dep->inumber, ARCH_CONVERT) == ino) {
+		else if (ent_ino == ino) {
 			do_warn(_("entry \"%*.*s\" in directory inode %llu "
 				  "points to self: "),
 				dep->namelen, dep->namelen, dep->name, ino);
@@ -1647,18 +1636,17 @@ process_dir2_data(
 		/*
 		 * Advance to the next entry.
 		 */
-		ptr += XFS_DIR2_DATA_ENTSIZE(dep->namelen);
+		ptr += xfs_dir2_data_entsize(dep->namelen);
 	}
 	/*
 	 * Check the bestfree table.
 	 */
 	if (freeseen != 7 || badbest) {
 		do_warn(_("bad bestfree table in block %u in directory inode "
-			  "%llu: "),
-			da_bno, ino);
+			  "%llu: "), da_bno, ino);
 		if (!no_modify) {
 			do_warn(_("repairing table\n"));
-			libxfs_dir2_data_freescan(mp, d, &i, endptr);
+			libxfs_dir2_data_freescan(mp, d, &i);
 			bp->dirty = 1;
 		} else {
 			do_warn(_("would repair table\n"));
@@ -1714,17 +1702,16 @@ process_block_dir2(
 	 * Verify the block
 	 */
 	block = bp->data;
-	if (INT_GET(block->hdr.magic, ARCH_CONVERT) != XFS_DIR2_BLOCK_MAGIC)
+	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
 		do_warn(_("bad directory block magic # %#x in block %u for "
 			  "directory inode %llu\n"),
-			INT_GET(block->hdr.magic, ARCH_CONVERT),
-			mp->m_dirdatablk, ino);
+			be32_to_cpu(block->hdr.magic), mp->m_dirdatablk, ino);
 	/*
 	 * process the data area
 	 * this also checks & fixes the bestfree
 	 */
-	btp = XFS_DIR2_BLOCK_TAIL_P(mp, block);
-	blp = XFS_DIR2_BLOCK_LEAF_P(btp);
+	btp = xfs_dir2_block_tail_p(mp, block);
+	blp = xfs_dir2_block_leaf_p(btp);
 	/*
 	 * Don't let this go past the end of the block.
 	 */
@@ -1758,27 +1745,25 @@ process_leaf_block_dir2(
 	int			i;
 	int			stale;
 
-	for (i = stale = 0; i < INT_GET(leaf->hdr.count, ARCH_CONVERT); i++) {
+	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
 		if ((char *)&leaf->ents[i] >= (char *)leaf + mp->m_dirblksize) {
 			do_warn(_("bad entry count in block %u of directory "
 				  "inode %llu\n"),
 				da_bno, ino);
 			return 1;
 		}
-		if (INT_GET(leaf->ents[i].address, ARCH_CONVERT) ==
-		    XFS_DIR2_NULL_DATAPTR)
+		if (be32_to_cpu(leaf->ents[i].address) == XFS_DIR2_NULL_DATAPTR)
 			stale++;
-		else if (INT_GET(leaf->ents[i].hashval, ARCH_CONVERT) <
-			 last_hashval) {
+		else if (be32_to_cpu(leaf->ents[i].hashval) < last_hashval) {
 			do_warn(_("bad hash ordering in block %u of directory "
 				  "inode %llu\n"),
 				da_bno, ino);
 			return 1;
 		}
 		*next_hashval = last_hashval =
-			INT_GET(leaf->ents[i].hashval, ARCH_CONVERT);
+					be32_to_cpu(leaf->ents[i].hashval);
 	}
-	if (stale != INT_GET(leaf->hdr.stale, ARCH_CONVERT)) {
+	if (stale != be16_to_cpu(leaf->hdr.stale)) {
 		do_warn(_("bad stale count in block %u of directory "
 			  "inode %llu\n"),
 			da_bno, ino);
@@ -1846,11 +1831,11 @@ process_leaf_level_dir2(
 		/*
 		 * Check magic number for leaf directory btree block.
 		 */
-		if (INT_GET(leaf->hdr.info.magic, ARCH_CONVERT) !=
+		if (be16_to_cpu(leaf->hdr.info.magic) !=
 		   XFS_DIR2_LEAFN_MAGIC) {
 			do_warn(_("bad directory leaf magic # %#x for "
 				  "directory inode %llu block %u\n"),
-				INT_GET(leaf->hdr.info.magic, ARCH_CONVERT),
+				be16_to_cpu(leaf->hdr.info.magic),
 				ino, da_bno);
 			da_brelse(bp);
 			goto error_out;
@@ -1874,10 +1859,10 @@ process_leaf_level_dir2(
 		da_cursor->level[0].bp = bp;
 		da_cursor->level[0].bno = da_bno;
 		da_cursor->level[0].index =
-			INT_GET(leaf->hdr.count, ARCH_CONVERT);
+			be16_to_cpu(leaf->hdr.count);
 		da_cursor->level[0].dirty = buf_dirty;
 
-		if (INT_GET(leaf->hdr.info.back, ARCH_CONVERT) != prev_bno) {
+		if (be32_to_cpu(leaf->hdr.info.back) != prev_bno) {
 			do_warn(_("bad sibling back pointer for block %u in "
 				  "directory inode %llu\n"),
 				da_bno, ino);
@@ -1885,7 +1870,7 @@ process_leaf_level_dir2(
 			goto error_out;
 		}
 		prev_bno = da_bno;
-		da_bno = INT_GET(leaf->hdr.info.forw, ARCH_CONVERT);
+		da_bno = be32_to_cpu(leaf->hdr.info.forw);
 		if (da_bno != 0) {
 			if (verify_dir2_path(mp, da_cursor, 0)) {
 				da_brelse(bp);
@@ -2023,12 +2008,10 @@ process_leaf_node_dir2(
 			continue;
 		}
 		data = bp->data;
-		if (INT_GET(data->hdr.magic, ARCH_CONVERT) !=
-		    XFS_DIR2_DATA_MAGIC)
+		if (be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC)
 			do_warn(_("bad directory block magic # %#x in block "
 				"%llu for directory inode %llu\n"),
-				INT_GET(data->hdr.magic, ARCH_CONVERT),
-				dbno, ino);
+				be32_to_cpu(data->hdr.magic), dbno, ino);
 		i = process_dir2_data(mp, ino, dip, ino_discovery, dirname,
 			parent, bp, dot, dotdot, (xfs_dablk_t)dbno,
 			(char *)data + mp->m_dirblksize);
@@ -2086,21 +2069,20 @@ process_dir2(
 	 */
 	if (blkmap)
 		last = blkmap_last_off(blkmap);
-	if (INT_GET(dip->di_core.di_size, ARCH_CONVERT) <=
-		XFS_DFORK_DSIZE(dip, mp) &&
-	    dip->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
+	if (be64_to_cpu(dip->di_core.di_size) <= XFS_DFORK_DSIZE(dip, mp) &&
+			dip->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
 		dot = dotdot = 1;
 		res = process_sf_dir2(mp, ino, dip, ino_discovery, dino_dirty,
 			dirname, parent, &repair);
 	} else if (last == mp->m_dirblkfsbs &&
-		 (dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-		  dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
+			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
 		res = process_block_dir2(mp, ino, dip, ino_discovery,
 			dino_dirty, dirname, parent, blkmap, &dot, &dotdot,
 			&repair);
 	} else if (last >= mp->m_dirleafblk + mp->m_dirblkfsbs &&
-		 (dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-		  dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
+			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
 		res = process_leaf_node_dir2(mp, ino, dip, ino_discovery,
 			dirname, parent, blkmap, &dot, &dotdot, &repair,
 			last > mp->m_dirleafblk + mp->m_dirblkfsbs);

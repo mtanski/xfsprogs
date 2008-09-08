@@ -1,3 +1,10 @@
+xfsprogs-3.0.0
+	- Resync libxfs to latest kernel implemenation
+	- Update all of xfsprogs to latest kernel interfaces
+	- Add sparse support to xfsprogs build (thanks to Christoph Hellwig)
+	- Cleanup devel package for xfsctl, libhandle and libdisk only
+	  (remove libxfs interfaces).
+
 xfsprogs-2.10.1 (5 September 2008)
 	- Improve xfs_repair -P option to disable xfs_buf_t locking.
 	- Fix inode cluster I/O size for > 8KB block size filesystems.

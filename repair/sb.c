@@ -65,10 +65,10 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 	 * secondaries and cannot be changed at run time in
 	 * the primary superblock
 	 */
-	if (XFS_SB_VERSION_HASDALIGN(source))
-		XFS_SB_VERSION_ADDDALIGN(dest);
-	if (XFS_SB_VERSION_HASEXTFLGBIT(source))
-		XFS_SB_VERSION_ADDEXTFLGBIT(dest);
+	if (xfs_sb_version_hasdalign(source))
+		dest->sb_versionnum |= XFS_SB_VERSION_DALIGNBIT;
+	if (xfs_sb_version_hasextflgbit(source))
+		dest->sb_versionnum |= XFS_SB_VERSION_EXTFLGBIT;
 
 	/*
 	 * these are all supposed to be zero or will get reset anyway
@@ -133,8 +133,8 @@ find_secondary_sb(xfs_sb_t *rsb)
 		 * we don't know how big the sectors really are.
 		 */
 		for (i = 0; !done && i < bsize; i += BBSIZE)  {
-			c_bufsb = (char *) sb + i;
-			libxfs_xlate_sb(c_bufsb, &bufsb, 1, XFS_SB_ALL_BITS);
+			c_bufsb = (char *)sb + i;
+			libxfs_sb_from_disk(&bufsb, (xfs_dsb_t *)c_bufsb);
 
 			if (verify_sb(&bufsb, 0) != XR_OK)
 				continue;
@@ -233,7 +233,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	if (sb->sb_magicnum != XFS_SB_MAGIC)
 		return(XR_BAD_MAGIC);
 
-	if (!XFS_SB_GOOD_VERSION(sb))
+	if (!xfs_sb_good_version(sb))
 		return(XR_BAD_VERSION);
 
 	/* does sb think mkfs really finished ? */
@@ -298,7 +298,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	if (i != sb->sb_sectlog)
 		return(XR_BAD_SECT_SIZE_DATA);
 
-	if (XFS_SB_VERSION_HASSECTOR(sb))  {
+	if (xfs_sb_version_hassector(sb))  {
 
 		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
 
@@ -361,7 +361,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	/*
 	 * verify correctness of inode alignment if it's there
 	 */
-	if (XFS_SB_VERSION_HASALIGN(sb))  {
+	if (xfs_sb_version_hasalign(sb))  {
 		align = calc_ino_align(sb);
 
 		if (align != sb->sb_inoalignmt)
@@ -377,7 +377,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	/*
 	 * verify stripe alignment fields if present
 	 */
-	if (XFS_SB_VERSION_HASDALIGN(sb)) {
+	if (xfs_sb_version_hasdalign(sb)) {
 		if ((!sb->sb_unit && sb->sb_width) ||
 		    (sb->sb_unit && sb->sb_agblocks % sb->sb_unit))
 			return(XR_BAD_SB_UNIT);
@@ -389,7 +389,7 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	/*
 	 * if shared bit is set, verify that the version number is sane
 	 */
-	if (XFS_SB_VERSION_HASSHARED(sb))  {
+	if (xfs_sb_version_hasshared(sb))  {
 		if (sb->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
 			return(XR_BAD_SVN);
 	}
@@ -414,9 +414,9 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 			 * shared version # and inode alignment fields
 			 * should be valid
 			 */
-			if (sb->sb_shared_vn && !XFS_SB_VERSION_HASSHARED(sb))
+			if (sb->sb_shared_vn && !xfs_sb_version_hasshared(sb))
 				return(XR_BAD_SVN);
-			if (sb->sb_inoalignmt && !XFS_SB_VERSION_HASALIGN(sb))
+			if (sb->sb_inoalignmt && !xfs_sb_version_hasalign(sb))
 				return(XR_BAD_INO_ALIGN);
 		}
 		if ((!pre_65_beta &&
@@ -426,9 +426,9 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 			/*
 			 * stripe alignment values should be valid
 			 */
-			if (sb->sb_unit && !XFS_SB_VERSION_HASDALIGN(sb))
+			if (sb->sb_unit && !xfs_sb_version_hasdalign(sb))
 				return(XR_BAD_SB_UNIT);
-			if (sb->sb_width && !XFS_SB_VERSION_HASDALIGN(sb))
+			if (sb->sb_width && !xfs_sb_version_hasdalign(sb))
 				return(XR_BAD_SB_WIDTH);
 		}
 
@@ -447,12 +447,13 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 void
 write_primary_sb(xfs_sb_t *sbp, int size)
 {
-	void *buf;
+	xfs_dsb_t	*buf;
 
 	if (no_modify)
 		return;
 
-	if ((buf = memalign(libxfs_device_alignment(), size)) == NULL) {
+	buf = memalign(libxfs_device_alignment(), size);
+	if (buf == NULL) {
 		do_error(_("failed to memalign superblock buffer\n"));
 		return;
 	}
@@ -463,7 +464,8 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
 	}
 
-	libxfs_xlate_sb(buf, sbp, -1, XFS_SB_ALL_BITS);
+	
+	libxfs_sb_to_disk(buf, sbp, XFS_SB_ALL_BITS);
 
 	if (write(x.dfd, buf, size) != size) {
 		free(buf);
@@ -480,9 +482,10 @@ int
 get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 {
 	int error, rval;
-	void *buf;
+	xfs_dsb_t *buf;
 
-	if ((buf = memalign(libxfs_device_alignment(), size)) == NULL) {
+	buf = memalign(libxfs_device_alignment(), size);
+	if (buf == NULL) {
 		do_error(
 	_("error reading superblock %u -- failed to memalign buffer\n"),
 			agno, off);
@@ -506,7 +509,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 			off, size, agno, rval);
 		do_error("%s\n", strerror(error));
 	}
-	libxfs_xlate_sb(buf, sbp, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(sbp, buf);
 	free(buf);
 
 	return (verify_sb(sbp, 0));
@@ -597,17 +600,17 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 	geo->sb_sectsize = sbp->sb_sectsize;
 	geo->sb_inodesize = sbp->sb_inodesize;
 
-	if (XFS_SB_VERSION_HASALIGN(sbp))
+	if (xfs_sb_version_hasalign(sbp))
 		geo->sb_ialignbit = 1;
 
-	if (XFS_SB_VERSION_HASSHARED(sbp) ||
+	if (xfs_sb_version_hasshared(sbp) ||
 	    sbp->sb_versionnum & XR_PART_SECSB_VNMASK)
 		geo->sb_sharedbit = 1;
 
-	if (XFS_SB_VERSION_HASDALIGN(sbp))
+	if (xfs_sb_version_hasdalign(sbp))
 		geo->sb_salignbit = 1;
 
-	if (XFS_SB_VERSION_HASEXTFLGBIT(sbp))
+	if (xfs_sb_version_hasextflgbit(sbp))
 		geo->sb_extflgbit = 1;
 
 	/*
@@ -629,7 +632,7 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
 		geo->sb_inoalignmt = sbp->sb_inoalignmt;
 
 	if ((!pre_65_beta && (sbp->sb_versionnum & XR_GOOD_SECSB_VNMASK)) ||
-	    (pre_65_beta && XFS_SB_VERSION_HASDALIGN(sbp))) {
+	    (pre_65_beta && xfs_sb_version_hasdalign(sbp))) {
 		geo->sb_unit = sbp->sb_unit;
 		geo->sb_width = sbp->sb_width;
 	}

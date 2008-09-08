@@ -44,14 +44,14 @@ setprfiles(void)
 }
 
 void
-setprent()
+setprent(void)
 {
 	setprfiles();
 	projects = fopen(projid_file, "r");
 }
 
 void
-setprpathent()
+setprpathent(void)
 {
 	setprfiles();
 	project_paths = fopen(projects_file, "r");

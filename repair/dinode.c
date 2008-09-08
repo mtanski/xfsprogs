@@ -56,13 +56,15 @@ calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
 		offset += sizeof(xfs_dev_t);
 		break;
 	case XFS_DINODE_FMT_LOCAL:
-		offset += INT_GET(dinoc->di_size, ARCH_CONVERT);
+		offset += be64_to_cpu(dinoc->di_size);
 		break;
 	case XFS_DINODE_FMT_EXTENTS:
-		offset += INT_GET(dinoc->di_nextents, ARCH_CONVERT) * sizeof(xfs_bmbt_rec_32_t);
+		offset += be32_to_cpu(dinoc->di_nextents) * 
+						sizeof(xfs_bmbt_rec_t);
 		break;
 	case XFS_DINODE_FMT_BTREE:
-		offset += INT_GET(dino->di_u.di_bmbt.bb_numrecs, ARCH_CONVERT) * sizeof(xfs_bmbt_rec_32_t);
+		offset += be16_to_cpu(dino->di_u.di_bmbt.bb_numrecs) * 
+						sizeof(xfs_bmbt_rec_t);
 		break;
 	default:
 		do_error(_("Unknown inode format.\n"));
@@ -88,10 +90,10 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 		fprintf(stderr, _("would have cleared inode %llu attributes\n"),
 			(unsigned long long)ino_num);
 
-	if (INT_GET(dinoc->di_anextents, ARCH_CONVERT) != 0)  {
+	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
 		if (no_modify)
 			return(1);
-		dinoc->di_anextents = 0;
+		dinoc->di_anextents = cpu_to_be16(0);
 	}
 
 	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
@@ -114,9 +116,8 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	if (!no_modify) {
 		xfs_attr_shortform_t *asf = (xfs_attr_shortform_t *)
 				XFS_DFORK_APTR(dino);
-		INT_SET(asf->hdr.totsize, ARCH_CONVERT,
-			sizeof(xfs_attr_sf_hdr_t));
-		INT_SET(asf->hdr.count, ARCH_CONVERT, 0);
+		asf->hdr.totsize = cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
+		asf->hdr.count = 0;
 		dinoc->di_forkoff = 0;  /* got to do this after asf is set */
 	}
 
@@ -132,13 +133,13 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 {
 	int dirty = 0;
 
-	if (INT_GET(dinoc->di_magic, ARCH_CONVERT) != XFS_DINODE_MAGIC)  {
+	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
 		dirty = 1;
 
 		if (no_modify)
 			return(1);
 
-		INT_SET(dinoc->di_magic, ARCH_CONVERT, XFS_DINODE_MAGIC);
+		dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
 	}
 
 	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
@@ -152,7 +153,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 						: XFS_DINODE_VERSION_1;
 	}
 
-	if (INT_GET(dinoc->di_mode, ARCH_CONVERT) != 0)  {
+	if (be16_to_cpu(dinoc->di_mode) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -161,7 +162,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_mode = 0;
 	}
 
-	if (INT_GET(dinoc->di_flags, ARCH_CONVERT) != 0)  {
+	if (be16_to_cpu(dinoc->di_flags) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -170,7 +171,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_flags = 0;
 	}
 
-	if (INT_GET(dinoc->di_dmevmask, ARCH_CONVERT) != 0)  {
+	if (be32_to_cpu(dinoc->di_dmevmask) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -206,7 +207,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
 	}
 
-	if (INT_GET(dinoc->di_size, ARCH_CONVERT) != 0)  {
+	if (be64_to_cpu(dinoc->di_size) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -215,7 +216,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_size = 0;
 	}
 
-	if (INT_GET(dinoc->di_nblocks, ARCH_CONVERT) != 0)  {
+	if (be64_to_cpu(dinoc->di_nblocks) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -224,7 +225,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_nblocks = 0;
 	}
 
-	if (INT_GET(dinoc->di_onlink, ARCH_CONVERT) != 0)  {
+	if (be16_to_cpu(dinoc->di_onlink) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -233,7 +234,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_onlink = 0;
 	}
 
-	if (INT_GET(dinoc->di_nextents, ARCH_CONVERT) != 0)  {
+	if (be32_to_cpu(dinoc->di_nextents) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -242,7 +243,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_nextents = 0;
 	}
 
-	if (INT_GET(dinoc->di_anextents, ARCH_CONVERT) != 0)  {
+	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -252,7 +253,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 	}
 
 	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
-			INT_GET(dinoc->di_nlink, ARCH_CONVERT) != 0)  {
+			be32_to_cpu(dinoc->di_nlink) != 0)  {
 		dirty = 1;
 
 		if (no_modify)
@@ -269,9 +270,9 @@ int
 clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
 {
 
-	if (dino->di_next_unlinked != NULLAGINO)  {
+	if (be32_to_cpu(dino->di_next_unlinked) != NULLAGINO)  {
 		if (!no_modify)
-			dino->di_next_unlinked = NULLAGINO;
+			dino->di_next_unlinked = cpu_to_be32(NULLAGINO);
 		return(1);
 	}
 
@@ -307,28 +308,19 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 /*
  * verify_ag_bno is heavily used. In the common case, it
  * performs just two number of compares
+ * Returns 1 for bad ag/bno pair or 0 if it's valid.
  */
 static __inline int
 verify_ag_bno(xfs_sb_t *sbp,
 		xfs_agnumber_t agno,
 		xfs_agblock_t agbno)
 {
-	if (agno < (sbp->sb_agcount - 1)) {
-		if (agbno >= sbp->sb_agblocks) {
-			return 1;	/* bad */
-		}
-		return 0;		/* good */
-	}
-	if (agno == (sbp->sb_agcount - 1)) {
-		if (agbno >=
-			(sbp->sb_dblocks -
-			(sbp->sb_agcount-1) *
-			sbp->sb_agblocks)) {
-			return 1;	/* bad */
-		}
-		return 0;		/* good */
-	}
-	return 1;			/* bad */
+	if (agno < (sbp->sb_agcount - 1)) 
+		return (agbno >= sbp->sb_agblocks);
+	if (agno == (sbp->sb_agcount - 1)) 
+		return (agbno >= (sbp->sb_dblocks -
+				((sbp->sb_agcount - 1) * sbp->sb_agblocks)));
+	return 1;
 }
 
 /*
@@ -470,13 +462,12 @@ get_bmbt_reclist(
 	int			i;
 	xfs_bmbt_irec_t 	irec;
 
-	for (i = 0; i < numrecs; i++, rp++) {
-		libxfs_bmbt_disk_get_all(rp, &irec);
+	for (i = 0; i < numrecs; i++) {
+		libxfs_bmbt_disk_get_all(rp + i, &irec);
 		if (irec.br_startoff >= fblock &&
 				irec.br_startoff + irec.br_blockcount < fblock)
 			return (irec.br_startblock + fblock - irec.br_startoff);
 	}
-
 	return(NULLDFSBNO);
 }
 
@@ -521,7 +512,7 @@ process_rt_rec(
 	 * verify that the blocks listed in the record
 	 * are multiples of an extent
 	 */
-	if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) == 0 &&
+	if (xfs_sb_version_hasextflgbit(&mp->m_sb) == 0 &&
 			(irec->br_startblock % mp->m_sb.sb_rextsize != 0 ||
 			 irec->br_blockcount % mp->m_sb.sb_rextsize != 0)) {
 		do_warn(_("malformed rt inode extent [%llu %llu] (fs rtext "
@@ -536,7 +527,7 @@ process_rt_rec(
 	for (b = irec->br_startblock; b < irec->br_startblock +
 			irec->br_blockcount; b += mp->m_sb.sb_rextsize)  {
 		ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;
-		pwe = XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb) &&
+		pwe = xfs_sb_version_hasextflgbit(&mp->m_sb) &&
 				irec->br_state == XFS_EXT_UNWRITTEN &&
 				(b % mp->m_sb.sb_rextsize != 0);
 
@@ -645,8 +636,8 @@ process_bmbt_reclist_int(
 	else
 		ftype = _("regular");
 
-	for (i = 0; i < numrecs; i++, rp++) {
-		libxfs_bmbt_disk_get_all(rp, &irec);
+	for (i = 0; i < numrecs; i++) {
+		libxfs_bmbt_disk_get_all(rp + i, &irec);
 		if (i == 0)
 			*last_key = *first_key = irec.br_startoff;
 		else
@@ -831,7 +822,7 @@ done:
 int
 process_bmbt_reclist(
 	xfs_mount_t		*mp,
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	int			numrecs,
 	int			type,
 	xfs_ino_t		ino,
@@ -841,9 +832,8 @@ process_bmbt_reclist(
 	xfs_dfiloff_t		*last_key,
 	int			whichfork)
 {
-	return(process_bmbt_reclist_int(mp, (xfs_bmbt_rec_t *)rp, numrecs, type,
-					ino, tot, blkmapp, first_key, last_key,
-					0, whichfork));
+	return process_bmbt_reclist_int(mp, rp, numrecs, type, ino, tot,
+				blkmapp, first_key, last_key, 0, whichfork);
 }
 
 /*
@@ -853,7 +843,7 @@ process_bmbt_reclist(
 int
 scan_bmbt_reclist(
 	xfs_mount_t		*mp,
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	int			numrecs,
 	int			type,
 	xfs_ino_t		ino,
@@ -863,9 +853,8 @@ scan_bmbt_reclist(
 	xfs_dfiloff_t		first_key = 0;
 	xfs_dfiloff_t		last_key = 0;
 
-	return(process_bmbt_reclist_int(mp, (xfs_bmbt_rec_t *)rp, numrecs, type,
-					ino, tot, NULL, &first_key, &last_key,
-					1, whichfork));
+	return process_bmbt_reclist_int(mp, rp, numrecs, type, ino, tot,
+				NULL, &first_key, &last_key, 1, whichfork);
 }
 
 /*
@@ -913,8 +902,9 @@ get_agino_buf(xfs_mount_t	 *mp,
  *
  * the next routines are utility routines for the third
  * routine, get_bmapi().
+ *
+ * NOTE: getfunc_extlist only used by dirv1 checking code
  */
-/* ARGSUSED */
 xfs_dfsbno_t
 getfunc_extlist(xfs_mount_t		*mp,
 		xfs_ino_t		ino,
@@ -941,6 +931,9 @@ getfunc_extlist(xfs_mount_t		*mp,
 	return(final_fsbno);
 }
 
+/*
+ * NOTE: getfunc_btree only used by dirv1 checking code... 
+ */
 xfs_dfsbno_t
 getfunc_btree(xfs_mount_t		*mp,
 		xfs_ino_t		ino,
@@ -953,6 +946,7 @@ getfunc_btree(xfs_mount_t		*mp,
 	int			prev_level;
 #endif
 	int			found;
+	int			numrecs;
 	xfs_bmbt_rec_t		*rec;
 	xfs_bmbt_irec_t		irec;
 	xfs_bmbt_ptr_t		*pp;
@@ -964,7 +958,7 @@ getfunc_btree(xfs_mount_t		*mp,
 	xfs_dfsbno_t		final_fsbno = NULLDFSBNO;
 	xfs_bmbt_block_t	*block;
 	xfs_bmdr_block_t	*rootblock = (xfs_bmdr_block_t *)
-			XFS_DFORK_PTR(dip, whichfork);
+						XFS_DFORK_PTR(dip, whichfork);
 
 	ASSERT(rootblock->bb_level != 0);
 	/*
@@ -973,31 +967,24 @@ getfunc_btree(xfs_mount_t		*mp,
 	 * a btree should have at least 2 levels otherwise it
 	 * would be an extent list.
 	 */
-	rkey = XFS_BTREE_KEY_ADDR(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-			xfs_bmdr, rootblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip,
-						mp, whichfork),
-			xfs_bmdr, 1));
-	rp = XFS_BTREE_PTR_ADDR(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-			xfs_bmdr, rootblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip,
-						mp, whichfork),
-			xfs_bmdr, 1));
-	for (found = -1, i = 0; i < rootblock->bb_numrecs - 1; i++)  {
-		if (rkey[i].br_startoff <= bno
-				&& bno < rkey[i+1].br_startoff)  {
+	rkey = XFS_BTREE_KEY_ADDR(xfs_bmdr, rootblock, 1);
+	rp = XFS_BTREE_PTR_ADDR(xfs_bmdr, rootblock, 1, XFS_BTREE_BLOCK_MAXRECS(
+			XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr, 1));
+	found = -1;
+	for (i = 0; i < be16_to_cpu(rootblock->bb_numrecs) - 1; i++) {
+		if (be64_to_cpu(rkey[i].br_startoff) <= bno && 
+				bno < be64_to_cpu(rkey[i + 1].br_startoff)) {
 			found = i;
 			break;
 		}
 	}
-	if (i == rootblock->bb_numrecs - 1 && bno >= rkey[i].br_startoff)
+	if (i == be16_to_cpu(rootblock->bb_numrecs) - 1 && 
+				bno >= be64_to_cpu(rkey[i].br_startoff))
 		found = i;
 
 	ASSERT(found != -1);
 
-	fsbno = INT_GET(rp[found], ARCH_CONVERT);
+	fsbno = be64_to_cpu(rp[found]);
 
 	ASSERT(verify_dfsbno(mp, fsbno));
 
@@ -1008,56 +995,48 @@ getfunc_btree(xfs_mount_t		*mp,
 		return(NULLDFSBNO);
 	}
 	block = XFS_BUF_TO_BMBT_BLOCK(bp);
+	numrecs = be16_to_cpu(block->bb_numrecs);
 
 	/*
 	 * ok, now traverse any interior btree nodes
 	 */
 #ifdef DEBUG
-	prev_level = INT_GET(block->bb_level, ARCH_CONVERT);
+	prev_level = be16_to_cpu(block->bb_level);
 #endif
 
-	while (INT_GET(block->bb_level, ARCH_CONVERT) > 0)  {
+	while (be16_to_cpu(block->bb_level) > 0)  {
 #ifdef DEBUG
-		ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) < prev_level);
+		ASSERT(be16_to_cpu(block->bb_level) < prev_level);
 
-		prev_level = INT_GET(block->bb_level, ARCH_CONVERT);
+		prev_level = be16_to_cpu(block->bb_level);
 #endif
-
-		if (INT_GET(block->bb_numrecs, ARCH_CONVERT) >
-						mp->m_bmap_dmxr[1]) {
+		if (numrecs > mp->m_bmap_dmxr[1]) {
 			do_warn(_("# of bmap records in inode %llu exceeds max "
 				  "(%u, max - %u)\n"),
-				ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
+				ino, numrecs,
 				mp->m_bmap_dmxr[1]);
 			libxfs_putbuf(bp);
 			return(NULLDFSBNO);
 		}
-		if (verbose && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-						mp->m_bmap_dmnr[1]) {
+		if (verbose && numrecs < mp->m_bmap_dmnr[1]) {
 			do_warn(_("- # of bmap records in inode %llu less than "
 				  "minimum (%u, min - %u), proceeding ...\n"),
-				ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
-				mp->m_bmap_dmnr[1]);
+				ino, numrecs, mp->m_bmap_dmnr[1]);
 		}
-		key = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize,
-			xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
-		pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize,
-			xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
-		for (	found = -1, i = 0;
-			i < INT_GET(block->bb_numrecs, ARCH_CONVERT) - 1;
-			i++) {
-			if (INT_GET(key[i].br_startoff, ARCH_CONVERT) <= bno &&
-			    bno < INT_GET(key[i+1].br_startoff, ARCH_CONVERT)) {
+		key = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
+		pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+		for (found = -1, i = 0; i < numrecs - 1; i++) {
+			if (be64_to_cpu(key[i].br_startoff) <= bno && bno < 
+					be64_to_cpu(key[i + 1].br_startoff)) {
 				found = i;
 				break;
 			}
 		}
-		if (i == INT_GET(block->bb_numrecs, ARCH_CONVERT) - 1 &&
-			bno >= INT_GET(key[i].br_startoff, ARCH_CONVERT))
+		if (i == numrecs - 1 && bno >= be64_to_cpu(key[i].br_startoff))
 			found = i;
 
 		ASSERT(found != -1);
-		fsbno = INT_GET(pp[found], ARCH_CONVERT);
+		fsbno = be64_to_cpu(pp[found]);
 
 		ASSERT(verify_dfsbno(mp, fsbno));
 
@@ -1073,34 +1052,32 @@ getfunc_btree(xfs_mount_t		*mp,
 			return(NULLDFSBNO);
 		}
 		block = XFS_BUF_TO_BMBT_BLOCK(bp);
+		numrecs = be16_to_cpu(block->bb_numrecs);
 	}
 
 	/*
 	 * current block must be a leaf block
 	 */
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) == 0);
-	if (INT_GET(block->bb_numrecs, ARCH_CONVERT) > mp->m_bmap_dmxr[0]) {
+	ASSERT(be16_to_cpu(block->bb_level) == 0);
+	if (numrecs > mp->m_bmap_dmxr[0]) {
 		do_warn(_("# of bmap records in inode %llu greater than "
 			  "maximum (%u, max - %u)\n"),
-			ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
-			mp->m_bmap_dmxr[0]);
+			ino, numrecs, mp->m_bmap_dmxr[0]);
 		libxfs_putbuf(bp);
 		return(NULLDFSBNO);
 	}
-	if (verbose && INT_GET(block->bb_numrecs, ARCH_CONVERT) <
-					mp->m_bmap_dmnr[0])
+	if (verbose && numrecs < mp->m_bmap_dmnr[0])
 		do_warn(_("- # of bmap records in inode %llu less than minimum "
 			  "(%u, min - %u), continuing...\n"),
-			ino, INT_GET(block->bb_numrecs, ARCH_CONVERT),
-			mp->m_bmap_dmnr[0]);
+			ino, numrecs, mp->m_bmap_dmnr[0]);
 
-	rec = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-			mp->m_bmap_dmxr[0]);
-	for (i = 0; i < INT_GET(block->bb_numrecs, ARCH_CONVERT); i++)  {
+	rec = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+	for (i = 0; i < numrecs; i++)  {
 		libxfs_bmbt_disk_get_all(rec + i, &irec);
 		if (irec.br_startoff <= bno &&
 				bno < irec.br_startoff + irec.br_blockcount) {
-			final_fsbno = bno - irec.br_startoff + irec.br_startblock;
+			final_fsbno = bno - irec.br_startoff +
+							irec.br_startblock;
 			break;
 		}
 	}
@@ -1124,6 +1101,8 @@ getfunc_btree(xfs_mount_t		*mp,
  *
  * caller is responsible for checking doubly referenced blocks
  * and references to holes
+ *
+ * NOTE: get_bmapi only used by dirv1 checking code
  */
 xfs_dfsbno_t
 get_bmapi(xfs_mount_t *mp, xfs_dinode_t *dino_p,
@@ -1199,8 +1178,8 @@ process_btinode(
 	else
 		forkname = _("attr");
 
-	level = INT_GET(dib->bb_level, ARCH_CONVERT);
-	numrecs = INT_GET(dib->bb_numrecs, ARCH_CONVERT);
+	level = be16_to_cpu(dib->bb_level);
+	numrecs = be16_to_cpu(dib->bb_numrecs);
 
 	if ((level == 0) || (level > XFS_BM_MAXLEVELS(mp, whichfork))) {
 		/*
@@ -1223,9 +1202,7 @@ process_btinode(
 	/*
 	 * use bmdr/dfork_dsize since the root block is in the data fork
 	 */
-	if (XFS_BMDR_SPACE_CALC(numrecs) > ((whichfork == XFS_DATA_FORK) ?
-			XFS_DFORK_DSIZE(dip, mp) :
-			XFS_DFORK_ASIZE(dip, mp)))  {
+	if (XFS_BMDR_SPACE_CALC(numrecs) > XFS_DFORK_SIZE(dip, mp, whichfork)) {
 		do_warn(
 	_("indicated size of %s btree root (%d bytes) greater than space in "
 	  "inode %llu %s fork\n"),
@@ -1235,19 +1212,9 @@ process_btinode(
 
 	init_bm_cursor(&cursor, level + 1);
 
-	pp = XFS_BTREE_PTR_ADDR(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-		xfs_bmdr, dib, 1,
-		XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-		xfs_bmdr, 0));
-	pkey = XFS_BTREE_KEY_ADDR(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-		xfs_bmdr, dib, 1,
-		XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE(dip, mp, whichfork),
-		xfs_bmdr, 0));
-
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1, XFS_BTREE_BLOCK_MAXRECS(
+			XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr, 0));
+	pkey = XFS_BTREE_KEY_ADDR(xfs_bmdr, dib, 1);
 	last_key = NULLDFILOFF;
 
 	for (i = 0; i < numrecs; i++)  {
@@ -1256,16 +1223,15 @@ process_btinode(
 		 * btree, we'd do it right here.  For now, if there's a
 		 * problem, we'll bail out and presumably clear the inode.
 		 */
-		if (!verify_dfsbno(mp, INT_GET(pp[i], ARCH_CONVERT)))  {
+		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
 			do_warn(_("bad bmap btree ptr 0x%llx in ino %llu\n"),
-				INT_GET(pp[i], ARCH_CONVERT), lino);
+				be64_to_cpu(pp[i]), lino);
 			return(1);
 		}
 
-		if (scan_lbtree((xfs_dfsbno_t)INT_GET(pp[i], ARCH_CONVERT),
-				    level, scanfunc_bmap, type, whichfork,
-				    lino, tot, nex, blkmapp, &cursor,
-				    1, check_dups))
+		if (scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, type, 
+				whichfork, lino, tot, nex, blkmapp, &cursor,
+				1, check_dups))
 			return(1);
 		/*
 		 * fix key (offset) mismatches between the keys in root
@@ -1273,27 +1239,24 @@ process_btinode(
 		 * fixes cases where entries have been shifted between
 		 * blocks but the parent hasn't been updated
 		 */
-		if (check_dups == 0 &&
-		    cursor.level[level-1].first_key !=
-		    INT_GET(pkey[i].br_startoff, ARCH_CONVERT))  {
+		if (!check_dups && cursor.level[level-1].first_key !=
+					be64_to_cpu(pkey[i].br_startoff))  {
 			if (!no_modify)  {
 				do_warn(
 	_("correcting key in bmbt root (was %llu, now %llu) in inode "
 	  "%llu %s fork\n"),
-					INT_GET(pkey[i].br_startoff,
-						ARCH_CONVERT),
+					be64_to_cpu(pkey[i].br_startoff),
 					cursor.level[level-1].first_key,
 					XFS_AGINO_TO_INO(mp, agno, ino),
 					forkname);
 				*dirty = 1;
-				INT_SET(pkey[i].br_startoff, ARCH_CONVERT,
+				pkey[i].br_startoff = cpu_to_be64(
 					cursor.level[level-1].first_key);
 			} else  {
 				do_warn(
 	_("bad key in bmbt root (is %llu, would reset to %llu) in inode "
 	  "%llu %s fork\n"),
-					INT_GET(pkey[i].br_startoff,
-						ARCH_CONVERT),
+					be64_to_cpu(pkey[i].br_startoff),
 					cursor.level[level-1].first_key,
 					XFS_AGINO_TO_INO(mp, agno, ino),
 					forkname);
@@ -1354,12 +1317,12 @@ process_exinode(
 	int			check_dups)
 {
 	xfs_ino_t		lino;
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 	xfs_dfiloff_t		first_key;
 	xfs_dfiloff_t		last_key;
 
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
 	*tot = 0;
 	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
 	/*
@@ -1379,54 +1342,38 @@ process_exinode(
 /*
  * return 1 if inode should be cleared, 0 otherwise
  */
-/* ARGSUSED */
-int
+static int
 process_lclinode(
 	xfs_mount_t		*mp,
 	xfs_agnumber_t		agno,
 	xfs_agino_t		ino,
 	xfs_dinode_t		*dip,
-	int			type,
-	int			*dirty,
-	xfs_drfsbno_t		*tot,
-	__uint64_t		*nex,
-	blkmap_t		**blkmapp,
-	int			whichfork,
-	int			check_dups)
+	int			whichfork)
 {
 	xfs_attr_shortform_t	*asf;
-	xfs_dinode_core_t	*dic;
 	xfs_ino_t		lino;
 
-	*tot = 0;
-	*nex = 0;	/* local inodes have 0 extents */
-
-	dic = &dip->di_core;
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-	if (whichfork == XFS_DATA_FORK &&
-	    INT_GET(dic->di_size, ARCH_CONVERT) >
-	    XFS_DFORK_DSIZE(dip, mp)) {
+	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_core.di_size) >
+						XFS_DFORK_DSIZE(dip, mp)) {
 		do_warn(
 	_("local inode %llu data fork is too large (size = %lld, max = %d)\n"),
-			lino, INT_GET(dic->di_size, ARCH_CONVERT),
+			lino, be64_to_cpu(dip->di_core.di_size),
 			XFS_DFORK_DSIZE(dip, mp));
 		return(1);
 	} else if (whichfork == XFS_ATTR_FORK) {
-		asf = (xfs_attr_shortform_t *)
-			XFS_DFORK_APTR(dip);
-		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) >
-		    XFS_DFORK_ASIZE(dip, mp)) {
+		asf = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+		if (be16_to_cpu(asf->hdr.totsize) > XFS_DFORK_ASIZE(dip, mp)) {
 			do_warn(
 	_("local inode %llu attr fork too large (size %d, max = %d)\n"),
-				lino, INT_GET(asf->hdr.totsize, ARCH_CONVERT),
+				lino, be16_to_cpu(asf->hdr.totsize),
 				XFS_DFORK_ASIZE(dip, mp));
 			return(1);
 		}
-		if (INT_GET(asf->hdr.totsize, ARCH_CONVERT) <
-		    sizeof(xfs_attr_sf_hdr_t)) {
+		if (be16_to_cpu(asf->hdr.totsize) < sizeof(xfs_attr_sf_hdr_t)) {
 			do_warn(
 	_("local inode %llu attr too small (size = %d, min size = %d)\n"),
-				lino, INT_GET(asf->hdr.totsize, ARCH_CONVERT),
+				lino, be16_to_cpu(asf->hdr.totsize),
 				sizeof(xfs_attr_sf_hdr_t));
 			return(1);
 		}
@@ -1444,31 +1391,24 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 	int			numrecs;
 	int			i;
 	int			max_blocks;
-	int			whichfork = XFS_DATA_FORK;
 
-	if (INT_GET(dino->di_core.di_size, ARCH_CONVERT) <=
-	    XFS_DFORK_SIZE(dino, mp, whichfork))  {
-		if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  {
-			return(0);
-		} else  {
-			do_warn(
-	_("mismatch between format (%d) and size (%lld) in symlink ino %llu\n"),
-				dino->di_core.di_format,
-				INT_GET(dino->di_core.di_size, ARCH_CONVERT),
-				lino);
-			return(1);
-		}
-	} else if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  {
-		do_warn(
-	_("mismatch between format (%d) and size (%lld) in symlink inode %llu\n"),
-				dino->di_core.di_format,
-				INT_GET(dino->di_core.di_size, ARCH_CONVERT),
-				lino);
-		return(1);
+	if (be64_to_cpu(dino->di_core.di_size) <= XFS_DFORK_DSIZE(dino, mp)) {
+		if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  
+			return 0;
+		do_warn(_("mismatch between format (%d) and size (%lld) in "
+			"symlink ino %llu\n"), dino->di_core.di_format, 
+			be64_to_cpu(dino->di_core.di_size), lino);
+		return 1;
+	}
+	if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
+		do_warn(_("mismatch between format (%d) and size (%lld) in "
+			"symlink inode %llu\n"), dino->di_core.di_format,
+			be64_to_cpu(dino->di_core.di_size), lino);
+		return 1;
 	}
 
-	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dino, whichfork);
-	numrecs = XFS_DFORK_NEXTENTS(dino, whichfork);
+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dino);
+	numrecs = be32_to_cpu(dino->di_core.di_nextents);
 
 	/*
 	 * the max # of extents in a symlink inode is equal to the
@@ -1484,8 +1424,8 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 	max_blocks = max_symlink_blocks;
 	expected_offset = 0;
 
-	for (i = 0; numrecs > 0; i++, numrecs--)  {
-		libxfs_bmbt_disk_get_all(rp, &irec);
+	for (i = 0; i < numrecs; i++)  {
+		libxfs_bmbt_disk_get_all(rp + i, &irec);
 
 		if (irec.br_startoff != expected_offset)  {
 			do_warn(
@@ -1550,9 +1490,9 @@ process_symlink(
 	 * the inode is structurally ok so we don't have to check
 	 * for that
 	 */
-	if (INT_GET(dinoc->di_size, ARCH_CONVERT) >= MAXPATHLEN)  {
+	if (be64_to_cpu(dinoc->di_size) >= MAXPATHLEN)  {
 		do_warn(_("symlink in inode %llu too long (%lld chars)\n"),
-			lino, INT_GET(dinoc->di_size, ARCH_CONVERT));
+			lino, be64_to_cpu(dinoc->di_size));
 		return(1);
 	}
 
@@ -1561,14 +1501,13 @@ process_symlink(
 	 * get symlink contents into data area
 	 */
 	symlink = &data[0];
-	if (INT_GET(dinoc->di_size, ARCH_CONVERT)
-			<= XFS_DFORK_DSIZE(dino, mp))  {
+	if (be64_to_cpu(dinoc->di_size) <= XFS_DFORK_DSIZE(dino, mp))  {
 		/*
 		 * local symlink, just copy the symlink out of the
 		 * inode into the data area
 		 */
-		memmove(symlink, (char *)XFS_DFORK_DPTR(dino),
-			INT_GET(dinoc->di_size, ARCH_CONVERT));
+		memmove(symlink, XFS_DFORK_DPTR(dino), 
+						be64_to_cpu(dinoc->di_size));
 	} else {
 		/*
 		 * stored in a meta-data file, have to bmap one block
@@ -1577,7 +1516,7 @@ process_symlink(
 		i = size = amountdone = 0;
 		cptr = symlink;
 
-		while (amountdone < INT_GET(dinoc->di_size, ARCH_CONVERT)) {
+		while (amountdone < be64_to_cpu(dinoc->di_size)) {
 			fsbno = blkmap_get(blkmap, i);
 			if (fsbno != NULLDFSBNO)
 				bp = libxfs_readbuf(mp->m_dev,
@@ -1591,8 +1530,8 @@ process_symlink(
 			}
 
 			buf_data = (char *)XFS_BUF_PTR(bp);
-			size = MIN(INT_GET(dinoc->di_size, ARCH_CONVERT)
-				- amountdone, (int)XFS_FSB_TO_BB(mp, 1)*BBSIZE);
+			size = MIN(be64_to_cpu(dinoc->di_size) - amountdone, 
+						XFS_FSB_TO_BB(mp, 1) * BBSIZE);
 			memmove(cptr, buf_data, size);
 			cptr += size;
 			amountdone += size;
@@ -1600,12 +1539,12 @@ process_symlink(
 			libxfs_putbuf(bp);
 		}
 	}
-	data[INT_GET(dinoc->di_size, ARCH_CONVERT)] = '\0';
+	data[be64_to_cpu(dinoc->di_size)] = '\0';
 
 	/*
 	 * check for nulls
 	 */
-	if (null_check(symlink, (int) INT_GET(dinoc->di_size, ARCH_CONVERT)))  {
+	if (null_check(symlink, be64_to_cpu(dinoc->di_size)))  {
 		do_warn(
 		_("found illegal null character in symlink inode %llu\n"),
 			lino);
@@ -1615,7 +1554,7 @@ process_symlink(
 	/*
 	 * check for any component being too long
 	 */
-	if (INT_GET(dinoc->di_size, ARCH_CONVERT) >= MAXNAMELEN)  {
+	if (be64_to_cpu(dinoc->di_size) >= MAXNAMELEN)  {
 		cptr = strchr(symlink, '/');
 
 		while (cptr != NULL)  {
@@ -1697,7 +1636,7 @@ process_misc_ino_types(xfs_mount_t	*mp,
 	return(0);
 }
 
-static __inline int
+static int
 process_misc_ino_types_blocks(xfs_drfsbno_t totblocks, xfs_ino_t lino, int type)
 {
 	/*
@@ -1764,7 +1703,7 @@ static int
 check_dinode_mode_format(
 	xfs_dinode_core_t *dinoc)
 {
-	if ((uchar_t)dinoc->di_format >= XFS_DINODE_FMT_UUID)
+	if (dinoc->di_format >= XFS_DINODE_FMT_UUID)
 		return -1;	/* FMT_UUID is not used */
 
 	switch (dinode_fmt(dinoc)) {
@@ -2094,8 +2033,7 @@ process_inode_data_fork(
 	int		err = 0;
 
 	*nextents = be32_to_cpu(dinoc->di_nextents);
-	if (*nextents > be64_to_cpu(dinoc->di_nblocks) ||
-			*nextents > XFS_MAX_INCORE_EXTENTS)
+	if (*nextents > be64_to_cpu(dinoc->di_nblocks))
 		*nextents = 1;
 
 	if (dinoc->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
@@ -2104,9 +2042,8 @@ process_inode_data_fork(
 
 	switch (dinoc->di_format) {
 	case XFS_DINODE_FMT_LOCAL:
-		err = process_lclinode(mp, agno, ino, dino, type, dirty,
-			totblocks, nextents, dblkmap, XFS_DATA_FORK,
-			check_dups);
+		err = process_lclinode(mp, agno, ino, dino, XFS_DATA_FORK);
+		*totblocks = 0;
 		break;
 	case XFS_DINODE_FMT_EXTENTS:
 		err = process_exinode(mp, agno, ino, dino, type, dirty,
@@ -2143,9 +2080,8 @@ process_inode_data_fork(
 		 */
 		switch (dinoc->di_format) {
 		case XFS_DINODE_FMT_LOCAL:
-			err = process_lclinode(mp, agno, ino, dino, type,
-				dirty, totblocks, nextents, dblkmap,
-				XFS_DATA_FORK, 0);
+			err = process_lclinode(mp, agno, ino, dino, 
+						XFS_DATA_FORK);
 			break;
 		case XFS_DINODE_FMT_EXTENTS:
 			err = process_exinode(mp, agno, ino, dino, type,
@@ -2213,16 +2149,14 @@ process_inode_attr_fork(
 	}
 
 	*anextents = be16_to_cpu(dinoc->di_anextents);
-	if (*anextents > be64_to_cpu(dinoc->di_nblocks) ||
-			*anextents > XFS_MAX_INCORE_EXTENTS)
+	if (*anextents > be64_to_cpu(dinoc->di_nblocks))
 		*anextents = 1;
 
 	switch (dinoc->di_aformat) {
 	case XFS_DINODE_FMT_LOCAL:
 		*anextents = 0;
-		err = process_lclinode(mp, agno, ino, dino, type, dirty,
-				atotblocks, anextents, &ablkmap,
-				XFS_ATTR_FORK, check_dups);
+		*atotblocks = 0;
+		err = process_lclinode(mp, agno, ino, dino, XFS_ATTR_FORK);
 		break;
 	case XFS_DINODE_FMT_EXTENTS:
 		ablkmap = blkmap_alloc(*anextents);
@@ -2281,9 +2215,8 @@ process_inode_attr_fork(
 	if (check_dups)  {
 		switch (dinoc->di_aformat) {
 		case XFS_DINODE_FMT_LOCAL:
-			err = process_lclinode(mp, agno, ino, dino,
-				type, dirty, atotblocks, anextents,
-				&ablkmap, XFS_ATTR_FORK, 0);
+			err = process_lclinode(mp, agno, ino, dino, 
+						XFS_ATTR_FORK);
 			break;
 		case XFS_DINODE_FMT_EXTENTS:
 			err = process_exinode(mp, agno, ino, dino,
@@ -2526,7 +2459,7 @@ process_dinode_int(xfs_mount_t *mp,
 		retval = 1;
 		if (!uncertain)
 			do_warn(_("bad version number 0x%x on inode %llu%c"),
-				dinoc->di_version, lino,
+				(__s8)dinoc->di_version, lino,
 				verify_mode ? '\n' : ',');
 		if (!verify_mode) {
 			if (!no_modify) {

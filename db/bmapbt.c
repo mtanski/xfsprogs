@@ -88,6 +88,23 @@ const field_t	bmapbtd_key_flds[] = {
 	{ NULL }
 };
 
+#ifndef XFS_NATIVE_HOST
+
+#define BMBT_EXNTFLAG_BITOFF	0
+#define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF + BMBT_EXNTFLAG_BITLEN)
+#define BMBT_STARTBLOCK_BITOFF	(BMBT_STARTOFF_BITOFF + BMBT_STARTOFF_BITLEN)
+#define BMBT_BLOCKCOUNT_BITOFF	\
+	(BMBT_STARTBLOCK_BITOFF + BMBT_STARTBLOCK_BITLEN)
+
+#else
+
+#define BMBT_EXNTFLAG_BITOFF	63
+#define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF - BMBT_STARTOFF_BITLEN)
+#define BMBT_STARTBLOCK_BITOFF	85 /* 128 - 43 (other 9 is in first word) */
+#define BMBT_BLOCKCOUNT_BITOFF	64 /* Start of second 64 bit container */
+
+#endif /* XFS_NATIVE_HOST */
+
 const field_t	bmapbta_rec_flds[] = {
 	{ "startoff", FLDT_CFILEOFFA, OI(BMBT_STARTOFF_BITOFF), C1, 0,
 	  TYP_ATTR },
@@ -120,9 +137,9 @@ bmapbta_key_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -136,9 +153,8 @@ bmapbta_key_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	kp = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 0));
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	kp = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, idx);
 	return bitize((int)((char *)kp - (char *)block));
 }
 
@@ -151,9 +167,9 @@ bmapbta_ptr_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -167,8 +183,8 @@ bmapbta_ptr_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, idx,
 		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 0));
 	return bitize((int)((char *)pp - (char *)block));
 }
@@ -182,9 +198,9 @@ bmapbta_rec_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) > 0)
+	if (be16_to_cpu(block->bb_level) > 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -198,9 +214,8 @@ bmapbta_rec_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) == 0);
-	rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 1));
+	ASSERT(be16_to_cpu(block->bb_level) == 0);
+	rp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, idx);
 	return bitize((int)((char *)rp - (char *)block));
 }
 
@@ -222,9 +237,9 @@ bmapbtd_key_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -238,9 +253,8 @@ bmapbtd_key_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	kp = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 0));
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	kp = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, idx);
 	return bitize((int)((char *)kp - (char *)block));
 }
 
@@ -253,9 +267,9 @@ bmapbtd_ptr_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+	if (be16_to_cpu(block->bb_level) == 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -269,8 +283,8 @@ bmapbtd_ptr_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) > 0);
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
+	ASSERT(be16_to_cpu(block->bb_level) > 0);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, idx,
 		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 0));
 	return bitize((int)((char *)pp - (char *)block));
 }
@@ -284,9 +298,9 @@ bmapbtd_rec_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->bb_level, ARCH_CONVERT) > 0)
+	if (be16_to_cpu(block->bb_level) > 0)
 		return 0;
-	return INT_GET(block->bb_numrecs, ARCH_CONVERT);
+	return be16_to_cpu(block->bb_numrecs);
 }
 
 static int
@@ -300,9 +314,8 @@ bmapbtd_rec_offset(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(INT_GET(block->bb_level, ARCH_CONVERT) == 0);
-	rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize, xfs_bmbt, 1));
+	ASSERT(be16_to_cpu(block->bb_level) == 0);
+	rp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, idx);
 	return bitize((int)((char *)rp - (char *)block));
 }
 

@@ -47,19 +47,24 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
 /*
  * Data record structure
  */
-typedef struct xfs_inobt_rec
-{
+typedef struct xfs_inobt_rec {
+	__be32		ir_startino;	/* starting inode number */
+	__be32		ir_freecount;	/* count of free inodes (set bits) */
+	__be64		ir_free;	/* free inode mask */
+} xfs_inobt_rec_t;
+
+typedef struct xfs_inobt_rec_incore {
 	xfs_agino_t	ir_startino;	/* starting inode number */
 	__int32_t	ir_freecount;	/* count of free inodes (set bits) */
 	xfs_inofree_t	ir_free;	/* free inode mask */
-} xfs_inobt_rec_t;
+} xfs_inobt_rec_incore_t;
+
 
 /*
  * Key structure
  */
-typedef struct xfs_inobt_key
-{
-	xfs_agino_t	ir_startino;	/* starting inode number */
+typedef struct xfs_inobt_key {
+	__be32		ir_startino;	/* starting inode number */
 } xfs_inobt_key_t;
 
 /* btree pointer type */
@@ -76,15 +81,12 @@ typedef	struct xfs_btree_sblock xfs_inobt_block_t;
 #define	XFS_INOBT_MASK(i)		((xfs_inofree_t)1 << (i))
 #define	XFS_INOBT_IS_FREE(rp,i)		\
 		(((rp)->ir_free & XFS_INOBT_MASK(i)) != 0)
-#define	XFS_INOBT_IS_FREE_DISK(rp,i)	\
-		((INT_GET((rp)->ir_free,ARCH_CONVERT) & XFS_INOBT_MASK(i)) != 0)
 #define	XFS_INOBT_SET_FREE(rp,i)	((rp)->ir_free |= XFS_INOBT_MASK(i))
 #define	XFS_INOBT_CLR_FREE(rp,i)	((rp)->ir_free &= ~XFS_INOBT_MASK(i))
 
 /*
  * Real block structures have a size equal to the disk block size.
  */
-#define	XFS_INOBT_BLOCK_SIZE(lev,cur)	(1 << (cur)->bc_blocklog)
 #define	XFS_INOBT_BLOCK_MAXRECS(lev,cur) ((cur)->bc_mp->m_inobt_mxr[lev != 0])
 #define	XFS_INOBT_BLOCK_MINRECS(lev,cur) ((cur)->bc_mp->m_inobt_mnr[lev != 0])
 #define	XFS_INOBT_IS_LAST_REC(cur)	\
@@ -105,14 +107,13 @@ typedef	struct xfs_btree_sblock xfs_inobt_block_t;
  * Record, key, and pointer address macros for btree blocks.
  */
 #define XFS_INOBT_REC_ADDR(bb,i,cur) \
-	(XFS_BTREE_REC_ADDR(XFS_INOBT_BLOCK_SIZE(0,cur), xfs_inobt, bb, \
-				i, XFS_INOBT_BLOCK_MAXRECS(0, cur)))
+	(XFS_BTREE_REC_ADDR(xfs_inobt, bb, i))
+
 #define	XFS_INOBT_KEY_ADDR(bb,i,cur) \
-	(XFS_BTREE_KEY_ADDR(XFS_INOBT_BLOCK_SIZE(1,cur), xfs_inobt, bb, \
-				i, XFS_INOBT_BLOCK_MAXRECS(1, cur)))
+	(XFS_BTREE_KEY_ADDR(xfs_inobt, bb, i))
 
 #define	XFS_INOBT_PTR_ADDR(bb,i,cur) \
-	(XFS_BTREE_PTR_ADDR(XFS_INOBT_BLOCK_SIZE(1,cur), xfs_inobt, bb, \
+	(XFS_BTREE_PTR_ADDR(xfs_inobt, bb, \
 				i, XFS_INOBT_BLOCK_MAXRECS(1, cur)))
 
 /*

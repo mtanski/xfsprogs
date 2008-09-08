@@ -25,6 +25,8 @@
 #define BAD_HEADER	(-1)
 #define NO_ERROR	(0)
 
+#define XLOG_SET(f,b)	(((f) & (b)) == (b))
+
 static int logBBsize;
 char *trans_type[] = {
 	"",
@@ -78,7 +80,7 @@ typedef struct xlog_split_item {
 	int			si_skip;
 } xlog_split_item_t;
 
-xlog_split_item_t *split_list = 0;
+xlog_split_item_t *split_list = NULL;
 
 void
 print_xlog_op_line(void)
@@ -127,8 +129,8 @@ xlog_print_op_header(xlog_op_header_t	*op_head,
     op_head = &hbuf;
     *ptr += sizeof(xlog_op_header_t);
     printf("Oper (%d): tid: %x  len: %d  clientid: %s  ", i,
-	    INT_GET(op_head->oh_tid, ARCH_CONVERT),
-	    INT_GET(op_head->oh_len, ARCH_CONVERT),
+	    be32_to_cpu(op_head->oh_tid),
+	    be32_to_cpu(op_head->oh_len),
 	    (op_head->oh_clientid == XFS_TRANSACTION ? "TRANS" :
 	    (op_head->oh_clientid == XFS_LOG ? "LOG" : "ERROR")));
     printf("flags: ");
@@ -162,7 +164,7 @@ xlog_print_add_to_trans(xlog_tid_t	tid,
     item->si_tid  = tid;
     item->si_skip = skip;
     item->si_next = split_list;
-    item->si_prev = 0;
+    item->si_prev = NULL;
     if (split_list)
 	split_list->si_prev = item;
     split_list	  = item;
@@ -213,7 +215,7 @@ xlog_print_trans_header(xfs_caddr_t *ptr, int len)
 
     *ptr += len;
 
-    magic=*(__uint32_t*)cptr; /* XXX INT_GET soon */
+    magic=*(__uint32_t*)cptr; /* XXX be32_to_cpu soon */
 
     if (len >= 4) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -239,18 +241,17 @@ int
 xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 {
     xfs_buf_log_format_t *f;
-    xfs_buf_log_format_v1_t *old_f;
     xfs_agi_t		 *agi;
     xfs_agf_t		 *agf;
     xfs_disk_dquot_t	 *dq;
-    xlog_op_header_t	 *head = 0;
+    xlog_op_header_t	 *head = NULL;
     int			 num, skip;
     int			 super_block = 0;
     int			 bucket, col, buckets;
     __int64_t		 blkno;
     xfs_buf_log_format_t lbuf;
     int			 size, blen, map_size, struct_size;
-    long long		 x, y;
+    __be64		 x, y;
     ushort		 flags;
 
     /*
@@ -261,36 +262,15 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     f = &lbuf;
     *ptr += len;
 
-    if (f->blf_type == XFS_LI_BUF) {
-	blkno = f->blf_blkno;
-	size = f->blf_size;
-	blen = f->blf_len;
-	map_size = f->blf_map_size;
-        flags = f->blf_flags;
-	struct_size = sizeof(xfs_buf_log_format_t);
-    } else {
-	old_f = (xfs_buf_log_format_v1_t*)f;
-	blkno = old_f->blf_blkno;
-	size = old_f->blf_size;
-	blen = old_f->blf_len;
-	map_size = old_f->blf_map_size;
-        flags = f->blf_flags;
-	struct_size = sizeof(xfs_buf_log_format_v1_t);
-    }
-    switch (f->blf_type)  {
-    case XFS_LI_BUF:
-	printf("BUF:  ");
-	break;
-    case XFS_LI_6_1_BUF:
-	printf("6.1 BUF:  ");
-	break;
-    case XFS_LI_5_3_BUF:
-	printf("5.3 BUF:  ");
-	break;
-    default:
-	printf("UNKNOWN BUF:  ");
-	break;
-    }
+    ASSERT(f->blf_type == XFS_LI_BUF);
+    printf("BUF:  ");
+    blkno = f->blf_blkno;
+    size = f->blf_size;
+    blen = f->blf_len;
+    map_size = f->blf_map_size;
+    flags = f->blf_flags;
+    struct_size = sizeof(xfs_buf_log_format_t);
+
     if (len >= struct_size) {
 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
 	printf("#regs: %d   start blkno: %lld (0x%llx)  len: %d  bmap size: %d  flags: 0x%x\n",
@@ -317,48 +297,45 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	xlog_print_op_header(head, *i, ptr);
 	if (super_block) {
 		printf("SUPER BLOCK Buffer: ");
-		if (INT_GET(head->oh_len, ARCH_CONVERT) < 4*8) {
+		if (be32_to_cpu(head->oh_len) < 4*8) {
 			printf("Out of space\n");
 		} else {
 			printf("\n");
 			/*
 			 * memmove because *ptr may not be 8-byte aligned
 			 */
-			memmove(&x, *ptr, sizeof(long long));
-			memmove(&y, *ptr+8, sizeof(long long));
+			memmove(&x, *ptr, sizeof(__be64));
+			memmove(&y, *ptr+8, sizeof(__be64));
 			printf("icount: %lld  ifree: %lld  ",
-				INT_GET(x, ARCH_CONVERT),
-				INT_GET(y, ARCH_CONVERT));
-			memmove(&x, *ptr+16, sizeof(long long));
-			memmove(&y, *ptr+24, sizeof(long long));
+				be64_to_cpu(x), be64_to_cpu(y));
+			memmove(&x, *ptr+16, sizeof(__be64));
+			memmove(&y, *ptr+24, sizeof(__be64));
 			printf("fdblks: %lld  frext: %lld\n",
-				INT_GET(x, ARCH_CONVERT),
-				INT_GET(y, ARCH_CONVERT));
+				be64_to_cpu(x), be64_to_cpu(y));
 		}
 		super_block = 0;
-	} else if (INT_GET(*(uint *)(*ptr), ARCH_CONVERT) == XFS_AGI_MAGIC) {
+	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
 		agi = (xfs_agi_t *)(*ptr);
 		printf("AGI Buffer: XAGI  ");
-		if (INT_GET(head->oh_len, ARCH_CONVERT) <
-		    sizeof(xfs_agi_t) -
-		    XFS_AGI_UNLINKED_BUCKETS*sizeof(xfs_agino_t)) {
+		if (be32_to_cpu(head->oh_len) < sizeof(xfs_agi_t) -
+				XFS_AGI_UNLINKED_BUCKETS*sizeof(xfs_agino_t)) {
 			printf("out of space\n");
 		} else {
 			printf("\n");
 			printf("ver: %d  ",
-				INT_GET(agi->agi_versionnum, ARCH_CONVERT));
+				be32_to_cpu(agi->agi_versionnum));
 			printf("seq#: %d  len: %d  cnt: %d  root: %d\n",
-				INT_GET(agi->agi_seqno, ARCH_CONVERT),
-				INT_GET(agi->agi_length, ARCH_CONVERT),
-				INT_GET(agi->agi_count, ARCH_CONVERT),
-				INT_GET(agi->agi_root, ARCH_CONVERT));
+				be32_to_cpu(agi->agi_seqno),
+				be32_to_cpu(agi->agi_length),
+				be32_to_cpu(agi->agi_count),
+				be32_to_cpu(agi->agi_root));
 			printf("level: %d  free#: 0x%x  newino: 0x%x\n",
-				INT_GET(agi->agi_level, ARCH_CONVERT),
-				INT_GET(agi->agi_freecount, ARCH_CONVERT),
-				INT_GET(agi->agi_newino, ARCH_CONVERT));
-			if (INT_GET(head->oh_len, ARCH_CONVERT) == 128) {
+				be32_to_cpu(agi->agi_level),
+				be32_to_cpu(agi->agi_freecount),
+				be32_to_cpu(agi->agi_newino));
+			if (be32_to_cpu(head->oh_len) == 128) {
 				buckets = 17;
-			} else if (INT_GET(head->oh_len, ARCH_CONVERT) == 256) {
+			} else if (be32_to_cpu(head->oh_len) == 256) {
 				buckets = 32 + 17;
 			} else {
 				if (head->oh_flags & XLOG_CONTINUE_TRANS) {
@@ -373,80 +350,69 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 				for (col = 0; col < 4; col++, bucket++) {
 					if (bucket < buckets) {
 						printf("0x%x ",
-			INT_GET(agi->agi_unlinked[bucket], ARCH_CONVERT));
+			be32_to_cpu(agi->agi_unlinked[bucket]));
 					}
 				}
 				printf("\n");
 			}
 		}
-	} else if (INT_GET(*(uint *)(*ptr), ARCH_CONVERT) == XFS_AGF_MAGIC) {
+	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGF_MAGIC) {
 		agf = (xfs_agf_t *)(*ptr);
 		printf("AGF Buffer: XAGF  ");
-		if (INT_GET(head->oh_len, ARCH_CONVERT) < sizeof(xfs_agf_t)) {
+		if (be32_to_cpu(head->oh_len) < sizeof(xfs_agf_t)) {
 			printf("Out of space\n");
 		} else {
 			printf("\n");
 			printf("ver: %d  seq#: %d  len: %d  \n",
-				INT_GET(agf->agf_versionnum, ARCH_CONVERT),
-				INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(agf->agf_length, ARCH_CONVERT));
+				be32_to_cpu(agf->agf_versionnum),
+				be32_to_cpu(agf->agf_seqno),
+				be32_to_cpu(agf->agf_length));
 			printf("root BNO: %d  CNT: %d\n",
-				INT_GET(agf->agf_roots[XFS_BTNUM_BNOi],
-					ARCH_CONVERT),
-				INT_GET(agf->agf_roots[XFS_BTNUM_CNTi],
-					ARCH_CONVERT));
+				be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]),
+				be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
 			printf("level BNO: %d  CNT: %d\n",
-				INT_GET(agf->agf_levels[XFS_BTNUM_BNOi],
-					ARCH_CONVERT),
-				INT_GET(agf->agf_levels[XFS_BTNUM_CNTi],
-					ARCH_CONVERT));
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]),
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
 			printf("1st: %d  last: %d  cnt: %d  "
 			       "freeblks: %d  longest: %d\n",
-				INT_GET(agf->agf_flfirst, ARCH_CONVERT),
-				INT_GET(agf->agf_fllast, ARCH_CONVERT),
-				INT_GET(agf->agf_flcount, ARCH_CONVERT),
-				INT_GET(agf->agf_freeblks, ARCH_CONVERT),
-				INT_GET(agf->agf_longest, ARCH_CONVERT));
+				be32_to_cpu(agf->agf_flfirst),
+				be32_to_cpu(agf->agf_fllast),
+				be32_to_cpu(agf->agf_flcount),
+				be32_to_cpu(agf->agf_freeblks),
+				be32_to_cpu(agf->agf_longest));
 		}
-	} else if (INT_GET(*(uint *)(*ptr), ARCH_CONVERT) == XFS_DQUOT_MAGIC) {
+	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_DQUOT_MAGIC) {
 		dq = (xfs_disk_dquot_t *)(*ptr);
 		printf("DQUOT Buffer: DQ  ");
-		if (INT_GET(head->oh_len, ARCH_CONVERT) <
+		if (be32_to_cpu(head->oh_len) <
 				sizeof(xfs_disk_dquot_t)) {
 			printf("Out of space\n");
 		}
 		else {
 			printf("\n");
 			printf("ver: %d  flags: 0x%x  id: %d  \n",
-				INT_GET(dq->d_version, ARCH_CONVERT),
-				INT_GET(dq->d_flags, ARCH_CONVERT),
-				INT_GET(dq->d_id, ARCH_CONVERT));
+				dq->d_version, dq->d_flags,
+				be32_to_cpu(dq->d_id));
 			printf("blk limits  hard: %llu  soft: %llu\n",
-				(unsigned long long)
-				INT_GET(dq->d_blk_hardlimit, ARCH_CONVERT),
-				(unsigned long long)
-				INT_GET(dq->d_blk_softlimit, ARCH_CONVERT));
+				be64_to_cpu(dq->d_blk_hardlimit),
+				be64_to_cpu(dq->d_blk_softlimit));
 			printf("blk  count: %llu  warns: %d  timer: %d\n",
-				(unsigned long long)
-				INT_GET(dq->d_bcount, ARCH_CONVERT),
-				INT_GET(dq->d_bwarns, ARCH_CONVERT),
-				INT_GET(dq->d_btimer, ARCH_CONVERT));
+				be64_to_cpu(dq->d_bcount),
+				be16_to_cpu(dq->d_bwarns),
+				be32_to_cpu(dq->d_btimer));
 			printf("ino limits  hard: %llu  soft: %llu\n",
-				(unsigned long long)
-				INT_GET(dq->d_ino_hardlimit, ARCH_CONVERT),
-				(unsigned long long)
-				INT_GET(dq->d_ino_softlimit, ARCH_CONVERT));
+				be64_to_cpu(dq->d_ino_hardlimit),
+				be64_to_cpu(dq->d_ino_softlimit));
 			printf("ino  count: %llu  warns: %d  timer: %d\n",
-				(unsigned long long)
-				INT_GET(dq->d_icount, ARCH_CONVERT),
-				INT_GET(dq->d_iwarns, ARCH_CONVERT),
-				INT_GET(dq->d_itimer, ARCH_CONVERT));
+				be64_to_cpu(dq->d_icount),
+				be16_to_cpu(dq->d_iwarns),
+				be32_to_cpu(dq->d_itimer));
 		}
 	} else {
 		printf("BUF DATA\n");
 		if (print_data) {
 			uint *dp  = (uint *)*ptr;
-			int  nums = INT_GET(head->oh_len, ARCH_CONVERT) >> 2;
+			int  nums = be32_to_cpu(head->oh_len) >> 2;
 			int  i = 0;
 
 			while (i < nums) {
@@ -461,7 +427,7 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 			printf("\n");
 		}
 	}
-	*ptr += INT_GET(head->oh_len, ARCH_CONVERT);
+	*ptr += be32_to_cpu(head->oh_len);
     }
     if (head && head->oh_flags & XLOG_CONTINUE_TRANS)
 	skip++;
@@ -566,7 +532,7 @@ xlog_print_trans_qoff(xfs_caddr_t *ptr, uint len)
 
 
 void
-xlog_print_trans_inode_core(xfs_dinode_core_t *ip)
+xlog_print_trans_inode_core(xfs_icdinode_t *ip)
 {
     printf("INODE CORE\n");
     printf("magic 0x%hx mode 0%ho version %d format %d\n",
@@ -607,7 +573,7 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 	printf("SHORTFORM DIRECTORY size %d count %d\n",
 	       size, sfp->hdr.count);
 	memmove(&ino, &(sfp->hdr.parent), sizeof(ino));
-	printf(".. ino 0x%llx\n", (unsigned long long)INT_GET(ino, ARCH_CONVERT));
+	printf(".. ino 0x%llx\n", be64_to_cpu(*(__be64 *)&ino));
 
 	count = (uint)(sfp->hdr.count);
 	sfep = &(sfp->list[0]);
@@ -617,14 +583,14 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 		namebuf[sfep->namelen] = '\0';
 		printf("%s ino 0x%llx namelen %d\n",
 		       namebuf, (unsigned long long)ino, sfep->namelen);
-		sfep = XFS_DIR_SF_NEXTENTRY(sfep);
+		sfep = xfs_dir_sf_nextentry(sfep);
 	}
 }
 
 int
 xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 {
-    xfs_dinode_core_t	   dino;
+    xfs_icdinode_t	   dino;
     xlog_op_header_t	   *op_head;
     xfs_inode_log_format_t dst_lbuf;
     xfs_inode_log_format_64_t src_lbuf; /* buffer of biggest one */
@@ -690,7 +656,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("EXTENTS inode data\n");
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
 		return 1;
 	    }
@@ -701,7 +667,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("BTREE inode data\n");
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
 		return 1;
 	    }
@@ -715,7 +681,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    if (mode == S_IFDIR) {
 		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
 	    }
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
 		return 1;
 	    }
@@ -726,7 +692,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("EXTENTS inode attr\n");
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
 		return 1;
 	    }
@@ -737,7 +703,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    (*i)++;
 	    xlog_print_op_header(op_head, *i, ptr);
 	    printf("BTREE inode attr\n");
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
 		return 1;
 	    }
@@ -751,7 +717,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	    if (mode == S_IFDIR) {
 		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
 	    }
-	    *ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
 		return 1;
 	    }
@@ -822,12 +788,11 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     while (num-- > 0) {
 	head = (xlog_op_header_t *)*ptr;
 	xlog_print_op_header(head, *i, ptr);
-	ASSERT(INT_GET(head->oh_len, ARCH_CONVERT) == sizeof(xfs_disk_dquot_t));
+	ASSERT(be32_to_cpu(head->oh_len) == sizeof(xfs_disk_dquot_t));
 	memmove(&ddq, *ptr, sizeof(xfs_disk_dquot_t));
 	printf("DQUOT: magic 0x%hx flags 0%ho\n",
-	       INT_GET(ddq.d_magic, ARCH_CONVERT),
-	       INT_GET(ddq.d_flags, ARCH_CONVERT));
-	*ptr += INT_GET(head->oh_len, ARCH_CONVERT);
+	       be16_to_cpu(ddq.d_magic), ddq.d_flags);
+	*ptr += be32_to_cpu(head->oh_len);
     }
     if (head && head->oh_flags & XLOG_CONTINUE_TRANS)
 	skip++;
@@ -862,11 +827,10 @@ xlog_print_lseek(xlog_t *log, int fd, xfs_daddr_t blkno, int whence)
 
 void
 print_lsn(xfs_caddr_t	string,
-	  xfs_lsn_t	*lsn,
-	  xfs_arch_t    arch)
+	  __be64	*lsn)
 {
     printf("%s: %u,%u", string,
-	    CYCLE_LSN(INT_GET(*lsn, arch)), BLOCK_LSN(INT_GET(*lsn, arch)));
+	    CYCLE_LSN(be64_to_cpu(*lsn)), BLOCK_LSN(be64_to_cpu(*lsn)));
 }
 
 
@@ -911,9 +875,9 @@ xlog_print_record(int			  fd,
     }
     /* Did we overflow the end? */
     if (*read_type == FULL_READ &&
-	BLOCK_LSN(INT_GET(rhead->h_lsn, ARCH_CONVERT)) + BTOBB(read_len) >=
+	BLOCK_LSN(be64_to_cpu(rhead->h_lsn)) + BTOBB(read_len) >=
 		logBBsize) {
-	*read_type = BBTOB(logBBsize - BLOCK_LSN(INT_GET(rhead->h_lsn, ARCH_CONVERT))-1);
+	*read_type = BBTOB(logBBsize - BLOCK_LSN(be64_to_cpu(rhead->h_lsn))-1);
 	*partial_buf = buf;
 	return PARTIAL_READ;
     }
@@ -937,7 +901,7 @@ xlog_print_record(int			  fd,
 	xlog_rec_header_t *rechead = (xlog_rec_header_t *)ptr;
 
 	/* sanity checks */
-	if (INT_GET(rechead->h_magicno, ARCH_CONVERT) == XLOG_HEADER_MAGIC_NUM) {
+	if (be32_to_cpu(rechead->h_magicno) == XLOG_HEADER_MAGIC_NUM) {
 	    /* data should not have magicno as first word
 	     * as it should by cycle#
 	     */
@@ -947,12 +911,12 @@ xlog_print_record(int			  fd,
 	    /* verify cycle#
 	     * FIXME: cycle+1 should be a macro pv#900369
 	     */
-	    if (INT_GET(rhead->h_cycle, ARCH_CONVERT) !=
-			INT_GET(*(uint *)ptr, ARCH_CONVERT)) {
+	    if (be32_to_cpu(rhead->h_cycle) !=
+			be32_to_cpu(*(__be32 *)ptr)) {
 		if (*read_type == FULL_READ)
 		    return -1;
-		else if (INT_GET(rhead->h_cycle, ARCH_CONVERT) + 1 !=
-			INT_GET(*(uint *)ptr, ARCH_CONVERT))
+		else if (be32_to_cpu(rhead->h_cycle) + 1 !=
+			be32_to_cpu(*(__be32 *)ptr))
 		    return -1;
 	    }
 	}
@@ -960,16 +924,14 @@ xlog_print_record(int			  fd,
 	/* copy back the data from the header */
 	if (i < XLOG_HEADER_CYCLE_SIZE / BBSIZE) {
 		/* from 1st header */
-		INT_SET(*(uint *)ptr, ARCH_CONVERT,
-			INT_GET(rhead->h_cycle_data[i], ARCH_CONVERT));
+		*(__be32 *)ptr = rhead->h_cycle_data[i];
 	}
 	else {
 		ASSERT(xhdrs != NULL);
 		/* from extra headers */
 		j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
 		k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-		INT_SET(*(uint *)ptr, ARCH_CONVERT,
-			INT_GET(xhdrs[j-1].xh_cycle_data[k], ARCH_CONVERT));
+		*(__be32 *)ptr = xhdrs[j-1].xh_cycle_data[k];
 	}
 
     }
@@ -985,59 +947,57 @@ xlog_print_record(int			  fd,
 	if (print_no_data ||
 	    ((XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
 	      XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) &&
-	     INT_GET(op_head->oh_len, ARCH_CONVERT) == 0)) {
-	    for (n = 0; n < INT_GET(op_head->oh_len, ARCH_CONVERT); n++) {
+	     be32_to_cpu(op_head->oh_len) == 0)) {
+	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
 		printf("%c", *ptr);
 		ptr++;
 	    }
 	    printf("\n");
 	    continue;
 	}
-	if (xlog_print_find_tid(INT_GET(op_head->oh_tid, ARCH_CONVERT),
+	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
 				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
 	    printf("Left over region from split log item\n");
-	    ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+	    ptr += be32_to_cpu(op_head->oh_len);
 	    continue;
 	}
-	if (INT_GET(op_head->oh_len, ARCH_CONVERT) != 0) {
+	if (be32_to_cpu(op_head->oh_len) != 0) {
 	    if (*(uint *)ptr == XFS_TRANS_HEADER_MAGIC) {
 		skip = xlog_print_trans_header(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT));
+					be32_to_cpu(op_head->oh_len));
 	    } else {
 		switch (*(unsigned short *)ptr) {
-		    case XFS_LI_5_3_BUF:
-		    case XFS_LI_6_1_BUF:
 		    case XFS_LI_BUF: {
 			skip = xlog_print_trans_buffer(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT),
+					be32_to_cpu(op_head->oh_len),
 					&i, num_ops);
 			break;
 		    }
 		    case XFS_LI_INODE: {
 			skip = xlog_print_trans_inode(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT),
+					be32_to_cpu(op_head->oh_len),
 					&i, num_ops);
 			break;
 		    }
 		    case XFS_LI_DQUOT: {
 			skip = xlog_print_trans_dquot(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT),
+					be32_to_cpu(op_head->oh_len),
 					&i, num_ops);
 			break;
 		    }
 		    case XFS_LI_EFI: {
 			skip = xlog_print_trans_efi(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT));
+					be32_to_cpu(op_head->oh_len));
 			break;
 		    }
 		    case XFS_LI_EFD: {
 			skip = xlog_print_trans_efd(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT));
+					be32_to_cpu(op_head->oh_len));
 			break;
 		    }
 		    case XFS_LI_QUOTAOFF: {
 			skip = xlog_print_trans_qoff(&ptr,
-					INT_GET(op_head->oh_len, ARCH_CONVERT));
+					be32_to_cpu(op_head->oh_len));
 			break;
 		    }
 		    case XLOG_UNMOUNT_TYPE: {
@@ -1053,12 +1013,12 @@ xlog_print_record(int			  fd,
 				return BAD_HEADER;
 			}
 			skip = 0;
-			ptr += INT_GET(op_head->oh_len, ARCH_CONVERT);
+			ptr += be32_to_cpu(op_head->oh_len);
 		    }
 		} /* switch */
 	    } /* else */
 	    if (skip != 0)
-		xlog_print_add_to_trans(INT_GET(op_head->oh_tid, ARCH_CONVERT), skip);
+		xlog_print_add_to_trans(be32_to_cpu(op_head->oh_tid), skip);
 	}
     }
     printf("\n");
@@ -1075,14 +1035,14 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
     int datalen,bbs;
 
     if (print_no_print)
-	    return INT_GET(head->h_num_logops, ARCH_CONVERT);
+	    return be32_to_cpu(head->h_num_logops);
 
     if (!head->h_magicno)
 	return ZEROED_LOG;
 
-    if (INT_GET(head->h_magicno, ARCH_CONVERT) != XLOG_HEADER_MAGIC_NUM) {
+    if (be32_to_cpu(head->h_magicno) != XLOG_HEADER_MAGIC_NUM) {
 	printf("Header 0x%x wanted 0x%x\n",
-		INT_GET(head->h_magicno, ARCH_CONVERT),
+		be32_to_cpu(head->h_magicno),
 		XLOG_HEADER_MAGIC_NUM);
 	return BAD_HEADER;
     }
@@ -1092,32 +1052,32 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	!head->h_num_logops && !head->h_size)
 	return CLEARED_BLKS;
 
-    datalen=INT_GET(head->h_len, ARCH_CONVERT);
+    datalen=be32_to_cpu(head->h_len);
     bbs=BTOBB(datalen);
 
     printf("cycle: %d	version: %d	",
-	    INT_GET(head->h_cycle, ARCH_CONVERT),
-	    INT_GET(head->h_version, ARCH_CONVERT));
-    print_lsn("	lsn", &head->h_lsn, ARCH_CONVERT);
-    print_lsn("	tail_lsn", &head->h_tail_lsn, ARCH_CONVERT);
+	    be32_to_cpu(head->h_cycle),
+	    be32_to_cpu(head->h_version));
+    print_lsn("	lsn", &head->h_lsn);
+    print_lsn("	tail_lsn", &head->h_tail_lsn);
     printf("\n");
     printf("length of Log Record: %d	prev offset: %d		num ops: %d\n",
 	   datalen,
-	    INT_GET(head->h_prev_block, ARCH_CONVERT),
-	    INT_GET(head->h_num_logops, ARCH_CONVERT));
+	    be32_to_cpu(head->h_prev_block),
+	    be32_to_cpu(head->h_num_logops));
 
     if (print_overwrite) {
 	printf("cycle num overwrites: ");
 	for (i=0; i< MIN(bbs, XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++)
 	    printf("%d - 0x%x  ",
 		    i,
-		    INT_GET(head->h_cycle_data[i], ARCH_CONVERT));
+		    be32_to_cpu(head->h_cycle_data[i]));
 	printf("\n");
     }
 
     platform_uuid_unparse(&head->h_fs_uuid, uub);
     printf("uuid: %s   format: ", uub);
-    switch (INT_GET(head->h_fmt, ARCH_CONVERT)) {
+    switch (be32_to_cpu(head->h_fmt)) {
 	case XLOG_FMT_UNKNOWN:
 	    printf("unknown\n");
 	    break;
@@ -1131,13 +1091,13 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	    printf("big endian irix\n");
 	    break;
 	default:
-	    printf("? (%d)\n", INT_GET(head->h_fmt, ARCH_CONVERT));
+	    printf("? (%d)\n", be32_to_cpu(head->h_fmt));
 	    break;
     }
-    printf("h_size: %d\n", INT_GET(head->h_size, ARCH_CONVERT));
+    printf("h_size: %d\n", be32_to_cpu(head->h_size));
 
-    *len = INT_GET(head->h_len, ARCH_CONVERT);
-    return(INT_GET(head->h_num_logops, ARCH_CONVERT));
+    *len = be32_to_cpu(head->h_len);
+    return(be32_to_cpu(head->h_num_logops));
 }	/* xlog_print_rec_head */
 
 void
@@ -1146,14 +1106,14 @@ xlog_print_rec_xhead(xlog_rec_ext_header_t *head, int coverage)
     int i;
 
     print_xlog_xhdr_line();
-    printf("extended-header: cycle: %d\n", INT_GET(head->xh_cycle, ARCH_CONVERT));
+    printf("extended-header: cycle: %d\n", be32_to_cpu(head->xh_cycle));
 
     if (print_overwrite) {
 	printf("cycle num overwrites: ");
 	for (i = 0; i < coverage; i++)
 	    printf("%d - 0x%x  ",
 		    i,
-		    INT_GET(head->xh_cycle_data[i], ARCH_CONVERT));
+		    be32_to_cpu(head->xh_cycle_data[i]));
 	printf("\n");
     }
 }	/* xlog_print_rec_xhead */
@@ -1174,7 +1134,7 @@ print_xlog_bad_header(xfs_daddr_t blkno, xfs_caddr_t buf)
 {
 	print_stars();
 	printf("* ERROR: header cycle=%-11d block=%-21lld        *\n",
-		GET_CYCLE(buf, ARCH_CONVERT), (long long)blkno);
+		xlog_get_cycle(buf), (long long)blkno);
 	print_stars();
 	if (print_exit)
 	    xlog_exit("Bad log record header");
@@ -1234,7 +1194,7 @@ xlog_print_extended_headers(
 	xlog_rec_ext_header_t	*x;
 
 	num_required = howmany(len, XLOG_HEADER_CYCLE_SIZE);
-	num_hdrs = INT_GET(hdr->h_size, ARCH_CONVERT) / XLOG_HEADER_CYCLE_SIZE;
+	num_hdrs = be32_to_cpu(hdr->h_size) / XLOG_HEADER_CYCLE_SIZE;
 
 	if (num_required > num_hdrs) {
 	    print_xlog_bad_reqd_hdrs((*blkno)-1, num_required, num_hdrs);
@@ -1374,7 +1334,7 @@ void xfs_log_print(xlog_t       *log,
 	    goto loop;
 	}
 
-	if (INT_GET(hdr->h_version, ARCH_CONVERT) == 2) {
+	if (be32_to_cpu(hdr->h_version) == 2) {
 	    if (xlog_print_extended_headers(fd, len, &blkno, hdr, &num_hdrs, &xhdrs) != 0)
 		break;
 	}
@@ -1472,7 +1432,7 @@ loop:
 		continue;
 	    }
 
-	    if (INT_GET(hdr->h_version, ARCH_CONVERT) == 2) {
+	    if (be32_to_cpu(hdr->h_version) == 2) {
 		if (xlog_print_extended_headers(fd, len, &blkno, hdr, &num_hdrs, &xhdrs) != 0)
 		    break;
 	    }

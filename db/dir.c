@@ -126,9 +126,9 @@ dir_leaf_entries_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC)
+	if (be16_to_cpu(block->hdr.info.magic) != XFS_DIR_LEAF_MAGIC)
 		return 0;
-	return INT_GET(block->hdr.count, ARCH_CONVERT);
+	return be16_to_cpu(block->hdr.count);
 }
 
 /*ARGSUSED*/
@@ -141,7 +141,7 @@ dir_leaf_hdr_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	return INT_GET(block->hdr.info.magic, ARCH_CONVERT) == XFS_DIR_LEAF_MAGIC;
+	return be16_to_cpu(block->hdr.info.magic) == XFS_DIR_LEAF_MAGIC;
 }
 
 static int
@@ -157,11 +157,11 @@ dir_leaf_name_count(
 	ASSERT(bitoffs(startoff) == 0);
 	off = byteize(startoff);
 	block = obj;
-	if (INT_GET(block->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC)
+	if (be16_to_cpu(block->hdr.info.magic) != XFS_DIR_LEAF_MAGIC)
 		return 0;
-	for (i = 0; i < INT_GET(block->hdr.count, ARCH_CONVERT); i++) {
+	for (i = 0; i < be16_to_cpu(block->hdr.count); i++) {
 		e = &block->entries[i];
-		if (INT_GET(e->nameidx, ARCH_CONVERT) == off)
+		if (be16_to_cpu(e->nameidx) == off)
 			return e->namelen;
 	}
 	return 0;
@@ -179,10 +179,10 @@ dir_leaf_name_size(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC)
+	if (be16_to_cpu(block->hdr.info.magic) != XFS_DIR_LEAF_MAGIC)
 		return 0;
 	e = &block->entries[idx];
-	return bitize((int)XFS_DIR_LEAF_ENTSIZE_BYENTRY(e));
+	return bitize((int)xfs_dir_leaf_entsize_byentry(e));
 }
 
 /*ARGSUSED*/
@@ -195,9 +195,9 @@ dir_leaf_namelist_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (INT_GET(block->hdr.info.magic, ARCH_CONVERT) != XFS_DIR_LEAF_MAGIC)
+	if (be16_to_cpu(block->hdr.info.magic) != XFS_DIR_LEAF_MAGIC)
 		return 0;
-	return INT_GET(block->hdr.count, ARCH_CONVERT);
+	return be16_to_cpu(block->hdr.count);
 }
 
 /*ARGSUSED*/
@@ -213,7 +213,7 @@ dir_leaf_namelist_offset(
 	ASSERT(startoff == 0);
 	block = obj;
 	e = &block->entries[idx];
-	return bitize(INT_GET(e->nameidx, ARCH_CONVERT));
+	return bitize(be16_to_cpu(e->nameidx));
 }
 
 /*ARGSUSED*/
@@ -226,9 +226,9 @@ dir_node_btree_count(
 
 	ASSERT(startoff == 0);		/* this is a base structure */
 	block = obj;
-	if (INT_GET(block->hdr.info.magic, ARCH_CONVERT) != XFS_DA_NODE_MAGIC)
+	if (be16_to_cpu(block->hdr.info.magic) != XFS_DA_NODE_MAGIC)
 		return 0;
-	return INT_GET(block->hdr.count, ARCH_CONVERT);
+	return be16_to_cpu(block->hdr.count);
 }
 
 /*ARGSUSED*/
@@ -241,7 +241,7 @@ dir_node_hdr_count(
 
 	ASSERT(startoff == 0);
 	block = obj;
-	return INT_GET(block->hdr.info.magic, ARCH_CONVERT) == XFS_DA_NODE_MAGIC;
+	return be16_to_cpu(block->hdr.info.magic) == XFS_DA_NODE_MAGIC;
 }
 
 /*ARGSUSED*/

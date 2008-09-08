@@ -22,21 +22,16 @@
 
 #define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
 #define BLOCK_LSN(lsn) ((uint)(lsn))
+
 /* this is used in a spot where we might otherwise double-endian-flip */
-#define CYCLE_LSN_DISK(lsn) (((uint *)&(lsn))[0])
+#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
 
 #ifdef __KERNEL__
 /*
- * By comparing each compnent, we don't have to worry about extra
+ * By comparing each component, we don't have to worry about extra
  * endian issues in treating two 32 bit numbers as one 64 bit number
  */
-static
-#if defined(__GNUC__) && (__GNUC__ == 2) && ( (__GNUC_MINOR__ == 95) || (__GNUC_MINOR__ == 96))
-__attribute__((unused))	/* gcc 2.95, 2.96 miscompile this when inlined */
-#else
-__inline__
-#endif
-xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
+static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
 {
 	if (CYCLE_LSN(lsn1) != CYCLE_LSN(lsn2))
 		return (CYCLE_LSN(lsn1)<CYCLE_LSN(lsn2))? -999 : 999;
@@ -54,15 +49,9 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
  */
 
 /*
- * Flags to xfs_log_mount
- */
-#define XFS_LOG_RECOVER		0x1
-
-/*
  * Flags to xfs_log_done()
  */
 #define XFS_LOG_REL_PERM_RESERV	0x1
-
 
 /*
  * Flags to xfs_log_reserve()
@@ -76,8 +65,6 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
 #define XFS_LOG_SLEEP		0x0
 #define XFS_LOG_NOSLEEP		0x1
 #define XFS_LOG_PERM_RESERV	0x2
-#define XFS_LOG_RESV_ALL	(XFS_LOG_NOSLEEP|XFS_LOG_PERM_RESERV)
-
 
 /*
  * Flags to xfs_log_force()
@@ -102,7 +89,6 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
 
 
 /* Region types for iovec's i_type */
-#if defined(XFS_LOG_RES_DEBUG)
 #define XLOG_REG_TYPE_BFORMAT		1
 #define XLOG_REG_TYPE_BCHUNK		2
 #define XLOG_REG_TYPE_EFI_FORMAT	3
@@ -123,21 +109,13 @@ xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
 #define XLOG_REG_TYPE_COMMIT		18
 #define XLOG_REG_TYPE_TRANSHDR		19
 #define XLOG_REG_TYPE_MAX		19
-#endif
 
-#if defined(XFS_LOG_RES_DEBUG)
 #define XLOG_VEC_SET_TYPE(vecp, t) ((vecp)->i_type = (t))
-#else
-#define XLOG_VEC_SET_TYPE(vecp, t)
-#endif
-
 
 typedef struct xfs_log_iovec {
 	xfs_caddr_t		i_addr;		/* beginning address of region */
 	int		i_len;		/* length in bytes of region */
-#if defined(XFS_LOG_RES_DEBUG)
- 	uint		i_type;		/* type of region */
-#endif
+	uint		i_type;		/* type of region */
 } xfs_log_iovec_t;
 
 typedef void* xfs_log_ticket_t;
@@ -164,13 +142,14 @@ int	  _xfs_log_force(struct xfs_mount *mp,
 			 xfs_lsn_t	lsn,
 			 uint		flags,
 			 int		*log_forced);
-#define xfs_log_force(mp, lsn, flags) \
-	_xfs_log_force(mp, lsn, flags, NULL);
+void	  xfs_log_force(struct xfs_mount	*mp,
+			xfs_lsn_t		lsn,
+			uint			flags);
 int	  xfs_log_mount(struct xfs_mount	*mp,
 			struct xfs_buftarg	*log_target,
 			xfs_daddr_t		start_block,
 			int		 	num_bblocks);
-int	  xfs_log_mount_finish(struct xfs_mount *mp, int);
+int	  xfs_log_mount_finish(struct xfs_mount *mp);
 void	  xfs_log_move_tail(struct xfs_mount	*mp,
 			    xfs_lsn_t		tail_lsn);
 int	  xfs_log_notify(struct xfs_mount	*mp,

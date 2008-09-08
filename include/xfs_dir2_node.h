@@ -36,20 +36,20 @@ struct xfs_trans;
 #define	XFS_DIR2_FREE_SPACE	2
 #define	XFS_DIR2_FREE_OFFSET	(XFS_DIR2_FREE_SPACE * XFS_DIR2_SPACE_SIZE)
 #define	XFS_DIR2_FREE_FIRSTDB(mp)	\
-	XFS_DIR2_BYTE_TO_DB(mp, XFS_DIR2_FREE_OFFSET)
+	xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET)
 
 #define	XFS_DIR2_FREE_MAGIC	0x58443246	/* XD2F */
 
 typedef	struct xfs_dir2_free_hdr {
-	__uint32_t		magic;		/* XFS_DIR2_FREE_MAGIC */
-	__int32_t		firstdb;	/* db of first entry */
-	__int32_t		nvalid;		/* count of valid entries */
-	__int32_t		nused;		/* count of used entries */
+	__be32			magic;		/* XFS_DIR2_FREE_MAGIC */
+	__be32			firstdb;	/* db of first entry */
+	__be32			nvalid;		/* count of valid entries */
+	__be32			nused;		/* count of used entries */
 } xfs_dir2_free_hdr_t;
 
 typedef struct xfs_dir2_free {
 	xfs_dir2_free_hdr_t	hdr;		/* block header */
-	xfs_dir2_data_off_t	bests[1];	/* best free counts */
+	__be16			bests[1];	/* best free counts */
 						/* unused entries are -1 */
 } xfs_dir2_free_t;
 
@@ -60,7 +60,6 @@ typedef struct xfs_dir2_free {
 /*
  * Convert data space db to the corresponding free db.
  */
-#define	XFS_DIR2_DB_TO_FDB(mp,db)	xfs_dir2_db_to_fdb(mp, db)
 static inline xfs_dir2_db_t
 xfs_dir2_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
 {
@@ -70,7 +69,6 @@ xfs_dir2_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
 /*
  * Convert data space db to the corresponding index in a free db.
  */
-#define	XFS_DIR2_DB_TO_FDINDEX(mp,db)	xfs_dir2_db_to_fdindex(mp, db)
 static inline int
 xfs_dir2_db_to_fdindex(struct xfs_mount *mp, xfs_dir2_db_t db)
 {

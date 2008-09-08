@@ -91,35 +91,29 @@ bmap(
 		bno = NULLFSBLOCK;
 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
-		pp = XFS_BTREE_PTR_ADDR(fsize, xfs_bmdr, rblock, 1,
+		pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, rblock, 1,
 			XFS_BTREE_BLOCK_MAXRECS(fsize, xfs_bmdr, 0));
-		kp = XFS_BTREE_KEY_ADDR(fsize, xfs_bmdr, rblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(fsize, xfs_bmdr, 0));
-		bno = select_child(curoffset, kp, pp, INT_GET(rblock->bb_numrecs, ARCH_CONVERT));
+		kp = XFS_BTREE_KEY_ADDR(xfs_bmdr, rblock, 1);
+		bno = select_child(curoffset, kp, pp, 
+					be16_to_cpu(rblock->bb_numrecs));
 		for (;;) {
 			set_cur(&typtab[typ], XFS_FSB_TO_DADDR(mp, bno),
 				blkbb, DB_RING_IGN, NULL);
 			block = (xfs_bmbt_block_t *)iocur_top->data;
-			if (INT_GET(block->bb_level, ARCH_CONVERT) == 0)
+			if (be16_to_cpu(block->bb_level) == 0)
 				break;
-			pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt,
-				block, 1,
+			pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1,
 				XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize,
 					xfs_bmbt, 0));
-			kp = XFS_BTREE_KEY_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt,
-				block, 1,
-				XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize,
-					xfs_bmbt, 0));
+			kp = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
 			bno = select_child(curoffset, kp, pp,
-				INT_GET(block->bb_numrecs, ARCH_CONVERT));
+					be16_to_cpu(block->bb_numrecs));
 		}
 		for (;;) {
-			nextbno = INT_GET(block->bb_rightsib, ARCH_CONVERT);
-			nextents = INT_GET(block->bb_numrecs, ARCH_CONVERT);
-			xp = (xfs_bmbt_rec_64_t *)XFS_BTREE_REC_ADDR(
-				mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-				XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize,
-					xfs_bmbt, 1));
+			nextbno = be64_to_cpu(block->bb_rightsib);
+			nextents = be16_to_cpu(block->bb_numrecs);
+			xp = (xfs_bmbt_rec_64_t *)XFS_BTREE_REC_ADDR(xfs_bmbt, 
+								block, 1);
 			for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
 				if (!bmap_one_extent(ep, &curoffset, eoffset,
 						&n, bep)) {
@@ -179,9 +173,9 @@ bmap_f(
 		push_cur();
 		set_cur_inode(iocur_top->ino);
 		dip = iocur_top->data;
-		if (INT_GET(dip->di_core.di_nextents, ARCH_CONVERT))
+		if (be32_to_cpu(dip->di_core.di_nextents))
 			dfork = 1;
-		if (INT_GET(dip->di_core.di_anextents, ARCH_CONVERT))
+		if (be16_to_cpu(dip->di_core.di_anextents))
 			afork = 1;
 		pop_cur();
 	}
@@ -334,14 +328,14 @@ select_child(
 	int		i;
 
 	for (i = 0; i < nrecs; i++) {
-		if (INT_GET(kp[i].br_startoff, ARCH_CONVERT) == off)
-			return INT_GET(pp[i], ARCH_CONVERT);
-		if (INT_GET(kp[i].br_startoff, ARCH_CONVERT) > off) {
+		if (be64_to_cpu(kp[i].br_startoff) == off)
+			return be64_to_cpu(pp[i]);
+		if (be64_to_cpu(kp[i].br_startoff) > off) {
 			if (i == 0)
-				return INT_GET(pp[i], ARCH_CONVERT);
+				return be64_to_cpu(pp[i]);
 			else
-				return INT_GET(pp[i - 1], ARCH_CONVERT);
+				return be64_to_cpu(pp[i - 1]);
 		}
 	}
-	return INT_GET(pp[nrecs - 1], ARCH_CONVERT);
+	return be64_to_cpu(pp[nrecs - 1]);
 }

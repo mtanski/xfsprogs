@@ -78,8 +78,8 @@ dir_sf_entry_size(
 	sf = (xfs_dir_shortform_t *)((char *)obj + byteize(startoff));
 	e = &sf->list[0];
 	for (i = 0; i < idx; i++)
-		e = XFS_DIR_SF_NEXTENTRY(e);
-	return bitize((int)XFS_DIR_SF_ENTSIZE_BYENTRY(e));
+		e = xfs_dir_sf_nextentry(e);
+	return bitize((int)xfs_dir_sf_entsize_byentry(e));
 }
 
 static int
@@ -108,7 +108,7 @@ dir_shortform_list_offset(
 	sf = (xfs_dir_shortform_t *)((char *)obj + byteize(startoff));
 	e = &sf->list[0];
 	for (i = 0; i < idx; i++)
-		e = XFS_DIR_SF_NEXTENTRY(e);
+		e = xfs_dir_sf_nextentry(e);
 	return bitize((int)((char *)e - (char *)sf));
 }
 
@@ -127,6 +127,6 @@ dirshort_size(
 	sf = (xfs_dir_shortform_t *)((char *)obj + byteize(startoff));
 	e = &sf->list[0];
 	for (i = 0; i < sf->hdr.count; i++)
-		e = XFS_DIR_SF_NEXTENTRY(e);
+		e = xfs_dir_sf_nextentry(e);
 	return bitize((int)((char *)e - (char *)sf));
 }

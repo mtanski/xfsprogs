@@ -156,24 +156,24 @@ const field_t	timestamp_flds[] = {
 };
 
 const field_t	inode_u_flds[] = {
-	{ "bmbt", FLDT_BMROOTD, 0, inode_u_bmbt_count, FLD_COUNT, TYP_NONE },
-	{ "bmx", FLDT_BMAPBTDREC, 0, inode_u_bmx_count, FLD_ARRAY|FLD_COUNT,
+	{ "bmbt", FLDT_BMROOTD, NULL, inode_u_bmbt_count, FLD_COUNT, TYP_NONE },
+	{ "bmx", FLDT_BMAPBTDREC, NULL, inode_u_bmx_count, FLD_ARRAY|FLD_COUNT,
 	  TYP_NONE },
-	{ "c", FLDT_CHARNS, 0, inode_u_c_count, FLD_COUNT, TYP_NONE },
-	{ "dev", FLDT_DEV, 0, inode_u_dev_count, FLD_COUNT, TYP_NONE },
-	{ "muuid", FLDT_UUID, 0, inode_u_muuid_count, FLD_COUNT, TYP_NONE },
-	{ "sfdir", FLDT_DIRSHORT, 0, inode_u_sfdir_count, FLD_COUNT, TYP_NONE },
-	{ "sfdir2", FLDT_DIR2SF, 0, inode_u_sfdir2_count, FLD_COUNT, TYP_NONE },
-	{ "symlink", FLDT_CHARNS, 0, inode_u_symlink_count, FLD_COUNT,
+	{ "c", FLDT_CHARNS, NULL, inode_u_c_count, FLD_COUNT, TYP_NONE },
+	{ "dev", FLDT_DEV, NULL, inode_u_dev_count, FLD_COUNT, TYP_NONE },
+	{ "muuid", FLDT_UUID, NULL, inode_u_muuid_count, FLD_COUNT, TYP_NONE },
+	{ "sfdir", FLDT_DIRSHORT, NULL, inode_u_sfdir_count, FLD_COUNT, TYP_NONE },
+	{ "sfdir2", FLDT_DIR2SF, NULL, inode_u_sfdir2_count, FLD_COUNT, TYP_NONE },
+	{ "symlink", FLDT_CHARNS, NULL, inode_u_symlink_count, FLD_COUNT,
 	  TYP_NONE },
 	{ NULL }
 };
 
 const field_t	inode_a_flds[] = {
-	{ "bmbt", FLDT_BMROOTA, 0, inode_a_bmbt_count, FLD_COUNT, TYP_NONE },
-	{ "bmx", FLDT_BMAPBTAREC, 0, inode_a_bmx_count, FLD_ARRAY|FLD_COUNT,
+	{ "bmbt", FLDT_BMROOTA, NULL, inode_a_bmbt_count, FLD_COUNT, TYP_NONE },
+	{ "bmx", FLDT_BMAPBTAREC, NULL, inode_a_bmx_count, FLD_ARRAY|FLD_COUNT,
 	  TYP_NONE },
-	{ "sfattr", FLDT_ATTRSHORT, 0, inode_a_sfattr_count, FLD_COUNT,
+	{ "sfattr", FLDT_ATTRSHORT, NULL, inode_a_sfattr_count, FLD_COUNT,
 	  TYP_NONE },
 	{ NULL }
 };
@@ -226,7 +226,7 @@ inode_a_bmbt_count(
 	if (!XFS_DFORK_Q(dip))
 		return 0;
 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_BTREE;
+	return dip->di_core.di_aformat == XFS_DINODE_FMT_BTREE;
 }
 
 static int
@@ -242,8 +242,8 @@ inode_a_bmx_count(
 	if (!XFS_DFORK_Q(dip))
 		return 0;
 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_EXTENTS ?
-		INT_GET(dip->di_core.di_anextents, ARCH_CONVERT) : 0;
+	return dip->di_core.di_aformat == XFS_DINODE_FMT_EXTENTS ?
+		be16_to_cpu(dip->di_core.di_anextents) : 0;
 }
 
 static int
@@ -286,7 +286,7 @@ inode_a_sfattr_count(
 	if (!XFS_DFORK_Q(dip))
 		return 0;
 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_aformat, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL;
+	return dip->di_core.di_aformat == XFS_DINODE_FMT_LOCAL;
 }
 
 int
@@ -301,12 +301,13 @@ inode_a_size(
 	ASSERT(startoff == 0);
 	ASSERT(idx == 0);
 	dip = obj;
-	switch (INT_GET(dip->di_core.di_aformat, ARCH_CONVERT)) {
+	switch (dip->di_core.di_aformat) {
 	case XFS_DINODE_FMT_LOCAL:
 		asf = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
-		return bitize((int)asf->hdr.totsize);
+		return bitize(be16_to_cpu(asf->hdr.totsize));
 	case XFS_DINODE_FMT_EXTENTS:
-		return (int)(INT_GET(dip->di_core.di_anextents, ARCH_CONVERT) * bitsz(xfs_bmbt_rec_t));
+		return (int)be16_to_cpu(dip->di_core.di_anextents) * 
+							bitsz(xfs_bmbt_rec_t);
 	case XFS_DINODE_FMT_BTREE:
 		return bitize((int)XFS_DFORK_ASIZE(dip, mp));
 	default:
@@ -399,7 +400,7 @@ inode_next_type(void)
 {
 	switch (iocur_top->mode & S_IFMT) {
 	case S_IFDIR:
-		return XFS_DIR_IS_V2(mp) ? TYP_DIR2 : TYP_DIR;
+		return xfs_sb_version_hasdirv2(&mp->m_sb) ? TYP_DIR2 : TYP_DIR;
 	case S_IFLNK:
 		return TYP_SYMLINK;
 	case S_IFREG:
@@ -437,7 +438,7 @@ inode_u_bmbt_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_BTREE;
+	return dip->di_core.di_format == XFS_DINODE_FMT_BTREE;
 }
 
 static int
@@ -451,8 +452,8 @@ inode_u_bmx_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_EXTENTS ?
-		INT_GET(dip->di_core.di_nextents, ARCH_CONVERT) : 0;
+	return dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ?
+		be32_to_cpu(dip->di_core.di_nextents) : 0;
 }
 
 static int
@@ -466,9 +467,9 @@ inode_u_c_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFREG ?
-		(int)INT_GET(dip->di_core.di_size, ARCH_CONVERT) : 0;
+	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFREG ?
+		(int)be64_to_cpu(dip->di_core.di_size) : 0;
 }
 
 static int
@@ -482,7 +483,7 @@ inode_u_dev_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_DEV;
+	return dip->di_core.di_format == XFS_DINODE_FMT_DEV;
 }
 
 static int
@@ -496,7 +497,7 @@ inode_u_muuid_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_UUID;
+	return dip->di_core.di_format == XFS_DINODE_FMT_UUID;
 }
 
 static int
@@ -510,9 +511,9 @@ inode_u_sfdir_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFDIR
-	       && XFS_DIR_IS_V1(mp);
+	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFDIR
+	       && !xfs_sb_version_hasdirv2(&mp->m_sb);
 }
 
 static int
@@ -526,9 +527,9 @@ inode_u_sfdir2_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFDIR &&
-	       XFS_DIR_IS_V2(mp);
+	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFDIR &&
+	       xfs_sb_version_hasdirv2(&mp->m_sb);
 }
 
 int
@@ -542,13 +543,14 @@ inode_u_size(
 	ASSERT(startoff == 0);
 	ASSERT(idx == 0);
 	dip = obj;
-	switch (INT_GET(dip->di_core.di_format, ARCH_CONVERT)) {
+	switch (dip->di_core.di_format) {
 	case XFS_DINODE_FMT_DEV:
 		return bitsz(xfs_dev_t);
 	case XFS_DINODE_FMT_LOCAL:
-		return bitize((int)INT_GET(dip->di_core.di_size, ARCH_CONVERT));
+		return bitize((int)be64_to_cpu(dip->di_core.di_size));
 	case XFS_DINODE_FMT_EXTENTS:
-		return (int)(INT_GET(dip->di_core.di_nextents, ARCH_CONVERT) * bitsz(xfs_bmbt_rec_t));
+		return (int)be32_to_cpu(dip->di_core.di_nextents) * 
+						bitsz(xfs_bmbt_rec_t);
 	case XFS_DINODE_FMT_BTREE:
 		return bitize((int)XFS_DFORK_DSIZE(dip, mp));
 	case XFS_DINODE_FMT_UUID:
@@ -569,9 +571,9 @@ inode_u_symlink_count(
 	ASSERT(obj == iocur_top->data);
 	dip = obj;
 	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
-	return INT_GET(dip->di_core.di_format, ARCH_CONVERT) == XFS_DINODE_FMT_LOCAL &&
-	       (INT_GET(dip->di_core.di_mode, ARCH_CONVERT) & S_IFMT) == S_IFLNK ?
-		(int)INT_GET(dip->di_core.di_size, ARCH_CONVERT) : 0;
+	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFLNK ?
+		(int)be64_to_cpu(dip->di_core.di_size) : 0;
 }
 
 void
@@ -607,7 +609,7 @@ set_cur_inode(
 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
 	dip = iocur_top->data;
 	iocur_top->ino = ino;
-	iocur_top->mode = INT_GET(dip->di_core.di_mode, ARCH_CONVERT);
+	iocur_top->mode = be16_to_cpu(dip->di_core.di_mode);
 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
 		iocur_top->dirino = ino;
 

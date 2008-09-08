@@ -24,6 +24,8 @@ struct xfs_inode;
 struct xfs_mount;
 struct xfs_trans;
 
+extern kmem_zone_t	*xfs_btree_cur_zone;
+
 /*
  * This nonsense is to make -wlint happy.
  */
@@ -122,13 +124,13 @@ extern const __uint32_t	xfs_magics[];
  * Given block size, type prefix, block pointer, and index of requested entry
  * (first entry numbered 1).
  */
-#define	XFS_BTREE_REC_ADDR(bsz,t,bb,i,mxr)	\
+#define	XFS_BTREE_REC_ADDR(t,bb,i)	\
 	((t ## _rec_t *)((char *)(bb) + sizeof(t ## _block_t) + \
 	 ((i) - 1) * sizeof(t ## _rec_t)))
-#define	XFS_BTREE_KEY_ADDR(bsz,t,bb,i,mxr)	\
+#define	XFS_BTREE_KEY_ADDR(t,bb,i)	\
 	((t ## _key_t *)((char *)(bb) + sizeof(t ## _block_t) + \
 	 ((i) - 1) * sizeof(t ## _key_t)))
-#define	XFS_BTREE_PTR_ADDR(bsz,t,bb,i,mxr)	\
+#define	XFS_BTREE_PTR_ADDR(t,bb,i,mxr)	\
 	((t ## _ptr_t *)((char *)(bb) + sizeof(t ## _block_t) + \
 	 (mxr) * sizeof(t ## _key_t) + ((i) - 1) * sizeof(t ## _ptr_t)))
 
@@ -145,7 +147,7 @@ typedef struct xfs_btree_cur
 	union {
 		xfs_alloc_rec_incore_t	a;
 		xfs_bmbt_irec_t		b;
-		xfs_inobt_rec_t		i;
+		xfs_inobt_rec_incore_t	i;
 	}		bc_rec;		/* current insert/search record value */
 	struct xfs_buf	*bc_bufs[XFS_BTREE_MAXLEVELS];	/* buf ptr per level */
 	int		bc_ptrs[XFS_BTREE_MAXLEVELS];	/* key/record # */
@@ -156,8 +158,8 @@ typedef struct xfs_btree_cur
 	__uint8_t	bc_blocklog;	/* log2(blocksize) of btree blocks */
 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
 	union {
-		struct {			/* needed for BNO, CNT */
-			struct xfs_buf	*agbp;	/* agf buffer pointer */
+		struct {			/* needed for BNO, CNT, INO */
+			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
 			xfs_agnumber_t	agno;	/* ag number */
 		} a;
 		struct {			/* needed for BMAP */
@@ -170,10 +172,6 @@ typedef struct xfs_btree_cur
 			char		flags;		/* flags */
 #define	XFS_BTCUR_BPRV_WASDEL	1			/* was delayed */
 		} b;
-		struct {			/* needed for INO */
-			struct xfs_buf	*agbp;	/* agi buffer pointer */
-			xfs_agnumber_t	agno;	/* ag number */
-		} i;
 	}		bc_private;	/* per-btree type data */
 } xfs_btree_cur_t;
 
@@ -187,8 +185,6 @@ typedef struct xfs_btree_cur
 #define	XFS_BUF_TO_LBLOCK(bp)	((xfs_btree_lblock_t *)XFS_BUF_PTR(bp))
 #define	XFS_BUF_TO_SBLOCK(bp)	((xfs_btree_sblock_t *)XFS_BUF_PTR(bp))
 
-
-#ifdef __KERNEL__
 
 #ifdef DEBUG
 /*
@@ -242,6 +238,9 @@ xfs_btree_check_lptr(
 	xfs_btree_cur_t		*cur,	/* btree cursor */
 	xfs_dfsbno_t		ptr,	/* btree block disk address */
 	int			level);	/* btree block level */
+
+#define xfs_btree_check_lptr_disk(cur, ptr, level) \
+	xfs_btree_check_lptr(cur, be64_to_cpu(ptr), level)
 
 /*
  * Checking routine: check that short form block header is ok.
@@ -435,36 +434,18 @@ xfs_btree_setbuf(
 	int			lev,	/* level in btree */
 	struct xfs_buf		*bp);	/* new buffer to set */
 
-#endif	/* __KERNEL__ */
-
 
 /*
  * Min and max functions for extlen, agblock, fileoff, and filblks types.
  */
-#define	XFS_EXTLEN_MIN(a,b)	\
-	((xfs_extlen_t)(a) < (xfs_extlen_t)(b) ? \
-		(xfs_extlen_t)(a) : (xfs_extlen_t)(b))
-#define	XFS_EXTLEN_MAX(a,b)	\
-	((xfs_extlen_t)(a) > (xfs_extlen_t)(b) ? \
-		(xfs_extlen_t)(a) : (xfs_extlen_t)(b))
-#define	XFS_AGBLOCK_MIN(a,b)	\
-	((xfs_agblock_t)(a) < (xfs_agblock_t)(b) ? \
-		(xfs_agblock_t)(a) : (xfs_agblock_t)(b))
-#define	XFS_AGBLOCK_MAX(a,b)	\
-	((xfs_agblock_t)(a) > (xfs_agblock_t)(b) ? \
-		(xfs_agblock_t)(a) : (xfs_agblock_t)(b))
-#define	XFS_FILEOFF_MIN(a,b)	\
-	((xfs_fileoff_t)(a) < (xfs_fileoff_t)(b) ? \
-		(xfs_fileoff_t)(a) : (xfs_fileoff_t)(b))
-#define	XFS_FILEOFF_MAX(a,b)	\
-	((xfs_fileoff_t)(a) > (xfs_fileoff_t)(b) ? \
-		(xfs_fileoff_t)(a) : (xfs_fileoff_t)(b))
-#define	XFS_FILBLKS_MIN(a,b)	\
-	((xfs_filblks_t)(a) < (xfs_filblks_t)(b) ? \
-		(xfs_filblks_t)(a) : (xfs_filblks_t)(b))
-#define	XFS_FILBLKS_MAX(a,b)	\
-	((xfs_filblks_t)(a) > (xfs_filblks_t)(b) ? \
-		(xfs_filblks_t)(a) : (xfs_filblks_t)(b))
+#define	XFS_EXTLEN_MIN(a,b)	min_t(xfs_extlen_t, (a), (b))
+#define	XFS_EXTLEN_MAX(a,b)	max_t(xfs_extlen_t, (a), (b))
+#define	XFS_AGBLOCK_MIN(a,b)	min_t(xfs_agblock_t, (a), (b))
+#define	XFS_AGBLOCK_MAX(a,b)	max_t(xfs_agblock_t, (a), (b))
+#define	XFS_FILEOFF_MIN(a,b)	min_t(xfs_fileoff_t, (a), (b))
+#define	XFS_FILEOFF_MAX(a,b)	max_t(xfs_fileoff_t, (a), (b))
+#define	XFS_FILBLKS_MIN(a,b)	min_t(xfs_filblks_t, (a), (b))
+#define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
 
 #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
 	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \

@@ -13,6 +13,7 @@ LDIRT = $(POTHEAD)
 # TODO: db/ logprint/
 XGETTEXTFILES =	\
 		$(TOPDIR)/copy/xfs_copy.c \
+		$(TOPDIR)/estimate/xfs_estimate.c \
 		$(TOPDIR)/growfs/xfs_growfs.c \
 		$(TOPDIR)/io/attr.c \
 		$(TOPDIR)/io/bmap.c \

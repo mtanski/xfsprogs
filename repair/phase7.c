@@ -30,7 +30,7 @@
 /* dinoc is a pointer to the IN-CORE dinode core */
 static void
 set_nlinks(
-	xfs_dinode_core_t	*dinoc,
+	xfs_icdinode_t		*dinoc,
 	xfs_ino_t		ino,
 	__uint32_t		nrefs,
 	int			*dirty)
@@ -108,7 +108,7 @@ update_inode_nlinks(
 		 */
 		ASSERT(error == 0);
 		error = libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES |
-				XFS_TRANS_SYNC, NULL);
+				XFS_TRANS_SYNC);
 
 		ASSERT(error == 0);
 	}

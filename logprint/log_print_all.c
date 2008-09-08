@@ -37,10 +37,10 @@ xlog_print_find_oldest(
 	first_blk = 0;		/* read first block */
 	bp = xlog_get_bp(log, 1);
 	xlog_bread(log, 0, 1, bp);
-	first_half_cycle = GET_CYCLE(XFS_BUF_PTR(bp), ARCH_CONVERT);
+	first_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
 	*last_blk = log->l_logBBsize-1;	/* read last block */
 	xlog_bread(log, *last_blk, 1, bp);
-	last_half_cycle = GET_CYCLE(XFS_BUF_PTR(bp), ARCH_CONVERT);
+	last_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
 	ASSERT(last_half_cycle != 0);
 
 	if (first_half_cycle == last_half_cycle) { /* all cycle nos are same */
@@ -85,7 +85,6 @@ xlog_recover_print_buffer(
 {
 	xfs_agi_t		*agi;
 	xfs_agf_t		*agf;
-	xfs_buf_log_format_v1_t	*old_f;
 	xfs_buf_log_format_t	*f;
 	xfs_caddr_t		p;
 	int			len, num, i;
@@ -93,30 +92,12 @@ xlog_recover_print_buffer(
 	xfs_disk_dquot_t	*ddq;
 
 	f = (xfs_buf_log_format_t *)item->ri_buf[0].i_addr;
-	old_f = (xfs_buf_log_format_v1_t *)f;
 	len = item->ri_buf[0].i_len;
 	printf("	");
-	switch (f->blf_type)  {
-	case XFS_LI_BUF:
-		printf("BUF:  ");
-		break;
-	case XFS_LI_6_1_BUF:
-		printf("6.1 BUF:  ");
-		break;
-	case XFS_LI_5_3_BUF:
-		printf("5.3 BUF:  ");
-		break;
-	}
-	if (f->blf_type == XFS_LI_BUF) {
-		printf("#regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n",
-		       f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size, f->blf_flags);
-		blkno = (xfs_daddr_t)f->blf_blkno;
-	} else {
-		printf("#regs:%d   start blkno:0x%x   len:%d   bmap size:%d\n",
-		       old_f->blf_size, old_f->blf_blkno, old_f->blf_len,
-		       old_f->blf_map_size);
-		blkno = (xfs_daddr_t)old_f->blf_blkno;
-	}
+	ASSERT(f->blf_type == XFS_LI_BUF);
+	printf("BUF:  #regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n",
+		f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size, f->blf_flags);
+	blkno = (xfs_daddr_t)f->blf_blkno;
 	num = f->blf_size-1;
 	i = 1;
 	while (num-- > 0) {
@@ -125,63 +106,63 @@ xlog_recover_print_buffer(
 		i++;
 		if (blkno == 0) { /* super block */
 			printf("	SUPER Block Buffer:\n");
-			if (!print_buffer) continue;
+			if (!print_buffer) 
+				continue;
 			printf("		icount:%Ld  ifree:%Ld  ",
-			       INT_GET(*(long long *)(p), ARCH_CONVERT),
-			       INT_GET(*(long long *)(p+8), ARCH_CONVERT));
+			       be64_to_cpu(*(__be64 *)(p)),
+			       be64_to_cpu(*(__be64 *)(p+8)));
 			printf("fdblks:%Ld  frext:%Ld\n",
-			       INT_GET(*(long long *)(p+16), ARCH_CONVERT),
-			       INT_GET(*(long long *)(p+24), ARCH_CONVERT));
+			       be64_to_cpu(*(__be64 *)(p+16)),
+			       be64_to_cpu(*(__be64 *)(p+24)));
 			printf("		sunit:%u  swidth:%u\n",
-			       INT_GET(*(uint *)(p+56), ARCH_CONVERT),
-			       INT_GET(*(uint *)(p+60), ARCH_CONVERT));
-		} else if (INT_GET(*(uint *)p, ARCH_CONVERT) == XFS_AGI_MAGIC) {
+			       be32_to_cpu(*(__be32 *)(p+56)),
+			       be32_to_cpu(*(__be32 *)(p+60)));
+		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGI_MAGIC) {
 			agi = (xfs_agi_t *)p;
 			printf("	AGI Buffer: (XAGI)\n");
-			if (!print_buffer) continue;
+			if (!print_buffer) 
+				continue;
 			printf("		ver:%d  ",
-				INT_GET(agi->agi_versionnum, ARCH_CONVERT));
+				be32_to_cpu(agi->agi_versionnum));
 			printf("seq#:%d  len:%d  cnt:%d  root:%d\n",
-				INT_GET(agi->agi_seqno, ARCH_CONVERT),
-				INT_GET(agi->agi_length, ARCH_CONVERT),
-				INT_GET(agi->agi_count, ARCH_CONVERT),
-				INT_GET(agi->agi_root, ARCH_CONVERT));
+				be32_to_cpu(agi->agi_seqno),
+				be32_to_cpu(agi->agi_length),
+				be32_to_cpu(agi->agi_count),
+				be32_to_cpu(agi->agi_root));
 			printf("		level:%d  free#:0x%x  newino:0x%x\n",
-				INT_GET(agi->agi_level, ARCH_CONVERT),
-				INT_GET(agi->agi_freecount, ARCH_CONVERT),
-				INT_GET(agi->agi_newino, ARCH_CONVERT));
-		} else if (INT_GET(*(uint *)p, ARCH_CONVERT) == XFS_AGF_MAGIC) {
+				be32_to_cpu(agi->agi_level),
+				be32_to_cpu(agi->agi_freecount),
+				be32_to_cpu(agi->agi_newino));
+		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGF_MAGIC) {
 			agf = (xfs_agf_t *)p;
 			printf("	AGF Buffer: (XAGF)\n");
-			if (!print_buffer) continue;
+			if (!print_buffer) 
+				continue;
 			printf("		ver:%d  seq#:%d  len:%d  \n",
-				INT_GET(agf->agf_versionnum, ARCH_CONVERT),
-				INT_GET(agf->agf_seqno, ARCH_CONVERT),
-				INT_GET(agf->agf_length, ARCH_CONVERT));
+				be32_to_cpu(agf->agf_versionnum),
+				be32_to_cpu(agf->agf_seqno),
+				be32_to_cpu(agf->agf_length));
 			printf("		root BNO:%d  CNT:%d\n",
-				INT_GET(agf->agf_roots[XFS_BTNUM_BNOi],
-					ARCH_CONVERT),
-				INT_GET(agf->agf_roots[XFS_BTNUM_CNTi],
-					ARCH_CONVERT));
+				be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]),
+				be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
 			printf("		level BNO:%d  CNT:%d\n",
-				INT_GET(agf->agf_levels[XFS_BTNUM_BNOi],
-					ARCH_CONVERT),
-				INT_GET(agf->agf_levels[XFS_BTNUM_CNTi],
-					ARCH_CONVERT));
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]),
+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
 			printf("		1st:%d  last:%d  cnt:%d  "
 				"freeblks:%d  longest:%d\n",
-				INT_GET(agf->agf_flfirst, ARCH_CONVERT),
-				INT_GET(agf->agf_fllast, ARCH_CONVERT),
-				INT_GET(agf->agf_flcount, ARCH_CONVERT),
-				INT_GET(agf->agf_freeblks, ARCH_CONVERT),
-				INT_GET(agf->agf_longest, ARCH_CONVERT));
+				be32_to_cpu(agf->agf_flfirst),
+				be32_to_cpu(agf->agf_fllast),
+				be32_to_cpu(agf->agf_flcount),
+				be32_to_cpu(agf->agf_freeblks),
+				be32_to_cpu(agf->agf_longest));
 		} else if (*(uint *)p == XFS_DQUOT_MAGIC) {
 			ddq = (xfs_disk_dquot_t *)p;
 			printf("	DQUOT Buffer:\n");
-			if (!print_buffer) continue;
+			if (!print_buffer) 
+				continue;
 			printf("		UIDs 0x%lx-0x%lx\n",
-			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT),
-			       (unsigned long)INT_GET(ddq->d_id, ARCH_CONVERT) +
+			       (unsigned long)be32_to_cpu(ddq->d_id),
+			       (unsigned long)be32_to_cpu(ddq->d_id) +
 			       (BBTOB(f->blf_len) / sizeof(xfs_dqblk_t)) - 1);
 		} else {
 			printf("	BUF DATA\n");
@@ -226,29 +207,29 @@ xlog_recover_print_dquot(
 	if (!print_quota)
 		return;
 	printf("\t\tmagic 0x%x\tversion 0x%x\tID 0x%x (%d)\t\n",
-	       INT_GET(d->d_magic, ARCH_CONVERT),
-	       INT_GET(d->d_version, ARCH_CONVERT),
-	       INT_GET(d->d_id, ARCH_CONVERT),
-	       INT_GET(d->d_id, ARCH_CONVERT));
+	       be16_to_cpu(d->d_magic),
+	       d->d_version,
+	       be32_to_cpu(d->d_id),
+	       be32_to_cpu(d->d_id));
 	printf("\t\tblk_hard 0x%x\tblk_soft 0x%x\tino_hard 0x%x"
 	       "\tino_soft 0x%x\n",
-	       (int)INT_GET(d->d_blk_hardlimit, ARCH_CONVERT),
-	       (int)INT_GET(d->d_blk_softlimit, ARCH_CONVERT),
-	       (int)INT_GET(d->d_ino_hardlimit, ARCH_CONVERT),
-	       (int)INT_GET(d->d_ino_softlimit, ARCH_CONVERT));
+	       (int)be64_to_cpu(d->d_blk_hardlimit),
+	       (int)be64_to_cpu(d->d_blk_softlimit),
+	       (int)be64_to_cpu(d->d_ino_hardlimit),
+	       (int)be64_to_cpu(d->d_ino_softlimit));
 	printf("\t\tbcount 0x%x (%d) icount 0x%x (%d)\n",
-	       (int)INT_GET(d->d_bcount, ARCH_CONVERT),
-	       (int)INT_GET(d->d_bcount, ARCH_CONVERT),
-	       (int)INT_GET(d->d_icount, ARCH_CONVERT),
-	       (int)INT_GET(d->d_icount, ARCH_CONVERT));
+	       (int)be64_to_cpu(d->d_bcount),
+	       (int)be64_to_cpu(d->d_bcount),
+	       (int)be64_to_cpu(d->d_icount),
+	       (int)be64_to_cpu(d->d_icount));
 	printf("\t\tbtimer 0x%x itimer 0x%x \n",
-	       (int)INT_GET(d->d_btimer, ARCH_CONVERT),
-	       (int)INT_GET(d->d_itimer, ARCH_CONVERT));
+	       (int)be32_to_cpu(d->d_btimer),
+	       (int)be32_to_cpu(d->d_itimer));
 }
 
 STATIC void
 xlog_recover_print_inode_core(
-	xfs_dinode_core_t	*di)
+	xfs_icdinode_t		*di)
 {
 	printf("	CORE inode:\n");
 	if (!print_inode)
@@ -291,8 +272,8 @@ xlog_recover_print_inode(
 	       f->ilf_dsize);
 
 	/* core inode comes 2nd */
-	ASSERT(item->ri_buf[1].i_len == sizeof(xfs_dinode_core_t));
-	xlog_recover_print_inode_core((xfs_dinode_core_t *)
+	ASSERT(item->ri_buf[1].i_len == sizeof(xfs_icdinode_t));
+	xlog_recover_print_inode_core((xfs_icdinode_t *)
 				      item->ri_buf[1].i_addr);
 
 	hasdata = (f->ilf_fields & XFS_ILOG_DFORK) != 0;
@@ -436,13 +417,9 @@ xlog_recover_print_logitem(
 {
 	switch (ITEM_TYPE(item)) {
 	case XFS_LI_BUF:
-	case XFS_LI_6_1_BUF:
-	case XFS_LI_5_3_BUF:
 		xlog_recover_print_buffer(item);
 		break;
 	case XFS_LI_INODE:
-	case XFS_LI_6_1_INODE:
-	case XFS_LI_5_3_INODE:
 		xlog_recover_print_inode(item);
 		break;
 	case XFS_LI_EFD:
@@ -481,18 +458,6 @@ xlog_recover_print_item(
 		break;
 	case XFS_LI_EFI:
 		printf("EFI");
-		break;
-	case XFS_LI_6_1_BUF:
-		printf("6.1 BUF");
-		break;
-	case XFS_LI_5_3_BUF:
-		printf("5.3 BUF");
-		break;
-	case XFS_LI_6_1_INODE:
-		printf("6.1 INO");
-		break;
-	case XFS_LI_5_3_INODE:
-		printf("5.3 INO");
 		break;
 	case XFS_LI_DQUOT:
 		printf("DQ ");

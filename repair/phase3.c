@@ -91,7 +91,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				}
 				pthread_mutex_unlock(&ag_locks[agno]);
 			}
-			current_ino = dip->di_next_unlinked;
+			current_ino = be32_to_cpu(dip->di_next_unlinked);
 		} else  {
 			current_ino = NULLAGINO;;
 		}
@@ -119,18 +119,17 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 
 	agip = XFS_BUF_TO_AGI(bp);
 
-	ASSERT(no_modify || INT_GET(agip->agi_seqno, ARCH_CONVERT) == agno);
+	ASSERT(no_modify || be32_to_cpu(agip->agi_seqno) == agno);
 
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  {
-		if (INT_GET(agip->agi_unlinked[i], ARCH_CONVERT) != NULLAGINO)  {
-			err += walk_unlinked_list(mp, agno, INT_GET(
-					agip->agi_unlinked[i], ARCH_CONVERT));
+		if (be32_to_cpu(agip->agi_unlinked[i]) != NULLAGINO)  {
+			err += walk_unlinked_list(mp, agno,
+					be32_to_cpu(agip->agi_unlinked[i]));
 			/*
 			 * clear the list
 			 */
 			if (!no_modify)  {
-				INT_SET(agip->agi_unlinked[i], ARCH_CONVERT,
-					NULLAGINO);
+				agip->agi_unlinked[i] = cpu_to_be32(NULLAGINO);
 				agi_dirty = 1;
 			}
 		}

@@ -16,7 +16,11 @@
 #include "progress.h"
 #include "radix-tree.h"
 
+#ifdef HAVE_PTHREAD_H
 int do_prefetch = 1;
+#else
+int do_prefetch = 0;
+#endif
 
 /*
  * Performs prefetching by priming the libxfs cache by using a dedicate thread
@@ -173,8 +177,8 @@ pf_read_bmbt_reclist(
 	xfs_dfilblks_t		cp = 0;		/* prev count */
 	xfs_dfiloff_t		op = 0;		/* prev offset */
 
-	for (i = 0; i < numrecs; i++, rp++) {
-		libxfs_bmbt_disk_get_all(rp, &irec);
+	for (i = 0; i < numrecs; i++) {
+		libxfs_bmbt_disk_get_all(rp + i, &irec);
 
 		if (((i > 0) && (op + cp > irec.br_startoff)) ||
 				(irec.br_blockcount == 0) ||
@@ -246,7 +250,6 @@ pf_scanfunc_bmap(
 	int			isadir,
 	prefetch_args_t		*args)
 {
-	xfs_bmbt_rec_t		*rp;
 	xfs_bmbt_ptr_t		*pp;
 	int 			numrecs;
 	int			i;
@@ -264,18 +267,14 @@ pf_scanfunc_bmap(
 	if (level == 0) {
 		if (numrecs > mp->m_bmap_dmxr[0] || !isadir)
 			return 0;
-
-		rp = XFS_BTREE_REC_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt,
-				block, 1, mp->m_bmap_dmxr[0]);
-
-		return pf_read_bmbt_reclist(args, rp, numrecs);
+		return pf_read_bmbt_reclist(args,
+			XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1), numrecs);
 	}
 
 	if (numrecs > mp->m_bmap_dmxr[1])
 		return 0;
 
-	pp = XFS_BTREE_PTR_ADDR(mp->m_sb.sb_blocksize, xfs_bmbt, block, 1,
-			mp->m_bmap_dmxr[1]);
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
 
 	for (i = 0; i < numrecs; i++) {
 		dbno = be64_to_cpu(pp[i]);
@@ -317,8 +316,8 @@ pf_read_btinode(
 		return;
 
 	dsize = XFS_DFORK_DSIZE(dino, mp);
-	pp = XFS_BTREE_PTR_ADDR(dsize, xfs_bmdr, dib, 1,
-			XFS_BTREE_BLOCK_MAXRECS(dsize, xfs_bmdr, 0));
+	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1,
+				XFS_BTREE_BLOCK_MAXRECS(dsize, xfs_bmdr, 0));
 
 	for (i = 0; i < numrecs; i++) {
 		dbno = be64_to_cpu(pp[i]);
@@ -763,9 +762,12 @@ start_inode_prefetch(
 
 	INIT_RADIX_TREE(&args->primary_io_queue, 0);
 	INIT_RADIX_TREE(&args->secondary_io_queue, 0);
-	pthread_mutex_init(&args->lock, NULL);
-	pthread_cond_init(&args->start_reading, NULL);
-	pthread_cond_init(&args->start_processing, NULL);
+	if (pthread_mutex_init(&args->lock, NULL) != 0)
+		do_error(_("failed to initialize prefetch mutex\n"));
+	if (pthread_cond_init(&args->start_reading, NULL) != 0)
+		do_error(_("failed to initialize prefetch cond var\n"));
+	if (pthread_cond_init(&args->start_processing, NULL) != 0)
+		do_error(_("failed to initialize prefetch cond var\n"));
 	args->agno = agno;
 	args->dirs_only = dirs_only;
 

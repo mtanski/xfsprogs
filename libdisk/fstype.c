@@ -199,11 +199,11 @@ fstype(const char *device) {
        to a block device or ordinary file */
     if (stat (device, &statbuf) ||
 	!(S_ISBLK(statbuf.st_mode) || S_ISREG(statbuf.st_mode)))
-      return 0;
+      return NULL;
 
     fd = open(device, O_RDONLY);
     if (fd < 0)
-      return 0;
+      return NULL;
 
     /* do seeks and reads in disk order, otherwise a very short
        partition may cause a failure because of read error */
@@ -409,5 +409,5 @@ fstype(const char *device) {
 
 io_error:
     close(fd);
-    return 0;
+    return NULL;
 }

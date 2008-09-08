@@ -81,11 +81,6 @@ extern void xlog_warn(char *fmt,...);
 extern void xlog_exit(char *fmt,...);
 extern void xlog_panic(char *fmt,...);
 
-#define kmem_zalloc(size, foo)			calloc(size,1)
-#define kmem_alloc(size, foo)			calloc(size,1)
-#define kmem_free(ptr, foo)			free(ptr)
-#define kmem_realloc(ptr, len, old, foo)	realloc(ptr, len)
-
 /* exports */
 extern int	print_exit;
 extern int	print_skip_uuid;
@@ -95,39 +90,34 @@ extern int	print_record_header;
 extern libxfs_init_t	x;
 
 extern struct xfs_buf *xlog_get_bp(xlog_t *, int);
-extern void	 xlog_put_bp(struct xfs_buf *);
-extern int	 xlog_bread(xlog_t *, xfs_daddr_t, int, struct xfs_buf *);
+extern void	xlog_put_bp(struct xfs_buf *);
+extern int	xlog_bread(xlog_t *, xfs_daddr_t, int, struct xfs_buf *);
 
-extern int  xlog_find_zeroed(xlog_t *log, xfs_daddr_t *blk_no);
-extern int  xlog_find_cycle_start(xlog_t *log, xfs_buf_t *bp,
-		xfs_daddr_t first_blk, xfs_daddr_t *last_blk, uint cycle);
-extern int  xlog_find_tail(xlog_t *log, xfs_daddr_t *head_blk,
-		xfs_daddr_t *tail_blk, int readonly);
+extern int	xlog_find_zeroed(xlog_t *log, xfs_daddr_t *blk_no);
+extern int	xlog_find_cycle_start(xlog_t *log, xfs_buf_t *bp,
+				xfs_daddr_t first_blk, xfs_daddr_t *last_blk, 
+				uint cycle);
+extern int	xlog_find_tail(xlog_t *log, xfs_daddr_t *head_blk,
+				xfs_daddr_t *tail_blk);
 
-extern int  xlog_test_footer(xlog_t *log);
-extern int  xlog_recover(xlog_t *log, int readonly);
-extern void xlog_recover_print_data(xfs_caddr_t p, int len);
-extern void xlog_recover_print_logitem(xlog_recover_item_t *item);
-extern void xlog_recover_print_trans_head(xlog_recover_t *tr);
-extern int  xlog_print_find_oldest(xlog_t *log, xfs_daddr_t *last_blk);
+extern int	xlog_test_footer(xlog_t *log);
+extern int	xlog_recover(xlog_t *log, int readonly);
+extern void	xlog_recover_print_data(xfs_caddr_t p, int len);
+extern void	xlog_recover_print_logitem(xlog_recover_item_t *item);
+extern void	xlog_recover_print_trans_head(xlog_recover_t *tr);
+extern int	xlog_print_find_oldest(xlog_t *log, xfs_daddr_t *last_blk);
 
 /* for transactional view */
-extern void xlog_recover_print_trans_head(xlog_recover_t *tr);
-
-extern void xlog_recover_print_trans(	xlog_recover_t		*trans,
-					xlog_recover_item_t	*itemq,
-					int			print);
-
-extern int  xlog_do_recovery_pass(	xlog_t		*log,
-					xfs_daddr_t	head_blk,
-					xfs_daddr_t	tail_blk,
-					int		pass);
-extern int  xlog_recover_do_trans(	xlog_t		*log,
-					xlog_recover_t	*trans,
-					int		pass);
-extern int  xlog_header_check_recover(  xfs_mount_t         *mp,
-					xlog_rec_header_t   *head);
-extern int  xlog_header_check_mount(    xfs_mount_t         *mp,
-					xlog_rec_header_t   *head);
+extern void	xlog_recover_print_trans_head(xlog_recover_t *tr);
+extern void	xlog_recover_print_trans(xlog_recover_t *trans,
+				xlog_recover_item_t *itemq, int print);
+extern int	xlog_do_recovery_pass(xlog_t *log, xfs_daddr_t head_blk,
+				xfs_daddr_t tail_blk, int pass);
+extern int	xlog_recover_do_trans(xlog_t *log, xlog_recover_t *trans,
+				int pass);
+extern int	xlog_header_check_recover(xfs_mount_t *mp, 
+				xlog_rec_header_t *head);
+extern int	xlog_header_check_mount(xfs_mount_t *mp,
+				xlog_rec_header_t *head);
 
 #endif	/* LIBXLOG_H */

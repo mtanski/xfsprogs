@@ -81,11 +81,11 @@ static void unmount_record(void *p)
 	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
 
 	memset(p, 0, BBSIZE);
-	INT_SET(op->oh_tid,		ARCH_CONVERT, 1);
-	INT_SET(op->oh_len,		ARCH_CONVERT, sizeof(magic));
-	INT_SET(op->oh_clientid,	ARCH_CONVERT, XFS_LOG);
-	INT_SET(op->oh_flags,		ARCH_CONVERT, XLOG_UNMOUNT_TRANS);
-	INT_SET(op->oh_res2,		ARCH_CONVERT, 0);
+	op->oh_tid = cpu_to_be32(1);
+	op->oh_len = cpu_to_be32(sizeof(magic));
+	op->oh_clientid = XFS_LOG;
+	op->oh_flags = XLOG_UNMOUNT_TRANS;
+	op->oh_res2 = 0;
 
 	/* and the data for this op */
 	memcpy((char *)p + sizeof(xlog_op_header_t), &magic, sizeof(magic));
@@ -142,7 +142,7 @@ libxfs_log_header(
 {
 	xlog_rec_header_t	*head = (xlog_rec_header_t *)caddr;
 	xfs_caddr_t		p = caddr;
-	uint			cycle_lsn;
+	__be32			cycle_lsn;
 	int			i, len;
 
 	len = ((version == 2) && sunit) ? BTOBB(sunit) : 1;
@@ -152,22 +152,22 @@ libxfs_log_header(
 	 * way things end up on disk.
 	 */
 	memset(p, 0, BBSIZE);
-	INT_SET(head->h_magicno,	ARCH_CONVERT, XLOG_HEADER_MAGIC_NUM);
-	INT_SET(head->h_cycle,		ARCH_CONVERT, 1);
-	INT_SET(head->h_version,	ARCH_CONVERT, version);
+	head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
+	head->h_cycle = cpu_to_be32(1);
+	head->h_version = cpu_to_be32(version);
 	if (len != 1)
-		INT_SET(head->h_len,		ARCH_CONVERT, sunit - BBSIZE);
+		head->h_len = cpu_to_be32(sunit - BBSIZE);
 	else
-		INT_SET(head->h_len,		ARCH_CONVERT, 20);
-	INT_SET(head->h_chksum,		ARCH_CONVERT, 0);
-	INT_SET(head->h_prev_block,	ARCH_CONVERT, -1);
-	INT_SET(head->h_num_logops,	ARCH_CONVERT, 1);
-	INT_SET(head->h_cycle_data[0],	ARCH_CONVERT, 0xb0c0d0d0);
-	INT_SET(head->h_fmt,		ARCH_CONVERT, fmt);
-	INT_SET(head->h_size,		ARCH_CONVERT, XLOG_HEADER_CYCLE_SIZE);
+		head->h_len = cpu_to_be32(20);
+	head->h_chksum = cpu_to_be32(0);
+	head->h_prev_block = cpu_to_be32(-1);
+	head->h_num_logops = cpu_to_be32(1);
+	head->h_cycle_data[0] = cpu_to_be32(0xb0c0d0d0);
+	head->h_fmt = cpu_to_be32(fmt);
+	head->h_size = cpu_to_be32(XLOG_HEADER_CYCLE_SIZE);
 
-	ASSIGN_ANY_LSN_DISK(head->h_lsn, 1, 0);
-	ASSIGN_ANY_LSN_DISK(head->h_tail_lsn, 1, 0);
+	head->h_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
+	head->h_tail_lsn = cpu_to_be64(xlog_assign_lsn(1, 0));
 
 	memcpy(&head->h_fs_uuid, fs_uuid, sizeof(uuid_t));
 
@@ -179,7 +179,7 @@ libxfs_log_header(
 	for (i = 2; i < len; i++) {
 		p = nextfunc(p, BBSIZE, private);
 		memset(p, 0, BBSIZE);
-		*(uint *)p = cycle_lsn;
+		*(__be32 *)p = cycle_lsn;
 	}
 
 	return BBTOB(len);
@@ -257,7 +257,7 @@ libxfs_getsb(xfs_mount_t *mp, int flags)
 				XFS_FSS_TO_BB(mp, 1), flags);
 }
 
-xfs_zone_t			*xfs_buf_zone;
+kmem_zone_t			*xfs_buf_zone;
 
 static struct cache_mru		xfs_buf_freelist =
 	{{&xfs_buf_freelist.cm_list, &xfs_buf_freelist.cm_list},
@@ -355,7 +355,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
 			bp->b_addr = NULL;
 		}
 	} else
-		bp = libxfs_zone_zalloc(xfs_buf_zone);
+		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
 	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
 
 	if (bp != NULL)
@@ -645,116 +645,11 @@ struct cache_operations libxfs_bcache_operations = {
 
 
 /*
- * Simple memory interface
- */
-
-xfs_zone_t *
-libxfs_zone_init(int size, char *name)
-{
-	xfs_zone_t	*ptr;
-
-	if ((ptr = malloc(sizeof(xfs_zone_t))) == NULL) {
-		fprintf(stderr, _("%s: zone init failed (%s, %d bytes): %s\n"),
-			progname, name, (int)sizeof(xfs_zone_t), strerror(errno));
-		exit(1);
-	}
-	ptr->zone_unitsize = size;
-	ptr->zone_name = name;
-#ifdef MEM_DEBUG
-	ptr->allocated = 0;
-	fprintf(stderr, "new zone %p for \"%s\", size=%d\n", ptr, name, size);
-#endif
-	return ptr;
-}
-
-void *
-libxfs_zone_zalloc(xfs_zone_t *z)
-{
-	void	*ptr;
-
-	if ((ptr = calloc(z->zone_unitsize, 1)) == NULL) {
-		fprintf(stderr, _("%s: zone calloc failed (%s, %d bytes): %s\n"),
-			progname, z->zone_name, z->zone_unitsize,
-			strerror(errno));
-		exit(1);
-	}
-#ifdef MEM_DEBUG
-	z->allocated++;
-	fprintf(stderr, "## zone alloc'd item %p from %s (%d bytes) (%d active)\n",
-		ptr, z->zone_name,  z->zone_unitsize,
-		z->allocated);
-#endif
-	return ptr;
-}
-
-void
-libxfs_zone_free(xfs_zone_t *z, void *ptr)
-{
-#ifdef MEM_DEBUG
-	z->allocated--;
-	fprintf(stderr, "## zone freed item %p from %s (%d bytes) (%d active)\n",
-		ptr, z->zone_name, z->zone_unitsize,
-		z->allocated);
-#endif
-	if (ptr != NULL) {
-		free(ptr);
-		ptr = NULL;
-	}
-}
-
-void *
-libxfs_malloc(size_t size)
-{
-	void	*ptr;
-
-	if ((ptr = calloc(1, size)) == NULL) {
-		fprintf(stderr, _("%s: calloc failed (%d bytes): %s\n"),
-			progname, (int)size, strerror(errno));
-		exit(1);
-	}
-#ifdef MEM_DEBUG
-	fprintf(stderr, "## calloc'd item %p size %d bytes\n", ptr, size);
-#endif
-	return ptr;
-}
-
-void
-libxfs_free(void *ptr)
-{
-#ifdef MEM_DEBUG
-	fprintf(stderr, "## freed item %p\n", ptr);
-#endif
-	if (ptr != NULL) {
-		free(ptr);
-		ptr = NULL;
-	}
-}
-
-void *
-libxfs_realloc(void *ptr, size_t size)
-{
-#ifdef MEM_DEBUG
-	void *optr=ptr;
-#endif
-	if ((ptr = realloc(ptr, size)) == NULL) {
-		fprintf(stderr, _("%s: realloc failed (%d bytes): %s\n"),
-			progname, (int)size, strerror(errno));
-		exit(1);
-	}
-#ifdef MEM_DEBUG
-	fprintf(stderr, "## realloc'd item %p now %p size %d bytes\n",
-		optr, ptr, size);
-#endif
-	return ptr;
-}
-
-
-/*
  * Inode cache interfaces
  */
 
-extern xfs_zone_t	*xfs_ili_zone;
-extern xfs_zone_t	*xfs_inode_zone;
+extern kmem_zone_t	*xfs_ili_zone;
+extern kmem_zone_t	*xfs_inode_zone;
 
 static unsigned int
 libxfs_ihash(cache_key_t key, unsigned int hashsize)
@@ -801,7 +696,7 @@ libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 static struct cache_node *
 libxfs_ialloc(cache_key_t key)
 {
-	return libxfs_zone_zalloc(xfs_inode_zone);
+	return kmem_zone_zalloc(xfs_inode_zone, 0);
 }
 
 static void
@@ -825,10 +720,10 @@ libxfs_irelse(struct cache_node *node)
 
 	if (ip != NULL) {
 		if (ip->i_itemp)
-			libxfs_zone_free(xfs_ili_zone, ip->i_itemp);
+			kmem_zone_free(xfs_ili_zone, ip->i_itemp);
 		ip->i_itemp = NULL;
 		libxfs_idestroy(ip);
-		libxfs_zone_free(xfs_inode_zone, ip);
+		kmem_zone_free(xfs_inode_zone, ip);
 		ip = NULL;
 	}
 }

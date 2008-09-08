@@ -30,56 +30,54 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 
 	/* check common fields */
 
-	if (INT_GET(agf->agf_magicnum, ARCH_CONVERT) != XFS_AGF_MAGIC)  {
+	if (be32_to_cpu(agf->agf_magicnum) != XFS_AGF_MAGIC)  {
 		retval = XR_AG_AGF;
 		do_warn(_("bad magic # 0x%x for agf %d\n"),
-			INT_GET(agf->agf_magicnum, ARCH_CONVERT), i);
+			be32_to_cpu(agf->agf_magicnum), i);
 
 		if (!no_modify)
-			INT_SET(agf->agf_magicnum, ARCH_CONVERT, XFS_AGF_MAGIC);
+			agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
 	}
 
-	if (!XFS_AGF_GOOD_VERSION(INT_GET(agf->agf_versionnum, ARCH_CONVERT)))  {
+	if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)))  {
 		retval = XR_AG_AGF;
 		do_warn(_("bad version # %d for agf %d\n"),
-			INT_GET(agf->agf_versionnum, ARCH_CONVERT), i);
+			be32_to_cpu(agf->agf_versionnum), i);
 
 		if (!no_modify)
-			INT_SET(agf->agf_versionnum, ARCH_CONVERT,
-				XFS_AGF_VERSION);
+			agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
 	}
 
-	if (INT_GET(agf->agf_seqno, ARCH_CONVERT) != i)  {
+	if (be32_to_cpu(agf->agf_seqno) != i)  {
 		retval = XR_AG_AGF;
 		do_warn(_("bad sequence # %d for agf %d\n"),
-			INT_GET(agf->agf_seqno, ARCH_CONVERT), i);
+			be32_to_cpu(agf->agf_seqno), i);
 
 		if (!no_modify)
-			INT_SET(agf->agf_seqno, ARCH_CONVERT, i);
+			agf->agf_seqno = cpu_to_be32(i);
 	}
 
-	if (INT_GET(agf->agf_length, ARCH_CONVERT) != mp->m_sb.sb_agblocks)  {
+	if (be32_to_cpu(agf->agf_length) != mp->m_sb.sb_agblocks)  {
 		if (i != mp->m_sb.sb_agcount - 1)  {
 			retval = XR_AG_AGF;
 			do_warn(_("bad length %d for agf %d, should be %d\n"),
-				INT_GET(agf->agf_length, ARCH_CONVERT), i,
+				be32_to_cpu(agf->agf_length), i,
 				mp->m_sb.sb_agblocks);
 			if (!no_modify)
-				INT_SET(agf->agf_length, ARCH_CONVERT,
-					mp->m_sb.sb_agblocks);
+				agf->agf_length = 
+					cpu_to_be32(mp->m_sb.sb_agblocks);
 		} else  {
 			agblocks = mp->m_sb.sb_dblocks -
 				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
 
-			if (INT_GET(agf->agf_length, ARCH_CONVERT) != agblocks)  {
+			if (be32_to_cpu(agf->agf_length) != agblocks)  {
 				retval = XR_AG_AGF;
 				do_warn(
 			_("bad length %d for agf %d, should be %llu\n"),
-					INT_GET(agf->agf_length, ARCH_CONVERT),
+					be32_to_cpu(agf->agf_length),
 						i, agblocks);
 				if (!no_modify)
-					INT_SET(agf->agf_length, ARCH_CONVERT,
-						(xfs_agblock_t) agblocks);
+					agf->agf_length = cpu_to_be32(agblocks);
 			}
 		}
 	}
@@ -88,20 +86,18 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	 * check first/last AGF fields.  if need be, lose the free
 	 * space in the AGFL, we'll reclaim it later.
 	 */
-	if (INT_GET(agf->agf_flfirst, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
+	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
 		do_warn(_("flfirst %d in agf %d too large (max = %d)\n"),
-			INT_GET(agf->agf_flfirst, ARCH_CONVERT),
-			i, XFS_AGFL_SIZE(mp));
+			be32_to_cpu(agf->agf_flfirst), i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
-			agf->agf_flfirst = 0;
+			agf->agf_flfirst = cpu_to_be32(0);
 	}
 
-	if (INT_GET(agf->agf_fllast, ARCH_CONVERT) >= XFS_AGFL_SIZE(mp))  {
+	if (be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp))  {
 		do_warn(_("fllast %d in agf %d too large (max = %d)\n"),
-			INT_GET(agf->agf_fllast, ARCH_CONVERT),
-			i, XFS_AGFL_SIZE(mp));
+			be32_to_cpu(agf->agf_fllast), i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
-			agf->agf_fllast = 0;
+			agf->agf_fllast = cpu_to_be32(0);
 	}
 
 	/* don't check freespace btrees -- will be checked by caller */
@@ -110,63 +106,61 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 }
 
 int
-verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t i)
+verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t agno)
 {
 	xfs_drfsbno_t agblocks;
 	int retval = 0;
 
 	/* check common fields */
 
-	if (INT_GET(agi->agi_magicnum, ARCH_CONVERT) != XFS_AGI_MAGIC)  {
+	if (be32_to_cpu(agi->agi_magicnum) != XFS_AGI_MAGIC)  {
 		retval = XR_AG_AGI;
 		do_warn(_("bad magic # 0x%x for agi %d\n"),
-			INT_GET(agi->agi_magicnum, ARCH_CONVERT), i);
+			be32_to_cpu(agi->agi_magicnum), agno);
 
 		if (!no_modify)
-			INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
+			agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
 	}
 
-	if (!XFS_AGI_GOOD_VERSION(INT_GET(agi->agi_versionnum, ARCH_CONVERT)))  {
+	if (!XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)))  {
 		retval = XR_AG_AGI;
 		do_warn(_("bad version # %d for agi %d\n"),
-			INT_GET(agi->agi_versionnum, ARCH_CONVERT), i);
+			be32_to_cpu(agi->agi_versionnum), agno);
 
 		if (!no_modify)
-			INT_SET(agi->agi_versionnum, ARCH_CONVERT,
-				XFS_AGI_VERSION);
+			agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
 	}
 
-	if (INT_GET(agi->agi_seqno, ARCH_CONVERT) != i)  {
+	if (be32_to_cpu(agi->agi_seqno) != agno)  {
 		retval = XR_AG_AGI;
 		do_warn(_("bad sequence # %d for agi %d\n"),
-			INT_GET(agi->agi_seqno, ARCH_CONVERT), i);
+			be32_to_cpu(agi->agi_seqno), agno);
 
 		if (!no_modify)
-			INT_SET(agi->agi_seqno, ARCH_CONVERT, i);
+			agi->agi_seqno = cpu_to_be32(agno);
 	}
 
-	if (INT_GET(agi->agi_length, ARCH_CONVERT) != mp->m_sb.sb_agblocks)  {
-		if (i != mp->m_sb.sb_agcount - 1)  {
+	if (be32_to_cpu(agi->agi_length) != mp->m_sb.sb_agblocks)  {
+		if (agno != mp->m_sb.sb_agcount - 1)  {
 			retval = XR_AG_AGI;
 			do_warn(_("bad length # %d for agi %d, should be %d\n"),
-				INT_GET(agi->agi_length, ARCH_CONVERT), i,
+				be32_to_cpu(agi->agi_length), agno,
 					mp->m_sb.sb_agblocks);
 			if (!no_modify)
-				INT_SET(agi->agi_length, ARCH_CONVERT,
-					mp->m_sb.sb_agblocks);
+				agi->agi_length = 
+					cpu_to_be32(mp->m_sb.sb_agblocks);
 		} else  {
 			agblocks = mp->m_sb.sb_dblocks -
-				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
+				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * agno;
 
-			if (INT_GET(agi->agi_length, ARCH_CONVERT) != agblocks)  {
+			if (be32_to_cpu(agi->agi_length) != agblocks)  {
 				retval = XR_AG_AGI;
 				do_warn(
 			_("bad length # %d for agi %d, should be %llu\n"),
-					INT_GET(agi->agi_length, ARCH_CONVERT),
-						i, agblocks);
+					be32_to_cpu(agi->agi_length),
+						agno, agblocks);
 				if (!no_modify)
-					INT_SET(agi->agi_length, ARCH_CONVERT,
-						(xfs_agblock_t) agblocks);
+					agi->agi_length = cpu_to_be32(agblocks);
 			}
 		}
 	}
@@ -245,16 +239,16 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 		 * work against older filesystems when the superblock
 		 * gets rev'ed again with new fields appended.
 		 */
-		if (XFS_SB_VERSION_HASMOREBITS(sb))
+		if (xfs_sb_version_hasmorebits(sb))
 			size = (__psint_t)&sb->sb_features2
 				+ sizeof(sb->sb_features2) - (__psint_t)sb;
-		else if (XFS_SB_VERSION_HASLOGV2(sb))
+		else if (xfs_sb_version_haslogv2(sb))
 			size = (__psint_t)&sb->sb_logsunit
 				+ sizeof(sb->sb_logsunit) - (__psint_t)sb;
-		else if (XFS_SB_VERSION_HASSECTOR(sb))
+		else if (xfs_sb_version_hassector(sb))
 			size = (__psint_t)&sb->sb_logsectsize
 				+ sizeof(sb->sb_logsectsize) - (__psint_t)sb;
-		else if (XFS_SB_VERSION_HASDIRV2(sb))
+		else if (xfs_sb_version_hasdirv2(sb))
 			size = (__psint_t)&sb->sb_dirblklog
 				+ sizeof(sb->sb_dirblklog) - (__psint_t)sb;
 		else
@@ -352,7 +346,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	 * written at mkfs time (and the corresponding sb version bits
 	 * are set).
 	 */
-	if (!XFS_SB_VERSION_HASSHARED(sb) && sb->sb_shared_vn != 0)  {
+	if (!xfs_sb_version_hasshared(sb) && sb->sb_shared_vn != 0)  {
 		if (!no_modify)
 			sb->sb_shared_vn = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
@@ -364,7 +358,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (!XFS_SB_VERSION_HASALIGN(sb) && sb->sb_inoalignmt != 0)  {
+	if (!xfs_sb_version_hasalign(sb) && sb->sb_inoalignmt != 0)  {
 		if (!no_modify)
 			sb->sb_inoalignmt = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
@@ -376,7 +370,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (!XFS_SB_VERSION_HASDALIGN(sb) &&
+	if (!xfs_sb_version_hasdalign(sb) &&
 	    (sb->sb_unit != 0 || sb->sb_width != 0))  {
 		if (!no_modify)
 			sb->sb_unit = sb->sb_width = 0;
@@ -389,7 +383,7 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (!XFS_SB_VERSION_HASSECTOR(sb) &&
+	if (!xfs_sb_version_hassector(sb) &&
 	    (sb->sb_sectsize != BBSIZE || sb->sb_sectlog != BBSHIFT ||
 	     sb->sb_logsectsize != 0 || sb->sb_logsectlog != 0))  {
 		if (!no_modify)  {

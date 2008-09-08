@@ -80,32 +80,28 @@ getbitval(
 	bit = bitoffs(bitoff);
 	signext = (flags & BVSIGNED) != 0;
 	z4 = ((__psint_t)p & 0xf) == 0 && bit == 0;
-	if (nbits == 64 && z4) {
-		if (signext)
-			return (__int64_t)INT_GET(*(__int64_t *)p, ARCH_CONVERT);
-		else
-			return (__int64_t)INT_GET(*(__uint64_t *)p, ARCH_CONVERT);
-	}
+	if (nbits == 64 && z4)
+		return be64_to_cpu(*(__be64 *)p);
 	z3 = ((__psint_t)p & 0x7) == 0 && bit == 0;
 	if (nbits == 32 && z3) {
 		if (signext)
-			return (__int64_t)INT_GET(*(__int32_t *)p, ARCH_CONVERT);
+			return (__s32)be32_to_cpu(*(__be32 *)p);
 		else
-			return (__int64_t)INT_GET(*(__uint32_t *)p, ARCH_CONVERT);
+			return (__u32)be32_to_cpu(*(__be32 *)p);
 	}
 	z2 = ((__psint_t)p & 0x3) == 0 && bit == 0;
 	if (nbits == 16 && z2) {
 		if (signext)
-			return (__int64_t)INT_GET(*(__int16_t *)p, ARCH_CONVERT);
+			return (__s16)be16_to_cpu(*(__be16 *)p);
 		else
-			return (__int64_t)INT_GET(*(__uint16_t *)p, ARCH_CONVERT);
+			return (__u16)be16_to_cpu(*(__be16 *)p);
 	}
 	z1 = ((__psint_t)p & 0x1) == 0 && bit == 0;
 	if (nbits == 8 && z1) {
 		if (signext)
-			return (__int64_t)INT_GET(*(__int8_t *)p, ARCH_CONVERT);
+			return *(__s8 *)p;
 		else
-			return (__int64_t)INT_GET(*(__uint8_t *)p, ARCH_CONVERT);
+			return *(__u8 *)p;
 	}
 
 

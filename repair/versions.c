@@ -32,28 +32,19 @@ update_sb_version(xfs_mount_t *mp)
 
 	sb = &mp->m_sb;
 
-	if (fs_attributes)  {
-		if (!XFS_SB_VERSION_HASATTR(sb))  {
-			ASSERT(fs_attributes_allowed);
-
-			XFS_SB_VERSION_ADDATTR(sb);
-		}
+	if (fs_attributes && !xfs_sb_version_hasattr(sb))  {
+		ASSERT(fs_attributes_allowed);
+		xfs_sb_version_addattr(sb);
 	}
 
-	if (fs_attributes2)  {
-		if (!XFS_SB_VERSION_HASATTR2(sb))  {
-			ASSERT(fs_attributes2_allowed);
-
-			XFS_SB_VERSION_ADDATTR2(sb);
-		}
+	if (fs_attributes2 && !xfs_sb_version_hasattr2(sb))  {
+		ASSERT(fs_attributes2_allowed);
+		xfs_sb_version_addattr2(sb);
 	}
 
-	if (fs_inode_nlink)  {
-		if (!XFS_SB_VERSION_HASNLINK(sb))  {
-			ASSERT(fs_inode_nlink_allowed);
-
-			XFS_SB_VERSION_ADDNLINK(sb);
-		}
+	if (fs_inode_nlink && !xfs_sb_version_hasnlink(sb))  {
+		ASSERT(fs_inode_nlink_allowed);
+		xfs_sb_version_addnlink(sb);
 	}
 
 	/*
@@ -62,10 +53,9 @@ update_sb_version(xfs_mount_t *mp)
 	 * have quotas.
 	 */
 	if (fs_quotas)  {
-		if (!XFS_SB_VERSION_HASQUOTA(sb))  {
+		if (!xfs_sb_version_hasquota(sb))  {
 			ASSERT(fs_quotas_allowed);
-
-			XFS_SB_VERSION_ADDQUOTA(sb);
+			xfs_sb_version_addquota(sb);
 		}
 
 		/*
@@ -100,25 +90,21 @@ update_sb_version(xfs_mount_t *mp)
 	} else  {
 		sb->sb_qflags = 0;
 
-		if (XFS_SB_VERSION_HASQUOTA(sb))  {
+		if (xfs_sb_version_hasquota(sb))  {
 			lost_quotas = 1;
 			vn = sb->sb_versionnum;
 			vn &= ~XFS_SB_VERSION_QUOTABIT;
 
 			if (!(vn & XFS_SB_VERSION_ALLFBITS))
-				vn = XFS_SB_VERSION_TOOLD(vn);
+				vn = xfs_sb_version_toold(vn);
 
 			ASSERT(vn != 0);
 			sb->sb_versionnum = vn;
 		}
 	}
 
-	if (!fs_aligned_inodes)  {
-		if (XFS_SB_VERSION_HASALIGN(sb))  {
-			if (XFS_SB_VERSION_NUM(sb) == XFS_SB_VERSION_4)
-				XFS_SB_VERSION_SUBALIGN(sb);
-		}
-	}
+	if (!fs_aligned_inodes && xfs_sb_version_hasalign(sb))  
+		sb->sb_versionnum &= ~XFS_SB_VERSION_ALIGNBIT;
 }
 
 /*
@@ -147,7 +133,7 @@ parse_sb_version(xfs_sb_t *sb)
 	 * ok, check to make sure that the sb isn't newer
 	 * than we are
 	 */
-	if (XFS_SB_VERSION_HASEXTFLGBIT(sb))  {
+	if (xfs_sb_version_hasextflgbit(sb))  {
 		fs_has_extflgbit = 1;
 		if (!fs_has_extflgbit_allowed)  {
 			issue_warning = 1;
@@ -156,7 +142,7 @@ parse_sb_version(xfs_sb_t *sb)
 		}
 	}
 
-	if (XFS_SB_VERSION_HASSHARED(sb))  {
+	if (xfs_sb_version_hasshared(sb))  {
 		fs_shared = 1;
 		if (!fs_shared_allowed)  {
 			issue_warning = 1;
@@ -171,7 +157,7 @@ _("This filesystem uses feature(s) not yet supported in this release.\n"
 		return(1);
 	}
 
-	if (!XFS_SB_GOOD_VERSION(sb))  {
+	if (!xfs_sb_good_version(sb))  {
 		do_warn(_("WARNING:  unknown superblock version %d\n"),
 			XFS_SB_VERSION_NUM(sb));
 		do_warn(
@@ -198,7 +184,7 @@ _("WARNING:  you have disallowed superblock-feature-bits-allowed\n"
 		}
 	}
 
-	if (XFS_SB_VERSION_HASATTR(sb))  {
+	if (xfs_sb_version_hasattr(sb))  {
 		if (!fs_attributes_allowed)  {
 			if (!no_modify)  {
 				do_warn(
@@ -216,7 +202,7 @@ _("WARNING:  you have disallowed attributes but this filesystem\n"
 		}
 	}
 
-	if (XFS_SB_VERSION_HASATTR2(sb))  {
+	if (xfs_sb_version_hasattr2(sb))  {
 		if (!fs_attributes2_allowed)  {
 			if (!no_modify)  {
 				do_warn(
@@ -234,7 +220,7 @@ _("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
 		}
 	}
 
-	if (XFS_SB_VERSION_HASNLINK(sb))  {
+	if (xfs_sb_version_hasnlink(sb))  {
 		if (!fs_inode_nlink_allowed)  {
 			if (!no_modify)  {
 				do_warn(
@@ -254,7 +240,7 @@ _("WARNING:  you have disallowed version 2 inodes but this filesystem\n"
 		}
 	}
 
-	if (XFS_SB_VERSION_HASQUOTA(sb))  {
+	if (xfs_sb_version_hasquota(sb))  {
 		if (!fs_quotas_allowed)  {
 			if (!no_modify)  {
 				do_warn(
@@ -280,7 +266,7 @@ _("WARNING:  you have disallowed quotas but this filesystem\n"
 		}
 	}
 
-	if (XFS_SB_VERSION_HASALIGN(sb))  {
+	if (xfs_sb_version_hasalign(sb))  {
 		if (fs_aligned_inodes_allowed)  {
 			fs_aligned_inodes = 1;
 			fs_ino_alignment = sb->sb_inoalignmt;

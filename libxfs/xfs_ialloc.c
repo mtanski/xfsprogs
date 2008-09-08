@@ -88,6 +88,16 @@ xfs_ialloc_log_di(
 /*
  * Allocation group level functions.
  */
+static inline int
+xfs_ialloc_cluster_alignment(
+	xfs_alloc_arg_t	*args)
+{
+	if (xfs_sb_version_hasalign(&args->mp->m_sb) &&
+	    args->mp->m_sb.sb_inoalignmt >=
+	     XFS_B_TO_FSBT(args->mp, XFS_INODE_CLUSTER_SIZE(args->mp)))
+		return args->mp->m_sb.sb_inoalignmt;
+	return 1;
+}
 
 /*
  * Allocate new inodes in the allocation group specified by agbp.
@@ -104,6 +114,7 @@ xfs_ialloc_ag_alloc(
 	int		blks_per_cluster;  /* fs blocks per inode cluster */
 	xfs_btree_cur_t	*cur;		/* inode btree cursor */
 	xfs_daddr_t	d;		/* disk addr of buffer */
+	xfs_agnumber_t	agno;
 	int		error;
 	xfs_buf_t	*fbuf;		/* new free inodes' buffer */
 	xfs_dinode_t	*free;		/* new free inode structure */
@@ -115,10 +126,9 @@ xfs_ialloc_ag_alloc(
 	int		ninodes;	/* num inodes per buf */
 	xfs_agino_t	thisino;	/* current inode number, for loop */
 	int		version;	/* inode version number to use */
-	int		isaligned;	/* inode allocation at stripe unit */
+	int		isaligned = 0;	/* inode allocation at stripe unit */
 					/* boundary */
-	xfs_dinode_core_t dic;          /* a dinode_core to copy to new */
-					/* inodes */
+	unsigned int	gen;
 
 	args.tp = tp;
 	args.mp = tp->t_mountp;
@@ -133,46 +143,84 @@ xfs_ialloc_ag_alloc(
 		return XFS_ERROR(ENOSPC);
 	args.minlen = args.maxlen = XFS_IALLOC_BLOCKS(args.mp);
 	/*
-	 * Set the alignment for the allocation.
-	 * If stripe alignment is turned on then align at stripe unit
-	 * boundary.
-	 * If the cluster size is smaller than a filesystem block
-	 * then we're doing I/O for inodes in filesystem block size pieces,
-	 * so don't need alignment anyway.
-	 */
-	isaligned = 0;
-	if (args.mp->m_sinoalign) {
-		ASSERT(!(args.mp->m_flags & XFS_MOUNT_NOALIGN));
-		args.alignment = args.mp->m_dalign;
-		isaligned = 1;
-	} else if (XFS_SB_VERSION_HASALIGN(&args.mp->m_sb) &&
-	    args.mp->m_sb.sb_inoalignmt >=
-	    XFS_B_TO_FSBT(args.mp, XFS_INODE_CLUSTER_SIZE(args.mp)))
-		args.alignment = args.mp->m_sb.sb_inoalignmt;
-	else
-		args.alignment = 1;
+	 * First try to allocate inodes contiguous with the last-allocated
+	 * chunk of inodes.  If the filesystem is striped, this will fill
+	 * an entire stripe unit with inodes.
+ 	 */
 	agi = XFS_BUF_TO_AGI(agbp);
-	/*
-	 * Need to figure out where to allocate the inode blocks.
-	 * Ideally they should be spaced out through the a.g.
-	 * For now, just allocate blocks up front.
-	 */
-	args.agbno = be32_to_cpu(agi->agi_root);
-	args.fsbno = XFS_AGB_TO_FSB(args.mp, be32_to_cpu(agi->agi_seqno),
-				    args.agbno);
-	/*
-	 * Allocate a fixed-size extent of inodes.
-	 */
-	args.type = XFS_ALLOCTYPE_NEAR_BNO;
-	args.mod = args.total = args.wasdel = args.isfl = args.userdata =
-		args.minalignslop = 0;
-	args.prod = 1;
-	/*
-	 * Allow space for the inode btree to split.
-	 */
-	args.minleft = XFS_IN_MAXLEVELS(args.mp) - 1;
-	if ((error = xfs_alloc_vextent(&args)))
-		return error;
+	newino = be32_to_cpu(agi->agi_newino);
+	args.agbno = XFS_AGINO_TO_AGBNO(args.mp, newino) +
+			XFS_IALLOC_BLOCKS(args.mp);
+	if (likely(newino != NULLAGINO &&
+		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
+		args.fsbno = XFS_AGB_TO_FSB(args.mp,
+				be32_to_cpu(agi->agi_seqno), args.agbno);
+		args.type = XFS_ALLOCTYPE_THIS_BNO;
+		args.mod = args.total = args.wasdel = args.isfl =
+			args.userdata = args.minalignslop = 0;
+		args.prod = 1;
+
+		/*
+		 * We need to take into account alignment here to ensure that
+		 * we don't modify the free list if we fail to have an exact
+		 * block. If we don't have an exact match, and every oher
+		 * attempt allocation attempt fails, we'll end up cancelling
+		 * a dirty transaction and shutting down.
+		 *
+		 * For an exact allocation, alignment must be 1,
+		 * however we need to take cluster alignment into account when
+		 * fixing up the freelist. Use the minalignslop field to
+		 * indicate that extra blocks might be required for alignment,
+		 * but not to use them in the actual exact allocation.
+		 */
+		args.alignment = 1;
+		args.minalignslop = xfs_ialloc_cluster_alignment(&args) - 1;
+
+		/* Allow space for the inode btree to split. */
+		args.minleft = XFS_IN_MAXLEVELS(args.mp) - 1;
+		if ((error = xfs_alloc_vextent(&args)))
+			return error;
+	} else
+		args.fsbno = NULLFSBLOCK;
+
+	if (unlikely(args.fsbno == NULLFSBLOCK)) {
+		/*
+		 * Set the alignment for the allocation.
+		 * If stripe alignment is turned on then align at stripe unit
+		 * boundary.
+		 * If the cluster size is smaller than a filesystem block
+		 * then we're doing I/O for inodes in filesystem block size
+		 * pieces, so don't need alignment anyway.
+		 */
+		isaligned = 0;
+		if (args.mp->m_sinoalign) {
+			ASSERT(!(args.mp->m_flags & XFS_MOUNT_NOALIGN));
+			args.alignment = args.mp->m_dalign;
+			isaligned = 1;
+		} else
+			args.alignment = xfs_ialloc_cluster_alignment(&args);
+		/*
+		 * Need to figure out where to allocate the inode blocks.
+		 * Ideally they should be spaced out through the a.g.
+		 * For now, just allocate blocks up front.
+		 */
+		args.agbno = be32_to_cpu(agi->agi_root);
+		args.fsbno = XFS_AGB_TO_FSB(args.mp,
+				be32_to_cpu(agi->agi_seqno), args.agbno);
+		/*
+		 * Allocate a fixed-size extent of inodes.
+		 */
+		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+		args.mod = args.total = args.wasdel = args.isfl =
+			args.userdata = args.minalignslop = 0;
+		args.prod = 1;
+		/*
+		 * Allow space for the inode btree to split.
+		 */
+		args.minleft = XFS_IN_MAXLEVELS(args.mp) - 1;
+		if ((error = xfs_alloc_vextent(&args)))
+			return error;
+	}
 
 	/*
 	 * If stripe alignment is turned on, then try again with cluster
@@ -183,12 +231,7 @@ xfs_ialloc_ag_alloc(
 		args.agbno = be32_to_cpu(agi->agi_root);
 		args.fsbno = XFS_AGB_TO_FSB(args.mp,
 				be32_to_cpu(agi->agi_seqno), args.agbno);
-		if (XFS_SB_VERSION_HASALIGN(&args.mp->m_sb) &&
-			args.mp->m_sb.sb_inoalignmt >=
-			XFS_B_TO_FSBT(args.mp, XFS_INODE_CLUSTER_SIZE(args.mp)))
-				args.alignment = args.mp->m_sb.sb_inoalignmt;
-		else
-			args.alignment = 1;
+		args.alignment = xfs_ialloc_cluster_alignment(&args);
 		if ((error = xfs_alloc_vextent(&args)))
 			return error;
 	}
@@ -224,15 +267,19 @@ xfs_ialloc_ag_alloc(
 	 * use the old version so that old kernels will continue to be
 	 * able to use the file system.
 	 */
-	if (XFS_SB_VERSION_HASNLINK(&args.mp->m_sb))
+	if (xfs_sb_version_hasnlink(&args.mp->m_sb))
 		version = XFS_DINODE_VERSION_2;
 	else
 		version = XFS_DINODE_VERSION_1;
 
-	memset(&dic, 0, sizeof(xfs_dinode_core_t));
-	INT_SET(dic.di_magic, ARCH_CONVERT, XFS_DINODE_MAGIC);
-	INT_SET(dic.di_version, ARCH_CONVERT, version);
-
+	/*
+	 * Seed the new inode cluster with a random generation number. This
+	 * prevents short-term reuse of generation numbers if a chunk is
+	 * freed and then immediately reallocated. We use random numbers
+	 * rather than a linear progression to prevent the next generation
+	 * number from being easily guessable.
+	 */
+	gen = random32();
 	for (j = 0; j < nbufs; j++) {
 		/*
 		 * Get the block.
@@ -245,29 +292,31 @@ xfs_ialloc_ag_alloc(
 		ASSERT(fbuf);
 		ASSERT(!XFS_BUF_GETERROR(fbuf));
 		/*
-		 * Loop over the inodes in this buffer.
+		 * Set initial values for the inodes in this buffer.
 		 */
-
+		xfs_biozero(fbuf, 0, ninodes << args.mp->m_sb.sb_inodelog);
 		for (i = 0; i < ninodes; i++) {
 			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
-			memcpy(&(free->di_core), &dic, sizeof(xfs_dinode_core_t));
-			INT_SET(free->di_next_unlinked, ARCH_CONVERT, NULLAGINO);
+			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+			free->di_core.di_version = version;
+			free->di_core.di_gen = cpu_to_be32(gen);
+			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
 			xfs_ialloc_log_di(tp, fbuf, i,
 				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
 		}
 		xfs_trans_inode_alloc_buf(tp, fbuf);
 	}
-	be32_add(&agi->agi_count, newlen);
-	be32_add(&agi->agi_freecount, newlen);
+	be32_add_cpu(&agi->agi_count, newlen);
+	be32_add_cpu(&agi->agi_freecount, newlen);
+	agno = be32_to_cpu(agi->agi_seqno);
 	down_read(&args.mp->m_peraglock);
-	args.mp->m_perag[be32_to_cpu(agi->agi_seqno)].pagi_freecount += newlen;
+	args.mp->m_perag[agno].pagi_freecount += newlen;
 	up_read(&args.mp->m_peraglock);
 	agi->agi_newino = cpu_to_be32(newino);
 	/*
 	 * Insert records describing the new inode chunk into the btree.
 	 */
-	cur = xfs_btree_init_cursor(args.mp, tp, agbp,
-			be32_to_cpu(agi->agi_seqno),
+	cur = xfs_btree_init_cursor(args.mp, tp, agbp, agno,
 			XFS_BTNUM_INO, (xfs_inode_t *)0, 0);
 	for (thisino = newino;
 	     thisino < newino + newlen;
@@ -299,7 +348,7 @@ xfs_ialloc_ag_alloc(
 	return 0;
 }
 
-STATIC __inline xfs_agnumber_t
+STATIC_INLINE xfs_agnumber_t
 xfs_ialloc_next_ag(
 	xfs_mount_t	*mp)
 {
@@ -415,7 +464,7 @@ nextag:
 		 */
 		if (XFS_FORCED_SHUTDOWN(mp)) {
 			up_read(&mp->m_peraglock);
-			return (xfs_buf_t *)0;
+			return NULL;
 		}
 		agno++;
 		if (agno >= agcount)
@@ -423,7 +472,7 @@ nextag:
 		if (agno == pagno) {
 			if (flags == 0) {
 				up_read(&mp->m_peraglock);
-				return (xfs_buf_t *)0;
+				return NULL;
 			}
 			flags = 0;
 		}
@@ -486,10 +535,10 @@ xfs_dialloc(
 	int		offset;		/* index of inode in chunk */
 	xfs_agino_t	pagino;		/* parent's a.g. relative inode # */
 	xfs_agnumber_t	pagno;		/* parent's allocation group number */
-	xfs_inobt_rec_t	rec;		/* inode allocation record */
+	xfs_inobt_rec_incore_t rec;	/* inode allocation record */
 	xfs_agnumber_t	tagno;		/* testing allocation group number */
 	xfs_btree_cur_t	*tcur;		/* temp cursor */
-	xfs_inobt_rec_t	trec;		/* temp inode allocation record */
+	xfs_inobt_rec_incore_t trec;	/* temp inode allocation record */
 
 
 	if (*IO_agbp == NULL) {
@@ -841,7 +890,7 @@ nextag:
 	if ((error = xfs_inobt_update(cur, rec.ir_startino, rec.ir_freecount,
 			rec.ir_free)))
 		goto error0;
-	be32_add(&agi->agi_freecount, -1);
+	be32_add_cpu(&agi->agi_freecount, -1);
 	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
 	down_read(&mp->m_peraglock);
 	mp->m_perag[tagno].pagi_freecount--;
@@ -917,6 +966,9 @@ xfs_dilocate(
 	if (agno >= mp->m_sb.sb_agcount || agbno >= mp->m_sb.sb_agblocks ||
 	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
 #ifdef DEBUG
+		/* no diagnostics for bulkstat, ino comes from userspace */
+		if (flags & XFS_IMAP_BULKSTAT)
+			return XFS_ERROR(EINVAL);
 		if (agno >= mp->m_sb.sb_agcount) {
 			xfs_fs_cmn_err(CE_ALERT, mp,
 					"xfs_dilocate: agno (%d) >= "
@@ -937,6 +989,7 @@ xfs_dilocate(
 					"(0x%llx)",
 					ino, XFS_AGINO_TO_INO(mp, agno, agino));
 		}
+		xfs_stack_trace();
 #endif /* DEBUG */
 		return XFS_ERROR(EINVAL);
 	}
@@ -1136,7 +1189,6 @@ xfs_ialloc_read_agi(
 		 * we are in the middle of a forced shutdown.
 		 */
 		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
-			pag->pagi_count == be32_to_cpu(agi->agi_count) ||
 			XFS_FORCED_SHUTDOWN(mp));
 	}
 
@@ -1166,7 +1218,8 @@ xfs_ialloc_pagi_init(
 	xfs_buf_t	*bp = NULL;
 	int		error;
 
-	if ((error = xfs_ialloc_read_agi(mp, tp, agno, &bp)))
+	error = xfs_ialloc_read_agi(mp, tp, agno, &bp);
+	if (error)
 		return error;
 	if (bp)
 		xfs_trans_brelse(tp, bp);

@@ -49,6 +49,18 @@ typedef struct xfs_acl {
 	xfs_acl_entry_t	acl_entry[XFS_ACL_MAX_ENTRIES];
 } xfs_acl_t;
 
+typedef struct xfs_acl_entry_disk {
+	__be32		ae_tag;
+	__be32		ae_id;
+	__be16		ae_perm;
+} xfs_acl_entry_disk_t;
+
+typedef struct xfs_acl_disk {
+	__be32		acl_cnt;
+	xfs_acl_entry_disk_t	acl_entry[XFS_ACL_MAX_ENTRIES];
+} xfs_acl_disk_t;
+
+
 #define SGI_ACL_FILE	"SGI_ACL_FILE"
 #define SGI_ACL_DEFAULT	"SGI_ACL_DEFAULT"
 #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)

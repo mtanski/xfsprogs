@@ -107,7 +107,7 @@ quot_bulkstat_add(
 		for (dp = *hp; dp; dp = dp->next)
 			if (dp->id == id)
 				break;
-		if (dp == 0) {
+		if (dp == NULL) {
 			if (ndu[i] >= NDU)
 				return;
 			dp = &du[i][(ndu[i]++)];
@@ -153,7 +153,7 @@ quot_bulkstat_mount(
 	overflow = 0;
 	for (i = 0; i < 3; i++)
 		for (dp = duhash[i]; dp < &duhash[i][DUHASH]; dp++)
-			*dp = 0;
+			*dp = NULL;
 	ndu[0] = ndu[1] = ndu[2] = 0;
 
 	fsfd = open(fsdir, O_RDONLY);
@@ -275,7 +275,7 @@ quot_report(
 	fs_cursor_t	cursor;
 	fs_path_t	*mount;
 
-	now = time(0);
+	now = time(NULL);
 	fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 	while ((mount = fs_cursor_next_entry(&cursor))) {
 		quot_bulkstat_mount(mount->fs_dir, flags);

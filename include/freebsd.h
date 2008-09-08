@@ -31,9 +31,6 @@
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#define __swab16(x)	__bswap16(x)
-#define __swab32(x)	__bswap32(x)
-#define __swab64(x)	__bswap64(x)
 
 /* FreeBSD file API is 64-bit aware */
 #define fstat64		fstat

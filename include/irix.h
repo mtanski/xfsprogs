@@ -164,16 +164,9 @@ typedef struct xfs_efd_log_format_32 {
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#define __swab16(x)	(x)
-#define __swab32(x)	(x)
-#define __swab64(x)	(x)
 
 /* Map some gcc macros for the MipsPRO compiler */
 #ifndef __GNUC__
-#define INT_SWAP16(type,var)	(var)
-#define INT_SWAP32(type,var)	(var)
-#define INT_SWAP64(type,var)	(var)
-#define HAVE_SWABMACROS		1 /* no typeof available */
 #define __builtin_constant_p(x)	(0)
 #define __FUNCTION__	"XFS"
 #define __sgi__		__sgi

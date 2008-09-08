@@ -567,7 +567,7 @@ zero_old_xfs_structures(
 		free(buf);
 		return;
 	}
-	libxfs_xlate_sb(buf, &sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(&sb, buf);
 
 	/*
 	 * perform same basic superblock validation to make sure we
@@ -1258,7 +1258,7 @@ main(
 			break;
 		case 'p':
 			if (protofile)
-				respec('p', 0, 0);
+				respec('p', NULL, 0);
 			protofile = optarg;
 			break;
 		case 'q':
@@ -2121,7 +2121,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	/* OK, now write the superblock */
 	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
-	libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
+	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 	/*
@@ -2173,7 +2173,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1));
 		memset(XFS_BUF_PTR(buf), 0, sectorsize);
-		libxfs_xlate_sb(XFS_BUF_PTR(buf), sbp, -1, XFS_SB_ALL_BITS);
+		libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2186,25 +2186,23 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		memset(agf, 0, sectorsize);
 		if (agno == agcount - 1)
 			agsize = dblocks - (xfs_drfsbno_t)(agno * agsize);
-		INT_SET(agf->agf_magicnum, ARCH_CONVERT, XFS_AGF_MAGIC);
-		INT_SET(agf->agf_versionnum, ARCH_CONVERT, XFS_AGF_VERSION);
-		INT_SET(agf->agf_seqno, ARCH_CONVERT, agno);
-		INT_SET(agf->agf_length, ARCH_CONVERT, (xfs_agblock_t)agsize);
-		INT_SET(agf->agf_roots[XFS_BTNUM_BNOi], ARCH_CONVERT,
-				XFS_BNO_BLOCK(mp));
-		INT_SET(agf->agf_roots[XFS_BTNUM_CNTi], ARCH_CONVERT,
-				XFS_CNT_BLOCK(mp));
-		INT_SET(agf->agf_levels[XFS_BTNUM_BNOi], ARCH_CONVERT, 1);
-		INT_SET(agf->agf_levels[XFS_BTNUM_CNTi], ARCH_CONVERT, 1);
-		INT_SET(agf->agf_flfirst, ARCH_CONVERT, 0);
-		INT_SET(agf->agf_fllast, ARCH_CONVERT, XFS_AGFL_SIZE(mp) - 1);
-		INT_SET(agf->agf_flcount, ARCH_CONVERT, 0);
+		agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+		agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+		agf->agf_seqno = cpu_to_be32(agno);
+		agf->agf_length = cpu_to_be32(agsize);
+		agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+		agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+		agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+		agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+		agf->agf_flfirst = 0;
+		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+		agf->agf_flcount = 0;
 		nbmblocks = (xfs_extlen_t)(agsize - XFS_PREALLOC_BLOCKS(mp));
-		INT_SET(agf->agf_freeblks, ARCH_CONVERT, nbmblocks);
-		INT_SET(agf->agf_longest, ARCH_CONVERT, nbmblocks);
+		agf->agf_freeblks = cpu_to_be32(nbmblocks);
+		agf->agf_longest = cpu_to_be32(nbmblocks);
 		if (loginternal && agno == logagno) {
-			INT_MOD(agf->agf_freeblks, ARCH_CONVERT, -logblocks);
-			INT_SET(agf->agf_longest, ARCH_CONVERT, agsize -
+			be32_add_cpu(&agf->agf_freeblks, -logblocks);
+			agf->agf_longest = cpu_to_be32(agsize -
 				XFS_FSB_TO_AGBNO(mp, logstart) - logblocks);
 		}
 		if (XFS_MIN_FREELIST(agf, mp) > worst_freelist)
@@ -2219,18 +2217,18 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_FSS_TO_BB(mp, 1));
 		agi = XFS_BUF_TO_AGI(buf);
 		memset(agi, 0, sectorsize);
-		INT_SET(agi->agi_magicnum, ARCH_CONVERT, XFS_AGI_MAGIC);
-		INT_SET(agi->agi_versionnum, ARCH_CONVERT, XFS_AGI_VERSION);
-		INT_SET(agi->agi_seqno, ARCH_CONVERT, agno);
-		INT_SET(agi->agi_length, ARCH_CONVERT, (xfs_agblock_t)agsize);
-		INT_SET(agi->agi_count, ARCH_CONVERT, 0);
-		INT_SET(agi->agi_root, ARCH_CONVERT, XFS_IBT_BLOCK(mp));
-		INT_SET(agi->agi_level, ARCH_CONVERT, 1);
-		INT_SET(agi->agi_freecount, ARCH_CONVERT, 0);
-		INT_SET(agi->agi_newino, ARCH_CONVERT, NULLAGINO);
-		INT_SET(agi->agi_dirino, ARCH_CONVERT, NULLAGINO);
+		agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+		agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+		agi->agi_seqno = cpu_to_be32(agno);
+		agi->agi_length = cpu_to_be32((xfs_agblock_t)agsize);
+		agi->agi_count = 0;
+		agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+		agi->agi_level = cpu_to_be32(1);
+		agi->agi_freecount = 0;
+		agi->agi_newino = cpu_to_be32(NULLAGINO);
+		agi->agi_dirino = cpu_to_be32(NULLAGINO);
 		for (c = 0; c < XFS_AGI_UNLINKED_BUCKETS; c++)
-			INT_SET(agi->agi_unlinked[c], ARCH_CONVERT, NULLAGINO);
+			agi->agi_unlinked[c] = cpu_to_be32(NULLAGINO);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2241,46 +2239,39 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
 		memset(block, 0, blocksize);
-		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_ABTB_MAGIC);
-		INT_SET(block->bb_level, ARCH_CONVERT, 0);
-		INT_SET(block->bb_numrecs, ARCH_CONVERT, 1);
-		INT_SET(block->bb_leftsib, ARCH_CONVERT, NULLAGBLOCK);
-		INT_SET(block->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
-		arec = XFS_BTREE_REC_ADDR(blocksize, xfs_alloc, block, 1,
-			XFS_BTREE_BLOCK_MAXRECS(blocksize, xfs_alloc, 1));
-		INT_SET(arec->ar_startblock, ARCH_CONVERT,
-			XFS_PREALLOC_BLOCKS(mp));
+		block->bb_magic = cpu_to_be32(XFS_ABTB_MAGIC);
+		block->bb_level = 0;
+		block->bb_numrecs = cpu_to_be16(1);
+		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+		arec = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
 		if (loginternal && agno == logagno) {
 			if (lalign) {
 				/*
 				 * Have to insert two records
 				 * Insert pad record for stripe align of log
 				 */
-				INT_SET(arec->ar_blockcount, ARCH_CONVERT,
-					(xfs_extlen_t)(XFS_FSB_TO_AGBNO(
-						mp, logstart)
-				  	- (INT_GET(arec->ar_startblock,
-						ARCH_CONVERT))));
+				arec->ar_blockcount = cpu_to_be32(
+					XFS_FSB_TO_AGBNO(mp, logstart) -
+					be32_to_cpu(arec->ar_startblock));
 				nrec = arec + 1;
 				/*
 				 * Insert record at start of internal log
 				 */
-				INT_SET(nrec->ar_startblock, ARCH_CONVERT,
-					INT_GET(arec->ar_startblock,
-						ARCH_CONVERT) +
-					INT_GET(arec->ar_blockcount,
-						ARCH_CONVERT));
+				nrec->ar_startblock = cpu_to_be32(
+					be32_to_cpu(arec->ar_startblock) +
+					be32_to_cpu(arec->ar_blockcount));
 				arec = nrec;
-				INT_MOD(block->bb_numrecs, ARCH_CONVERT, 1);
+				be16_add_cpu(&block->bb_numrecs, 1);
 			}
 			/*
 			 * Change record start to after the internal log
 			 */
-			INT_MOD(arec->ar_startblock, ARCH_CONVERT, logblocks);
+			be32_add_cpu(&arec->ar_startblock, logblocks);
 		}
-		INT_SET(arec->ar_blockcount, ARCH_CONVERT,
-			(xfs_extlen_t)(agsize -
-				INT_GET(arec->ar_startblock, ARCH_CONVERT)));
+		arec->ar_blockcount = cpu_to_be32(agsize - 
+					be32_to_cpu(arec->ar_startblock));
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2291,33 +2282,29 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
 		memset(block, 0, blocksize);
-		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_ABTC_MAGIC);
-		INT_SET(block->bb_level, ARCH_CONVERT, 0);
-		INT_SET(block->bb_numrecs, ARCH_CONVERT, 1);
-		INT_SET(block->bb_leftsib, ARCH_CONVERT, NULLAGBLOCK);
-		INT_SET(block->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
-		arec = XFS_BTREE_REC_ADDR(blocksize, xfs_alloc, block, 1,
-			XFS_BTREE_BLOCK_MAXRECS(blocksize, xfs_alloc, 1));
-		INT_SET(arec->ar_startblock, ARCH_CONVERT,
-			XFS_PREALLOC_BLOCKS(mp));
+		block->bb_magic = cpu_to_be32(XFS_ABTC_MAGIC);
+		block->bb_level = 0;
+		block->bb_numrecs = cpu_to_be16(1);
+		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+		arec = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
 		if (loginternal && agno == logagno) {
 			if (lalign) {
-				INT_SET(arec->ar_blockcount, ARCH_CONVERT,
-				    (xfs_extlen_t)( XFS_FSB_TO_AGBNO(
-					mp, logstart) - (INT_GET(
-					arec->ar_startblock, ARCH_CONVERT)) )
-				);
+				arec->ar_blockcount = cpu_to_be32(
+					XFS_FSB_TO_AGBNO(mp, logstart) -
+					be32_to_cpu(arec->ar_startblock));
 				nrec = arec + 1;
-				INT_SET(nrec->ar_startblock, ARCH_CONVERT,
-				    INT_GET(arec->ar_startblock, ARCH_CONVERT) +
-				    INT_GET(arec->ar_blockcount, ARCH_CONVERT));
+				nrec->ar_startblock = cpu_to_be32(
+					be32_to_cpu(arec->ar_startblock) +
+					be32_to_cpu(arec->ar_blockcount));
 				arec = nrec;
-				INT_MOD(block->bb_numrecs, ARCH_CONVERT, 1);
+				be16_add_cpu(&block->bb_numrecs, 1);
 			}
-			INT_MOD(arec->ar_startblock, ARCH_CONVERT, logblocks);
+			be32_add_cpu(&arec->ar_startblock, logblocks);
 		}
-		INT_SET(arec->ar_blockcount, ARCH_CONVERT, (xfs_extlen_t)
-			(agsize - INT_GET(arec->ar_startblock, ARCH_CONVERT)));
+		arec->ar_blockcount = cpu_to_be32(agsize - 
+					be32_to_cpu(arec->ar_startblock));
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2328,11 +2315,11 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				bsize);
 		block = XFS_BUF_TO_SBLOCK(buf);
 		memset(block, 0, blocksize);
-		INT_SET(block->bb_magic, ARCH_CONVERT, XFS_IBT_MAGIC);
-		INT_SET(block->bb_level, ARCH_CONVERT, 0);
-		INT_SET(block->bb_numrecs, ARCH_CONVERT, 0);
-		INT_SET(block->bb_leftsib, ARCH_CONVERT, NULLAGBLOCK);
-		INT_SET(block->bb_rightsib, ARCH_CONVERT, NULLAGBLOCK);
+		block->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
+		block->bb_level = 0;
+		block->bb_numrecs = 0;
+		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 
@@ -2370,7 +2357,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		if ((c = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
 			res_failed(c);
 		libxfs_alloc_fix_freelist(&args, 0);
-		libxfs_trans_commit(tp, 0, NULL);
+		libxfs_trans_commit(tp, 0);
 	}
 
 	/*
@@ -2401,8 +2388,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 					XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1),
 				LIBXFS_EXIT_ON_FAILURE);
-		INT_SET((XFS_BUF_TO_SBP(buf))->sb_rootino,
-				ARCH_CONVERT, mp->m_sb.sb_rootino);
+		XFS_BUF_TO_SBP(buf)->sb_rootino = cpu_to_be64(
+							mp->m_sb.sb_rootino);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		/*
 		 * and one in the middle for luck
@@ -2413,8 +2400,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 					XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1),
 				LIBXFS_EXIT_ON_FAILURE);
-			INT_SET((XFS_BUF_TO_SBP(buf))->sb_rootino,
-				ARCH_CONVERT, mp->m_sb.sb_rootino);
+			XFS_BUF_TO_SBP(buf)->sb_rootino = cpu_to_be64(
+							mp->m_sb.sb_rootino);
 			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 		}
 	}

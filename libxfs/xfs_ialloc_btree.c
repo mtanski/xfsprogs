@@ -15,12 +15,18 @@
  * along with this program; if not, write the Free Software Foundation,
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-/*
- * Inode allocation management for XFS.
- */
-
 #include <xfs.h>
+
+STATIC void xfs_inobt_log_block(xfs_trans_t *, xfs_buf_t *, int);
+STATIC void xfs_inobt_log_keys(xfs_btree_cur_t *, xfs_buf_t *, int, int);
+STATIC void xfs_inobt_log_ptrs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
+STATIC void xfs_inobt_log_recs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
+STATIC int xfs_inobt_lshift(xfs_btree_cur_t *, int, int *);
+STATIC int xfs_inobt_newroot(xfs_btree_cur_t *, int *);
+STATIC int xfs_inobt_rshift(xfs_btree_cur_t *, int, int *);
+STATIC int xfs_inobt_split(xfs_btree_cur_t *, int, xfs_agblock_t *,
+		xfs_inobt_key_t *, xfs_btree_cur_t **, int *);
+STATIC int xfs_inobt_updkey(xfs_btree_cur_t *, xfs_inobt_key_t *, int);
 
 /*
  * Insert one record/level.  Return information to the caller
@@ -71,7 +77,7 @@ xfs_inobt_insrec(
 	/*
 	 * Make a key out of the record data to be inserted, and save it.
 	 */
-	key.ir_startino = recp->ir_startino; /* INT_: direct copy */
+	key.ir_startino = recp->ir_startino;
 	optr = ptr = cur->bc_ptrs[level];
 	/*
 	 * If we're off the left edge, return failure.
@@ -103,7 +109,7 @@ xfs_inobt_insrec(
 	}
 #endif
 	nbno = NULLAGBLOCK;
-	ncur = (xfs_btree_cur_t *)0;
+	ncur = NULL;
 	/*
 	 * If the block is full, we can't insert the new entry until we
 	 * make the block un-full.
@@ -144,7 +150,7 @@ xfs_inobt_insrec(
 						return error;
 #endif
 					ptr = cur->bc_ptrs[level];
-					nrec.ir_startino = nkey.ir_startino; /* INT_: direct copy */
+					nrec.ir_startino = nkey.ir_startino;
 				} else {
 					/*
 					 * Otherwise the insert fails.
@@ -184,7 +190,7 @@ xfs_inobt_insrec(
 		if ((error = xfs_btree_check_sptr(cur, *bnop, level)))
 			return error;
 #endif
-		kp[ptr - 1] = key; /* INT_: struct copy */
+		kp[ptr - 1] = key;
 		pp[ptr - 1] = cpu_to_be32(*bnop);
 		numrecs++;
 		block->bb_numrecs = cpu_to_be16(numrecs);
@@ -201,7 +207,7 @@ xfs_inobt_insrec(
 		 * Now stuff the new record in, bump numrecs
 		 * and log the new data.
 		 */
-		rp[ptr - 1] = *recp; /* INT_: struct copy */
+		rp[ptr - 1] = *recp;
 		numrecs++;
 		block->bb_numrecs = cpu_to_be16(numrecs);
 		xfs_inobt_log_recs(cur, bp, ptr, numrecs);
@@ -234,7 +240,7 @@ xfs_inobt_insrec(
 	 */
 	*bnop = nbno;
 	if (nbno != NULLAGBLOCK) {
-		*recp = nrec; /* INT_: struct copy */
+		*recp = nrec;
 		*curp = ncur;
 	}
 	*stat = 1;
@@ -357,7 +363,7 @@ xfs_inobt_lookup(
 	{
 		xfs_agi_t	*agi;	/* a.g. inode header */
 
-		agi = XFS_BUF_TO_AGI(cur->bc_private.i.agbp);
+		agi = XFS_BUF_TO_AGI(cur->bc_private.a.agbp);
 		agno = be32_to_cpu(agi->agi_seqno);
 		agbno = be32_to_cpu(agi->agi_root);
 	}
@@ -381,7 +387,7 @@ xfs_inobt_lookup(
 		 */
 		bp = cur->bc_bufs[level];
 		if (bp && XFS_BUF_ADDR(bp) != d)
-			bp = (xfs_buf_t *)0;
+			bp = NULL;
 		if (!bp) {
 			/*
 			 * Need to get a new buffer.  Read it, then
@@ -453,12 +459,12 @@ xfs_inobt_lookup(
 					xfs_inobt_key_t	*kkp;
 
 					kkp = kkbase + keyno - 1;
-					startino = INT_GET(kkp->ir_startino, ARCH_CONVERT);
+					startino = be32_to_cpu(kkp->ir_startino);
 				} else {
 					xfs_inobt_rec_t	*krp;
 
 					krp = krbase + keyno - 1;
-					startino = INT_GET(krp->ir_startino, ARCH_CONVERT);
+					startino = be32_to_cpu(krp->ir_startino);
 				}
 				/*
 				 * Compute difference to get next direction.
@@ -592,7 +598,7 @@ xfs_inobt_lshift(
 	 * Set up the left neighbor as "left".
 	 */
 	if ((error = xfs_btree_read_bufs(cur->bc_mp, cur->bc_tp,
-			cur->bc_private.i.agno, be32_to_cpu(right->bb_leftsib),
+			cur->bc_private.a.agno, be32_to_cpu(right->bb_leftsib),
 			0, &lbp, XFS_INO_BTREE_REF)))
 		return error;
 	left = XFS_BUF_TO_INOBT_BLOCK(lbp);
@@ -620,7 +626,7 @@ xfs_inobt_lshift(
 		if ((error = xfs_btree_check_sptr(cur, be32_to_cpu(*rpp), level)))
 			return error;
 #endif
-		*lpp = *rpp; /* INT_: no-change copy */
+		*lpp = *rpp;
 		xfs_inobt_log_ptrs(cur, lbp, nrec, nrec);
 	}
 	/*
@@ -635,7 +641,7 @@ xfs_inobt_lshift(
 	/*
 	 * Bump and log left's numrecs, decrement and log right's numrecs.
 	 */
-	be16_add(&left->bb_numrecs, 1);
+	be16_add_cpu(&left->bb_numrecs, 1);
 	xfs_inobt_log_block(cur->bc_tp, lbp, XFS_BB_NUMRECS);
 #ifdef DEBUG
 	if (level > 0)
@@ -643,7 +649,7 @@ xfs_inobt_lshift(
 	else
 		xfs_btree_check_rec(cur->bc_btnum, lrp - 1, lrp);
 #endif
-	be16_add(&right->bb_numrecs, -1);
+	be16_add_cpu(&right->bb_numrecs, -1);
 	xfs_inobt_log_block(cur->bc_tp, rbp, XFS_BB_NUMRECS);
 	/*
 	 * Slide the contents of right down one entry.
@@ -663,7 +669,7 @@ xfs_inobt_lshift(
 	} else {
 		memmove(rrp, rrp + 1, be16_to_cpu(right->bb_numrecs) * sizeof(*rrp));
 		xfs_inobt_log_recs(cur, rbp, 1, be16_to_cpu(right->bb_numrecs));
-		key.ir_startino = rrp->ir_startino; /* INT_: direct copy */
+		key.ir_startino = rrp->ir_startino;
 		rkp = &key;
 	}
 	/*
@@ -710,10 +716,10 @@ xfs_inobt_newroot(
 	/*
 	 * Get a block & a buffer.
 	 */
-	agi = XFS_BUF_TO_AGI(cur->bc_private.i.agbp);
+	agi = XFS_BUF_TO_AGI(cur->bc_private.a.agbp);
 	args.tp = cur->bc_tp;
 	args.mp = cur->bc_mp;
-	args.fsbno = XFS_AGB_TO_FSB(args.mp, cur->bc_private.i.agno,
+	args.fsbno = XFS_AGB_TO_FSB(args.mp, cur->bc_private.a.agno,
 		be32_to_cpu(agi->agi_root));
 	args.mod = args.minleft = args.alignment = args.total = args.wasdel =
 		args.isfl = args.userdata = args.minalignslop = 0;
@@ -735,8 +741,8 @@ xfs_inobt_newroot(
 	 * Set the root data in the a.g. inode structure.
 	 */
 	agi->agi_root = cpu_to_be32(args.agbno);
-	be32_add(&agi->agi_level, 1);
-	xfs_ialloc_log_agi(args.tp, cur->bc_private.i.agbp,
+	be32_add_cpu(&agi->agi_level, 1);
+	xfs_ialloc_log_agi(args.tp, cur->bc_private.a.agbp,
 		XFS_AGI_ROOT | XFS_AGI_LEVEL);
 	/*
 	 * At the previous root level there are now two blocks: the old
@@ -800,13 +806,13 @@ xfs_inobt_newroot(
 	 */
 	kp = XFS_INOBT_KEY_ADDR(new, 1, cur);
 	if (be16_to_cpu(left->bb_level) > 0) {
-		kp[0] = *XFS_INOBT_KEY_ADDR(left, 1, cur); /* INT_: struct copy */
-		kp[1] = *XFS_INOBT_KEY_ADDR(right, 1, cur); /* INT_: struct copy */
+		kp[0] = *XFS_INOBT_KEY_ADDR(left, 1, cur);
+		kp[1] = *XFS_INOBT_KEY_ADDR(right, 1, cur);
 	} else {
 		rp = XFS_INOBT_REC_ADDR(left, 1, cur);
-		INT_COPY(kp[0].ir_startino, rp->ir_startino, ARCH_CONVERT);
+		kp[0].ir_startino = rp->ir_startino;
 		rp = XFS_INOBT_REC_ADDR(right, 1, cur);
-		INT_COPY(kp[1].ir_startino, rp->ir_startino, ARCH_CONVERT);
+		kp[1].ir_startino = rp->ir_startino;
 	}
 	xfs_inobt_log_keys(cur, nbp, 1, 2);
 	/*
@@ -879,7 +885,7 @@ xfs_inobt_rshift(
 	 * Set up the right neighbor as "right".
 	 */
 	if ((error = xfs_btree_read_bufs(cur->bc_mp, cur->bc_tp,
-			cur->bc_private.i.agno, be32_to_cpu(left->bb_rightsib),
+			cur->bc_private.a.agno, be32_to_cpu(left->bb_rightsib),
 			0, &rbp, XFS_INO_BTREE_REF)))
 		return error;
 	right = XFS_BUF_TO_INOBT_BLOCK(rbp);
@@ -913,8 +919,8 @@ xfs_inobt_rshift(
 		if ((error = xfs_btree_check_sptr(cur, be32_to_cpu(*lpp), level)))
 			return error;
 #endif
-		*rkp = *lkp; /* INT_: no change copy */
-		*rpp = *lpp; /* INT_: no change copy */
+		*rkp = *lkp;
+		*rpp = *lpp;
 		xfs_inobt_log_keys(cur, rbp, 1, be16_to_cpu(right->bb_numrecs) + 1);
 		xfs_inobt_log_ptrs(cur, rbp, 1, be16_to_cpu(right->bb_numrecs) + 1);
 	} else {
@@ -923,15 +929,15 @@ xfs_inobt_rshift(
 		memmove(rrp + 1, rrp, be16_to_cpu(right->bb_numrecs) * sizeof(*rrp));
 		*rrp = *lrp;
 		xfs_inobt_log_recs(cur, rbp, 1, be16_to_cpu(right->bb_numrecs) + 1);
-		key.ir_startino = rrp->ir_startino; /* INT_: direct copy */
+		key.ir_startino = rrp->ir_startino;
 		rkp = &key;
 	}
 	/*
 	 * Decrement and log left's numrecs, bump and log right's numrecs.
 	 */
-	be16_add(&left->bb_numrecs, -1);
+	be16_add_cpu(&left->bb_numrecs, -1);
 	xfs_inobt_log_block(cur->bc_tp, lbp, XFS_BB_NUMRECS);
-	be16_add(&right->bb_numrecs, 1);
+	be16_add_cpu(&right->bb_numrecs, 1);
 #ifdef DEBUG
 	if (level > 0)
 		xfs_btree_check_key(cur->bc_btnum, rkp, rkp + 1);
@@ -995,7 +1001,7 @@ xfs_inobt_split(
 	 * Allocate the new block.
 	 * If we can't do it, we're toast.  Give up.
 	 */
-	args.fsbno = XFS_AGB_TO_FSB(args.mp, cur->bc_private.i.agno, lbno);
+	args.fsbno = XFS_AGB_TO_FSB(args.mp, cur->bc_private.a.agno, lbno);
 	args.mod = args.minleft = args.alignment = args.total = args.wasdel =
 		args.isfl = args.userdata = args.minalignslop = 0;
 	args.minlen = args.maxlen = args.prod = 1;
@@ -1032,7 +1038,7 @@ xfs_inobt_split(
 	 */
 	if ((be16_to_cpu(left->bb_numrecs) & 1) &&
 	    cur->bc_ptrs[level] <= be16_to_cpu(right->bb_numrecs) + 1)
-		be16_add(&right->bb_numrecs, 1);
+		be16_add_cpu(&right->bb_numrecs, 1);
 	i = be16_to_cpu(left->bb_numrecs) - be16_to_cpu(right->bb_numrecs) + 1;
 	/*
 	 * For non-leaf blocks, copy keys and addresses over to the new block.
@@ -1062,13 +1068,13 @@ xfs_inobt_split(
 		rrp = XFS_INOBT_REC_ADDR(right, 1, cur);
 		memcpy(rrp, lrp, be16_to_cpu(right->bb_numrecs) * sizeof(*rrp));
 		xfs_inobt_log_recs(cur, rbp, 1, be16_to_cpu(right->bb_numrecs));
-		keyp->ir_startino = rrp->ir_startino; /* INT_: direct copy */
+		keyp->ir_startino = rrp->ir_startino;
 	}
 	/*
 	 * Find the left block number by looking in the buffer.
 	 * Adjust numrecs, sibling pointers.
 	 */
-	be16_add(&left->bb_numrecs, -(be16_to_cpu(right->bb_numrecs)));
+	be16_add_cpu(&left->bb_numrecs, -(be16_to_cpu(right->bb_numrecs)));
 	right->bb_rightsib = left->bb_rightsib;
 	left->bb_rightsib = cpu_to_be32(args.agbno);
 	right->bb_leftsib = cpu_to_be32(lbno);
@@ -1228,7 +1234,7 @@ xfs_inobt_decrement(
 
 		agbno = be32_to_cpu(*XFS_INOBT_PTR_ADDR(block, cur->bc_ptrs[lev], cur));
 		if ((error = xfs_btree_read_bufs(cur->bc_mp, cur->bc_tp,
-				cur->bc_private.i.agno, agbno, 0, &bp,
+				cur->bc_private.a.agno, agbno, 0, &bp,
 				XFS_INO_BTREE_REF)))
 			return error;
 		lev--;
@@ -1279,9 +1285,9 @@ xfs_inobt_get_rec(
 	 * Point to the record and extract its data.
 	 */
 	rec = XFS_INOBT_REC_ADDR(block, ptr, cur);
-	*ino = INT_GET(rec->ir_startino, ARCH_CONVERT);
-	*fcnt = INT_GET(rec->ir_freecount, ARCH_CONVERT);
-	*free = INT_GET(rec->ir_free, ARCH_CONVERT);
+	*ino = be32_to_cpu(rec->ir_startino);
+	*fcnt = be32_to_cpu(rec->ir_freecount);
+	*free = be64_to_cpu(rec->ir_free);
 	*stat = 1;
 	return 0;
 }
@@ -1363,7 +1369,7 @@ xfs_inobt_increment(
 
 		agbno = be32_to_cpu(*XFS_INOBT_PTR_ADDR(block, cur->bc_ptrs[lev], cur));
 		if ((error = xfs_btree_read_bufs(cur->bc_mp, cur->bc_tp,
-				cur->bc_private.i.agno, agbno, 0, &bp,
+				cur->bc_private.a.agno, agbno, 0, &bp,
 				XFS_INO_BTREE_REF)))
 			return error;
 		lev--;
@@ -1396,10 +1402,10 @@ xfs_inobt_insert(
 
 	level = 0;
 	nbno = NULLAGBLOCK;
-	INT_SET(nrec.ir_startino, ARCH_CONVERT, cur->bc_rec.i.ir_startino);
-	INT_SET(nrec.ir_freecount, ARCH_CONVERT, cur->bc_rec.i.ir_freecount);
-	INT_SET(nrec.ir_free, ARCH_CONVERT, cur->bc_rec.i.ir_free);
-	ncur = (xfs_btree_cur_t *)0;
+	nrec.ir_startino = cpu_to_be32(cur->bc_rec.i.ir_startino);
+	nrec.ir_freecount = cpu_to_be32(cur->bc_rec.i.ir_freecount);
+	nrec.ir_free = cpu_to_be64(cur->bc_rec.i.ir_free);
+	ncur = NULL;
 	pcur = cur;
 	/*
 	 * Loop going up the tree, starting at the leaf level.
@@ -1431,7 +1437,7 @@ xfs_inobt_insert(
 		 */
 		if (ncur) {
 			pcur = ncur;
-			ncur = (xfs_btree_cur_t *)0;
+			ncur = NULL;
 		}
 	} while (nbno != NULLAGBLOCK);
 	*stat = i;
@@ -1526,9 +1532,9 @@ xfs_inobt_update(
 	/*
 	 * Fill in the new contents and log them.
 	 */
-	INT_SET(rp->ir_startino, ARCH_CONVERT, ino);
-	INT_SET(rp->ir_freecount, ARCH_CONVERT, fcnt);
-	INT_SET(rp->ir_free, ARCH_CONVERT, free);
+	rp->ir_startino = cpu_to_be32(ino);
+	rp->ir_freecount = cpu_to_be32(fcnt);
+	rp->ir_free = cpu_to_be64(free);
 	xfs_inobt_log_recs(cur, bp, ptr, ptr);
 	/*
 	 * Updating first record in leaf. Pass new key value up to our parent.
@@ -1536,7 +1542,7 @@ xfs_inobt_update(
 	if (ptr == 1) {
 		xfs_inobt_key_t	key;	/* key containing [ino] */
 
-		INT_SET(key.ir_startino, ARCH_CONVERT, ino);
+		key.ir_startino = cpu_to_be32(ino);
 		if ((error = xfs_inobt_updkey(cur, &key, 1)))
 			return error;
 	}

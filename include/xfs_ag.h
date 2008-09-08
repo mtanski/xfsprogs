@@ -152,7 +152,7 @@ typedef struct xfs_agi {
 #define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)XFS_BUF_PTR(bp))
 
 typedef struct xfs_agfl {
-	xfs_agblock_t	agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
+	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
 } xfs_agfl_t;
 
 /*
@@ -181,7 +181,7 @@ typedef struct xfs_perag
 {
 	char		pagf_init;	/* this agf's entry is initialized */
 	char		pagi_init;	/* this agi's entry is initialized */
-	char		pagf_metadata;	/* the agf is prefered to be metadata */
+	char		pagf_metadata;	/* the agf is preferred to be metadata */
 	char		pagi_inodeok;	/* The agi is ok for inodes */
 	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
 					/* # of levels in bno & cnt btree */
@@ -192,10 +192,16 @@ typedef struct xfs_perag
 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
 	xfs_agino_t	pagi_count;	/* number of allocated inodes */
 	int		pagb_count;	/* pagb slots in use */
-#ifdef __KERNEL__
-	lock_t		pagb_lock;	/* lock for pagb_list */
-#endif
 	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
+#ifdef __KERNEL__
+	spinlock_t	pagb_lock;	/* lock for pagb_list */
+
+	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+
+	int		pag_ici_init;	/* incore inode cache initialised */
+	rwlock_t	pag_ici_lock;	/* incore inode lock */
+	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+#endif
 } xfs_perag_t;
 
 #define	XFS_AG_MAXLEVELS(mp)		((mp)->m_ag_maxlevels)

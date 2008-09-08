@@ -185,14 +185,14 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 		return 0;
 	}
 
-	libxfs_xlate_sb(iocur_top->data, sb, 1, XFS_SB_ALL_BITS);
+	libxfs_sb_from_disk(sb, iocur_top->data);
 
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
 		dbprintf("bad sb magic # %#x in AG %u\n",
 			sb->sb_magicnum, agno);
 		return 0;
 	}
-	if (!XFS_SB_GOOD_VERSION(sb)) {
+	if (!xfs_sb_good_version(sb)) {
 		dbprintf("bad sb version # %#x in AG %u\n",
 			sb->sb_versionnum, agno);
 		return 0;
@@ -238,7 +238,7 @@ sb_logcheck(void)
 	log.l_logBBstart = x.logBBstart;
 	log.l_mp = mp;
 
-	if (xlog_find_tail(&log, &head_blk, &tail_blk, 0)) {
+	if (xlog_find_tail(&log, &head_blk, &tail_blk)) {
 		dbprintf("ERROR: cannot find log head/tail, run xfs_repair\n");
 		return 0;
 	}
@@ -268,7 +268,7 @@ sb_logzero(uuid_t *uuidp)
 			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
 			uuidp,
-			XFS_SB_VERSION_HASLOGV2(&mp->m_sb) ? 2 : 1,
+			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
 			mp->m_sb.sb_logsunit, XLOG_FMT)) {
 		dbprintf("ERROR: cannot clear the log\n");
 		return 0;
@@ -317,7 +317,7 @@ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
 	}
 	/* set uuid */
 	memcpy(&tsb.sb_uuid, uuid, sizeof(uuid_t));
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_UUID);
+	libxfs_sb_to_disk(iocur_top->data, &tsb, XFS_SB_UUID);
 	write_cur();
 	return uuid;
 }
@@ -470,7 +470,7 @@ do_label(xfs_agnumber_t agno, char *label)
 	memset(&tsb.sb_fname, 0, sizeof(tsb.sb_fname));
 	memcpy(&tsb.sb_fname, label, len);
 	memcpy(&lbl[0], &tsb.sb_fname, sizeof(tsb.sb_fname));
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, XFS_SB_FNAME);
+	libxfs_sb_to_disk(iocur_top->data, &tsb, XFS_SB_FNAME);
 	write_cur();
 	return &lbl[0];
 }
@@ -557,7 +557,7 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 		return 0;
 
 	if ((version & XFS_SB_VERSION_LOGV2BIT) &&
-	    !XFS_SB_VERSION_HASLOGV2(&tsb)) {
+					!xfs_sb_version_haslogv2(&tsb)) {
 		tsb.sb_logsunit = 1;
 		fields |= (1LL << XFS_SBS_LOGSUNIT);
 	}
@@ -565,7 +565,7 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 	tsb.sb_versionnum = version;
 	tsb.sb_features2 = features;
 	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2;
-	libxfs_xlate_sb(iocur_top->data, &tsb, -1, fields);
+	libxfs_sb_to_disk(iocur_top->data, &tsb, fields);
 	write_cur();
 	return 1;
 }
@@ -585,33 +585,33 @@ version_string(
 	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
 		strcpy(s, "V4");
 
-	if (XFS_SB_VERSION_HASATTR(sbp))
+	if (xfs_sb_version_hasattr(sbp))
 		strcat(s, ",ATTR");
-	if (XFS_SB_VERSION_HASNLINK(sbp))
+	if (xfs_sb_version_hasnlink(sbp))
 		strcat(s, ",NLINK");
-	if (XFS_SB_VERSION_HASQUOTA(sbp))
+	if (xfs_sb_version_hasquota(sbp))
 		strcat(s, ",QUOTA");
-	if (XFS_SB_VERSION_HASALIGN(sbp))
+	if (xfs_sb_version_hasalign(sbp))
 		strcat(s, ",ALIGN");
-	if (XFS_SB_VERSION_HASDALIGN(sbp))
+	if (xfs_sb_version_hasdalign(sbp))
 		strcat(s, ",DALIGN");
-	if (XFS_SB_VERSION_HASSHARED(sbp))
+	if (xfs_sb_version_hasshared(sbp))
 		strcat(s, ",SHARED");
-	if (XFS_SB_VERSION_HASDIRV2(sbp))
+	if (xfs_sb_version_hasdirv2(sbp))
 		strcat(s, ",DIRV2");
-	if (XFS_SB_VERSION_HASLOGV2(sbp))
+	if (xfs_sb_version_haslogv2(sbp))
 		strcat(s, ",LOGV2");
-	if (XFS_SB_VERSION_HASEXTFLGBIT(sbp))
+	if (xfs_sb_version_hasextflgbit(sbp))
 		strcat(s, ",EXTFLG");
-	if (XFS_SB_VERSION_HASSECTOR(sbp))
+	if (xfs_sb_version_hassector(sbp))
 		strcat(s, ",SECTOR");
 	if (xfs_sb_version_hasasciici(sbp))
 		strcat(s, ",ASCII_CI");
-	if (XFS_SB_VERSION_HASMOREBITS(sbp))
+	if (xfs_sb_version_hasmorebits(sbp))
 		strcat(s, ",MOREBITS");
-	if (XFS_SB_VERSION_HASATTR2(sbp))
+	if (xfs_sb_version_hasattr2(sbp))
 		strcat(s, ",ATTR2");
-	if (XFS_SB_VERSION_LAZYSBCOUNT(sbp))
+	if (xfs_sb_version_haslazysbcount(sbp))
 		strcat(s, ",LAZYSBCOUNT");
 	return s;
 }
@@ -646,7 +646,7 @@ version_f(
 				version = 0x0034 | XFS_SB_VERSION_EXTFLGBIT;
 				break;
 			case XFS_SB_VERSION_4:
-				if (XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb))
+				if (xfs_sb_version_hasextflgbit(&mp->m_sb))
 					dbprintf("unwritten extents flag"
 						 " is already enabled\n");
 				else
@@ -666,7 +666,7 @@ version_f(
 				version = 0x0034 | XFS_SB_VERSION_LOGV2BIT;
 				break;
 			case XFS_SB_VERSION_4:
-				if (XFS_SB_VERSION_HASLOGV2(&mp->m_sb))
+				if (xfs_sb_version_haslogv2(&mp->m_sb))
 					dbprintf("version 2 log format"
 						 " is already in use\n");
 				else
@@ -675,18 +675,18 @@ version_f(
 				break;
 			}
 		} else if (!strcasecmp(argv[1], "attr1")) {
-			if (XFS_SB_VERSION_HASATTR2(&mp->m_sb)) {
+			if (xfs_sb_version_hasattr2(&mp->m_sb)) {
 				if (!(mp->m_sb.sb_features2 &=
 						~XFS_SB_VERSION2_ATTR2BIT))
 					mp->m_sb.sb_versionnum &=
 						~XFS_SB_VERSION_MOREBITSBIT;
 			}
-			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
+			xfs_sb_version_addattr(&mp->m_sb);
 			version = mp->m_sb.sb_versionnum;
 			features = mp->m_sb.sb_features2;
 		} else if (!strcasecmp(argv[1], "attr2")) {
-			XFS_SB_VERSION_ADDATTR(&mp->m_sb);
-			XFS_SB_VERSION_ADDATTR2(&mp->m_sb);
+			xfs_sb_version_addattr(&mp->m_sb);
+			xfs_sb_version_addattr2(&mp->m_sb);
 			version = mp->m_sb.sb_versionnum;
 			features = mp->m_sb.sb_features2;
 		} else {

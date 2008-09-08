@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs.h>
 #include <sys/stat.h>
 #include "init.h"
 
@@ -338,6 +338,13 @@ libxfs_init(libxfs_init_t *a)
 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
 	use_xfs_buf_lock = a->usebuflock;
+#ifndef HAVE_PTHREAD_T
+	if (use_xfs_buf_lock) {
+		fprintf(stderr, _("%s: can't use buffer locks without pthreads\n"),
+			progname);
+		goto done;
+	}
+#endif
 	manage_zones(0);
 	rval = 1;
 done:
@@ -365,42 +372,42 @@ done:
 static void
 manage_zones(int release)
 {
-	extern xfs_zone_t	*xfs_buf_zone;
-	extern xfs_zone_t	*xfs_ili_zone;
-	extern xfs_zone_t	*xfs_inode_zone;
-	extern xfs_zone_t	*xfs_ifork_zone;
-	extern xfs_zone_t	*xfs_dabuf_zone;
-	extern xfs_zone_t	*xfs_buf_item_zone;
-	extern xfs_zone_t	*xfs_da_state_zone;
-	extern xfs_zone_t	*xfs_btree_cur_zone;
-	extern xfs_zone_t	*xfs_bmap_free_item_zone;
+	extern kmem_zone_t	*xfs_buf_zone;
+	extern kmem_zone_t	*xfs_ili_zone;
+	extern kmem_zone_t	*xfs_inode_zone;
+	extern kmem_zone_t	*xfs_ifork_zone;
+	extern kmem_zone_t	*xfs_dabuf_zone;
+	extern kmem_zone_t	*xfs_buf_item_zone;
+	extern kmem_zone_t	*xfs_da_state_zone;
+	extern kmem_zone_t	*xfs_btree_cur_zone;
+	extern kmem_zone_t	*xfs_bmap_free_item_zone;
 	extern void		xfs_dir_startup();
 
 	if (release) {	/* free zone allocation */
-		libxfs_free(xfs_buf_zone);
-		libxfs_free(xfs_inode_zone);
-		libxfs_free(xfs_ifork_zone);
-		libxfs_free(xfs_dabuf_zone);
-		libxfs_free(xfs_buf_item_zone);
-		libxfs_free(xfs_da_state_zone);
-		libxfs_free(xfs_btree_cur_zone);
-		libxfs_free(xfs_bmap_free_item_zone);
+		kmem_free(xfs_buf_zone);
+		kmem_free(xfs_inode_zone);
+		kmem_free(xfs_ifork_zone);
+		kmem_free(xfs_dabuf_zone);
+		kmem_free(xfs_buf_item_zone);
+		kmem_free(xfs_da_state_zone);
+		kmem_free(xfs_btree_cur_zone);
+		kmem_free(xfs_bmap_free_item_zone);
 		return;
 	}
 	/* otherwise initialise zone allocation */
-	xfs_buf_zone = libxfs_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
-	xfs_inode_zone = libxfs_zone_init(sizeof(xfs_inode_t), "xfs_inode");
-	xfs_ifork_zone = libxfs_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
-	xfs_dabuf_zone = libxfs_zone_init(sizeof(xfs_dabuf_t), "xfs_dabuf");
-	xfs_ili_zone = libxfs_zone_init(
+	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
+	xfs_inode_zone = kmem_zone_init(sizeof(xfs_inode_t), "xfs_inode");
+	xfs_ifork_zone = kmem_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
+	xfs_dabuf_zone = kmem_zone_init(sizeof(xfs_dabuf_t), "xfs_dabuf");
+	xfs_ili_zone = kmem_zone_init(
 			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
-	xfs_buf_item_zone = libxfs_zone_init(
+	xfs_buf_item_zone = kmem_zone_init(
 			sizeof(xfs_buf_log_item_t), "xfs_buf_log_item");
-	xfs_da_state_zone = libxfs_zone_init(
+	xfs_da_state_zone = kmem_zone_init(
 			sizeof(xfs_da_state_t), "xfs_da_state");
-	xfs_btree_cur_zone = libxfs_zone_init(
+	xfs_btree_cur_zone = kmem_zone_init(
 			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
-	xfs_bmap_free_item_zone = libxfs_zone_init(
+	xfs_bmap_free_item_zone = kmem_zone_init(
 			sizeof(xfs_bmap_free_item_t), "xfs_bmap_free_item");
 	xfs_dir_startup();
 }
@@ -493,6 +500,22 @@ rtmount_init(
 	return 0;
 }
 
+
+/*
+ * Core dir v1 mount code for allowing reading of these dirs. 
+ */
+static void
+libxfs_dirv1_mount(
+	xfs_mount_t	*mp)
+{
+	mp->m_dir_node_ents = mp->m_attr_node_ents =
+		(XFS_LBSIZE(mp) - (uint)sizeof(xfs_da_node_hdr_t)) /
+		(uint)sizeof(xfs_da_node_entry_t);
+	mp->m_dir_magicpct = (XFS_LBSIZE(mp) * 37) / 100;
+	mp->m_dirblksize = mp->m_sb.sb_blocksize;
+	mp->m_dirblkfsbs = 1;
+}
+
 /*
  * Mount structure initialization, provides a filled-in xfs_mount_t
  * such that the numerous XFS_* macros can be used.  If dev is zero,
@@ -520,12 +543,12 @@ libxfs_mount(
 	mp->m_sb = *sb;
 	sbp = &(mp->m_sb);
 
-	libxfs_mount_common(mp, sb);
+	xfs_mount_common(mp, sb);
 
-	libxfs_alloc_compute_maxlevels(mp);
-	libxfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
-	libxfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-	libxfs_ialloc_compute_maxlevels(mp);
+	xfs_alloc_compute_maxlevels(mp);
+	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+	xfs_ialloc_compute_maxlevels(mp);
 
 	if (sbp->sb_imax_pct) {
 		/* Make sure the maximum inode count is a multiple of the
@@ -542,7 +565,7 @@ libxfs_mount(
 	/*
 	 * Set whether we're using stripe alignment.
 	 */
-	if (XFS_SB_VERSION_HASDALIGN(&mp->m_sb)) {
+	if (xfs_sb_version_hasdalign(&mp->m_sb)) {
 		mp->m_dalign = sbp->sb_unit;
 		mp->m_swidth = sbp->sb_width;
 	}
@@ -550,7 +573,7 @@ libxfs_mount(
 	/*
 	 * Set whether we're using inode alignment.
 	 */
-	if (XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&
+	if (xfs_sb_version_hasalign(&mp->m_sb) &&
 	    mp->m_sb.sb_inoalignmt >=
 	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
 		mp->m_inoalign_mask = mp->m_sb.sb_inoalignmt - 1;
@@ -560,8 +583,8 @@ libxfs_mount(
 	 * If we are using stripe alignment, check whether
 	 * the stripe unit is a multiple of the inode alignment
 	 */
-	if (   mp->m_dalign
-	    && mp->m_inoalign_mask && !(mp->m_dalign & mp->m_inoalign_mask))
+	if (mp->m_dalign && mp->m_inoalign_mask && 
+					!(mp->m_dalign & mp->m_inoalign_mask))
 		mp->m_sinoalign = mp->m_dalign;
 	else
 		mp->m_sinoalign = 0;
@@ -577,16 +600,21 @@ libxfs_mount(
 	}
 
 	/* Initialize the appropriate directory manager */
-	if (XFS_SB_VERSION_HASDIRV2(sbp))
-		libxfs_dir2_mount(mp);
-	else
-		libxfs_dir_mount(mp);
+	if (xfs_sb_version_hasdirv2(sbp))
+		xfs_dir_mount(mp);
+	else {
+		fprintf(stderr, _("%s: WARNING - filesystem uses v1 dirs,"
+				"limited functionality provided.\n"), progname);
+		libxfs_dirv1_mount(mp);
+	}
 
 	/* Initialize cached values for the attribute manager */
 	mp->m_attr_magicpct = (mp->m_sb.sb_blocksize * 37) / 100;
+	if (xfs_sb_version_hasattr2(&mp->m_sb))
+		mp->m_flags |= LIBXFS_MOUNT_ATTR2;
 
 	/* Initialize the precomputed transaction reservations values */
-	libxfs_trans_init(mp);
+	xfs_trans_init(mp);
 
 	if (dev == 0)	/* maxtrres, we have no device so leave now */
 		return mp;
@@ -632,7 +660,7 @@ libxfs_mount(
 		exit(1);
 	}
 
-	mp->m_maxagi = libxfs_initialize_perag(mp, sbp->sb_agcount);
+	mp->m_maxagi = xfs_initialize_perag(mp, sbp->sb_agcount);
 
 	/*
 	 * mkfs calls mount before the root inode is allocated.
@@ -657,8 +685,8 @@ libxfs_mount(
 	 * mkfs calls mount before the AGF/AGI structures are written.
 	 */
 	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO &&
-	    XFS_SB_VERSION_LAZYSBCOUNT(&mp->m_sb)) {
-		error = libxfs_initialize_perag_data(mp, sbp->sb_agcount);
+	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
 		if (error) {
 			fprintf(stderr, _("%s: cannot init perag data (%d)\n"),
 				progname, error);

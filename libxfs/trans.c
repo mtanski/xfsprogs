@@ -37,7 +37,7 @@ libxfs_trans_alloc(
 	ptr->t_mountp = mp;
 	ptr->t_type = type;
 	ptr->t_items_free = XFS_LIC_NUM_SLOTS;
-	XFS_LIC_INIT(&(ptr->t_items));
+	xfs_lic_init(&ptr->t_items);
 #ifdef XACT_DEBUG
 	fprintf(stderr, "allocated new transaction %p\n", ptr);
 #endif
@@ -566,7 +566,7 @@ libxfs_trans_mod_sb(
  * Transaction commital code follows (i.e. write to disk in libxfs)
  */
 
-STATIC void
+static void
 inode_item_done(
 	xfs_inode_log_item_t	*iip)
 {
@@ -576,7 +576,7 @@ inode_item_done(
 	xfs_buf_t		*bp;
 	int			hold;
 	int			error;
-	extern xfs_zone_t	*xfs_ili_zone;
+	extern kmem_zone_t	*xfs_ili_zone;
 
 	ip = iip->ili_inode;
 	mp = iip->ili_item.li_mountp;
@@ -592,7 +592,7 @@ inode_item_done(
 	/*
 	 * Get the buffer containing the on-disk inode.
 	 */
-	error = libxfs_itobp(mp, NULL, ip, &dip, &bp, 0);
+	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0, 0, 0);
 	if (error) {
 		fprintf(stderr, _("%s: warning - itobp failed (%d)\n"),
 			progname, error);
@@ -630,13 +630,13 @@ ili_done:
 	ip->i_itemp = NULL;
 }
 
-STATIC void
+static void
 buf_item_done(
 	xfs_buf_log_item_t	*bip)
 {
 	xfs_buf_t		*bp;
 	int			hold;
-	extern xfs_zone_t	*xfs_buf_item_zone;
+	extern kmem_zone_t	*xfs_buf_item_zone;
 
 	bp = bip->bli_buf;
 	ASSERT(bp != NULL);
@@ -673,7 +673,7 @@ trans_chunk_committed(
 
 	lidp = licp->lic_descs;
 	for (i = 0; i < licp->lic_unused; i++, lidp++) {
-		if (XFS_LIC_ISFREE(licp, i))
+		if (xfs_lic_isfree(licp, i))
 			continue;
 		lip = lidp->lid_item;
 		if (lip->li_type == XFS_LI_BUF)
@@ -702,7 +702,7 @@ trans_committed(
 	 * Special case the chunk embedded in the transaction.
 	 */
 	licp = &(tp->t_items);
-	if (!(XFS_LIC_ARE_ALL_FREE(licp))) {
+	if (!(xfs_lic_are_all_free(licp))) {
 		trans_chunk_committed(licp);
 	}
 
@@ -713,12 +713,12 @@ trans_committed(
 	while (licp != NULL) {
 		trans_chunk_committed(licp);
 		next_licp = licp->lic_next;
-		kmem_free(licp, sizeof(xfs_log_item_chunk_t));
+		kmem_free(licp);
 		licp = next_licp;
 	}
 }
 
-STATIC void
+static void
 buf_item_unlock(
 	xfs_buf_log_item_t	*bip)
 {
@@ -734,7 +734,7 @@ buf_item_unlock(
 	bip->bli_flags &= ~XFS_BLI_HOLD;
 }
 
-STATIC void
+static void
 inode_item_unlock(
 	xfs_inode_log_item_t	*iip)
 {
@@ -773,7 +773,7 @@ xfs_trans_unlock_chunk(
 	freed = 0;
 	lidp = licp->lic_descs;
 	for (i = 0; i < licp->lic_unused; i++, lidp++) {
-		if (XFS_LIC_ISFREE(licp, i)) {
+		if (xfs_lic_isfree(licp, i)) {
 			continue;
 		}
 		lip = lidp->lid_item;
@@ -799,7 +799,7 @@ xfs_trans_unlock_chunk(
 		 */
 		if (!(freeing_chunk) &&
 		    (!(lidp->lid_flags & XFS_LID_DIRTY) || abort)) {
-			XFS_LIC_RELSE(licp, i);
+			xfs_lic_relse(licp, i);
 			freed++;
 		}
 	}
@@ -814,8 +814,7 @@ xfs_trans_unlock_chunk(
 int
 libxfs_trans_commit(
 	xfs_trans_t	*tp,
-	uint		flags,
-	xfs_lsn_t	*commit_lsn_p)
+	uint		flags)
 {
 	xfs_sb_t	*sbp;
 
@@ -842,7 +841,7 @@ libxfs_trans_commit(
 			sbp->sb_fdblocks += tp->t_fdblocks_delta;
 		if (tp->t_frextents_delta)
 			sbp->sb_frextents += tp->t_frextents_delta;
-		libxfs_mod_sb(tp, XFS_SB_ALL_BITS);
+		xfs_mod_sb(tp, XFS_SB_ALL_BITS);
 	}
 
 #ifdef XACT_DEBUG

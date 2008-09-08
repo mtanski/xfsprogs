@@ -29,7 +29,6 @@
 #define __BYTE_ORDER	BYTE_ORDER
 #define __BIG_ENDIAN	BIG_ENDIAN
 #define __LITTLE_ENDIAN	LITTLE_ENDIAN
-#include <xfs/swab.h>
 
 #include <sys/syscall.h>
 # ifndef SYS_fsctl

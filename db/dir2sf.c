@@ -134,7 +134,7 @@ dir2_sf_entry_inumber_offset(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
 	e = (xfs_dir2_sf_entry_t *)((char *)obj + byteize(startoff));
-	return bitize((int)((char *)XFS_DIR2_SF_INUMBERP(e) - (char *)e));
+	return bitize((int)((char *)xfs_dir2_sf_inumberp(e) - (char *)e));
 }
 
 int
@@ -149,10 +149,10 @@ dir2_sf_entry_size(
 
 	ASSERT(bitoffs(startoff) == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = XFS_DIR2_SF_FIRSTENTRY(sf);
+	e = xfs_dir2_sf_firstentry(sf);
 	for (i = 0; i < idx; i++)
-		e = XFS_DIR2_SF_NEXTENTRY(sf, e);
-	return bitize((int)XFS_DIR2_SF_ENTSIZE_BYENTRY(sf, e));
+		e = xfs_dir2_sf_nextentry(sf, e);
+	return bitize((int)xfs_dir2_sf_entsize_byentry(sf, e));
 }
 
 /*ARGSUSED*/
@@ -167,7 +167,7 @@ dir2_sf_hdr_size(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	return bitize(XFS_DIR2_SF_HDR_SIZE(sf->hdr.i8count));
+	return bitize(xfs_dir2_sf_hdr_size(sf->hdr.i8count));
 }
 
 static int
@@ -194,9 +194,9 @@ dir2_sf_list_offset(
 
 	ASSERT(bitoffs(startoff) == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = XFS_DIR2_SF_FIRSTENTRY(sf);
+	e = xfs_dir2_sf_firstentry(sf);
 	for (i = 0; i < idx; i++)
-		e = XFS_DIR2_SF_NEXTENTRY(sf, e);
+		e = xfs_dir2_sf_nextentry(sf, e);
 	return bitize((int)((char *)e - (char *)sf));
 }
 
@@ -214,8 +214,8 @@ dir2sf_size(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = XFS_DIR2_SF_FIRSTENTRY(sf);
+	e = xfs_dir2_sf_firstentry(sf);
 	for (i = 0; i < sf->hdr.count; i++)
-		e = XFS_DIR2_SF_NEXTENTRY(sf, e);
+		e = xfs_dir2_sf_nextentry(sf, e);
 	return bitize((int)((char *)e - (char *)sf));
 }

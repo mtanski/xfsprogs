@@ -50,24 +50,24 @@ xfs_log_dump(
 			break;
 		}
 
-		if (CYCLE_LSN(INT_GET(*(xfs_lsn_t *)buf, ARCH_CONVERT)) ==
+		if (CYCLE_LSN(be64_to_cpu(*(__be64 *)buf)) ==
 				XLOG_HEADER_MAGIC_NUM && !print_no_data) {
 			printf(
 		"%6lld HEADER Cycle %d tail %d:%06d len %6d ops %d\n",
 				(long long)blkno,
-				INT_GET(hdr->h_cycle, ARCH_CONVERT),
-				CYCLE_LSN(INT_GET(hdr->h_tail_lsn, ARCH_CONVERT)),
-				BLOCK_LSN(INT_GET(hdr->h_tail_lsn, ARCH_CONVERT)),
-				INT_GET(hdr->h_len, ARCH_CONVERT),
-				INT_GET(hdr->h_num_logops, ARCH_CONVERT));
+				be32_to_cpu(hdr->h_cycle),
+				CYCLE_LSN(be64_to_cpu(hdr->h_tail_lsn)),
+				BLOCK_LSN(be64_to_cpu(hdr->h_tail_lsn)),
+				be32_to_cpu(hdr->h_len),
+				be32_to_cpu(hdr->h_num_logops));
 		}
 
-		if (GET_CYCLE(buf, ARCH_CONVERT) != last_cycle) {
+		if (xlog_get_cycle(buf) != last_cycle) {
 			printf(
 		"[%05lld - %05lld] Cycle 0x%08x New Cycle 0x%08x\n",
 				(long long)dupblkno, (long long)blkno,
-				last_cycle, GET_CYCLE(buf, ARCH_CONVERT));
-			last_cycle = GET_CYCLE(buf, ARCH_CONVERT);
+				last_cycle, xlog_get_cycle(buf));
+			last_cycle = xlog_get_cycle(buf);
 			dupblkno = blkno;
 		}
 	}

@@ -18,9 +18,12 @@
 
 #include <xfs.h>
 
-xfs_zone_t	*xfs_buf_item_zone;
-xfs_zone_t	*xfs_ili_zone;		/* inode log item zone */
+kmem_zone_t	*xfs_buf_item_zone;
+kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
 
+/*
+ * Following functions from fs/xfs/xfs_trans_item.c
+ */
 
 /*
  * This is called to add the given log item to the transaction's
@@ -51,11 +54,11 @@ xfs_trans_add_item(
 		 * Initialize the chunk, and then
 		 * claim the first slot in the newly allocated chunk.
 		 */
-		XFS_LIC_INIT(licp);
-		XFS_LIC_CLAIM(licp, 0);
+		xfs_lic_init(licp);
+		xfs_lic_claim(licp, 0);
 		licp->lic_unused = 1;
-		XFS_LIC_INIT_SLOT(licp, 0);
-		lidp = XFS_LIC_SLOT(licp, 0);
+		xfs_lic_init_slot(licp, 0);
+		lidp = xfs_lic_slot(licp, 0);
 
 		/*
 		 * Link in the new chunk and update the free count.
@@ -77,7 +80,7 @@ xfs_trans_add_item(
 		lidp->lid_size = 0;
 		lip->li_desc = lidp;
 		lip->li_mountp = tp->t_mountp;
-		return (lidp);
+		return lidp;
 	}
 
 	/*
@@ -86,14 +89,14 @@ xfs_trans_add_item(
 	 */
 	licp = &tp->t_items;
 	while (licp != NULL) {
-		if (XFS_LIC_VACANCY(licp)) {
+		if (xfs_lic_vacancy(licp)) {
 			if (licp->lic_unused <= XFS_LIC_MAX_SLOT) {
 				i = licp->lic_unused;
-				ASSERT(XFS_LIC_ISFREE(licp, i));
+				ASSERT(xfs_lic_isfree(licp, i));
 				break;
 			}
 			for (i = 0; i <= XFS_LIC_MAX_SLOT; i++) {
-				if (XFS_LIC_ISFREE(licp, i))
+				if (xfs_lic_isfree(licp, i))
 					break;
 			}
 			ASSERT(i <= XFS_LIC_MAX_SLOT);
@@ -106,19 +109,19 @@ xfs_trans_add_item(
 	 * If we find a free descriptor, claim it,
 	 * initialize it, and return it.
 	 */
-	XFS_LIC_CLAIM(licp, i);
+	xfs_lic_claim(licp, i);
 	if (licp->lic_unused <= i) {
 		licp->lic_unused = i + 1;
-		XFS_LIC_INIT_SLOT(licp, i);
+		xfs_lic_init_slot(licp, i);
 	}
-	lidp = XFS_LIC_SLOT(licp, i);
+	lidp = xfs_lic_slot(licp, i);
 	tp->t_items_free--;
 	lidp->lid_item = lip;
 	lidp->lid_flags = 0;
 	lidp->lid_size = 0;
 	lip->li_desc = lidp;
 	lip->li_mountp = tp->t_mountp;
-	return (lidp);
+	return lidp;
 }
 
 /*
@@ -136,9 +139,9 @@ xfs_trans_free_item(
 	xfs_log_item_chunk_t	*licp;
 	xfs_log_item_chunk_t	**licpp;
 
-	slot = XFS_LIC_DESC_TO_SLOT(lidp);
-	licp = XFS_LIC_DESC_TO_CHUNK(lidp);
-	XFS_LIC_RELSE(licp, slot);
+	slot = xfs_lic_desc_to_slot(lidp);
+	licp = xfs_lic_desc_to_chunk(lidp);
+	xfs_lic_relse(licp, slot);
 	lidp->lid_item->li_desc = NULL;
 	tp->t_items_free++;
 
@@ -148,20 +151,20 @@ xfs_trans_free_item(
 	 * the chunk. First pull it from the chunk list and then
 	 * free it back to the heap.  We didn't bother with a doubly
 	 * linked list here because the lists should be very short
-	 * and this is not a performance path.	It's better to save
+	 * and this is not a performance path.  It's better to save
 	 * the memory of the extra pointer.
 	 *
 	 * Also decrement the transaction structure's count of free items
 	 * by the number in a chunk since we are freeing an empty chunk.
 	 */
-	if (XFS_LIC_ARE_ALL_FREE(licp) && (licp != &(tp->t_items))) {
+	if (xfs_lic_are_all_free(licp) && (licp != &(tp->t_items))) {
 		licpp = &(tp->t_items.lic_next);
 		while (*licpp != licp) {
 			ASSERT(*licpp != NULL);
 			licpp = &((*licpp)->lic_next);
 		}
 		*licpp = licp->lic_next;
-		kmem_free(licp, sizeof(xfs_log_item_chunk_t));
+		kmem_free(licp);
 		tp->t_items_free -= XFS_LIC_NUM_SLOTS;
 	}
 }
@@ -182,7 +185,7 @@ xfs_trans_find_item(
 {
 	ASSERT(lip->li_desc != NULL);
 
-	return (lip->li_desc);
+	return lip->li_desc;
 }
 
 /*
@@ -206,9 +209,9 @@ xfs_trans_free_items(
 	/*
 	 * Special case the embedded chunk so we don't free it below.
 	 */
-	if (!XFS_LIC_ARE_ALL_FREE(licp)) {
+	if (!xfs_lic_are_all_free(licp)) {
 		(void) xfs_trans_unlock_chunk(licp, 1, abort, NULLCOMMITLSN);
-		XFS_LIC_ALL_FREE(licp);
+		xfs_lic_all_free(licp);
 		licp->lic_unused = 0;
 	}
 	licp = licp->lic_next;
@@ -217,10 +220,10 @@ xfs_trans_free_items(
 	 * Unlock each item in each chunk and free the chunks.
 	 */
 	while (licp != NULL) {
-		ASSERT(!XFS_LIC_ARE_ALL_FREE(licp));
+		ASSERT(!xfs_lic_are_all_free(licp));
 		(void) xfs_trans_unlock_chunk(licp, 1, abort, NULLCOMMITLSN);
 		next_licp = licp->lic_next;
-		kmem_free(licp, sizeof(xfs_log_item_chunk_t));
+		kmem_free(licp);
 		licp = next_licp;
 	}
 
@@ -232,11 +235,15 @@ xfs_trans_free_items(
 }
 
 /*
+ * Following functions from fs/xfs/xfs_trans_buf.c
+ */
+
+/*
  * Check to see if a buffer matching the given parameters is already
  * a part of the given transaction.  Only check the first, embedded
  * chunk, since we don't want to spend all day scanning large transactions.
  */
-STATIC xfs_buf_t *
+xfs_buf_t *
 xfs_trans_buf_item_match(
 	xfs_trans_t		*tp,
 	xfs_buftarg_t		*target,
@@ -256,16 +263,16 @@ xfs_trans_buf_item_match(
 	bp = NULL;
 	len = BBTOB(len);
 	licp = &tp->t_items;
-	if (!XFS_LIC_ARE_ALL_FREE(licp)) {
+	if (!xfs_lic_are_all_free(licp)) {
 		for (i = 0; i < licp->lic_unused; i++) {
 			/*
 			 * Skip unoccupied slots.
 			 */
-			if (XFS_LIC_ISFREE(licp, i)) {
+			if (xfs_lic_isfree(licp, i)) {
 				continue;
 			}
 
-			lidp = XFS_LIC_SLOT(licp, i);
+			lidp = xfs_lic_slot(licp, i);
 			blip = (xfs_buf_log_item_t *)lidp->lid_item;
 #ifdef LI_DEBUG
 			fprintf(stderr,
@@ -311,7 +318,7 @@ xfs_trans_buf_item_match(
  * a part of the given transaction.  Check all the chunks, we
  * want to be thorough.
  */
-STATIC xfs_buf_t *
+xfs_buf_t *
 xfs_trans_buf_item_match_all(
 	xfs_trans_t		*tp,
 	xfs_buftarg_t		*target,
@@ -332,7 +339,7 @@ xfs_trans_buf_item_match_all(
 	bp = NULL;
 	len = BBTOB(len);
 	for (licp = &tp->t_items; licp != NULL; licp = licp->lic_next) {
-		if (XFS_LIC_ARE_ALL_FREE(licp)) {
+		if (xfs_lic_are_all_free(licp)) {
 			ASSERT(licp == &tp->t_items);
 			ASSERT(licp->lic_next == NULL);
 			return NULL;
@@ -341,11 +348,11 @@ xfs_trans_buf_item_match_all(
 			/*
 			 * Skip unoccupied slots.
 			 */
-			if (XFS_LIC_ISFREE(licp, i)) {
+			if (xfs_lic_isfree(licp, i)) {
 				continue;
 			}
 
-			lidp = XFS_LIC_SLOT(licp, i);
+			lidp = xfs_lic_slot(licp, i);
 			blip = (xfs_buf_log_item_t *)lidp->lid_item;
 #ifdef LI_DEBUG
 			fprintf(stderr,
@@ -385,6 +392,10 @@ xfs_trans_buf_item_match_all(
 #endif
 	return NULL;
 }
+
+/*
+ * The following are from fs/xfs/xfs_buf_item.c
+ */
 
 /*
  * Allocate a new buf log item to go with the given buffer.

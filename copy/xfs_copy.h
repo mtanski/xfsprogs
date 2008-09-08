@@ -30,7 +30,7 @@
  * each of which is an AG and has an ag_header at the beginning.
  */
 typedef struct ag_header  {
-	xfs_sb_t	*xfs_sb;	/* superblock for filesystem or AG */
+	xfs_dsb_t	*xfs_sb;	/* superblock for filesystem or AG */
 	xfs_agf_t	*xfs_agf;	/* free space info */
 	xfs_agi_t	*xfs_agi;	/* free inode info */
 	xfs_agfl_t	*xfs_agfl;	/* AG freelist */

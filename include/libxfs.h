@@ -15,6 +15,7 @@
  * along with this program; if not, write the Free Software Foundation,
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 #ifndef __LIBXFS_H__
 #define __LIBXFS_H__
 
@@ -23,9 +24,11 @@
 
 #include <xfs/platform_defs.h>
 
-#include <pthread.h>
 #include <xfs/list.h>
 #include <xfs/cache.h>
+#include <xfs/bitops.h>
+#include <xfs/kmem.h>
+#include <xfs/swab.h>
 
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_types.h>
@@ -125,7 +128,6 @@ extern int	libxfs_log_header (xfs_caddr_t, uuid_t *, int, int, int,
  * Define a user-level mount structure with all we need
  * in order to make use of the numerous XFS_* macros.
  */
-struct xfs_inode;
 typedef struct xfs_mount {
 	xfs_sb_t		m_sb;		/* copy of fs superblock */
 	char			*m_fsname;	/* filesystem name */
@@ -177,7 +179,6 @@ typedef struct xfs_mount {
 	int			m_sinoalign;	/* stripe unit inode alignmnt */
 	int			m_attr_magicpct;/* 37% of the blocksize */
 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
-	__uint8_t		m_dirversion;	/* 1 or 2 */
 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
 	int			m_dirblksize;	/* directory block sz--bytes */
 	int			m_dirblkfsbs;	/* directory block sz--fsbs */
@@ -185,30 +186,21 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
 } xfs_mount_t;
-#define	XFS_DIR_IS_V1(mp)	((mp)->m_dirversion == 1)
-#define	XFS_DIR_IS_V2(mp)	((mp)->m_dirversion == 2)
 
 #define LIBXFS_MOUNT_ROOTINOS		0x0001
 #define LIBXFS_MOUNT_DEBUGGER		0x0002
 #define LIBXFS_MOUNT_32BITINODES	0x0004
 #define LIBXFS_MOUNT_32BITINOOPT	0x0008
 #define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
+#define LIBXFS_MOUNT_ATTR2		0x0020
 
 #define LIBXFS_IHASHSIZE(sbp)		(1<<10)
 #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
 
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 				dev_t, dev_t, dev_t, int);
-extern void	libxfs_mount_common (xfs_mount_t *, xfs_sb_t *);
-extern xfs_agnumber_t	libxfs_initialize_perag (xfs_mount_t *, xfs_agnumber_t);
-extern int	libxfs_initialize_perag_data (xfs_mount_t *, xfs_agnumber_t);
 extern void	libxfs_umount (xfs_mount_t *);
-extern int	libxfs_rtmount_init (xfs_mount_t *);
 extern void	libxfs_rtmount_destroy (xfs_mount_t *);
-extern void	libxfs_alloc_compute_maxlevels (xfs_mount_t *);
-extern void	libxfs_bmap_compute_maxlevels (xfs_mount_t *, int);
-extern void	libxfs_ialloc_compute_maxlevels (xfs_mount_t *);
-extern void	libxfs_trans_init (xfs_mount_t *);
 
 
 /*
@@ -364,7 +356,7 @@ typedef struct xfs_trans {
 extern xfs_trans_t	*libxfs_trans_alloc (xfs_mount_t *, int);
 extern xfs_trans_t	*libxfs_trans_dup (xfs_trans_t *);
 extern int	libxfs_trans_reserve (xfs_trans_t *, uint,uint,uint,uint,uint);
-extern int	libxfs_trans_commit (xfs_trans_t *, uint, xfs_lsn_t *);
+extern int	libxfs_trans_commit (xfs_trans_t *, uint);
 extern void	libxfs_trans_cancel (xfs_trans_t *, int);
 extern void	libxfs_mod_sb (xfs_trans_t *, __int64_t);
 extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
@@ -390,23 +382,6 @@ extern int	libxfs_trans_read_buf (xfs_mount_t *, xfs_trans_t *, dev_t,
 
 
 /*
- * Simple memory interface
- */
-typedef struct xfs_zone {
-	int	zone_unitsize;	/* Size in bytes of zone unit           */
-	char	*zone_name;	/* tag name                             */
-	int	allocated;	/* debug: How many currently allocated  */
-} xfs_zone_t;
-
-extern xfs_zone_t	*libxfs_zone_init (int, char *);
-extern void	*libxfs_zone_zalloc (xfs_zone_t *);
-extern void	libxfs_zone_free (xfs_zone_t *, void *);
-extern void	*libxfs_malloc (size_t);
-extern void	libxfs_free (void *);
-extern void	*libxfs_realloc (void *, size_t);
-
-
-/*
  * Inode interface
  */
 typedef struct xfs_inode {
@@ -422,7 +397,8 @@ typedef struct xfs_inode {
 	xfs_trans_t		*i_transp;	/* ptr to owning transaction */
 	xfs_inode_log_item_t	*i_itemp;	/* logging information */
 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
-	xfs_dinode_core_t	i_d;		/* most of ondisk inode */
+	xfs_icdinode_t		i_d;		/* most of ondisk inode */
+	xfs_fsize_t		i_size;		/* in-memory size */
 } xfs_inode_t;
 
 #define LIBXFS_ATTR_ROOT	0x0002	/* use attrs in root namespace */
@@ -440,13 +416,8 @@ extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
 				struct fsxattr *, xfs_inode_t **);
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
-extern void	libxfs_idata_realloc (xfs_inode_t *, int, int);
-extern void	libxfs_idestroy_fork (xfs_inode_t *, int);
-extern int	libxfs_iformat (xfs_inode_t *, xfs_dinode_t *);
 extern void	libxfs_ichgtime (xfs_inode_t *, int);
 extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
-extern int	libxfs_itobp (xfs_mount_t *, xfs_trans_t *, xfs_inode_t *,
-				xfs_dinode_t **, xfs_buf_t **, xfs_daddr_t);
 extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				xfs_inode_t *, xfs_daddr_t);
 
@@ -458,142 +429,26 @@ extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);
 
-
-/*
- * Directory interface
- */
-#include <xfs/xfs_dir_leaf.h>
+#include <xfs/xfs_dir_leaf.h>	/* dirv1 support in db & repair */ 
 #include <xfs/xfs_dir2_data.h>
 #include <xfs/xfs_dir2_leaf.h>
 #include <xfs/xfs_dir2_block.h>
 #include <xfs/xfs_dir2_node.h>
 
-extern void	libxfs_dir_mount (xfs_mount_t *);
-extern void	libxfs_dir2_mount (xfs_mount_t *);
-extern int	libxfs_dir_init (xfs_trans_t *, xfs_inode_t *, xfs_inode_t *);
-extern int	libxfs_dir2_init (xfs_trans_t *, xfs_inode_t *, xfs_inode_t *);
-extern int	libxfs_dir_createname (xfs_trans_t *, xfs_inode_t *, uchar_t *,
-				int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir2_createname (xfs_trans_t *, xfs_inode_t *, uchar_t *,
-				int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir_lookup (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t *);
-extern int	libxfs_dir2_lookup (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t *);
-extern int	libxfs_dir_replace (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir2_replace (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir_removename (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir2_removename (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, int, xfs_ino_t, xfs_fsblock_t *,
-				xfs_bmap_free_t *, xfs_extlen_t);
-extern int	libxfs_dir_bogus_removename (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, xfs_fsblock_t *, xfs_bmap_free_t *,
-				xfs_extlen_t, xfs_dahash_t, int);
-extern int	libxfs_dir2_bogus_removename (xfs_trans_t *, xfs_inode_t *,
-				uchar_t *, xfs_fsblock_t *, xfs_bmap_free_t *,
-				xfs_extlen_t, xfs_dahash_t, int);
-
-
-/*
- * Block map interface
- */
-extern int	libxfs_bmapi (xfs_trans_t *, xfs_inode_t *, xfs_fileoff_t,
-				xfs_filblks_t, int, xfs_fsblock_t *,
-				xfs_extlen_t, xfs_bmbt_irec_t *, int *,
-				xfs_bmap_free_t *);
-extern int	libxfs_bmapi_single(xfs_trans_t *, xfs_inode_t *, int,
-				xfs_fsblock_t *, xfs_fileoff_t);
-extern int	libxfs_bmap_finish (xfs_trans_t **, xfs_bmap_free_t *,
-				xfs_fsblock_t, int *);
-extern void	libxfs_bmap_cancel(xfs_bmap_free_t *);
-extern int	libxfs_bmap_next_offset (xfs_trans_t *, xfs_inode_t *,
-				xfs_fileoff_t *, int);
-extern int	libxfs_bmap_last_offset(xfs_trans_t *, xfs_inode_t *,
-				xfs_fileoff_t *, int);
-extern int	libxfs_bunmapi (xfs_trans_t *, xfs_inode_t *, xfs_fileoff_t,
-				xfs_filblks_t, int, xfs_extnum_t,
-				xfs_fsblock_t *, xfs_bmap_free_t *, int *);
-extern void	libxfs_bmap_del_free (xfs_bmap_free_t *,
-				xfs_bmap_free_item_t *, xfs_bmap_free_item_t *);
-
-
-/*
- * All other routines we want to keep common...
- */
-
-extern int	libxfs_highbit32 (__uint32_t);
-extern int	libxfs_highbit64 (__uint64_t);
-extern uint	libxfs_da_log2_roundup (uint);
-
-extern void	libxfs_xlate_sb (void *, xfs_sb_t *, int, __int64_t);
-extern void	libxfs_xlate_dinode_core (xfs_caddr_t buf,
-				xfs_dinode_core_t *, int);
-
-extern int	libxfs_alloc_fix_freelist (xfs_alloc_arg_t *, int);
-extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
-				xfs_off_t, int, int);
-
-extern xfs_dahash_t	libxfs_da_hashname (const uchar_t *, int);
-extern int	libxfs_attr_leaf_newentsize (int, int, int, int *);
-extern int	libxfs_attr_set_int (xfs_inode_t*, const char *, int, char *,
-				int, int);
-extern int	libxfs_attr_remove_int (xfs_inode_t *, const char *, int, int);
-
-
-extern void	libxfs_bmbt_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
-#if __BYTE_ORDER != __BIG_ENDIAN
-extern void	libxfs_bmbt_disk_get_all (xfs_bmbt_rec_t *, xfs_bmbt_irec_t *);
-#else
-# define libxfs_bmbt_disk_get_all(r,s)	libxfs_bmbt_get_all(r,s)
-#endif
-
-extern int	libxfs_free_extent (xfs_trans_t *, xfs_fsblock_t, xfs_extlen_t);
-extern int	libxfs_rtfree_extent (xfs_trans_t *, xfs_rtblock_t,
-				xfs_extlen_t);
-
-/* Directory/Attribute routines used by xfs_repair */
-extern void	libxfs_da_bjoin (xfs_trans_t *, xfs_dabuf_t *);
-extern int	libxfs_da_shrink_inode (xfs_da_args_t *, xfs_dablk_t,
-				xfs_dabuf_t *);
-extern int	libxfs_da_grow_inode (xfs_da_args_t *, xfs_dablk_t *);
-extern void	libxfs_da_bhold (xfs_trans_t *, xfs_dabuf_t *);
-extern void	libxfs_da_brelse (xfs_trans_t *, xfs_dabuf_t *);
-extern int	libxfs_da_read_bufr (xfs_trans_t *, xfs_inode_t *, xfs_dablk_t,
-				xfs_daddr_t, xfs_dabuf_t **, int);
-extern int	libxfs_da_read_buf (xfs_trans_t *, xfs_inode_t *,
-				xfs_dablk_t, xfs_daddr_t, xfs_dabuf_t **, int);
-extern int	libxfs_da_get_buf (xfs_trans_t *, xfs_inode_t *,
-				xfs_dablk_t, xfs_daddr_t, xfs_dabuf_t **, int);
-extern void	libxfs_da_log_buf (xfs_trans_t *, xfs_dabuf_t *, uint, uint);
-extern int	libxfs_dir2_shrink_inode (xfs_da_args_t *, xfs_dir2_db_t,
-				xfs_dabuf_t *);
-extern int	libxfs_dir2_grow_inode (xfs_da_args_t *, int, xfs_dir2_db_t *);
-extern int	libxfs_dir2_isleaf (xfs_trans_t *, xfs_inode_t *, int *);
-extern int	libxfs_dir2_isblock (xfs_trans_t *, xfs_inode_t *, int *);
-extern void	libxfs_dir2_data_use_free (xfs_trans_t *, xfs_dabuf_t *,
-				xfs_dir2_data_unused_t *, xfs_dir2_data_aoff_t,
-				xfs_dir2_data_aoff_t, int *, int *);
-extern void	libxfs_dir2_data_make_free (xfs_trans_t *, xfs_dabuf_t *,
-				xfs_dir2_data_aoff_t, xfs_dir2_data_aoff_t,
-				int *, int *);
-extern void	libxfs_dir2_data_log_entry (xfs_trans_t *, xfs_dabuf_t *,
-				xfs_dir2_data_entry_t *);
-extern void	libxfs_dir2_data_log_header (xfs_trans_t *, xfs_dabuf_t *);
-extern void	libxfs_dir2_data_freescan (xfs_mount_t *, xfs_dir2_data_t *,
-				int *, char *);
-extern void	libxfs_dir2_free_log_bests (xfs_trans_t *, xfs_dabuf_t *,
-				int, int);
-
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);
+
+extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
+				xfs_off_t, int, int);
+extern int	libxfs_bmap_finish(xfs_trans_t **, xfs_bmap_free_t *, int *);
+
+extern void	libxfs_da_bjoin (xfs_trans_t *, xfs_dabuf_t *);
+extern void	libxfs_da_bhold (xfs_trans_t *, xfs_dabuf_t *);
+extern int	libxfs_da_read_bufr(xfs_trans_t *, xfs_inode_t *, xfs_dablk_t,
+				xfs_daddr_t, xfs_dabuf_t **, int);
+
+extern void 	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
+extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
 
 extern void cmn_err(int, char *, ...);
 enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
@@ -612,5 +467,75 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 #include <xfs/xfs_imap.h>
 #include <xfs/xfs_log.h>
 #include <xfs/xfs_log_priv.h>
+
+#define XFS_INOBT_IS_FREE_DISK(rp,i)		\
+			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
+/*
+ * public xfs kernel routines to be called as libxfs_*
+ */
+
+/* xfs_alloc.c */
+int libxfs_alloc_fix_freelist(xfs_alloc_arg_t *, int);
+
+/* xfs_attr.c */
+int libxfs_attr_get(struct xfs_inode *, const char *, char *, int *, int);
+int libxfs_attr_set(struct xfs_inode *, const char *, char *, int, int);
+int libxfs_attr_remove(struct xfs_inode *, const char *, int);
+
+/* xfs_bmap.c */
+xfs_bmbt_rec_host_t *xfs_bmap_search_extents(xfs_inode_t *, xfs_fileoff_t,
+				int, int *, xfs_extnum_t *, xfs_bmbt_irec_t *,
+				xfs_bmbt_irec_t	*);
+
+/* xfs_attr_leaf.h */
+#define libxfs_attr_leaf_newentsize	xfs_attr_leaf_newentsize
+
+/* xfs_bit.h */
+#define libxfs_highbit32		xfs_highbit32
+#define libxfs_highbit64		xfs_highbit64
+
+/* xfs_bmap.h */
+#define libxfs_bmap_cancel		xfs_bmap_cancel
+#define libxfs_bmap_last_offset		xfs_bmap_last_offset
+#define libxfs_bmapi			xfs_bmapi
+#define libxfs_bunmapi			xfs_bunmapi
+
+/* xfs_bmap_btree.h */
+#define libxfs_bmbt_disk_get_all	xfs_bmbt_disk_get_all
+
+/* xfs_da_btree.h */
+#define libxfs_da_brelse		xfs_da_brelse
+#define libxfs_da_hashname		xfs_da_hashname
+#define libxfs_da_shrink_inode		xfs_da_shrink_inode
+
+/* xfs_dir2.h */
+#define libxfs_dir_createname		xfs_dir_createname
+#define libxfs_dir_init			xfs_dir_init
+#define libxfs_dir_lookup		xfs_dir_lookup
+#define libxfs_dir_replace		xfs_dir_replace
+#define libxfs_dir2_isblock		xfs_dir2_isblock
+#define libxfs_dir2_isleaf		xfs_dir2_isleaf
+
+/* xfs_dir2_data.h */
+#define libxfs_dir2_data_freescan	xfs_dir2_data_freescan
+#define libxfs_dir2_data_log_entry	xfs_dir2_data_log_entry
+#define libxfs_dir2_data_log_header	xfs_dir2_data_log_header
+#define libxfs_dir2_data_make_free	xfs_dir2_data_make_free
+#define libxfs_dir2_data_use_free	xfs_dir2_data_use_free
+#define libxfs_dir2_shrink_inode	xfs_dir2_shrink_inode
+
+/* xfs_inode.h */
+#define libxfs_dinode_from_disk		xfs_dinode_from_disk
+#define libxfs_dinode_to_disk		xfs_dinode_to_disk
+#define libxfs_idata_realloc		xfs_idata_realloc
+#define libxfs_idestroy_fork		xfs_idestroy_fork
+
+/* xfs_mount.h */
+#define libxfs_mod_sb			xfs_mod_sb
+#define libxfs_sb_from_disk		xfs_sb_from_disk
+#define libxfs_sb_to_disk		xfs_sb_to_disk
+
+/* xfs_rtalloc.c */
+int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
 
 #endif	/* __LIBXFS_H__ */

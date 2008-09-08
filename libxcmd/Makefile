@@ -24,7 +24,4 @@ default: $(LTLIBRARY)
 
 include $(BUILDRULES)
 
-install: default
-
-install-dev: default
-	$(INSTALL_LTLIB_STATIC)
+install install-dev install-qa: default
