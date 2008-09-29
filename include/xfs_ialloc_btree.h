@@ -116,63 +116,7 @@ typedef	struct xfs_btree_sblock xfs_inobt_block_t;
 	(XFS_BTREE_PTR_ADDR(xfs_inobt, bb, \
 				i, XFS_INOBT_BLOCK_MAXRECS(1, cur)))
 
-/*
- * Decrement cursor by one record at the level.
- * For nonzero levels the leaf-ward information is untouched.
- */
-extern int xfs_inobt_decrement(struct xfs_btree_cur *cur, int level, int *stat);
-
-/*
- * Delete the record pointed to by cur.
- * The cursor refers to the place where the record was (could be inserted)
- * when the operation returns.
- */
-extern int xfs_inobt_delete(struct xfs_btree_cur *cur, int *stat);
-
-/*
- * Get the data from the pointed-to record.
- */
-extern int xfs_inobt_get_rec(struct xfs_btree_cur *cur, xfs_agino_t *ino,
-			     __int32_t *fcnt, xfs_inofree_t *free, int *stat);
-
-/*
- * Increment cursor by one record at the level.
- * For nonzero levels the leaf-ward information is untouched.
- */
-extern int xfs_inobt_increment(struct xfs_btree_cur *cur, int level, int *stat);
-
-/*
- * Insert the current record at the point referenced by cur.
- * The cursor may be inconsistent on return if splits have been done.
- */
-extern int xfs_inobt_insert(struct xfs_btree_cur *cur, int *stat);
-
-/*
- * Lookup the record equal to ino in the btree given by cur.
- */
-extern int xfs_inobt_lookup_eq(struct xfs_btree_cur *cur, xfs_agino_t ino,
-				__int32_t fcnt, xfs_inofree_t free, int *stat);
-
-/*
- * Lookup the first record greater than or equal to ino
- * in the btree given by cur.
- */
-extern int xfs_inobt_lookup_ge(struct xfs_btree_cur *cur, xfs_agino_t ino,
-				__int32_t fcnt,	xfs_inofree_t free, int *stat);
-
-/*
- * Lookup the first record less than or equal to ino
- * in the btree given by cur.
- */
-extern int xfs_inobt_lookup_le(struct xfs_btree_cur *cur, xfs_agino_t ino,
-				__int32_t fcnt,	xfs_inofree_t free, int *stat);
-
-/*
- * Update the record referred to by cur, to the value given
- * by [ino, fcnt, free].
- * This either works (return 0) or gets an EFSCORRUPTED error.
- */
-extern int xfs_inobt_update(struct xfs_btree_cur *cur, xfs_agino_t ino,
-				__int32_t fcnt, xfs_inofree_t free);
+extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
 
 #endif	/* __XFS_IALLOC_BTREE_H__ */

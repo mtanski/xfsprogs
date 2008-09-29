@@ -52,6 +52,7 @@
 #include <xfs/xfs_inode_item.h>
 #include <xfs/xfs_alloc.h>
 #include <xfs/xfs_btree.h>
+#include <xfs/xfs_btree_trace.h>
 #include <xfs/xfs_bmap.h>
 
 

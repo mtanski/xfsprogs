@@ -94,62 +94,9 @@ typedef	struct xfs_btree_sblock xfs_alloc_block_t;
 #define	XFS_ALLOC_PTR_ADDR(bb,i,cur)	\
 	XFS_BTREE_PTR_ADDR(xfs_alloc, bb, i, XFS_ALLOC_BLOCK_MAXRECS(1, cur))
 
-/*
- * Decrement cursor by one record at the level.
- * For nonzero levels the leaf-ward information is untouched.
- */
-extern int xfs_alloc_decrement(struct xfs_btree_cur *cur, int level, int *stat);
 
-/*
- * Delete the record pointed to by cur.
- * The cursor refers to the place where the record was (could be inserted)
- * when the operation returns.
- */
-extern int xfs_alloc_delete(struct xfs_btree_cur *cur, int *stat);
-
-/*
- * Get the data from the pointed-to record.
- */
-extern int xfs_alloc_get_rec(struct xfs_btree_cur *cur,	xfs_agblock_t *bno,
-				xfs_extlen_t *len, int *stat);
-
-/*
- * Increment cursor by one record at the level.
- * For nonzero levels the leaf-ward information is untouched.
- */
-extern int xfs_alloc_increment(struct xfs_btree_cur *cur, int level, int *stat);
-
-/*
- * Insert the current record at the point referenced by cur.
- * The cursor may be inconsistent on return if splits have been done.
- */
-extern int xfs_alloc_insert(struct xfs_btree_cur *cur, int *stat);
-
-/*
- * Lookup the record equal to [bno, len] in the btree given by cur.
- */
-extern int xfs_alloc_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-				xfs_extlen_t len, int *stat);
-
-/*
- * Lookup the first record greater than or equal to [bno, len]
- * in the btree given by cur.
- */
-extern int xfs_alloc_lookup_ge(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-				xfs_extlen_t len, int *stat);
-
-/*
- * Lookup the first record less than or equal to [bno, len]
- * in the btree given by cur.
- */
-extern int xfs_alloc_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-				xfs_extlen_t len, int *stat);
-
-/*
- * Update the record referred to by cur, to the value given by [bno, len].
- * This either works (return 0) or gets an EFSCORRUPTED error.
- */
-extern int xfs_alloc_update(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-				xfs_extlen_t len);
+extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
+		struct xfs_trans *, struct xfs_buf *,
+		xfs_agnumber_t, xfs_btnum_t);
 
 #endif	/* __XFS_ALLOC_BTREE_H__ */

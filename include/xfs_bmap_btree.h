@@ -24,6 +24,7 @@ struct xfs_btree_cur;
 struct xfs_btree_lblock;
 struct xfs_mount;
 struct xfs_inode;
+struct xfs_trans;
 
 /*
  * Bmap root header, on-disk form only.
@@ -230,37 +231,11 @@ typedef struct xfs_btree_lblock xfs_bmbt_block_t;
 	 be16_to_cpu((bb)->bb_numrecs) <= (mp)->m_bmap_dmxr[(level) != 0])
 
 
-#ifdef __KERNEL__
-
-#if defined(XFS_BMBT_TRACE)
-/*
- * Trace buffer entry types.
- */
-#define XFS_BMBT_KTRACE_ARGBI	1
-#define XFS_BMBT_KTRACE_ARGBII	2
-#define XFS_BMBT_KTRACE_ARGFFFI 3
-#define XFS_BMBT_KTRACE_ARGI	4
-#define XFS_BMBT_KTRACE_ARGIFK	5
-#define XFS_BMBT_KTRACE_ARGIFR	6
-#define XFS_BMBT_KTRACE_ARGIK	7
-#define XFS_BMBT_KTRACE_CUR	8
-
-#define XFS_BMBT_TRACE_SIZE	4096	/* size of global trace buffer */
-#define XFS_BMBT_KTRACE_SIZE	32	/* size of per-inode trace buffer */
-extern ktrace_t	*xfs_bmbt_trace_buf;
-#endif
-
-#endif	/* __KERNEL__ */
-
 /*
  * Prototypes for xfs_bmap.c to call.
  */
 extern void xfs_bmdr_to_bmbt(xfs_bmdr_block_t *, int, xfs_bmbt_block_t *, int);
-extern int xfs_bmbt_decrement(struct xfs_btree_cur *, int, int *);
-extern int xfs_bmbt_delete(struct xfs_btree_cur *, int *);
 extern void xfs_bmbt_get_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
-extern xfs_bmbt_block_t *xfs_bmbt_get_block(struct xfs_btree_cur *cur,
-						int, struct xfs_buf **bpp);
 extern xfs_filblks_t xfs_bmbt_get_blockcount(xfs_bmbt_rec_host_t *r);
 extern xfs_fsblock_t xfs_bmbt_get_startblock(xfs_bmbt_rec_host_t *r);
 extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
@@ -269,22 +244,6 @@ extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
 extern void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
 extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
-
-extern int xfs_bmbt_increment(struct xfs_btree_cur *, int, int *);
-extern int xfs_bmbt_insert(struct xfs_btree_cur *, int *);
-extern void xfs_bmbt_log_block(struct xfs_btree_cur *, struct xfs_buf *, int);
-extern void xfs_bmbt_log_recs(struct xfs_btree_cur *, struct xfs_buf *, int,
-				int);
-extern int xfs_bmbt_lookup_eq(struct xfs_btree_cur *, xfs_fileoff_t,
-				xfs_fsblock_t, xfs_filblks_t, int *);
-extern int xfs_bmbt_lookup_ge(struct xfs_btree_cur *, xfs_fileoff_t,
-				xfs_fsblock_t, xfs_filblks_t, int *);
-
-/*
- * Give the bmap btree a new root block.  Copy the old broot contents
- * down into a real block and make the broot point to it.
- */
-extern int xfs_bmbt_newroot(struct xfs_btree_cur *cur, int *lflags, int *stat);
 
 extern void xfs_bmbt_set_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
 extern void xfs_bmbt_set_allf(xfs_bmbt_rec_host_t *r, xfs_fileoff_t o,
@@ -299,8 +258,9 @@ extern void xfs_bmbt_disk_set_allf(xfs_bmbt_rec_t *r, xfs_fileoff_t o,
 			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
 
 extern void xfs_bmbt_to_bmdr(xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
-extern int xfs_bmbt_update(struct xfs_btree_cur *, xfs_fileoff_t,
-				xfs_fsblock_t, xfs_filblks_t, xfs_exntst_t);
+
+extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+		struct xfs_trans *, struct xfs_inode *, int);
 
 
 #endif	/* __XFS_BMAP_BTREE_H__ */
