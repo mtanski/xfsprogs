@@ -2694,7 +2694,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 * just leave nlinks alone.  even if it's set wrong,
 	 * it'll be reset when read in.
 	 */
-	*dirty = process_check_inode_nlink_version(dinoc, lino);
+	*dirty += process_check_inode_nlink_version(dinoc, lino);
 
 	return retval;
 
