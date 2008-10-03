@@ -16,9 +16,29 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+extern const struct field	bmapbta_flds[];
+extern const struct field	bmapbta_hfld[];
+extern const struct field	bmapbta_key_flds[];
+extern const struct field	bmapbta_rec_flds[];
+
+extern const struct field	bmapbtd_flds[];
+extern const struct field	bmapbtd_hfld[];
+extern const struct field	bmapbtd_key_flds[];
+extern const struct field	bmapbtd_rec_flds[];
+
+extern const struct field	inobt_flds[];
+extern const struct field	inobt_hfld[];
+extern const struct field	inobt_key_flds[];
+extern const struct field	inobt_rec_flds[];
+
 extern const struct field	bnobt_flds[];
 extern const struct field	bnobt_hfld[];
 extern const struct field	bnobt_key_flds[];
 extern const struct field	bnobt_rec_flds[];
 
-extern int	bnobt_size(void *obj, int startoff, int idx);
+extern const struct field	cntbt_flds[];
+extern const struct field	cntbt_hfld[];
+extern const struct field	cntbt_key_flds[];
+extern const struct field	cntbt_rec_flds[];
+
+extern int	btblock_size(void *obj, int startoff, int idx);

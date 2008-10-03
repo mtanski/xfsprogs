@@ -2689,6 +2689,12 @@ process_inode(
 		}
 		return;
 	}
+	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
+		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+			dbprintf("bad next unlinked %#x for inode %lld\n",
+				be32_to_cpu(dip->di_next_unlinked), ino);
+		error++;
+	}
 	/*
 	 * di_mode is a 16-bit uint so no need to check the < 0 case
 	 */

@@ -22,10 +22,7 @@
 #include "fprint.h"
 #include "field.h"
 #include "inode.h"
-#include "bnobt.h"
-#include "cntbt.h"
-#include "inobt.h"
-#include "bmapbt.h"
+#include "btblock.h"
 #include "bmroot.h"
 #include "bit.h"
 #include "agf.h"
@@ -87,7 +84,7 @@ const ftattr_t	ftattrtab[] = {
 	  fa_attrblock, NULL },
 	{ FLDT_ATTRSHORT, "attrshort", NULL, (char *)attr_shortform_flds,
 	  attrshort_size, FTARG_SIZE, NULL, attr_shortform_flds },
-	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, bmapbta_size,
+	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
 	  FTARG_SIZE, NULL, bmapbta_flds },
 	{ FLDT_BMAPBTAKEY, "bmapbtakey", fp_sarray, (char *)bmapbta_key_flds,
 	  SI(bitsz(xfs_bmbt_key_t)), 0, NULL, bmapbta_key_flds },
@@ -95,7 +92,7 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(xfs_bmbt_ptr_t)), 0, fa_dfsbno, NULL },
 	{ FLDT_BMAPBTAREC, "bmapbtarec", fp_sarray, (char *)bmapbta_rec_flds,
 	  SI(bitsz(xfs_bmbt_rec_t)), 0, NULL, bmapbta_rec_flds },
-	{ FLDT_BMAPBTD, "bmapbtd", NULL, (char *)bmapbtd_flds, bmapbtd_size,
+	{ FLDT_BMAPBTD, "bmapbtd", NULL, (char *)bmapbtd_flds, btblock_size,
 	  FTARG_SIZE, NULL, bmapbtd_flds },
 	{ FLDT_BMAPBTDKEY, "bmapbtdkey", fp_sarray, (char *)bmapbtd_key_flds,
 	  SI(bitsz(xfs_bmbt_key_t)), 0, NULL, bmapbtd_key_flds },
@@ -115,7 +112,7 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(xfs_bmdr_key_t)), 0, NULL, bmrootd_key_flds },
 	{ FLDT_BMROOTDPTR, "bmrootdptr", fp_num, "%llu",
 	  SI(bitsz(xfs_bmdr_ptr_t)), 0, fa_dfsbno, NULL },
-	{ FLDT_BNOBT, "bnobt", NULL, (char *)bnobt_flds, bnobt_size, FTARG_SIZE,
+	{ FLDT_BNOBT, "bnobt", NULL, (char *)bnobt_flds, btblock_size, FTARG_SIZE,
 	  NULL, bnobt_flds },
 	{ FLDT_BNOBTKEY, "bnobtkey", fp_sarray, (char *)bnobt_key_flds,
 	  SI(bitsz(xfs_alloc_key_t)), 0, NULL, bnobt_key_flds },
@@ -136,7 +133,7 @@ const ftattr_t	ftattrtab[] = {
 	{ FLDT_CHARNS, "charns", fp_charns, NULL, SI(bitsz(char)), 0, NULL,
 	  NULL },
 	{ FLDT_CHARS, "chars", fp_num, "%c", SI(bitsz(char)), 0, NULL, NULL },
-	{ FLDT_CNTBT, "cntbt", NULL, (char *)cntbt_flds, cntbt_size, FTARG_SIZE,
+	{ FLDT_CNTBT, "cntbt", NULL, (char *)cntbt_flds, btblock_size, FTARG_SIZE,
 	  NULL, cntbt_flds },
 	{ FLDT_CNTBTKEY, "cntbtkey", fp_sarray, (char *)cntbt_key_flds,
 	  SI(bitsz(xfs_alloc_key_t)), 0, NULL, cntbt_key_flds },
@@ -247,7 +244,7 @@ const ftattr_t	ftattrtab[] = {
 	  FTARG_SIGNED, NULL, NULL },
 	{ FLDT_INO, "ino", fp_num, "%llu", SI(bitsz(xfs_ino_t)), FTARG_DONULL,
 	  fa_ino, NULL },
-	{ FLDT_INOBT, "inobt",  NULL, (char *)inobt_flds, inobt_size,
+	{ FLDT_INOBT, "inobt",  NULL, (char *)inobt_flds, btblock_size,
 	  FTARG_SIZE, NULL, inobt_flds },
 	{ FLDT_INOBTKEY, "inobtkey", fp_sarray, (char *)inobt_key_flds,
 	  SI(bitsz(xfs_inobt_key_t)), 0, NULL, inobt_key_flds },

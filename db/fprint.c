@@ -24,7 +24,7 @@
 #include "fprint.h"
 #include "field.h"
 #include "inode.h"
-#include "inobt.h"
+#include "btblock.h"
 #include "bit.h"
 #include "print.h"
 #include "output.h"
