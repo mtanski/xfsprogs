@@ -47,7 +47,7 @@ scan_sbtree(
 	int		nlevels,
 	xfs_agnumber_t	agno,
 	int		suspect,
-	void		(*func)(xfs_btree_sblock_t	*block,
+	void		(*func)(struct xfs_btree_block	*block,
 				int			level,
 				xfs_agblock_t		bno,
 				xfs_agnumber_t		agno,
@@ -63,8 +63,7 @@ scan_sbtree(
 		do_error(_("can't read btree block %d/%d\n"), agno, root);
 		return;
 	}
-	(*func)((xfs_btree_sblock_t *)XFS_BUF_PTR(bp),
-		nlevels - 1, root, agno, suspect, isroot);
+	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect, isroot);
 	libxfs_putbuf(bp);
 }
 
@@ -75,7 +74,7 @@ int
 scan_lbtree(
 	xfs_dfsbno_t	root,
 	int		nlevels,
-	int		(*func)(xfs_btree_lblock_t	*block,
+	int		(*func)(struct xfs_btree_block	*block,
 				int			level,
 				int			type,
 				int			whichfork,
@@ -110,7 +109,7 @@ scan_lbtree(
 			XFS_FSB_TO_AGBNO(mp, root));
 		return(1);
 	}
-	err = (*func)((xfs_btree_lblock_t *)XFS_BUF_PTR(bp), nlevels - 1,
+	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
 			type, whichfork, root, ino, tot, nex, blkmapp,
 			bm_cursor, isroot, check_dups, &dirty);
 
@@ -126,7 +125,7 @@ scan_lbtree(
 
 int
 scanfunc_bmap(
-	xfs_btree_lblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	int			type,
 	int			whichfork,
@@ -140,7 +139,6 @@ scanfunc_bmap(
 	int			check_dups,
 	int			*dirty)
 {
-	xfs_bmbt_block_t	*block = (xfs_bmbt_block_t *)ablock;
 	int			i;
 	int			err;
 	xfs_bmbt_ptr_t		*pp;
@@ -197,12 +195,12 @@ _("bad fwd (right) sibling pointer (saw %llu parent block says %llu)\n"
 					bm_cursor->level[level].fsbno);
 				return(1);
 			}
-			if (be64_to_cpu(block->bb_leftsib) !=
+			if (be64_to_cpu(block->bb_u.l.bb_leftsib) !=
 					bm_cursor->level[level].fsbno)  {
 				do_warn(
 _("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
   "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					be64_to_cpu(block->bb_leftsib),
+					be64_to_cpu(block->bb_u.l.bb_leftsib),
 					bm_cursor->level[level].fsbno,
 					ino, forkname, bno);
 				return(1);
@@ -212,11 +210,11 @@ _("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
 			 * This is the first or only block on this level.
 			 * Check that the left sibling pointer is NULL
 			 */
-			if (be64_to_cpu(block->bb_leftsib) != NULLDFSBNO)  {
+			if (be64_to_cpu(block->bb_u.l.bb_leftsib) != NULLDFSBNO) {
 				do_warn(
 _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
   "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					be64_to_cpu(block->bb_leftsib),
+					be64_to_cpu(block->bb_u.l.bb_leftsib),
 					ino, forkname, bno);
 				return(1);
 			}
@@ -227,9 +225,9 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		 */
 		bm_cursor->level[level].fsbno = bno;
 		bm_cursor->level[level].left_fsbno =
-					be64_to_cpu(block->bb_leftsib);
+					be64_to_cpu(block->bb_u.l.bb_leftsib);
 		bm_cursor->level[level].right_fsbno =
-					be64_to_cpu(block->bb_rightsib);
+					be64_to_cpu(block->bb_u.l.bb_rightsib);
 
 		switch (get_fsbno_state(mp, bno))  {
 		case XR_E_UNKNOWN:
@@ -304,7 +302,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 					mp->m_bmap_dmxr[0]);
 			return(1);
 		}
-		rp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
 		*nex += numrecs;
 		/*
 		 * XXX - if we were going to fix up the btree record,
@@ -353,8 +351,8 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 			ino, numrecs, mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
 		return(1);
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
-	pkey = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
+	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+	pkey = XFS_BMBT_KEY_ADDR(mp, block, 1);
 
 	last_key = NULLDFILOFF;
 
@@ -442,7 +440,7 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 
 void
 scanfunc_bno(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
@@ -451,7 +449,6 @@ scanfunc_bno(
 	)
 {
 	xfs_agblock_t		b, e;
-	xfs_alloc_block_t	*block = (xfs_alloc_block_t *)ablock;
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
@@ -507,7 +504,7 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 		if (hdr_errors)
 			suspect++;
 
-		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
 			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
 			    be32_to_cpu(rp[i].ar_startblock) == 0 ||
@@ -541,7 +538,7 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 	/*
 	 * interior record
 	 */
-	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 
 	if (numrecs > mp->m_alloc_mxr[1])  {
 		numrecs = mp->m_alloc_mxr[1];
@@ -585,7 +582,7 @@ _("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n")
 
 void
 scanfunc_cnt(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
@@ -593,7 +590,6 @@ scanfunc_cnt(
 	int			isroot
 	)
 {
-	xfs_alloc_block_t	*block;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
 	xfs_agblock_t		b, e;
@@ -602,7 +598,6 @@ scanfunc_cnt(
 	int			numrecs;
 	int			state;
 
-	block = (xfs_alloc_block_t *)ablock;
 	hdr_errors = 0;
 
 	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
@@ -652,7 +647,7 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 		if (hdr_errors)
 			suspect++;
 
-		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
 			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
 					be32_to_cpu(rp[i].ar_startblock) == 0 ||
@@ -694,7 +689,7 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 	/*
 	 * interior record
 	 */
-	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 
 	if (numrecs > mp->m_alloc_mxr[1])  {
 		numrecs = mp->m_alloc_mxr[1];
@@ -745,7 +740,7 @@ _("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
  */
 void
 scanfunc_ino(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
@@ -754,7 +749,6 @@ scanfunc_ino(
 	)
 {
 	xfs_ino_t		lino;
-	xfs_inobt_block_t	*block;
 	int			i;
 	xfs_agino_t		ino;
 	xfs_agblock_t		agbno;
@@ -768,7 +762,6 @@ scanfunc_ino(
 	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
 	int			hdr_errors;
 
-	block = (xfs_inobt_block_t *)ablock;
 	hdr_errors = 0;
 
 	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
@@ -831,7 +824,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			suspect++;
 		}
 
-		rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, 1);
+		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
 
 		/*
 		 * step through the records, each record points to
@@ -1019,7 +1012,7 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 		hdr_errors++;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, 1, mp->m_inobt_mxr[1]);
+	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
 
 	/*
 	 * don't pass bogus tree flag down further if this block

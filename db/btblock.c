@@ -37,25 +37,25 @@ struct xfs_db_btree {
 	size_t			ptr_len;
 } btrees[] = {
 	[/*0x424d415*/0] = { /* BMAP */
-		sizeof(struct xfs_btree_lblock),
+		XFS_BTREE_LBLOCK_LEN,
 		sizeof(xfs_bmbt_key_t),
 		sizeof(xfs_bmbt_rec_t),
 		sizeof(__be64),
 	},
 	[/*0x4142544*/2] = { /* ABTB */
-		sizeof(struct xfs_btree_sblock),
+		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
 	[/*0x4142544*/3] = { /* ABTC */
-		sizeof(struct xfs_btree_sblock),
+		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
 	[/*0x4941425*/4] = { /* IABT */
-		sizeof(struct xfs_btree_sblock),
+		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_inobt_key_t),
 		sizeof(xfs_inobt_rec_t),
 		sizeof(__be32),
@@ -208,13 +208,13 @@ const field_t	bmapbtd_hfld[] = {
 	{ NULL }
 };
 
-#define	OFF(f)	bitize(offsetof(xfs_bmbt_block_t, bb_ ## f))
+#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
 const field_t	bmapbta_flds[] = {
 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
 	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-	{ "leftsib", FLDT_DFSBNO, OI(OFF(leftsib)), C1, 0, TYP_BMAPBTA },
-	{ "rightsib", FLDT_DFSBNO, OI(OFF(rightsib)), C1, 0, TYP_BMAPBTA },
+	{ "leftsib", FLDT_DFSBNO, OI(OFF(u.l.bb_leftsib)), C1, 0, TYP_BMAPBTA },
+	{ "rightsib", FLDT_DFSBNO, OI(OFF(u.l.bb_rightsib)), C1, 0, TYP_BMAPBTA },
 	{ "recs", FLDT_BMAPBTAREC, btblock_rec_offset, btblock_rec_count,
 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ "keys", FLDT_BMAPBTAKEY, btblock_key_offset, btblock_key_count,
@@ -227,8 +227,8 @@ const field_t	bmapbtd_flds[] = {
 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
 	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-	{ "leftsib", FLDT_DFSBNO, OI(OFF(leftsib)), C1, 0, TYP_BMAPBTD },
-	{ "rightsib", FLDT_DFSBNO, OI(OFF(rightsib)), C1, 0, TYP_BMAPBTD },
+	{ "leftsib", FLDT_DFSBNO, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_BMAPBTD },
+	{ "rightsib", FLDT_DFSBNO, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_BMAPBTD },
 	{ "recs", FLDT_BMAPBTDREC, btblock_rec_offset, btblock_rec_count,
 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ "keys", FLDT_BMAPBTDKEY, btblock_key_offset, btblock_key_count,
@@ -300,13 +300,13 @@ const field_t	inobt_hfld[] = {
 	{ NULL }
 };
 
-#define	OFF(f)	bitize(offsetof(struct xfs_btree_sblock, bb_ ## f))
+#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
 const field_t	inobt_flds[] = {
 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
 	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-	{ "leftsib", FLDT_AGBLOCK, OI(OFF(leftsib)), C1, 0, TYP_INOBT },
-	{ "rightsib", FLDT_AGBLOCK, OI(OFF(rightsib)), C1, 0, TYP_INOBT },
+	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_INOBT },
+	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_INOBT },
 	{ "recs", FLDT_INOBTREC, btblock_rec_offset, btblock_rec_count,
 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ "keys", FLDT_INOBTKEY, btblock_key_offset, btblock_key_count,
@@ -342,13 +342,13 @@ const field_t	bnobt_hfld[] = {
 	{ NULL }
 };
 
-#define	OFF(f)	bitize(offsetof(xfs_alloc_block_t, bb_ ## f))
+#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
 const field_t	bnobt_flds[] = {
 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
 	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-	{ "leftsib", FLDT_AGBLOCK, OI(OFF(leftsib)), C1, 0, TYP_BNOBT },
-	{ "rightsib", FLDT_AGBLOCK, OI(OFF(rightsib)), C1, 0, TYP_BNOBT },
+	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_BNOBT },
+	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_BNOBT },
 	{ "recs", FLDT_BNOBTREC, btblock_rec_offset, btblock_rec_count,
 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ "keys", FLDT_BNOBTKEY, btblock_key_offset, btblock_key_count,
@@ -380,13 +380,13 @@ const field_t	cntbt_hfld[] = {
 	{ NULL }
 };
 
-#define	OFF(f)	bitize(offsetof(xfs_alloc_block_t, bb_ ## f))
+#define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
 const field_t	cntbt_flds[] = {
 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
 	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
-	{ "leftsib", FLDT_AGBLOCK, OI(OFF(leftsib)), C1, 0, TYP_CNTBT },
-	{ "rightsib", FLDT_AGBLOCK, OI(OFF(rightsib)), C1, 0, TYP_CNTBT },
+	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_CNTBT },
+	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_CNTBT },
 	{ "recs", FLDT_CNTBTREC, btblock_rec_offset, btblock_rec_count,
 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ "keys", FLDT_CNTBTKEY, btblock_key_offset, btblock_key_count,

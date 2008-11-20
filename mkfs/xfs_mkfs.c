@@ -616,7 +616,7 @@ main(
 	__uint64_t		agsize;
 	xfs_alloc_rec_t		*arec;
 	int			attrversion;
-	xfs_btree_sblock_t	*block;
+	struct xfs_btree_block	*block;
 	int			blflag;
 	int			blocklog;
 	unsigned int		blocksize;
@@ -2241,14 +2241,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		buf = libxfs_getbuf(mp->m_dev,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
 				bsize);
-		block = XFS_BUF_TO_SBLOCK(buf);
+		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_ABTB_MAGIC);
 		block->bb_level = 0;
 		block->bb_numrecs = cpu_to_be16(1);
-		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
-		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		arec = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		block->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
 		if (loginternal && agno == logagno) {
 			if (lalign) {
@@ -2284,14 +2284,14 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		buf = libxfs_getbuf(mp->m_dev,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
 				bsize);
-		block = XFS_BUF_TO_SBLOCK(buf);
+		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_ABTC_MAGIC);
 		block->bb_level = 0;
 		block->bb_numrecs = cpu_to_be16(1);
-		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
-		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		arec = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		block->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
 		if (loginternal && agno == logagno) {
 			if (lalign) {
@@ -2317,13 +2317,13 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		buf = libxfs_getbuf(mp->m_dev,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
 				bsize);
-		block = XFS_BUF_TO_SBLOCK(buf);
+		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
 		block->bb_level = 0;
 		block->bb_numrecs = 0;
-		block->bb_leftsib = cpu_to_be32(NULLAGBLOCK);
-		block->bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+		block->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	}
 

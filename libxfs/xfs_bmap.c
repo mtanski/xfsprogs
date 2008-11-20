@@ -2871,24 +2871,24 @@ xfs_bmap_btree_to_extents(
 	int			whichfork)  /* data or attr fork */
 {
 	/* REFERENCED */
-	xfs_bmbt_block_t	*cblock;/* child btree block */
+	struct xfs_btree_block	*cblock;/* child btree block */
 	xfs_fsblock_t		cbno;	/* child block number */
 	xfs_buf_t		*cbp;	/* child block's buffer */
 	int			error;	/* error return value */
 	xfs_ifork_t		*ifp;	/* inode fork data */
 	xfs_mount_t		*mp;	/* mount point structure */
 	__be64			*pp;	/* ptr to block address */
-	xfs_bmbt_block_t	*rblock;/* root btree block */
+	struct xfs_btree_block	*rblock;/* root btree block */
 
+	mp = ip->i_mount;
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
 	rblock = ifp->if_broot;
 	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
-	ASSERT(XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes) == 1);
-	mp = ip->i_mount;
-	pp = XFS_BMAP_BROOT_PTR_ADDR(rblock, 1, ifp->if_broot_bytes);
+	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
+	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, ifp->if_broot_bytes);
 	cbno = be64_to_cpu(*pp);
 	*logflagsp = 0;
 #ifdef DEBUG
@@ -2898,8 +2898,8 @@ xfs_bmap_btree_to_extents(
 	if ((error = xfs_btree_read_bufl(mp, tp, cbno, 0, &cbp,
 			XFS_BMAP_BTREE_REF)))
 		return error;
-	cblock = XFS_BUF_TO_BMBT_BLOCK(cbp);
-	if ((error = xfs_btree_check_lblock(cur, cblock, 0, cbp)))
+	cblock = XFS_BUF_TO_BLOCK(cbp);
+	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
 		return error;
 	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
 	ip->i_d.di_nblocks--;
@@ -3281,11 +3281,11 @@ xfs_bmap_extents_to_btree(
 	int			*logflagsp,	/* inode logging flags */
 	int			whichfork)	/* data or attr fork */
 {
-	xfs_bmbt_block_t	*ablock;	/* allocated (child) bt block */
+	struct xfs_btree_block	*ablock;	/* allocated (child) bt block */
 	xfs_buf_t		*abp;		/* buffer for ablock */
 	xfs_alloc_arg_t		args;		/* allocation arguments */
 	xfs_bmbt_rec_t		*arp;		/* child record pointer */
-	xfs_bmbt_block_t	*block;		/* btree root block */
+	struct xfs_btree_block	*block;		/* btree root block */
 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
 	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
 	int			error;		/* error return value */
@@ -3305,6 +3305,7 @@ xfs_bmap_extents_to_btree(
 	 */
 	xfs_iroot_realloc(ip, 1, whichfork);
 	ifp->if_flags |= XFS_IFBROOT;
+
 	/*
 	 * Fill in the root.
 	 */
@@ -3312,8 +3313,9 @@ xfs_bmap_extents_to_btree(
 	block->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
 	block->bb_level = cpu_to_be16(1);
 	block->bb_numrecs = cpu_to_be16(1);
-	block->bb_leftsib = cpu_to_be64(NULLDFSBNO);
-	block->bb_rightsib = cpu_to_be64(NULLDFSBNO);
+	block->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
+	block->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
+
 	/*
 	 * Need a cursor.  Can't allocate until bb_level is filled in.
 	 */
@@ -3365,12 +3367,12 @@ xfs_bmap_extents_to_btree(
 	/*
 	 * Fill in the child block.
 	 */
-	ablock = XFS_BUF_TO_BMBT_BLOCK(abp);
+	ablock = XFS_BUF_TO_BLOCK(abp);
 	ablock->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
 	ablock->bb_level = 0;
-	ablock->bb_leftsib = cpu_to_be64(NULLDFSBNO);
-	ablock->bb_rightsib = cpu_to_be64(NULLDFSBNO);
-	arp = XFS_BMAP_REC_IADDR(ablock, 1, cur);
+	ablock->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
+	ablock->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
+	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
 	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
 	for (cnt = i = 0; i < nextents; i++) {
 		ep = xfs_iext_get_ext(ifp, i);
@@ -3381,15 +3383,18 @@ xfs_bmap_extents_to_btree(
 		}
 	}
 	ASSERT(cnt == XFS_IFORK_NEXTENTS(ip, whichfork));
-	ablock->bb_numrecs = cpu_to_be16(cnt);
+	xfs_btree_set_numrecs(ablock, cnt);
+
 	/*
 	 * Fill in the root key and pointer.
 	 */
-	kp = XFS_BMAP_KEY_IADDR(block, 1, cur);
-	arp = XFS_BMAP_REC_IADDR(ablock, 1, cur);
+	kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
 	kp->br_startoff = cpu_to_be64(xfs_bmbt_disk_get_startoff(arp));
-	pp = XFS_BMAP_PTR_IADDR(block, 1, cur);
+	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, xfs_bmbt_get_maxrecs(cur,
+						be16_to_cpu(block->bb_level)));
 	*pp = cpu_to_be64(args.fsbno);
+
 	/*
 	 * Do all this logging at the end so that
 	 * the root is at the right level.
@@ -3871,7 +3876,7 @@ xfs_bmap_compute_maxlevels(
 		maxleafents = MAXAEXTNUM;
 		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
 	}
-	maxrootrecs = (int)XFS_BTREE_BLOCK_MAXRECS(sz, xfs_bmdr, 0);
+	maxrootrecs = xfs_bmdr_maxrecs(mp, sz, 0);
 	minleafrecs = mp->m_bmap_dmnr[0];
 	minnoderecs = mp->m_bmap_dmnr[1];
 	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
@@ -4082,6 +4087,22 @@ xfs_bmap_one_block(
 	return rval;
 }
 
+STATIC int
+xfs_bmap_sanity_check(
+	struct xfs_mount	*mp,
+	struct xfs_buf		*bp,
+	int			level)
+{
+	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
+
+	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC ||
+	    be16_to_cpu(block->bb_level) != level ||
+	    be16_to_cpu(block->bb_numrecs) == 0 ||
+	    be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+		return 0;
+	return 1;
+}
+
 /*
  * Read in the extents to if_extents.
  * All inode fields are set up by caller, we just traverse the btree
@@ -4094,7 +4115,7 @@ xfs_bmap_read_extents(
 	xfs_inode_t		*ip,	/* incore inode */
 	int			whichfork) /* data or attr fork */
 {
-	xfs_bmbt_block_t	*block;	/* current btree block */
+	struct xfs_btree_block	*block;	/* current btree block */
 	xfs_fsblock_t		bno;	/* block # of "block" */
 	xfs_buf_t		*bp;	/* buffer for "block" */
 	int			error;	/* error return value */
@@ -4118,7 +4139,7 @@ xfs_bmap_read_extents(
 	 */
 	level = be16_to_cpu(block->bb_level);
 	ASSERT(level > 0);
-	pp = XFS_BMAP_BROOT_PTR_ADDR(block, 1, ifp->if_broot_bytes);
+	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
 	bno = be64_to_cpu(*pp);
 	ASSERT(bno != NULLDFSBNO);
 	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
@@ -4131,13 +4152,13 @@ xfs_bmap_read_extents(
 		if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
 				XFS_BMAP_BTREE_REF)))
 			return error;
-		block = XFS_BUF_TO_BMBT_BLOCK(bp);
+		block = XFS_BUF_TO_BLOCK(bp);
 		XFS_WANT_CORRUPTED_GOTO(
-			XFS_BMAP_SANITY_CHECK(mp, block, level),
+			xfs_bmap_sanity_check(mp, bp, level),
 			error0);
 		if (level == 0)
 			break;
-		pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
 		bno = be64_to_cpu(*pp);
 		XFS_WANT_CORRUPTED_GOTO(XFS_FSB_SANITY_CHECK(mp, bno), error0);
 		xfs_trans_brelse(tp, bp);
@@ -4157,7 +4178,7 @@ xfs_bmap_read_extents(
 		xfs_extnum_t	start;
 
 
-		num_recs = be16_to_cpu(block->bb_numrecs);
+		num_recs = xfs_btree_get_numrecs(block);
 		if (unlikely(i + num_recs > room)) {
 			ASSERT(i + num_recs <= room);
 			xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
@@ -4169,18 +4190,18 @@ xfs_bmap_read_extents(
 			goto error0;
 		}
 		XFS_WANT_CORRUPTED_GOTO(
-			XFS_BMAP_SANITY_CHECK(mp, block, 0),
+			xfs_bmap_sanity_check(mp, bp, 0),
 			error0);
 		/*
 		 * Read-ahead the next leaf block, if any.
 		 */
-		nextbno = be64_to_cpu(block->bb_rightsib);
+		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
 		if (nextbno != NULLFSBLOCK)
 			xfs_btree_reada_bufl(mp, nextbno, 1);
 		/*
 		 * Copy records into the extent records.
 		 */
-		frp = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
 		start = i;
 		for (j = 0; j < num_recs; j++, i++, frp++) {
 			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
@@ -4211,7 +4232,7 @@ xfs_bmap_read_extents(
 		if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
 				XFS_BMAP_BTREE_REF)))
 			return error;
-		block = XFS_BUF_TO_BMBT_BLOCK(bp);
+		block = XFS_BUF_TO_BLOCK(bp);
 	}
 	ASSERT(i == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)));
 	ASSERT(i == XFS_IFORK_NEXTENTS(ip, whichfork));

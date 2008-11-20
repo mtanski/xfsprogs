@@ -177,7 +177,7 @@ static int		verbose;
 #define	CHECK_BLISTA(a,b)	\
 	(blist_size && check_blist(XFS_AGB_TO_FSB(mp, a, b)))
 
-typedef void	(*scan_lbtree_f_t)(xfs_btree_lblock_t	*block,
+typedef void	(*scan_lbtree_f_t)(struct xfs_btree_block *block,
 				   int			level,
 				   dbm_t		type,
 				   xfs_fsblock_t	bno,
@@ -189,7 +189,7 @@ typedef void	(*scan_lbtree_f_t)(xfs_btree_lblock_t	*block,
 				   int			isroot,
 				   typnm_t		btype);
 
-typedef void	(*scan_sbtree_f_t)(xfs_btree_sblock_t	*block,
+typedef void	(*scan_sbtree_f_t)(struct xfs_btree_block *block,
 				   int			level,
 				   xfs_agf_t		*agf,
 				   xfs_agblock_t	bno,
@@ -340,19 +340,19 @@ static void		scan_lbtree(xfs_fsblock_t root, int nlevels,
 static void		scan_sbtree(xfs_agf_t *agf, xfs_agblock_t root,
 				    int nlevels, int isroot,
 				    scan_sbtree_f_t func, typnm_t btype);
-static void		scanfunc_bmap(xfs_btree_lblock_t *ablock, int level,
-				      dbm_t type, xfs_fsblock_t bno,
+static void		scanfunc_bmap(struct xfs_btree_block *block,
+				      int level, dbm_t type, xfs_fsblock_t bno,
 				      inodata_t *id, xfs_drfsbno_t *totd,
 				      xfs_drfsbno_t *toti, xfs_extnum_t *nex,
 				      blkmap_t **blkmapp, int isroot,
 				      typnm_t btype);
-static void		scanfunc_bno(xfs_btree_sblock_t *ablock, int level,
+static void		scanfunc_bno(struct xfs_btree_block *block, int level,
 				     xfs_agf_t *agf, xfs_agblock_t bno,
 				     int isroot);
-static void		scanfunc_cnt(xfs_btree_sblock_t *ablock, int level,
+static void		scanfunc_cnt(struct xfs_btree_block *block, int level,
 				     xfs_agf_t *agf, xfs_agblock_t bno,
 				     int isroot);
-static void		scanfunc_ino(xfs_btree_sblock_t *ablock, int level,
+static void		scanfunc_ino(struct xfs_btree_block *block, int level,
 				     xfs_agf_t *agf, xfs_agblock_t bno,
 				     int isroot);
 static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
@@ -2126,9 +2126,9 @@ process_btinode(
 		error++;
 		return;
 	}
-	if (be16_to_cpu(dib->bb_numrecs) > XFS_BTREE_BLOCK_MAXRECS(
-				XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr, 
-				be16_to_cpu(dib->bb_level) == 0)) {
+	if (be16_to_cpu(dib->bb_numrecs) >
+			xfs_bmdr_maxrecs(mp, XFS_DFORK_SIZE(dip, mp, whichfork),
+			be16_to_cpu(dib->bb_level) == 0)) {
 		if (!sflag || id->ilist)
 			dbprintf("numrecs for ino %lld %s fork bmap root too "
 				 "large (%u)\n",
@@ -2139,16 +2139,14 @@ process_btinode(
 		return;
 	}
 	if (be16_to_cpu(dib->bb_level) == 0) {
-		rp = (xfs_bmbt_rec_32_t *)XFS_BTREE_REC_ADDR(xfs_bmdr, dib, 1);
+		rp = (xfs_bmbt_rec_32_t *)XFS_BMDR_REC_ADDR(dib, 1);
 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), type, 
 							id, totd, blkmapp);
 		*nex += be16_to_cpu(dib->bb_numrecs);
 		return;
 	} else {
-		pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1,
-			XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp,
-							       whichfork),
-						xfs_bmdr, 0));
+		pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(mp,
+				XFS_DFORK_SIZE(dip, mp, whichfork), 0));
 		for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
 			scan_lbtree(be64_to_cpu(pp[i]), 
 					be16_to_cpu(dib->bb_level), 
@@ -4186,7 +4184,7 @@ scan_sbtree(
 
 static void
 scanfunc_bmap(
-	xfs_btree_lblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	dbm_t			type,
 	xfs_fsblock_t		bno,
@@ -4200,7 +4198,6 @@ scanfunc_bmap(
 {
 	xfs_agblock_t		agbno;
 	xfs_agnumber_t		agno;
-	xfs_bmbt_block_t	*block = (xfs_bmbt_block_t *)ablock;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmbt_rec_32_t	*rp;
@@ -4236,7 +4233,7 @@ scanfunc_bmap(
 			error++;
 			return;
 		}
-		rp = (xfs_bmbt_rec_32_t *)XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+		rp = (xfs_bmbt_rec_32_t *)XFS_BMBT_REC_ADDR(mp, block, 1);
 		*nex += be16_to_cpu(block->bb_numrecs);
 		process_bmbt_reclist(rp, be16_to_cpu(block->bb_numrecs), type, id, totd,
 			blkmapp);
@@ -4252,7 +4249,7 @@ scanfunc_bmap(
 		error++;
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[0]);
+	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[0]);
 	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
 		scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, type, id, 
 					totd, toti, nex, blkmapp, 0, btype);
@@ -4260,13 +4257,12 @@ scanfunc_bmap(
 
 static void
 scanfunc_bno(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agf_t		*agf,
 	xfs_agblock_t		bno,
 	int			isroot)
 {
-	xfs_alloc_block_t	*block = (xfs_alloc_block_t *)ablock;
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
@@ -4299,7 +4295,7 @@ scanfunc_bno(
 			serious_error++;
 			return;
 		}
-		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		lastblock = 0;
 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
 			set_dbmap(seqno, be32_to_cpu(rp[i].ar_startblock),
@@ -4327,20 +4323,19 @@ scanfunc_bno(
 		serious_error++;
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
 		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_bno, TYP_BNOBT);
 }
 
 static void
 scanfunc_cnt(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agf_t		*agf,
 	xfs_agblock_t		bno,
 	int			isroot)
 {
-	xfs_alloc_block_t	*block = (xfs_alloc_block_t *)ablock;
 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
 	int			i;
 	xfs_alloc_ptr_t		*pp;
@@ -4373,7 +4368,7 @@ scanfunc_cnt(
 			serious_error++;
 			return;
 		}
-		rp = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		lastcount = 0;
 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
 			check_set_dbmap(seqno, be32_to_cpu(rp[i].ar_startblock),
@@ -4404,21 +4399,20 @@ scanfunc_cnt(
 		serious_error++;
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
 		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_cnt, TYP_CNTBT);
 }
 
 static void
 scanfunc_ino(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agf_t		*agf,
 	xfs_agblock_t		bno,
 	int			isroot)
 {
 	xfs_agino_t		agino;
-	xfs_inobt_block_t	*block = (xfs_inobt_block_t *)ablock;
 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
 	int			i;
 	int			isfree;
@@ -4452,7 +4446,7 @@ scanfunc_ino(
 			serious_error++;
 			return;
 		}
-		rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, 1);
+		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
 			agino = be32_to_cpu(rp[i].ir_startino);
 			off = XFS_INO_TO_OFFSET(mp, agino);
@@ -4518,7 +4512,7 @@ scanfunc_ino(
 		serious_error++;
 		return;
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, 1, mp->m_inobt_mxr[1]);
+	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
 	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
 		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_ino, TYP_INOBT);
 }

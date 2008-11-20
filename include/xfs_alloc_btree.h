@@ -24,7 +24,6 @@
 
 struct xfs_buf;
 struct xfs_btree_cur;
-struct xfs_btree_sblock;
 struct xfs_mount;
 
 /*
@@ -50,16 +49,6 @@ typedef struct xfs_alloc_rec_incore {
 
 /* btree pointer type */
 typedef __be32 xfs_alloc_ptr_t;
-/* btree block header type */
-typedef	struct xfs_btree_sblock xfs_alloc_block_t;
-
-#define	XFS_BUF_TO_ALLOC_BLOCK(bp)	((xfs_alloc_block_t *)XFS_BUF_PTR(bp))
-
-/*
- * Real block structures have a size equal to the disk block size.
- */
-#define	XFS_ALLOC_BLOCK_MAXRECS(lev,cur) ((cur)->bc_mp->m_alloc_mxr[lev != 0])
-#define	XFS_ALLOC_BLOCK_MINRECS(lev,cur) ((cur)->bc_mp->m_alloc_mnr[lev != 0])
 
 /*
  * Minimum and maximum blocksize and sectorsize.
@@ -83,20 +72,39 @@ typedef	struct xfs_btree_sblock xfs_alloc_block_t;
 #define	XFS_CNT_BLOCK(mp)	((xfs_agblock_t)(XFS_BNO_BLOCK(mp) + 1))
 
 /*
- * Record, key, and pointer address macros for btree blocks.
+ * Btree block header size depends on a superblock flag.
+ *
+ * (not quite yet, but soon)
  */
-#define	XFS_ALLOC_REC_ADDR(bb,i,cur)	\
-	XFS_BTREE_REC_ADDR(xfs_alloc, bb, i)
+#define XFS_ALLOC_BLOCK_LEN(mp)	XFS_BTREE_SBLOCK_LEN
 
-#define	XFS_ALLOC_KEY_ADDR(bb,i,cur)	\
-	XFS_BTREE_KEY_ADDR(xfs_alloc, bb, i)
+/*
+ * Record, key, and pointer address macros for btree blocks.
+ *
+ * (note that some of these may appear unused, but they are used in userspace)
+ */
+#define XFS_ALLOC_REC_ADDR(mp, block, index) \
+	((xfs_alloc_rec_t *) \
+		((char *)(block) + \
+		 XFS_ALLOC_BLOCK_LEN(mp) + \
+		 (((index) - 1) * sizeof(xfs_alloc_rec_t))))
 
-#define	XFS_ALLOC_PTR_ADDR(bb,i,cur)	\
-	XFS_BTREE_PTR_ADDR(xfs_alloc, bb, i, XFS_ALLOC_BLOCK_MAXRECS(1, cur))
+#define XFS_ALLOC_KEY_ADDR(mp, block, index) \
+	((xfs_alloc_key_t *) \
+		((char *)(block) + \
+		 XFS_ALLOC_BLOCK_LEN(mp) + \
+		 ((index) - 1) * sizeof(xfs_alloc_key_t)))
 
+#define XFS_ALLOC_PTR_ADDR(mp, block, index, maxrecs) \
+	((xfs_alloc_ptr_t *) \
+		((char *)(block) + \
+		 XFS_ALLOC_BLOCK_LEN(mp) + \
+		 (maxrecs) * sizeof(xfs_alloc_key_t) + \
+		 ((index) - 1) * sizeof(xfs_alloc_ptr_t)))
 
 extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
 		struct xfs_trans *, struct xfs_buf *,
 		xfs_agnumber_t, xfs_btnum_t);
+extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
 
 #endif	/* __XFS_ALLOC_BTREE_H__ */

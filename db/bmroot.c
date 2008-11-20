@@ -101,7 +101,7 @@ bmroota_key_offset(
 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-	kp = XFS_BTREE_KEY_ADDR(xfs_bmdr, block, idx);
+	kp = XFS_BMDR_KEY_ADDR(block, idx);
 	return bitize((int)((char *)kp - (char *)block));
 }
 
@@ -139,8 +139,8 @@ bmroota_ptr_offset(
 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_ASIZE(dip, mp), xfs_bmdr, 0));
+	pp = XFS_BMDR_PTR_ADDR(block, idx,
+		xfs_bmdr_maxrecs(mp, XFS_DFORK_ASIZE(dip, mp), 0));
 	return bitize((int)((char *)pp - (char *)block));
 }
 
@@ -199,7 +199,7 @@ bmrootd_key_offset(
 	dip = obj;
 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-	kp = XFS_BTREE_KEY_ADDR(xfs_bmdr, block, idx);
+	kp = XFS_BMDR_KEY_ADDR(block, idx);
 	return bitize((int)((char *)kp - (char *)block));
 }
 
@@ -236,8 +236,8 @@ bmrootd_ptr_offset(
 	dip = obj;
 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, block, idx,
-		XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_DSIZE(dip, mp), xfs_bmdr, 0));
+	pp = XFS_BMDR_PTR_ADDR(block, idx,
+		xfs_bmdr_maxrecs(mp, XFS_DFORK_DSIZE(dip, mp), 0));
 	return bitize((int)((char *)pp - (char *)block));
 }
 

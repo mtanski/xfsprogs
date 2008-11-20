@@ -253,7 +253,7 @@ scanfunc_freesp(
 		return 1;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, mp->m_alloc_mxr[1]);
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 	for (i = 0; i < numrecs; i++) {
 		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
 			if (show_warnings)
@@ -1014,8 +1014,8 @@ scanfunc_bmap(
 					typtab[btype].name, agno, agbno);
 			return 1;
 		}
-		return process_bmbt_reclist(XFS_BTREE_REC_ADDR(xfs_bmbt, 
-					block, 1), nrecs, *(typnm_t*)arg);
+		return process_bmbt_reclist(XFS_BMBT_REC_ADDR(mp, block, 1),
+					    nrecs, *(typnm_t*)arg);
 	}
 
 	if (nrecs > mp->m_bmap_dmxr[1]) {
@@ -1024,7 +1024,7 @@ scanfunc_bmap(
 					nrecs, typtab[btype].name, agno, agbno);
 		return 1;
 	}
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
 	for (i = 0; i < nrecs; i++) {
 		xfs_agnumber_t	ag;
 		xfs_agblock_t	bno;
@@ -1076,12 +1076,12 @@ process_btinode(
 		return 1;
 	}
 
-	if (level == 0) 
-		return process_bmbt_reclist(XFS_BTREE_REC_ADDR(xfs_bmdr, 
-							dib, 1), nrecs, itype);
+	if (level == 0) {
+		return process_bmbt_reclist(XFS_BMDR_REC_ADDR(dib, 1),
+					    nrecs, itype);
+	}
 
-	maxrecs = XFS_BTREE_BLOCK_MAXRECS(XFS_DFORK_SIZE(dip, mp, whichfork),
-			xfs_bmdr, 0);
+	maxrecs = xfs_bmdr_maxrecs(mp, XFS_DFORK_SIZE(dip, mp, whichfork), 0);
 	if (nrecs > maxrecs) {
 		if (show_warnings)
 			print_warning("invalid numrecs (%u) in inode %lld %s "
@@ -1090,7 +1090,7 @@ process_btinode(
 		return 1;
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1, maxrecs);
+	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
 	for (i = 0; i < nrecs; i++) {
 		xfs_agnumber_t	ag;
 		xfs_agblock_t	bno;
@@ -1324,7 +1324,7 @@ scanfunc_ino(
 					typtab[btype].name, agno, agbno);
 			numrecs = mp->m_inobt_mxr[0];
 		}
-		rp = XFS_BTREE_REC_ADDR(xfs_inobt, block, 1);
+		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++, rp++) {
 			if (!copy_inode_chunk(agno, rp))
 				return 0;
@@ -1339,7 +1339,7 @@ scanfunc_ino(
 		numrecs = mp->m_inobt_mxr[1];
 	}
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_inobt, block, 1, mp->m_inobt_mxr[1]);
+	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
 	for (i = 0; i < numrecs; i++) {
 		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
 			if (show_warnings)

@@ -513,7 +513,7 @@ main(int argc, char **argv)
 	xfs_agnumber_t	num_ags, agno;
 	xfs_agblock_t	bno;
 	xfs_daddr_t	begin, next_begin, ag_begin, new_begin, ag_end;
-	xfs_alloc_block_t *block;
+	struct xfs_btree_block *block;
 	xfs_alloc_ptr_t	*ptr;
 	xfs_alloc_rec_t	*rec_ptr;
 	extern char	*optarg;
@@ -897,7 +897,7 @@ main(int argc, char **argv)
 			    - (__uint64_t)mp->m_sb.sb_fdblocks + 10 * num_ags));
 
 	kids = num_targets;
-	block = (xfs_alloc_block_t *) btree_buf.data;
+	block = (struct xfs_btree_block *) btree_buf.data;
 
 	for (agno = 0; agno < num_ags && kids > 0; agno++)  {
 		/* read in first blocks of the ag */
@@ -943,15 +943,16 @@ main(int argc, char **argv)
 			btree_buf.length = source_blocksize;
 
 			read_wbuf(source_fd, &btree_buf, mp);
-			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
-					+ pos - btree_buf.position);
+			block = (struct xfs_btree_block *)
+				 ((char *)btree_buf.data +
+				  pos - btree_buf.position);
 
 			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
 
 			if (be16_to_cpu(block->bb_level) == 0)
 				break;
 
-			ptr = XFS_BTREE_PTR_ADDR(xfs_alloc, block, 1, 
+			ptr = XFS_ALLOC_PTR_ADDR(mp, block, 1,
 							mp->m_alloc_mxr[1]);
 			bno = be32_to_cpu(ptr[0]);
 		}
@@ -976,7 +977,7 @@ main(int argc, char **argv)
 				exit(1);
 			}
 
-			rec_ptr = XFS_BTREE_REC_ADDR(xfs_alloc, block, 1);
+			rec_ptr = XFS_ALLOC_REC_ADDR(mp, block, 1);
 			for (i = 0; i < be16_to_cpu(block->bb_numrecs);
 							i++, rec_ptr++)  {
 				/* calculate in daddr's */
@@ -1041,22 +1042,23 @@ main(int argc, char **argv)
 						w_buf.min_io_size >> BBSHIFT);
 			}
 
-			if (be32_to_cpu(block->bb_rightsib) == NULLAGBLOCK)
+			if (be32_to_cpu(block->bb_u.s.bb_rightsib) == NULLAGBLOCK)
 				break;
 
 			/* read in next btree record block */
 
 			btree_buf.position = pos = (xfs_off_t)
 				XFS_AGB_TO_DADDR(mp, agno, be32_to_cpu(
-						block->bb_rightsib)) << BBSHIFT;
+						block->bb_u.s.bb_rightsib)) << BBSHIFT;
 			btree_buf.length = source_blocksize;
 
 			/* let read_wbuf handle alignment */
 
 			read_wbuf(source_fd, &btree_buf, mp);
 
-			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
-					+ pos - btree_buf.position);
+			block = (struct xfs_btree_block *)
+				 ((char *) btree_buf.data +
+				  pos - btree_buf.position);
 
 			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
 		}

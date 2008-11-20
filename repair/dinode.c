@@ -956,7 +956,7 @@ getfunc_btree(xfs_mount_t		*mp,
 	xfs_dfsbno_t		fsbno;
 	xfs_buf_t		*bp;
 	xfs_dfsbno_t		final_fsbno = NULLDFSBNO;
-	xfs_bmbt_block_t	*block;
+	struct xfs_btree_block	*block;
 	xfs_bmdr_block_t	*rootblock = (xfs_bmdr_block_t *)
 						XFS_DFORK_PTR(dip, whichfork);
 
@@ -967,9 +967,9 @@ getfunc_btree(xfs_mount_t		*mp,
 	 * a btree should have at least 2 levels otherwise it
 	 * would be an extent list.
 	 */
-	rkey = XFS_BTREE_KEY_ADDR(xfs_bmdr, rootblock, 1);
-	rp = XFS_BTREE_PTR_ADDR(xfs_bmdr, rootblock, 1, XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr, 1));
+	rkey = XFS_BMDR_KEY_ADDR(rootblock, 1);
+	rp = XFS_BMDR_PTR_ADDR(rootblock, 1,
+		xfs_bmdr_maxrecs(mp, XFS_DFORK_SIZE(dip, mp, whichfork), 1));
 	found = -1;
 	for (i = 0; i < be16_to_cpu(rootblock->bb_numrecs) - 1; i++) {
 		if (be64_to_cpu(rkey[i].br_startoff) <= bno && 
@@ -994,7 +994,7 @@ getfunc_btree(xfs_mount_t		*mp,
 		do_error(_("cannot read bmap block %llu\n"), fsbno);
 		return(NULLDFSBNO);
 	}
-	block = XFS_BUF_TO_BMBT_BLOCK(bp);
+	block = XFS_BUF_TO_BLOCK(bp);
 	numrecs = be16_to_cpu(block->bb_numrecs);
 
 	/*
@@ -1023,8 +1023,8 @@ getfunc_btree(xfs_mount_t		*mp,
 				  "minimum (%u, min - %u), proceeding ...\n"),
 				ino, numrecs, mp->m_bmap_dmnr[1]);
 		}
-		key = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
-		pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+		key = XFS_BMBT_KEY_ADDR(mp, block, 1);
+		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
 		for (found = -1, i = 0; i < numrecs - 1; i++) {
 			if (be64_to_cpu(key[i].br_startoff) <= bno && bno < 
 					be64_to_cpu(key[i + 1].br_startoff)) {
@@ -1051,7 +1051,7 @@ getfunc_btree(xfs_mount_t		*mp,
 			do_error(_("cannot read bmap block %llu\n"), fsbno);
 			return(NULLDFSBNO);
 		}
-		block = XFS_BUF_TO_BMBT_BLOCK(bp);
+		block = XFS_BUF_TO_BLOCK(bp);
 		numrecs = be16_to_cpu(block->bb_numrecs);
 	}
 
@@ -1071,7 +1071,7 @@ getfunc_btree(xfs_mount_t		*mp,
 			  "(%u, min - %u), continuing...\n"),
 			ino, numrecs, mp->m_bmap_dmnr[0]);
 
-	rec = XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1);
+	rec = XFS_BMBT_REC_ADDR(mp, block, 1);
 	for (i = 0; i < numrecs; i++)  {
 		libxfs_bmbt_disk_get_all(rec + i, &irec);
 		if (irec.br_startoff <= bno &&
@@ -1212,9 +1212,9 @@ process_btinode(
 
 	init_bm_cursor(&cursor, level + 1);
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1, XFS_BTREE_BLOCK_MAXRECS(
-			XFS_DFORK_SIZE(dip, mp, whichfork), xfs_bmdr, 0));
-	pkey = XFS_BTREE_KEY_ADDR(xfs_bmdr, dib, 1);
+	pp = XFS_BMDR_PTR_ADDR(dib, 1,
+		xfs_bmdr_maxrecs(mp, XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+	pkey = XFS_BMDR_KEY_ADDR(dib, 1);
 	last_key = NULLDFILOFF;
 
 	for (i = 0; i < numrecs; i++)  {

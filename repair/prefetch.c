@@ -16,11 +16,7 @@
 #include "progress.h"
 #include "radix-tree.h"
 
-#ifdef HAVE_PTHREAD_H
 int do_prefetch = 1;
-#else
-int do_prefetch = 0;
-#endif
 
 /*
  * Performs prefetching by priming the libxfs cache by using a dedicate thread
@@ -124,7 +120,8 @@ pf_queue_io(
 	if (bp->b_flags & LIBXFS_B_UPTODATE) {
 		if (B_IS_INODE(flag))
 			pf_read_inode_dirs(args, bp);
-		XFS_BUF_SET_PRIORITY(bp, XFS_BUF_PRIORITY(bp) + 8);
+		XFS_BUF_SET_PRIORITY(bp, XFS_BUF_PRIORITY(bp) +
+						CACHE_PREFETCH_PRIORITY);
 		libxfs_putbuf(bp);
 		return;
 	}
@@ -221,7 +218,7 @@ pf_scan_lbtree(
 	int			level,
 	int			isadir,
 	prefetch_args_t		*args,
-	int			(*func)(xfs_btree_lblock_t	*block,
+	int			(*func)(struct xfs_btree_block	*block,
 					int			level,
 					int			isadir,
 					prefetch_args_t		*args))
@@ -236,7 +233,7 @@ pf_scan_lbtree(
 
 	XFS_BUF_SET_PRIORITY(bp, isadir ? B_DIR_BMAP : B_BMAP);
 
-	rc = (*func)((xfs_btree_lblock_t *)XFS_BUF_PTR(bp), level - 1, isadir, args);
+	rc = (*func)(XFS_BUF_TO_BLOCK(bp), level - 1, isadir, args);
 
 	libxfs_putbuf(bp);
 
@@ -245,7 +242,7 @@ pf_scan_lbtree(
 
 static int
 pf_scanfunc_bmap(
-	xfs_btree_lblock_t	*block,
+	struct xfs_btree_block	*block,
 	int			level,
 	int			isadir,
 	prefetch_args_t		*args)
@@ -268,13 +265,13 @@ pf_scanfunc_bmap(
 		if (numrecs > mp->m_bmap_dmxr[0] || !isadir)
 			return 0;
 		return pf_read_bmbt_reclist(args,
-			XFS_BTREE_REC_ADDR(xfs_bmbt, block, 1), numrecs);
+			XFS_BMBT_REC_ADDR(mp, block, 1), numrecs);
 	}
 
 	if (numrecs > mp->m_bmap_dmxr[1])
 		return 0;
 
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1, mp->m_bmap_dmxr[1]);
+	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
 
 	for (i = 0; i < numrecs; i++) {
 		dbno = be64_to_cpu(pp[i]);
@@ -316,8 +313,7 @@ pf_read_btinode(
 		return;
 
 	dsize = XFS_DFORK_DSIZE(dino, mp);
-	pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, dib, 1,
-				XFS_BTREE_BLOCK_MAXRECS(dsize, xfs_bmdr, 0));
+	pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(mp, dsize, 0));
 
 	for (i = 0; i < numrecs; i++) {
 		dbno = be64_to_cpu(pp[i]);

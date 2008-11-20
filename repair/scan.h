@@ -25,7 +25,7 @@ void scan_sbtree(
 	int		nlevels,
 	xfs_agnumber_t	agno,
 	int		suspect,
-	void		(*func)(xfs_btree_sblock_t	*block,
+	void		(*func)(struct xfs_btree_block	*block,
 				int			level,
 				xfs_agblock_t		bno,
 				xfs_agnumber_t		agno,
@@ -36,7 +36,7 @@ void scan_sbtree(
 int scan_lbtree(
 	xfs_dfsbno_t	root,
 	int		nlevels,
-	int		(*func)(xfs_btree_lblock_t	*block,
+	int		(*func)(struct xfs_btree_block	*block,
 				int			level,
 				int			type,
 				int			whichfork,
@@ -60,7 +60,7 @@ int scan_lbtree(
 	int		check_dups);
 
 int scanfunc_bmap(
-	xfs_btree_lblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	int			type,
 	int			whichfork,
@@ -75,7 +75,7 @@ int scanfunc_bmap(
 	int			*dirty);
 
 void scanfunc_bno(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
@@ -83,7 +83,7 @@ void scanfunc_bno(
 	int			isroot);
 
 void scanfunc_cnt(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
@@ -92,7 +92,7 @@ void scanfunc_cnt(
 
 void
 scanfunc_ino(
-	xfs_btree_sblock_t	*ablock,
+	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,

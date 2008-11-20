@@ -338,13 +338,6 @@ libxfs_init(libxfs_init_t *a)
 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
 	use_xfs_buf_lock = a->usebuflock;
-#ifndef HAVE_PTHREAD_T
-	if (use_xfs_buf_lock) {
-		fprintf(stderr, _("%s: can't use buffer locks without pthreads\n"),
-			progname);
-		goto done;
-	}
-#endif
 	manage_zones(0);
 	rval = 1;
 done:
@@ -502,7 +495,7 @@ rtmount_init(
 
 
 /*
- * Core dir v1 mount code for allowing reading of these dirs. 
+ * Core dir v1 mount code for allowing reading of these dirs.
  */
 static void
 libxfs_dirv1_mount(
@@ -583,7 +576,7 @@ libxfs_mount(
 	 * If we are using stripe alignment, check whether
 	 * the stripe unit is a multiple of the inode alignment
 	 */
-	if (mp->m_dalign && mp->m_inoalign_mask && 
+	if (mp->m_dalign && mp->m_inoalign_mask &&
 					!(mp->m_dalign & mp->m_inoalign_mask))
 		mp->m_sinoalign = mp->m_dalign;
 	else

@@ -341,3 +341,19 @@ xfs_inobt_init_cursor(
 
 	return cur;
 }
+
+/*
+ * Calculate number of records in an inobt btree block.
+ */
+int
+xfs_inobt_maxrecs(
+	struct xfs_mount	*mp,
+	int			blocklen,
+	int			leaf)
+{
+	blocklen -= XFS_INOBT_BLOCK_LEN(mp);
+
+	if (leaf)
+		return blocklen / sizeof(xfs_inobt_rec_t);
+	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+}

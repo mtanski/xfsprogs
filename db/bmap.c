@@ -47,7 +47,7 @@ bmap(
 	int			*nexp,
 	bmap_ext_t		*bep)
 {
-	xfs_bmbt_block_t	*block;
+	struct xfs_btree_block	*block;
 	xfs_fsblock_t		bno;
 	xfs_dfiloff_t		curoffset;
 	xfs_dinode_t		*dip;
@@ -91,29 +91,27 @@ bmap(
 		bno = NULLFSBLOCK;
 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
-		pp = XFS_BTREE_PTR_ADDR(xfs_bmdr, rblock, 1,
-			XFS_BTREE_BLOCK_MAXRECS(fsize, xfs_bmdr, 0));
-		kp = XFS_BTREE_KEY_ADDR(xfs_bmdr, rblock, 1);
+		pp = XFS_BMDR_PTR_ADDR(rblock, 1, xfs_bmdr_maxrecs(mp, fsize, 0));
+		kp = XFS_BMDR_KEY_ADDR(rblock, 1);
 		bno = select_child(curoffset, kp, pp, 
 					be16_to_cpu(rblock->bb_numrecs));
 		for (;;) {
 			set_cur(&typtab[typ], XFS_FSB_TO_DADDR(mp, bno),
 				blkbb, DB_RING_IGN, NULL);
-			block = (xfs_bmbt_block_t *)iocur_top->data;
+			block = (struct xfs_btree_block *)iocur_top->data;
 			if (be16_to_cpu(block->bb_level) == 0)
 				break;
-			pp = XFS_BTREE_PTR_ADDR(xfs_bmbt, block, 1,
-				XFS_BTREE_BLOCK_MAXRECS(mp->m_sb.sb_blocksize,
-					xfs_bmbt, 0));
-			kp = XFS_BTREE_KEY_ADDR(xfs_bmbt, block, 1);
+			pp = XFS_BMDR_PTR_ADDR(block, 1,
+				xfs_bmbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0));
+			kp = XFS_BMDR_KEY_ADDR(block, 1);
 			bno = select_child(curoffset, kp, pp,
 					be16_to_cpu(block->bb_numrecs));
 		}
 		for (;;) {
-			nextbno = be64_to_cpu(block->bb_rightsib);
+			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
 			nextents = be16_to_cpu(block->bb_numrecs);
-			xp = (xfs_bmbt_rec_64_t *)XFS_BTREE_REC_ADDR(xfs_bmbt, 
-								block, 1);
+			xp = (xfs_bmbt_rec_64_t *)
+				XFS_BMBT_REC_ADDR(mp, block, 1);
 			for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
 				if (!bmap_one_extent(ep, &curoffset, eoffset,
 						&n, bep)) {
@@ -126,7 +124,7 @@ bmap(
 				break;
 			set_cur(&typtab[typ], XFS_FSB_TO_DADDR(mp, bno),
 				blkbb, DB_RING_IGN, NULL);
-			block = (xfs_bmbt_block_t *)iocur_top->data;
+			block = (struct xfs_btree_block *)iocur_top->data;
 		}
 		pop_cur();
 	}

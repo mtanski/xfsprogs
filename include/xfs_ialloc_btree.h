@@ -24,7 +24,6 @@
 
 struct xfs_buf;
 struct xfs_btree_cur;
-struct xfs_btree_sblock;
 struct xfs_mount;
 
 /*
@@ -70,11 +69,6 @@ typedef struct xfs_inobt_key {
 /* btree pointer type */
 typedef __be32 xfs_inobt_ptr_t;
 
-/* btree block header type */
-typedef	struct xfs_btree_sblock xfs_inobt_block_t;
-
-#define	XFS_BUF_TO_INOBT_BLOCK(bp)	((xfs_inobt_block_t *)XFS_BUF_PTR(bp))
-
 /*
  * Bit manipulations for ir_free.
  */
@@ -83,14 +77,6 @@ typedef	struct xfs_btree_sblock xfs_inobt_block_t;
 		(((rp)->ir_free & XFS_INOBT_MASK(i)) != 0)
 #define	XFS_INOBT_SET_FREE(rp,i)	((rp)->ir_free |= XFS_INOBT_MASK(i))
 #define	XFS_INOBT_CLR_FREE(rp,i)	((rp)->ir_free &= ~XFS_INOBT_MASK(i))
-
-/*
- * Real block structures have a size equal to the disk block size.
- */
-#define	XFS_INOBT_BLOCK_MAXRECS(lev,cur) ((cur)->bc_mp->m_inobt_mxr[lev != 0])
-#define	XFS_INOBT_BLOCK_MINRECS(lev,cur) ((cur)->bc_mp->m_inobt_mnr[lev != 0])
-#define	XFS_INOBT_IS_LAST_REC(cur)	\
-	((cur)->bc_ptrs[0] == be16_to_cpu(XFS_BUF_TO_INOBT_BLOCK((cur)->bc_bufs[0])->bb_numrecs))
 
 /*
  * Maximum number of inode btree levels.
@@ -104,19 +90,38 @@ typedef	struct xfs_btree_sblock xfs_inobt_block_t;
 #define	XFS_PREALLOC_BLOCKS(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
 
 /*
- * Record, key, and pointer address macros for btree blocks.
+ * Btree block header size depends on a superblock flag.
+ *
+ * (not quite yet, but soon)
  */
-#define XFS_INOBT_REC_ADDR(bb,i,cur) \
-	(XFS_BTREE_REC_ADDR(xfs_inobt, bb, i))
+#define XFS_INOBT_BLOCK_LEN(mp)	XFS_BTREE_SBLOCK_LEN
 
-#define	XFS_INOBT_KEY_ADDR(bb,i,cur) \
-	(XFS_BTREE_KEY_ADDR(xfs_inobt, bb, i))
+/*
+ * Record, key, and pointer address macros for btree blocks.
+ *
+ * (note that some of these may appear unused, but they are used in userspace)
+ */
+#define XFS_INOBT_REC_ADDR(mp, block, index) \
+	((xfs_inobt_rec_t *) \
+		((char *)(block) + \
+		 XFS_INOBT_BLOCK_LEN(mp) + \
+		 (((index) - 1) * sizeof(xfs_inobt_rec_t))))
 
-#define	XFS_INOBT_PTR_ADDR(bb,i,cur) \
-	(XFS_BTREE_PTR_ADDR(xfs_inobt, bb, \
-				i, XFS_INOBT_BLOCK_MAXRECS(1, cur)))
+#define XFS_INOBT_KEY_ADDR(mp, block, index) \
+	((xfs_inobt_key_t *) \
+		((char *)(block) + \
+		 XFS_INOBT_BLOCK_LEN(mp) + \
+		 ((index) - 1) * sizeof(xfs_inobt_key_t)))
+
+#define XFS_INOBT_PTR_ADDR(mp, block, index, maxrecs) \
+	((xfs_inobt_ptr_t *) \
+		((char *)(block) + \
+		 XFS_INOBT_BLOCK_LEN(mp) + \
+		 (maxrecs) * sizeof(xfs_inobt_key_t) + \
+		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
 
 extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
 		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
+extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
 
 #endif	/* __XFS_IALLOC_BTREE_H__ */

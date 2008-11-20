@@ -155,7 +155,7 @@ xfs_allocbt_update_lastrec(
 		if (numrecs) {
 			xfs_alloc_rec_t *rrp;
 
-			rrp = XFS_ALLOC_REC_ADDR(block, numrecs, cur);
+			rrp = XFS_ALLOC_REC_ADDR(cur->bc_mp, block, numrecs);
 			len = rrp->ar_blockcount;
 		} else {
 			len = 0;
@@ -455,4 +455,20 @@ xfs_allocbt_init_cursor(
 	cur->bc_private.a.agno = agno;
 
 	return cur;
+}
+
+/*
+ * Calculate number of records in an alloc btree block.
+ */
+int
+xfs_allocbt_maxrecs(
+	struct xfs_mount	*mp,
+	int			blocklen,
+	int			leaf)
+{
+	blocklen -= XFS_ALLOC_BLOCK_LEN(mp);
+
+	if (leaf)
+		return blocklen / sizeof(xfs_alloc_rec_t);
+	return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
 }
