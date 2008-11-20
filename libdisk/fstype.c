@@ -68,6 +68,7 @@ swapped(unsigned short a) {
     Added jfs - Christoph Hellwig
     Added sysv - Tim Launchbury
     Added udf - Bryce Nesbitt
+    Added gfs/gfs2 - Eric Sandeen
 */
 
 /*
@@ -192,6 +193,7 @@ fstype(const char *device) {
     struct hpfs_super_block hpfssb;
     struct adfs_super_block adfssb;
     struct sysv_super_block svsb;
+    struct gfs2_sb gfs2sb;
     struct stat statbuf;
 
     /* opening and reading an arbitrary unknown path can have
@@ -379,6 +381,21 @@ fstype(const char *device) {
 	    goto io_error;
 	if (is_reiserfs_magic_string(&reiserfssb))
 	    type = "reiserfs";
+    }
+
+    if (!type) {
+	/* block 64 */
+	if (lseek(fd, GFS_SUPERBLOCK_OFFSET, SEEK_SET) != GFS_SUPERBLOCK_OFFSET
+	    || read(fd, (char *) &gfs2sb, sizeof(gfs2sb)) != sizeof(gfs2sb))
+	    goto io_error;
+	if (gfsmagic(gfs2sb)) {
+		if (gfsformat(gfs2sb) == GFS_FORMAT_FS &&
+		    gfsmultiformat(gfs2sb) == GFS_FORMAT_MULTI)
+			type = "gfs";
+		else if (gfsformat(gfs2sb) == GFS2_FORMAT_FS &&
+			 gfsmultiformat(gfs2sb) == GFS2_FORMAT_MULTI)
+			type = "gfs2";
+	}
     }
 
     if (!type) {

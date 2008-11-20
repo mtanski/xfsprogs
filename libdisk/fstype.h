@@ -242,6 +242,56 @@ struct ocfs_volume_label {
 #define ocfslabellen(o)	assemble2le(o.label_len)
 #define OCFS_MAGIC	"OracleCFS"
 
+/* Common gfs/gfs2 constants: */
+#define GFS_MAGIC               0x01161970
+#define GFS_DEFAULT_BSIZE       4096
+#define GFS_SUPERBLOCK_OFFSET	(0x10 * GFS_DEFAULT_BSIZE)
+#define GFS_LOCKNAME_LEN        64
+
+/* gfs1 constants: */
+#define GFS_FORMAT_FS           1309
+#define GFS_FORMAT_MULTI        1401
+/* gfs2 constants: */
+#define GFS2_FORMAT_FS          1801
+#define GFS2_FORMAT_MULTI       1900
+
+struct gfs2_meta_header {
+	char mh_magic[4];
+	char mh_type[4];
+	char __pad0[8];          /* Was generation number in gfs1 */
+	char mh_format[4];
+	char __pad1[4];          /* Was incarnation number in gfs1 */
+};
+
+struct gfs2_inum {
+	char no_formal_ino[8];
+	char no_addr[8];
+};
+
+struct gfs2_sb {
+	struct gfs2_meta_header sb_header;
+
+	char sb_fs_format[4];
+	char sb_multihost_format[4];
+	char  __pad0[4];  /* Was superblock flags in gfs1 */
+
+	char sb_bsize[4];
+	char sb_bsize_shift[4];
+	char __pad1[4];   /* Was journal segment size in gfs1 */
+
+	struct gfs2_inum sb_master_dir; /* Was jindex dinode in gfs1 */
+	struct gfs2_inum __pad2; /* Was rindex dinode in gfs1 */
+	struct gfs2_inum sb_root_dir;
+
+	char sb_lockproto[GFS_LOCKNAME_LEN];
+	char sb_locktable[GFS_LOCKNAME_LEN];
+	/* In gfs1, quota and license dinodes followed */
+};
+
+#define gfsmagic(s)		assemble4be(s.sb_header.mh_magic)
+#define gfsformat(s)		assemble4be(s.sb_fs_format)
+#define gfsmultiformat(s)	assemble4be(s.sb_multihost_format)
+
 static inline int
 assemble2le(char *p) {
 	return (p[0] | (p[1] << 8));
@@ -250,4 +300,9 @@ assemble2le(char *p) {
 static inline int
 assemble4le(char *p) {
 	return (p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24));
+}
+
+static inline int
+assemble4be(char *p) {
+	return (p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24));
 }
