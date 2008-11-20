@@ -670,7 +670,8 @@ libxfs_mount(
 		ASSERT(mp->m_rootip != NULL);
 	}
 	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
-		libxfs_iput(mp->m_rootip, 0);
+		if (mp->m_rootip)
+			libxfs_iput(mp->m_rootip, 0);
 		return NULL;
 	}
 
