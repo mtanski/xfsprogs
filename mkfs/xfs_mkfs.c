@@ -1808,6 +1808,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 
 	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
 
+	if (!imflag)
+		imaxpct = calc_default_imaxpct(blocklog, dblocks);
+
 	if (!nodsflag) {
 		if (dsunit) {
 			if (xlv_dsunit && xlv_dsunit != dsunit) {
@@ -2023,8 +2026,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
 			"", sectorsize, attrversion,
-			"", blocksize, (long long)dblocks,
-			       calc_default_imaxpct(blocklog, dblocks),
+			"", blocksize, (long long)dblocks, imaxpct,
 			"", dsunit, dswidth,
 			dirversion, dirblocksize, nci,
 			logfile, 1 << blocklog, (long long)logblocks,
@@ -2061,7 +2063,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		(__uint8_t)(rtextents ?
 			libxfs_highbit32((unsigned int)rtextents) : 0);
 	sbp->sb_inprogress = 1;	/* mkfs is in progress */
-	sbp->sb_imax_pct = calc_default_imaxpct(blocklog, dblocks);
+	sbp->sb_imax_pct = imaxpct;
 	sbp->sb_icount = 0;
 	sbp->sb_ifree = 0;
 	sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
