@@ -1795,22 +1795,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		calc_default_ag_geometry(blocklog, dblocks,
 				xlv_dsunit | xlv_dswidth, &agsize, &agcount);
 
-	/*
-	 * If the last AG is too small, reduce the filesystem size
-	 * and drop the blocks.
-	 */
-	if ( dblocks % agsize != 0 &&
-	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
-		dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
-		agcount--;
-		ASSERT(agcount != 0);
-	}
-
-	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-
-	if (!imflag)
-		imaxpct = calc_default_imaxpct(blocklog, dblocks);
-
 	if (!nodsflag) {
 		if (dsunit) {
 			if (xlv_dsunit && xlv_dsunit != dsunit) {
@@ -1861,13 +1845,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			 */
 			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
 				tmp_agsize = ((agsize) / dsunit) * dsunit;
+
 			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
-			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
-			    !daflag) {
+			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog))) {
 				agsize = tmp_agsize;
-				agcount = dblocks/agsize +
+				if (!daflag)
+					agcount = dblocks/agsize +
 						(dblocks % agsize != 0);
-				if (dasize || daflag)
+				if (dasize)
 					fprintf(stderr,
 				_("agsize rounded to %lld, swidth = %d\n"),
 						(long long)agsize, dswidth);
@@ -1930,6 +1915,23 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			exit(1);
 		}
 	}
+
+	/*
+	 * If the last AG is too small, reduce the filesystem size
+	 * and drop the blocks.
+	 */
+	if ( dblocks % agsize != 0 &&
+	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
+		ASSERT(!daflag);
+		dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
+		agcount--;
+		ASSERT(agcount != 0);
+	}
+
+	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
+
+	if (!imflag)
+		imaxpct = calc_default_imaxpct(blocklog, dblocks);
 
 	/*
 	 * check that log sunit is modulo fsblksize or default it to dsunit.
