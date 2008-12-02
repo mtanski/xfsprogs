@@ -49,7 +49,8 @@ static int max_block_alignment;
 int
 platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 {
-	struct ustat	ust;
+	/* Pad ust; pre-2.6.28 linux copies out too much in 32bit compat mode */
+	struct ustat	ust[2];
 	struct stat64	st;
 
 	if (!s) {
@@ -60,7 +61,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 		s = &st;
 	}
 
-	if (ustat(s->st_rdev, &ust) >= 0) {
+	if (ustat(s->st_rdev, ust) >= 0) {
 		if (verbose)
 			fprintf(stderr,
 				_("%s: %s contains a mounted filesystem\n"),
