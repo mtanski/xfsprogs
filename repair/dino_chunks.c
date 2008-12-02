@@ -609,7 +609,8 @@ process_inode_chunk(
 	if (blks_per_cluster == 0)
 		blks_per_cluster = 1;
 	cluster_count = XFS_INODES_PER_CHUNK / inodes_per_cluster;
-	ASSERT(cluster_count > 0);
+	if (cluster_count == 0)
+		cluster_count = 1;
 
 	/*
 	 * get all blocks required to read in this chunk (may wind up
