@@ -277,21 +277,14 @@ convert_extent(
 	xfs_dfilblks_t		*cp,
 	int			*fp)
 {
-	xfs_bmbt_irec_t irec, *s = &irec;
-	xfs_bmbt_rec_t rpcopy, *p = &rpcopy;
+	xfs_bmbt_irec_t		irec;
 
-	memmove(&rpcopy, rp, sizeof(rpcopy));
-	libxfs_bmbt_disk_get_all(p, s);
+	libxfs_bmbt_disk_get_all(rp, &irec);
 
-	if (s->br_state == XFS_EXT_UNWRITTEN) {
-		*fp = 1;
-	} else {
-		*fp = 0;
-	}
-
-	*op = s->br_startoff;
-	*sp = s->br_startblock;
-	*cp = s->br_blockcount;
+	*fp = irec.br_state == XFS_EXT_UNWRITTEN;
+	*op = irec.br_startoff;
+	*sp = irec.br_startblock;
+	*cp = irec.br_blockcount;
 }
 
 void
