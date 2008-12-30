@@ -339,16 +339,16 @@ print_final_rpt(void)
 	if (report_interval) {
 		switch(msgp->format->format) {
 		case FMT1:
-			sprintf (msgbuf, *msgp->format->fmt,
+			sprintf (msgbuf, _(*msgp->format->fmt),
 				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
-				msgp->format->msg, sum,
-				*msgp->total, *msgp->format->type);
+				_(msgp->format->msg), sum,
+				*msgp->total, _(*msgp->format->type));
 			break;
 		case FMT2:
-			sprintf (msgbuf, *msgp->format->fmt,
+			sprintf (msgbuf, _(*msgp->format->fmt),
 				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
-				msgp->format->msg, sum,
-				*msgp->format->type);
+				_(msgp->format->msg), sum,
+				_(*msgp->format->type));
 			break;
 		}
 		do_log(_("%s"), msgbuf);
