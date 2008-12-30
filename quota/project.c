@@ -31,11 +31,11 @@ enum {
 };
 
 #define EXCLUDED_FILE_TYPES(x) \
-	   S_ISCHR((x)) \
+	   (S_ISCHR((x)) \
 	|| S_ISBLK((x)) \
 	|| S_ISFIFO((x)) \
 	|| S_ISLNK((x)) \
-	|| S_ISSOCK((x))
+	|| S_ISSOCK((x)))
 
 static void
 project_help(void)
