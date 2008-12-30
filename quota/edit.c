@@ -140,9 +140,11 @@ set_limits(
 	d.d_rtb_hardlimit = *rtbhard;
 	d.d_rtb_softlimit = *rtbsoft;
 
-	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0)
+	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot set limits: %s\n"),
 				progname, strerror(errno));
+	}
 }
 
 static void
@@ -159,10 +161,11 @@ set_user_limits(
 {
 	uid_t		uid = uid_from_string(name);
 
-	if (uid == -1)
+	if (uid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid user name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_limits(uid, type, mask, fs_path->fs_name,
 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
 }
@@ -181,10 +184,11 @@ set_group_limits(
 {
 	gid_t		gid = gid_from_string(name);
 
-	if (gid == -1)
+	if (gid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid group name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_limits(gid, type, mask, fs_path->fs_name,
 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
 }
@@ -203,10 +207,11 @@ set_project_limits(
 {
 	prid_t		prid = prid_from_string(name);
 
-	if (prid == -1)
+	if (prid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid project name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_limits(prid, type, mask, fs_path->fs_name,
 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
 }
@@ -315,12 +320,14 @@ limit_f(
 		else if (extractb(s, "rtbhard=", 7, bsize, ssize, &rtbhard))
 			mask |= FS_DQ_RTBHARD;
 		else {
+			exitcode = 1;
 			fprintf(stderr, _("%s: unrecognised argument %s\n"),
 				progname, s);
 			return 0;
 		}
 	}
 	if (!mask) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot find any valid arguments\n"),
 			progname);
 		return 0;
@@ -428,6 +435,7 @@ restore_f(
 
 	if (fname) {
 		if ((fp = fopen(fname, "r")) == NULL) {
+			exitcode = 1;
 			fprintf(stderr, _("%s: fopen on %s failed: %s\n"),
 				progname, fname, strerror(errno));
 			return 0;
@@ -458,9 +466,11 @@ set_timer(
 	d.d_btimer = value;
 	d.d_rtbtimer = value;
 
-	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0)
+	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot set timer: %s\n"),
 				progname, strerror(errno));
+	}
 }
 
 static int
@@ -530,9 +540,11 @@ set_warnings(
 	d.d_bwarns = value;
 	d.d_rtbwarns = value;
 
-	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0)
+	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot set warnings: %s\n"),
 				progname, strerror(errno));
+	}
 }
 
 static void
@@ -544,10 +556,11 @@ set_user_warnings(
 {
 	uid_t		uid = uid_from_string(name);
 
-	if (uid == -1)
+	if (uid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid user name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_warnings(uid, type, mask, fs_path->fs_name, value);
 }
 
@@ -560,10 +573,11 @@ set_group_warnings(
 {
 	gid_t		gid = gid_from_string(name);
 
-	if (gid == -1)
+	if (gid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid group name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_warnings(gid, type, mask, fs_path->fs_name, value);
 }
 
@@ -576,10 +590,11 @@ set_project_warnings(
 {
 	prid_t		prid = prid_from_string(name);
 
-	if (prid == -1)
+	if (prid == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: invalid project name: %s\n"),
 				progname, name);
-	else
+	} else
 		set_warnings(prid, type, mask, fs_path->fs_name, value);
 }
 

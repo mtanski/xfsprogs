@@ -413,11 +413,13 @@ fopen_write_secure(
 		return stdout;
 
 	if ((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL, 0600)) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: open on %s failed: %s\n"),
 			progname, fname, strerror(errno));
 		return NULL;
 	}
 	if ((fp = fdopen(fd, "w")) == NULL) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: fdopen on %s failed: %s\n"),
 			progname, fname, strerror(errno));
 		close(fd);

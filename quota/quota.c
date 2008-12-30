@@ -231,6 +231,7 @@ quota_user_type(
 			id = u->pw_uid;
 			name = u->pw_name;
 		} else {
+			exitcode = 1;
 			fprintf(stderr, _("%s: cannot find user %s\n"),
 				progname, name);
 			return;
@@ -280,6 +281,7 @@ quota_group_type(
 				gid = g->gr_gid;
 				name = g->gr_name;
 			} else {
+				exitcode = 1;
 				fprintf(stderr, _("%s: cannot find group %s\n"),
 					progname, name);
 				return;
@@ -336,6 +338,7 @@ quota_proj_type(
 	prid_t		id;
 
 	if (!name) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: must specify a project name/ID\n"),
 			progname);
 		return;
@@ -348,6 +351,7 @@ quota_proj_type(
 		id = p->pr_prid;
 		name = p->pr_name;
 	} else {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot find project %s\n"),
 			progname, name);
 		return;

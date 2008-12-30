@@ -61,6 +61,7 @@ mount_free_space_data(
 	int			fd;
 
 	if ((fd = open(mount->fs_dir, O_RDONLY)) < 0) {
+		exitcode = 1;
 		fprintf(stderr, "%s: cannot open %s: %s\n",
 			progname, mount->fs_dir, strerror(errno));
 		return 0;
@@ -128,17 +129,20 @@ projects_free_space_data(
 		return 0;
 
 	if ((fd = open(path->fs_dir, O_RDONLY)) < 0) {
+		exitcode = 1;
 		fprintf(stderr, "%s: cannot open %s: %s\n",
 			progname, path->fs_dir, strerror(errno));
 		return 0;
 	}
 
 	if ((xfsctl(path->fs_dir, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		exitcode = 1;
 		perror("XFS_IOC_FSGETXATTR");
 		close(fd);
 		return 0;
 	}
 	if (!(fsx.fsx_xflags & XFS_XFLAG_PROJINHERIT)) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: project quota flag not set on %s\n"),
 			progname, path->fs_dir);
 		close(fd);
@@ -146,6 +150,7 @@ projects_free_space_data(
 	}
 
 	if (path->fs_prid != fsx.fsx_projid) {
+		exitcode = 1;
 		fprintf(stderr,
 			_("%s: project ID %u (%s) doesn't match ID %u (%s)\n"),
 			progname, path->fs_prid, projects_file,

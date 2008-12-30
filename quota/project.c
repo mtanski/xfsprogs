@@ -91,6 +91,7 @@ check_project(
 	int			fd;
 
 	if (flag == FTW_NS ){
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
 		return 0;
 	}
@@ -99,13 +100,15 @@ check_project(
 		return 0;
 	}
 
-	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
+	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
-	else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
+	} else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
 			progname, path, strerror(errno));
-	else {
+	} else {
 		if (fsx.fsx_projid != prid)
 			printf(_("%s - project identifier is not set"
 				 " (inode=%u, tree=%u)\n"),
@@ -130,6 +133,7 @@ clear_project(
 	int			fd;
 
 	if (flag == FTW_NS ){
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
 		return 0;
 	}
@@ -139,10 +143,12 @@ clear_project(
 	}
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
 		return 0;
 	} else if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
 			progname, path, strerror(errno));
 		close(fd);
@@ -151,9 +157,11 @@ clear_project(
 
 	fsx.fsx_projid = 0;
 	fsx.fsx_xflags &= ~XFS_XFLAG_PROJINHERIT;
-	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
+	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
 			progname, path, strerror(errno));
+	}
 	close(fd);
 	return 0;
 }
@@ -169,6 +177,7 @@ setup_project(
 	int			fd;
 
 	if (flag == FTW_NS ){
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
 		return 0;
 	}
@@ -178,10 +187,12 @@ setup_project(
 	}
 
 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 			progname, path, strerror(errno));
 		return 0;
 	} else if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
 			progname, path, strerror(errno));
 		close(fd);
@@ -190,9 +201,11 @@ setup_project(
 
 	fsx.fsx_projid = prid;
 	fsx.fsx_xflags |= XFS_XFLAG_PROJINHERIT;
-	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
+	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0) {
+		exitcode = 1;
 		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
 			progname, path, strerror(errno));
+	}
 	close(fd);
 	return 0;
 }
@@ -272,6 +285,7 @@ project_f(
 
 	setprfiles();
 	if (access(projects_file, F_OK) != 0) {
+		exitcode = 1;
 		fprintf(stderr, _("projects file \"%s\" doesn't exist\n"),
 			projects_file);
 		return 0;
@@ -279,10 +293,11 @@ project_f(
 
         while (argc > optind) {
 		prid = prid_from_string(argv[optind]);
-		if (prid == -1)
+		if (prid == -1) {
+			exitcode = 1;
 			fprintf(stderr, _("%s - no such project in %s\n"),
 				argv[optind], projects_file);
-		else
+		} else
 	                project(argv[optind], type);
 		optind++;
 	}

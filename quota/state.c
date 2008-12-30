@@ -253,6 +253,7 @@ enable_enforcement(
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
+		exitcode = 1;
 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
 		return;
 	}
@@ -274,6 +275,7 @@ disable_enforcement(
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
+		exitcode = 1;
 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
 		return;
 	}
@@ -295,6 +297,7 @@ quotaoff(
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
+		exitcode = 1;
 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
 		return;
 	}
@@ -327,6 +330,7 @@ remove_extents(
 
 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
 	if (!mount) {
+		exitcode = 1;
 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
 		return;
 	}

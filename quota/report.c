@@ -115,6 +115,7 @@ dump_limits_any_type(
 	uint		id;
 
 	if ((mount = fs_table_lookup(dir, FS_MOUNT_POINT)) == NULL) {
+		exitcode = 1;
 		fprintf(stderr, "%s: cannot find mount point %s\n",
 			progname, dir);
 		return;
