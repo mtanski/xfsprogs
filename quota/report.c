@@ -45,7 +45,7 @@ dump_help(void)
 static void
 report_help(void)
 {
-	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
+	report_cmd.args = _("[-bir] [-gpu] [-ahntLNU] [-f file]");
 	report_cmd.oneline = _("report filesystem quota information");
 	printf(_(
 "\n"
@@ -61,6 +61,8 @@ report_help(void)
 " -n -- skip identifier-to-name translations, just report IDs\n"
 " -N -- suppress the header from the output\n"
 " -t -- terse output format, hides rows which are all zero\n"
+" -L -- lower ID bound to report on\n"
+" -U -- upder ID bound to report on\n"
 " -g -- report group usage and quota information\n"
 " -p -- report project usage and quota information\n"
 " -u -- report user usage and quota information\n"
