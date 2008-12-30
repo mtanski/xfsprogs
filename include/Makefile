@@ -40,10 +40,10 @@ LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
 LSRCFILES += command.h input.h path.h project.h
 LDIRT = xfs disk
 
-default install :
-	rm -f xfs disk
-	$(LN_S) . xfs
-	$(LN_S) . disk
+xfs disk:
+	$(LN_S) . $@
+
+default install: xfs disk
 
 include $(BUILDRULES)
 
