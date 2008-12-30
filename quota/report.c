@@ -124,7 +124,7 @@ dump_limits_any_type(
 	}
 
 	if (upper) {
-		for (id = lower; id < upper; id++)
+		for (id = lower; id <= upper; id++)
 			dump_file(fp, id, type, mount->fs_name);
 		return;
 	}
@@ -398,7 +398,7 @@ report_user_mount(
 	uint		id;
 
 	if (upper) {	/* identifier range specified */
-		for (id = lower; id < upper; id++) {
+		for (id = lower; id <= upper; id++) {
 			snprintf(n, sizeof(n)-1, "#%u", id);
 			if (report_mount(fp, id, n,
 					form, XFS_USER_QUOTA, mount, flags))
@@ -436,7 +436,7 @@ report_group_mount(
 	uint		id;
 
 	if (upper) {	/* identifier range specified */
-		for (id = lower; id < upper; id++) {
+		for (id = lower; id <= upper; id++) {
 			snprintf(n, sizeof(n)-1, "#%u", id);
 			if (report_mount(fp, id, n,
 					form, XFS_GROUP_QUOTA, mount, flags))
@@ -473,7 +473,7 @@ report_project_mount(
 	uint		id;
 
 	if (upper) {	/* identifier range specified */
-		for (id = lower; id < upper; id++) {
+		for (id = lower; id <= upper; id++) {
 			snprintf(n, sizeof(n)-1, "#%u", id);
 			if (report_mount(fp, id, n,
 					form, XFS_PROJ_QUOTA, mount, flags))
