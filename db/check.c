@@ -798,8 +798,13 @@ blockget_f(
 		dbprintf("already have block usage information\n");
 		return 0;
 	}
-	if (!init(argc, argv))
+	if (!init(argc, argv)) {
+		if (serious_error)
+			exitcode = 3;
+		else
+			exitcode = 1;
 		return 0;
+	}
 	oldprefix = dbprefix;
 	dbprefix |= pflag;
 	for (agno = 0, sbyell = 0; agno < mp->m_sb.sb_agcount; agno++) {
@@ -1760,9 +1765,11 @@ init(
 	xfs_ino_t	ino;
 	int		rt;
 
+	serious_error = 0;
 	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
 		dbprintf("bad superblock magic number %x, giving up\n",
 			mp->m_sb.sb_magicnum);
+		serious_error = 1;
 		return 0;
 	}
 	if (!sb_logcheck())
