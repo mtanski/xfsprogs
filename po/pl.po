@@ -3670,6 +3670,11 @@ msgstr "%s: nieprawid³owa nazwa grupy: %s\n"
 msgid "%s: invalid project name: %s\n"
 msgstr "%s: nieprawid³owa nazwa projektu: %s\n"
 
+#: ../quota/edit.c:237
+#, c-format
+msgid "%s: Warning: `%s' in quota blocks is 0 (unlimited).\n"
+msgstr "%s: Uwaga: `%s' w blokach quoty oznacza 0 (nieograniczone).\n"
+
 #: ../quota/edit.c:318
 #, c-format
 msgid "%s: unrecognised argument %s\n"

@@ -233,6 +233,8 @@ extractb(
 		s = string + length + 1;
 		v = (__uint64_t)cvtnum(blocksize, sectorsize, s);
 		*value = v >> 9;	/* syscalls use basic blocks */
+		if (v > 0 && *value == 0)
+			fprintf(stderr, _("%s: Warning: `%s' in quota blocks is 0 (unlimited).\n"), progname, s);
 		return 1;
 	}
 	return 0;
