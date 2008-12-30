@@ -81,8 +81,11 @@ dump_file(
 {
 	fs_disk_quota_t	d;
 
-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
+	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
+		if (errno != ENOENT && errno != ENOSYS)
+			perror("XFS_GETQUOTA");
 		return;
+	}
 	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
 	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
 	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
@@ -298,8 +301,11 @@ report_mount(
 	uint		qflags;
 	int		count;
 
-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
+	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
+		if (errno != ENOENT && errno != ENOSYS)
+			perror("XFS_GETQUOTA");
 		return 0;
+	}
 
 	if (flags & TERSE_FLAG) {
 		count = 0;
@@ -514,8 +520,10 @@ report_any_type(
 	if (type & XFS_USER_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor))) {
-			xfsquotactl(XFS_QSYNC, mount->fs_name,
-						XFS_USER_QUOTA, 0, NULL);
+			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_USER_QUOTA, 0, NULL) < 0
+					&& errno != ENOENT && errno != ENOSYS)
+				perror("XFS_QSYNC user quota");
 			report_user_mount(fp, form, mount,
 						lower, upper, flags);
 		}
@@ -523,8 +531,10 @@ report_any_type(
 	if (type & XFS_GROUP_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor))) {
-			xfsquotactl(XFS_QSYNC, mount->fs_name,
-						XFS_GROUP_QUOTA, 0, NULL);
+			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_GROUP_QUOTA, 0, NULL) < 0
+					&& errno != ENOENT && errno != ENOSYS)
+				perror("XFS_QSYNC group quota");
 			report_group_mount(fp, form, mount,
 						lower, upper, flags);
 		}
@@ -532,8 +542,10 @@ report_any_type(
 	if (type & XFS_PROJ_QUOTA) {
 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
 		while ((mount = fs_cursor_next_entry(&cursor))) {
-			xfsquotactl(XFS_QSYNC, mount->fs_name,
-						XFS_PROJ_QUOTA, 0, NULL);
+			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+						XFS_PROJ_QUOTA, 0, NULL) < 0
+					&& errno != ENOENT && errno != ENOSYS)
+				perror("XFS_QSYNC proj quota");
 			report_project_mount(fp, form, mount,
 						lower, upper, flags);
 		}
