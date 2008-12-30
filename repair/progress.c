@@ -13,30 +13,30 @@
 static
 char *rpt_types[] = {
 #define TYPE_INODE 	0
-	_("inodes"),
+	N_("inodes"),
 #define TYPE_BLOCK 	1
-	_("blocks"),
+	N_("blocks"),
 #define TYPE_DIR   	2
-	_("directories"),
+	N_("directories"),
 #define TYPE_AG		3
-	_("allocation groups"),
+	N_("allocation groups"),
 #define TYPE_AGI_BUCKET	4
-	_("AGI unlinked buckets"),
+	N_("AGI unlinked buckets"),
 #define TYPE_EXTENTS	5
-	_("extents"),
+	N_("extents"),
 #define TYPE_RTEXTENTS	6
-	_("realtime extents"),
+	N_("realtime extents"),
 #define TYPE_UNLINKED_LIST 7
-	_("unlinked lists")
+	N_("unlinked lists")
 };
 
 
 static
 char *rpt_fmts[] = {
 #define FMT1 0
-_("        - %02d:%02d:%02d: %s - %llu of %llu %s done\n"),
+N_("        - %02d:%02d:%02d: %s - %llu of %llu %s done\n"),
 #define FMT2 1
-_("        - %02d:%02d:%02d: %s - %llu %s done\n"),
+N_("        - %02d:%02d:%02d: %s - %llu %s done\n"),
 };
 
 typedef struct progress_rpt_s {
@@ -48,35 +48,35 @@ typedef struct progress_rpt_s {
 
 static
 progress_rpt_t progress_rpt_reports[] = {
-{FMT1, _("scanning filesystem freespace"),			/*  0 */
+{FMT1, N_("scanning filesystem freespace"),			/*  0 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT1, _("scanning agi unlinked lists"),			/*  1 */
+{FMT1, N_("scanning agi unlinked lists"),			/*  1 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT2, _("check uncertain AG inodes"),				/*  2 */
+{FMT2, N_("check uncertain AG inodes"),				/*  2 */
 	&rpt_fmts[FMT2], &rpt_types[TYPE_AGI_BUCKET]},
-{FMT1, _("process known inodes and inode discovery"),		/*  3 */
+{FMT1, N_("process known inodes and inode discovery"),		/*  3 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
-{FMT1, _("process newly discovered inodes"),			/*  4 */
+{FMT1, N_("process newly discovered inodes"),			/*  4 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT1, _("setting up duplicate extent list"),			/*  5 */
+{FMT1, N_("setting up duplicate extent list"),			/*  5 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT1, _("initialize realtime bitmap"),				/*  6 */
+{FMT1, N_("initialize realtime bitmap"),			/*  6 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_BLOCK]},
-{FMT1, _("reset realtime bitmaps"),				/*  7 */
+{FMT1, N_("reset realtime bitmaps"),				/*  7 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT1, _("check for inodes claiming duplicate blocks"),		/*  8 */
+{FMT1, N_("check for inodes claiming duplicate blocks"),	/*  8 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
-{FMT1, _("rebuild AG headers and trees"),	 		/*  9 */
+{FMT1, N_("rebuild AG headers and trees"),	 		/*  9 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT1, _("traversing filesystem"),				/* 10 */
+{FMT1, N_("traversing filesystem"),				/* 10 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
-{FMT2, _("traversing all unattached subtrees"),			/* 11 */
+{FMT2, N_("traversing all unattached subtrees"),		/* 11 */
 	&rpt_fmts[FMT2], &rpt_types[TYPE_DIR]},
-{FMT2, _("moving disconnected inodes to lost+found"),		/* 12 */
+{FMT2, N_("moving disconnected inodes to lost+found"),		/* 12 */
 	&rpt_fmts[FMT2], &rpt_types[TYPE_INODE]},
-{FMT1, _("verify and correct link counts"),			/* 13 */
+{FMT1, N_("verify and correct link counts"),			/* 13 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
-{FMT1, _("verify link counts"),					/* 14 */
+{FMT1, N_("verify link counts"),				/* 14 */
 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]}
 };
 

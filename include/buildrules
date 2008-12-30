@@ -40,7 +40,7 @@ endif
 
 ifdef POTHEAD
 $(POTHEAD): $(XGETTEXTFILES)
-	$(XGETTEXT) --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
+	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
 
 # Generate temp .po files, to check whether translations need updating.
 # Not by default, due to gettext output differences between versions.
