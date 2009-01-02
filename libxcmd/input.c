@@ -339,8 +339,12 @@ prid_from_string(
 	prid_t		prid;
 	char		*sp;
 
+	/*
+	 * Allow either a full numeric or a valid projectname, even
+	 * if it starts with a digit.
+	 */
 	prid = (prid_t)strtoul(project, &sp, 10);
-	if (sp != project)
+	if (*project != '\0' && *sp == '\0')
 		return prid;
 	prj = getprnam(project);
 	if (prj)
