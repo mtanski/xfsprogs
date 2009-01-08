@@ -360,8 +360,11 @@ attr_list_by_handle(
 
 	memcpy(&alhreq.pos, cursor, sizeof(alhreq.pos));
 	alhreq.flags = flags;
-	alhreq.buflen = bufsize;
 	alhreq.buffer = buf;
+	alhreq.buflen = bufsize;
+	/* prevent needless EINVAL from the kernel */
+	if (alhreq.buflen > XATTR_LIST_MAX)
+		alhreq.buflen = XATTR_LIST_MAX;
 
 	error = xfsctl(path, fd, XFS_IOC_ATTRLIST_BY_HANDLE, &alhreq);
 
