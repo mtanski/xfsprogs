@@ -292,6 +292,32 @@ struct gfs2_sb {
 #define gfsformat(s)		assemble4be(s.sb_fs_format)
 #define gfsmultiformat(s)	assemble4be(s.sb_multihost_format)
 
+/* btrfs constants */
+#define BTRFS_SUPER_INFO_OFFSET (64 * 1024)
+
+/* 32 bytes in various csum fields */
+#define BTRFS_CSUM_SIZE 32
+
+#define BTRFS_FSID_SIZE 16
+
+#define BTRFS_MAGIC "_BHRfS_M"
+
+/*
+ * the super block basically lists the main trees of the FS
+ * it currently lacks any block count etc etc
+ */
+struct btrfs_super_block {
+	char csum[BTRFS_CSUM_SIZE];
+	/* the first 3 fields must match struct btrfs_header */
+	char fsid[BTRFS_FSID_SIZE];    /* FS specific uuid */
+	char bytenr[8]; /* this block number */
+	char flags[8];
+
+	/* allowed to be different from the btrfs_header from here own down */
+	char magic[8];
+	/* more follows but this is all our libdisk cares about*/
+} __attribute__ ((__packed__));
+
 static inline int
 assemble2le(char *p) {
 	return (p[0] | (p[1] << 8));
