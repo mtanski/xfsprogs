@@ -760,27 +760,37 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	switch (num_sbs)  {
 	case 2:
 		/*
-		 * all them have to be right.  if not, report geometry
-		 * and get out unless force option is in effect (-F)
+		 * If we only have two allocation groups, and the superblock
+		 * in the second allocation group differs from the primary
+		 * superblock we can't verify the geometry information.
+		 * Warn the user about this situation and get out unless
+		 * explicitly overridden.
 		 */
 		if (current->refs != 2)  {
 			if (!force_geo)  {
 				do_warn(
-	_("Only two AGs detected and they do not match - cannot proceed.\n"));
+	_("Only two AGs detected and they do not match - "
+	  "cannot validate filesystem geometry.\n"
+	  "Use the -o force_geometry option to proceed.\n"));
 				exit(1);
 			}
 		}
-		break;
+		goto out_free_list;
 	case 1:
 		/*
-		 * just report the geometry info and get out.
-		 * refuse to run further unless the force (-F)
-		 * option is in effect.
+		 * If we only have a single allocation group there is no
+		 * secondary superblock that we can use to verify the geometry
+		 * information.  Warn the user about this situation and get
+		 * out unless explicitly overridden.
 		 */
 		if (!force_geo)  {
-			do_warn(_("Only one AG detected - cannot proceed.\n"));
+			do_warn(
+	_("Only one AG detected - "
+	  "cannot validate filesystem geometry.\n"
+	  "Use the -o force_geometry option to proceed.\n"));
 			exit(1);
 		}
+		goto out_free_list;
 	default:
 		/*
 		 * at least half of the probed superblocks have
@@ -820,6 +830,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 		sb_width = sb->sb_width;
 	}
 
+out_free_list:
 	free_geo(list);
 out:
 	free(sb);

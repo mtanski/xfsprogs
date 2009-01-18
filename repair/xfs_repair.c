@@ -62,6 +62,8 @@ char *o_opts[] = {
 	"bhash",
 #define	AG_STRIDE	4
 	"ag_stride",
+#define FORCE_GEO	5
+	"force_geometry",
 	NULL
 };
 
@@ -258,6 +260,13 @@ process_args(int argc, char **argv)
 				case AG_STRIDE:
 					ag_stride = (int)strtol(val, NULL, 0);
 					break;
+				case FORCE_GEO:
+					if (val)
+						noval('o', o_opts, FORCE_GEO);
+					if (force_geo)
+						respec('o', o_opts, FORCE_GEO);
+					force_geo = 1;
+					break;
 				default:
 					unknown('o', val);
 					break;
@@ -407,6 +416,19 @@ calc_mkfs(xfs_mount_t *mp)
 	bcntbt_root = bnobt_root + 1;
 	inobt_root = bnobt_root + 2;
 	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
+
+	/*
+	 * If we only have a single allocation group the log is also allocated
+	 * in the first allocation group and we need to add the number of
+	 * blocks used by the log to the above calculation.
+	 * All this of course doesn't apply if we have an external log.
+	 */
+	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
+		/*
+		 * XXX(hch): verify that sb_logstart makes sense?
+		 */
+		 fino_bno += mp->m_sb.sb_logblocks;
+	}
 
 	/*
 	 * ditto the location of the first inode chunks in the fs ('/')

@@ -146,6 +146,15 @@ RAM size.
 This creates additional processing threads to parallel process
 AGs that span multiple concat units. This can significantly
 reduce repair times on concat based filesystems.
+.TP
+.BI force_geometry
+Check the filesystem even if geometry information could not be validated.
+Geometry information can not be validated if only a single allocation
+group and exist and thus we do not have a backup superblock available, or
+if there are two allocation groups and the two superblocks do not
+agree on the filesystem geometry.  Only use this option if you validated
+the geometry yourself and know what you are doing.  If In doubt run
+in no modify mode first.
 .RE
 .TP
 .B \-t " interval"
