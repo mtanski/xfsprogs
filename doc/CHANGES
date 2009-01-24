@@ -1,7 +1,15 @@
 xfsprogs-3.0.0
+	- Various smaller xfs_repair improvements
+	- Various gettext improvements, thanks to Jakub Bogusz
+	- Polish translation update, thanks to Jakub Bogusz
+	- Various xfs_quota fixes, thanks to Arkadiusz Miskiewicz
+	- Support parallel builds
+	- Detection of btrfs, gfs and gfs2 in libdisk
+	- Addition of the xfs_fsr and xfs_estimate tools previous found
+	  in the xfsdump package
 	- Resync libxfs to latest kernel implemenation
 	- Update all of xfsprogs to latest kernel interfaces
-	- Add sparse support to xfsprogs build (thanks to Christoph Hellwig)
+	- Add sparse support to xfsprogs build
 	- Cleanup devel package for xfsctl, libhandle and libdisk only
 	  (remove libxfs interfaces).
 
