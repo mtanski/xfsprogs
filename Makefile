@@ -16,7 +16,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 LIB_SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk
-TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
 		mdrestore repair rtcp m4 man doc po debian build
 
 SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
