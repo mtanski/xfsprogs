@@ -140,7 +140,7 @@ bmap_f(
 		}
 	}
 
-	map_size = nflag ? nflag+2 : 32;	/* initial guess - 256 */
+	map_size = nflag ? nflag+2 : 32;	/* initial guess - 32 */
 	map = malloc(map_size*sizeof(*map));
 	if (map == NULL) {
 		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
@@ -151,7 +151,7 @@ bmap_f(
 
 
 /*	Try the xfsctl(XFS_IOC_GETBMAPX) for the number of extents specified
- *	by nflag, or the initial guess number of extents (256).
+ *	by nflag, or the initial guess number of extents (32).
  *
  *	If there are more extents than we guessed, use xfsctl
  *	(XFS_IOC_FSGETXATTR[A]) to get the extent count, realloc some more
