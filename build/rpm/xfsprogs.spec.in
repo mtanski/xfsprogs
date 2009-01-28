@@ -5,10 +5,8 @@ Release: @pkg_release@
 Distribution: @pkg_distribution@
 Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
 BuildRoot: @build_root@ 
-Provides: xfs-cmds
-Obsoletes: xfs-cmds
 Prereq: /sbin/ldconfig
-Conflicts: xfsdump < 2.0.0
+Conflicts: xfsdump < 3.0.0
 Source: @pkg_name@-@pkg_version@.src.tar.gz
 License: GPL
 Vendor: Silicon Graphics, Inc.
@@ -32,8 +30,8 @@ with the IRIX version of XFS.
 %package devel
 Summary: XFS filesystem-specific static libraries and headers.
 Group: Development/Libraries
-Requires: @pkg_name@ >= 2.0.0
-Conflicts: @pkg_name@ < 2.0.0
+Requires: @pkg_name@ >= 3.0.0
+Conflicts: @pkg_name@ < 3.0.0
 
 %description devel
 xfsprogs-devel contains the libraries and header files needed to
