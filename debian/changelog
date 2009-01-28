@@ -1,3 +1,11 @@
+xfsprogs (3.0.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Remove watch file, xfsprogs is native
+  * Updated dependencies as this requires xfsdump 3 also
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 28 Jan 2009 21:15:07 +1100
+
 xfsprogs (2.10.2-1) unstable; urgency=low
 
   * New upstream release

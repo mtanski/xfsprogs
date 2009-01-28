@@ -2,7 +2,7 @@ Source: xfsprogs
 Section: admin
 Priority: optional
 Maintainer: Nathan Scott <nathans@debian.org>
-Uploaders: Anibal Monsalve Salazar <anibal@debian.org>, Niv Sardi <xaiki@debian.org>
+Uploaders: Anibal Monsalve Salazar <anibal@debian.org>
 Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev
 Standards-Version: 3.7.3
 Homepage: http://oss.sgi.com/projects/xfs/
@@ -11,7 +11,7 @@ Package: xfsprogs
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: fsck-backend
 Suggests: xfsdump, attr, dvhtool, quota
-Conflicts: xfsdump (<< 2.0.0)
+Conflicts: xfsdump (<< 3.0.0)
 Architecture: any
 Description: Utilities for managing the XFS filesystem
  A set of commands to use the XFS filesystem, including mkfs.xfs.
@@ -30,8 +30,8 @@ Description: Utilities for managing the XFS filesystem
 Package: xfslibs-dev
 Section: libdevel
 Priority: extra
-Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>= 2.0.0)
-Conflicts: xfsprogs (<< 2.0.0)
+Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>= 3.0.0)
+Conflicts: xfsprogs (<< 3.0.0)
 Architecture: any
 Description: XFS filesystem-specific static libraries and headers
  xfslibs-dev contains the libraries and header files needed to
