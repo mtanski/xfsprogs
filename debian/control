@@ -10,7 +10,7 @@ Homepage: http://oss.sgi.com/projects/xfs/
 Package: xfsprogs
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: fsck-backend
-Suggests: xfsdump, attr, dvhtool, quota
+Suggests: xfsdump, acl, attr, quota
 Conflicts: xfsdump (<< 3.0.0)
 Architecture: any
 Description: Utilities for managing the XFS filesystem
