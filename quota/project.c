@@ -23,6 +23,7 @@
 
 static cmdinfo_t project_cmd;
 static prid_t prid;
+static int recurse_depth = -1;
 
 enum {
 	CHECK_PROJECT	= 0x1,
@@ -75,6 +76,10 @@ project_help(void)
 " which do not have the project ID of the rest of the tree, or if the inode\n"
 " flag is not set.\n"
 "\n"
+" The -d <depth> option allows to descend at most <depth> levels of directories\n"
+" below the command line arguments. -d 0 means only apply the actions\n"
+" to the top level of the projects. -d -1 means no recursion limit (default).\n"
+"\n"
 " The /etc/projid and /etc/projects file formats are simple, and described\n"
 " on the xfs_quota man page.\n"
 "\n"));
@@ -89,6 +94,9 @@ check_project(
 {
 	struct fsxattr		fsx;
 	int			fd;
+
+	if (recurse_depth >= 0 && data->level > recurse_depth)
+		return -1;
 
 	if (flag == FTW_NS ){
 		exitcode = 1;
@@ -131,6 +139,9 @@ clear_project(
 {
 	struct fsxattr		fsx;
 	int			fd;
+
+	if (recurse_depth >= 0 && data->level > recurse_depth)
+		return -1;
 
 	if (flag == FTW_NS ){
 		exitcode = 1;
@@ -176,6 +187,9 @@ setup_project(
 	struct fsxattr		fsx;
 	int			fd;
 
+	if (recurse_depth >= 0 && data->level > recurse_depth)
+		return -1;
+
 	if (flag == FTW_NS ){
 		exitcode = 1;
 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
@@ -219,15 +233,15 @@ project_operations(
 	switch (type) {
 	case CHECK_PROJECT:
 		printf(_("Checking project %s (path %s)...\n"), project, dir);
-		nftw(dir, check_project, 100, FTW_PHYS|FTW_MOUNT|FTW_DEPTH);
+		nftw(dir, check_project, 100, FTW_PHYS|FTW_MOUNT);
 		break;
 	case SETUP_PROJECT:
 		printf(_("Setting up project %s (path %s)...\n"), project, dir);
-		nftw(dir, setup_project, 100, FTW_PHYS|FTW_MOUNT|FTW_DEPTH);
+		nftw(dir, setup_project, 100, FTW_PHYS|FTW_MOUNT);
 		break;
 	case CLEAR_PROJECT:
 		printf(_("Clearing project %s (path %s)...\n"), project, dir);
-		nftw(dir, clear_project, 100, FTW_PHYS|FTW_MOUNT|FTW_DEPTH);
+		nftw(dir, clear_project, 100, FTW_PHYS|FTW_MOUNT);
 		break;
 	}
 }
@@ -249,8 +263,9 @@ project(
 		count++;
 	}
 
-	printf(_("Processed %d %s paths for project %s\n"),
-		 count, projects_file, project);
+	printf(_("Processed %d %s paths for project %s with recursion depth %s (%d)\n"),
+		 count, projects_file, project,
+		 recurse_depth < 0 ? _("infinite") : _("limited"), recurse_depth);
 }
 
 static int
@@ -260,10 +275,15 @@ project_f(
 {
 	int		c, type = 0;
 
-	while ((c = getopt(argc, argv, "csC")) != EOF) {
+	while ((c = getopt(argc, argv, "cd:sC")) != EOF) {
 		switch (c) {
 		case 'c':
 			type = CHECK_PROJECT;
+			break;
+		case 'd':
+			recurse_depth = atoi(optarg);
+			if (recurse_depth < 0)
+				recurse_depth = -1;
 			break;
 		case 's':
 			type = SETUP_PROJECT;
@@ -311,7 +331,7 @@ project_init(void)
 	project_cmd.name = _("project");
 	project_cmd.altname = _("tree");
 	project_cmd.cfunc = project_f;
-	project_cmd.args = _("[-c|-s|-C] project ...");
+	project_cmd.args = _("[-c|-s|-C|-d <depth>] project ...");
 	project_cmd.argmin = 1;
 	project_cmd.argmax = -1;
 	project_cmd.oneline = _("check, setup or clear project quota trees");
