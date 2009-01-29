@@ -35,6 +35,13 @@ AC_ARG_ENABLE(lib64,
 	enable_lib64=no)
 AC_SUBST(enable_lib64)
 
+# Find localized files
+LOCALIZED_FILES=""
+for lfile in `find ${srcdir} -name '*.c' -type f || exit 1`; do
+    LOCALIZED_FILES="$LOCALIZED_FILES \$(TOPDIR)/$lfile"
+done
+AC_SUBST(LOCALIZED_FILES)
+
 AC_PACKAGE_GLOBALS(xfsprogs)
 AC_PACKAGE_UTILITIES(xfsprogs)
 AC_MULTILIB($enable_lib64)

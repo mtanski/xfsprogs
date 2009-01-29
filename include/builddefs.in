@@ -74,6 +74,7 @@ MAKEDEPEND	= @makedepend@
 MSGFMT		= @msgfmt@
 MSGMERGE	= @msgmerge@
 XGETTEXT	= @xgettext@
+LOCALIZED_FILES	= @LOCALIZED_FILES@
 
 RPM		= @rpm@
 RPMBUILD	= @rpmbuild@
