@@ -52,6 +52,8 @@ extern void fs_table_destroy(void);
 
 extern void fs_table_insert_mount(char *__mount);
 extern void fs_table_insert_project(char *__project);
+extern void fs_table_insert_project_path(char *__dir, uint __projid);
+
 
 extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
 

@@ -402,6 +402,36 @@ fs_table_insert_project(
 	}
 }
 
+void 
+fs_table_insert_project_path(
+	char		*udir,
+	prid_t		prid)
+{
+	fs_path_t	*fs;
+	char		*dir = NULL, *fsname = NULL;
+	int		error = 0;
+
+	if ((fs = fs_mount_point_from_path(udir)) != NULL) {
+		dir = strdup(udir);
+		fsname = strdup(fs->fs_name);
+		if (dir && fsname)
+			error = fs_table_insert(dir, prid,
+					FS_PROJECT_PATH, fsname, NULL, NULL);
+		else
+			error = ENOMEM;
+	} else
+		error = ENOENT;
+
+	if (error) {
+		if (dir)
+			free(dir);
+		if (fsname)
+			free(fsname);
+		fprintf(stderr, _("%s: cannot setup path for project dir %s: %s\n"),
+				progname, udir, strerror(error));
+		exit(1);
+	}
+}
 /*
  * Table iteration (cursor-based) interfaces
  */

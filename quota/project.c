@@ -76,6 +76,11 @@ project_help(void)
 " which do not have the project ID of the rest of the tree, or if the inode\n"
 " flag is not set.\n"
 "\n"
+" The -p <path> option can be used to manually specify project path without\n"
+" need to create /etc/projects file. This option can be used multiple times\n"
+" to specify multiple paths. When using this option only one projid/name can\n"
+" be specified at command line. Note that /etc/projects is also used if exists.\n"
+"\n"
 " The -d <depth> option allows to descend at most <depth> levels of directories\n"
 " below the command line arguments. -d 0 means only apply the actions\n"
 " to the top level of the projects. -d -1 means no recursion limit (default).\n"
@@ -257,13 +262,13 @@ project(
 
 	fs_cursor_initialise(NULL, FS_PROJECT_PATH, &cursor);
 	while ((path = fs_cursor_next_entry(&cursor))) {
-		if (prid != path->fs_prid)
+		if (prid != path->fs_prid && path->fs_prid != -1)
 			continue;
 		project_operations(project, path->fs_dir, type);
 		count++;
 	}
 
-	printf(_("Processed %d %s paths for project %s with recursion depth %s (%d)\n"),
+	printf(_("Processed %d (%s and cmdline) paths for project %s with recursion depth %s (%d).\n"),
 		 count, projects_file, project,
 		 recurse_depth < 0 ? _("infinite") : _("limited"), recurse_depth);
 }
@@ -273,9 +278,9 @@ project_f(
 	int		argc,
 	char		**argv)
 {
-	int		c, type = 0;
+	int		c, type = 0, ispath = 0;
 
-	while ((c = getopt(argc, argv, "cd:sC")) != EOF) {
+	while ((c = getopt(argc, argv, "cd:p:sC")) != EOF) {
 		switch (c) {
 		case 'c':
 			type = CHECK_PROJECT;
@@ -284,6 +289,10 @@ project_f(
 			recurse_depth = atoi(optarg);
 			if (recurse_depth < 0)
 				recurse_depth = -1;
+			break;
+		case 'p':
+			ispath = 1;
+			fs_table_insert_project_path(optarg, -1);
 			break;
 		case 's':
 			type = SETUP_PROJECT;
@@ -304,10 +313,17 @@ project_f(
 		type = CHECK_PROJECT;
 
 	setprfiles();
-	if (access(projects_file, F_OK) != 0) {
+	if (!ispath && access(projects_file, F_OK) != 0) {
 		exitcode = 1;
 		fprintf(stderr, _("projects file \"%s\" doesn't exist\n"),
 			projects_file);
+		return 0;
+	}
+
+	if (ispath && argc - optind > 1) {
+		exitcode = 1;
+		fprintf(stderr, _("%s: only one projid/name can be specified when using -p <path>, %d found.\n"),
+				progname, argc - optind);
 		return 0;
 	}
 
@@ -331,7 +347,7 @@ project_init(void)
 	project_cmd.name = _("project");
 	project_cmd.altname = _("tree");
 	project_cmd.cfunc = project_f;
-	project_cmd.args = _("[-c|-s|-C|-d <depth>] project ...");
+	project_cmd.args = _("[-c|-s|-C|-d <depth>|-p <path>] project ...");
 	project_cmd.argmin = 1;
 	project_cmd.argmax = -1;
 	project_cmd.oneline = _("check, setup or clear project quota trees");
