@@ -248,7 +248,8 @@ fs_table_initialise_mounts(
 	dir = fsname = fslog = fsrt = NULL;
 
 	if ((count = getmntinfo(&stats, 0)) < 0) {
-		perror("getmntinfo");
+		fprintf(stderr, _("%s: getmntinfo() failed: %s\n"),
+				progname, strerror(errno));
 		return 0;
 	}
 
@@ -298,7 +299,6 @@ fs_mount_point_from_path(
 	struct stat64	s;
 
 	if (stat64(dir, &s) < 0) {
-		perror(dir);
 		return NULL;
 	}
 
@@ -327,8 +327,11 @@ fs_table_initialise_projects(
 	while ((path = getprpathent()) != NULL) {
 		if (project && prid != path->pp_prid)
 			continue;
-		if ((fs = fs_mount_point_from_path(path->pp_pathname)) == NULL)
+		if ((fs = fs_mount_point_from_path(path->pp_pathname)) == NULL) {
+			fprintf(stderr, _("%s: cannot find mount point for path `%s': %s\n"),
+					progname, path->pp_pathname, strerror(errno));
 			continue;
+		}
 		found = 1;
 		dir = strdup(path->pp_pathname);
 		fsname = strdup(fs->fs_name);
