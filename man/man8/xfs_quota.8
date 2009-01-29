@@ -547,6 +547,14 @@ instead of stdout.
 .B project
 [
 .B \-cCs
+[
+.B \-d
+.I depth
+]
+[
+.B \-p
+.I path
+]
 .I id
 |
 .I name
@@ -562,8 +570,14 @@ files). The
 .BR \-C ,
 and
 .B \-s
-options allow the directory
-tree quota mechanism, discussed in detail below, to be maintained.
+options allow the directory tree quota mechanism to be maintained.
+.BR \-d
+allows to limit recursion level when processing project directories
+and
+.BR \-p
+allows to specify project paths at command line ( instead of
+.I /etc/projects
+). All options are discussed in detail below.
 .SH DIRECTORY TREE QUOTA
 The project quota mechanism in XFS can be used to implement a form of
 directory tree quota, where a specified directory and all of the files
@@ -602,6 +616,18 @@ option can be used to check whether a
 tree is setup, it reports nothing if the tree is correct, otherwise it
 reports the paths of inodes which do not have the project ID of the rest
 of the tree, or if the inode flag is not set.
+.PP
+Option
+.B \-d
+can be used to limit recursion level (-1 is infinite, 0 is top level only,
+1 is first level ... ).
+Option
+.B \-p
+adds posibility to specify project paths in command line without a need
+for
+.I /etc/projects
+to exist. Note that if projects file exists then it is also used.
+
 .SH FILE FORMATS
 There are two files involved with the tree quota mechanism, namely
 .I /etc/projects
@@ -664,6 +690,17 @@ log file directories to only using 1 gigabyte of space).
 # echo logfiles:42 >> /etc/projid
 # xfs_quota \-x \-c 'project \-s logfiles' /var
 # xfs_quota \-x \-c 'limit \-p bhard=1g logfiles' /var
+.in -5
+.fi
+.PP
+Same as above without a need for configuration files.
+.nf
+.sp
+.in +5
+# rm \-f /etc/projects /etc/projid
+# mount \-o prjquota /dev/xvm/var /var
+# xfs_quota \-x \-c 'project \-s \-p /var/log 42' /var
+# xfs_quota \-x \-c 'limit \-p bhard=1g 42' /var
 .in -5
 .fi
 .SH CAVEATS
