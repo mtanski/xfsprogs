@@ -29,7 +29,7 @@ done
 set -- extra $@
 shift $OPTIND
 case $# in
-	2)	xfs_db$DBOPTS -i -p xfs_metadump -c "metadump$OPTS $2" $1
+	2)	xfs_db$DBOPTS -F -i -p xfs_metadump -c "metadump$OPTS $2" $1
 		status=$?
 		;;
 	*)	echo $USAGE 1>&2

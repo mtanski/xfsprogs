@@ -33,6 +33,7 @@ char		*fsdevice;
 int		blkbb;
 int		exitcode;
 int		expert_mode;
+int		force;
 xfs_mount_t	xmount;
 xfs_mount_t	*mp;
 libxfs_init_t	x;
@@ -42,8 +43,8 @@ static void
 usage(void)
 {
 	fprintf(stderr, _(
-		"Usage: %s [-frxV] [-p prog] [-l logdev] [-c cmd]... device\n"),
-		progname);
+		"Usage: %s [-fFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
+		), progname);
 	exit(1);
 }
 
@@ -57,7 +58,7 @@ init(
 	int		c;
 
 	progname = basename(argv[0]);
-	while ((c = getopt(argc, argv, "c:fip:rxVl:")) != EOF) {
+	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
 		switch (c) {
 		case 'c':
 			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
@@ -65,6 +66,9 @@ init(
 			break;
 		case 'f':
 			x.disfile = 1;
+			break;
+		case 'F':
+			force = 1;
 			break;
 		case 'i':
 			x.isreadonly = (LIBXFS_ISREADONLY|LIBXFS_ISINACTIVE);
@@ -118,8 +122,10 @@ init(
 
 	sbp = &xmount.m_sb;
 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-		fprintf(stderr, _("%s: unexpected XFS SB magic number 0x%08x\n"),
-			progname, sbp->sb_magicnum);
+		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
+			progname, fsdevice, sbp->sb_magicnum);
+		if (!force)
+			exit(EXIT_FAILURE);
 	}
 
 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,

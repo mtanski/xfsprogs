@@ -26,7 +26,7 @@ done
 set -- extra $@
 shift $OPTIND
 case $# in
-	1)	xfs_db64$DBOPTS -i -p xfs_check64 -c "check$OPTS" $1
+	1)	xfs_db64$DBOPTS -F -i -p xfs_check64 -c "check$OPTS" $1
 		status=$?
 		;;
 	*)	echo $USAGE 1>&2
