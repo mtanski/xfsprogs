@@ -2774,7 +2774,7 @@ process_dinode(
 	const int	uncertain = 0;
 
 #ifdef XR_INODE_TRACE
-	fprintf(stderr, "processing inode %d/%d\n", agno, ino);
+	fprintf(stderr, _("processing inode %d/%d\n"), agno, ino);
 #endif
 	return process_dinode_int(mp, dino, agno, ino, was_free, dirty, used,
 				verify_mode, uncertain, ino_discovery,

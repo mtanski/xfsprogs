@@ -36,8 +36,8 @@ static xfs_fsblock_t	select_child(xfs_dfiloff_t off, xfs_bmbt_key_t *kp,
 				     xfs_bmbt_ptr_t *pp, int nrecs);
 
 static const cmdinfo_t	bmap_cmd =
-	{ "bmap", NULL, bmap_f, 0, 3, 0, "[-ad] [block [len]]",
-	  "show block map for current file", NULL };
+	{ "bmap", NULL, bmap_f, 0, 3, 0, N_("[-ad] [block [len]]"),
+	  N_("show block map for current file"), NULL };
 
 void
 bmap(
@@ -150,7 +150,7 @@ bmap_f(
 	int		whichfork;
 
 	if (iocur_top->ino == NULLFSINO) {
-		dbprintf("no current inode\n");
+		dbprintf(_("no current inode\n"));
 		return 0;
 	}
 	optind = 0;
@@ -163,7 +163,7 @@ bmap_f(
 			dfork = 1;
 			break;
 		default:
-			dbprintf("bad option for bmap command\n");
+			dbprintf(_("bad option for bmap command\n"));
 			return 0;
 		}
 	}
@@ -180,7 +180,7 @@ bmap_f(
 	if (optind < argc) {
 		co = (xfs_dfiloff_t)strtoull(argv[optind], &p, 0);
 		if (*p != '\0') {
-			dbprintf("bad block number for bmap %s\n",
+			dbprintf(_("bad block number for bmap %s\n"),
 				argv[optind]);
 			return 0;
 		}
@@ -188,7 +188,7 @@ bmap_f(
 		if (optind < argc) {
 			len = (xfs_dfilblks_t)strtoull(argv[optind], &p, 0);
 			if (*p != '\0') {
-				dbprintf("bad len for bmap %s\n", argv[optind]);
+				dbprintf(_("bad len for bmap %s\n"), argv[optind]);
 				return 0;
 			}
 			eo = co + len - 1;
@@ -211,9 +211,9 @@ bmap_f(
 			bmap(co, eo - co + 1, whichfork, &nex, &be);
 			if (nex == 0)
 				break;
-			dbprintf("%s offset %lld startblock %llu (%u/%u) count "
-				 "%llu flag %u\n",
-				whichfork == XFS_DATA_FORK ? "data" : "attr",
+			dbprintf(_("%s offset %lld startblock %llu (%u/%u) count "
+				 "%llu flag %u\n"),
+				whichfork == XFS_DATA_FORK ? _("data") : _("attr"),
 				be.startoff, be.startblock,
 				XFS_FSB_TO_AGNO(mp, be.startblock),
 				XFS_FSB_TO_AGBNO(mp, be.startblock),

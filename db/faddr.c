@@ -37,12 +37,12 @@ fa_agblock(
 	xfs_agblock_t	bno;
 
 	if (cur_agno == NULLAGNUMBER) {
-		dbprintf("no current allocation group, cannot set new addr\n");
+		dbprintf(_("no current allocation group, cannot set new addr\n"));
 		return;
 	}
 	bno = (xfs_agblock_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLAGBLOCK) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	ASSERT(typtab[next].typnm == next);
@@ -60,12 +60,12 @@ fa_agino(
 	xfs_agino_t	agino;
 
 	if (cur_agno == NULLAGNUMBER) {
-		dbprintf("no current allocation group, cannot set new addr\n");
+		dbprintf(_("no current allocation group, cannot set new addr\n"));
 		return;
 	}
 	agino = (xfs_agino_t)getbitval(obj, bit, bitsz(agino), BVUNSIGNED);
 	if (agino == NULLAGINO) {
-		dbprintf("null inode number, cannot set new addr\n");
+		dbprintf(_("null inode number, cannot set new addr\n"));
 		return;
 	}
 	set_cur_inode(XFS_AGINO_TO_INO(mp, cur_agno, agino));
@@ -85,13 +85,13 @@ fa_attrblock(
 
 	bno = (__uint32_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == 0) {
-		dbprintf("null attribute block number, cannot set new addr\n");
+		dbprintf(_("null attribute block number, cannot set new addr\n"));
 		return;
 	}
 	nex = 1;
 	bmap(bno, 1, XFS_ATTR_FORK, &nex, &bm);
 	if (nex == 0) {
-		dbprintf("attribute block is unmapped\n");
+		dbprintf(_("attribute block is unmapped\n"));
 		return;
 	}
 	dfsbno = bm.startblock + (bno - bm.startoff);
@@ -114,13 +114,13 @@ fa_cfileoffa(
 	bno = (xfs_dfiloff_t)getbitval(obj, bit, BMBT_STARTOFF_BITLEN,
 		BVUNSIGNED);
 	if (bno == NULLDFILOFF) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	nex = 1;
 	bmap(bno, 1, XFS_ATTR_FORK, &nex, &bm);
 	if (nex == 0) {
-		dbprintf("file block is unmapped\n");
+		dbprintf(_("file block is unmapped\n"));
 		return;
 	}
 	dfsbno = bm.startblock + (bno - bm.startoff);
@@ -145,14 +145,14 @@ fa_cfileoffd(
 	bno = (xfs_dfiloff_t)getbitval(obj, bit, BMBT_STARTOFF_BITLEN,
 		BVUNSIGNED);
 	if (bno == NULLDFILOFF) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	nex = nb = next == TYP_DIR2 ? mp->m_dirblkfsbs : 1;
 	bmp = malloc(nb * sizeof(*bmp));
 	bmap(bno, nb, XFS_DATA_FORK, &nex, bmp);
 	if (nex == 0) {
-		dbprintf("file block is unmapped\n");
+		dbprintf(_("file block is unmapped\n"));
 		free(bmp);
 		return;
 	}
@@ -177,7 +177,7 @@ fa_cfsblock(
 	bno = (xfs_dfsbno_t)getbitval(obj, bit, BMBT_STARTBLOCK_BITLEN,
 		BVUNSIGNED);
 	if (bno == NULLDFSBNO) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	nb = next == TYP_DIR2 ? mp->m_dirblkfsbs : 1;
@@ -199,13 +199,13 @@ fa_dfiloffa(
 
 	bno = (xfs_dfiloff_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLDFILOFF) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	nex = 1;
 	bmap(bno, 1, XFS_ATTR_FORK, &nex, &bm);
 	if (nex == 0) {
-		dbprintf("file block is unmapped\n");
+		dbprintf(_("file block is unmapped\n"));
 		return;
 	}
 	dfsbno = bm.startblock + (bno - bm.startoff);
@@ -229,14 +229,14 @@ fa_dfiloffd(
 
 	bno = (xfs_dfiloff_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLDFILOFF) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	nex = nb = next == TYP_DIR2 ? mp->m_dirblkfsbs : 1;
 	bmp = malloc(nb * sizeof(*bmp));
 	bmap(bno, nb, XFS_DATA_FORK, &nex, bmp);
 	if (nex == 0) {
-		dbprintf("file block is unmapped\n");
+		dbprintf(_("file block is unmapped\n"));
 		free(bmp);
 		return;
 	}
@@ -259,7 +259,7 @@ fa_dfsbno(
 
 	bno = (xfs_dfsbno_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLDFSBNO) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	ASSERT(typtab[next].typnm == next);
@@ -282,14 +282,14 @@ fa_dirblock(
 
 	bno = (__uint32_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == 0) {
-		dbprintf("null directory block number, cannot set new addr\n");
+		dbprintf(_("null directory block number, cannot set new addr\n"));
 		return;
 	}
 	nex = mp->m_dirblkfsbs;
 	bmp = malloc(nex * sizeof(*bmp));
 	bmap(bno, mp->m_dirblkfsbs, XFS_DATA_FORK, &nex, bmp);
 	if (nex == 0) {
-		dbprintf("directory block is unmapped\n");
+		dbprintf(_("directory block is unmapped\n"));
 		free(bmp);
 		return;
 	}
@@ -313,7 +313,7 @@ fa_drfsbno(
 
 	bno = (xfs_drfsbno_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLDRFSBNO) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	ASSERT(typtab[next].typnm == next);
@@ -332,7 +332,7 @@ fa_drtbno(
 
 	bno = (xfs_drtbno_t)getbitval(obj, bit, bitsz(bno), BVUNSIGNED);
 	if (bno == NULLDRTBNO) {
-		dbprintf("null block number, cannot set new addr\n");
+		dbprintf(_("null block number, cannot set new addr\n"));
 		return;
 	}
 	/* need set_cur to understand rt subvolume */
@@ -350,7 +350,7 @@ fa_ino(
 	ASSERT(next == TYP_INODE);
 	ino = (xfs_ino_t)getbitval(obj, bit, bitsz(ino), BVUNSIGNED);
 	if (ino == NULLFSINO) {
-		dbprintf("null inode number, cannot set new addr\n");
+		dbprintf(_("null inode number, cannot set new addr\n"));
 		return;
 	}
 	set_cur_inode(ino);
@@ -368,7 +368,7 @@ fa_ino4(
 	ASSERT(next == TYP_INODE);
 	ino = (xfs_ino_t)getbitval(obj, bit, bitsz(ino4), BVUNSIGNED);
 	if (ino == NULLFSINO) {
-		dbprintf("null inode number, cannot set new addr\n");
+		dbprintf(_("null inode number, cannot set new addr\n"));
 		return;
 	}
 	set_cur_inode(ino);
@@ -386,7 +386,7 @@ fa_ino8(
 	ASSERT(next == TYP_INODE);
 	ino = (xfs_ino_t)getbitval(obj, bit, bitsz(ino8), BVUNSIGNED);
 	if (ino == NULLFSINO) {
-		dbprintf("null inode number, cannot set new addr\n");
+		dbprintf(_("null inode number, cannot set new addr\n"));
 		return;
 	}
 	set_cur_inode(ino);

@@ -32,8 +32,8 @@ static int agi_f(int argc, char **argv);
 static void agi_help(void);
 
 static const cmdinfo_t agi_cmd =
-	{ "agi", NULL, agi_f, 0, 1, 1, "[agno]",
-	  "set address to agi header", agi_help };
+	{ "agi", NULL, agi_f, 0, 1, 1, N_("[agno]"),
+	  N_("set address to agi header"), agi_help };
 
 const field_t	agi_hfld[] = {
 	{ "", FLDT_AGI, OI(0), C1, 0, TYP_NONE },
@@ -60,7 +60,7 @@ const field_t	agi_flds[] = {
 static void
 agi_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " set allocation group inode btree\n"
 "\n"
@@ -72,7 +72,7 @@ agi_help(void)
 " the agi inode btree tracks all used/free inodes in the allocation group.\n"
 " Inodes are allocated in 16k 'chunks', each btree entry tracks a 'chunk'.\n"
 "\n"
-);
+));
 }
 
 static int
@@ -86,7 +86,7 @@ agi_f(
 	if (argc > 1) {
 		agno = (xfs_agnumber_t)strtoul(argv[1], &p, 0);
 		if (*p != '\0' || agno >= mp->m_sb.sb_agcount) {
-			dbprintf("bad allocation group number %s\n", argv[1]);
+			dbprintf(_("bad allocation group number %s\n"), argv[1]);
 			return 0;
 		}
 		cur_agno = agno;

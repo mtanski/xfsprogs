@@ -24,8 +24,8 @@
 static int	echo_f(int argc, char **argv);
 
 static const cmdinfo_t	echo_cmd =
-	{ "echo", NULL, echo_f, 0, -1, 0, "[args]...",
-	  "echo arguments", NULL };
+	{ "echo", NULL, echo_f, 0, -1, 0, N_("[args]..."),
+	  N_("echo arguments"), NULL };
 
 /*ARGSUSED*/
 static int

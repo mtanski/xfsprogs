@@ -35,17 +35,17 @@ static void		attrset_help(void);
 
 static const cmdinfo_t	attr_set_cmd =
 	{ "attr_set", "aset", attr_set_f, 1, -1, 0,
-	  "[-r|-s|-p|-u] [-n] [-R|-C] [-v n] name",
-	  "set the named attribute on the current inode", attrset_help };
+	  N_("[-r|-s|-p|-u] [-n] [-R|-C] [-v n] name"),
+	  N_("set the named attribute on the current inode"), attrset_help };
 static const cmdinfo_t	attr_remove_cmd =
 	{ "attr_remove", "aremove", attr_remove_f, 1, -1, 0,
-	  "[-r|-s|-p|-u] [-n] name",
-	  "remove the named attribute from the current inode", attrset_help };
+	  N_("[-r|-s|-p|-u] [-n] name"),
+	  N_("remove the named attribute from the current inode"), attrset_help };
 
 static void
 attrset_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The 'attr_set' and 'attr_remove' commands provide interfaces for debugging\n"
 " the extended attribute allocation and removal code.\n"
@@ -60,7 +60,7 @@ attrset_help(void)
 "  -C -- 'create'    - create attribute, fail if it already exists\n"
 "  -R -- 'replace'   - replace attribute, fail if it does not exist\n"
 " The backward compatibility mode 'noattr2' can be emulated (-n) also.\n"
-"\n");
+"\n"));
 }
 
 void
@@ -83,11 +83,11 @@ attr_set_f(
 	int		c, namelen, valuelen = 0, flags = 0;
 
 	if (cur_typ == NULL) {
-		dbprintf("no current type\n");
+		dbprintf(_("no current type\n"));
 		return 0;
 	}
 	if (cur_typ->typnm != TYP_INODE) {
-		dbprintf("current type is not inode\n");
+		dbprintf(_("current type is not inode\n"));
 		return 0;
 	}
 
@@ -122,19 +122,19 @@ attr_set_f(
 		case 'v':
 			valuelen = (int)strtol(optarg, &sp, 0);
 			if (*sp != '\0' || valuelen < 0 || valuelen > 64*1024) {
-				dbprintf("bad attr_set valuelen %s\n", optarg);
+				dbprintf(_("bad attr_set valuelen %s\n"), optarg);
 				return 0;
 			}
 			break;
 
 		default:
-			dbprintf("bad option for attr_set command\n");
+			dbprintf(_("bad option for attr_set command\n"));
 			return 0;
 		}
 	}
 
 	if (optind != argc - 1) {
-		dbprintf("too few options for attr_set (no name given)\n");
+		dbprintf(_("too few options for attr_set (no name given)\n"));
 		return 0;
 	}
 
@@ -144,7 +144,7 @@ attr_set_f(
 	if (valuelen) {
 		value = (char *)memalign(getpagesize(), valuelen);
 		if (!value) {
-			dbprintf("cannot allocate buffer (%d)\n", valuelen);
+			dbprintf(_("cannot allocate buffer (%d)\n"), valuelen);
 			goto out;
 		}
 		memset(value, 0xfeedface, valuelen);
@@ -186,11 +186,11 @@ attr_remove_f(
 	int		c, namelen, flags = 0;
 
 	if (cur_typ == NULL) {
-		dbprintf("no current type\n");
+		dbprintf(_("no current type\n"));
 		return 0;
 	}
 	if (cur_typ->typnm != TYP_INODE) {
-		dbprintf("current type is not inode\n");
+		dbprintf(_("current type is not inode\n"));
 		return 0;
 	}
 
@@ -214,13 +214,13 @@ attr_remove_f(
 			break;
 
 		default:
-			dbprintf("bad option for attr_remove command\n");
+			dbprintf(_("bad option for attr_remove command\n"));
 			return 0;
 		}
 	}
 
 	if (optind != argc - 1) {
-		dbprintf("too few options for attr_remove (no name given)\n");
+		dbprintf(_("too few options for attr_remove (no name given)\n"));
 		return 0;
 	}
 

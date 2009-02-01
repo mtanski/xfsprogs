@@ -39,7 +39,7 @@ int	print_operation = OP_PRINT;
 void
 usage(void)
 {
-	fprintf(stderr, "Usage: %s [options...] <device>\n\n\
+	fprintf(stderr, _("Usage: %s [options...] <device>\n\n\
 Options:\n\
     -c	            try to continue if error found in log\n\
     -C <filename>   copy the log from the filesystem to filename\n\
@@ -55,7 +55,7 @@ Options:\n\
 	-i          in transactional view, extract inode info\n\
 	-q          in transactional view, extract quota info\n\
     -D              print only data; no decoding\n\
-    -V              print version information\n",
+    -V              print version information\n"),
 	progname);
 	exit(1);
 }
@@ -72,13 +72,13 @@ logstat(xfs_mount_t *mp)
 	 * log. Otherwise we end up seeking forever. -- mkp
 	 */
 	if ((fd = open(x.dname, O_RDONLY)) == -1) {
-		fprintf(stderr, "    Can't open device %s: %s\n",
+		fprintf(stderr, _("    Can't open device %s: %s\n"),
 			x.dname, strerror(errno));
 		exit(1);
 	}
 	lseek64(fd, 0, SEEK_SET);
 	if (read(fd, buf, sizeof(buf)) != sizeof(buf)) {
-		fprintf(stderr, "    read of XFS superblock failed\n");
+		fprintf(stderr, _("    read of XFS superblock failed\n"));
 		exit(1);
 	}
 	close (fd);
@@ -94,7 +94,7 @@ logstat(xfs_mount_t *mp)
 		x.logBBsize = XFS_FSB_TO_BB(mp, sb->sb_logblocks);
 		x.logBBstart = XFS_FSB_TO_DADDR(mp, sb->sb_logstart);
 		if (!x.logname && sb->sb_logstart == 0) {
-			fprintf(stderr, "    external log device not specified\n\n");
+			fprintf(stderr, _("    external log device not specified\n\n"));
 			usage();
 			/*NOTREACHED*/
 		}
@@ -109,7 +109,7 @@ logstat(xfs_mount_t *mp)
 
 	if (x.logname && *x.logname) {    /* External log */
 		if ((fd = open(x.logname, O_RDONLY)) == -1) {
-			fprintf(stderr, "Can't open file %s: %s\n",
+			fprintf(stderr, _("Can't open file %s: %s\n"),
 				x.logname, strerror(errno));
 			exit(1);
 		}
@@ -130,6 +130,10 @@ main(int argc, char **argv)
 	char		*copy_file = NULL;
 	xlog_t	        log = {0};
 	xfs_mount_t	mount;
+
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
 
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
@@ -189,7 +193,7 @@ main(int argc, char **argv)
 				print_overwrite++;
 				break;
 			case 'V':
-				printf("%s version %s\n", progname, VERSION);
+				printf(_("%s version %s\n"), progname, VERSION);
 				exit(0);
 			case '?':
 				usage();
@@ -205,7 +209,7 @@ main(int argc, char **argv)
 		usage();
 
 	x.isreadonly = LIBXFS_ISINACTIVE;
-	printf("xfs_logprint:\n");
+	printf(_("xfs_logprint:\n"));
 	if (!libxfs_init(&x))
 		exit(1);
 
@@ -213,15 +217,15 @@ main(int argc, char **argv)
 
 	logfd = (x.logfd < 0) ? x.dfd : x.logfd;
 
-	printf("    data device: 0x%llx\n", (unsigned long long)x.ddev);
+	printf(_("    data device: 0x%llx\n"), (unsigned long long)x.ddev);
 
 	if (x.logname) {
-		printf("    log file: \"%s\" ", x.logname);
+		printf(_("    log file: \"%s\" "), x.logname);
 	} else {
-		printf("    log device: 0x%llx ", (unsigned long long)x.logdev);
+		printf(_("    log device: 0x%llx "), (unsigned long long)x.logdev);
 	}
 
-	printf("daddr: %lld length: %lld\n\n",
+	printf(_("daddr: %lld length: %lld\n\n"),
 		(long long)x.logBBstart, (long long)x.logBBsize);
 
 	ASSERT(x.logBBsize <= INT_MAX);

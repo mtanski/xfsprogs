@@ -40,8 +40,8 @@ static void	popfile(void);
 static int	source_f(int argc, char **argv);
 
 static const cmdinfo_t	source_cmd =
-	{ "source", NULL, source_f, 1, 1, 0, "source-file",
-	  "get commands from source-file", NULL };
+	{ "source", NULL, source_f, 1, 1, 0, N_("source-file"),
+	  N_("get commands from source-file"), NULL };
 
 /* our homegrown strtok that understands strings */
 
@@ -317,7 +317,7 @@ source_f(
 
 	f = fopen(argv[1], "r");
 	if (f == NULL)
-		dbprintf("can't open %s\n", argv[0]);
+		dbprintf(_("can't open %s\n"), argv[0]);
 	else
 		pushfile(f);
 	return 0;

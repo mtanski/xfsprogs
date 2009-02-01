@@ -34,8 +34,8 @@ static int	dquot_f(int argc, char **argv);
 static void	dquot_help(void);
 
 static const cmdinfo_t	dquot_cmd =
-	{ "dquot", NULL, dquot_f, 1, 2, 1, "[projid|gid|uid]",
-	  "set current address to project, group or user quota block", dquot_help };
+	{ "dquot", NULL, dquot_f, 1, 2, 1, N_("[projid|gid|uid]"),
+	  N_("set current address to project, group or user quota block"), dquot_help };
 
 const field_t	dqblk_hfld[] = {
 	{ "", FLDT_DQBLK, OI(0), C1, 0, TYP_NONE },
@@ -121,25 +121,25 @@ dquot_f(
 			dogrp = doprj = 0;
 			break;
 		default:
-			dbprintf("bad option for dquot command\n");
+			dbprintf(_("bad option for dquot command\n"));
 			return 0;
 		}
 	}
-	s = doprj ? "project" : dogrp ? "group" : "user";
+	s = doprj ? _("project") : dogrp ? _("group") : _("user");
 	if (optind != argc - 1) {
-		dbprintf("dquot command requires one %s id argument\n", s);
+		dbprintf(_("dquot command requires one %s id argument\n"), s);
 		return 0;
 	}
 	ino = (dogrp || doprj) ? mp->m_sb.sb_gquotino : mp->m_sb.sb_uquotino;
 	if (ino == 0 || ino == NULLFSINO ||
 	    (dogrp && (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT)) ||
 	    (doprj && (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))) {
-		dbprintf("no %s quota inode present\n", s);
+		dbprintf(_("no %s quota inode present\n"), s);
 		return 0;
 	}
 	id = (xfs_dqid_t)strtol(argv[optind], &p, 0);
 	if (*p != '\0') {
-		dbprintf("bad %s id for dquot %s\n", s, argv[optind]);
+		dbprintf(_("bad %s id for dquot %s\n"), s, argv[optind]);
 		return 0;
 	}
 	perblock = (int)(mp->m_sb.sb_blocksize / sizeof(xfs_dqblk_t));
@@ -151,7 +151,7 @@ dquot_f(
 	bmap(qbno, 1, XFS_DATA_FORK, &nex, &bm);
 	pop_cur();
 	if (nex == 0) {
-		dbprintf("no %s quota data for id %d\n", s, id);
+		dbprintf(_("no %s quota data for id %d\n"), s, id);
 		return 0;
 	}
 	set_cur(&typtab[TYP_DQBLK], XFS_FSB_TO_DADDR(mp, bm.startblock), blkbb,

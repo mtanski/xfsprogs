@@ -38,8 +38,8 @@ static void	print_somefields(const struct field *fields, int argc,
 				 char **argv);
 
 static const cmdinfo_t	print_cmd =
-	{ "print", "p", print_f, 0, -1, 0, "[value]...",
-	  "print field values", NULL };
+	{ "print", "p", print_f, 0, -1, 0, N_("[value]..."),
+	  N_("print field values"), NULL };
 
 static void
 print_allfields(
@@ -71,12 +71,12 @@ print_f(
 	pfunc_t	pf;
 
 	if (cur_typ == NULL) {
-		dbprintf("no current type\n");
+		dbprintf(_("no current type\n"));
 		return 0;
 	}
 	pf = cur_typ->pfunc;
 	if (pf == NULL) {
-		dbprintf("no print function for type %s\n", cur_typ->name);
+		dbprintf(_("no print function for type %s\n"), cur_typ->name);
 		return 0;
 	}
 	argc--;
@@ -150,7 +150,7 @@ print_flist_1(
 					dbprintf("\n");
 			} else {
 				ASSERT(fa->arg & FTARG_OKEMPTY);
-				dbprintf("(empty)\n");
+				dbprintf(_("(empty)\n"));
 			}
 		}
 		free_strvec(pfx);
@@ -212,7 +212,7 @@ print_sarray(
 					f->flags & FLD_ARRAY);
 			else {
 				ASSERT(fa->arg & FTARG_OKEMPTY);
-				dbprintf("(empty)");
+				dbprintf(_("(empty)"));
 			}
 		}
 		dbprintf("]");
@@ -272,7 +272,7 @@ print_string(
 	char		*cp;
 
 	if (argc != 0)
-		dbprintf("no arguments allowed\n");
+		dbprintf(_("no arguments allowed\n"));
 	dbprintf("\"");
 	for (cp = iocur_top->data;
 	     cp < (char *)iocur_top->data + iocur_top->len && *cp &&

@@ -1224,7 +1224,7 @@ main()
 	printf("\n");
 
 	while (1) {
-		printf("Command [fpdir] : ");
+		printf(_("Command [fpdir] : "));
 		fgets(linebuf, 256, stdin);
 		if (feof(stdin)) break;
 		cmd[0] = NULL;
@@ -1233,7 +1233,7 @@ main()
 		switch (cmd[0]) {
 		case 'd':
 		case 'f':
-			printf("end of range ? ");
+			printf(_("end of range ? "));
 			fgets(linebuf, 256, stdin);
 			j = atoi(linebuf);
 
@@ -1244,7 +1244,7 @@ main()
 				if (cmd[0] == 'd')
 					avl64_delete(&tree, np);
 			} else
-				printf("Cannot find %d\n", i);
+				printf(_("Cannot find %d\n"), i);
 			break;
 		case 'p':
 			avl64_print(&tree, tree.avl_root, 0);
@@ -1257,7 +1257,7 @@ main()
 			np = alloc_avlnode();
 			ASSERT(np);
 			np->avl_start = i;
-			printf("size of range ? ");
+			printf(_("size of range ? "));
 			fgets(linebuf, 256, stdin);
 			j = atoi(linebuf);
 
@@ -1268,18 +1268,18 @@ main()
 			avl64node_t	*b, *e, *t;
 			int		checklen;
 
-			printf("End of range ? ");
+			printf(_("End of range ? "));
 			fgets(linebuf, 256, stdin);
 			j = atoi(linebuf);
 
-			printf("checklen 0/1 ? ");
+			printf(_("checklen 0/1 ? "));
 			fgets(linebuf, 256, stdin);
 			checklen = atoi(linebuf);
 
 
 			b = avl64_findanyrange(&tree, i, j, checklen);
 			if (b) {
-				printf("Found something\n");
+				printf(_("Found something\n"));
 				t = b;
 				while (t)  {
 					if (t != b &&

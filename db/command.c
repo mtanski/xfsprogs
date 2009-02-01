@@ -79,18 +79,18 @@ command(
 	cmd = argv[0];
 	ct = find_command(cmd);
 	if (ct == NULL) {
-		dbprintf("command %s not found\n", cmd);
+		dbprintf(_("command %s not found\n"), cmd);
 		return 0;
 	}
 	if (argc-1 < ct->argmin || (ct->argmax != -1 && argc-1 > ct->argmax)) {
-		dbprintf("bad argument count %d to %s, expected ", argc-1, cmd);
+		dbprintf(_("bad argument count %d to %s, expected "), argc-1, cmd);
 		if (ct->argmax == -1)
-			dbprintf("at least %d", ct->argmin);
+			dbprintf(_("at least %d"), ct->argmin);
 		else if (ct->argmin == ct->argmax)
 			dbprintf("%d", ct->argmin);
 		else
-			dbprintf("between %d and %d", ct->argmin, ct->argmax);
-		dbprintf(" arguments\n");
+			dbprintf(_("between %d and %d"), ct->argmin, ct->argmax);
+		dbprintf(_(" arguments\n"));
 		return 0;
 	}
 	platform_getoptreset();

@@ -32,8 +32,8 @@ static int agf_f(int argc, char **argv);
 static void agf_help(void);
 
 static const cmdinfo_t agf_cmd =
-	{ "agf", NULL, agf_f, 0, 1, 1, "[agno]",
-	  "set address to agf header", agf_help };
+	{ "agf", NULL, agf_f, 0, 1, 1, N_("[agno]"),
+	  N_("set address to agf header"), agf_help };
 
 const field_t	agf_hfld[] = {
 	{ "", FLDT_AGF, OI(0), C1, 0, TYP_NONE },
@@ -75,7 +75,7 @@ const field_t	agf_flds[] = {
 static void
 agf_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " set allocation group free block list\n"
 "\n"
@@ -87,7 +87,7 @@ agf_help(void)
 " contains the root of two different freespace btrees:\n"
 " The 'cnt' btree keeps track freespace indexed on section size.\n"
 " The 'bno' btree tracks sections of freespace indexed on block number.\n"
-);
+));
 }
 
 static int
@@ -101,7 +101,7 @@ agf_f(
 	if (argc > 1) {
 		agno = (xfs_agnumber_t)strtoul(argv[1], &p, 0);
 		if (*p != '\0' || agno >= mp->m_sb.sb_agcount) {
-			dbprintf("bad allocation group number %s\n", argv[1]);
+			dbprintf(_("bad allocation group number %s\n"), argv[1]);
 			return 0;
 		}
 		cur_agno = agno;

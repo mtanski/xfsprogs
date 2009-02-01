@@ -41,28 +41,28 @@ xfs_log_copy(
 	for (blkno = 0; blkno < log->l_logBBsize; blkno++) {
 		r = read(fd, buf, sizeof(buf));
 		if (r < 0) {
-			fprintf(stderr, "%s: read error (%lld): %s\n",
+			fprintf(stderr, _("%s: read error (%lld): %s\n"),
 				__FUNCTION__, (long long)blkno,
 				strerror(errno));
 			continue;
 		} else if (r == 0) {
-			printf("%s: physical end of log at %lld\n",
+			printf(_("%s: physical end of log at %lld\n"),
 				__FUNCTION__, (long long)blkno);
 			break;
 		} else if (r != sizeof(buf)) {
-			fprintf(stderr, "%s: short read? (%lld)\n",
+			fprintf(stderr, _("%s: short read? (%lld)\n"),
 					__FUNCTION__, (long long)blkno);
 			continue;
 		}
 
 		r = write(ofd, buf, sizeof(buf));
 		if (r < 0) {
-			fprintf(stderr, "%s: write error (%lld): %s\n",
+			fprintf(stderr, _("%s: write error (%lld): %s\n"),
 				__FUNCTION__, (long long)blkno,
 				strerror(errno));
 			break;
 		} else if (r != sizeof(buf)) {
-			fprintf(stderr, "%s: short write? (%lld)\n",
+			fprintf(stderr, _("%s: short write? (%lld)\n"),
 				__FUNCTION__, (long long)blkno);
 			continue;
 		}

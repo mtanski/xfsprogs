@@ -27,20 +27,20 @@ static int hash_f(int argc, char **argv);
 static void hash_help(void);
 
 static const cmdinfo_t hash_cmd =
-	{ "hash", NULL, hash_f, 1, 1, 0, "string",
-	  "calculate hash value", hash_help };
+	{ "hash", NULL, hash_f, 1, 1, 0, N_("string"),
+	  N_("calculate hash value"), hash_help };
 
 static void
 hash_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " 'hash' prints out the calculated hash value for a string using the\n"
 "directory/attribute code hash function.\n"
 "\n"
 " Usage:  \"hash <string>\"\n"
 "\n"
-);
+));
 
 }
 

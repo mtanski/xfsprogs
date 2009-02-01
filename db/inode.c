@@ -378,14 +378,14 @@ inode_f(
 	if (argc > 1) {
 		ino = strtoull(argv[1], &p, 0);
 		if (*p != '\0') {
-			dbprintf("bad value for inode number %s\n", argv[1]);
+			dbprintf(_("bad value for inode number %s\n"), argv[1]);
 			return 0;
 		}
 		set_cur_inode(ino);
 	} else if (iocur_top->ino == NULLFSINO)
-		dbprintf("no current inode\n");
+		dbprintf(_("no current inode\n"));
 	else
-		dbprintf("current inode number is %lld\n", iocur_top->ino);
+		dbprintf(_("current inode number is %lld\n"), iocur_top->ino);
 	return 0;
 }
 
@@ -593,7 +593,7 @@ set_cur_inode(
 	if (agno >= mp->m_sb.sb_agcount || agbno >= mp->m_sb.sb_agblocks ||
 	    offset >= mp->m_sb.sb_inopblock ||
 	    XFS_AGINO_TO_INO(mp, agno, agino) != ino) {
-		dbprintf("bad inode number %lld\n", ino);
+		dbprintf(_("bad inode number %lld\n"), ino);
 		return;
 	}
 	cur_agno = agno;

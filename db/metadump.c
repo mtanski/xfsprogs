@@ -44,8 +44,8 @@ static void	metadump_help(void);
 
 static const cmdinfo_t	metadump_cmd =
 	{ "metadump", NULL, metadump_f, 0, -1, 0,
-		"[-e] [-g] [-m max_extent] [-w] [-o] filename",
-		"dump metadata to a file", metadump_help };
+		N_("[-e] [-g] [-m max_extent] [-w] [-o] filename"),
+		N_("dump metadata to a file"), metadump_help };
 
 static FILE		*outf;		/* metadump file */
 
@@ -74,7 +74,7 @@ metadump_init(void)
 static void
 metadump_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The 'metadump' command dumps the known metadata to a compact file suitable\n"
 " for compressing and sending to an XFS maintainer for corruption analysis \n"
@@ -85,7 +85,7 @@ metadump_help(void)
 "   -m -- Specify max extent size in blocks to copy (default = %d blocks)\n"
 "   -o -- Don't obfuscate names and extended attributes\n"
 "   -w -- Show warnings of bad metadata information\n"
-"\n", DEFAULT_MAX_EXT_SIZE);
+"\n"), DEFAULT_MAX_EXT_SIZE);
 }
 
 static void

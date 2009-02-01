@@ -95,7 +95,7 @@ xlog_recover_print_buffer(
 	len = item->ri_buf[0].i_len;
 	printf("	");
 	ASSERT(f->blf_type == XFS_LI_BUF);
-	printf("BUF:  #regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n",
+	printf(_("BUF:  #regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n"),
 		f->blf_size, (long long)f->blf_blkno, f->blf_len, f->blf_map_size, f->blf_flags);
 	blkno = (xfs_daddr_t)f->blf_blkno;
 	num = f->blf_size-1;
@@ -105,51 +105,51 @@ xlog_recover_print_buffer(
 		len = item->ri_buf[i].i_len;
 		i++;
 		if (blkno == 0) { /* super block */
-			printf("	SUPER Block Buffer:\n");
+			printf(_("	SUPER Block Buffer:\n"));
 			if (!print_buffer) 
 				continue;
-			printf("		icount:%Ld  ifree:%Ld  ",
+			printf(_("		icount:%Ld  ifree:%Ld  "),
 			       be64_to_cpu(*(__be64 *)(p)),
 			       be64_to_cpu(*(__be64 *)(p+8)));
-			printf("fdblks:%Ld  frext:%Ld\n",
+			printf(_("fdblks:%Ld  frext:%Ld\n"),
 			       be64_to_cpu(*(__be64 *)(p+16)),
 			       be64_to_cpu(*(__be64 *)(p+24)));
-			printf("		sunit:%u  swidth:%u\n",
+			printf(_("		sunit:%u  swidth:%u\n"),
 			       be32_to_cpu(*(__be32 *)(p+56)),
 			       be32_to_cpu(*(__be32 *)(p+60)));
 		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGI_MAGIC) {
 			agi = (xfs_agi_t *)p;
-			printf("	AGI Buffer: (XAGI)\n");
+			printf(_("	AGI Buffer: (XAGI)\n"));
 			if (!print_buffer) 
 				continue;
-			printf("		ver:%d  ",
+			printf(_("		ver:%d  "),
 				be32_to_cpu(agi->agi_versionnum));
-			printf("seq#:%d  len:%d  cnt:%d  root:%d\n",
+			printf(_("seq#:%d  len:%d  cnt:%d  root:%d\n"),
 				be32_to_cpu(agi->agi_seqno),
 				be32_to_cpu(agi->agi_length),
 				be32_to_cpu(agi->agi_count),
 				be32_to_cpu(agi->agi_root));
-			printf("		level:%d  free#:0x%x  newino:0x%x\n",
+			printf(_("		level:%d  free#:0x%x  newino:0x%x\n"),
 				be32_to_cpu(agi->agi_level),
 				be32_to_cpu(agi->agi_freecount),
 				be32_to_cpu(agi->agi_newino));
 		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGF_MAGIC) {
 			agf = (xfs_agf_t *)p;
-			printf("	AGF Buffer: (XAGF)\n");
+			printf(_("	AGF Buffer: (XAGF)\n"));
 			if (!print_buffer) 
 				continue;
-			printf("		ver:%d  seq#:%d  len:%d  \n",
+			printf(_("		ver:%d  seq#:%d  len:%d  \n"),
 				be32_to_cpu(agf->agf_versionnum),
 				be32_to_cpu(agf->agf_seqno),
 				be32_to_cpu(agf->agf_length));
-			printf("		root BNO:%d  CNT:%d\n",
+			printf(_("		root BNO:%d  CNT:%d\n"),
 				be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]),
 				be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
-			printf("		level BNO:%d  CNT:%d\n",
+			printf(_("		level BNO:%d  CNT:%d\n"),
 				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]),
 				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
-			printf("		1st:%d  last:%d  cnt:%d  "
-				"freeblks:%d  longest:%d\n",
+			printf(_("		1st:%d  last:%d  cnt:%d  "
+				"freeblks:%d  longest:%d\n"),
 				be32_to_cpu(agf->agf_flfirst),
 				be32_to_cpu(agf->agf_fllast),
 				be32_to_cpu(agf->agf_flcount),
@@ -157,15 +157,15 @@ xlog_recover_print_buffer(
 				be32_to_cpu(agf->agf_longest));
 		} else if (*(uint *)p == XFS_DQUOT_MAGIC) {
 			ddq = (xfs_disk_dquot_t *)p;
-			printf("	DQUOT Buffer:\n");
+			printf(_("	DQUOT Buffer:\n"));
 			if (!print_buffer) 
 				continue;
-			printf("		UIDs 0x%lx-0x%lx\n",
+			printf(_("		UIDs 0x%lx-0x%lx\n"),
 			       (unsigned long)be32_to_cpu(ddq->d_id),
 			       (unsigned long)be32_to_cpu(ddq->d_id) +
 			       (BBTOB(f->blf_len) / sizeof(xfs_dqblk_t)) - 1);
 		} else {
-			printf("	BUF DATA\n");
+			printf(_("	BUF DATA\n"));
 			if (!print_buffer) continue;
 			xlog_recover_print_data(p, len);
 		}
@@ -187,7 +187,7 @@ xlog_recover_print_quotaoff(
 		strcat(str, "GROUP QUOTA");
 	if (qoff_f->qf_flags & XFS_PQUOTA_ACCT)
 		strcat(str, "PROJECT QUOTA");
-	printf("\tQUOTAOFF: #regs:%d   type:%s\n",
+	printf(_("\tQUOTAOFF: #regs:%d   type:%s\n"),
 	       qoff_f->qf_size, str);
 }
 
@@ -202,27 +202,27 @@ xlog_recover_print_dquot(
 	ASSERT(f);
 	ASSERT(f->qlf_len == 1);
 	d = (xfs_disk_dquot_t *)item->ri_buf[1].i_addr;
-	printf("\tDQUOT: #regs:%d  blkno:%lld  boffset:%u id: %d\n",
+	printf(_("\tDQUOT: #regs:%d  blkno:%lld  boffset:%u id: %d\n"),
 	       f->qlf_size, (long long)f->qlf_blkno, f->qlf_boffset, f->qlf_id);
 	if (!print_quota)
 		return;
-	printf("\t\tmagic 0x%x\tversion 0x%x\tID 0x%x (%d)\t\n",
+	printf(_("\t\tmagic 0x%x\tversion 0x%x\tID 0x%x (%d)\t\n"),
 	       be16_to_cpu(d->d_magic),
 	       d->d_version,
 	       be32_to_cpu(d->d_id),
 	       be32_to_cpu(d->d_id));
-	printf("\t\tblk_hard 0x%x\tblk_soft 0x%x\tino_hard 0x%x"
-	       "\tino_soft 0x%x\n",
+	printf(_("\t\tblk_hard 0x%x\tblk_soft 0x%x\tino_hard 0x%x"
+	       "\tino_soft 0x%x\n"),
 	       (int)be64_to_cpu(d->d_blk_hardlimit),
 	       (int)be64_to_cpu(d->d_blk_softlimit),
 	       (int)be64_to_cpu(d->d_ino_hardlimit),
 	       (int)be64_to_cpu(d->d_ino_softlimit));
-	printf("\t\tbcount 0x%x (%d) icount 0x%x (%d)\n",
+	printf(_("\t\tbcount 0x%x (%d) icount 0x%x (%d)\n"),
 	       (int)be64_to_cpu(d->d_bcount),
 	       (int)be64_to_cpu(d->d_bcount),
 	       (int)be64_to_cpu(d->d_icount),
 	       (int)be64_to_cpu(d->d_icount));
-	printf("\t\tbtimer 0x%x itimer 0x%x \n",
+	printf(_("\t\tbtimer 0x%x itimer 0x%x \n"),
 	       (int)be32_to_cpu(d->d_btimer),
 	       (int)be32_to_cpu(d->d_itimer));
 }
@@ -231,24 +231,24 @@ STATIC void
 xlog_recover_print_inode_core(
 	xfs_icdinode_t		*di)
 {
-	printf("	CORE inode:\n");
+	printf(_("	CORE inode:\n"));
 	if (!print_inode)
 		return;
-	printf("		magic:%c%c  mode:0x%x  ver:%d  format:%d  "
-	     "onlink:%d\n",
+	printf(_("		magic:%c%c  mode:0x%x  ver:%d  format:%d  "
+	     "onlink:%d\n"),
 	       (di->di_magic>>8) & 0xff, di->di_magic & 0xff,
 	       di->di_mode, di->di_version, di->di_format, di->di_onlink);
-	printf("		uid:%d  gid:%d  nlink:%d projid:%d\n",
+	printf(_("		uid:%d  gid:%d  nlink:%d projid:%d\n"),
 	       di->di_uid, di->di_gid, di->di_nlink, (uint)di->di_projid);
-	printf("		atime:%d  mtime:%d  ctime:%d\n",
+	printf(_("		atime:%d  mtime:%d  ctime:%d\n"),
 	       di->di_atime.t_sec, di->di_mtime.t_sec, di->di_ctime.t_sec);
-	printf("		flushiter:%d\n", di->di_flushiter);
-	printf("		size:0x%llx  nblks:0x%llx  exsize:%d  "
-	     "nextents:%d  anextents:%d\n", (unsigned long long)
+	printf(_("		flushiter:%d\n"), di->di_flushiter);
+	printf(_("		size:0x%llx  nblks:0x%llx  exsize:%d  "
+	     "nextents:%d  anextents:%d\n"), (unsigned long long)
 	       di->di_size, (unsigned long long)di->di_nblocks,
 	       di->di_extsize, di->di_nextents, (int)di->di_anextents);
-	printf("		forkoff:%d  dmevmask:0x%x  dmstate:%d  flags:0x%x  "
-	     "gen:%d\n",
+	printf(_("		forkoff:%d  dmevmask:0x%x  dmstate:%d  flags:0x%x  "
+	     "gen:%d\n"),
 	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
 	       (int)di->di_flags, di->di_gen);
 }
@@ -267,7 +267,7 @@ xlog_recover_print_inode(
 	       item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_64_t));
 	f = xfs_inode_item_format_convert(item->ri_buf[0].i_addr, item->ri_buf[0].i_len, &f_buf);
 
-	printf("	INODE: #regs:%d   ino:0x%llx  flags:0x%x   dsize:%d\n",
+	printf(_("	INODE: #regs:%d   ino:0x%llx  flags:0x%x   dsize:%d\n"),
 	       f->ilf_size, (unsigned long long)f->ilf_ino, f->ilf_fields,
 	       f->ilf_dsize);
 
@@ -282,32 +282,32 @@ xlog_recover_print_inode(
 	switch (f->ilf_fields & (XFS_ILOG_DFORK|XFS_ILOG_DEV|XFS_ILOG_UUID)) {
 	case XFS_ILOG_DEXT:
 		ASSERT(f->ilf_size == 3 + hasattr);
-		printf("		DATA FORK EXTENTS inode data:\n");
+		printf(_("		DATA FORK EXTENTS inode data:\n"));
 		if (print_inode && print_data)
 			xlog_recover_print_data(item->ri_buf[2].i_addr,
 						item->ri_buf[2].i_len);
 		break;
 	case XFS_ILOG_DBROOT:
 		ASSERT(f->ilf_size == 3 + hasattr);
-		printf("		DATA FORK BTREE inode data:\n");
+		printf(_("		DATA FORK BTREE inode data:\n"));
 		if (print_inode && print_data)
 			xlog_recover_print_data(item->ri_buf[2].i_addr,
 						item->ri_buf[2].i_len);
 		break;
 	case XFS_ILOG_DDATA:
 		ASSERT(f->ilf_size == 3 + hasattr);
-		printf("		DATA FORK LOCAL inode data:\n");
+		printf(_("		DATA FORK LOCAL inode data:\n"));
 		if (print_inode && print_data)
 			xlog_recover_print_data(item->ri_buf[2].i_addr,
 						item->ri_buf[2].i_len);
 		break;
 	case XFS_ILOG_DEV:
 		ASSERT(f->ilf_size == 2 + hasattr);
-		printf("		DEV inode: no extra region\n");
+		printf(_("		DEV inode: no extra region\n"));
 		break;
 	case XFS_ILOG_UUID:
 		ASSERT(f->ilf_size == 2 + hasattr);
-		printf("		UUID inode: no extra region\n");
+		printf(_("		UUID inode: no extra region\n"));
 		break;
 
 	case 0:
@@ -322,7 +322,7 @@ xlog_recover_print_inode(
 		switch (f->ilf_fields & XFS_ILOG_AFORK) {
 		case XFS_ILOG_AEXT:
 			ASSERT(f->ilf_size == 3 + hasdata);
-			printf("		ATTR FORK EXTENTS inode data:\n");
+			printf(_("		ATTR FORK EXTENTS inode data:\n"));
 			if (print_inode && print_data)
 				xlog_recover_print_data(
 					item->ri_buf[attr_index].i_addr,
@@ -330,7 +330,7 @@ xlog_recover_print_inode(
 			break;
 		case XFS_ILOG_ABROOT:
 			ASSERT(f->ilf_size == 3 + hasdata);
-			printf("		ATTR FORK BTREE inode data:\n");
+			printf(_("		ATTR FORK BTREE inode data:\n"));
 			if (print_inode && print_data)
 				xlog_recover_print_data(
 					item->ri_buf[attr_index].i_addr,
@@ -338,7 +338,7 @@ xlog_recover_print_inode(
 			break;
 		case XFS_ILOG_ADATA:
 			ASSERT(f->ilf_size == 3 + hasdata);
-			printf("		ATTR FORK LOCAL inode data:\n");
+			printf(_("		ATTR FORK LOCAL inode data:\n"));
 			if (print_inode && print_data)
 				xlog_recover_print_data(
 					item->ri_buf[attr_index].i_addr,
@@ -363,7 +363,7 @@ xlog_recover_print_efd(
 	 * Each element is of size xfs_extent_32_t or xfs_extent_64_t.
 	 * However, the extents are never used and won't be printed.
 	 */
-	printf("	EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n",
+	printf(_("	EFD:  #regs: %d    num_extents: %d  id: 0x%llx\n"),
 	       f->efd_size, f->efd_nextents, (unsigned long long)f->efd_efi_id);
 }
 
@@ -387,7 +387,7 @@ xlog_recover_print_efi(
 	 */
 	dst_len = sizeof(xfs_efi_log_format_t) + (src_f->efi_nextents - 1) * sizeof(xfs_extent_t);
 	if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
-	    fprintf(stderr, "%s: xlog_recover_print_efi: malloc failed\n", progname);
+	    fprintf(stderr, _("%s: xlog_recover_print_efi: malloc failed\n"), progname);
 	    exit(1);
 	}
 	if (xfs_efi_copy_format((char*)src_f, src_len, f)) {
@@ -395,7 +395,7 @@ xlog_recover_print_efi(
 	    return;
 	}
 
-	printf("	EFI:  #regs:%d    num_extents:%d  id:0x%llx\n",
+	printf(_("	EFI:  #regs:%d    num_extents:%d  id:0x%llx\n"),
 	       f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
 	ex = f->efi_extents;
 	printf("	");
@@ -435,7 +435,7 @@ xlog_recover_print_logitem(
 		xlog_recover_print_quotaoff(item);
 		break;
 	default:
-		printf("xlog_recover_print_logitem: illegal type\n");
+		printf(_("xlog_recover_print_logitem: illegal type\n"));
 		break;
 	}
 }
@@ -466,17 +466,17 @@ xlog_recover_print_item(
 		printf("QOFF");
 		break;
 	default:
-		cmn_err(CE_PANIC, "%s: illegal type", __FUNCTION__);
+		cmn_err(CE_PANIC, _("%s: illegal type"), __FUNCTION__);
 		break;
 	}
 
 /*	type isn't filled in yet
-	printf("ITEM: type: %d cnt: %d total: %d ",
+	printf(_("ITEM: type: %d cnt: %d total: %d "),
 	       item->ri_type, item->ri_cnt, item->ri_total);
 */
-	printf(": cnt:%d total:%d ", item->ri_cnt, item->ri_total);
+	printf(_(": cnt:%d total:%d "), item->ri_cnt, item->ri_total);
 	for (i=0; i<item->ri_cnt; i++) {
-		printf("a:0x%lx len:%d ",
+		printf(_("a:0x%lx len:%d "),
 		       (long)item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
 	}
 	printf("\n");

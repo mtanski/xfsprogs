@@ -91,7 +91,7 @@ increase_rlimit(void)
 	/* Increase limits */
 	if (getrlimit(RLIMIT_FSIZE, &rl) == -1) {
 		perror("getrlimit");
-		fprintf(stderr, "getrlimit(RLIMIT_FSIZE) failed!\n");
+		fprintf(stderr, _("getrlimit(RLIMIT_FSIZE) failed!\n"));
 		exit(1);
 	}
 	if (rl.rlim_cur != RLIM_INFINITY) {
@@ -99,7 +99,7 @@ increase_rlimit(void)
 		if (setrlimit(RLIMIT_FSIZE, &rl) == -1) {
 			perror("setrlimit");
 			fprintf(stderr,
-				"setrlimit failed - current: %lld, max: %lld\n",
+				_("setrlimit failed - current: %lld, max: %lld\n"),
 				(unsigned long long)rl.rlim_cur,
 				(unsigned long long)rl.rlim_max);
 			exit(1);

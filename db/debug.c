@@ -24,8 +24,8 @@
 static int	debug_f(int argc, char **argv);
 
 static const cmdinfo_t	debug_cmd =
-	{ "debug", NULL, debug_f, 0, 1, 0, "[flagbits]",
-	  "set debug option bits", NULL };
+	{ "debug", NULL, debug_f, 0, 1, 0, N_("[flagbits]"),
+	  N_("set debug option bits"), NULL };
 
 long	debug_state;
 
@@ -39,7 +39,7 @@ debug_f(
 	if (argc > 1) {
 		debug_state = strtol(argv[1], &p, 0);
 		if (*p != '\0') {
-			dbprintf("bad value for debug %s\n", argv[1]);
+			dbprintf(_("bad value for debug %s\n"), argv[1]);
 			return 0;
 		}
 	}

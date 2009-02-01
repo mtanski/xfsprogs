@@ -43,22 +43,22 @@ static void     ring_help(void);
 
 static const cmdinfo_t	pop_cmd =
 	{ "pop", NULL, pop_f, 0, 0, 0, NULL,
-	  "pop location from the stack", pop_help };
+	  N_("pop location from the stack"), pop_help };
 static const cmdinfo_t	push_cmd =
-	{ "push", NULL, push_f, 0, 2, 0, "[command]",
-	  "push location to the stack", push_help };
+	{ "push", NULL, push_f, 0, 2, 0, N_("[command]"),
+	  N_("push location to the stack"), push_help };
 static const cmdinfo_t	stack_cmd =
 	{ "stack", NULL, stack_f, 0, 0, 0, NULL,
-	  "view the location stack", stack_help };
+	  N_("view the location stack"), stack_help };
 static const cmdinfo_t  forward_cmd =
 	{ "forward", "f", forward_f, 0, 0, 0, NULL,
-	  "move forward to next entry in the position ring", forward_help };
+	  N_("move forward to next entry in the position ring"), forward_help };
 static const cmdinfo_t  back_cmd =
 	{ "back", "b", back_f, 0, 0, 0, NULL,
-	  "move to the previous location in the position ring", back_help };
+	  N_("move to the previous location in the position ring"), back_help };
 static const cmdinfo_t  ring_cmd =
 	{ "ring", NULL, ring_f, 0, 1, 0, NULL,
-	  "show position ring or move to a specific entry", ring_help };
+	  N_("show position ring or move to a specific entry"), ring_help };
 
 iocur_t	*iocur_base;
 iocur_t	*iocur_top;
@@ -88,7 +88,7 @@ off_cur(
 	int	len)
 {
 	if (iocur_top == NULL || off + len > BBTOB(iocur_top->blen))
-		dbprintf("can't set block offset to %d\n", off);
+		dbprintf(_("can't set block offset to %d\n"), off);
 	else {
 		iocur_top->boff = off;
 		iocur_top->off = ((xfs_off_t)iocur_top->bb << BBSHIFT) + off;
@@ -101,7 +101,7 @@ void
 pop_cur(void)
 {
 	if (iocur_sp < 0) {
-		dbprintf("can't pop anything from I/O stack\n");
+		dbprintf(_("can't pop anything from I/O stack\n"));
 		return;
 	}
 	if (iocur_top->buf)
@@ -128,11 +128,11 @@ pop_f(
 static void
 pop_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " Changes the address and data type to the first entry on the stack.\n"
 "\n"
-		);
+		));
 }
 
 void
@@ -143,18 +143,18 @@ print_iocur(
 	int	i;
 
 	dbprintf("%s\n", tag);
-	dbprintf("\tbyte offset %lld, length %d\n", ioc->off, ioc->len);
-	dbprintf("\tbuffer block %lld (fsbno %lld), %d bb%s\n", ioc->bb,
+	dbprintf(_("\tbyte offset %lld, length %d\n"), ioc->off, ioc->len);
+	dbprintf(_("\tbuffer block %lld (fsbno %lld), %d bb%s\n"), ioc->bb,
 		(xfs_dfsbno_t)XFS_DADDR_TO_FSB(mp, ioc->bb), ioc->blen,
 		ioc->blen == 1 ? "" : "s");
 	if (ioc->use_bbmap) {
-		dbprintf("\tblock map");
+		dbprintf(_("\tblock map"));
 		for (i = 0; i < ioc->blen; i++)
 			dbprintf(" %d:%lld", i, ioc->bbmap.b[i]);
 		dbprintf("\n");
 	}
-	dbprintf("\tinode %lld, dir inode %lld, type %s\n", ioc->ino,
-		ioc->dirino, ioc->typ == NULL ? "none" : ioc->typ->name);
+	dbprintf(_("\tinode %lld, dir inode %lld, type %s\n"), ioc->ino,
+		ioc->dirino, ioc->typ == NULL ? _("none") : ioc->typ->name);
 }
 
 void
@@ -164,11 +164,11 @@ print_ring(void)
 	iocur_t *ioc;
 
 	if (ring_current == -1) {
-		dbprintf("no entries in location ring.\n");
+		dbprintf(_("no entries in location ring.\n"));
 		return;
 	}
 
-	dbprintf("      type    bblock  bblen    fsbno     inode\n");
+	dbprintf(_("      type    bblock  bblen    fsbno     inode\n"));
 
 	i = ring_head;
 	for (;;) {
@@ -222,11 +222,11 @@ push_f(
 		/* check we can execute command */
 		ct = find_command(argv[1]);
 		if (ct == NULL) {
-			dbprintf("no such command %s\n", argv[1]);
+			dbprintf(_("no such command %s\n"), argv[1]);
 			return 0;
 		}
 		if (!ct->canpush) {
-			dbprintf("no push form allowed for %s\n", argv[1]);
+			dbprintf(_("no push form allowed for %s\n"), argv[1]);
 			return 0;
 		}
 	}
@@ -249,13 +249,13 @@ push_f(
 static void
 push_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " Allows you to push the current address and data type on the stack for\n"
 " later return.  'push' also accepts an additional command to execute after\n"
 " storing the current address (ex: 'push a rootino' from the superblock).\n"
 "\n"
-		);
+		));
 }
 
 /* move forward through the ring */
@@ -266,11 +266,11 @@ forward_f(
 	char		**argv)
 {
 	if (ring_current == -1) {
-		dbprintf("ring is empty\n");
+		dbprintf(_("ring is empty\n"));
 		return 0;
 	}
 	if (ring_current == ring_head) {
-		dbprintf("no further entries\n");
+		dbprintf(_("no further entries\n"));
 		return 0;
 	}
 
@@ -289,14 +289,14 @@ forward_f(
 static void
 forward_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The 'forward' ('f') command moves to the next location in the position\n"
 " ring, updating the current position and data type.  If the current location\n"
 " is the top entry in the ring, then the 'forward' command will have\n"
 " no effect.\n"
 "\n"
-		);
+		));
 }
 
 /* move backwards through the ring */
@@ -307,11 +307,11 @@ back_f(
 	char		**argv)
 {
 	if (ring_current == -1) {
-		dbprintf("ring is empty\n");
+		dbprintf(_("ring is empty\n"));
 		return 0;
 	}
 	if (ring_current == ring_tail) {
-		dbprintf("no previous entries\n");
+		dbprintf(_("no previous entries\n"));
 		return 0;
 	}
 
@@ -330,13 +330,13 @@ back_f(
 static void
 back_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The 'back' ('b') command moves to the previous location in the position\n"
 " ring, updating the current position and data type.  If the current location\n"
 " is the last entry in the ring, then the 'back' command will have no effect.\n"
 "\n"
-		);
+		));
 }
 
 /* show or go to specific point in ring */
@@ -354,7 +354,7 @@ ring_f(
 
 	index = (int)strtoul(argv[1], NULL, 0);
 	if (index < 0 || index >= RING_ENTRIES)
-		dbprintf("invalid entry: %d\n", index);
+		dbprintf(_("invalid entry: %d\n"), index);
 
 	ring_current = index;
 
@@ -370,7 +370,7 @@ ring_f(
 static void
 ring_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The position ring automatically keeps track of each disk location and\n"
 " structure type for each change of position you make during your xfs_db\n"
@@ -389,7 +389,7 @@ ring_help(void)
 " Note: Unlike the 'stack', 'push' and 'pop' commands, the ring tracks your\n"
 " location implicitly.  Use the 'push' and 'pop' commands if you wish to\n"
 " store a specific location explicitly for later return.\n"
-"\n",
+"\n"),
 		RING_ENTRIES);
 }
 
@@ -435,7 +435,7 @@ write_bbs(
 			bbno = bbmap->b[j];
 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
-			dbprintf("can't seek in filesystem at bb %lld\n", bbno);
+			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
 			return rval;
 		}
 		c = BBTOB(bbmap ? 1 : count);
@@ -478,7 +478,7 @@ read_bbs(
 			bbno = bbmap->b[j];
 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
-			dbprintf("can't seek in filesystem at bb %lld\n", bbno);
+			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
 			if (*bufp == NULL)
 				xfree(buf);
 			buf = NULL;
@@ -512,24 +512,24 @@ write_cur(void)
 	int ret;
 
 	if (iocur_sp < 0) {
-		dbprintf("nothing to write\n");
+		dbprintf(_("nothing to write\n"));
 		return;
 	}
 	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
 	if (ret == -1)
-		dbprintf("incomplete write, block: %lld\n",
+		dbprintf(_("incomplete write, block: %lld\n"),
 			 (iocur_base + iocur_sp)->bb);
 	else if (ret != 0)
-		dbprintf("write error: %s\n", strerror(ret));
+		dbprintf(_("write error: %s\n"), strerror(ret));
 	/* re-read buffer from disk */
 	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
 	if (ret == -1)
-		dbprintf("incomplete read, block: %lld\n",
+		dbprintf(_("incomplete read, block: %lld\n"),
 			 (iocur_base + iocur_sp)->bb);
 	else if (ret != 0)
-		dbprintf("read error: %s\n", strerror(ret));
+		dbprintf(_("read error: %s\n"), strerror(ret));
 }
 
 void
@@ -545,13 +545,13 @@ set_cur(
 	__uint16_t	mode;
 
 	if (iocur_sp < 0) {
-		dbprintf("set_cur no stack element to set\n");
+		dbprintf(_("set_cur no stack element to set\n"));
 		return;
 	}
 
 #ifdef DEBUG
 	if (bbmap)
-		printf("xfs_db got a bbmap for %lld\n", (long long)d);
+		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
 #endif
 	ino = iocur_top->ino;
 	dirino = iocur_top->dirino;
@@ -581,7 +581,7 @@ set_cur(
 static void
 stack_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The stack is used to explicitly store your location and data type\n"
 " for later return.  The 'push' operation stores the current address\n"
@@ -591,7 +591,7 @@ stack_help(void)
 " The 'stack' allows explicit location saves, see 'ring' for implicit\n"
 " position tracking.\n"
 "\n"
-		);
+		));
 }
 
 /*ARGSUSED*/

@@ -40,20 +40,20 @@ xfs_log_dump(
 	for (blkno = 0; blkno < log->l_logBBsize; blkno++) {
 		r = read(fd, buf, sizeof(buf));
 		if (r < 0) {
-			fprintf(stderr, "%s: read error (%lld): %s\n",
+			fprintf(stderr, _("%s: read error (%lld): %s\n"),
 				__FUNCTION__, (long long)blkno,
 				strerror(errno));
 			continue;
 		} else if (r == 0) {
-			printf("%s: physical end of log at %lld\n",
+			printf(_("%s: physical end of log at %lld\n"),
 				__FUNCTION__, (long long)blkno);
 			break;
 		}
 
 		if (CYCLE_LSN(be64_to_cpu(*(__be64 *)buf)) ==
 				XLOG_HEADER_MAGIC_NUM && !print_no_data) {
-			printf(
-		"%6lld HEADER Cycle %d tail %d:%06d len %6d ops %d\n",
+			printf(_(
+		"%6lld HEADER Cycle %d tail %d:%06d len %6d ops %d\n"),
 				(long long)blkno,
 				be32_to_cpu(hdr->h_cycle),
 				CYCLE_LSN(be64_to_cpu(hdr->h_tail_lsn)),
@@ -63,8 +63,8 @@ xfs_log_dump(
 		}
 
 		if (xlog_get_cycle(buf) != last_cycle) {
-			printf(
-		"[%05lld - %05lld] Cycle 0x%08x New Cycle 0x%08x\n",
+			printf(_(
+		"[%05lld - %05lld] Cycle 0x%08x New Cycle 0x%08x\n"),
 				(long long)dupblkno, (long long)blkno,
 				last_cycle, xlog_get_cycle(buf));
 			last_cycle = xlog_get_cycle(buf);

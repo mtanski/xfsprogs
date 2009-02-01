@@ -33,8 +33,8 @@ static int agfl_f(int argc, char **argv);
 static void agfl_help(void);
 
 static const cmdinfo_t agfl_cmd =
-	{ "agfl", NULL, agfl_f, 0, 1, 1, "[agno]",
-	  "set address to agfl block", agfl_help };
+	{ "agfl", NULL, agfl_f, 0, 1, 1, N_("[agno]"),
+	  N_("set address to agfl block"), agfl_help };
 
 const field_t	agfl_hfld[] = { {
 	"", FLDT_AGFL, OI(0), C1, 0, TYP_NONE, },
@@ -59,7 +59,7 @@ agfl_bno_size(
 static void
 agfl_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " set allocation group freelist\n"
 "\n"
@@ -72,7 +72,7 @@ agfl_help(void)
 " for each allocation group.  This acts as a reserved pool of space\n"
 " separate from the general filesystem freespace (not used for user data).\n"
 "\n"
-);
+));
 
 }
 
@@ -87,7 +87,7 @@ agfl_f(
 	if (argc > 1) {
 		agno = (xfs_agnumber_t)strtoul(argv[1], &p, 0);
 		if (*p != '\0' || agno >= mp->m_sb.sb_agcount) {
-			dbprintf("bad allocation group number %s\n", argv[1]);
+			dbprintf(_("bad allocation group number %s\n"), argv[1]);
 			return 0;
 		}
 		cur_agno = agno;

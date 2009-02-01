@@ -39,17 +39,17 @@ static int	version_f(int argc, char **argv);
 static void     version_help(void);
 
 static const cmdinfo_t	sb_cmd =
-	{ "sb", NULL, sb_f, 0, 1, 1, "[agno]",
-	  "set current address to sb header", sb_help };
+	{ "sb", NULL, sb_f, 0, 1, 1, N_("[agno]"),
+	  N_("set current address to sb header"), sb_help };
 static const cmdinfo_t	uuid_cmd =
-	{ "uuid", NULL, uuid_f, 0, 1, 1, "[uuid]",
-	  "write/print FS uuid", uuid_help };
+	{ "uuid", NULL, uuid_f, 0, 1, 1, N_("[uuid]"),
+	  N_("write/print FS uuid"), uuid_help };
 static const cmdinfo_t	label_cmd =
-	{ "label", NULL, label_f, 0, 1, 1, "[label]",
-	  "write/print FS label", label_help };
+	{ "label", NULL, label_f, 0, 1, 1, N_("[label]"),
+	  N_("write/print FS label"), label_help };
 static const cmdinfo_t	version_cmd =
-	{ "version", NULL, version_f, 0, -1, 1, "[feature | [vnum fnum]]",
-	  "set feature bit(s) in the sb version field", version_help };
+	{ "version", NULL, version_f, 0, -1, 1, N_("[feature | [vnum fnum]]"),
+	  N_("set feature bit(s) in the sb version field"), version_help };
 
 void
 sb_init(void)
@@ -120,7 +120,7 @@ const field_t	sb_hfld[] = {
 static void
 sb_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " set allocation group superblock\n"
 "\n"
@@ -134,7 +134,7 @@ sb_help(void)
 " remaining allocation groups only serve as backup for filesystem recovery.\n"
 " The icount/ifree/fdblocks/frextents are only updated in superblock 0.\n"
 "\n"
-);
+));
 }
 
 static int
@@ -148,7 +148,7 @@ sb_f(
 	if (argc > 1) {
 		agno = (xfs_agnumber_t)strtoul(argv[1], &p, 0);
 		if (*p != '\0' || agno >= mp->m_sb.sb_agcount) {
-			dbprintf("bad allocation group number %s\n", argv[1]);
+			dbprintf(_("bad allocation group number %s\n"), argv[1]);
 			return 0;
 		}
 		cur_agno = agno;
@@ -180,7 +180,7 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 
 	if (!iocur_top->data) {
-		dbprintf("can't read superblock for AG %u\n", agno);
+		dbprintf(_("can't read superblock for AG %u\n"), agno);
 		pop_cur();
 		return 0;
 	}
@@ -188,17 +188,17 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 	libxfs_sb_from_disk(sb, iocur_top->data);
 
 	if (sb->sb_magicnum != XFS_SB_MAGIC) {
-		dbprintf("bad sb magic # %#x in AG %u\n",
+		dbprintf(_("bad sb magic # %#x in AG %u\n"),
 			sb->sb_magicnum, agno);
 		return 0;
 	}
 	if (!xfs_sb_good_version(sb)) {
-		dbprintf("bad sb version # %#x in AG %u\n",
+		dbprintf(_("bad sb version # %#x in AG %u\n"),
 			sb->sb_versionnum, agno);
 		return 0;
 	}
 	if (agno == 0 && sb->sb_inprogress != 0) {
-		dbprintf("mkfs not completed successfully\n");
+		dbprintf(_("mkfs not completed successfully\n"));
 		return 0;
 	}
 	return 1;
@@ -215,14 +215,14 @@ sb_logcheck(void)
 
 	if (mp->m_sb.sb_logstart) {
 		if (x.logdev && x.logdev != x.ddev) {
-			dbprintf("aborting - external log specified for FS "
-				 "with an internal log\n");
+			dbprintf(_("aborting - external log specified for FS "
+				 "with an internal log\n"));
 			return 0;
 		}
 	} else {
 		if (!x.logdev || (x.logdev == x.ddev)) {
-			dbprintf("aborting - no external log specified for FS "
-				 "with an external log\n");
+			dbprintf(_("aborting - no external log specified for FS "
+				 "with an external log\n"));
 			return 0;
 		}
 	}
@@ -239,17 +239,17 @@ sb_logcheck(void)
 	log.l_mp = mp;
 
 	if (xlog_find_tail(&log, &head_blk, &tail_blk)) {
-		dbprintf("ERROR: cannot find log head/tail, run xfs_repair\n");
+		dbprintf(_("ERROR: cannot find log head/tail, run xfs_repair\n"));
 		return 0;
 	}
 	if (head_blk != tail_blk) {
-		dbprintf(
+		dbprintf(_(
 "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
 "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
 "re-running %s.  If you are unable to mount the filesystem, then use\n"
 "the xfs_repair -L option to destroy the log and attempt a repair.\n"
 "Note that destroying the log may cause corruption -- please attempt a mount\n"
-"of the filesystem before doing this.\n", progname);
+"of the filesystem before doing this.\n"), progname);
 		return 0;
 	}
 	return 1;
@@ -261,7 +261,7 @@ sb_logzero(uuid_t *uuidp)
 	if (!sb_logcheck())
 		return 0;
 
-	dbprintf("Clearing log and setting UUID\n");
+	dbprintf(_("Clearing log and setting UUID\n"));
 
 	if (libxfs_log_clear(
 			(mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev,
@@ -270,7 +270,7 @@ sb_logzero(uuid_t *uuidp)
 			uuidp,
 			xfs_sb_version_haslogv2(&mp->m_sb) ? 2 : 1,
 			mp->m_sb.sb_logsunit, XLOG_FMT)) {
-		dbprintf("ERROR: cannot clear the log\n");
+		dbprintf(_("ERROR: cannot clear the log\n"));
 		return 0;
 	}
 	return 1;
@@ -280,7 +280,7 @@ sb_logzero(uuid_t *uuidp)
 static void
 uuid_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " write/print FS uuid\n"
 "\n"
@@ -298,7 +298,7 @@ uuid_help(void)
 "As a side effect of writing the UUID, the log is cleared (which is fine\n"
 "on a CLEANLY unmounted FS).\n"
 "\n"
-);
+));
 }
 
 static uuid_t *
@@ -333,14 +333,14 @@ uuid_f(
 	uuid_t		*uup = NULL;
 
 	if (argc != 1 && argc != 2) {
-		dbprintf("invalid parameters\n");
+		dbprintf(_("invalid parameters\n"));
 		return 0;
 	}
 
 	if (argc == 2) {	/* WRITE UUID */
 
 		if ((x.isreadonly & LIBXFS_ISREADONLY) || !expert_mode) {
-			dbprintf("%s: not in expert mode, writing disabled\n",
+			dbprintf(_("%s: not in expert mode, writing disabled\n"),
 				progname);
 			return 0;
 		}
@@ -352,15 +352,15 @@ uuid_f(
 		} else if (!strcasecmp(argv[1], "rewrite")) {
 			uup = do_uuid(0, NULL);
 			if (!uup) {
-				dbprintf("failed to read UUID from AG 0\n");
+				dbprintf(_("failed to read UUID from AG 0\n"));
 				return 0;
 			}
 			memcpy(&uu, uup, sizeof(uuid_t));
 			platform_uuid_unparse(&uu, bp);
-			dbprintf("old UUID = %s\n", bp);
+			dbprintf(_("old UUID = %s\n"), bp);
 		} else {
 			if (platform_uuid_parse(argv[1], &uu)) {
-				dbprintf("invalid UUID\n");
+				dbprintf(_("invalid UUID\n"));
 				return 0;
 			}
 		}
@@ -369,15 +369,15 @@ uuid_f(
 		if (!sb_logzero(&uu))
 			return 0;
 
-		dbprintf("writing all SBs\n");
+		dbprintf(_("writing all SBs\n"));
 		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
 			if (!do_uuid(agno, &uu)) {
-				dbprintf("failed to set UUID in AG %d\n", agno);
+				dbprintf(_("failed to set UUID in AG %d\n"), agno);
 				break;
 			}
 
 		platform_uuid_unparse(&uu, bp);
-		dbprintf("new UUID = %s\n", bp);
+		dbprintf(_("new UUID = %s\n"), bp);
 		return 0;
 
 	} else {	/* READ+CHECK UUID */
@@ -385,14 +385,14 @@ uuid_f(
 		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
 			uup = do_uuid(agno, NULL);
 			if (!uup) {
-				dbprintf("failed to read UUID from AG %d\n",
+				dbprintf(_("failed to read UUID from AG %d\n"),
 					agno);
 				return 0;
 			}
 			if (agno) {
 				if (memcmp(&uu, uup, sizeof(uuid_t))) {
-					dbprintf("warning: UUID in AG %d "
-						 "differs to the primary SB\n",
+					dbprintf(_("warning: UUID in AG %d "
+						 "differs to the primary SB\n"),
 						agno);
 					break;
 				}
@@ -402,15 +402,15 @@ uuid_f(
 		}
 		if (mp->m_sb.sb_logstart) {
 			if (x.logdev && x.logdev != x.ddev)
-				dbprintf("warning - external log specified "
-					 "for FS with an internal log\n");
+				dbprintf(_("warning - external log specified "
+					 "for FS with an internal log\n"));
 		} else if (!x.logdev || (x.logdev == x.ddev)) {
-			dbprintf("warning - no external log specified "
-				 "for FS with an external log\n");
+			dbprintf(_("warning - no external log specified "
+				 "for FS with an external log\n"));
 		}
 
 		platform_uuid_unparse(&uu, bp);
-		dbprintf("UUID = %s\n", bp);
+		dbprintf(_("UUID = %s\n"), bp);
 	}
 
 	return 0;
@@ -420,7 +420,7 @@ uuid_f(
 static void
 label_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " write/print FS label\n"
 "\n"
@@ -435,7 +435,7 @@ label_help(void)
 "specified value.  The maximum length of a label is 12 characters - use of a\n"
 "longer label will result in truncation and a warning will be issued.\n"
 "\n"
-);
+));
 }
 
 static char *
@@ -458,7 +458,7 @@ do_label(xfs_agnumber_t agno, char *label)
 	/* set label */
 	if ((len = strlen(label)) > sizeof(tsb.sb_fname)) {
 		if (agno == 0)
-			dbprintf("%s: truncating label length from %d to %d\n",
+			dbprintf(_("%s: truncating label length from %d to %d\n"),
 				progname, (int)len, (int)sizeof(tsb.sb_fname));
 		len = sizeof(tsb.sb_fname);
 	}
@@ -485,40 +485,40 @@ label_f(
 	xfs_agnumber_t	ag;
 
 	if (argc != 1 && argc != 2) {
-		dbprintf("invalid parameters\n");
+		dbprintf(_("invalid parameters\n"));
 		return 0;
 	}
 
 	if (argc == 2) {	/* WRITE LABEL */
 
 		if ((x.isreadonly & LIBXFS_ISREADONLY) || !expert_mode) {
-			dbprintf("%s: not in expert mode, writing disabled\n",
+			dbprintf(_("%s: not in expert mode, writing disabled\n"),
 				progname);
 			return 0;
 		}
 
-		dbprintf("writing all SBs\n");
+		dbprintf(_("writing all SBs\n"));
 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
 			if ((p = do_label(ag, argv[1])) == NULL) {
-				dbprintf("failed to set label in AG %d\n", ag);
+				dbprintf(_("failed to set label in AG %d\n"), ag);
 				break;
 			}
-		dbprintf("new label = \"%s\"\n", p);
+		dbprintf(_("new label = \"%s\"\n"), p);
 
 	} else {	/* READ LABEL */
 
 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
 			p = do_label(ag, NULL);
 			if (!p) {
-				dbprintf("failed to read label in AG %d\n", ag);
+				dbprintf(_("failed to read label in AG %d\n"), ag);
 				return 0;
 			}
 			if (!ag)
 				memcpy(&sb.sb_fname, p, sizeof(sb.sb_fname));
 			else if (memcmp(&sb.sb_fname, p, sizeof(sb.sb_fname)))
-				dbprintf("warning: AG %d label differs\n", ag);
+				dbprintf(_("warning: AG %d label differs\n"), ag);
 		}
-		dbprintf("label = \"%s\"\n", p);
+		dbprintf(_("label = \"%s\"\n"), p);
 	}
 	return 0;
 }
@@ -527,7 +527,7 @@ label_f(
 static void
 version_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " set/print feature bits in sb version\n"
 "\n"
@@ -544,7 +544,7 @@ version_help(void)
 "It can also be used to enable selected features, such as support for\n"
 "unwritten extents.  The upated version is written into all AGs.\n"
 "\n"
-);
+));
 }
 
 static int
@@ -628,7 +628,7 @@ version_f(
 	if (argc == 2) {	/* WRITE VERSION */
 
 		if ((x.isreadonly & LIBXFS_ISREADONLY) || !expert_mode) {
-			dbprintf("%s: not in expert mode, writing disabled\n",
+			dbprintf(_("%s: not in expert mode, writing disabled\n"),
 				progname);
 			return 0;
 		}
@@ -647,8 +647,8 @@ version_f(
 				break;
 			case XFS_SB_VERSION_4:
 				if (xfs_sb_version_hasextflgbit(&mp->m_sb))
-					dbprintf("unwritten extents flag"
-						 " is already enabled\n");
+					dbprintf(_("unwritten extents flag"
+						 " is already enabled\n"));
 				else
 					version = mp->m_sb.sb_versionnum |
 						  XFS_SB_VERSION_EXTFLGBIT;
@@ -667,8 +667,8 @@ version_f(
 				break;
 			case XFS_SB_VERSION_4:
 				if (xfs_sb_version_haslogv2(&mp->m_sb))
-					dbprintf("version 2 log format"
-						 " is already in use\n");
+					dbprintf(_("version 2 log format"
+						 " is already in use\n"));
 				else
 					version = mp->m_sb.sb_versionnum |
 						  XFS_SB_VERSION_LOGV2BIT;
@@ -690,17 +690,17 @@ version_f(
 			version = mp->m_sb.sb_versionnum;
 			features = mp->m_sb.sb_features2;
 		} else {
-			dbprintf("%s: invalid version change command \"%s\"\n",
+			dbprintf(_("%s: invalid version change command \"%s\"\n"),
 				progname, argv[1]);
 			return 0;
 		}
 
 		if (version) {
-			dbprintf("writing all SBs\n");
+			dbprintf(_("writing all SBs\n"));
 			for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
 				if (!do_version(ag, version, features)) {
-					dbprintf("failed to set versionnum "
-						 "in AG %d\n", ag);
+					dbprintf(_("failed to set versionnum "
+						 "in AG %d\n"), ag);
 					break;
 				}
 			mp->m_sb.sb_versionnum = version;
@@ -717,7 +717,7 @@ version_f(
 		mp->m_sb.sb_features2 = strtoul(argv[2], &sp, 0);
 	}
 
-	dbprintf("versionnum [0x%x+0x%x] = %s\n", mp->m_sb.sb_versionnum,
+	dbprintf(_("versionnum [0x%x+0x%x] = %s\n"), mp->m_sb.sb_versionnum,
 			mp->m_sb.sb_features2, version_string(&mp->m_sb));
 
 	if (argc == 3) {	/* now reset... */

@@ -24,7 +24,7 @@
 static void
 badmalloc(void)
 {
-	dbprintf("%s: out of memory\n", progname);
+	dbprintf(_("%s: out of memory\n"), progname);
 	exit(4);
 }
 

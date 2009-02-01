@@ -38,8 +38,8 @@ static int	write_f(int argc, char **argv);
 static void     write_help(void);
 
 static const cmdinfo_t	write_cmd =
-	{ "write", NULL, write_f, 0, -1, 0, "[field or value]...",
-	  "write value to disk", write_help };
+	{ "write", NULL, write_f, 0, -1, 0, N_("[field or value]..."),
+	  N_("write value to disk"), write_help };
 
 void
 write_init(void)
@@ -54,7 +54,7 @@ write_init(void)
 static void
 write_help(void)
 {
-	dbprintf(
+	dbprintf(_(
 "\n"
 " The 'write' command takes on different personalities depending on the\n"
 " type of object being worked with.\n\n"
@@ -79,7 +79,7 @@ write_help(void)
 "  String mode: 'write \"This_is_a_filename\" - write null terminated string.\n"
 "\n"
 " In data mode type 'write' by itself for a list of specific commands.\n\n"
-);
+));
 
 }
 
@@ -92,19 +92,19 @@ write_f(
 	extern char *progname;
 
 	if (x.isreadonly & LIBXFS_ISREADONLY) {
-		dbprintf("%s started in read only mode, writing disabled\n",
+		dbprintf(_("%s started in read only mode, writing disabled\n"),
 			progname);
 		return 0;
 	}
 
 	if (cur_typ == NULL) {
-		dbprintf("no current type\n");
+		dbprintf(_("no current type\n"));
 		return 0;
 	}
 
 	pf = cur_typ->pfunc;
 	if (pf == NULL) {
-		dbprintf("no handler function for type %s, write unsupported.\n",
+		dbprintf(_("no handler function for type %s, write unsupported.\n"),
 			 cur_typ->name);
 		return 0;
 	}
@@ -164,7 +164,7 @@ bwrite_lshift(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -193,7 +193,7 @@ bwrite_rshift(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -223,7 +223,7 @@ bwrite_lrot(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -255,7 +255,7 @@ bwrite_rrot(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -290,7 +290,7 @@ bwrite_seq(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -339,7 +339,7 @@ bwrite_random(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -368,7 +368,7 @@ bwrite_fill(
 		len = iocur_top->len - start;
 
 	if (len+start > iocur_top->len) {
-		dbprintf("length (%d) too large for data block size (%d)",
+		dbprintf(_("length (%d) too large for data block size (%d)"),
 			 len, iocur_top->len);
 	}
 
@@ -556,13 +556,13 @@ write_struct(
 	int		parentoffset;
 
 	if (argc != 2) {
-		dbprintf("usage: write fieldname value\n");
+		dbprintf(_("usage: write fieldname value\n"));
 		return;
 	}
 
 	fl = flist_scan(argv[0]);
 	if (!fl) {
-		dbprintf("unable to parse '%s'.\n", argv[0]);
+		dbprintf(_("unable to parse '%s'.\n"), argv[0]);
 		return;
 	}
 
@@ -576,7 +576,7 @@ write_struct(
 	/* run down the field list and set offsets into the data */
 	if (!flist_parse(fields, fl, iocur_top->data, 0)) {
 		flist_free(fl);
-		dbprintf("parsing error\n");
+		dbprintf(_("parsing error\n"));
 		return;
 	}
 
@@ -595,7 +595,7 @@ write_struct(
 
 	buf = convert_arg(argv[1], bit_length);
 	if (!buf) {
-		dbprintf("unable to convert value '%s'.\n", argv[1]);
+		dbprintf(_("unable to convert value '%s'.\n"), argv[1]);
 		return;
 	}
 
@@ -618,7 +618,7 @@ write_string(
 	int i;
 
 	if (argc != 1) {
-		dbprintf("usage (in string mode): write \"string...\"\n");
+		dbprintf(_("usage (in string mode): write \"string...\"\n"));
 		return;
 	}
 
@@ -660,12 +660,12 @@ write_block(
 	}
 
 	if (!cmd) {
-		dbprintf("write: invalid subcommand\n");
+		dbprintf(_("write: invalid subcommand\n"));
 		goto block_usage;
 	}
 
 	if ((argc < cmd->argmin + 1) || (argc > cmd->argmax + 1)) {
-		dbprintf("write %s: invalid number of arguments\n",
+		dbprintf(_("write %s: invalid number of arguments\n"),
 			 cmd->cmdstr);
 		goto block_usage;
 	}
@@ -689,7 +689,7 @@ write_block(
 
   block_usage:
 
-	dbprintf("usage: write (in data mode)\n");
+	dbprintf(_("usage: write (in data mode)\n"));
 	for (i = 0; i < BWRITE_CMD_MAX; i++) {
 		dbprintf("              %-9.9s %s\n",
 			 bw_cmdtab[i].cmdstr, bw_cmdtab[i].usage);

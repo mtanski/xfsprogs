@@ -103,9 +103,9 @@ freesp_f(
 	if (histcount)
 		printhist();
 	if (summaryflag) {
-		dbprintf("total free extents %lld\n", totexts);
-		dbprintf("total free blocks %lld\n", totblocks);
-		dbprintf("average free extent size %g\n",
+		dbprintf(_("total free extents %lld\n"), totexts);
+		dbprintf(_("total free blocks %lld\n"), totblocks);
+		dbprintf(_("average free extent size %g\n"),
 			(double)totblocks / (double)totexts);
 	}
 	if (aglist)
@@ -196,8 +196,8 @@ init(
 static int
 usage(void)
 {
-	dbprintf("freesp arguments: [-bcdfs] [-a agno] [-e binsize] [-h h1]... "
-		 "[-m binmult]\n");
+	dbprintf(_("freesp arguments: [-bcdfs] [-a agno] [-e binsize] [-h h1]... "
+		 "[-m binmult]\n"));
 	return 0;
 }
 
@@ -267,7 +267,7 @@ scan_sbtree(
 	set_cur(&typtab[typ], XFS_AGB_TO_DADDR(mp, seqno, root),
 		blkbb, DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
-		dbprintf("can't read btree block %u/%u\n", seqno, root);
+		dbprintf(_("can't read btree block %u/%u\n"), seqno, root);
 		return;
 	}
 	(*func)(iocur_top->data, typ, nlevels - 1, agf);
@@ -397,7 +397,7 @@ printhist(void)
 	int	i;
 
 	dbprintf("%7s %7s %7s %7s %6s\n",
-		"from", "to", "extents", "blocks", "pct");
+		_("from"), _("to"), _("extents"), _("blocks"), _("pct"));
 	for (i = 0; i < histcount; i++) {
 		if (hist[i].count)
 			dbprintf("%7d %7d %7lld %7lld %6.2f\n", hist[i].low,

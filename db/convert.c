@@ -168,27 +168,27 @@ convert_f(int argc, char **argv)
 	argv++;
 
 	if ((argc % 2) != 1) {
-		dbprintf("bad argument count %d to convert, expected 3,5,7,9 "
-			 "arguments\n", argc);
+		dbprintf(_("bad argument count %d to convert, expected 3,5,7,9 "
+			 "arguments\n"), argc);
 		return 0;
 	}
 	if ((wtype = lookupcty(argv[argc - 1])) == CT_NONE) {
-		dbprintf("unknown conversion type %s\n", argv[argc - 1]);
+		dbprintf(_("unknown conversion type %s\n"), argv[argc - 1]);
 		return 0;
 	}
 
 	for (i = mask = conmask = 0; i < (argc - 1) / 2; i++) {
 		c = lookupcty(argv[i * 2]);
 		if (c == CT_NONE) {
-			dbprintf("unknown conversion type %s\n", argv[i * 2]);
+			dbprintf(_("unknown conversion type %s\n"), argv[i * 2]);
 			return 0;
 		}
 		if (c == wtype) {
-			dbprintf("result type same as argument\n");
+			dbprintf(_("result type same as argument\n"));
 			return 0;
 		}
 		if (conmask & (1 << c)) {
-			dbprintf("conflicting conversion type %s\n",
+			dbprintf(_("conflicting conversion type %s\n"),
 				argv[i * 2]);
 			return 0;
 		}
@@ -267,7 +267,7 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
 
 	v = strtoull(s, &p, 0);
 	if (*p != '\0') {
-		dbprintf("%s is not a number\n", s);
+		dbprintf(_("%s is not a number\n"), s);
 		return 0;
 	}
 	switch (ctype) {

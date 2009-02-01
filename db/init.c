@@ -57,6 +57,10 @@ init(
 	void		*bufp = NULL;
 	int		c;
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
 		switch (c) {
@@ -86,7 +90,7 @@ init(
 			expert_mode = 1;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case '?':
 			usage();

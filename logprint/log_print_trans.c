@@ -22,7 +22,7 @@ void
 xlog_recover_print_trans_head(
 	xlog_recover_t	*tr)
 {
-	printf("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n",
+	printf(_("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n"),
 	       tr->r_log_tid, trans_type[tr->r_theader.th_type],
 	       tr->r_theader.th_num_items,
 	       tr->r_theader.th_tid, (long)tr->r_itemq);
@@ -48,18 +48,18 @@ xfs_log_print_trans(
 
 	error = xlog_find_tail(log, &head_blk, &tail_blk);
 	if (error) {
-		fprintf(stderr, "%s: failed to find head and tail, error: %d\n",
+		fprintf(stderr, _("%s: failed to find head and tail, error: %d\n"),
 			progname, error);
 		exit(1);
 	}
 
-	printf("    log tail: %lld head: %lld state: %s\n",
+	printf(_("    log tail: %lld head: %lld state: %s\n"),
 		(long long)tail_blk,
 		(long long)head_blk,
 		(tail_blk == head_blk)?"<CLEAN>":"<DIRTY>");
 
 	if (print_block_start != -1) {
-		printf("    override tail: %d\n", print_block_start);
+		printf(_("    override tail: %d\n"), print_block_start);
 		tail_blk = print_block_start;
 	}
 	printf("\n");
@@ -69,7 +69,7 @@ xfs_log_print_trans(
 	if (head_blk == tail_blk)
 		return;
 	if ((error = xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))) {
-		fprintf(stderr, "%s: failed in xfs_do_recovery_pass, error: %d\n",
+		fprintf(stderr, _("%s: failed in xfs_do_recovery_pass, error: %d\n"),
 			progname, error);
 		exit(1);
 	}

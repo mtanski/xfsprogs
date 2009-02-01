@@ -27,8 +27,8 @@ static int	help_f(int argc, char **argv);
 static void	help_oneline(const char *cmd, const cmdinfo_t *ct);
 
 static const cmdinfo_t	help_cmd =
-	{ "help", "?", help_f, 0, 1, 0, "[command]",
-	  "help for one or all commands", NULL };
+	{ "help", "?", help_f, 0, 1, 0, N_("[command]"),
+	  N_("help for one or all commands"), NULL };
 
 static void
 help_all(void)
@@ -37,7 +37,7 @@ help_all(void)
 
 	for (ct = cmdtab; ct < &cmdtab[ncmds]; ct++)
 		help_oneline(ct->name, ct);
-	dbprintf("\nUse 'help commandname' for extended help.\n");
+	dbprintf(_("\nUse 'help commandname' for extended help.\n"));
 }
 
 static int
@@ -53,7 +53,7 @@ help_f(
 	}
 	ct = find_command(argv[1]);
 	if (ct == NULL) {
-		dbprintf("command %s not found\n", argv[1]);
+		dbprintf(_("command %s not found\n"), argv[1]);
 		return 0;
 	}
 	help_onecmd(argv[1], ct);
@@ -86,7 +86,7 @@ help_oneline(
 	else {
 		dbprintf("%s ", ct->name);
 		if (ct->altname)
-			dbprintf("(or %s) ", ct->altname);
+			dbprintf(_("(or %s) "), ct->altname);
 	}
 	if (ct->args)
 		dbprintf("%s ", ct->args);

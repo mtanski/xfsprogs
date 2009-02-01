@@ -47,8 +47,8 @@ static int		type_f(int argc, char **argv);
 const typ_t	*cur_typ;
 
 static const cmdinfo_t	type_cmd =
-	{ "type", NULL, type_f, 0, 1, 1, "[newtype]",
-	  "set/show current data type", NULL };
+	{ "type", NULL, type_f, 0, 1, 1, N_("[newtype]"),
+	  N_("set/show current data type"), NULL };
 
 const typ_t	typtab[] = {
 	{ TYP_AGF, "agf", handle_struct, agf_hfld },
@@ -99,11 +99,11 @@ type_f(
 
 	if (argc == 1) {
 		if (cur_typ == NULL)
-			dbprintf("no current type\n");
+			dbprintf(_("no current type\n"));
 		else
-			dbprintf("current type is \"%s\"\n", cur_typ->name);
+			dbprintf(_("current type is \"%s\"\n"), cur_typ->name);
 
-		dbprintf("\n supported types are:\n ");
+		dbprintf(_("\n supported types are:\n "));
 		for (tt = typtab, count = 0; tt->name != NULL; tt++) {
 			if ((tt+1)->name != NULL) {
 				dbprintf("%s, ", tt->name);
@@ -118,10 +118,10 @@ type_f(
 	} else {
 		tt = findtyp(argv[1]);
 		if (tt == NULL) {
-			dbprintf("no such type %s\n", argv[1]);
+			dbprintf(_("no such type %s\n"), argv[1]);
 		} else {
 			if (iocur_top->typ == NULL) {
-			    dbprintf("no current object\n");
+			    dbprintf(_("no current object\n"));
 			} else {
 			    iocur_top->typ = cur_typ = tt;
 			}

@@ -27,8 +27,8 @@
 static int	log_f(int argc, char **argv);
 
 static const cmdinfo_t	log_cmd =
-	{ "log", NULL, log_f, 0, 2, 0, "[stop|start <filename>]",
-	  "start or stop logging to a file", NULL };
+	{ "log", NULL, log_f, 0, 2, 0, N_("[stop|start <filename>]"),
+	  N_("start or stop logging to a file"), NULL };
 
 int		dbprefix;
 static FILE	*log_file;
@@ -65,29 +65,29 @@ log_f(
 {
 	if (argc == 1) {
 		if (log_file)
-			dbprintf("logging to %s\n", log_file_name);
+			dbprintf(_("logging to %s\n"), log_file_name);
 		else
-			dbprintf("no log file\n");
+			dbprintf(_("no log file\n"));
 	} else if (argc == 2 && strcmp(argv[1], "stop") == 0) {
 		if (log_file) {
 			xfree(log_file_name);
 			fclose(log_file);
 			log_file = NULL;
 		} else
-			dbprintf("no log file\n");
+			dbprintf(_("no log file\n"));
 	} else if (argc == 3 && strcmp(argv[1], "start") == 0) {
 		if (log_file)
-			dbprintf("already logging to %s\n", log_file_name);
+			dbprintf(_("already logging to %s\n"), log_file_name);
 		else {
 			log_file = fopen(argv[2], "a");
 			if (log_file == NULL)
-				dbprintf("can't open %s for writing\n",
+				dbprintf(_("can't open %s for writing\n"),
 					argv[2]);
 			else
 				log_file_name = xstrdup(argv[1]);
 		}
 	} else
-		dbprintf("bad log command, ignored\n");
+		dbprintf(_("bad log command, ignored\n"));
 	return 0;
 }
 

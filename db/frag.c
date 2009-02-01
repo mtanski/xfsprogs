@@ -170,7 +170,7 @@ frag_f(
 			 (double)extcount_actual;
 	else
 		answer = 0.0;
-	dbprintf("actual %llu, ideal %llu, fragmentation factor %.2f%%\n",
+	dbprintf(_("actual %llu, ideal %llu, fragmentation factor %.2f%%\n"),
 		extcount_actual, extcount_ideal, answer);
 	return 0;
 }
@@ -211,7 +211,7 @@ init(
 			vflag = 1;
 			break;
 		default:
-			dbprintf("bad option for frag command\n");
+			dbprintf(_("bad option for frag command\n"));
 			return 0;
 		}
 	}
@@ -349,7 +349,7 @@ process_inode(
 	if (!skipa)
 		process_fork(dip, XFS_ATTR_FORK);
 	if (vflag && (!skipd || !skipa))
-		dbprintf("inode %lld actual %lld ideal %lld\n",
+		dbprintf(_("inode %lld actual %lld ideal %lld\n"),
 			ino, extcount_actual - actual, extcount_ideal - ideal);
 }
 
@@ -365,7 +365,7 @@ scan_ag(
 		XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agf = iocur_top->data) == NULL) {
-		dbprintf("can't read agf block for ag %u\n", agno);
+		dbprintf(_("can't read agf block for ag %u\n"), agno);
 		pop_cur();
 		return;
 	}
@@ -374,7 +374,7 @@ scan_ag(
 		XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	if ((agi = iocur_top->data) == NULL) {
-		dbprintf("can't read agi block for ag %u\n", agno);
+		dbprintf(_("can't read agi block for ag %u\n"), agno);
 		pop_cur();
 		pop_cur();
 		return;
@@ -397,7 +397,7 @@ scan_lbtree(
 	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, root), blkbb, DB_RING_IGN,
 		NULL);
 	if (iocur_top->data == NULL) {
-		dbprintf("can't read btree block %u/%u\n",
+		dbprintf(_("can't read btree block %u/%u\n"),
 			XFS_FSB_TO_AGNO(mp, root),
 			XFS_FSB_TO_AGBNO(mp, root));
 		return;
@@ -420,7 +420,7 @@ scan_sbtree(
 	set_cur(&typtab[btype], XFS_AGB_TO_DADDR(mp, seqno, root),
 		blkbb, DB_RING_IGN, NULL);
 	if (iocur_top->data == NULL) {
-		dbprintf("can't read btree block %u/%u\n", seqno, root);
+		dbprintf(_("can't read btree block %u/%u\n"), seqno, root);
 		return;
 	}
 	(*func)(iocur_top->data, nlevels - 1, agf);
@@ -476,7 +476,7 @@ scanfunc_ino(
 				XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
 				DB_RING_IGN, NULL);
 			if (iocur_top->data == NULL) {
-				dbprintf("can't read inode block %u/%u\n",
+				dbprintf(_("can't read inode block %u/%u\n"),
 					seqno, XFS_AGINO_TO_AGBNO(mp, agino));
 				continue;
 			}

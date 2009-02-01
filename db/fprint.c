@@ -95,7 +95,7 @@ fp_num(
 		if (array)
 			dbprintf("%d:", i + base);
 		if ((arg & FTARG_DONULL) && isnull)
-			dbprintf("null");
+			dbprintf(_("null"));
 		else if (size > 32)
 			dbprintf(fmtstr, val);
 		else

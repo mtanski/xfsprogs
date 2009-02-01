@@ -24,7 +24,7 @@ static int	quit_f(int argc, char **argv);
 
 static const cmdinfo_t	quit_cmd =
 	{ "quit", "q", quit_f, 0, 0, 0, NULL,
-	  "exit xfs_db", NULL };
+	  N_("exit xfs_db"), NULL };
 
 static int
 quit_f(
