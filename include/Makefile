@@ -29,9 +29,9 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_imap.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h \
-	xfs_trans.h xfs_trans_space.h xfs_types.h
+	xfs_trans.h xfs_trans_space.h xfs_types.h xfs_dfrag.h
 
-HFILES = handle.h jdm.h xqm.h xfs.h xfs_dfrag.h xfs_fs.h
+HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h
 HFILES += $(PKG_PLATFORM).h
 PHFILES = darwin.h freebsd.h irix.h linux.h
 DKHFILES = volume.h fstyp.h dvh.h
@@ -51,8 +51,6 @@ install-dev: default
 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
 	$(INSTALL) -m 644 $(HFILES) $(PKG_INC_DIR)
 	$(INSTALL) -m 644 platform_defs.h $(PKG_INC_DIR)
-	$(INSTALL) -m 755 -d $(DK_INC_DIR)
-	$(INSTALL) -m 644 $(DKHFILES) $(DK_INC_DIR)
 
 install-qa: install-dev
 	$(INSTALL) -m 644 $(QAHFILES) $(PKG_INC_DIR)
