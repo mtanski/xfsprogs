@@ -1,6 +1,6 @@
 xfsprogs (3.0.0-1) unstable; urgency=low
 
-  * New upstream release
+  * New upstream release (closes: #263170)
   * Remove watch file, xfsprogs is native
   * Updated dependencies as this requires xfsdump 3 also
 
