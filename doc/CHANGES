@@ -1,4 +1,4 @@
-xfsprogs-3.0.0
+xfsprogs-3.0.0 (4 February 2009)
 	- Various smaller xfs_repair improvements.
 	- Various gettext improvements, thanks to Jakub Bogusz.
 	- Polish translation update, thanks to Jakub Bogusz.
