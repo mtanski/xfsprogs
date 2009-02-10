@@ -33,11 +33,11 @@ if [ "$1" = "" ]; then
 fi
 
 if $FREEZE ; then
-	$DIRNAME/xfs_io -r -p xfs_freeze -x -c "freeze" "$1"
+	$DIRNAME/xfs_io -F -r -p xfs_freeze -x -c "freeze" "$1"
 	status=$?
 	[ $status -ne 0 ] && exit $status
 elif $THAW ; then
-	$DIRNAME/xfs_io -r -p xfs_freeze -x -c "thaw" "$1"
+	$DIRNAME/xfs_io -F -r -p xfs_freeze -x -c "thaw" "$1"
 	status=$?
 	[ $status -ne 0 ] && exit $status
 else
