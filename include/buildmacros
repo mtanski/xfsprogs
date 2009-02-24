@@ -15,6 +15,7 @@ LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
 
 MAKEOPTS = --no-print-directory
 SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
+SRCFILES += $(QAHFILES)
 
 DEPDIRT = dep dep.bak
 MANDIRT = *.[1-9].gz

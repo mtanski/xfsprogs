@@ -5,6 +5,8 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
+LSRCFILES = README
+
 LTCOMMAND = xfs_repair
 
 HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
