@@ -15,11 +15,11 @@ LSRCFILES = configure configure.in Makepkgs aclocal.m4 install-sh README VERSION
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
-LIB_SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk
+LIB_SUBDIRS = libxfs libxlog libxcmd libhandle libdisk
 TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
 		mdrestore repair rtcp m4 man doc po debian build
 
-SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
+SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 
 default: include/builddefs include/platform_defs.h
 ifeq ($(HAVE_BUILDDEFS), no)
@@ -29,9 +29,10 @@ else
 endif
 
 # tool/lib dependencies
-libxcmd: include
+$(LIB_SUBDIRS) $(TOOL_SUBDIRS): include
 copy mdrestore: libxfs
 db logprint: libxfs libxlog
+fsr: libhandle
 growfs: libxfs libxcmd
 io: libxcmd libhandle
 mkfs: libxfs libdisk
