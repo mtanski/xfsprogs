@@ -327,7 +327,7 @@ timestr(
 
 /*
  * Convert from arbitrary user strings into a numeric ID.
- * If its all numeric, we convert that inplace, else we do
+ * If it's all numeric, we convert that inplace, else we do
  * the name lookup, and return the found identifier.
  */
 

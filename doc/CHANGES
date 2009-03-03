@@ -893,7 +893,7 @@ xfsprogs-2.3.8 (18 December 2002)
 	  as set_cur() takes basic blocks as its third parameter.
 	- Fixed obscure issue in mkfs where only the first AG would
 	  get its AGFL freelist "fixed" - not clear this caused any
-	  issues in practice (on Linux its always been this way, we
+	  issues in practice (on Linux it's always been this way, we
 	  now match up with IRIX though).
 	- Made xfs_growfs filesystem geometry output match up with
 	  that displayed by mkfs.xfs (xfs_growfs was missing a comma
@@ -1072,7 +1072,7 @@ xfsprogs-1.3.16 (17 December 2001)
 	  on read-only root filesystems
 
 xfsprogs-1.3.15 (12 December 2001)
-	- reenable the use of the BLKBSZSET ioctl, its baaack
+	- reenable the use of the BLKBSZSET ioctl, it's baaack
 	- sync recent XFS kernel source changes back into libxfs
 
 xfsprogs-1.3.14 (05 December 2001)

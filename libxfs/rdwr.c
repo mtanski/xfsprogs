@@ -336,7 +336,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
 	/*
 	 * first look for a buffer that can be used as-is,
 	 * if one cannot be found, see if there is a buffer,
-	 * and if so, free it's buffer and set b_addr to NULL
+	 * and if so, free its buffer and set b_addr to NULL
 	 * before calling libxfs_initbuf.
 	 */
 	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);

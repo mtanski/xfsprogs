@@ -336,7 +336,7 @@ mread_help(void)
 " Accesses a range of the current memory mapping, optionally dumping it to\n"
 " the standard output stream (with -v option) for subsequent inspection.\n"
 " -f -- verbose mode, dump bytes with offsets relative to start of file.\n"
-" -r -- reverse order; start accessing fom the end of range, moving backward\n"
+" -r -- reverse order; start accessing from the end of range, moving backward\n"
 " -v -- verbose mode, dump bytes with offsets relative to start of mapping.\n"
 " The accesses are performed sequentially from the start offset by default.\n"
 " Notes:\n"
@@ -500,7 +500,7 @@ mwrite_help(void)
 " Stores a byte into memory for a range within a mapping.\n"
 " The default stored value is 'X', repeated to fill the range specified.\n"
 " -S -- use an alternate seed character\n"
-" -r -- reverse order; start storing fom the end of range, moving backward\n"
+" -r -- reverse order; start storing from the end of range, moving backward\n"
 " The stores are performed sequentially from the start offset by default.\n"
 "\n"));
 }

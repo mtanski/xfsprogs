@@ -527,7 +527,7 @@ extsize_help(void)
 {
 	printf(_(
 "\n"
-" report or modify prefered extent size (in bytes) for the current path\n"
+" report or modify preferred extent size (in bytes) for the current path\n"
 "\n"
 " -R -- recursively descend (useful when current path is a directory)\n"
 " -D -- recursively descend, only modifying extsize on directories\n"
@@ -838,7 +838,7 @@ open_init(void)
 	extsize_cmd.argmax = -1;
 	extsize_cmd.flags = CMD_NOMAP_OK;
 	extsize_cmd.oneline =
-		_("get/set prefered extent size (in bytes) for the open file");
+		_("get/set preferred extent size (in bytes) for the open file");
 	extsize_cmd.help = extsize_help;
 
 	add_command(&open_cmd);

@@ -46,7 +46,7 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
  * For leaf block attributes, it requires more processing. One sticky
  * point is that the attributes can be local (within the leaf) or
  * remote (outside the leaf in other blocks). Thinking of local only
- * if you get a bad attribute, and want to delete just one, its a-okay
+ * if you get a bad attribute, and want to delete just one, it's a-okay
  * if it remains large enough to still be a leaf block attribute. Otherwise,
  * it may have to be converted to shortform. How to convert this and when
  * is an issue. This call is happening in Phase3. Phase5 will capture empty
@@ -694,7 +694,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		}
 
 		/*
-		 * for each block, process the block, verify it's path,
+		 * for each block, process the block, verify its path,
 		 * then get next block.  update cursor values along the way
 		 */
 		if (process_leaf_attr_block(mp, leaf, da_bno, ino,

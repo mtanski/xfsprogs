@@ -62,7 +62,7 @@ report_help(void)
 " -N -- suppress the header from the output\n"
 " -t -- terse output format, hides rows which are all zero\n"
 " -L -- lower ID bound to report on\n"
-" -U -- upder ID bound to report on\n"
+" -U -- upper ID bound to report on\n"
 " -g -- report group usage and quota information\n"
 " -p -- report project usage and quota information\n"
 " -u -- report user usage and quota information\n"

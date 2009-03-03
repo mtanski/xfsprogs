@@ -350,7 +350,7 @@ Phase 3 -- traverse inodes to make the inodes, bmaps and freespace maps
 
 	Third, make sure that the root inode is known.  If not,
 		and we know the inode number from the superblock,
-		discover that inode and it's chunk.
+		discover that inode and its chunk.
 
 	Then, walk the incore inode-cluster tree.
 
@@ -649,7 +649,7 @@ XXX		if in no_modify mode, compare contents of realtime bitmap
 		link count for the inode that the entry points to.
 
 	After traversal, scan incore inode map for directories not
-		reached.  Go to first one and try and find it's root
+		reached.  Go to first one and try and find its root
 		by following .. entries.  Once at root, run traversal
 		algorithm.  When algorithm terminates, move subtree
 		root inode to the orphanage.  Repeat as necessary

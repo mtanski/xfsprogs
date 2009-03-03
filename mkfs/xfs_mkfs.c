@@ -424,7 +424,7 @@ calc_default_ag_geometry(
 	 * number of data blocks available, trying to keep the
 	 * number of AGs relatively small (especially compared
 	 * to the original algorithm).  AG count is calculated
-	 * based on the prefered AG size, not vice-versa - the
+	 * based on the preferred AG size, not vice-versa - the
 	 * count can be increased by growfs, so prefer to use
 	 * smaller counts at mkfs time.
 	 *
@@ -550,7 +550,7 @@ zero_old_xfs_structures(
 	xfs_off_t		off;
 
 	/*
-	 * read in existing filesystem superblock, use it's geometry
+	 * read in existing filesystem superblock, use its geometry
 	 * settings and zero the existing secondary superblocks.
 	 */
 	buf = memalign(libxfs_device_alignment(), new_sb->sb_sectsize);
@@ -1973,7 +1973,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	if (loginternal) {
 		/*
 		 * Readjust the log size to fit within an AG if it was sized
-		 * automaticly.
+		 * automatically.
 		 */
 		if (!logsize) {
 			logblocks = MIN(logblocks,

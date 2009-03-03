@@ -835,7 +835,7 @@ mk_orphanage(xfs_mount_t *mp)
 
 	/*
 	 * check for an existing lost+found first, if it exists, return
-	 * it's inode. Otherwise, we can create it. Bad lost+found inodes
+	 * its inode. Otherwise, we can create it. Bad lost+found inodes
 	 * would have been cleared in phase3 and phase4.
 	 */
 
@@ -3419,7 +3419,7 @@ process_dir_inode(
 
 	/*
 	 * if we need to create the '.' entry, do so only if
-	 * the directory is a longform dir.  it it's been
+	 * the directory is a longform dir.  if it's been
 	 * turned into a shortform dir, then the inode is ok
 	 * since shortform dirs have no '.' entry and the inode
 	 * has already been committed by prune_lf_dir_entry().

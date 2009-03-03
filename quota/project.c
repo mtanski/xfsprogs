@@ -63,7 +63,7 @@ project_help(void)
 " Once this has been done, new files created in the tree will automatically\n"
 " be accounted to the tree based on their project identifier.  An attempt to\n"
 " create a hard link to a file in the tree will only succeed if the project\n"
-" identifier matches the project identifer for the tree.  The xfs_io utility\n"
+" identifier matches the project identifier for the tree.  The xfs_io utility\n"
 " can be used to set the project ID for an arbitrary file, but this can only\n"
 " be done by a privileged user.\n"
 "\n"

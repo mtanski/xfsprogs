@@ -25,7 +25,7 @@
  * Change the requested timestamp in the given inode.
  *
  * This was once shared with the kernel, but has diverged to the point
- * where its no longer worth the hassle of maintaining common code.
+ * where it's no longer worth the hassle of maintaining common code.
  */
 void
 libxfs_ichgtime(xfs_inode_t *ip, int flags)
@@ -167,13 +167,13 @@ libxfs_iread(
 }
 
 /*
- * Allocate an inode on disk and return a copy of it's in-core version.
+ * Allocate an inode on disk and return a copy of its in-core version.
  * Set mode, nlink, and rdev appropriately within the inode.
  * The uid and gid for the inode are set according to the contents of
  * the given cred structure.
  *
  * This was once shared with the kernel, but has diverged to the point
- * where its no longer worth the hassle of maintaining common code.
+ * where it's no longer worth the hassle of maintaining common code.
  */
 int
 libxfs_ialloc(

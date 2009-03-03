@@ -365,7 +365,7 @@ uuid_f(
 			}
 		}
 
-		/* clear the log (setting uuid) if its not dirty */
+		/* clear the log (setting uuid) if it's not dirty */
 		if (!sb_logzero(&uu))
 			return 0;
 
@@ -540,9 +540,9 @@ version_help(void)
 " 'version log2'     - enable v2 log format\n"
 "\n"
 "The version function prints currently enabled features for a filesystem\n"
-"according to its the version field of the primary superblock.\n"
+"according to the version field of its primary superblock.\n"
 "It can also be used to enable selected features, such as support for\n"
-"unwritten extents.  The upated version is written into all AGs.\n"
+"unwritten extents.  The updated version is written into all AGs.\n"
 "\n"
 ));
 }

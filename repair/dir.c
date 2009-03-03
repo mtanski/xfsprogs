@@ -2390,7 +2390,7 @@ process_leaf_dir_level(xfs_mount_t	*mp,
 
 		buf_dirty = 0;
 		/*
-		 * for each block, process the block, verify it's path,
+		 * for each block, process the block, verify its path,
 		 * then get next block.  update cursor values along the way
 		 */
 		if (process_leaf_dir_block(mp, leaf, da_bno, ino,
