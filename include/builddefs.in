@@ -41,6 +41,7 @@ DK_INC_DIR = @includedir@/disk
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
+top_builddir = @top_builddir@
 datarootdir = @datarootdir@
 
 PKG_NAME	= @pkg_name@
