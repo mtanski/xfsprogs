@@ -217,8 +217,8 @@ bmap_f(
 			exitcode = 1;
 			return 0;
 		}
-		if (fsx.fsx_nextents >= map_size-1) {
-			map_size = 2*(fsx.fsx_nextents+1);
+		if (2 * fsx.fsx_nextents > map_size) {
+			map_size = 2 * fsx.fsx_nextents + 1;
 			map = realloc(map, map_size*sizeof(*map));
 			if (map == NULL) {
 				fprintf(stderr,
