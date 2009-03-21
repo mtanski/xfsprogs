@@ -628,46 +628,6 @@ for
 .I /etc/projects
 to exist. Note that if projects file exists then it is also used.
 
-.SH FILE FORMATS
-There are two files involved with the tree quota mechanism, namely
-.I /etc/projects
-and
-.IR /etc/projid .
-The latter is optional.
-The
-.I /etc/projects
-file provides a mapping between numeric project identifiers and those
-directories which are the roots of the quota tree.
-Its format is simply:
-.nf
-.sp
-.in +5
-# comments are hash-prefixed
-# ...
-10:/export/cage
-42:/var/log
-.in -5
-.fi
-.PP
-The
-.I /etc/projid
-file provides a mapping between numeric project identifiers and a
-simple human readable name (similar relationship to the one that
-exists between usernames and uids).
-Its format is simply:
-.nf
-.sp
-.in +5
-# comments are hash-prefixed
-# ...
-cage:10
-logfiles:42
-.in -5
-.fi
-.PP
-This file is optional, if a project identifier cannot be mapped to
-a name, it will be displayed as a number only.
-.PP
 .SH EXAMPLES
 Enabling quota enforcement on an XFS filesystem (restrict a user
 to a set amount of space).
@@ -752,4 +712,6 @@ Mapping of numeric project identifiers to project names.
 .SH SEE ALSO
 .BR df (1),
 .BR mount (1),
-.BR sync (2).
+.BR sync (2),
+.BR projid (5),
+.BR projects (5).
