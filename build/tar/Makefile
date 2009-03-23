@@ -5,7 +5,7 @@
 TOPDIR = ../..
 include $(TOPDIR)/include/builddefs
 
-BINTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+BINTAR=$(PKG_NAME)-$(PKG_VERSION).bin.tar.gz
 LDIRT = *.gz
 
 default install install-dev install-lib:

@@ -6,7 +6,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 MANIFEST=src-manifest
-SRCTAR=$(PKG_NAME)-$(PKG_VERSION).src.tar.gz
+SRCTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 LDIRT = *-manifest *.gz $(TOPDIR)/$(PKG_NAME)-*
 

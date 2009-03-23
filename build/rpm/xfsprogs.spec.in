@@ -6,7 +6,7 @@ Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
 BuildRoot: @build_root@ 
 Prereq: /sbin/ldconfig
 Conflicts: xfsdump < 3.0.0
-Source: %name-%version.src.tar.gz
+Source: %name-%version.tar.gz
 License: GPL
 Vendor: Silicon Graphics, Inc.
 URL: http://oss.sgi.com/projects/xfs/
