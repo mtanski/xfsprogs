@@ -32,8 +32,6 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     AC_SUBST(make)
     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
 
-    AC_PROG_LIBTOOL
-
     if test -z "$TAR"; then
         AC_PATH_PROG(TAR, tar,, /usr/freeware/bin:/bin:/usr/local/bin:/usr/bin)
     fi
