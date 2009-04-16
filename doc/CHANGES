@@ -1,3 +1,14 @@
+xfsprogs-3.0.1
+	- Update the Makepkgs script to generate proper source tarballs.
+	- New project(5) and projid(5) man pages.
+	- Fix extent array reallocation in the xfs_io bmap command,
+	  thanks to Tomasz Majkowski.
+	- Small specfile improvements, thanks to Jan Engelhardt.
+	- Allow xfs_freeze to freeze non-XFS filesystems.
+	- Fix the xfs_db bmbta command.
+	- Fix parallel builds, thanks to Mike Frysinger.
+	- Various autoconf/libtoool fixes, thanks to Andreas Gruenbacher.
+
 xfsprogs-3.0.0 (4 February 2009)
 	- Various smaller xfs_repair improvements.
 	- Various gettext improvements, thanks to Jakub Bogusz.
