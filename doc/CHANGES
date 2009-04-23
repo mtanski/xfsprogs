@@ -7,7 +7,7 @@ xfsprogs-3.0.1
 	- Allow xfs_freeze to freeze non-XFS filesystems.
 	- Fix the xfs_db bmbta command.
 	- Fix parallel builds, thanks to Mike Frysinger.
-	- Various autoconf/libtoool fixes, thanks to Andreas Gruenbacher.
+	- Various autoconf/libtool fixes, thanks to Andreas Gruenbacher.
 
 xfsprogs-3.0.0 (4 February 2009)
 	- Various smaller xfs_repair improvements.
