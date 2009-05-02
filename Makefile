@@ -12,7 +12,7 @@ endif
 CONFIGURE = aclocal.m4 configure config.guess config.sub configure install-sh \
 	    ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
 	    m4/ltversion.m4 m4/lt~obsolete.m4
-LSRCFILES = configure.in Makepkgs README VERSION $(CONFIGURE)
+LSRCFILES = configure.in Makepkgs release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz autom4te.cache/* \
