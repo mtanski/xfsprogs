@@ -2,7 +2,7 @@ xfsprogs-3.0.2 (6 May 2009)
 	- Updates to Debian build process after recent autoconf tweaks.
 	- Fix a couple of minor man page syntax issues.
 
-xfsprogs-3.0.1 (16 April 2009)
+xfsprogs-3.0.1 (4 May 2009)
 	- Update the Makepkgs script to generate proper source tarballs.
 	- New project(5) and projid(5) man pages.
 	- Fix extent array reallocation in the xfs_io bmap command,
