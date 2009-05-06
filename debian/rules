@@ -35,14 +35,14 @@ config: .census
 .census:
 	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
-	$(options) $(MAKE) configure
+	$(options) $(MAKE) include/platform_defs.h
 	touch .census
 
 dibuild:
 	$(checkdir)
 	@echo "== dpkg-buildpackage: installer" 1>&2
 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
-		$(diopts) $(MAKE) configure; \
+		$(diopts) $(MAKE) include/platform_defs.h; \
 		for dir in include libxfs libdisk mkfs; do \
 			$(MAKE) -C $$dir; \
 		done; \

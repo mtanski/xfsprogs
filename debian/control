@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Nathan Scott <nathans@debian.org>
 Uploaders: Anibal Monsalve Salazar <anibal@debian.org>
 Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev
-Standards-Version: 3.7.3
+Standards-Version: 3.8.1
 Homepage: http://oss.sgi.com/projects/xfs/
 
 Package: xfsprogs
@@ -24,23 +24,30 @@ Description: Utilities for managing the XFS filesystem
  and scalability.
  .
  Refer to the documentation at http://oss.sgi.com/projects/xfs/
- for complete details.  This implementation is on-disk compatible
- with the IRIX version of XFS.
+ for complete details.
 
 Package: xfslibs-dev
 Section: libdevel
-Priority: extra
 Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>= 3.0.0)
 Conflicts: xfsprogs (<< 3.0.0)
 Architecture: any
 Description: XFS filesystem-specific static libraries and headers
  xfslibs-dev contains the libraries and header files needed to
  develop XFS filesystem-specific programs.
+ .
+ XFS is a high performance journaling filesystem which originated
+ on the SGI IRIX platform.  It is completely multi-threaded, can
+ support large files and large filesystems, extended attributes,
+ variable block sizes, is extent based, and makes extensive use of
+ Btrees (directories, extents, free space) to aid both performance
+ and scalability.
+ .
+ Refer to the documentation at http://oss.sgi.com/projects/xfs/
+ for complete details.
 
 Package: xfsprogs-udeb
 XC-Package-Type: udeb
 Section: debian-installer
-Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: A stripped-down version of xfsprogs, for debian-installer
