@@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
 		args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
 	else if (dangerously)
 		args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
+	else
+		args->isreadonly = LIBXFS_EXCLUSIVELY;
 
 	if (!libxfs_init(args))
 		do_error(_("couldn't initialize XFS library\n"));
