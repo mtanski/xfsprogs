@@ -362,13 +362,13 @@ validate_log_size(__uint64_t logblocks, int blocklog, int min_logblocks)
 	}
 	if (logblocks > XFS_MAX_LOG_BLOCKS) {
 		fprintf(stderr,
-	_("log size %lld blocks too large, maximum size is %d blocks\n"),
+	_("log size %lld blocks too large, maximum size is %lld blocks\n"),
 			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
 		usage();
 	}
 	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
 		fprintf(stderr,
-	_("log size %lld bytes too large, maximum size is %d bytes\n"),
+	_("log size %lld bytes too large, maximum size is %lld bytes\n"),
 			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
 		usage();
 	}
@@ -1717,7 +1717,7 @@ reported by the device (%u).\n"),
 	min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-		min_logblocks = MAX(min_logblocks, (10*1024*1024)>>blocklog);
+		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
 		fprintf(stderr,
 _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
@@ -1737,10 +1737,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		logblocks = 0;
 	} else if (loginternal && !logsize) {
 		/*
-		 * logblocks grows from min_logblocks to XFS_MAX_LOG_BLOCKS
-		 * at 128GB
-		 *
-		 * 2048 = 128GB / MAX_LOG_BYTES
+		 * With a 2GB max log size, default to maximum size
+		 * at 4TB. This keeps the same ratio from the older
+		 * max log size of 128M at 256GB fs size. IOWs,
+		 * the ratio of fs size to log size is 2048:1.
 		 */
 		logblocks = (dblocks << blocklog) / 2048;
 		logblocks = logblocks >> blocklog;
