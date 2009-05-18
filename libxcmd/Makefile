@@ -20,6 +20,14 @@ ifeq ($(HAVE_GETMNTINFO),yes)
 LCFLAGS += -DHAVE_GETMNTINFO
 endif
 
+ifeq ($(ENABLE_READLINE),yes)
+LCFLAGS += -DENABLE_READLINE
+endif
+
+ifeq ($(ENABLE_EDITLINE),yes)
+LCFLAGS += -DENABLE_EDITLINE
+endif
+
 default: $(LTLIBRARY)
 
 include $(BUILDRULES)
