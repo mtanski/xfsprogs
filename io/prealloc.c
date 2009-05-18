@@ -16,6 +16,9 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#if defined(HAVE_FALLOCATE)
+#include <linux/falloc.h>
+#endif
 #include <xfs/xfs.h>
 #include <xfs/command.h>
 #include <xfs/input.h>
@@ -26,6 +29,9 @@ static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
 static cmdinfo_t resvsp_cmd;
 static cmdinfo_t unresvsp_cmd;
+#if defined(HAVE_FALLOCATE)
+static cmdinfo_t falloc_cmd;
+#endif
 
 static int
 offset_length(
@@ -119,6 +125,40 @@ unresvsp_f(
 	return 0;
 }
 
+#if defined (HAVE_FALLOCATE)
+static int
+fallocate_f(
+	int		argc,
+	char		**argv)
+{
+	xfs_flock64_t	segment;
+	int		mode = 0;
+	int		c;
+
+	while ((c = getopt(argc, argv, "k")) != EOF) {
+		switch (c) {
+		case 'k':
+			mode = FALLOC_FL_KEEP_SIZE;
+			break;
+		default:
+			command_usage(&falloc_cmd);
+		}
+	}
+        if (optind != argc - 2)
+                return command_usage(&falloc_cmd);
+
+	if (!offset_length(argv[optind], argv[optind+1], &segment))
+		return 0;
+
+	if (fallocate(file->fd, mode,
+			segment.l_start, segment.l_len)) {
+		perror("fallocate");
+		return 0;
+	}
+	return 0;
+}
+#endif
+
 void
 prealloc_init(void)
 {
@@ -160,4 +200,17 @@ prealloc_init(void)
 	add_command(&freesp_cmd);
 	add_command(&resvsp_cmd);
 	add_command(&unresvsp_cmd);
+
+#if defined (HAVE_FALLOCATE)
+	falloc_cmd.name = _("falloc");
+	falloc_cmd.cfunc = fallocate_f;
+	falloc_cmd.argmin = 2;
+	falloc_cmd.argmax = -1;
+	falloc_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+	falloc_cmd.args = _("[-k] off len");
+	falloc_cmd.oneline =
+		_("allocates space associated with part of a file via fallocate");
+
+	add_command(&falloc_cmd);
+#endif
 }

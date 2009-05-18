@@ -295,6 +295,20 @@ system call described in the
 .BR xfsctl (3)
 manual page.
 .TP
+.BI "falloc [ \-k ]" " offset length"
+Allocates reserved, unwritten space for part of a file using the
+fallocate routine as described in the
+.BR fallocate (3)
+manual page.
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.B \-k
+will set the FALLOC_FL_KEEP_SIZE flag as described in
+.BR fallocate (3).
+.PD
+.RE
+.TP
 .BI truncate " offset"
 Truncates the current file at the given offset using
 .BR ftruncate (2).
