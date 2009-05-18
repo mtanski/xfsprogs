@@ -1,3 +1,6 @@
+	- Fix xfs_io and xfs_quota when readline config enabled.
+	- Add fallocate command to xfs_io.
+
 xfsprogs-3.0.2 (6 May 2009)
 	- Updates to Debian build process after recent autoconf tweaks.
 	- Fix a couple of minor man page syntax issues.
