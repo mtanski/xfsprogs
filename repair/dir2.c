@@ -339,9 +339,17 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		/*
 		 * maintain level counter
 		 */
-		if (i == -1)
+		if (i == -1) {
 			i = da_cursor->active = be16_to_cpu(node->hdr.level);
-		else  {
+			if (i >= XFS_DA_NODE_MAXDEPTH) {
+				do_warn(_("bad header depth for directory "
+					  "inode %llu\n"),
+					da_cursor->ino);
+				da_brelse(bp);
+				i = -1;
+				goto error_out;
+			}
+		} else {
 			if (be16_to_cpu(node->hdr.level) == i - 1)  {
 				i--;
 			} else  {
