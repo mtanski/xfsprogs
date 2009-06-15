@@ -105,6 +105,9 @@ AC_DEFUN([AC_HAVE_GETMNTINFO],
 AC_DEFUN([AC_HAVE_FALLOCATE],
   [ AC_MSG_CHECKING([for fallocate])
     AC_TRY_LINK([
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <fcntl.h>
 #include <linux/falloc.h>
     ], [
          fallocate(0, 0, 0, 0);
