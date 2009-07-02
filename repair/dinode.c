@@ -319,7 +319,8 @@ verify_ag_bno(xfs_sb_t *sbp,
 		return (agbno >= sbp->sb_agblocks);
 	if (agno == (sbp->sb_agcount - 1)) 
 		return (agbno >= (sbp->sb_dblocks -
-				((sbp->sb_agcount - 1) * sbp->sb_agblocks)));
+				((xfs_drfsbno_t)(sbp->sb_agcount - 1) *
+				 sbp->sb_agblocks)));
 	return 1;
 }
 

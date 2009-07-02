@@ -113,7 +113,8 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 		ag_end = mp->m_sb.sb_agblocks;
 	else
 		ag_end = mp->m_sb.sb_dblocks -
-			mp->m_sb.sb_agblocks * (mp->m_sb.sb_agcount - 1);
+			(xfs_drfsbno_t)mp->m_sb.sb_agblocks *
+                       (mp->m_sb.sb_agcount - 1);
 
 	/*
 	 * ok, now find the number of extents, keep track of the
