@@ -222,7 +222,8 @@ valid_bno(
 		return 1;
 	if (agno == (mp->m_sb.sb_agcount - 1) && agbno > 0 &&
 			agbno <= (mp->m_sb.sb_dblocks -
-			 (mp->m_sb.sb_agcount - 1) * mp->m_sb.sb_agblocks))
+			 (xfs_drfsbno_t)(mp->m_sb.sb_agcount - 1) *
+			 mp->m_sb.sb_agblocks))
 		return 1;
 
 	return 0;
