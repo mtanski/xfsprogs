@@ -1281,6 +1281,18 @@ process_btinode(
 		}
 	}
 	/*
+	 * Ideally if all the extents are ok (perhaps after further
+	 * checks below?) we'd just move this back into extents format.
+	 * But for now clear it, as the kernel will choke on this
+	 */
+	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) /
+			sizeof(xfs_bmbt_rec_t)) {
+		do_warn(
+	_("extent count for ino %lld %s fork too low (%d) for file format\n"),
+				lino, forkname, *nex);
+		return(1);
+	}
+	/*
 	 * Check that the last child block's forward sibling pointer
 	 * is NULL.
 	 */
