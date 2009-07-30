@@ -196,7 +196,7 @@ init(
 static int
 usage(void)
 {
-	dbprintf(_("freesp arguments: [-bcdfs] [-a agno] [-e binsize] [-h h1]... "
+	dbprintf(_("freesp arguments: [-bcds] [-a agno] [-e binsize] [-h h1]... "
 		 "[-m binmult]\n"));
 	return 0;
 }
