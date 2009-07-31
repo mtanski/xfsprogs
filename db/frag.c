@@ -437,15 +437,29 @@ scanfunc_bmap(
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmbt_rec_t		*rp;
+	int			nrecs;
+
+	nrecs = be16_to_cpu(block->bb_numrecs);
 
 	if (level == 0) {
+		if (nrecs > mp->m_bmap_dmxr[0]) {
+			dbprintf(_("invalid numrecs (%u) in %s block\n"),
+				   nrecs, typtab[btype].name);
+			return;
+		}
 		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
 		process_bmbt_reclist((xfs_bmbt_rec_32_t *)rp, 
-				be16_to_cpu(block->bb_numrecs), extmapp);
+				nrecs, extmapp);
+		return;
+	}
+
+	if (nrecs > mp->m_bmap_dmxr[1]) {
+		dbprintf(_("invalid numrecs (%u) in %s block\n"),
+			   nrecs, typtab[btype].name);
 		return;
 	}
 	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[0]);
-	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+	for (i = 0; i < nrecs; i++)
 		scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, extmapp, 
 									btype);
 }
