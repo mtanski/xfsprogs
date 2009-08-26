@@ -163,7 +163,7 @@ write_buffer(
 	int		ops = 0;
 
 	*total = 0;
-	while (count > 0) {
+	while (count >= 0) {
 		if (fd > 0) {	/* input file given, read buffer first */
 			if (read_buffer(fd, skip + *total, bs, &bar, 0, 1) < 0)
 				break;
@@ -182,6 +182,8 @@ write_buffer(
 			break;
 		offset += bytes;
 		count -= bytes;
+		if (count == 0)
+			break;
 	}
 	return ops;
 }
