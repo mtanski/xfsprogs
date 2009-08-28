@@ -127,18 +127,36 @@ static inline int __do_div(unsigned long long *n, unsigned base)
 #define max_t(type,x,y) \
 	({ type __x = (x); type __y = (y); __x > __y ? __x: __y; })
 
-/* only 64 bit accesses used in xfs kernel code */
-static inline __u64 get_unaligned_be64(void *ptr)
+
+static inline __uint32_t __get_unaligned_be32(const __uint8_t *p)
 {
-	__be64	__tmp;
-	memmove(&__tmp, ptr, 8);
-	return be64_to_cpu(__tmp);
+        return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
 }
 
-static inline void put_unaligned(__be64 val, void *ptr)
+static inline __uint64_t get_unaligned_be64(void *p)
 {
-	memmove(ptr, &val, 8);
+	return (__uint64_t)__get_unaligned_be32(p) << 32 |
+			   __get_unaligned_be32(p + 4);
 }
+
+static inline void __put_unaligned_be16(__uint16_t val, __uint8_t *p)
+{
+	*p++ = val >> 8;
+	*p++ = val;
+}
+
+static inline void __put_unaligned_be32(__uint32_t val, __uint8_t *p)
+{
+	__put_unaligned_be16(val >> 16, p);
+	__put_unaligned_be16(val, p + 2);
+}
+
+static inline void put_unaligned_be64(__uint64_t val, void *p)
+{
+	__put_unaligned_be32(val >> 32, p);
+	__put_unaligned_be32(val, p + 4);
+}
+
 
 static inline __attribute__((const))
 int is_power_of_2(unsigned long n)
