@@ -1,5 +1,11 @@
-	- Fix xfs_io and xfs_quota when readline config enabled.
+xfsprogs-3.0.3
+	- Fix unaligned accesses in libxfs.
+	- Various small fixes to xfs_db, xfs_repair and xfs_io.
 	- Add fallocate command to xfs_io.
+	- Enable readline support in xfs_io and xfs_quota.
+	- Allow log sizes up to 2GiB (minus 1 byte) in xfs_mkfs.
+	- Open the block device in xfs_repair exclusively, thanks to
+	  Nathaniel W. Turner.
 
 xfsprogs-3.0.2 (6 May 2009)
 	- Updates to Debian build process after recent autoconf tweaks.
