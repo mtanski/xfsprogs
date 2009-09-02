@@ -235,6 +235,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		agno = XFS_FSB_TO_AGNO(mp, bno);
 		agbno = XFS_FSB_TO_AGBNO(mp, bno);
 
+		pthread_mutex_lock(&ag_locks[agno]);
 		state = get_bmap(agno, agbno);
 		switch (state) {
 		case XR_E_UNKNOWN:
@@ -280,6 +281,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 				state, ino, (__uint64_t) bno);
 			break;
 		}
+		pthread_mutex_unlock(&ag_locks[agno]);
 	} else  {
 		/*
 		 * attribute fork for realtime files is in the regular
