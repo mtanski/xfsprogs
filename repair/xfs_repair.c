@@ -39,7 +39,6 @@ extern void	phase4(xfs_mount_t *);
 extern void	phase5(xfs_mount_t *);
 extern void	phase6(xfs_mount_t *);
 extern void	phase7(xfs_mount_t *);
-extern void	incore_init(xfs_mount_t *);
 
 #define		XR_MAX_SECT_SIZE	(64 * 1024)
 
@@ -688,9 +687,14 @@ main(int argc, char **argv)
 	calc_mkfs(mp);
 
 	/*
-	 * check sb filesystem stats and initialize in-core data structures
+	 * initialize block alloc map
 	 */
-	incore_init(mp);
+	init_bmaps(mp);
+	incore_ino_init(mp);
+	incore_ext_init(mp);
+
+	/* initialize random globals now that we know the fs geometry */
+	inodes_per_block = mp->m_sb.sb_inopblock;
 
 	if (parse_sb_version(&mp->m_sb))  {
 		do_warn(
@@ -717,6 +721,11 @@ main(int argc, char **argv)
 		phase5(mp);
 	}
 	timestamp(PHASE_END, 5, NULL);
+
+	/*
+	 * Done with the block usage maps, toss them...
+	 */
+	free_bmaps(mp);
 
 	if (!bad_ino_btree)  {
 		phase6(mp);

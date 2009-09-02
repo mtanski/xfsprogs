@@ -1465,11 +1465,6 @@ phase5_func(
 		}
 
 		/*
-		 * done with the AG bitmap, toss it...
-		 */
-		teardown_ag_bmap(mp, agno);
-
-		/*
 		 * ok, now set up the btree cursors for the
 		 * on-disk btrees (includs pre-allocating all
 		 * required blocks for the trees themselves)
@@ -1655,7 +1650,6 @@ phase5(xfs_mount_t *mp)
 		_("        - generate realtime summary info and bitmap...\n"));
 		rtinit(mp);
 		generate_rtinfo(mp, btmcompute, sumcompute);
-		teardown_rt_bmap(mp);
 	}
 
 	do_log(_("        - reset superblock...\n"));
