@@ -286,8 +286,9 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		 * filesystem
 		 */
 		if (type != XR_INO_RTDATA || whichfork != XFS_DATA_FORK)  {
-			if (search_dup_extent(mp, XFS_FSB_TO_AGNO(mp, bno),
-					XFS_FSB_TO_AGBNO(mp, bno)))
+			if (search_dup_extent(XFS_FSB_TO_AGNO(mp, bno),
+					XFS_FSB_TO_AGBNO(mp, bno),
+					XFS_FSB_TO_AGBNO(mp, bno) + 1))
 				return(1);
 		} else  {
 			if (search_rt_dup_extent(mp, bno))
