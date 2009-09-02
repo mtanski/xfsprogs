@@ -150,4 +150,5 @@ xfs_init(libxfs_init_t *args)
 	ts_create();
 	ts_init();
 	increase_rlimit();
+	pftrace_init();
 }

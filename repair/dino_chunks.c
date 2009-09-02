@@ -629,10 +629,9 @@ process_inode_chunk(
 			cluster_count * sizeof(xfs_buf_t*));
 
 	for (bp_index = 0; bp_index < cluster_count; bp_index++) {
-#ifdef XR_PF_TRACE
 		pftrace("about to read off %llu in AG %d",
 			(long long)XFS_AGB_TO_DADDR(mp, agno, agbno), agno);
-#endif
+
 		bplist[bp_index] = libxfs_readbuf(mp->m_dev,
 					XFS_AGB_TO_DADDR(mp, agno, agbno),
 					XFS_FSB_TO_BB(mp, blks_per_cluster), 0);
@@ -650,11 +649,9 @@ process_inode_chunk(
 		}
 		agbno += blks_per_cluster;
 
-#ifdef XR_PF_TRACE
 		pftrace("readbuf %p (%llu, %d) in AG %d", bplist[bp_index],
 			(long long)XFS_BUF_ADDR(bplist[bp_index]),
 			XFS_BUF_COUNT(bplist[bp_index]), agno);
-#endif
 	}
 	agbno = XFS_AGINO_TO_AGBNO(mp, first_irec->ino_startnum);
 
@@ -906,10 +903,10 @@ process_inode_chunk(
 			 * done! - finished up irec and block simultaneously
 			 */
 			for (bp_index = 0; bp_index < cluster_count; bp_index++) {
-#ifdef XR_PF_TRACE
-				pftrace("put/writebuf %p (%llu) in AG %d", bplist[bp_index],
-					(long long)XFS_BUF_ADDR(bplist[bp_index]), agno);
-#endif
+				pftrace("put/writebuf %p (%llu) in AG %d",
+					bplist[bp_index], (long long)
+					XFS_BUF_ADDR(bplist[bp_index]), agno);
+
 				if (dirty && !no_modify)
 					libxfs_writebuf(bplist[bp_index], 0);
 				else
