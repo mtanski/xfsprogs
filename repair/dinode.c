@@ -524,6 +524,7 @@ process_rt_rec(
 
 	/*
 	 * set the appropriate number of extents
+	 * this iterates block by block, this can be optimised using extents
 	 */
 	for (b = irec->br_startblock; b < irec->br_startblock +
 			irec->br_blockcount; b += mp->m_sb.sb_rextsize)  {
@@ -614,9 +615,10 @@ process_bmbt_reclist_int(
 	char			*forkname;
 	int			i;
 	int			state;
-	xfs_dfsbno_t		e;
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
+	xfs_agblock_t		ebno;
+	xfs_extlen_t		blen;
 	xfs_agnumber_t		locked_agno = -1;
 	int			error = 1;
 
@@ -718,7 +720,7 @@ process_bmbt_reclist_int(
 		 */
 		agno = XFS_FSB_TO_AGNO(mp, irec.br_startblock);
 		agbno = XFS_FSB_TO_AGBNO(mp, irec.br_startblock);
-		e = irec.br_startblock + irec.br_blockcount;
+		ebno = agbno + irec.br_blockcount;
 		if (agno != locked_agno) {
 			if (locked_agno != -1)
 				pthread_mutex_unlock(&ag_locks[locked_agno]);
@@ -733,7 +735,9 @@ process_bmbt_reclist_int(
 			 * checking each entry without setting the
 			 * block bitmap
 			 */
-			for (b = irec.br_startblock; b < e; b++, agbno++)  {
+			for (b = irec.br_startblock;
+			     agbno < ebno;
+			     b++, agbno++)  {
 				if (search_dup_extent(mp, agno, agbno)) {
 					do_warn(_("%s fork in ino %llu claims "
 						"dup extent, off - %llu, "
@@ -748,22 +752,10 @@ process_bmbt_reclist_int(
 			continue;
 		}
 
-		for (b = irec.br_startblock; b < e; b++, agbno++)  {
-			/*
-			 * Process in chunks of 16 (XR_BB_UNIT/XR_BB)
-			 * for common XR_E_UNKNOWN to XR_E_INUSE transition
-			 */
-			if (((agbno & XR_BB_MASK) == 0) && ((irec.br_startblock + irec.br_blockcount - b) >= (XR_BB_UNIT/XR_BB))) {
-				if (ba_bmap[agno][agbno>>XR_BB] == XR_E_UNKNOWN_LL) {
-					ba_bmap[agno][agbno>>XR_BB] = XR_E_INUSE_LL;
-					agbno += (XR_BB_UNIT/XR_BB) - 1;
-					b += (XR_BB_UNIT/XR_BB) - 1;
-					continue;
-				}
-
-			}
-
-			state = get_bmap(agno, agbno);
+		for (b = irec.br_startblock;
+		     agbno < ebno;
+		     b += blen, agbno += blen) {
+			state = get_bmap_ext(agno, agbno, ebno, &blen);
 			switch (state)  {
 			case XR_E_FREE:
 			case XR_E_FREE1:
@@ -772,7 +764,7 @@ process_bmbt_reclist_int(
 					forkname, ino, (__uint64_t) b);
 				/* fall through ... */
 			case XR_E_UNKNOWN:
-				set_bmap(agno, agbno, XR_E_INUSE);
+				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
 				break;
 
 			case XR_E_BAD_STATE:
@@ -788,7 +780,7 @@ process_bmbt_reclist_int(
 
 			case XR_E_INUSE:
 			case XR_E_MULT:
-				set_bmap(agno, agbno, XR_E_MULT);
+				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
 				do_warn(_("%s fork in %s inode %llu claims "
 					"used block %llu\n"),
 					forkname, ftype, ino, (__uint64_t) b);

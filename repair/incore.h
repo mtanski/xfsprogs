@@ -26,59 +26,32 @@
  */
 
 /*
- * block bit map defs -- track state of each filesystem block.
- * ba_bmap is an array of bitstrings declared in the globals.h file.
- * the bitstrings are broken up into 64-bit chunks.  one bitstring per AG.
- */
-#define BA_BMAP_SIZE(x)		(howmany(x, 4))
-
-void			init_bmaps(xfs_mount_t *mp);
-void			reset_bmaps(xfs_mount_t *mp);
-void			free_bmaps(xfs_mount_t *mp);
-
-
-/* blocks are numbered from zero */
-
-/* block records fit into __uint64_t's units */
-
-#define XR_BB_UNIT	64			/* number of bits/unit */
-#define XR_BB		4			/* bits per block record */
-#define XR_BB_NUM	(XR_BB_UNIT/XR_BB)	/* number of records per unit */
-#define XR_BB_MASK	0xF			/* block record mask */
-
-/*
- * bitstring ops -- set/get block states, either in filesystem
- * bno's or in agbno's.  turns out that fsbno addressing is
- * more convenient when dealing with bmap extracted addresses
- * and agbno addressing is more convenient when dealing with
- * meta-data extracted addresses.  So the fsbno versions use
- * mtype (which can be one of the block map types above) to
- * set the correct block map while the agbno versions assume
- * you want to use the regular block map.
+ * block map -- track state of each filesystem block.
  */
 
-#define get_bmap(agno, ag_blockno) \
-			((int) (*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) \
-				 >> (((ag_blockno)%XR_BB_NUM)*XR_BB)) \
-				& XR_BB_MASK)
-#define set_bmap(agno, ag_blockno, state) \
-	*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) = \
-		((*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) & \
-	  (~((__uint64_t) XR_BB_MASK << (((ag_blockno)%XR_BB_NUM)*XR_BB)))) | \
-	 (((__uint64_t) (state)) << (((ag_blockno)%XR_BB_NUM)*XR_BB)))
+void		init_bmaps(xfs_mount_t *mp);
+void		reset_bmaps(xfs_mount_t *mp);
+void		free_bmaps(xfs_mount_t *mp);
 
-/*
- * these work in real-time extents (e.g. fsbno == rt extent number)
- */
-#define get_rtbmap(fsbno) \
-			((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) >> \
-			(((fsbno)%XR_BB_NUM)*XR_BB)) & XR_BB_MASK)
-#define set_rtbmap(fsbno, state) \
-	*(rt_ba_bmap + (fsbno)/XR_BB_NUM) = \
-	 ((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) & \
-	  (~((__uint64_t) XR_BB_MASK << (((fsbno)%XR_BB_NUM)*XR_BB)))) | \
-	 (((__uint64_t) (state)) << (((fsbno)%XR_BB_NUM)*XR_BB)))
+void		set_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+			     xfs_extlen_t blen, int state);
+int		get_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+			     xfs_agblock_t maxbno, xfs_extlen_t *blen);
 
+void		set_rtbmap(xfs_drtbno_t bno, int state);
+int		get_rtbmap(xfs_drtbno_t bno);
+
+static inline void
+set_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno, int state)
+{
+	set_bmap_ext(agno, agbno, 1, state);
+}
+
+static inline int
+get_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno)
+{
+	return get_bmap_ext(agno, agbno, agbno + 1, NULL);
+}
 
 /*
  * extent tree definitions
