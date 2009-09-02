@@ -26,7 +26,6 @@
 #include "dir.h"
 #include "incore.h"
 #include "prefetch.h"
-#include "radix-tree.h"
 #include <sys/resource.h>
 
 static pthread_key_t dirbuf_key;
@@ -151,5 +150,4 @@ xfs_init(libxfs_init_t *args)
 	ts_create();
 	ts_init();
 	increase_rlimit();
-	radix_tree_init();
 }

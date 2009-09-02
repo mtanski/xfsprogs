@@ -3,7 +3,6 @@
 
 #include <semaphore.h>
 #include "incore.h"
-#include "radix-tree.h"
 
 
 extern int 	do_prefetch;
@@ -14,8 +13,8 @@ typedef struct prefetch_args {
 	pthread_mutex_t		lock;
 	pthread_t		queuing_thread;
 	pthread_t		io_threads[PF_THREAD_COUNT];
-	struct radix_tree_root	primary_io_queue;
-	struct radix_tree_root	secondary_io_queue;
+	struct btree_root	*primary_io_queue;
+	struct btree_root	*secondary_io_queue;
 	pthread_cond_t		start_reading;
 	pthread_cond_t		start_processing;
 	int			agno;

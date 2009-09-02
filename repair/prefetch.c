@@ -1,6 +1,7 @@
 #include <libxfs.h>
 #include <pthread.h>
 #include "avl.h"
+#include "btree.h"
 #include "globals.h"
 #include "agheader.h"
 #include "incore.h"
@@ -14,7 +15,6 @@
 #include "threads.h"
 #include "prefetch.h"
 #include "progress.h"
-#include "radix-tree.h"
 
 int do_prefetch = 1;
 
@@ -129,10 +129,8 @@ pf_queue_io(
 	pthread_mutex_lock(&args->lock);
 
 	if (fsbno > args->last_bno_read) {
-		radix_tree_insert(&args->primary_io_queue, fsbno, bp);
-		if (!B_IS_INODE(flag))
-			radix_tree_tag_set(&args->primary_io_queue, fsbno, 0);
-		else {
+		btree_insert(args->primary_io_queue, fsbno, bp);
+		if (B_IS_INODE(flag)) {
 			args->inode_bufs_queued++;
 			if (args->inode_bufs_queued == IO_THRESHOLD)
 				pf_start_io_workers(args);
@@ -154,7 +152,7 @@ pf_queue_io(
 #endif
 		ASSERT(!B_IS_INODE(flag));
 		XFS_BUF_SET_PRIORITY(bp, B_DIR_META_2);
-		radix_tree_insert(&args->secondary_io_queue, fsbno, bp);
+		btree_insert(args->secondary_io_queue, fsbno, bp);
 	}
 
 	pf_start_processing(args);
@@ -407,7 +405,7 @@ pf_batch_read(
 	pf_which_t		which,
 	void			*buf)
 {
-	struct radix_tree_root	*queue;
+	struct btree_root	*queue;
 	xfs_buf_t		*bplist[MAX_BUFS];
 	unsigned int		num;
 	off64_t			first_off, last_off, next_off;
@@ -415,27 +413,25 @@ pf_batch_read(
 	int			i;
 	int			inode_bufs;
 	unsigned long		fsbno;
+	unsigned long		max_fsbno;
 	char			*pbuf;
 
-	queue = (which != PF_SECONDARY) ? &args->primary_io_queue
-				: &args->secondary_io_queue;
+	queue = (which != PF_SECONDARY) ? args->primary_io_queue
+				: args->secondary_io_queue;
 
-	while (radix_tree_lookup_first(queue, &fsbno) != NULL) {
+	while (btree_find(queue, 0, &fsbno) != NULL) {
+		max_fsbno = fsbno + pf_max_fsbs;
+		num = 0;
 
-		if (which != PF_META_ONLY) {
-			num = radix_tree_gang_lookup_ex(queue,
-					(void**)&bplist[0], fsbno,
-					fsbno + pf_max_fsbs, MAX_BUFS);
-			ASSERT(num > 0);
-			ASSERT(XFS_FSB_TO_DADDR(mp, fsbno) ==
-				XFS_BUF_ADDR(bplist[0]));
-		} else {
-			num = radix_tree_gang_lookup_tag(queue,
-					(void**)&bplist[0], fsbno,
-					MAX_BUFS / 4, 0);
-			if (num == 0)
-				return;
+		bplist[0] = btree_lookup(queue, fsbno);
+		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
+			if (which != PF_META_ONLY ||
+			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+				num++;
+			bplist[num] = btree_lookup_next(queue, &fsbno);
 		}
+		if (!num)
+			return;
 
 		/*
 		 * do a big read if 25% of the potential buffer is useful,
@@ -467,7 +463,7 @@ pf_batch_read(
 		}
 
 		for (i = 0; i < num; i++) {
-			if (radix_tree_delete(queue, XFS_DADDR_TO_FSB(mp,
+			if (btree_delete(queue, XFS_DADDR_TO_FSB(mp,
 					XFS_BUF_ADDR(bplist[i]))) == NULL)
 				do_error(_("prefetch corruption\n"));
 		}
@@ -570,7 +566,7 @@ pf_io_worker(
 		return NULL;
 
 	pthread_mutex_lock(&args->lock);
-	while (!args->queuing_done || args->primary_io_queue.height) {
+	while (!args->queuing_done || btree_find(args->primary_io_queue, 0, NULL)) {
 
 #ifdef XR_PF_TRACE
 		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
@@ -696,8 +692,8 @@ pf_queuing_worker(
 #endif
 	pthread_mutex_lock(&args->lock);
 
-	ASSERT(args->primary_io_queue.height == 0);
-	ASSERT(args->secondary_io_queue.height == 0);
+	ASSERT(btree_find(args->primary_io_queue, 0, NULL) == NULL);
+	ASSERT(btree_find(args->secondary_io_queue, 0, NULL) == NULL);
 
 	args->prefetch_done = 1;
 	if (args->next_args)
@@ -755,8 +751,8 @@ start_inode_prefetch(
 
 	args = calloc(1, sizeof(prefetch_args_t));
 
-	INIT_RADIX_TREE(&args->primary_io_queue, 0);
-	INIT_RADIX_TREE(&args->secondary_io_queue, 0);
+	btree_init(&args->primary_io_queue);
+	btree_init(&args->secondary_io_queue);
 	if (pthread_mutex_init(&args->lock, NULL) != 0)
 		do_error(_("failed to initialize prefetch mutex\n"));
 	if (pthread_cond_init(&args->start_reading, NULL) != 0)
@@ -835,6 +831,8 @@ cleanup_inode_prefetch(
 	pthread_cond_destroy(&args->start_reading);
 	pthread_cond_destroy(&args->start_processing);
 	sem_destroy(&args->ra_count);
+	btree_destroy(args->primary_io_queue);
+	btree_destroy(args->secondary_io_queue);
 
 	free(args);
 }

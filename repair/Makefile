@@ -9,15 +9,15 @@ LSRCFILES = README
 
 LTCOMMAND = xfs_repair
 
-HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
-	dir2.h err_protos.h globals.h incore.h protos.h rt.h \
-	progress.h scan.h versions.h prefetch.h radix-tree.h threads.h
+HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h btree.h \
+	dinode.h dir.h dir2.h err_protos.h globals.h incore.h protos.h rt.h \
+	progress.h scan.h versions.h prefetch.h threads.h
 
-CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
-	dinode.c dir.c dir2.c globals.c incore.c \
+CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
+	dino_chunks.c dinode.c dir.c dir2.c globals.c incore.c \
 	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
-	progress.c prefetch.c radix-tree.c rt.c sb.c scan.c threads.c \
+	progress.c prefetch.c rt.c sb.c scan.c threads.c \
 	versions.c xfs_repair.c
 
 LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
