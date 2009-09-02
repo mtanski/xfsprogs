@@ -123,7 +123,7 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 	for (agbno = 0; agbno < ag_end; agbno++)  {
 #if 0
 		old_state = state;
-		state = get_agbno_state(mp, agno, agbno);
+		state = get_bmap(agno, agbno);
 		if (state != old_state)  {
 			fprintf(stderr, "agbno %u - new state is %d\n",
 					agbno, state);
@@ -142,7 +142,7 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 			}
 
 		}
-		if (get_agbno_state(mp, agno, agbno) < XR_E_INUSE)  {
+		if (get_bmap(agno, agbno) < XR_E_INUSE)  {
 			free_blocks++;
 			if (in_extent == 0)  {
 				/*

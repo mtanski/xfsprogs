@@ -176,7 +176,7 @@ phase2(xfs_mount_t *mp)
 		 * also mark blocks
 		 */
 		for (b = 0; b < mp->m_ialloc_blks; b++)  {
-			set_agbno_state(mp, 0,
+			set_bmap(0,
 				b + XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
 				XR_E_INO);
 		}

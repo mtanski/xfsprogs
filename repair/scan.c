@@ -148,6 +148,9 @@ scanfunc_bmap(
 	xfs_dfiloff_t		last_key;
 	char			*forkname;
 	int			numrecs;
+	xfs_agnumber_t		agno;
+	xfs_agblock_t		agbno;
+	int			state;
 
 	if (whichfork == XFS_DATA_FORK)
 		forkname = _("data");
@@ -229,11 +232,15 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		bm_cursor->level[level].right_fsbno =
 					be64_to_cpu(block->bb_u.l.bb_rightsib);
 
-		switch (get_fsbno_state(mp, bno))  {
+		agno = XFS_FSB_TO_AGNO(mp, bno);
+		agbno = XFS_FSB_TO_AGBNO(mp, bno);
+
+		state = get_bmap(agno, agbno);
+		switch (state) {
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_fsbno_state(mp, bno, XR_E_INUSE);
+			set_bmap(agno, agbno, XR_E_INUSE);
 			break;
 		case XR_E_FS_MAP:
 		case XR_E_INUSE:
@@ -245,19 +252,17 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 			 * we made it here, the block probably
 			 * contains btree data.
 			 */
-			set_fsbno_state(mp, bno, XR_E_MULT);
+			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
 		_("inode 0x%llx bmap block 0x%llx claimed, state is %d\n"),
-				ino, (__uint64_t) bno,
-				get_fsbno_state(mp, bno));
+				ino, (__uint64_t) bno, state);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE_FS:
-			set_fsbno_state(mp, bno, XR_E_MULT);
+			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
 		_("inode 0x%llx bmap block 0x%llx claimed, state is %d\n"),
-				ino, (__uint64_t) bno,
-				get_fsbno_state(mp, bno));
+				ino, (__uint64_t) bno, state);
 			/*
 			 * if we made it to here, this is probably a bmap block
 			 * that is being used by *another* file as a bmap block
@@ -272,8 +277,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		default:
 			do_warn(
 		_("bad state %d, inode 0x%llx bmap block 0x%llx\n"),
-				get_fsbno_state(mp, bno),
-				ino, (__uint64_t) bno);
+				state, ino, (__uint64_t) bno);
 			break;
 		}
 	} else  {
@@ -478,19 +482,15 @@ scanfunc_allocbt(
 	/*
 	 * check for btree blocks multiply claimed
 	 */
-	state = get_agbno_state(mp, agno, bno);
-
-	switch (state)  {
-	case XR_E_UNKNOWN:
-		set_agbno_state(mp, agno, bno, XR_E_FS_MAP);
-		break;
-	default:
-		set_agbno_state(mp, agno, bno, XR_E_MULT);
+	state = get_bmap(agno, bno);
+	switch (state != XR_E_UNKNOWN)  {
+		set_bmap(agno, bno, XR_E_MULT);
 		do_warn(
 _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 				name, state, agno, bno, suspect);
 		return;
 	}
+	set_bmap(agno, bno, XR_E_FS_MAP);
 
 	numrecs = be16_to_cpu(block->bb_numrecs);
 
@@ -525,11 +525,10 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 				continue;
 
 			for ( ; b < end; b++)  {
-				state = get_agbno_state(mp, agno, b);
+				state = get_bmap(agno, b);
 				switch (state) {
 				case XR_E_UNKNOWN:
-					set_agbno_state(mp, agno, b,
-							XR_E_FREE1);
+					set_bmap(agno, b, XR_E_FREE1);
 					break;
 				case XR_E_FREE1:
 					/*
@@ -537,8 +536,7 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 					 * FREE1 blocks later
 					 */
 					if (magic == XFS_ABTC_MAGIC) {
-						set_agbno_state(mp, agno, b,
-								XR_E_FREE);
+						set_bmap(agno, b, XR_E_FREE);
 						break;
 					}
 				default:
@@ -700,13 +698,14 @@ _("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
 		     j < XFS_INODES_PER_CHUNK;
 		     j += mp->m_sb.sb_inopblock)  {
 			agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
-			state = get_agbno_state(mp, agno, agbno);
+
+			state = get_bmap(agno, agbno);
 			if (state == XR_E_UNKNOWN)  {
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
+				set_bmap(agno, agbno, XR_E_INO);
 			} else if (state == XR_E_INUSE_FS && agno == 0 &&
 				   ino + j >= first_prealloc_ino &&
 				   ino + j < last_prealloc_ino)  {
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
+				set_bmap(agno, agbno, XR_E_INO);
 			} else  {
 				do_warn(
 _("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
@@ -843,16 +842,15 @@ scanfunc_ino(
 	 * check for btree blocks multiply claimed, any unknown/free state
 	 * is ok in the bitmap block.
 	 */
-	state = get_agbno_state(mp, agno, bno);
-
+	state = get_bmap(agno, bno);
 	switch (state)  {
 	case XR_E_UNKNOWN:
 	case XR_E_FREE1:
 	case XR_E_FREE:
-		set_agbno_state(mp, agno, bno, XR_E_FS_MAP);
+		set_bmap(agno, bno, XR_E_FS_MAP);
 		break;
 	default:
-		set_agbno_state(mp, agno, bno, XR_E_MULT);
+		set_bmap(agno, bno, XR_E_MULT);
 		do_warn(
 _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			state, agno, bno, suspect);
@@ -954,7 +952,7 @@ scan_freelist(
 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
 	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
 	    XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
-		set_agbno_state(mp, agno, XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+		set_bmap(agno, XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
 
 	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
@@ -972,7 +970,7 @@ scan_freelist(
 	for (;;) {
 		bno = be32_to_cpu(agfl->agfl_bno[i]);
 		if (verify_agbno(mp, agno, bno))
-			set_agbno_state(mp, agno, bno, XR_E_FREE);
+			set_bmap(agno, bno, XR_E_FREE);
 		else
 			do_warn(_("bad agbno %u in agfl, agno %d\n"),
 				bno, agno);

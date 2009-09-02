@@ -151,7 +151,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 
 		pthread_mutex_lock(&ag_locks[agno]);
 
-		switch (state = get_agbno_state(mp, agno, agbno))  {
+		state = get_bmap(agno, agbno);
+		switch (state) {
 		case XR_E_INO:
 			do_warn(
 		_("uncertain inode block %d/%d already known\n"),
@@ -160,7 +161,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			set_bmap(agno, agbno, XR_E_INO);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -172,14 +173,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, agbno, state);
-			set_agbno_state(mp, agno, agbno, XR_E_MULT);
+			set_bmap(agno, agbno, XR_E_MULT);
 			pthread_mutex_unlock(&ag_locks[agno]);
 			return(0);
 		default:
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, agbno, state);
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			set_bmap(agno, agbno, XR_E_INO);
 			break;
 		}
 
@@ -434,7 +435,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	pthread_mutex_lock(&ag_locks[agno]);
 	for (j = 0, cur_agbno = chunk_start_agbno;
 			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
+		state = get_bmap(agno, cur_agbno);
+		switch (state) {
 		case XR_E_MULT:
 		case XR_E_INUSE:
 		case XR_E_INUSE_FS:
@@ -442,7 +444,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_agbno_state(mp, agno, cur_agbno, XR_E_MULT);
+			set_bmap(agno, cur_agbno, XR_E_MULT);
 			j = 1;
 			break;
 		case XR_E_INO:
@@ -486,7 +488,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 
 	for (cur_agbno = chunk_start_agbno;
 			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
+		state = get_bmap(agno, cur_agbno);
+		switch (state) {
 		case XR_E_INO:
 			do_error(
 		_("uncertain inode block %llu already known\n"),
@@ -495,7 +498,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_agbno_state(mp, agno, cur_agbno, XR_E_INO);
+			set_bmap(agno, cur_agbno, XR_E_INO);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -509,7 +512,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_agbno_state(mp, agno, cur_agbno, XR_E_INO);
+			set_bmap(agno, cur_agbno, XR_E_INO);
 			break;
 		}
 	}
@@ -742,22 +745,23 @@ process_inode_chunk(
 	 * mark block as an inode block in the incore bitmap
 	 */
 	pthread_mutex_lock(&ag_locks[agno]);
-	switch (state = get_agbno_state(mp, agno, agbno))  {
-		case XR_E_INO:	/* already marked */
-			break;
-		case XR_E_UNKNOWN:
-		case XR_E_FREE:
-		case XR_E_FREE1:
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
-			break;
-		case XR_E_BAD_STATE:
-			do_error(_("bad state in block map %d\n"), state);
-			break;
-		default:
-			set_agbno_state(mp, agno, agbno, XR_E_MULT);
-			do_warn(_("inode block %llu multiply claimed, state was %d\n"),
-				XFS_AGB_TO_FSB(mp, agno, agbno), state);
-			break;
+	state = get_bmap(agno, agbno);
+	switch (state) {
+	case XR_E_INO:	/* already marked */
+		break;
+	case XR_E_UNKNOWN:
+	case XR_E_FREE:
+	case XR_E_FREE1:
+		set_bmap(agno, agbno, XR_E_INO);
+		break;
+	case XR_E_BAD_STATE:
+		do_error(_("bad state in block map %d\n"), state);
+		break;
+	default:
+		set_bmap(agno, agbno, XR_E_MULT);
+		do_warn(_("inode block %llu multiply claimed, state was %d\n"),
+			XFS_AGB_TO_FSB(mp, agno, agbno), state);
+		break;
 	}
 	pthread_mutex_unlock(&ag_locks[agno]);
 
@@ -923,20 +927,21 @@ process_inode_chunk(
 			agbno++;
 
 			pthread_mutex_lock(&ag_locks[agno]);
-			switch (state = get_agbno_state(mp, agno, agbno))  {
+			state = get_bmap(agno, agbno);
+			switch (state) {
 			case XR_E_INO:	/* already marked */
 				break;
 			case XR_E_UNKNOWN:
 			case XR_E_FREE:
 			case XR_E_FREE1:
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
+				set_bmap(agno, agbno, XR_E_INO);
 				break;
 			case XR_E_BAD_STATE:
 				do_error(_("bad state in block map %d\n"),
 					state);
 				break;
 			default:
-				set_agbno_state(mp, agno, agbno, XR_E_MULT);
+				set_bmap(agno, agbno, XR_E_MULT);
 				do_warn(_("inode block %llu multiply claimed, "
 					  "state was %d\n"),
 					XFS_AGB_TO_FSB(mp, agno, agbno), state);

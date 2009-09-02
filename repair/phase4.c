@@ -247,8 +247,7 @@ phase4(xfs_mount_t *mp)
 				}
 			}
 
-			bstate = get_agbno_state(mp, i, j);
-
+			bstate = get_bmap(i, j);
 			switch (bstate)  {
 			case XR_E_BAD_STATE:
 			default:
@@ -305,9 +304,7 @@ phase4(xfs_mount_t *mp)
 	rt_len = 0;
 
 	for (bno = 0; bno < mp->m_sb.sb_rextents; bno++)  {
-
-		bstate = get_rtbno_state(mp, bno);
-
+		bstate = get_rtbmap(bno);
 		switch (bstate)  {
 		case XR_E_BAD_STATE:
 		default:
@@ -366,7 +363,7 @@ phase4(xfs_mount_t *mp)
 		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
 						sizeof(__uint64_t)));
 		for (j = 0; j < ag_hdr_block; j++)
-			set_agbno_state(mp, i, j, XR_E_INUSE_FS);
+			set_bmap(i, j, XR_E_INUSE_FS);
 	}
 	set_bmap_rt(mp->m_sb.sb_rextents);
 	set_bmap_log(mp);

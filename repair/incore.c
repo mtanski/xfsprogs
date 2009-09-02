@@ -158,7 +158,8 @@ set_bmap_log(xfs_mount_t *mp)
 	logend = mp->m_sb.sb_logstart + mp->m_sb.sb_logblocks;
 
 	for (i = mp->m_sb.sb_logstart; i < logend ; i++)  {
-		set_fsbno_state(mp, i, XR_E_INUSE_FS);
+		set_bmap(XFS_FSB_TO_AGNO(mp, i),
+			 XFS_FSB_TO_AGBNO(mp, i), XR_E_INUSE_FS);
 	}
 
 	return;
@@ -178,7 +179,7 @@ set_bmap_fs(xfs_mount_t *mp)
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
 		for (j = 0; j < end; j++)
-			set_agbno_state(mp, i, j, XR_E_INUSE_FS);
+			set_bmap(i, j, XR_E_INUSE_FS);
 
 	return;
 }
@@ -200,7 +201,7 @@ set_bmap_fs_bt(xfs_mount_t *mp)
 		 * account for btree roots
 		 */
 		for (j = begin; j < end; j++)
-			set_agbno_state(mp, i, j, XR_E_INUSE_FS);
+			set_bmap(i, j, XR_E_INUSE_FS);
 	}
 
 	return;
@@ -226,44 +227,3 @@ incore_init(xfs_mount_t *mp)
 
 	return;
 }
-
-#if defined(XR_BMAP_TRACE) || defined(XR_BMAP_DBG)
-int
-get_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-		xfs_agblock_t ag_blockno)
-{
-	__uint64_t *addr;
-
-	addr = ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM;
-
-	return((*addr >> (((ag_blockno)%XR_BB_NUM)*XR_BB)) & XR_BB_MASK);
-}
-
-void set_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-	xfs_agblock_t ag_blockno, int state)
-{
-	__uint64_t *addr;
-
-	addr = ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM;
-
-	*addr = (((*addr) &
-	  (~((__uint64_t) XR_BB_MASK << (((ag_blockno)%XR_BB_NUM)*XR_BB)))) |
-	 (((__uint64_t) (state)) << (((ag_blockno)%XR_BB_NUM)*XR_BB)));
-}
-
-int
-get_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno)
-{
-	return(get_agbno_state(mp, XFS_FSB_TO_AGNO(mp, blockno),
-			XFS_FSB_TO_AGBNO(mp, blockno)));
-}
-
-void
-set_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno, int state)
-{
-	set_agbno_state(mp, XFS_FSB_TO_AGNO(mp, blockno),
-		XFS_FSB_TO_AGBNO(mp, blockno), state);
-
-	return;
-}
-#endif
