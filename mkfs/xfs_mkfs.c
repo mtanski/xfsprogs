@@ -27,7 +27,7 @@
  */
 static void conflict(char opt, char *tab[], int oldidx, int newidx);
 static void illegal(char *value, char *opt);
-static void reqval(char opt, char *tab[], int idx);
+static __attribute__((noreturn)) void reqval(char opt, char *tab[], int idx);
 static void respec(char opt, char *tab[], int idx);
 static void unknown(char opt, char *s);
 static int  ispow2(unsigned int i);
@@ -2464,7 +2464,7 @@ ispow2(
 	return (i & (i - 1)) == 0;
 }
 
-static void
+static void __attribute__((noreturn))
 reqval(
 	char		opt,
 	char		*tab[],
