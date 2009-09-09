@@ -19,7 +19,10 @@ do
 	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
 	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
 	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
-	V)	DB_OPTS=$DB_OPTS" -V";;
+	V)	xfs_db -p xfs_admin -V
+		status=$?
+		exit $status
+		;;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;
