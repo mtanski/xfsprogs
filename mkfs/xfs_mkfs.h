@@ -68,7 +68,6 @@
 
 
 /* xfs_mkfs.c */
-extern void usage (void);
 extern int isdigits (char *str);
 extern long long cvtnum (unsigned int blocksize,
 			 unsigned int sectorsize, char *s);

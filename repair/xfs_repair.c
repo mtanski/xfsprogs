@@ -339,18 +339,6 @@ process_args(int argc, char **argv)
 		usage();
 }
 
-void
-do_msg(int do_abort, char const *msg, va_list args)
-{
-	vfprintf(stderr, msg, args);
-
-	if (do_abort)  {
-		if (dumpcore)
-			abort();
-		exit(1);
-	}
-}
-
 void __attribute__((noreturn))
 do_error(char const *msg, ...)
 {
@@ -359,7 +347,10 @@ do_error(char const *msg, ...)
 	fprintf(stderr, _("\nfatal error -- "));
 
 	va_start(args, msg);
-	do_msg(1, msg, args);
+	vfprintf(stderr, msg, args);
+	if (dumpcore)
+		abort();
+	exit(1);
 }
 
 /*
@@ -372,7 +363,10 @@ do_abort(char const *msg, ...)
 	va_list args;
 
 	va_start(args, msg);
-	do_msg(1, msg, args);
+	vfprintf(stderr, msg, args);
+	if (dumpcore)
+		abort();
+	exit(1);
 }
 
 void
@@ -383,7 +377,7 @@ do_warn(char const *msg, ...)
 	fs_is_dirty = 1;
 
 	va_start(args, msg);
-	do_msg(0, msg, args);
+	vfprintf(stderr, msg, args);
 	va_end(args);
 }
 
@@ -395,7 +389,7 @@ do_log(char const *msg, ...)
 	va_list args;
 
 	va_start(args, msg);
-	do_msg(0, msg, args);
+	vfprintf(stderr, msg, args);
 	va_end(args);
 }
 
