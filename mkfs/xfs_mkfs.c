@@ -27,6 +27,7 @@
  */
 static void conflict(char opt, char *tab[], int oldidx, int newidx);
 static void illegal(char *value, char *opt);
+static __attribute__((noreturn)) void usage (void);
 static __attribute__((noreturn)) void reqval(char opt, char *tab[], int idx);
 static void respec(char opt, char *tab[], int idx);
 static void unknown(char opt, char *s);
@@ -2554,7 +2555,7 @@ cvtnum(
 	return -1LL;
 }
 
-void
+static void __attribute__((noreturn))
 usage( void )
 {
 	fprintf(stderr, _("Usage: %s\n\
