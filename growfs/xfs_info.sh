@@ -10,7 +10,10 @@ while getopts "t:V" c
 do
 	case $c in
 	t)	OPTS="-t $OPTARG" ;;
-	V)	OPTS="-V $OPTARG" ;;
+	V)	xfs_growfs -p xfs_info -V
+		status=$?
+		exit $status
+		;;
 	*)	echo $USAGE 1>&2
 		exit 2
 		;;

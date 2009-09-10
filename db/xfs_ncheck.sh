@@ -14,9 +14,12 @@ do
 	s)	OPTS=$OPTS"-s ";;
 	i)	OPTS=$OPTS"-i "$OPTARG" ";;
 	v)	OPTS=$OPTS"-v ";;
-	V)	OPTS=$OPTS"-V ";;
 	f)	DBOPTS=$DBOPTS" -f";;
 	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
+	V)	xfs_db -p xfs_ncheck -V
+		status=$?
+		exit $status
+		;;
 	\?)	echo $USAGE 1>&2
 		exit 2
 		;;
