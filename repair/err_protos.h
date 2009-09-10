@@ -16,7 +16,11 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-void	do_abort(char const *, ...);		/* abort, internal error */
-void	do_error(char const *, ...);		/* abort, system error */
-void	do_warn(char const *, ...);		/* issue warning */
-void	do_log(char const *, ...);		/* issue log message */
+/* abort, internal error */
+void  __attribute__((noreturn)) do_abort(char const *, ...);
+/* abort, system error */
+void  __attribute__((noreturn)) do_error(char const *, ...);
+/* issue warning */
+void do_warn(char const *, ...);
+/* issue log message */
+void do_log(char const *, ...);

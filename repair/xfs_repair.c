@@ -351,7 +351,7 @@ do_msg(int do_abort, char const *msg, va_list args)
 	}
 }
 
-void
+void __attribute__((noreturn))
 do_error(char const *msg, ...)
 {
 	va_list args;
@@ -366,7 +366,7 @@ do_error(char const *msg, ...)
  * like do_error, only the error is internal, no system
  * error so no oserror processing
  */
-void
+void __attribute__((noreturn))
 do_abort(char const *msg, ...)
 {
 	va_list args;
