@@ -1190,7 +1190,7 @@ packfile(char *fname, char *tname, int fd,
 			}
 			if (nfrags) {
 				/* Do a matching write to the tmp file */
-				wc = wc_b4;
+				wc_b4 = wc;
 				if (((wc = write(ffd, fbuf, wc)) != wc_b4)) {
 					fsrprintf(_("bad write of %d bytes "
 						"to %s: %s\n"),
