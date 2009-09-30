@@ -22,6 +22,8 @@ MANDIRT = *.[1-9].gz
 PODIRT = *.tmpo *.mo
 CDIRT = $(OBJECTS) $(LTOBJECTS) $(LTCOMMAND) $(LTLIBRARY)
 DIRT = $(LDIRT) $(DEPDIRT) $(MANDIRT) $(PODIRT) $(CDIRT)
+LIBDIRT = .libs
+DIRDIRT = $(LDIRDIRT) $(LIBDIRT)
 
 OBJECTS = $(ASFILES:.s=.o) \
 	  $(CFILES:.c=.o) \
@@ -138,7 +140,7 @@ DIST_MAKERULE = \
 
 SOURCE_MAKERULE = \
 	@test -z "$$DIR" && DIR="."; \
-	for f in $(SRCFILES) ""; do \
+	for f in $(SRCFILES) $(POTHEAD) ""; do \
 	    test -z "$$f" && break; \
 	    test -L "$$f" || $(ECHO) $$DIR/$$f; \
 	done; \

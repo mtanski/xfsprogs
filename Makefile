@@ -9,9 +9,7 @@ ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
 endif
 
-CONFIGURE = aclocal.m4 configure config.guess config.sub configure install-sh \
-	    ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
-	    m4/ltversion.m4 m4/lt~obsolete.m4
+CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
 LSRCFILES = configure.in Makepkgs release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \

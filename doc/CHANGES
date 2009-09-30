@@ -1,3 +1,7 @@
+xfsprogs-3.0.4 (17 September 2009)
+	- Debian packaging updates.
+	- Rework Makepkgs and Makefiles to improve deb generation.
+
 xfsprogs-3.0.3 (30 August 2009)
 	- Fix unaligned accesses in libxfs.
 	- Various small fixes to xfs_db, xfs_repair and xfs_io.
