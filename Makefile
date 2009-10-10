@@ -58,18 +58,7 @@ configure:
 	autoconf
 
 include/builddefs: configure
-	./configure \
-		--prefix=/ \
-		--exec-prefix=/ \
-		--sbindir=/sbin \
-		--bindir=/usr/sbin \
-		--libdir=/lib \
-		--libexecdir=/usr/lib \
-		--enable-lib64=yes \
-		--includedir=/usr/include \
-		--mandir=/usr/share/man \
-		--datadir=/usr/share \
-		$$LOCAL_CONFIGURE_OPTIONS
+	./configure $$LOCAL_CONFIGURE_OPTIONS
 	touch .census
 
 include/platform_defs.h: include/builddefs
