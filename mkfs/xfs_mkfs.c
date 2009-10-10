@@ -17,10 +17,24 @@
  */
 
 #include <xfs/libxfs.h>
+#include <ctype.h>
+#ifdef ENABLE_BLKID
+#include <blkid/blkid.h>
+#else
 #include <disk/fstyp.h>
 #include <disk/volume.h>
-#include <ctype.h>
+#endif
 #include "xfs_mkfs.h"
+
+/*
+ * Device topology information.
+ */
+struct fs_topology {
+	int	dsunit;		/* stripe unit - data subvolume */
+	int	dswidth;	/* stripe width - data subvolume */
+	int	rtswidth;	/* stripe width - rt subvolume */
+	int	sectoralign;
+};
 
 /*
  * Prototypes for internal functions.
@@ -267,6 +281,105 @@ calc_stripe_factors(
 	}
 }
 
+#ifdef ENABLE_BLKID
+static int
+check_overwrite(
+	char		*device)
+{
+	const char	*type;
+	blkid_probe	pr;
+	int		ret = 0;
+
+	if (!device || !*device)
+		return 0;
+
+	pr = blkid_new_probe_from_filename(device);
+	if (!pr)
+		return -1;
+
+	if (blkid_probe_enable_partitions(pr, 1))
+		goto out_free_probe;
+
+	if (blkid_do_fullprobe(pr))
+		goto out_free_probe;
+
+	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
+		fprintf(stderr,
+			_("%s: %s appears to contain an existing "
+			"filesystem (%s).\n"), progname, device, type);
+		ret = 1;
+	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
+		fprintf(stderr,
+			_("%s: %s appears to contain a partition "
+			"table (%s).\n"), progname, device, type);
+		ret = 1;
+	}
+
+out_free_probe:
+	blkid_free_probe(pr);
+	return ret;
+}
+
+static void blkid_get_topology(const char *device, int *sunit, int *swidth)
+{
+	blkid_topology tp;
+	blkid_probe pr;
+	unsigned long val;
+
+	pr = blkid_new_probe_from_filename(device);
+	if (!pr)
+		return;
+
+	tp = blkid_probe_get_topology(pr);
+	if (!tp)
+		goto out_free_probe;
+
+	/*
+	 * Blkid reports the information in terms of bytes, but we want it in
+	 * terms of 512 bytes blocks (just to convert it to bytes later..)
+	 *
+	 * If the reported values are just the normal 512 byte block size
+	 * do not bother to report anything.  It will just causes warnings
+	 * if people specifier larger stripe units or widths manually.
+	 */
+	val = blkid_topology_get_minimum_io_size(tp) >> 9;
+	if (val > 1)
+		*sunit = val;
+	val = blkid_topology_get_optimal_io_size(tp) >> 9;
+	if (val > 1)
+		*swidth = val;
+
+	if (blkid_topology_get_alignment_offset(tp) != 0) {
+		fprintf(stderr,
+			_("warning: device is not properly aligned %s\n"),
+			device);
+	}
+
+	blkid_free_probe(pr);
+	return;
+
+out_free_probe:
+	blkid_free_probe(pr);
+	fprintf(stderr,
+		_("warning: unable to probe device toplology for device %s\n"),
+		device);
+}
+
+static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
+{
+	if (!xi->disfile) {
+		const char *dfile = xi->volname ? xi->volname : xi->dname;
+
+		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth);
+	}
+
+	if (xi->rtname && !xi->risfile) {
+		int dummy;
+
+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth);
+	}
+}
+#else /* ENABLE_BLKID */
 static int
 check_overwrite(
 	char		*device)
@@ -289,6 +402,24 @@ check_overwrite(
 	}
 	return 0;
 }
+
+static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
+{
+	char *dfile = xi->volname ? xi->volname : xi->dname;
+
+	if (!xi->disfile) {
+		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
+				&ft->dsunit, &ft->dswidth, &ft->sectoralign);
+	}
+
+	if (xi->rtname && !xi->risfile) {
+		int dummy1;
+
+		get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1,
+					  &ft->rtswidth, &dummy1);
+	}
+}
+#endif /* ENABLE_BLKID */
 
 static void
 fixup_log_stripe_unit(
@@ -692,7 +823,6 @@ main(
 	char			*rtfile;
 	char			*rtsize;
 	xfs_sb_t		*sbp;
-	int			sectoralign;
 	int			sectorlog;
 	unsigned int		sectorsize;
 	__uint64_t		sector_mask;
@@ -702,8 +832,7 @@ main(
 	uuid_t			uuid;
 	int			worst_freelist;
 	libxfs_init_t		xi;
-	int 			xlv_dsunit;
-	int			xlv_dswidth;
+	struct fs_topology	ft;
 	int			lazy_sb_counters;
 
 	progname = basename(argv[0]);
@@ -1393,12 +1522,10 @@ main(
 		usage();
 	}
 
-	sectoralign = 0;
-	xlv_dsunit = xlv_dswidth = 0;
-	if (!xi.disfile)
-		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
-				&xlv_dsunit, &xlv_dswidth, &sectoralign);
-	if (sectoralign) {
+	memset(&ft, 0, sizeof(ft));
+	get_topology(&xi, &ft);
+
+	if (ft.sectoralign) {
 		sectorsize = blocksize;
 		sectorlog = libxfs_highbit32(sectorsize);
 		if (loginternal) {
@@ -1546,14 +1673,15 @@ main(
 		 * and the underlying volume is striped, then set rtextblocks
 		 * to the stripe width.
 		 */
-		int		dummy1, rswidth;
+		int		rswidth;
 		__uint64_t	rtextbytes;
 
-		dummy1 = rswidth = 0;
+		rswidth = 0;
 
 		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
-			get_subvol_stripe_wrapper(dfile, SVTYPE_RT, &dummy1,
-						  &rswidth, &dummy1);
+			rswidth = ft.rtswidth;
+		else
+			rswidth = 0;
 
 		/* check that rswidth is a multiple of fs blocksize */
 		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
@@ -1794,27 +1922,27 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		agsize = dblocks / agcount + (dblocks % agcount != 0);
 	else
 		calc_default_ag_geometry(blocklog, dblocks,
-				xlv_dsunit | xlv_dswidth, &agsize, &agcount);
+				ft.dsunit | ft.dswidth, &agsize, &agcount);
 
 	if (!nodsflag) {
 		if (dsunit) {
-			if (xlv_dsunit && xlv_dsunit != dsunit) {
+			if (ft.dsunit && ft.dsunit != dsunit) {
 				fprintf(stderr,
 					_("%s: Specified data stripe unit %d "
 					"is not the same as the volume stripe "
 					"unit %d\n"),
-					progname, dsunit, xlv_dsunit);
+					progname, dsunit, ft.dsunit);
 			}
-			if (xlv_dswidth && xlv_dswidth != dswidth) {
+			if (ft.dswidth && ft.dswidth != dswidth) {
 				fprintf(stderr,
 					_("%s: Specified data stripe width %d "
 					"is not the same as the volume stripe "
 					"width %d\n"),
-					progname, dswidth, xlv_dswidth);
+					progname, dswidth, ft.dswidth);
 			}
 		} else {
-			dsunit = xlv_dsunit;
-			dswidth = xlv_dswidth;
+			dsunit = ft.dsunit;
+			dswidth = ft.dswidth;
 			nodsflag = 1;
 		}
 	} /* else dsunit & dswidth can't be set if nodsflag is set */

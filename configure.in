@@ -35,6 +35,12 @@ AC_ARG_ENABLE(termcap,
 	test $enable_termcap = yes && libtermcap="-ltermcap",)
 AC_SUBST(libtermcap)
 
+AC_ARG_ENABLE(blkid,
+[ --enable-blkid=[yes/no] Enable block device id library [default=no]],
+	test $enable_blkid = yes && libblkid="-lblkid",)
+AC_SUBST(libblkid)
+AC_SUBST(enable_blkid)
+
 AC_ARG_ENABLE(lib64,
 [ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
 	enable_lib64=yes)
