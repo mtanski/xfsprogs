@@ -736,6 +736,20 @@ done:
 	free(buf);
 }
 
+static void
+discard_blocks(dev_t dev, __uint64_t nsectors)
+{
+	int fd;
+
+	/*
+	 * We intentionally ignore errors from the discard ioctl.  It is
+	 * not necessary for the mkfs functionality but just an optimization.
+	 */
+	fd = libxfs_device_to_fd(dev);
+	if (fd > 0)
+		platform_discard_blocks(fd, 0, nsectors << 9);
+}
+
 int
 main(
 	int			argc,
@@ -812,6 +826,7 @@ main(
 	int			nvflag;
 	int			nci;
 	int			Nflag;
+	int			discard = 1;
 	char			*p;
 	char			*protofile;
 	char			*protostring;
@@ -870,7 +885,7 @@ main(
 	xi.isdirect = LIBXFS_DIRECT;
 	xi.isreadonly = LIBXFS_EXCLUSIVELY;
 
-	while ((c = getopt(argc, argv, "b:d:i:l:L:n:Np:qr:s:CfV")) != EOF) {
+	while ((c = getopt(argc, argv, "b:d:i:l:L:n:KNp:qr:s:CfV")) != EOF) {
 		switch (c) {
 		case 'C':
 		case 'f':
@@ -1386,6 +1401,9 @@ main(
 		case 'N':
 			Nflag = 1;
 			break;
+		case 'K':
+			discard = 0;
+			break;
 		case 'p':
 			if (protofile)
 				respec('p', NULL, 0);
@@ -1771,6 +1789,14 @@ main(
 				progname);
 			exit(1);
 		}
+	}
+
+	if (discard) {
+		discard_blocks(xi.ddev, xi.dsize);
+		if (xi.rtdev)
+			discard_blocks(xi.rtdev, xi.rtsize);
+		if (xi.logdev && xi.logdev != xi.ddev)
+			discard_blocks(xi.logdev, xi.logBBsize);
 	}
 
 	if (!liflag && !ldflag)

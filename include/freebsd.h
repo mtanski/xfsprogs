@@ -139,4 +139,10 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
 	memcpy(dst, src, sizeof(uuid_t));
 }
 
+static __inline__ int
+platform_discard_blocks(int fd, off64_t start, off64_t end)
+{
+	return 0;
+}
+
 #endif	/* __XFS_FREEBSD_H__ */
