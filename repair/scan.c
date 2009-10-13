@@ -449,7 +449,6 @@ scanfunc_allocbt(
 	__uint32_t		magic)
 {
 	const char 		*name;
-	xfs_agblock_t		b, e;
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
@@ -511,20 +510,21 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
-			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
-			    be32_to_cpu(rp[i].ar_startblock) == 0 ||
-			    !verify_agbno(mp, agno,
-				be32_to_cpu(rp[i].ar_startblock)) ||
-			    be32_to_cpu(rp[i].ar_blockcount) >
-					MAXEXTLEN)
+			xfs_agblock_t		b, end;
+			xfs_extlen_t		len;
+
+			b = be32_to_cpu(rp[i].ar_startblock);
+			len = be32_to_cpu(rp[i].ar_blockcount);
+			end = b + len;
+
+			if (b == 0 || !verify_agbno(mp, agno, b))
+				continue;
+			if (len == 0 || len > MAXEXTLEN)
+				continue;
+			if (!verify_agbno(mp, agno, end - 1))
 				continue;
 
-			e = be32_to_cpu(rp[i].ar_startblock) +
-				be32_to_cpu(rp[i].ar_blockcount);
-			if (!verify_agbno(mp, agno, e - 1))
-				continue;
-			for (b = be32_to_cpu(rp[i].ar_startblock);
-			     b < e; b++)  {
+			for ( ; b < end; b++)  {
 				state = get_agbno_state(mp, agno, b);
 				switch (state) {
 				case XR_E_UNKNOWN:
@@ -581,6 +581,8 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 	}
 
 	for (i = 0; i < numrecs; i++)  {
+		xfs_agblock_t		bno = be32_to_cpu(pp[i]);
+
 		/*
 		 * XXX - put sibling detection right here.
 		 * we know our sibling chain is good.  So as we go,
@@ -590,11 +592,11 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 		 * pointer mismatch, try and extract as much data
 		 * as possible.
 		 */
-		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
-							be32_to_cpu(pp[i])))
-			scan_sbtree(be32_to_cpu(pp[i]), level, agno, suspect,
+		if (bno != 0 && verify_agbno(mp, agno, bno)) {
+			scan_sbtree(bno, level, agno, suspect,
 				    (magic == XFS_ABTB_MAGIC) ?
 				     scanfunc_bno : scanfunc_cnt, 0);
+		}
 	}
 }
 
