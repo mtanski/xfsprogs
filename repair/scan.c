@@ -944,23 +944,26 @@ scan_freelist(
 {
 	xfs_agfl_t	*agfl;
 	xfs_buf_t	*agflbuf;
+	xfs_agnumber_t	agno;
 	xfs_agblock_t	bno;
 	int		count;
 	int		i;
 
+	agno = be32_to_cpu(agf->agf_seqno);
+
 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-			XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-			XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
-		set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
-				XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+	    XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
+		set_agbno_state(mp, agno, XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+
 	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
-	agflbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp,
-				be32_to_cpu(agf->agf_seqno),
-				XFS_AGFL_DADDR(mp)), XFS_FSS_TO_BB(mp, 1), 0);
+
+	agflbuf = libxfs_readbuf(mp->m_dev,
+				 XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+				 XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agflbuf)  {
-		do_abort(_("can't read agfl block for ag %d\n"),
-			be32_to_cpu(agf->agf_seqno));
+		do_abort(_("can't read agfl block for ag %d\n"), agno);
 		return;
 	}
 	agfl = XFS_BUF_TO_AGFL(agflbuf);
@@ -968,12 +971,11 @@ scan_freelist(
 	count = 0;
 	for (;;) {
 		bno = be32_to_cpu(agfl->agfl_bno[i]);
-		if (verify_agbno(mp, be32_to_cpu(agf->agf_seqno), bno))
-			set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
-					bno, XR_E_FREE);
+		if (verify_agbno(mp, agno, bno))
+			set_agbno_state(mp, agno, bno, XR_E_FREE);
 		else
 			do_warn(_("bad agbno %u in agfl, agno %d\n"),
-				bno, be32_to_cpu(agf->agf_seqno));
+				bno, agno);
 		count++;
 		if (i == be32_to_cpu(agf->agf_fllast))
 			break;
@@ -982,8 +984,7 @@ scan_freelist(
 	}
 	if (count != be32_to_cpu(agf->agf_flcount)) {
 		do_warn(_("freeblk count %d != flcount %d in ag %d\n"), count,
-			be32_to_cpu(agf->agf_flcount),
-			be32_to_cpu(agf->agf_seqno));
+			be32_to_cpu(agf->agf_flcount), agno);
 	}
 	libxfs_putbuf(agflbuf);
 }
