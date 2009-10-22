@@ -111,16 +111,29 @@ path_to_handle(
 	void		**hanp,		/* output, pointer to data */
 	size_t		*hlen)		/* output, size of returned data */
 {
+	return lpath_to_handle(path, path, hanp, hlen);
+}
+
+/* Like path_to_handle, but reliable for paths which are either dangling
+ * symlinks or symlinks whose targets are not in XFS filesystems.
+ */
+int
+lpath_to_handle(
+	char		*fspath,	/* input,  path in filesystem */
+	char		*path,		/* input,  path to convert */
+	void		**hanp,		/* output, pointer to data */
+	size_t		*hlen)		/* output, size of returned data */
+{
 	int		fd;
 	int		result;
 	comarg_t	obj;
 
-	fd = open(path, O_RDONLY);
+	fd = open(fspath, O_RDONLY);
 	if (fd < 0)
 		return -1;
 
 	obj.path = path;
-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
 				obj, hanp, hlen);
 	close(fd);
 	return result;
