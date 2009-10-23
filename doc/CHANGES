@@ -1,3 +1,19 @@
+xfsprogs-3.0.5 (23 October 2009)
+	- Use btrees in xfs_repair in a number of critical data
+	  structures, in place of bitmaps and radix trees, resulting
+	  in reduced memory and CPU requirements for large file
+	  systems.
+	- Various other performance improvements in xfs_repair.
+	- Add a new function lpath_to_handle() to libhandle, which
+	  allows symlinks to be handled more robustly.
+	- Tweak the code so a single scanfunc_allocbt() can be used
+	  in place of the two nearly-identical functions used before.
+	- Add support for discarding blocks to mkfs (along with a
+	  command-line option to avoid its use if desired).
+	- Allow use of libblkid from util-linux if it is available,
+	  for determining device geometry.
+	- A few configuration and build improvements.
+
 xfsprogs-3.0.4 (17 September 2009)
 	- Fix a memory leak in xfsprogs.
 	- Increase hash chain length in xfsprogs when running out of memory.
