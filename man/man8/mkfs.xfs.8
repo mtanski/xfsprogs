@@ -36,6 +36,8 @@ mkfs.xfs \- construct an XFS filesystem
 .I label
 ] [
 .B \-N
+] [
+.B \-K
 ]
 .I device
 .SH DESCRIPTION
@@ -714,6 +716,9 @@ manual entries for additional information.
 .B \-N
 Causes the file system parameters to be printed out without really
 creating the file system.
+.TP
+.B \-K
+Do not attempt to discard blocks at mkfs time.
 .SH SEE ALSO
 .BR xfs (5),
 .BR mkfs (8),

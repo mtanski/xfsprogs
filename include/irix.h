@@ -337,6 +337,12 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
 	memcpy(dst, src, sizeof(uuid_t));
 }
 
+static __inline__ int
+platform_discard_blocks(int fd, off64_t start, off64_t end)
+{
+	return 0;
+}
+
 static __inline__ char * strsep(char **s, const char *ct)
 {
 	char *sbegin = *s, *end;

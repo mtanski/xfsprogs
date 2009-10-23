@@ -11,14 +11,27 @@ FSTYP = fstyp
 HFILES = xfs_mkfs.h
 CFILES = maxtrres.c proto.c xfs_mkfs.c
 
-LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK) $(LIBRT) $(LIBPTHREAD)
-LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
+LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static
+
+ifeq ($(ENABLE_BLKID),yes)
+LLDLIBS += $(LIBBLKID)
+CFLAGS += -DENABLE_BLKID
+else
+LLDLIBS += $(LIBDISK)
+LTDEPENDENCIES += $(LIBDISK)
+endif
+
 
 LSRCFILES = $(FSTYP).c
 LDIRT = $(FSTYP)
 
-default: $(FSTYP) $(LTCOMMAND)
+default: $(LTCOMMAND)
+
+ifneq ($(ENABLE_BLKID),yes)
+default: $(FSTYP)
+endif
 
 include $(BUILDRULES)
 
@@ -26,6 +39,6 @@ $(FSTYP):
 	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
 
 install: default
-	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
 install-dev:

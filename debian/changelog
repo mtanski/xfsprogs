@@ -1,3 +1,10 @@
+xfsprogs (3.0.4) unstable; urgency=low
+
+  * New bugfix release
+  * Resolve a libxfs unaligned access (closes: #517553)
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 17 Sep 2009 14:32:48 +1000
+
 xfsprogs (3.0.2) unstable; urgency=low
 
   * New bugfix release
