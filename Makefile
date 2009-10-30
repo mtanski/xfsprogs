@@ -9,16 +9,24 @@ ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
 endif
 
+SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
+SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
+
 CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
-LSRCFILES = configure.in Makepkgs release.sh README VERSION $(CONFIGURE)
+LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
-	Logs/* built .census install.* install-dev.* *.gz autom4te.cache/* \
-	libtool include/builddefs include/platform_defs.h
+	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
+	include/builddefs include/platform_defs.h
+
+ifeq ($(HAVE_BUILDDEFS), yes)
+LDIRDIRT = $(SRCDIR)
+LDIRT += $(SRCTAR)
+endif
 
 LIB_SUBDIRS = libxfs libxlog libxcmd libhandle $(LDISK)
 TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
-		mdrestore repair rtcp m4 man doc po debian build
+		mdrestore repair rtcp m4 man doc po debian
 
 ifneq ($(ENABLE_BLKID), yes)
 LIB_SUBDIRS += libdisk
@@ -67,7 +75,6 @@ configure:
 
 include/builddefs: configure
 	./configure $$LOCAL_CONFIGURE_OPTIONS
-	touch .census
 
 include/platform_defs.h: include/builddefs
 ## Recover from the removal of $@
@@ -98,3 +105,32 @@ distclean: clean
 
 realclean: distclean
 	rm -f $(CONFIGURE)
+
+#
+# All this gunk is to allow for a make dist on an unconfigured tree
+#
+dist: include/builddefs include/platform_defs.h default
+ifeq ($(HAVE_BUILDDEFS), no)
+	$(MAKE) -C . $@
+else
+	$(MAKE) $(SRCTAR)
+endif
+
+deb: include/builddefs include/platform_defs.h
+ifeq ($(HAVE_BUILDDEFS), no)
+	$(MAKE) -C . $@
+else
+	$(MAKE) $(SRCDIR)
+	$(MAKE) -C po
+	$(MAKE) source-link
+	cd $(SRCDIR) && dpkg-buildpackage
+endif
+
+$(SRCDIR) : $(_FORCE)
+	rm -fr $@
+	mkdir -p $@
+
+$(SRCTAR) : default $(SRCDIR)
+	$(MAKE) source-link
+	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+	echo Wrote: $@

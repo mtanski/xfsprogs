@@ -23,12 +23,12 @@ endif
 
 source-link: 
 	@test -z "$$DIR" && DIR="."; \
-	for f in `echo $(SRCFILES) $(SUBDIRS)`; do \
+	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
 	    if test -d $$f ; then \
-		mkdir $$SRCLINK_ROOT/$$DIR/$$f || exit $$?; \
+		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
 		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
 	    else \
-		ln $$f $$SRCLINK_ROOT/$$DIR/$$f || exit $$?; \
+		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
 	    fi; \
 	done
 
@@ -72,9 +72,6 @@ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
 %.mo: %.po
 	$(MSGFMT) -c --statistics -o $@ $<
 endif
-
-source :
-	$(SOURCE_MAKERULE)
 
 endif # _BUILDRULES_INCLUDED_
 

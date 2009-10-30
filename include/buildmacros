@@ -134,19 +134,3 @@ MAN_MAKERULE = \
 			$(ZIP) --best -c < $$f > $$f.gz; \
 		fi; \
 	done
-
-DIST_MAKERULE = \
-	$(MAKEF) -C build dist
-
-SOURCE_MAKERULE = \
-	@test -z "$$DIR" && DIR="."; \
-	for f in $(SRCFILES) $(POTHEAD) ""; do \
-	    test -z "$$f" && break; \
-	    test -L "$$f" || $(ECHO) $$DIR/$$f; \
-	done; \
-	for d in `echo $(SUBDIRS)` ""; do \
-	    test -z "$$d" && break; \
-	    if test -d "$$d"; then \
-		$(MAKEF) DIR=$$DIR/$$d -C $$d $@ || exit $$?; \
-	    fi; \
-	done

@@ -3,7 +3,6 @@
 
 # build system
 .census
-Logs/
 include/platform_defs.h
 include/builddefs
 install-sh

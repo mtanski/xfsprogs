@@ -5,7 +5,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS sparse.txt
+LSRCFILES = INSTALL CHANGES COPYING CREDITS sparse.txt
 LDIRT = *.gz
 
 default: CHANGES.gz
@@ -17,7 +17,7 @@ CHANGES.gz:
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-	$(INSTALL) -m 644 PORTING CHANGES.gz CREDITS $(PKG_DOC_DIR)
+	$(INSTALL) -m 644 CHANGES.gz CREDITS $(PKG_DOC_DIR)
 ifeq ($(PKG_DISTRIBUTION), debian)
 	$(INSTALL) -S CHANGES.gz $(PKG_DOC_DIR)/changelog.gz
 else

@@ -67,7 +67,7 @@ binary-arch: checkroot built
 	$(pkgme)  $(MAKE) -C . install
 	$(pkgdev) $(MAKE) -C . install-dev
 	$(pkgdi)  $(MAKE) -C debian install-d-i
-	$(pkgme)  $(MAKE) -C build src-manifest
+	$(pkgme)  $(MAKE) dist
 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
 	dh_installdocs
 	dh_installchangelogs
