@@ -118,6 +118,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	int		i;
 	int		j;
 	int		state;
+	xfs_extlen_t	blen;
 
 	agno = XFS_INO_TO_AGNO(mp, ino);
 	agino = XFS_INO_TO_AGINO(mp, ino);
@@ -433,9 +434,10 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	 * entry or an iunlinked pointer
 	 */
 	pthread_mutex_lock(&ag_locks[agno]);
-	for (j = 0, cur_agbno = chunk_start_agbno;
-			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		state = get_bmap(agno, cur_agbno);
+	for (cur_agbno = chunk_start_agbno;
+	     cur_agbno < chunk_stop_agbno;
+	     cur_agbno += blen)  {
+		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
 		switch (state) {
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -444,9 +446,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_bmap(agno, cur_agbno, XR_E_MULT);
-			j = 1;
-			break;
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
+			pthread_mutex_unlock(&ag_locks[agno]);
+			return 0;
 		case XR_E_INO:
 			do_error(
 		_("uncertain inode block overlap, agbno = %d, ino = %llu\n"),
@@ -454,11 +456,6 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			break;
 		default:
 			break;
-		}
-
-		if (j) {
-			pthread_mutex_unlock(&ag_locks[agno]);
-			return(0);
 		}
 	}
 	pthread_mutex_unlock(&ag_locks[agno]);
@@ -487,8 +484,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	pthread_mutex_lock(&ag_locks[agno]);
 
 	for (cur_agbno = chunk_start_agbno;
-			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		state = get_bmap(agno, cur_agbno);
+	     cur_agbno < chunk_stop_agbno;
+	     cur_agbno += blen)  {
+		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
 		switch (state) {
 		case XR_E_INO:
 			do_error(
@@ -498,7 +496,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_bmap(agno, cur_agbno, XR_E_INO);
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -512,7 +510,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_bmap(agno, cur_agbno, XR_E_INO);
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
 			break;
 		}
 	}

@@ -109,7 +109,6 @@ void
 phase2(xfs_mount_t *mp)
 {
 	xfs_agnumber_t		i;
-	xfs_agblock_t		b;
 	int			j;
 	ino_tree_node_t		*ino_rec;
 
@@ -169,11 +168,8 @@ phase2(xfs_mount_t *mp)
 		/*
 		 * also mark blocks
 		 */
-		for (b = 0; b < mp->m_ialloc_blks; b++)  {
-			set_bmap(0,
-				b + XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
-				XR_E_INO);
-		}
+		set_bmap_ext(0, XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
+			     mp->m_ialloc_blks, XR_E_INO);
 	} else  {
 		do_log(_("        - found root inode chunk\n"));
 

@@ -156,11 +156,6 @@ EXTERN int		chunks_pblock;	/* # of 64-ino chunks per allocation */
 EXTERN int		max_symlink_blocks;
 EXTERN __int64_t	fs_max_file_offset;
 
-/* block allocation bitmaps */
-
-EXTERN __uint64_t	**ba_bmap;	/* see incore.h */
-EXTERN __uint64_t	*rt_ba_bmap;	/* see incore.h */
-
 /* realtime info */
 
 EXTERN xfs_rtword_t	*btmcompute;

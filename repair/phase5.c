@@ -88,10 +88,8 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 	xfs_agblock_t		agbno;
 	xfs_agblock_t		ag_end;
 	uint			free_blocks;
-#ifdef XR_BLD_FREE_TRACE
-	int			old_state;
-	int			state = XR_E_BAD_STATE;
-#endif
+	xfs_extlen_t		blen;
+	int			bstate;
 
 	/*
 	 * scan the bitmap for the ag looking for continuous
@@ -120,30 +118,10 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 	 * ok, now find the number of extents, keep track of the
 	 * largest extent.
 	 */
-	for (agbno = 0; agbno < ag_end; agbno++)  {
-#if 0
-		old_state = state;
-		state = get_bmap(agno, agbno);
-		if (state != old_state)  {
-			fprintf(stderr, "agbno %u - new state is %d\n",
-					agbno, state);
-		}
-#endif
-		/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
-		if ((in_extent == 0) && ((agbno & XR_BB_MASK) == 0)) {
-			/* testing >= XR_E_INUSE */
-			switch (ba_bmap[agno][agbno>>XR_BB]) {
-			case XR_E_INUSE_LL:
-			case XR_E_INUSE_FS_LL:
-			case XR_E_INO_LL:
-			case XR_E_FS_MAP_LL:
-				agbno += (XR_BB_UNIT/XR_BB) - 1;
-				continue;
-			}
-
-		}
-		if (get_bmap(agno, agbno) < XR_E_INUSE)  {
-			free_blocks++;
+	for (agbno = 0; agbno < ag_end; agbno += blen) {
+		bstate = get_bmap_ext(agno, agbno, ag_end, &blen);
+		if (bstate < XR_E_INUSE)  {
+			free_blocks += blen;
 			if (in_extent == 0)  {
 				/*
 				 * found the start of a free extent
@@ -151,9 +129,9 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 				in_extent = 1;
 				num_extents++;
 				extent_start = agbno;
-				extent_len = 1;
+				extent_len = blen;
 			} else  {
-				extent_len++;
+				extent_len += blen;
 			}
 		} else   {
 			if (in_extent)  {

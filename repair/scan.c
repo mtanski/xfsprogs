@@ -511,7 +511,7 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
 			xfs_agblock_t		b, end;
-			xfs_extlen_t		len;
+			xfs_extlen_t		len, blen;
 
 			b = be32_to_cpu(rp[i].ar_startblock);
 			len = be32_to_cpu(rp[i].ar_blockcount);
@@ -524,8 +524,8 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			if (!verify_agbno(mp, agno, end - 1))
 				continue;
 
-			for ( ; b < end; b++)  {
-				state = get_bmap(agno, b);
+			for ( ; b < end; b += blen)  {
+				state = get_bmap_ext(agno, b, end, &blen);
 				switch (state) {
 				case XR_E_UNKNOWN:
 					set_bmap(agno, b, XR_E_FREE1);
@@ -536,13 +536,15 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 					 * FREE1 blocks later
 					 */
 					if (magic == XFS_ABTC_MAGIC) {
-						set_bmap(agno, b, XR_E_FREE);
+						set_bmap_ext(agno, b, blen,
+							     XR_E_FREE);
 						break;
 					}
 				default:
 					do_warn(
-	_("block (%d,%d) multiply claimed by %s space tree, state - %d\n"),
-						agno, b, name, state);
+	_("block (%d,%d-%d) multiply claimed by %s space tree, state - %d\n"),
+						agno, b, b + blen - 1,
+						name, state);
 					break;
 				}
 			}
