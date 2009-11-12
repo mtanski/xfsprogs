@@ -50,8 +50,15 @@ cleanup_inode_prefetch(
 
 
 #ifdef XR_PF_TRACE
+void	pftrace_init(void);
+void	pftrace_done(void);
+
 #define pftrace(msg...)	_pftrace(__FUNCTION__, ## msg)
 void	_pftrace(const char *, const char *, ...);
+#else
+static inline void pftrace_init(void) { };
+static inline void pftrace_done(void) { };
+static inline void pftrace(const char *msg, ...) { };
 #endif
 
 #endif /* _XFS_REPAIR_PREFETCH_H */

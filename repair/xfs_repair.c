@@ -536,11 +536,6 @@ main(int argc, char **argv)
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-#ifdef XR_PF_TRACE
-	pf_trace_file = fopen("/tmp/xfs_repair_prefetch.trace", "w");
-	setvbuf(pf_trace_file, NULL, _IOLBF, 1024);
-#endif
-
 	temp_mp = &xfs_m;
 	setbuf(stdout, NULL);
 
@@ -844,8 +839,7 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 	if (verbose)
 		summary_report();
 	do_log(_("done\n"));
-#ifdef XR_PF_TRACE
-	fclose(pf_trace_file);
-#endif
+	pftrace_done();
+
 	return (0);
 }

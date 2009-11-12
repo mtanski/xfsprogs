@@ -199,10 +199,6 @@ EXTERN pthread_mutex_t	*ag_locks;
 EXTERN int 		report_interval;
 EXTERN __uint64_t 	*prog_rpt_done;
 
-#ifdef XR_PF_TRACE
-EXTERN FILE		*pf_trace_file;
-#endif
-
 EXTERN int		ag_stride;
 EXTERN int		thread_count;
 
