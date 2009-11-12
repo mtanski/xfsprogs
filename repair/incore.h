@@ -61,51 +61,23 @@ void			teardown_bmap_finish(xfs_mount_t *mp);
  * you want to use the regular block map.
  */
 
-#if defined(XR_BMAP_TRACE) || defined(XR_BMAP_DBG)
-/*
- * implemented as functions for debugging purposes
- */
-int get_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-	xfs_agblock_t ag_blockno);
-void set_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-	xfs_agblock_t ag_blockno, int state);
-
-int get_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno);
-void set_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno, int state);
-#else
-/*
- * implemented as macros for performance purposes
- */
-
-#define get_agbno_state(mp, agno, ag_blockno) \
+#define get_bmap(agno, ag_blockno) \
 			((int) (*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) \
 				 >> (((ag_blockno)%XR_BB_NUM)*XR_BB)) \
 				& XR_BB_MASK)
-#define set_agbno_state(mp, agno, ag_blockno, state) \
+#define set_bmap(agno, ag_blockno, state) \
 	*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) = \
 		((*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) & \
 	  (~((__uint64_t) XR_BB_MASK << (((ag_blockno)%XR_BB_NUM)*XR_BB)))) | \
 	 (((__uint64_t) (state)) << (((ag_blockno)%XR_BB_NUM)*XR_BB)))
 
-#define get_fsbno_state(mp, blockno) \
-		get_agbno_state(mp, XFS_FSB_TO_AGNO(mp, (blockno)), \
-				XFS_FSB_TO_AGBNO(mp, (blockno)))
-#define set_fsbno_state(mp, blockno, state) \
-		set_agbno_state(mp, XFS_FSB_TO_AGNO(mp, (blockno)), \
-			XFS_FSB_TO_AGBNO(mp, (blockno)), (state))
-
-
-#define get_agbno_rec(mp, agno, ag_blockno) \
-			(*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM))
-#endif /* XR_BMAP_TRACE */
-
 /*
  * these work in real-time extents (e.g. fsbno == rt extent number)
  */
-#define get_rtbno_state(mp, fsbno) \
+#define get_rtbmap(fsbno) \
 			((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) >> \
 			(((fsbno)%XR_BB_NUM)*XR_BB)) & XR_BB_MASK)
-#define set_rtbno_state(mp, fsbno, state) \
+#define set_rtbmap(fsbno, state) \
 	*(rt_ba_bmap + (fsbno)/XR_BB_NUM) = \
 	 ((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) & \
 	  (~((__uint64_t) XR_BB_MASK << (((fsbno)%XR_BB_NUM)*XR_BB)))) | \

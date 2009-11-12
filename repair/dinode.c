@@ -545,40 +545,33 @@ process_rt_rec(
 			continue;
 		}
 
-		state = get_rtbno_state(mp, ext);
-
+		state = get_rtbmap(ext);
 		switch (state)  {
-			case XR_E_FREE:
-			case XR_E_UNKNOWN:
-				set_rtbno_state(mp, ext, XR_E_INUSE);
+		case XR_E_FREE:
+		case XR_E_UNKNOWN:
+			set_rtbmap(ext, XR_E_INUSE);
+			break;
+		case XR_E_BAD_STATE:
+			do_error(_("bad state in rt block map %llu\n"), ext);
+		case XR_E_FS_MAP:
+		case XR_E_INO:
+		case XR_E_INUSE_FS:
+			do_error(_("data fork in rt inode %llu found "
+				"metadata block %llu in rt bmap\n"),
+				ino, ext);
+		case XR_E_INUSE:
+			if (pwe)
 				break;
-
-			case XR_E_BAD_STATE:
-				do_error(_("bad state in rt block map %llu\n"),
-						ext);
-
-			case XR_E_FS_MAP:
-			case XR_E_INO:
-			case XR_E_INUSE_FS:
-				do_error(_("data fork in rt inode %llu found "
-					"metadata block %llu in rt bmap\n"),
+		case XR_E_MULT:
+			set_rtbmap(ext, XR_E_MULT);
+			do_warn(_("data fork in rt inode %llu claims "
+					"used rt block %llu\n"),
 					ino, ext);
-
-			case XR_E_INUSE:
-				if (pwe)
-					break;
-
-			case XR_E_MULT:
-				set_rtbno_state(mp, ext, XR_E_MULT);
-				do_warn(_("data fork in rt inode %llu claims "
-						"used rt block %llu\n"),
-						ino, ext);
-				return 1;
-
-			case XR_E_FREE1:
-			default:
-				do_error(_("illegal state %d in rt block map "
-						"%llu\n"), state, b);
+			return 1;
+		case XR_E_FREE1:
+		default:
+			do_error(_("illegal state %d in rt block map "
+					"%llu\n"), state, b);
 		}
 	}
 
@@ -770,8 +763,7 @@ process_bmbt_reclist_int(
 
 			}
 
-			state = get_agbno_state(mp, agno, agbno);
-
+			state = get_bmap(agno, agbno);
 			switch (state)  {
 			case XR_E_FREE:
 			case XR_E_FREE1:
@@ -780,7 +772,7 @@ process_bmbt_reclist_int(
 					forkname, ino, (__uint64_t) b);
 				/* fall through ... */
 			case XR_E_UNKNOWN:
-				set_agbno_state(mp, agno, agbno, XR_E_INUSE);
+				set_bmap(agno, agbno, XR_E_INUSE);
 				break;
 
 			case XR_E_BAD_STATE:
@@ -796,7 +788,7 @@ process_bmbt_reclist_int(
 
 			case XR_E_INUSE:
 			case XR_E_MULT:
-				set_agbno_state(mp, agno, agbno, XR_E_MULT);
+				set_bmap(agno, agbno, XR_E_MULT);
 				do_warn(_("%s fork in %s inode %llu claims "
 					"used block %llu\n"),
 					forkname, ftype, ino, (__uint64_t) b);

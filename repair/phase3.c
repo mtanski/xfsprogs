@@ -61,14 +61,8 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 				agbno = XFS_AGINO_TO_AGBNO(mp, current_ino);
 
 				pthread_mutex_lock(&ag_locks[agno]);
-				switch (state = get_agbno_state(mp,
-							agno, agbno))  {
-				case XR_E_UNKNOWN:
-				case XR_E_FREE:
-				case XR_E_FREE1:
-					set_agbno_state(mp, agno, agbno,
-						XR_E_INO);
-					break;
+				state = get_bmap(agno, agbno);
+				switch (state) {
 				case XR_E_BAD_STATE:
 					do_error(_(
 						"bad state in block map %d\n"),
@@ -85,8 +79,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 					 * anyway, hopefully without
 					 * losing too much other data
 					 */
-					set_agbno_state(mp, agno, agbno,
-						XR_E_INO);
+					set_bmap(agno, agbno, XR_E_INO);
 					break;
 				}
 				pthread_mutex_unlock(&ag_locks[agno]);

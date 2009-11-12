@@ -32,9 +32,7 @@ include $(BUILDRULES)
 
 #
 # Tracing flags:
-# -DXR_BMAP_DBG		incore block bitmap debugging
 # -DXR_INODE_TRACE	inode processing
-# -DXR_BMAP_TRACE	bmap btree processing
 # -DXR_DIR_TRACE	directory processing
 # -DXR_DUP_TRACE	duplicate extent processing
 # -DXR_BCNT_TRACE	incore bcnt freespace btree building
