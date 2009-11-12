@@ -20,6 +20,8 @@
 #define XFS_REPAIR_INCORE_H
 
 #include "avl.h"
+
+
 /*
  * contains definition information.  implementation (code)
  * is spread out in separate files.
@@ -168,23 +170,11 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 /*
  * duplicate extent tree functions
  */
-void		add_dup_extent(xfs_agnumber_t agno,
-				xfs_agblock_t startblock,
-				xfs_extlen_t blockcount);
 
-extern avltree_desc_t   **extent_tree_ptrs;
-/* ARGSUSED */
-static inline int
-search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
-{
-	ASSERT(agno < glob_agcount);
-
-	if (avl_findrange(extent_tree_ptrs[agno], agbno) != NULL)
-		return(1);
-
-	return(0);
-}
-
+int		add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
+			xfs_extlen_t blockcount);
+int		search_dup_extent(xfs_agnumber_t agno,
+			xfs_agblock_t start_agbno, xfs_agblock_t end_agbno);
 void		add_rt_dup_extent(xfs_drtbno_t	startblock,
 				xfs_extlen_t	blockcount);
 

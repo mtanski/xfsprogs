@@ -735,18 +735,14 @@ process_bmbt_reclist_int(
 			 * checking each entry without setting the
 			 * block bitmap
 			 */
-			for (b = irec.br_startblock;
-			     agbno < ebno;
-			     b++, agbno++)  {
-				if (search_dup_extent(mp, agno, agbno)) {
-					do_warn(_("%s fork in ino %llu claims "
-						"dup extent, off - %llu, "
-						"start - %llu, cnt %llu\n"),
-						forkname, ino, irec.br_startoff,
-						irec.br_startblock,
-						irec.br_blockcount);
-					goto done;
-				}
+			if (search_dup_extent(agno, agbno, ebno)) {
+				do_warn(_("%s fork in ino %llu claims "
+					"dup extent, off - %llu, "
+					"start - %llu, cnt %llu\n"),
+					forkname, ino, irec.br_startoff,
+					irec.br_startblock,
+					irec.br_blockcount);
+				goto done;
 			}
 			*tot += irec.br_blockcount;
 			continue;
