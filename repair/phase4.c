@@ -355,19 +355,7 @@ phase4(xfs_mount_t *mp)
 	/*
 	 * initialize bitmaps for all AGs
 	 */
-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		/*
-		 * now reset the bitmap for all ags
-		 */
-		memset(ba_bmap[i], 0,
-		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
-						sizeof(__uint64_t)));
-		for (j = 0; j < ag_hdr_block; j++)
-			set_bmap(i, j, XR_E_INUSE_FS);
-	}
-	set_bmap_rt(mp->m_sb.sb_rextents);
-	set_bmap_log(mp);
-	set_bmap_fs(mp);
+	reset_bmaps(mp);
 
 	do_log(_("        - check for inodes claiming duplicate blocks...\n"));
 	set_progress_msg(PROG_FMT_DUP_BLOCKS, (__uint64_t) mp->m_sb.sb_icount);

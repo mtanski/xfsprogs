@@ -134,12 +134,6 @@ phase2(xfs_mount_t *mp)
 
 	do_log(_("        - scan filesystem freespace and inode maps...\n"));
 
-	/*
-	 * account for space used by ag headers and log if internal
-	 */
-	set_bmap_log(mp);
-	set_bmap_fs(mp);
-
 	bad_ino_btree = 0;
 
 	set_progress_msg(PROG_FMT_SCAN_AG, (__uint64_t) glob_agcount);

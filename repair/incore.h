@@ -32,14 +32,10 @@
  */
 #define BA_BMAP_SIZE(x)		(howmany(x, 4))
 
-void			set_bmap_rt(xfs_drfsbno_t numblocks);
-void			set_bmap_log(xfs_mount_t *mp);
-void			set_bmap_fs(xfs_mount_t *mp);
-void			teardown_bmap(xfs_mount_t *mp);
+void			init_bmaps(xfs_mount_t *mp);
+void			reset_bmaps(xfs_mount_t *mp);
+void			free_bmaps(xfs_mount_t *mp);
 
-void			teardown_rt_bmap(xfs_mount_t *mp);
-void			teardown_ag_bmap(xfs_mount_t *mp, xfs_agnumber_t agno);
-void			teardown_bmap_finish(xfs_mount_t *mp);
 
 /* blocks are numbered from zero */
 
@@ -243,12 +239,15 @@ void		release_agbcnt_extent_tree(xfs_agnumber_t agno);
  */
 void		free_rt_dup_extent_tree(xfs_mount_t *mp);
 
+void		incore_ext_init(xfs_mount_t *);
 /*
  * per-AG extent trees shutdown routine -- all (bno, bcnt and dup)
  * at once.  this one actually frees the memory instead of just recyling
  * the nodes.
  */
 void		incore_ext_teardown(xfs_mount_t *mp);
+
+void		incore_ino_init(xfs_mount_t *);
 
 /*
  * inode definitions
