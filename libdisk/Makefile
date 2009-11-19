@@ -27,6 +27,5 @@ include $(BUILDRULES)
 install: default
 
 install-dev: default
-	$(INSTALL_LTLIB_STATIC)
 
 install-qa: install-dev
