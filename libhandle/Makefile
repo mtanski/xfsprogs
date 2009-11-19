@@ -10,7 +10,10 @@ LT_CURRENT = 1
 LT_REVISION = 3
 LT_AGE = 0
 
+LTLDFLAGS += -Wl,--version-script,libhandle.sym
+
 CFILES = handle.c jdm.c
+LSRCFILES = libhandle.sym
 
 default:  $(LTLIBRARY)
 
