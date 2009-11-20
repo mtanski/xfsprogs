@@ -155,7 +155,7 @@ typedef unsigned char	uchar_t;
 #define HAVE_FID	1
 
 static __inline__ int
-platform_discard_blocks(int fd, off64_t start, off64_t end)
+platform_discard_blocks(int fd, uint64_t start, uint64_t len)
 {
 	return 0;
 }

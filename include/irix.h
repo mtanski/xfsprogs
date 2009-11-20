@@ -338,7 +338,7 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
 }
 
 static __inline__ int
-platform_discard_blocks(int fd, off64_t start, off64_t end)
+platform_discard_blocks(int fd, uint64_t start, uint64_t len)
 {
 	return 0;
 }
