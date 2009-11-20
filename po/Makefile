@@ -6,7 +6,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 POTHEAD = $(PKG_NAME).pot
-LINGUAS = pl
+LINGUAS = de pl
 LSRCFILES = $(LINGUAS:%=%.po)
 LDIRT = $(POTHEAD)
 
