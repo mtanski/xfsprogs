@@ -18,7 +18,6 @@
 
 #include <libxfs.h>
 #include "avl.h"
-#include "btree.h"
 #include "globals.h"
 #include "incore.h"
 #include "agheader.h"
@@ -73,8 +72,8 @@ static rt_ext_flist_t rt_ext_flist;
 
 static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
 
-static struct btree_root **dup_extent_trees;	/* per ag dup extent trees */
-
+avltree_desc_t	**extent_tree_ptrs;		/* array of extent tree ptrs */
+						/* one per ag for dups */
 static avltree_desc_t	**extent_bno_ptrs;	/*
 						 * array of extent tree ptrs
 						 * one per ag for free extents
@@ -99,48 +98,6 @@ static struct list_head	rt_ba_list;
 static pthread_mutex_t	ext_flist_lock;
 static pthread_mutex_t	rt_ext_tree_lock;
 static pthread_mutex_t	rt_ext_flist_lock;
-
-/*
- * duplicate extent tree functions
- */
-
-void
-release_dup_extent_tree(
-	xfs_agnumber_t		agno)
-{
-	btree_clear(dup_extent_trees[agno]);
-}
-
-int
-add_dup_extent(
-	xfs_agnumber_t		agno,
-	xfs_agblock_t		startblock,
-	xfs_extlen_t		blockcount)
-{
-#ifdef XR_DUP_TRACE
-	fprintf(stderr, "Adding dup extent - %d/%d %d\n", agno, startblock,
-		blockcount);
-#endif
-	return btree_insert(dup_extent_trees[agno], startblock,
-				(void *)(uintptr_t)(startblock + blockcount));
-}
-
-int
-search_dup_extent(
-	xfs_agnumber_t		agno,
-	xfs_agblock_t		start_agbno,
-	xfs_agblock_t		end_agbno)
-{
-	unsigned long	bno;
-
-	if (!btree_find(dup_extent_trees[agno], start_agbno, &bno))
-		return 0;	/* this really shouldn't happen */
-	if (bno < end_agbno)
-		return 1;
-	return (uintptr_t)btree_peek_prev(dup_extent_trees[agno], NULL) >
-								start_agbno;
-}
-
 
 /*
  * extent tree stuff is avl trees of duplicate extents,
@@ -253,6 +210,14 @@ release_extent_tree(avltree_desc_t *tree)
 /*
  * top-level (visible) routines
  */
+void
+release_dup_extent_tree(xfs_agnumber_t agno)
+{
+	release_extent_tree(extent_tree_ptrs[agno]);
+
+	return;
+}
+
 void
 release_agbno_extent_tree(xfs_agnumber_t agno)
 {
@@ -557,6 +522,93 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 	return(ext);
 }
 
+/*
+ * the next 2 routines manage the trees of duplicate extents -- 1 tree
+ * per AG
+ */
+void
+add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
+		xfs_extlen_t blockcount)
+{
+	extent_tree_node_t *first, *last, *ext, *next_ext;
+	xfs_agblock_t new_startblock;
+	xfs_extlen_t new_blockcount;
+
+	ASSERT(agno < glob_agcount);
+
+#ifdef XR_DUP_TRACE
+	fprintf(stderr, "Adding dup extent - %d/%d %d\n", agno, startblock, blockcount);
+#endif
+	avl_findranges(extent_tree_ptrs[agno], startblock - 1,
+		startblock + blockcount + 1,
+		(avlnode_t **) &first, (avlnode_t **) &last);
+	/*
+	 * find adjacent and overlapping extent blocks
+	 */
+	if (first == NULL && last == NULL)  {
+		/* nothing, just make and insert new extent */
+
+		ext = mk_extent_tree_nodes(startblock, blockcount, XR_E_MULT);
+
+		if (avl_insert(extent_tree_ptrs[agno],
+				(avlnode_t *) ext) == NULL)  {
+			do_error(_("duplicate extent range\n"));
+		}
+
+		return;
+	}
+
+	ASSERT(first != NULL && last != NULL);
+
+	/*
+	 * find the new composite range, delete old extent nodes
+	 * as we go
+	 */
+	new_startblock = startblock;
+	new_blockcount = blockcount;
+
+	for (ext = first;
+		ext != (extent_tree_node_t *) last->avl_node.avl_nextino;
+		ext = next_ext)  {
+		/*
+		 * preserve the next inorder node
+		 */
+		next_ext = (extent_tree_node_t *) ext->avl_node.avl_nextino;
+		/*
+		 * just bail if the new extent is contained within an old one
+		 */
+		if (ext->ex_startblock <= startblock &&
+				ext->ex_blockcount >= blockcount)
+			return;
+		/*
+		 * now check for overlaps and adjacent extents
+		 */
+		if (ext->ex_startblock + ext->ex_blockcount >= startblock
+			|| ext->ex_startblock <= startblock + blockcount)  {
+
+			if (ext->ex_startblock < new_startblock)
+				new_startblock = ext->ex_startblock;
+
+			if (ext->ex_startblock + ext->ex_blockcount >
+					new_startblock + new_blockcount)
+				new_blockcount = ext->ex_startblock +
+							ext->ex_blockcount -
+							new_startblock;
+
+			avl_delete(extent_tree_ptrs[agno], (avlnode_t *) ext);
+			continue;
+		}
+	}
+
+	ext = mk_extent_tree_nodes(new_startblock, new_blockcount, XR_E_MULT);
+
+	if (avl_insert(extent_tree_ptrs[agno], (avlnode_t *) ext) == NULL)  {
+		do_error(_("duplicate extent range\n"));
+	}
+
+	return;
+}
+
 static __psunsigned_t
 avl_ext_start(avlnode_t *node)
 {
@@ -852,9 +904,10 @@ incore_ext_init(xfs_mount_t *mp)
 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
 	pthread_mutex_init(&rt_ext_flist_lock, NULL);
 
-	dup_extent_trees = calloc(agcount, sizeof(struct btree_root *));
-	if (!dup_extent_trees)
-		do_error(_("couldn't malloc dup extent tree descriptor table\n"));
+	if ((extent_tree_ptrs = malloc(agcount *
+					sizeof(avltree_desc_t *))) == NULL)
+		do_error(
+	_("couldn't malloc dup extent tree descriptor table\n"));
 
 	if ((extent_bno_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
@@ -867,6 +920,10 @@ incore_ext_init(xfs_mount_t *mp)
 	_("couldn't malloc free by-bcnt extent tree descriptor table\n"));
 
 	for (i = 0; i < agcount; i++)  {
+		if ((extent_tree_ptrs[i] =
+				malloc(sizeof(avltree_desc_t))) == NULL)
+			do_error(
+			_("couldn't malloc dup extent tree descriptor\n"));
 		if ((extent_bno_ptrs[i] =
 				malloc(sizeof(avltree_desc_t))) == NULL)
 			do_error(
@@ -878,7 +935,7 @@ incore_ext_init(xfs_mount_t *mp)
 	}
 
 	for (i = 0; i < agcount; i++)  {
-		btree_init(&dup_extent_trees[i]);
+		avl_init_tree(extent_tree_ptrs[i], &avl_extent_tree_ops);
 		avl_init_tree(extent_bno_ptrs[i], &avl_extent_tree_ops);
 		avl_init_tree(extent_bcnt_ptrs[i], &avl_extent_bcnt_tree_ops);
 	}
@@ -907,18 +964,18 @@ incore_ext_teardown(xfs_mount_t *mp)
 		free(cur);
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		btree_destroy(dup_extent_trees[i]);
+		free(extent_tree_ptrs[i]);
 		free(extent_bno_ptrs[i]);
 		free(extent_bcnt_ptrs[i]);
 	}
 
-	free(dup_extent_trees);
 	free(extent_bcnt_ptrs);
 	free(extent_bno_ptrs);
+	free(extent_tree_ptrs);
 
-	dup_extent_trees = NULL;
-	extent_bcnt_ptrs = NULL;
-	extent_bno_ptrs = NULL;
+	extent_bcnt_ptrs = extent_bno_ptrs = extent_tree_ptrs = NULL;
+
+	return;
 }
 
 int

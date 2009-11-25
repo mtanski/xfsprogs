@@ -103,19 +103,21 @@ da_read_buf(
 		bplist = bparray;
 	}
 	for (i = 0; i < nex; i++) {
+#ifdef XR_PF_TRACE
 		pftrace("about to read off %llu (len = %d)",
 			(long long)XFS_FSB_TO_DADDR(mp, bmp[i].startblock),
 			XFS_FSB_TO_BB(mp, bmp[i].blockcount));
-
+#endif
 		bplist[i] = libxfs_readbuf(mp->m_dev,
 				XFS_FSB_TO_DADDR(mp, bmp[i].startblock),
 				XFS_FSB_TO_BB(mp, bmp[i].blockcount), 0);
 		if (!bplist[i])
 			goto failed;
-
+#ifdef XR_PF_TRACE
 		pftrace("readbuf %p (%llu, %d)", bplist[i],
 			(long long)XFS_BUF_ADDR(bplist[i]),
 			XFS_BUF_COUNT(bplist[i]));
+#endif
 	}
 	dabuf = malloc(XFS_DA_BUF_SIZE(nex));
 	if (dabuf == NULL) {
@@ -246,8 +248,10 @@ da_brelse(
 	}
 	da_buf_done(dabuf);
 	for (i = 0; i < nbuf; i++) {
+#ifdef XR_PF_TRACE
 		pftrace("putbuf %p (%llu)", bplist[i],
 					(long long)XFS_BUF_ADDR(bplist[i]));
+#endif
 		libxfs_putbuf(bplist[i]);
 	}
 	if (bplist != &bp)
@@ -534,7 +538,7 @@ verify_final_dir2_path(xfs_mount_t	*mp,
 	/*
 	 * bail out if this is the root block (top of tree)
 	 */
-	if (this_level >= cursor->active)
+	if (this_level >= cursor->active)  
 		return(0);
 	/*
 	 * set hashvalue to correctl reflect the now-validated
@@ -1421,7 +1425,7 @@ process_dir2_data(
 		 * numbers.  Do NOT touch the name until after we've computed
 		 * the hashvalue and done a namecheck() on the name.
 		 *
-		 * Conditions must either set clearino to zero or set
+		 * Conditions must either set clearino to zero or set 
 		 * clearreason why it's being cleared.
 		 */
 		if (!ino_discovery && ent_ino == BADFSINO) {
@@ -1452,7 +1456,7 @@ process_dir2_data(
 				if (ino_discovery) {
 					add_inode_uncertain(mp, ent_ino, 0);
 					clearino = 0;
-				} else
+				} else 
 					clearreason = _("non-existent");
 			} else {
 				/*

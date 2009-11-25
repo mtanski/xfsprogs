@@ -156,6 +156,11 @@ EXTERN int		chunks_pblock;	/* # of 64-ino chunks per allocation */
 EXTERN int		max_symlink_blocks;
 EXTERN __int64_t	fs_max_file_offset;
 
+/* block allocation bitmaps */
+
+EXTERN __uint64_t	**ba_bmap;	/* see incore.h */
+EXTERN __uint64_t	*rt_ba_bmap;	/* see incore.h */
+
 /* realtime info */
 
 EXTERN xfs_rtword_t	*btmcompute;
@@ -193,6 +198,10 @@ EXTERN pthread_mutex_t	*ag_locks;
 
 EXTERN int 		report_interval;
 EXTERN __uint64_t 	*prog_rpt_done;
+
+#ifdef XR_PF_TRACE
+EXTERN FILE		*pf_trace_file;
+#endif
 
 EXTERN int		ag_stride;
 EXTERN int		thread_count;

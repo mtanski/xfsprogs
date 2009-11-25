@@ -3661,6 +3661,11 @@ phase6(xfs_mount_t *mp)
 
 	do_log(_("Phase 6 - check inode connectivity...\n"));
 
+	if (!no_modify)
+		teardown_bmap_finish(mp);
+	else
+		teardown_bmap(mp);
+
 	incore_ext_teardown(mp);
 
 	add_ino_ex_data(mp);

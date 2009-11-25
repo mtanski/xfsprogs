@@ -39,6 +39,7 @@ extern void	phase4(xfs_mount_t *);
 extern void	phase5(xfs_mount_t *);
 extern void	phase6(xfs_mount_t *);
 extern void	phase7(xfs_mount_t *);
+extern void	incore_init(xfs_mount_t *);
 
 #define		XR_MAX_SECT_SIZE	(64 * 1024)
 
@@ -535,6 +536,11 @@ main(int argc, char **argv)
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
+#ifdef XR_PF_TRACE
+	pf_trace_file = fopen("/tmp/xfs_repair_prefetch.trace", "w");
+	setvbuf(pf_trace_file, NULL, _IOLBF, 1024);
+#endif
+
 	temp_mp = &xfs_m;
 	setbuf(stdout, NULL);
 
@@ -687,14 +693,9 @@ main(int argc, char **argv)
 	calc_mkfs(mp);
 
 	/*
-	 * initialize block alloc map
+	 * check sb filesystem stats and initialize in-core data structures
 	 */
-	init_bmaps(mp);
-	incore_ino_init(mp);
-	incore_ext_init(mp);
-
-	/* initialize random globals now that we know the fs geometry */
-	inodes_per_block = mp->m_sb.sb_inopblock;
+	incore_init(mp);
 
 	if (parse_sb_version(&mp->m_sb))  {
 		do_warn(
@@ -721,11 +722,6 @@ main(int argc, char **argv)
 		phase5(mp);
 	}
 	timestamp(PHASE_END, 5, NULL);
-
-	/*
-	 * Done with the block usage maps, toss them...
-	 */
-	free_bmaps(mp);
 
 	if (!bad_ino_btree)  {
 		phase6(mp);
@@ -848,7 +844,8 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 	if (verbose)
 		summary_report();
 	do_log(_("done\n"));
-	pftrace_done();
-
+#ifdef XR_PF_TRACE
+	fclose(pf_trace_file);
+#endif
 	return (0);
 }

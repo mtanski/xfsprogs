@@ -91,7 +91,7 @@ generate_rtinfo(xfs_mount_t	*mp,
 		bits = 0;
 		for (i = 0; i < sizeof(xfs_rtword_t) * NBBY &&
 				extno < mp->m_sb.sb_rextents; i++, extno++)  {
-			if (get_rtbmap(extno) == XR_E_FREE)  {
+			if (get_rtbno_state(mp, extno) == XR_E_FREE)  {
 				sb_frextents++;
 				bits |= freebit;
 
@@ -218,7 +218,7 @@ process_rtbitmap(xfs_mount_t	*mp,
 		     bit < bitsperblock && extno < mp->m_sb.sb_rextents;
 		     bit++, extno++) {
 			if (xfs_isset(words, bit)) {
-				set_rtbmap(extno, XR_E_FREE);
+				set_rtbno_state(mp, extno, XR_E_FREE);
 				sb_frextents++;
 				if (prevbit == 0) {
 					start_bmbno = bmbno;

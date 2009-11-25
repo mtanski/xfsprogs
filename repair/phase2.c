@@ -109,6 +109,7 @@ void
 phase2(xfs_mount_t *mp)
 {
 	xfs_agnumber_t		i;
+	xfs_agblock_t		b;
 	int			j;
 	ino_tree_node_t		*ino_rec;
 
@@ -132,6 +133,12 @@ phase2(xfs_mount_t *mp)
 	}
 
 	do_log(_("        - scan filesystem freespace and inode maps...\n"));
+
+	/*
+	 * account for space used by ag headers and log if internal
+	 */
+	set_bmap_log(mp);
+	set_bmap_fs(mp);
 
 	bad_ino_btree = 0;
 
@@ -168,8 +175,11 @@ phase2(xfs_mount_t *mp)
 		/*
 		 * also mark blocks
 		 */
-		set_bmap_ext(0, XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
-			     mp->m_ialloc_blks, XR_E_INO);
+		for (b = 0; b < mp->m_ialloc_blks; b++)  {
+			set_agbno_state(mp, 0,
+				b + XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
+				XR_E_INO);
+		}
 	} else  {
 		do_log(_("        - found root inode chunk\n"));
 

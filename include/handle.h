@@ -27,8 +27,6 @@ struct attrlist_cursor;
 struct parent;
 
 extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
-extern int  lpath_to_handle (char *__fspath, char *__path,
-			     void **__hanp, size_t *__hlen);
 extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
 extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
 				size_t *__fshlen);

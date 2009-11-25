@@ -24,24 +24,20 @@
 #include "pthread.h"
 #include "avl.h"
 #include "dir.h"
-#include "bmap.h"
 #include "incore.h"
 #include "prefetch.h"
+#include "radix-tree.h"
 #include <sys/resource.h>
 
-/* TODO: dirbuf/freemap key usage is completely b0rked - only used for dirv1 */
 static pthread_key_t dirbuf_key;
 static pthread_key_t dir_freemap_key;
 static pthread_key_t attr_freemap_key;
-
-extern pthread_key_t dblkmap_key;
-extern pthread_key_t ablkmap_key;
 
 static void
 ts_alloc(pthread_key_t key, unsigned n, size_t size)
 {
 	void *voidp;
-	voidp = calloc(n, size);
+	voidp = malloc((n)*(size));
 	if (voidp == NULL) {
 		do_error(_("ts_alloc: cannot allocate thread specific storage\n"));
 		/* NO RETURN */
@@ -57,9 +53,6 @@ ts_create(void)
 	pthread_key_create(&dirbuf_key, NULL);
 	pthread_key_create(&dir_freemap_key, NULL);
 	pthread_key_create(&attr_freemap_key, NULL);
-
-	pthread_key_create(&dblkmap_key, NULL);
-	pthread_key_create(&ablkmap_key, NULL);
 }
 
 void
@@ -158,5 +151,5 @@ xfs_init(libxfs_init_t *args)
 	ts_create();
 	ts_init();
 	increase_rlimit();
-	pftrace_init();
+	radix_tree_init();
 }
