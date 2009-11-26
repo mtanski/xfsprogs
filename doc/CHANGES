@@ -1,13 +1,3 @@
-xfsprogs-3.0.4 (17 September 2009)
-	- Fix a memory leak in xfsprogs.
-	- Increase hash chain length in xfsprogs when running out of memory.
-	- Fix dmsetup invocation in libdisk to avoid warnings during mkfs
-	  on multipath devices.
-	- Fix the -V option to various installed tools.
-	- Small internal fixes to please the clang semantical analysis tool.
-	- Debian packaging updates.
-	- Rework Makepkgs and Makefiles to improve deb generation.
-
 xfsprogs-3.0.3 (30 August 2009)
 	- Fix unaligned accesses in libxfs.
 	- Various small fixes to xfs_db, xfs_repair and xfs_io.

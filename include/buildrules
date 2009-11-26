@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
 
 clean clobber : $(addsuffix -clean,$(SUBDIRS))
 	rm -f $(DIRT)
-	rm -fr $(DIRDIRT)
+	@rm -fr .libs
 %-clean:
 	$(MAKE) -C $* clean
 
@@ -20,17 +20,6 @@ ifdef SUBDIRS
 $(SUBDIRS):
 	$(MAKE) -C $@
 endif
-
-source-link: 
-	@test -z "$$DIR" && DIR="."; \
-	for f in `echo $(SRCFILES) $(SUBDIRS)`; do \
-	    if test -d $$f ; then \
-		mkdir $$SRCLINK_ROOT/$$DIR/$$f || exit $$?; \
-		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
-	    else \
-		ln $$f $$SRCLINK_ROOT/$$DIR/$$f || exit $$?; \
-	    fi; \
-	done
 
 #
 # Standard targets

@@ -83,18 +83,6 @@ cache_init(
 }
 
 void
-cache_expand(
-	struct cache *		cache)
-{
-	pthread_mutex_lock(&cache->c_mutex);
-#ifdef CACHE_DEBUG
-	fprintf(stderr, "doubling cache size to %d\n", 2 * cache->c_maxcount);
-#endif
-	cache->c_maxcount *= 2;
-	pthread_mutex_unlock(&cache->c_mutex);
-}
-
-void
 cache_walk(
 	struct cache *		cache,
 	cache_walk_t		visit)
@@ -356,15 +344,6 @@ cache_node_get(
 		if (node)
 			break;
 		priority = cache_shake(cache, priority, 0);
-		/*
-		 * We start at 0; if we free CACHE_SHAKE_COUNT we get
-		 * back the same priority, if not we get back priority+1.
-		 * If we exceed CACHE_MAX_PRIORITY all slots are full; grow it.
-		 */
-		if (priority > CACHE_MAX_PRIORITY) {
-			priority = 0;
-			cache_expand(cache);
-		}
 	}
 
 	node->cn_hashidx = hashidx;

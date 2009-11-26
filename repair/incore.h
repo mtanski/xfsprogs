@@ -26,6 +26,17 @@
  */
 
 /*
+ * block allocation lists
+ */
+typedef struct ba_rec  {
+	void		*addr;
+	struct ba_rec	*next;
+} ba_rec_t;
+
+void			record_allocation(ba_rec_t *addr, ba_rec_t *list);
+void			free_allocations(ba_rec_t *list);
+
+/*
  * block bit map defs -- track state of each filesystem block.
  * ba_bmap is an array of bitstrings declared in the globals.h file.
  * the bitstrings are broken up into 64-bit chunks.  one bitstring per AG.

@@ -93,20 +93,6 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
 	uuid_copy(*dst, *src);
 }
 
-#ifndef BLKDISCARD
-#define BLKDISCARD	_IO(0x12,119)
-#endif
-
-static __inline__ int
-platform_discard_blocks(int fd, off64_t start, off64_t end)
-{
-	__uint64_t range[2] = { start, end };
-
-	if (ioctl(fd, BLKDISCARD, &range) < 0)
-		return errno;
-	return 0;
-}
-
 #if (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1))
 # define constpp	const char * const *
 #else

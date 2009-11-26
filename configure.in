@@ -35,42 +35,10 @@ AC_ARG_ENABLE(termcap,
 	test $enable_termcap = yes && libtermcap="-ltermcap",)
 AC_SUBST(libtermcap)
 
-AC_ARG_ENABLE(blkid,
-[ --enable-blkid=[yes/no] Enable block device id library [default=no]],
-	test $enable_blkid = yes && libblkid="-lblkid",)
-AC_SUBST(libblkid)
-AC_SUBST(enable_blkid)
-
 AC_ARG_ENABLE(lib64,
-[ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
-	enable_lib64=yes)
+[ --enable-lib64=[yes/no] Enable lib64 support [default=no]],,
+	enable_lib64=no)
 AC_SUBST(enable_lib64)
-
-#
-# If the user specified a libdir ending in lib64 do not append another
-# 64 to the library names.
-#
-base_libdir=`basename "$libdir"`
-case $base_libdir in
-lib64)
-  enable_lib64=no
-esac
-
-#
-# Some important tools should be installed into the root partitions.
-#
-# Check whether exec_prefix=/usr: and install them to /sbin in that
-# case.  If the user choses a different prefix assume he just wants
-# a local install for testing and not a system install.
-#
-case $exec_prefix:$prefix in
-NONE:NONE | NONE:/usr | /usr:*)
-  root_sbindir='/sbin'
-  AC_SUBST([root_sbindir])
-
-  root_libdir="/${base_libdir}"
-  AC_SUBST([root_libdir])
-esac
 
 # Find localized files
 LOCALIZED_FILES=""

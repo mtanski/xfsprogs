@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
 
 POTHEAD = $(PKG_NAME).pot
 LINGUAS = pl
-LSRCFILES = $(LINGUAS:%=%.po)
+LSRCFILES = $(LINGUAS:%=%.po) $(POTHEAD)
 LDIRT = $(POTHEAD)
 
 XGETTEXTFILES =	$(LOCALIZED_FILES)

@@ -439,16 +439,16 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 }
 
 void
-scanfunc_allocbt(
+scanfunc_bno(
 	struct xfs_btree_block	*block,
 	int			level,
 	xfs_agblock_t		bno,
 	xfs_agnumber_t		agno,
 	int			suspect,
-	int			isroot,
-	__uint32_t		magic)
+	int			isroot
+	)
 {
-	const char 		*name;
+	xfs_agblock_t		b, e;
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
@@ -456,20 +456,16 @@ scanfunc_allocbt(
 	int			numrecs;
 	int			state;
 
-	assert(magic == XFS_ABTB_MAGIC || magic == XFS_ABTC_MAGIC);
-
-	name = (magic == XFS_ABTB_MAGIC) ? "bno" : "cnt";
-
-	if (be32_to_cpu(block->bb_magic) != magic) {
-		do_warn(_("bad magic # %#x in bt%s block %d/%d\n"),
-			be32_to_cpu(block->bb_magic), name, agno, bno);
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
+		do_warn(_("bad magic # %#x in btbno block %d/%d\n"),
+			be32_to_cpu(block->bb_magic), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
 	}
 	if (be16_to_cpu(block->bb_level) != level) {
-		do_warn(_("expected level %d got %d in bt%s block %d/%d\n"),
-			level, be16_to_cpu(block->bb_level), name, agno, bno);
+		do_warn(_("expected level %d got %d in btbno block %d/%d\n"),
+			level, be16_to_cpu(block->bb_level), agno, bno);
 		hdr_errors++;
 		if (suspect)
 			return;
@@ -487,8 +483,8 @@ scanfunc_allocbt(
 	default:
 		set_agbno_state(mp, agno, bno, XR_E_MULT);
 		do_warn(
-_("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
-				name, state, agno, bno, suspect);
+_("bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+				state, agno, bno, suspect);
 		return;
 	}
 
@@ -510,42 +506,29 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
-			xfs_agblock_t		b, end;
-			xfs_extlen_t		len;
-
-			b = be32_to_cpu(rp[i].ar_startblock);
-			len = be32_to_cpu(rp[i].ar_blockcount);
-			end = b + len;
-
-			if (b == 0 || !verify_agbno(mp, agno, b))
-				continue;
-			if (len == 0 || len > MAXEXTLEN)
-				continue;
-			if (!verify_agbno(mp, agno, end - 1))
+			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
+			    be32_to_cpu(rp[i].ar_startblock) == 0 ||
+			    !verify_agbno(mp, agno,
+				be32_to_cpu(rp[i].ar_startblock)) ||
+			    be32_to_cpu(rp[i].ar_blockcount) >
+					MAXEXTLEN)
 				continue;
 
-			for ( ; b < end; b++)  {
-				state = get_agbno_state(mp, agno, b);
-				switch (state) {
-				case XR_E_UNKNOWN:
+			e = be32_to_cpu(rp[i].ar_startblock) +
+				be32_to_cpu(rp[i].ar_blockcount);
+			if (!verify_agbno(mp, agno, e - 1))
+				continue;
+			for (b = be32_to_cpu(rp[i].ar_startblock);
+			     b < e; b++)  {
+				if (get_agbno_state(mp, agno, b)
+							== XR_E_UNKNOWN)
 					set_agbno_state(mp, agno, b,
 							XR_E_FREE1);
-					break;
-				case XR_E_FREE1:
-					/*
-					 * no warning messages -- we'll catch
-					 * FREE1 blocks later
-					 */
-					if (magic == XFS_ABTC_MAGIC) {
-						set_agbno_state(mp, agno, b,
-								XR_E_FREE);
-						break;
-					}
-				default:
+				else  {
 					do_warn(
-	_("block (%d,%d) multiply claimed by %s space tree, state - %d\n"),
-						agno, b, name, state);
-					break;
+	_("block (%d,%d) multiply claimed by bno space tree, state - %d\n"),
+						agno, b,
+						get_agbno_state(mp, agno, b));
 				}
 			}
 		}
@@ -581,8 +564,6 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 	}
 
 	for (i = 0; i < numrecs; i++)  {
-		xfs_agblock_t		bno = be32_to_cpu(pp[i]);
-
 		/*
 		 * XXX - put sibling detection right here.
 		 * we know our sibling chain is good.  So as we go,
@@ -592,25 +573,11 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 		 * pointer mismatch, try and extract as much data
 		 * as possible.
 		 */
-		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-			scan_sbtree(bno, level, agno, suspect,
-				    (magic == XFS_ABTB_MAGIC) ?
-				     scanfunc_bno : scanfunc_cnt, 0);
-		}
+		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+							be32_to_cpu(pp[i])))
+			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+					suspect, scanfunc_bno, 0);
 	}
-}
-
-void
-scanfunc_bno(
-	struct xfs_btree_block	*block,
-	int			level,
-	xfs_agblock_t		bno,
-	xfs_agnumber_t		agno,
-	int			suspect,
-	int			isroot)
-{
-	return scanfunc_allocbt(block, level, bno, agno,
-				suspect, isroot, XFS_ABTB_MAGIC);
 }
 
 void
@@ -623,169 +590,137 @@ scanfunc_cnt(
 	int			isroot
 	)
 {
-	return scanfunc_allocbt(block, level, bno, agno,
-				suspect, isroot, XFS_ABTC_MAGIC);
-}
-
-static int
-scan_single_ino_chunk(
-	xfs_agnumber_t		agno,
-	xfs_inobt_rec_t		*rp,
-	int			suspect)
-{
-	xfs_ino_t		lino;
-	xfs_agino_t		ino;
-	xfs_agblock_t		agbno;
-	int			j;
-	int			nfree;
-	int			off;
+	xfs_alloc_ptr_t		*pp;
+	xfs_alloc_rec_t		*rp;
+	xfs_agblock_t		b, e;
+	int			i;
+	int			hdr_errors;
+	int			numrecs;
 	int			state;
-	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
 
-	ino = be32_to_cpu(rp->ir_startino);
-	off = XFS_AGINO_TO_OFFSET(mp, ino);
-	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
-	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+	hdr_errors = 0;
 
-	/*
-	 * on multi-block block chunks, all chunks start
-	 * at the beginning of the block.  with multi-chunk
-	 * blocks, all chunks must start on 64-inode boundaries
-	 * since each block can hold N complete chunks. if
-	 * fs has aligned inodes, all chunks must start
-	 * at a fs_ino_alignment*N'th agbno.  skip recs
-	 * with badly aligned starting inodes.
-	 */
-	if (ino == 0 ||
-	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
-	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
-	     off % XFS_INODES_PER_CHUNK != 0) ||
-	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0))  {
-		do_warn(
-	_("badly aligned inode rec (starting inode = %llu)\n"),
-			lino);
-		suspect++;
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
+		do_warn(_("bad magic # %#x in btcnt block %d/%d\n"),
+			be32_to_cpu(block->bb_magic), agno, bno);
+		hdr_errors++;
+		if (suspect)
+			return;
+	}
+	if (be16_to_cpu(block->bb_level) != level) {
+		do_warn(_("expected level %d got %d in btcnt block %d/%d\n"),
+			level, be16_to_cpu(block->bb_level), agno, bno);
+		hdr_errors++;
+		if (suspect)
+			return;
 	}
 
 	/*
-	 * verify numeric validity of inode chunk first
-	 * before inserting into a tree.  don't have to
-	 * worry about the overflow case because the
-	 * starting ino number of a chunk can only get
-	 * within 255 inodes of max (NULLAGINO).  if it
-	 * gets closer, the agino number will be illegal
-	 * as the agbno will be too large.
+	 * check for btree blocks multiply claimed
 	 */
-	if (verify_aginum(mp, agno, ino))  {
+	state = get_agbno_state(mp, agno, bno);
+
+	switch (state)  {
+	case XR_E_UNKNOWN:
+		set_agbno_state(mp, agno, bno, XR_E_FS_MAP);
+		break;
+	default:
+		set_agbno_state(mp, agno, bno, XR_E_MULT);
 		do_warn(
-_("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
-			lino, agno, ino);
-		return ++suspect;
+_("bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+			state, agno, bno, suspect);
+		return;
 	}
 
-	if (verify_aginum(mp, agno,
-			ino + XFS_INODES_PER_CHUNK - 1))  {
-		do_warn(
-_("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
-			lino + XFS_INODES_PER_CHUNK - 1,
-			agno, ino + XFS_INODES_PER_CHUNK - 1);
-		return ++suspect;
-	}
+	numrecs = be16_to_cpu(block->bb_numrecs);
 
-	/*
-	 * set state of each block containing inodes
-	 */
-	if (off == 0 && !suspect)  {
-		for (j = 0;
-		     j < XFS_INODES_PER_CHUNK;
-		     j += mp->m_sb.sb_inopblock)  {
-			agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
-			state = get_agbno_state(mp, agno, agbno);
-			if (state == XR_E_UNKNOWN)  {
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
-			} else if (state == XR_E_INUSE_FS && agno == 0 &&
-				   ino + j >= first_prealloc_ino &&
-				   ino + j < last_prealloc_ino)  {
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
-			} else  {
-				do_warn(
-_("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
-					agno, agbno, mp->m_sb.sb_inopblock);
+	if (level == 0) {
+		if (numrecs > mp->m_alloc_mxr[0])  {
+			numrecs = mp->m_alloc_mxr[0];
+			hdr_errors++;
+		}
+		if (isroot == 0 && numrecs < mp->m_alloc_mnr[0])  {
+			numrecs = mp->m_alloc_mnr[0];
+			hdr_errors++;
+		}
+
+		if (hdr_errors)
+			suspect++;
+
+		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+		for (i = 0; i < numrecs; i++) {
+			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
+					be32_to_cpu(rp[i].ar_startblock) == 0 ||
+					!verify_agbno(mp, agno, be32_to_cpu(
+							rp[i].ar_startblock)) ||
+			    		be32_to_cpu(rp[i].ar_blockcount) >
+							MAXEXTLEN)
+				continue;
+
+			e = be32_to_cpu(rp[i].ar_startblock) +
+				be32_to_cpu(rp[i].ar_blockcount);
+			if (!verify_agbno(mp, agno, e - 1))
+				continue;
+			for (b = be32_to_cpu(rp[i].ar_startblock); b < e; b++) {
+				state = get_agbno_state(mp, agno, b);
 				/*
-				 * XXX - maybe should mark
-				 * block a duplicate
+				 * no warning messages -- we'll catch
+				 * FREE1 blocks later
 				 */
-				return ++suspect;
+				switch (state)  {
+				case XR_E_FREE1:
+					set_agbno_state(mp, agno, b, XR_E_FREE);
+					break;
+				case XR_E_UNKNOWN:
+					set_agbno_state(mp, agno, b,
+							XR_E_FREE1);
+					break;
+				default:
+					do_warn(
+				_("block (%d,%d) already used, state %d\n"),
+						agno, b, state);
+					break;
+				}
 			}
 		}
+		return;
 	}
 
 	/*
-	 * ensure only one avl entry per chunk
+	 * interior record
 	 */
-	find_inode_rec_range(agno, ino, ino + XFS_INODES_PER_CHUNK,
-			     &first_rec, &last_rec);
-	if (first_rec != NULL)  {
-		/*
-		 * this chunk overlaps with one (or more)
-		 * already in the tree
-		 */
-		do_warn(
-_("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
-			lino, agno, ino, agno, first_rec->ino_startnum);
-		suspect++;
+	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
 
-		/*
-		 * if the 2 chunks start at the same place,
-		 * then we don't have to put this one
-		 * in the uncertain list.  go to the next one.
-		 */
-		if (first_rec->ino_startnum == ino)
-			return suspect;
+	if (numrecs > mp->m_alloc_mxr[1])  {
+		numrecs = mp->m_alloc_mxr[1];
+		hdr_errors++;
 	}
-
-	nfree = 0;
+	if (isroot == 0 && numrecs < mp->m_alloc_mnr[1])  {
+		numrecs = mp->m_alloc_mnr[1];
+		hdr_errors++;
+	}
 
 	/*
-	 * now mark all the inodes as existing and free or used.
-	 * if the tree is suspect, put them into the uncertain
-	 * inode tree.
+	 * don't pass bogus tree flag down further if this block
+	 * looked ok.  bail out if two levels in a row look bad.
 	 */
-	if (!suspect)  {
-		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
-			nfree++;
-			ino_rec = set_inode_free_alloc(agno, ino);
-		} else  {
-			ino_rec = set_inode_used_alloc(agno, ino);
-		}
-		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-				nfree++;
-				set_inode_free(ino_rec, j);
-			} else  {
-				set_inode_used(ino_rec, j);
-			}
-		}
-	} else  {
-		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-				nfree++;
-				add_aginode_uncertain(agno, ino + j, 1);
-			} else  {
-				add_aginode_uncertain(agno, ino + j, 0);
-			}
-		}
+
+	if (suspect && !hdr_errors)
+		suspect = 0;
+
+	if (hdr_errors)  {
+		if (suspect)
+			return;
+		else suspect++;
 	}
 
-	if (nfree != be32_to_cpu(rp->ir_freecount)) {
-		do_warn(_("ir_freecount/free mismatch, inode "
-			"chunk %d/%d, freecount %d nfree %d\n"),
-			agno, ino, be32_to_cpu(rp->ir_freecount), nfree);
+	for (i = 0; i < numrecs; i++) {
+		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+							be32_to_cpu(pp[i])))
+			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+					suspect, scanfunc_cnt, 0);
 	}
-
-	return suspect;
 }
-
 
 /*
  * this one walks the inode btrees sucking the info there into
@@ -813,11 +748,18 @@ scanfunc_ino(
 	int			isroot
 	)
 {
+	xfs_ino_t		lino;
 	int			i;
+	xfs_agino_t		ino;
+	xfs_agblock_t		agbno;
+	int			j;
+	int			nfree;
+	int			off;
 	int			numrecs;
 	int			state;
 	xfs_inobt_ptr_t		*pp;
 	xfs_inobt_rec_t		*rp;
+	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
 	int			hdr_errors;
 
 	hdr_errors = 0;
@@ -892,8 +834,165 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 		 * of INODES_PER_CHUNK (64) inodes.  off is the offset into
 		 * the block.  skip processing of bogus records.
 		 */
-		for (i = 0; i < numrecs; i++)
-			suspect = scan_single_ino_chunk(agno, &rp[i], suspect);
+		for (i = 0; i < numrecs; i++) {
+			ino = be32_to_cpu(rp[i].ir_startino);
+			off = XFS_AGINO_TO_OFFSET(mp, ino);
+			agbno = XFS_AGINO_TO_AGBNO(mp, ino);
+			lino = XFS_AGINO_TO_INO(mp, agno, ino);
+			/*
+			 * on multi-block block chunks, all chunks start
+			 * at the beginning of the block.  with multi-chunk
+			 * blocks, all chunks must start on 64-inode boundaries
+			 * since each block can hold N complete chunks. if
+			 * fs has aligned inodes, all chunks must start
+			 * at a fs_ino_alignment*N'th agbno.  skip recs
+			 * with badly aligned starting inodes.
+			 */
+			if (ino == 0 ||
+			    (inodes_per_block <= XFS_INODES_PER_CHUNK &&
+			     off !=  0) ||
+			    (inodes_per_block > XFS_INODES_PER_CHUNK &&
+			     off % XFS_INODES_PER_CHUNK != 0) ||
+			    (fs_aligned_inodes &&
+			     agbno % fs_ino_alignment != 0))  {
+				do_warn(
+			_("badly aligned inode rec (starting inode = %llu)\n"),
+					lino);
+				suspect++;
+			}
+
+			/*
+			 * verify numeric validity of inode chunk first
+			 * before inserting into a tree.  don't have to
+			 * worry about the overflow case because the
+			 * starting ino number of a chunk can only get
+			 * within 255 inodes of max (NULLAGINO).  if it
+			 * gets closer, the agino number will be illegal
+			 * as the agbno will be too large.
+			 */
+			if (verify_aginum(mp, agno, ino))  {
+				do_warn(
+_("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
+					lino, agno, ino);
+				suspect++;
+				continue;
+			}
+
+			if (verify_aginum(mp, agno,
+					ino + XFS_INODES_PER_CHUNK - 1))  {
+				do_warn(
+_("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
+					lino + XFS_INODES_PER_CHUNK - 1,
+					agno, ino + XFS_INODES_PER_CHUNK - 1);
+				suspect++;
+				continue;
+			}
+
+			/*
+			 * set state of each block containing inodes
+			 */
+			if (off == 0 && !suspect)  {
+				for (j = 0;
+				     j < XFS_INODES_PER_CHUNK;
+				     j += mp->m_sb.sb_inopblock)  {
+					agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
+					state = get_agbno_state(mp,
+							agno, agbno);
+
+					if (state == XR_E_UNKNOWN)  {
+						set_agbno_state(mp, agno,
+							agbno, XR_E_INO);
+					} else if (state == XR_E_INUSE_FS &&
+						agno == 0 &&
+						ino + j >= first_prealloc_ino &&
+						ino + j < last_prealloc_ino)  {
+						set_agbno_state(mp, agno,
+							agbno, XR_E_INO);
+					} else  {
+						do_warn(
+_("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
+							agno, bno,
+							mp->m_sb.sb_inopblock);
+						suspect++;
+						/*
+						 * XXX - maybe should mark
+						 * block a duplicate
+						 */
+						continue;
+					}
+				}
+			}
+			/*
+			 * ensure only one avl entry per chunk
+			 */
+			find_inode_rec_range(agno, ino,
+					ino + XFS_INODES_PER_CHUNK,
+					&first_rec,
+					&last_rec);
+			if (first_rec != NULL)  {
+				/*
+				 * this chunk overlaps with one (or more)
+				 * already in the tree
+				 */
+				do_warn(
+_("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
+					lino, agno, ino,
+					agno, first_rec->ino_startnum);
+				suspect++;
+
+				/*
+				 * if the 2 chunks start at the same place,
+				 * then we don't have to put this one
+				 * in the uncertain list.  go to the next one.
+				 */
+				if (first_rec->ino_startnum == ino)
+					continue;
+			}
+
+			nfree = 0;
+
+			/*
+			 * now mark all the inodes as existing and free or used.
+			 * if the tree is suspect, put them into the uncertain
+			 * inode tree.
+			 */
+			if (!suspect)  {
+				if (XFS_INOBT_IS_FREE_DISK(&rp[i], 0)) {
+					nfree++;
+					ino_rec = set_inode_free_alloc(agno,
+									ino);
+				} else  {
+					ino_rec = set_inode_used_alloc(agno,
+									ino);
+				}
+				for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
+					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
+						nfree++;
+						set_inode_free(ino_rec, j);
+					} else  {
+						set_inode_used(ino_rec, j);
+					}
+				}
+			} else  {
+				for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
+					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
+						nfree++;
+						add_aginode_uncertain(agno,
+								ino + j, 1);
+					} else  {
+						add_aginode_uncertain(agno,
+								ino + j, 0);
+					}
+				}
+			}
+
+			if (nfree != be32_to_cpu(rp[i].ir_freecount)) {
+				do_warn(_("ir_freecount/free mismatch, inode "
+					"chunk %d/%d, freecount %d nfree %d\n"),
+					agno, ino,
+					be32_to_cpu(rp[i].ir_freecount), nfree);
+			}
+		}
 
 		if (suspect)
 			bad_ino_btree = 1;
@@ -944,26 +1043,23 @@ scan_freelist(
 {
 	xfs_agfl_t	*agfl;
 	xfs_buf_t	*agflbuf;
-	xfs_agnumber_t	agno;
 	xfs_agblock_t	bno;
 	int		count;
 	int		i;
 
-	agno = be32_to_cpu(agf->agf_seqno);
-
 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-	    XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
-		set_agbno_state(mp, agno, XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
-
+			XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+			XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
+		set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+				XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
 	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
-
-	agflbuf = libxfs_readbuf(mp->m_dev,
-				 XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
-				 XFS_FSS_TO_BB(mp, 1), 0);
+	agflbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp,
+				be32_to_cpu(agf->agf_seqno),
+				XFS_AGFL_DADDR(mp)), XFS_FSS_TO_BB(mp, 1), 0);
 	if (!agflbuf)  {
-		do_abort(_("can't read agfl block for ag %d\n"), agno);
+		do_abort(_("can't read agfl block for ag %d\n"),
+			be32_to_cpu(agf->agf_seqno));
 		return;
 	}
 	agfl = XFS_BUF_TO_AGFL(agflbuf);
@@ -971,11 +1067,12 @@ scan_freelist(
 	count = 0;
 	for (;;) {
 		bno = be32_to_cpu(agfl->agfl_bno[i]);
-		if (verify_agbno(mp, agno, bno))
-			set_agbno_state(mp, agno, bno, XR_E_FREE);
+		if (verify_agbno(mp, be32_to_cpu(agf->agf_seqno), bno))
+			set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+					bno, XR_E_FREE);
 		else
 			do_warn(_("bad agbno %u in agfl, agno %d\n"),
-				bno, agno);
+				bno, be32_to_cpu(agf->agf_seqno));
 		count++;
 		if (i == be32_to_cpu(agf->agf_fllast))
 			break;
@@ -984,7 +1081,8 @@ scan_freelist(
 	}
 	if (count != be32_to_cpu(agf->agf_flcount)) {
 		do_warn(_("freeblk count %d != flcount %d in ag %d\n"), count,
-			be32_to_cpu(agf->agf_flcount), agno);
+			be32_to_cpu(agf->agf_flcount),
+			be32_to_cpu(agf->agf_seqno));
 	}
 	libxfs_putbuf(agflbuf);
 }

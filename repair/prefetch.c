@@ -64,6 +64,7 @@ static void		pf_read_inode_dirs(prefetch_args_t *, xfs_buf_t *);
  * the buffer is for an inode or other metadata.
  */
 #define B_IS_INODE(f)	(((f) & 5) == 0)
+#define B_IS_META(f)	(((f) & 5) != 0)
 
 #define DEF_BATCH_BYTES	0x10000
 
@@ -130,7 +131,7 @@ pf_queue_io(
 
 	if (fsbno > args->last_bno_read) {
 		radix_tree_insert(&args->primary_io_queue, fsbno, bp);
-		if (!B_IS_INODE(flag))
+		if (B_IS_META(flag))
 			radix_tree_tag_set(&args->primary_io_queue, fsbno, 0);
 		else {
 			args->inode_bufs_queued++;
@@ -152,7 +153,7 @@ pf_queue_io(
 			(long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
 			args->last_bno_read);
 #endif
-		ASSERT(!B_IS_INODE(flag));
+		ASSERT(B_IS_META(flag));
 		XFS_BUF_SET_PRIORITY(bp, B_DIR_META_2);
 		radix_tree_insert(&args->secondary_io_queue, fsbno, bp);
 	}

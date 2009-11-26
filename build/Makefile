@@ -9,7 +9,6 @@ MANIFEST=src-manifest
 SRCTAR=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 LDIRT = *-manifest *.gz $(TOPDIR)/$(PKG_NAME)-*
-LDIRDIRT = deb
 
 # for clean and clobber
 SUBDIRS = tar rpm

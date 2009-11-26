@@ -31,12 +31,12 @@
  * paranoia -- account for any weird padding, 64/32-bit alignment, etc.
  */
 typedef struct extent_alloc_rec  {
-	struct list_head	list;
+	ba_rec_t		alloc_rec;
 	extent_tree_node_t	extents[ALLOC_NUM_EXTS];
 } extent_alloc_rec_t;
 
 typedef struct rt_extent_alloc_rec  {
-	struct list_head	list;
+	ba_rec_t		alloc_rec;
 	rt_extent_tree_node_t	extents[ALLOC_NUM_EXTS];
 } rt_extent_alloc_rec_t;
 
@@ -89,8 +89,8 @@ static avltree_desc_t	**extent_bcnt_ptrs;	/*
 /*
  * list of allocated "blocks" for easy freeing later
  */
-static struct list_head	ba_list;
-static struct list_head	rt_ba_list;
+static ba_rec_t		*ba_list;
+static ba_rec_t		*rt_ba_list;
 
 /*
  * locks.
@@ -120,7 +120,7 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
 			do_error(
 			_("couldn't allocate new extent descriptors.\n"));
 
-		list_add(&rec->list, &ba_list);
+		record_allocation(&rec->alloc_rec, ba_list);
 
 		new = &rec->extents[0];
 
@@ -678,7 +678,7 @@ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
 			do_error(
 			_("couldn't allocate new extent descriptors.\n"));
 
-		list_add(&rec->list, &rt_ba_list);
+		record_allocation(&rec->alloc_rec, rt_ba_list);
 
 		new = &rec->extents[0];
 
@@ -755,15 +755,12 @@ release_rt_extent_tree()
 void
 free_rt_dup_extent_tree(xfs_mount_t *mp)
 {
-	rt_extent_alloc_rec_t *cur, *tmp;
-
 	ASSERT(mp->m_sb.sb_rblocks != 0);
 
-	list_for_each_entry_safe(cur, tmp, &rt_ba_list, list)
-		free(cur);
-
+	free_allocations(rt_ba_list);
 	free(rt_ext_tree_ptr);
 
+	rt_ba_list = NULL;
 	rt_ext_tree_ptr = NULL;
 
 	return;
@@ -898,8 +895,8 @@ incore_ext_init(xfs_mount_t *mp)
 	int i;
 	xfs_agnumber_t agcount = mp->m_sb.sb_agcount;
 
-	list_head_init(&ba_list);
-	list_head_init(&rt_ba_list);
+	ba_list = NULL;
+	rt_ba_list = NULL;
 	pthread_mutex_init(&ext_flist_lock, NULL);
 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
 	pthread_mutex_init(&rt_ext_flist_lock, NULL);
@@ -957,11 +954,9 @@ incore_ext_init(xfs_mount_t *mp)
 void
 incore_ext_teardown(xfs_mount_t *mp)
 {
-	extent_alloc_rec_t *cur, *tmp;
 	xfs_agnumber_t i;
 
-	list_for_each_entry_safe(cur, tmp, &ba_list, list)
-		free(cur);
+	free_allocations(ba_list);
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		free(extent_tree_ptrs[i]);

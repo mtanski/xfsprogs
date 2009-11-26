@@ -9,20 +9,18 @@ ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
 endif
 
-CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+CONFIGURE = aclocal.m4 configure config.guess config.sub configure install-sh \
+	    ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+	    m4/ltversion.m4 m4/lt~obsolete.m4
 LSRCFILES = configure.in Makepkgs release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz autom4te.cache/* \
 	libtool include/builddefs include/platform_defs.h
 
-LIB_SUBDIRS = libxfs libxlog libxcmd libhandle $(LDISK)
+LIB_SUBDIRS = libxfs libxlog libxcmd libhandle libdisk
 TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
 		mdrestore repair rtcp m4 man doc po debian build
-
-ifneq ($(ENABLE_BLKID), yes)
-LIB_SUBDIRS += libdisk
-endif
 
 SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 
@@ -40,13 +38,9 @@ db logprint: libxfs libxlog
 fsr: libhandle
 growfs: libxfs libxcmd
 io: libxcmd libhandle
-mkfs: libxfs
+mkfs: libxfs libdisk
 quota: libxcmd
 repair: libxfs libxlog
-
-ifneq ($(ENABLE_BLKID), yes)
-mkfs: libdisk
-endif
 
 ifeq ($(HAVE_BUILDDEFS), yes)
 include $(BUILDRULES)
@@ -66,7 +60,18 @@ configure:
 	autoconf
 
 include/builddefs: configure
-	./configure $$LOCAL_CONFIGURE_OPTIONS
+	./configure \
+		--prefix=/ \
+		--exec-prefix=/ \
+		--sbindir=/sbin \
+		--bindir=/usr/sbin \
+		--libdir=/lib \
+		--libexecdir=/usr/lib \
+		--enable-lib64=yes \
+		--includedir=/usr/include \
+		--mandir=/usr/share/man \
+		--datadir=/usr/share \
+		$$LOCAL_CONFIGURE_OPTIONS
 	touch .census
 
 include/platform_defs.h: include/builddefs

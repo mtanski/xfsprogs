@@ -25,6 +25,33 @@
 #include "err_protos.h"
 #include "threads.h"
 
+/*
+ * push a block allocation record onto list.  assumes list
+ * if set to NULL if empty.
+ */
+void
+record_allocation(ba_rec_t *addr, ba_rec_t *list)
+{
+	addr->next = list;
+	list = addr;
+
+	return;
+}
+
+void
+free_allocations(ba_rec_t *list)
+{
+	ba_rec_t *current = list;
+
+	while (list != NULL)  {
+		list = list->next;
+		free(current);
+		current = list;
+	}
+
+	return;
+}
+
 /* ba bmap setupstuff.  setting/getting state is in incore.h  */
 
 void

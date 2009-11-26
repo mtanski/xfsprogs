@@ -36,11 +36,10 @@ dm_get_subvol_stripe(
 {
 	int		count, stripes = 0, stripesize = 0;
 	int		dmpipe[2];
-	char		*largv[7];
+	char		*dpath, *largv[4], tmppath[PATH_MAX];
 	FILE		*stream;
 	long long	offset, size;
 	static char	*command = "table";	/* dmsetup table /dev/xxx */
-	char		major_str[4], minor_str[4];
 
 	if (!mnt_is_dm_subvol(sb->st_rdev))
 		return 0;
@@ -58,15 +57,16 @@ dm_get_subvol_stripe(
 		return 0;
 	}
 
-	snprintf(major_str, 4, "%d", major(sb->st_rdev));
-	snprintf(minor_str, 4, "%d", minor(sb->st_rdev));
+	if (!(dpath = realpath(dfile, tmppath))) {
+		fprintf(stderr,
+	_("Warning - device mapper device, but cannot resolve path %s: %s\n"),
+			dfile, strerror(errno));
+		return 0;
+	}
 
 	largv[1] = command;
-	largv[2] = "-j";
-	largv[3] = major_str;
-	largv[4] = "-m";
-	largv[5] = minor_str;
-	largv[6] = NULL;
+	largv[2] = dpath;
+	largv[3] = NULL;
 
 	/* Open pipe */
 	if (pipe(dmpipe) < 0) {
