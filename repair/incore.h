@@ -20,97 +20,40 @@
 #define XFS_REPAIR_INCORE_H
 
 #include "avl.h"
+
+
 /*
  * contains definition information.  implementation (code)
  * is spread out in separate files.
  */
 
 /*
- * block bit map defs -- track state of each filesystem block.
- * ba_bmap is an array of bitstrings declared in the globals.h file.
- * the bitstrings are broken up into 64-bit chunks.  one bitstring per AG.
- */
-#define BA_BMAP_SIZE(x)		(howmany(x, 4))
-
-void			set_bmap_rt(xfs_drfsbno_t numblocks);
-void			set_bmap_log(xfs_mount_t *mp);
-void			set_bmap_fs(xfs_mount_t *mp);
-void			teardown_bmap(xfs_mount_t *mp);
-
-void			teardown_rt_bmap(xfs_mount_t *mp);
-void			teardown_ag_bmap(xfs_mount_t *mp, xfs_agnumber_t agno);
-void			teardown_bmap_finish(xfs_mount_t *mp);
-
-/* blocks are numbered from zero */
-
-/* block records fit into __uint64_t's units */
-
-#define XR_BB_UNIT	64			/* number of bits/unit */
-#define XR_BB		4			/* bits per block record */
-#define XR_BB_NUM	(XR_BB_UNIT/XR_BB)	/* number of records per unit */
-#define XR_BB_MASK	0xF			/* block record mask */
-
-/*
- * bitstring ops -- set/get block states, either in filesystem
- * bno's or in agbno's.  turns out that fsbno addressing is
- * more convenient when dealing with bmap extracted addresses
- * and agbno addressing is more convenient when dealing with
- * meta-data extracted addresses.  So the fsbno versions use
- * mtype (which can be one of the block map types above) to
- * set the correct block map while the agbno versions assume
- * you want to use the regular block map.
+ * block map -- track state of each filesystem block.
  */
 
-#if defined(XR_BMAP_TRACE) || defined(XR_BMAP_DBG)
-/*
- * implemented as functions for debugging purposes
- */
-int get_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-	xfs_agblock_t ag_blockno);
-void set_agbno_state(xfs_mount_t *mp, xfs_agnumber_t agno,
-	xfs_agblock_t ag_blockno, int state);
+void		init_bmaps(xfs_mount_t *mp);
+void		reset_bmaps(xfs_mount_t *mp);
+void		free_bmaps(xfs_mount_t *mp);
 
-int get_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno);
-void set_fsbno_state(xfs_mount_t *mp, xfs_dfsbno_t blockno, int state);
-#else
-/*
- * implemented as macros for performance purposes
- */
+void		set_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+			     xfs_extlen_t blen, int state);
+int		get_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+			     xfs_agblock_t maxbno, xfs_extlen_t *blen);
 
-#define get_agbno_state(mp, agno, ag_blockno) \
-			((int) (*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) \
-				 >> (((ag_blockno)%XR_BB_NUM)*XR_BB)) \
-				& XR_BB_MASK)
-#define set_agbno_state(mp, agno, ag_blockno, state) \
-	*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) = \
-		((*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) & \
-	  (~((__uint64_t) XR_BB_MASK << (((ag_blockno)%XR_BB_NUM)*XR_BB)))) | \
-	 (((__uint64_t) (state)) << (((ag_blockno)%XR_BB_NUM)*XR_BB)))
+void		set_rtbmap(xfs_drtbno_t bno, int state);
+int		get_rtbmap(xfs_drtbno_t bno);
 
-#define get_fsbno_state(mp, blockno) \
-		get_agbno_state(mp, XFS_FSB_TO_AGNO(mp, (blockno)), \
-				XFS_FSB_TO_AGBNO(mp, (blockno)))
-#define set_fsbno_state(mp, blockno, state) \
-		set_agbno_state(mp, XFS_FSB_TO_AGNO(mp, (blockno)), \
-			XFS_FSB_TO_AGBNO(mp, (blockno)), (state))
+static inline void
+set_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno, int state)
+{
+	set_bmap_ext(agno, agbno, 1, state);
+}
 
-
-#define get_agbno_rec(mp, agno, ag_blockno) \
-			(*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM))
-#endif /* XR_BMAP_TRACE */
-
-/*
- * these work in real-time extents (e.g. fsbno == rt extent number)
- */
-#define get_rtbno_state(mp, fsbno) \
-			((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) >> \
-			(((fsbno)%XR_BB_NUM)*XR_BB)) & XR_BB_MASK)
-#define set_rtbno_state(mp, fsbno, state) \
-	*(rt_ba_bmap + (fsbno)/XR_BB_NUM) = \
-	 ((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) & \
-	  (~((__uint64_t) XR_BB_MASK << (((fsbno)%XR_BB_NUM)*XR_BB)))) | \
-	 (((__uint64_t) (state)) << (((fsbno)%XR_BB_NUM)*XR_BB)))
-
+static inline int
+get_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno)
+{
+	return get_bmap_ext(agno, agbno, agbno + 1, NULL);
+}
 
 /*
  * extent tree definitions
@@ -227,23 +170,11 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
 /*
  * duplicate extent tree functions
  */
-void		add_dup_extent(xfs_agnumber_t agno,
-				xfs_agblock_t startblock,
-				xfs_extlen_t blockcount);
 
-extern avltree_desc_t   **extent_tree_ptrs;
-/* ARGSUSED */
-static inline int
-search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
-{
-	ASSERT(agno < glob_agcount);
-
-	if (avl_findrange(extent_tree_ptrs[agno], agbno) != NULL)
-		return(1);
-
-	return(0);
-}
-
+int		add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
+			xfs_extlen_t blockcount);
+int		search_dup_extent(xfs_agnumber_t agno,
+			xfs_agblock_t start_agbno, xfs_agblock_t end_agbno);
 void		add_rt_dup_extent(xfs_drtbno_t	startblock,
 				xfs_extlen_t	blockcount);
 
@@ -271,12 +202,15 @@ void		release_agbcnt_extent_tree(xfs_agnumber_t agno);
  */
 void		free_rt_dup_extent_tree(xfs_mount_t *mp);
 
+void		incore_ext_init(xfs_mount_t *);
 /*
  * per-AG extent trees shutdown routine -- all (bno, bcnt and dup)
  * at once.  this one actually frees the memory instead of just recyling
  * the nodes.
  */
 void		incore_ext_teardown(xfs_mount_t *mp);
+
+void		incore_ino_init(xfs_mount_t *);
 
 /*
  * inode definitions

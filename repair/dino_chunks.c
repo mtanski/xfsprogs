@@ -118,6 +118,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	int		i;
 	int		j;
 	int		state;
+	xfs_extlen_t	blen;
 
 	agno = XFS_INO_TO_AGNO(mp, ino);
 	agino = XFS_INO_TO_AGINO(mp, ino);
@@ -151,7 +152,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
 
 		pthread_mutex_lock(&ag_locks[agno]);
 
-		switch (state = get_agbno_state(mp, agno, agbno))  {
+		state = get_bmap(agno, agbno);
+		switch (state) {
 		case XR_E_INO:
 			do_warn(
 		_("uncertain inode block %d/%d already known\n"),
@@ -160,7 +162,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			set_bmap(agno, agbno, XR_E_INO);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -172,14 +174,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, agbno, state);
-			set_agbno_state(mp, agno, agbno, XR_E_MULT);
+			set_bmap(agno, agbno, XR_E_MULT);
 			pthread_mutex_unlock(&ag_locks[agno]);
 			return(0);
 		default:
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, agbno, state);
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
+			set_bmap(agno, agbno, XR_E_INO);
 			break;
 		}
 
@@ -432,9 +434,11 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	 * entry or an iunlinked pointer
 	 */
 	pthread_mutex_lock(&ag_locks[agno]);
-	for (j = 0, cur_agbno = chunk_start_agbno;
-			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
+	for (cur_agbno = chunk_start_agbno;
+	     cur_agbno < chunk_stop_agbno;
+	     cur_agbno += blen)  {
+		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
+		switch (state) {
 		case XR_E_MULT:
 		case XR_E_INUSE:
 		case XR_E_INUSE_FS:
@@ -442,9 +446,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_agbno_state(mp, agno, cur_agbno, XR_E_MULT);
-			j = 1;
-			break;
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
+			pthread_mutex_unlock(&ag_locks[agno]);
+			return 0;
 		case XR_E_INO:
 			do_error(
 		_("uncertain inode block overlap, agbno = %d, ino = %llu\n"),
@@ -452,11 +456,6 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			break;
 		default:
 			break;
-		}
-
-		if (j) {
-			pthread_mutex_unlock(&ag_locks[agno]);
-			return(0);
 		}
 	}
 	pthread_mutex_unlock(&ag_locks[agno]);
@@ -485,8 +484,10 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	pthread_mutex_lock(&ag_locks[agno]);
 
 	for (cur_agbno = chunk_start_agbno;
-			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
-		switch (state = get_agbno_state(mp, agno, cur_agbno))  {
+	     cur_agbno < chunk_stop_agbno;
+	     cur_agbno += blen)  {
+		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
+		switch (state) {
 		case XR_E_INO:
 			do_error(
 		_("uncertain inode block %llu already known\n"),
@@ -495,7 +496,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_UNKNOWN:
 		case XR_E_FREE1:
 		case XR_E_FREE:
-			set_agbno_state(mp, agno, cur_agbno, XR_E_INO);
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE:
@@ -509,7 +510,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 			do_warn(
 		_("inode block %d/%d bad state, (state %d)\n"),
 				agno, cur_agbno, state);
-			set_agbno_state(mp, agno, cur_agbno, XR_E_INO);
+			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
 			break;
 		}
 	}
@@ -629,10 +630,9 @@ process_inode_chunk(
 			cluster_count * sizeof(xfs_buf_t*));
 
 	for (bp_index = 0; bp_index < cluster_count; bp_index++) {
-#ifdef XR_PF_TRACE
 		pftrace("about to read off %llu in AG %d",
 			(long long)XFS_AGB_TO_DADDR(mp, agno, agbno), agno);
-#endif
+
 		bplist[bp_index] = libxfs_readbuf(mp->m_dev,
 					XFS_AGB_TO_DADDR(mp, agno, agbno),
 					XFS_FSB_TO_BB(mp, blks_per_cluster), 0);
@@ -650,11 +650,9 @@ process_inode_chunk(
 		}
 		agbno += blks_per_cluster;
 
-#ifdef XR_PF_TRACE
 		pftrace("readbuf %p (%llu, %d) in AG %d", bplist[bp_index],
 			(long long)XFS_BUF_ADDR(bplist[bp_index]),
 			XFS_BUF_COUNT(bplist[bp_index]), agno);
-#endif
 	}
 	agbno = XFS_AGINO_TO_AGBNO(mp, first_irec->ino_startnum);
 
@@ -745,22 +743,23 @@ process_inode_chunk(
 	 * mark block as an inode block in the incore bitmap
 	 */
 	pthread_mutex_lock(&ag_locks[agno]);
-	switch (state = get_agbno_state(mp, agno, agbno))  {
-		case XR_E_INO:	/* already marked */
-			break;
-		case XR_E_UNKNOWN:
-		case XR_E_FREE:
-		case XR_E_FREE1:
-			set_agbno_state(mp, agno, agbno, XR_E_INO);
-			break;
-		case XR_E_BAD_STATE:
-			do_error(_("bad state in block map %d\n"), state);
-			break;
-		default:
-			set_agbno_state(mp, agno, agbno, XR_E_MULT);
-			do_warn(_("inode block %llu multiply claimed, state was %d\n"),
-				XFS_AGB_TO_FSB(mp, agno, agbno), state);
-			break;
+	state = get_bmap(agno, agbno);
+	switch (state) {
+	case XR_E_INO:	/* already marked */
+		break;
+	case XR_E_UNKNOWN:
+	case XR_E_FREE:
+	case XR_E_FREE1:
+		set_bmap(agno, agbno, XR_E_INO);
+		break;
+	case XR_E_BAD_STATE:
+		do_error(_("bad state in block map %d\n"), state);
+		break;
+	default:
+		set_bmap(agno, agbno, XR_E_MULT);
+		do_warn(_("inode block %llu multiply claimed, state was %d\n"),
+			XFS_AGB_TO_FSB(mp, agno, agbno), state);
+		break;
 	}
 	pthread_mutex_unlock(&ag_locks[agno]);
 
@@ -906,10 +905,10 @@ process_inode_chunk(
 			 * done! - finished up irec and block simultaneously
 			 */
 			for (bp_index = 0; bp_index < cluster_count; bp_index++) {
-#ifdef XR_PF_TRACE
-				pftrace("put/writebuf %p (%llu) in AG %d", bplist[bp_index],
-					(long long)XFS_BUF_ADDR(bplist[bp_index]), agno);
-#endif
+				pftrace("put/writebuf %p (%llu) in AG %d",
+					bplist[bp_index], (long long)
+					XFS_BUF_ADDR(bplist[bp_index]), agno);
+
 				if (dirty && !no_modify)
 					libxfs_writebuf(bplist[bp_index], 0);
 				else
@@ -926,20 +925,21 @@ process_inode_chunk(
 			agbno++;
 
 			pthread_mutex_lock(&ag_locks[agno]);
-			switch (state = get_agbno_state(mp, agno, agbno))  {
+			state = get_bmap(agno, agbno);
+			switch (state) {
 			case XR_E_INO:	/* already marked */
 				break;
 			case XR_E_UNKNOWN:
 			case XR_E_FREE:
 			case XR_E_FREE1:
-				set_agbno_state(mp, agno, agbno, XR_E_INO);
+				set_bmap(agno, agbno, XR_E_INO);
 				break;
 			case XR_E_BAD_STATE:
 				do_error(_("bad state in block map %d\n"),
 					state);
 				break;
 			default:
-				set_agbno_state(mp, agno, agbno, XR_E_MULT);
+				set_bmap(agno, agbno, XR_E_MULT);
 				do_warn(_("inode block %llu multiply claimed, "
 					  "state was %d\n"),
 					XFS_AGB_TO_FSB(mp, agno, agbno), state);

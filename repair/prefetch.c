@@ -1,6 +1,7 @@
 #include <libxfs.h>
 #include <pthread.h>
 #include "avl.h"
+#include "btree.h"
 #include "globals.h"
 #include "agheader.h"
 #include "incore.h"
@@ -14,7 +15,6 @@
 #include "threads.h"
 #include "prefetch.h"
 #include "progress.h"
-#include "radix-tree.h"
 
 int do_prefetch = 1;
 
@@ -83,9 +83,8 @@ pf_start_processing(
 	prefetch_args_t		*args)
 {
 	if (!args->can_start_processing) {
-#ifdef XR_PF_TRACE
 		pftrace("signalling processing for AG %d", args->agno);
-#endif
+
 		args->can_start_processing = 1;
 		pthread_cond_signal(&args->start_processing);
 	}
@@ -96,9 +95,8 @@ pf_start_io_workers(
 	prefetch_args_t		*args)
 {
 	if (!args->can_start_reading) {
-#ifdef XR_PF_TRACE
 		pftrace("signalling reading for AG %d", args->agno);
-#endif
+
 		args->can_start_reading = 1;
 		pthread_cond_broadcast(&args->start_reading);
 	}
@@ -128,34 +126,23 @@ pf_queue_io(
 
 	pthread_mutex_lock(&args->lock);
 
+	btree_insert(args->io_queue, fsbno, bp);
+
 	if (fsbno > args->last_bno_read) {
-		radix_tree_insert(&args->primary_io_queue, fsbno, bp);
-		if (!B_IS_INODE(flag))
-			radix_tree_tag_set(&args->primary_io_queue, fsbno, 0);
-		else {
+		if (B_IS_INODE(flag)) {
 			args->inode_bufs_queued++;
 			if (args->inode_bufs_queued == IO_THRESHOLD)
 				pf_start_io_workers(args);
 		}
-#ifdef XR_PF_TRACE
-		pftrace("getbuf %c %p (%llu) in AG %d (fsbno = %lu) added to "
-			"primary queue (inode_bufs_queued = %d, last_bno = %lu)",
-			B_IS_INODE(flag) ? 'I' : 'M', bp,
-			(long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
-			args->inode_bufs_queued, args->last_bno_read);
-#endif
 	} else {
-#ifdef XR_PF_TRACE
-		pftrace("getbuf %c %p (%llu) in AG %d (fsbno = %lu) added to "
-			"secondary queue (last_bno = %lu)",
-			B_IS_INODE(flag) ? 'I' : 'M', bp,
-			(long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
-			args->last_bno_read);
-#endif
 		ASSERT(!B_IS_INODE(flag));
 		XFS_BUF_SET_PRIORITY(bp, B_DIR_META_2);
-		radix_tree_insert(&args->secondary_io_queue, fsbno, bp);
 	}
+
+	pftrace("getbuf %c %p (%llu) in AG %d (fsbno = %lu) added to queue"
+		"(inode_bufs_queued = %d, last_bno = %lu)", B_IS_INODE(flag) ?
+		'I' : 'M', bp, (long long)XFS_BUF_ADDR(bp), args->agno, fsbno,
+		args->inode_bufs_queued, args->last_bno_read);
 
 	pf_start_processing(args);
 
@@ -194,9 +181,9 @@ pf_read_bmbt_reclist(
 
 		while (irec.br_blockcount) {
 			unsigned int	len;
-#ifdef XR_PF_TRACE
+
 			pftrace("queuing dir extent in AG %d", args->agno);
-#endif
+
 			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
 					mp->m_dirblkfsbs : irec.br_blockcount;
 			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
@@ -407,7 +394,6 @@ pf_batch_read(
 	pf_which_t		which,
 	void			*buf)
 {
-	struct radix_tree_root	*queue;
 	xfs_buf_t		*bplist[MAX_BUFS];
 	unsigned int		num;
 	off64_t			first_off, last_off, next_off;
@@ -415,27 +401,28 @@ pf_batch_read(
 	int			i;
 	int			inode_bufs;
 	unsigned long		fsbno;
+	unsigned long		max_fsbno;
 	char			*pbuf;
 
-	queue = (which != PF_SECONDARY) ? &args->primary_io_queue
-				: &args->secondary_io_queue;
-
-	while (radix_tree_lookup_first(queue, &fsbno) != NULL) {
-
-		if (which != PF_META_ONLY) {
-			num = radix_tree_gang_lookup_ex(queue,
-					(void**)&bplist[0], fsbno,
-					fsbno + pf_max_fsbs, MAX_BUFS);
-			ASSERT(num > 0);
-			ASSERT(XFS_FSB_TO_DADDR(mp, fsbno) ==
-				XFS_BUF_ADDR(bplist[0]));
+	for (;;) {
+		num = 0;
+		if (which == PF_SECONDARY) {
+			bplist[0] = btree_find(args->io_queue, 0, &fsbno);
+			max_fsbno = MIN(fsbno + pf_max_fsbs,
+							args->last_bno_read);
 		} else {
-			num = radix_tree_gang_lookup_tag(queue,
-					(void**)&bplist[0], fsbno,
-					MAX_BUFS / 4, 0);
-			if (num == 0)
-				return;
+			bplist[0] = btree_find(args->io_queue,
+						args->last_bno_read, &fsbno);
+			max_fsbno = fsbno + pf_max_fsbs;
 		}
+		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
+			if (which != PF_META_ONLY ||
+			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+				num++;
+			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
+		}
+		if (!num)
+			return;
 
 		/*
 		 * do a big read if 25% of the potential buffer is useful,
@@ -467,7 +454,7 @@ pf_batch_read(
 		}
 
 		for (i = 0; i < num; i++) {
-			if (radix_tree_delete(queue, XFS_DADDR_TO_FSB(mp,
+			if (btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp,
 					XFS_BUF_ADDR(bplist[i]))) == NULL)
 				do_error(_("prefetch corruption\n"));
 		}
@@ -521,20 +508,16 @@ pf_batch_read(
 			}
 		}
 		for (i = 0; i < num; i++) {
-#ifdef XR_PF_TRACE
 			pftrace("putbuf %c %p (%llu) in AG %d",
 				B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])) ? 'I' : 'M',
 				bplist[i], (long long)XFS_BUF_ADDR(bplist[i]),
 				args->agno);
-#endif
 			libxfs_putbuf(bplist[i]);
 		}
 		pthread_mutex_lock(&args->lock);
 		if (which != PF_SECONDARY) {
-#ifdef XR_PF_TRACE
 			pftrace("inode_bufs_queued for AG %d = %d", args->agno,
 				args->inode_bufs_queued);
-#endif
 			/*
 			 * if primary inode queue running low, process metadata
 			 * in boths queues to avoid I/O starvation as the
@@ -543,15 +526,14 @@ pf_batch_read(
 			 */
 			if (which == PF_PRIMARY && !args->queuing_done &&
 					args->inode_bufs_queued < IO_THRESHOLD) {
-#ifdef XR_PF_TRACE
 				pftrace("reading metadata bufs from primary queue for AG %d",
 					args->agno);
-#endif
+
 				pf_batch_read(args, PF_META_ONLY, buf);
-#ifdef XR_PF_TRACE
+
 				pftrace("reading bufs from secondary queue for AG %d",
 					args->agno);
-#endif
+
 				pf_batch_read(args, PF_SECONDARY, buf);
 			}
 		}
@@ -570,22 +552,19 @@ pf_io_worker(
 		return NULL;
 
 	pthread_mutex_lock(&args->lock);
-	while (!args->queuing_done || args->primary_io_queue.height) {
-
-#ifdef XR_PF_TRACE
+	while (!args->queuing_done || !btree_is_empty(args->io_queue)) {
 		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
-#endif
+
 		while (!args->can_start_reading && !args->queuing_done)
 			pthread_cond_wait(&args->start_reading, &args->lock);
-#ifdef XR_PF_TRACE
+
 		pftrace("starting prefetch I/O for AG %d", args->agno);
-#endif
+
 		pf_batch_read(args, PF_PRIMARY, buf);
 		pf_batch_read(args, PF_SECONDARY, buf);
 
-#ifdef XR_PF_TRACE
 		pftrace("ran out of bufs to prefetch for AG %d", args->agno);
-#endif
+
 		if (!args->queuing_done)
 			args->can_start_reading = 0;
 	}
@@ -593,9 +572,8 @@ pf_io_worker(
 
 	free(buf);
 
-#ifdef XR_PF_TRACE
 	pftrace("finished prefetch I/O for AG %d", args->agno);
-#endif
+
 	return NULL;
 }
 
@@ -637,10 +615,7 @@ pf_queuing_worker(
 			break;
 		}
 	}
-
-#ifdef XR_PF_TRACE
 	pftrace("starting prefetch for AG %d", args->agno);
-#endif
 
 	for (irec = findfirst_inode_rec(args->agno); irec != NULL;
 			irec = next_ino_rec(irec)) {
@@ -677,10 +652,9 @@ pf_queuing_worker(
 
 	pthread_mutex_lock(&args->lock);
 
-#ifdef XR_PF_TRACE
 	pftrace("finished queuing inodes for AG %d (inode_bufs_queued = %d)",
 		args->agno, args->inode_bufs_queued);
-#endif
+
 	args->queuing_done = 1;
 	pf_start_io_workers(args);
 	pf_start_processing(args);
@@ -691,13 +665,11 @@ pf_queuing_worker(
 		if (args->io_threads[i])
 			pthread_join(args->io_threads[i], NULL);
 
-#ifdef XR_PF_TRACE
 	pftrace("prefetch for AG %d finished", args->agno);
-#endif
+
 	pthread_mutex_lock(&args->lock);
 
-	ASSERT(args->primary_io_queue.height == 0);
-	ASSERT(args->secondary_io_queue.height == 0);
+	ASSERT(btree_is_empty(args->io_queue));
 
 	args->prefetch_done = 1;
 	if (args->next_args)
@@ -714,9 +686,8 @@ pf_create_prefetch_thread(
 {
 	int			err;
 
-#ifdef XR_PF_TRACE
 	pftrace("creating queue thread for AG %d", args->agno);
-#endif
+
 	err = pthread_create(&args->queuing_thread, NULL,
 			pf_queuing_worker, args);
 	if (err != 0) {
@@ -755,8 +726,7 @@ start_inode_prefetch(
 
 	args = calloc(1, sizeof(prefetch_args_t));
 
-	INIT_RADIX_TREE(&args->primary_io_queue, 0);
-	INIT_RADIX_TREE(&args->secondary_io_queue, 0);
+	btree_init(&args->io_queue);
 	if (pthread_mutex_init(&args->lock, NULL) != 0)
 		do_error(_("failed to initialize prefetch mutex\n"));
 	if (pthread_cond_init(&args->start_reading, NULL) != 0)
@@ -804,14 +774,12 @@ wait_for_inode_prefetch(
 	pthread_mutex_lock(&args->lock);
 
 	while (!args->can_start_processing) {
-#ifdef XR_PF_TRACE
 		pftrace("waiting to start processing AG %d", args->agno);
-#endif
+
 		pthread_cond_wait(&args->start_processing, &args->lock);
 	}
-#ifdef XR_PF_TRACE
 	pftrace("can start processing AG %d", args->agno);
-#endif
+
 	pthread_mutex_unlock(&args->lock);
 }
 
@@ -822,24 +790,38 @@ cleanup_inode_prefetch(
 	if (args == NULL)
 		return;
 
-#ifdef XR_PF_TRACE
 	pftrace("waiting AG %d prefetch to finish", args->agno);
-#endif
+
 	if (args->queuing_thread)
 		pthread_join(args->queuing_thread, NULL);
 
-#ifdef XR_PF_TRACE
 	pftrace("AG %d prefetch done", args->agno);
-#endif
+
 	pthread_mutex_destroy(&args->lock);
 	pthread_cond_destroy(&args->start_reading);
 	pthread_cond_destroy(&args->start_processing);
 	sem_destroy(&args->ra_count);
+	btree_destroy(args->io_queue);
 
 	free(args);
 }
 
 #ifdef XR_PF_TRACE
+
+static FILE	*pf_trace_file;
+
+void
+pftrace_init(void)
+{
+	pf_trace_file = fopen("/tmp/xfs_repair_prefetch.trace", "w");
+	setvbuf(pf_trace_file, NULL, _IOLBF, 1024);
+}
+
+void
+pftrace_done(void)
+{
+	fclose(pf_trace_file);
+}
 
 void
 _pftrace(const char *func, const char *msg, ...)
@@ -855,7 +837,8 @@ _pftrace(const char *func, const char *msg, ...)
 	buf[sizeof(buf)-1] = '\0';
 	va_end(args);
 
-	fprintf(pf_trace_file, "%lu.%06lu  %s: %s\n", tv.tv_sec, tv.tv_usec, func, buf);
+	fprintf(pf_trace_file, "%lu.%06lu  %s: %s\n", tv.tv_sec, tv.tv_usec,
+		func, buf);
 }
 
 #endif

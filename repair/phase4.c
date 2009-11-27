@@ -192,8 +192,7 @@ phase4(xfs_mount_t *mp)
 	xfs_agnumber_t		i;
 	xfs_agblock_t		j;
 	xfs_agblock_t		ag_end;
-	xfs_agblock_t		extent_start;
-	xfs_extlen_t		extent_len;
+	xfs_extlen_t		blen;
 	int			ag_hdr_len = 4 * mp->m_sb.sb_sectsize;
 	int			ag_hdr_block;
 	int			bstate;
@@ -226,30 +225,13 @@ phase4(xfs_mount_t *mp)
 		ag_end = (i < mp->m_sb.sb_agcount - 1) ? mp->m_sb.sb_agblocks :
 			mp->m_sb.sb_dblocks -
 				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
-		extent_start = extent_len = 0;
+
 		/*
 		 * set up duplicate extent list for this ag
 		 */
-		for (j = ag_hdr_block; j < ag_end; j++)  {
-
-			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
-			if ((extent_start == 0) && ((j & XR_BB_MASK) == 0)) {
-				switch(ba_bmap[i][j>>XR_BB]) {
-				case XR_E_UNKNOWN_LL:
-				case XR_E_FREE1_LL:
-				case XR_E_FREE_LL:
-				case XR_E_INUSE_LL:
-				case XR_E_INUSE_FS_LL:
-				case XR_E_INO_LL:
-				case XR_E_FS_MAP_LL:
-					j += (XR_BB_UNIT/XR_BB) - 1;
-					continue;
-				}
-			}
-
-			bstate = get_agbno_state(mp, i, j);
-
-			switch (bstate)  {
+		for (j = ag_hdr_block; j < ag_end; j += blen)  {
+			bstate = get_bmap_ext(i, j, ag_end, &blen);
+			switch (bstate) {
 			case XR_E_BAD_STATE:
 			default:
 				do_warn(
@@ -263,37 +245,13 @@ phase4(xfs_mount_t *mp)
 			case XR_E_INUSE_FS:
 			case XR_E_INO:
 			case XR_E_FS_MAP:
-				if (extent_start == 0)
-					continue;
-				else  {
-					/*
-					 * add extent and reset extent state
-					 */
-					add_dup_extent(i, extent_start,
-							extent_len);
-					extent_start = 0;
-					extent_len = 0;
-				}
 				break;
 			case XR_E_MULT:
-				if (extent_start == 0)  {
-					extent_start = j;
-					extent_len = 1;
-				} else if (extent_len == MAXEXTLEN)  {
-					add_dup_extent(i, extent_start,
-							extent_len);
-					extent_start = j;
-					extent_len = 1;
-				} else
-					extent_len++;
+				add_dup_extent(i, j, blen);
 				break;
 			}
 		}
-		/*
-		 * catch tail-case, extent hitting the end of the ag
-		 */
-		if (extent_start != 0)
-			add_dup_extent(i, extent_start, extent_len);
+
 		PROG_RPT_INC(prog_rpt_done[i], 1);
 	}
 	print_final_rpt();
@@ -305,9 +263,7 @@ phase4(xfs_mount_t *mp)
 	rt_len = 0;
 
 	for (bno = 0; bno < mp->m_sb.sb_rextents; bno++)  {
-
-		bstate = get_rtbno_state(mp, bno);
-
+		bstate = get_rtbmap(bno);
 		switch (bstate)  {
 		case XR_E_BAD_STATE:
 		default:
@@ -358,19 +314,7 @@ phase4(xfs_mount_t *mp)
 	/*
 	 * initialize bitmaps for all AGs
 	 */
-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		/*
-		 * now reset the bitmap for all ags
-		 */
-		memset(ba_bmap[i], 0,
-		    roundup((mp->m_sb.sb_agblocks+(NBBY/XR_BB)-1)/(NBBY/XR_BB),
-						sizeof(__uint64_t)));
-		for (j = 0; j < ag_hdr_block; j++)
-			set_agbno_state(mp, i, j, XR_E_INUSE_FS);
-	}
-	set_bmap_rt(mp->m_sb.sb_rextents);
-	set_bmap_log(mp);
-	set_bmap_fs(mp);
+	reset_bmaps(mp);
 
 	do_log(_("        - check for inodes claiming duplicate blocks...\n"));
 	set_progress_msg(PROG_FMT_DUP_BLOCKS, (__uint64_t) mp->m_sb.sb_icount);
