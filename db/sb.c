@@ -556,6 +556,12 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 	if (!get_sb(agno, &tsb))
 		return 0;
 
+	if (xfs_sb_has_mismatched_features2(&tsb)) {
+		dbprintf(_("Superblock has mismatched features2 fields, "
+			   "skipping modification\n"));
+		return 0;
+	}
+
 	if ((version & XFS_SB_VERSION_LOGV2BIT) &&
 					!xfs_sb_version_haslogv2(&tsb)) {
 		tsb.sb_logsunit = 1;
@@ -564,7 +570,8 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
 
 	tsb.sb_versionnum = version;
 	tsb.sb_features2 = features;
-	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2;
+	tsb.sb_bad_features2 = features;
+	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
 	libxfs_sb_to_disk(iocur_top->data, &tsb, fields);
 	write_cur();
 	return 1;
