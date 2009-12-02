@@ -457,9 +457,10 @@ counter values without needed to keep them in the superblock.
 This gives significant improvements in performance on some configurations.
 The default
 .I value
-is 0 (off) so you must specify
-.B lazy-count=1
-if you want to make use of this feature.
+is 1 (on) so you must specify
+.B lazy-count=0
+if you want to disable this feature for older kernels which don't support
+it.
 .RE
 .TP
 .BI \-n " naming_options"
