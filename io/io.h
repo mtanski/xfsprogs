@@ -112,12 +112,6 @@ extern void		fadvise_init(void);
 #define fadvise_init()	do { } while (0)
 #endif
 
-#ifdef HAVE_INJECT
-extern void		inject_init(void);
-#else
-#define inject_init()	do { } while (0)
-#endif
-
 #ifdef HAVE_RESBLKS
 extern void		resblks_init(void);
 #else
