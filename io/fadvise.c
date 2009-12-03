@@ -52,8 +52,7 @@ fadvise_f(
 	int		argc,
 	char		**argv)
 {
-	off64_t		offset = 0;
-	size_t		length = 0;
+	off64_t		offset = 0, length = 0;
 	int		c, range = 0, advise = POSIX_FADV_NORMAL;
 
 	while ((c = getopt(argc, argv, "dnrsw")) != EOF) {

@@ -30,7 +30,7 @@ mincore_f(
 	int		argc,
 	char		**argv)
 {
-	off64_t		offset;
+	off64_t		offset, llength;
 	size_t		length;
 	size_t		blocksize, sectsize;
 	void		*start;
@@ -49,12 +49,17 @@ mincore_f(
 				argv[1]);
 			return 0;
 		}
-		length = cvtnum(blocksize, sectsize, argv[2]);
-		if (length < 0) {
+		llength = cvtnum(blocksize, sectsize, argv[2]);
+		if (llength < 0) {
 			printf(_("non-numeric length argument -- %s\n"),
 				argv[2]);
 			return 0;
-		}
+		} else if (llength > (size_t)llength) {
+			printf(_("length argument too large -- %lld\n"),
+				llength);
+			return 0;
+		} else
+			length = (size_t)llength;
 	} else {
 		return command_usage(&mincore_cmd);
 	}
