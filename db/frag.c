@@ -66,7 +66,7 @@ static void		extmap_set_ext(extmap_t **extmapp, xfs_fileoff_t o,
 				       xfs_extlen_t c);
 static int		frag_f(int argc, char **argv);
 static int		init(int argc, char **argv);
-static void		process_bmbt_reclist(xfs_bmbt_rec_32_t *rp, int numrecs,
+static void		process_bmbt_reclist(xfs_bmbt_rec_t *rp, int numrecs,
 					     extmap_t **extmapp);
 static void		process_btinode(xfs_dinode_t *dip, extmap_t **extmapp,
 					int whichfork);
@@ -223,7 +223,7 @@ init(
 
 static void
 process_bmbt_reclist(
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	int			numrecs,
 	extmap_t		**extmapp)
 {
@@ -234,7 +234,7 @@ process_bmbt_reclist(
 	xfs_dfsbno_t		s;
 
 	for (i = 0; i < numrecs; i++, rp++) {
-		convert_extent((xfs_bmbt_rec_64_t *)rp, &o, &s, &c, &f);
+		convert_extent(rp, &o, &s, &c, &f);
 		extmap_set_ext(extmapp, (xfs_fileoff_t)o, (xfs_extlen_t)c);
 	}
 }
@@ -248,11 +248,10 @@ process_btinode(
 	xfs_bmdr_block_t	*dib;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_32_t	*rp;
 
 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 	if (be16_to_cpu(dib->bb_level) == 0) {
-		rp = (xfs_bmbt_rec_32_t *)XFS_BMDR_REC_ADDR(dib, 1);
+		xfs_bmbt_rec_t		*rp = XFS_BMDR_REC_ADDR(dib, 1);
 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), extmapp);
 		return;
 	}
@@ -270,9 +269,9 @@ process_exinode(
 	extmap_t		**extmapp,
 	int			whichfork)
 {
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
 	process_bmbt_reclist(rp, XFS_DFORK_NEXTENTS(dip, whichfork), extmapp);
 }
 
@@ -448,8 +447,7 @@ scanfunc_bmap(
 			return;
 		}
 		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
-		process_bmbt_reclist((xfs_bmbt_rec_32_t *)rp, 
-				nrecs, extmapp);
+		process_bmbt_reclist(rp, nrecs, extmapp);
 		return;
 	}
 

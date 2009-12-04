@@ -265,7 +265,7 @@ static int		ncheck_f(int argc, char **argv);
 static char		*prepend_path(char *oldpath, char *parent);
 static xfs_ino_t	process_block_dir_v2(blkmap_t *blkmap, int *dot,
 					     int *dotdot, inodata_t *id);
-static void		process_bmbt_reclist(xfs_bmbt_rec_32_t *rp, int numrecs,
+static void		process_bmbt_reclist(xfs_bmbt_rec_t *rp, int numrecs,
 					     dbm_t type, inodata_t *id,
 					     xfs_drfsbno_t *tot,
 					     blkmap_t **blkmapp);
@@ -2012,7 +2012,7 @@ process_block_dir_v2(
 
 static void
 process_bmbt_reclist(
-	xfs_bmbt_rec_32_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	int			numrecs,
 	dbm_t			type,
 	inodata_t		*id,
@@ -2038,7 +2038,7 @@ process_bmbt_reclist(
 	iagno = XFS_INO_TO_AGNO(mp, id->ino);
 	iagbno = XFS_INO_TO_AGBNO(mp, id->ino);
 	for (i = 0; i < numrecs; i++, rp++) {
-		convert_extent((xfs_bmbt_rec_64_t *)rp, &o, &s, &c, &f);
+		convert_extent(rp, &o, &s, &c, &f);
 		if (v)
 			dbprintf(_("inode %lld extent [%lld,%lld,%lld,%d]\n"),
 				id->ino, o, s, c, f);
@@ -2120,7 +2120,6 @@ process_btinode(
 	xfs_bmdr_block_t	*dib;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_32_t	*rp;
 
 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 	if (be16_to_cpu(dib->bb_level) >= XFS_BM_MAXLEVELS(mp, whichfork)) {
@@ -2146,7 +2145,7 @@ process_btinode(
 		return;
 	}
 	if (be16_to_cpu(dib->bb_level) == 0) {
-		rp = (xfs_bmbt_rec_32_t *)XFS_BMDR_REC_ADDR(dib, 1);
+		xfs_bmbt_rec_t	*rp = XFS_BMDR_REC_ADDR(dib, 1);
 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), type, 
 							id, totd, blkmapp);
 		*nex += be16_to_cpu(dib->bb_numrecs);
@@ -2579,12 +2578,12 @@ process_exinode(
 	blkmap_t		**blkmapp,
 	int			whichfork)
 {
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 
-	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
 	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
 	if (*nex < 0 || *nex > XFS_DFORK_SIZE(dip, mp, whichfork) / 
-						sizeof(xfs_bmbt_rec_32_t)) {
+						sizeof(xfs_bmbt_rec_t)) {
 		if (!sflag || id->ilist)
 			dbprintf(_("bad number of extents %d for inode %lld\n"),
 				*nex, id->ino);
@@ -4207,7 +4206,7 @@ scanfunc_bmap(
 	xfs_agnumber_t		agno;
 	int			i;
 	xfs_bmbt_ptr_t		*pp;
-	xfs_bmbt_rec_32_t	*rp;
+	xfs_bmbt_rec_t		*rp;
 
 	agno = XFS_FSB_TO_AGNO(mp, bno);
 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
@@ -4240,7 +4239,7 @@ scanfunc_bmap(
 			error++;
 			return;
 		}
-		rp = (xfs_bmbt_rec_32_t *)XFS_BMBT_REC_ADDR(mp, block, 1);
+		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
 		*nex += be16_to_cpu(block->bb_numrecs);
 		process_bmbt_reclist(rp, be16_to_cpu(block->bb_numrecs), type, id, totd,
 			blkmapp);
