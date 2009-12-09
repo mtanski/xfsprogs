@@ -8,6 +8,8 @@ include $(TOPDIR)/include/builddefs
 LSRCFILES = changelog compat control copyright rules
 DEV_DOC_DIR = $(PKG_DOC_DIR)/../xfslibs-dev
 BOOT_MKFS_BIN = $(TOPDIR)/mkfs/mkfs.xfs-xfsprogs-udeb
+LDIRDIRT = xfslibs-dev xfsprogs xfsprogs-udeb
+LDIRT = files *.log *.substvars *.debhelper
 
 default:
 

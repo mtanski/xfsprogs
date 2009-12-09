@@ -7,18 +7,23 @@ include/platform_defs.h
 include/builddefs
 install-sh
 
-# magic diretory symlinks
+# magic directory symlinks
 include/disk
 include/xfs
 
-# Makepgs
-build/src-manifest
-build/xfsprogs-*.tar.gz
+# packaging
 doc/CHANGES.gz
 xfsprogs-*
+xfsprogs_*
+xfslibs-dev_*
 
 # autoconf generated files
 aclocal.m4
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
 autom4te.cache/
 config.guess
 config.log
@@ -34,8 +39,12 @@ ltmain.sh
 .libs
 
 # gettext
+po/de.mo
 po/pl.mo
 po/xfsprogs.pot
+
+# cscope stuff
+cscope.*
 
 # quilt stuff
 .pc/

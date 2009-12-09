@@ -1,3 +1,14 @@
+xfsprogs (3.1.0) unstable; urgency=low
+
+  * New bugfix release
+  * Merged German translation (closes: #521389)
+  * Merged German translation update (closes: #557100)
+  * Uptodate po file is provided now (closes: #538962)
+  * Fixed typos in xfs_quota man page (closes: #481715)
+  * Tighten permissions on temp fsr files (closes: #559490)
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 10 Dec 2009 09:19:37 +1100
+
 xfsprogs (3.0.4) unstable; urgency=low
 
   * New bugfix release
