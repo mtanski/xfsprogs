@@ -1541,7 +1541,7 @@ tmp_init(char *mnt)
 	}
 	for (i=0; i < fsgeom.agcount; i++) {
 		sprintf(buf, "%s/.fsr/ag%d", mnt, i);
-		if (mkdir(buf, 0777) < 0) {
+		if (mkdir(buf, 0700) < 0) {
 			if (errno == EEXIST) {
 				if (dflag)
 					fsrprintf(
