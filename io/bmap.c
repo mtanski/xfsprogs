@@ -43,6 +43,9 @@ bmap_help(void)
 " -a -- prints the attribute fork map instead of the data fork.\n"
 " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
 " -l -- also displays the length of each extent in 512-byte blocks.\n"
+" -n -- query n extents.\n"
+" -p -- obtain all unwritten extents as well (w/ -v show which are unwritten.)\n"
+" -v -- Verbose information, specify ag info.  Show flags legend on 2nd -v\n"
 " Note: the bmap for non-regular files can be obtained provided the file\n"
 " was opened appropriately (in particular, must be opened read-only).\n"
 "\n"));
