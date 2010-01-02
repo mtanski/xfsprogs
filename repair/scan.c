@@ -520,12 +520,18 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			len = be32_to_cpu(rp[i].ar_blockcount);
 			end = b + len;
 
-			if (b == 0 || !verify_agbno(mp, agno, b))
+			if (b == 0 || !verify_agbno(mp, agno, b)) {
+				do_warn(
+	_("invalid start block %u in record %u of %d btree block %u/%u"),
+					b, i, name, agno, bno);
 				continue;
-			if (len == 0 || len > MAXEXTLEN)
+			}
+			if (len == 0 || !verify_agbno(mp, agno, end - 1)) {
+				do_warn(
+	_("invalid length %u in record %u of %d btree block %u/%u"),
+					len, i, name, agno, bno);
 				continue;
-			if (!verify_agbno(mp, agno, end - 1))
-				continue;
+			}
 
 			for ( ; b < end; b += blen)  {
 				state = get_bmap_ext(agno, b, end, &blen);
