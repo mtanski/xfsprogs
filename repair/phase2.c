@@ -27,6 +27,7 @@
 
 void	set_mp(xfs_mount_t *mpp);
 void	scan_ag(xfs_agnumber_t agno);
+void	validate_sb(struct xfs_sb *sb);
 
 /* workaround craziness in the xlog routines */
 int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
@@ -143,6 +144,11 @@ phase2(xfs_mount_t *mp)
 		print_inode_list(i);
 #endif
 	}
+
+	/*
+	 * Validate that our manual counts match the superblock.
+	 */
+	validate_sb(&mp->m_sb);
 
 	print_final_rpt();
 
