@@ -462,6 +462,8 @@ scanfunc_allocbt(
 	int			hdr_errors = 0;
 	int			numrecs;
 	int			state;
+	xfs_extlen_t		lastcount = 0;
+	xfs_agblock_t		lastblock = 0;
 
 	assert(magic == XFS_ABTB_MAGIC || magic == XFS_ABTC_MAGIC);
 
@@ -508,8 +510,14 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 			hdr_errors++;
 		}
 
-		if (hdr_errors)
+		if (hdr_errors) {
+			do_warn(
+	_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
+				be16_to_cpu(block->bb_numrecs),
+				mp->m_alloc_mnr[0], mp->m_alloc_mxr[0],
+				name, agno, bno);
 			suspect++;
+		}
 
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++) {
@@ -531,6 +539,24 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 	_("invalid length %u in record %u of %d btree block %u/%u"),
 					len, i, name, agno, bno);
 				continue;
+			}
+
+			if (magic == XFS_ABTB_MAGIC) {
+				if (b <= lastblock) {
+					do_warn(_(
+	"out-of-order bno btree record %d (%u %u) block %u/%u\n"),
+						i, b, len, agno, bno);
+				} else {
+					lastblock = b;
+				}
+			} else {
+				if (len < lastcount) {
+					do_warn(_(
+	"out-of-order cnt btree record %d (%u %u) block %u/%u\n"),
+						i, b, len, agno, bno);
+				} else {
+					lastcount = len;
+				}
 			}
 
 			for ( ; b < end; b += blen)  {
@@ -579,14 +605,17 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 	 * don't pass bogus tree flag down further if this block
 	 * looked ok.  bail out if two levels in a row look bad.
 	 */
-
-	if (suspect && !hdr_errors)
-		suspect = 0;
-
 	if (hdr_errors)  {
+		do_warn(
+	_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
+			be16_to_cpu(block->bb_numrecs),
+			mp->m_alloc_mnr[1], mp->m_alloc_mxr[1],
+			name, agno, bno);
 		if (suspect)
 			return;
-		else suspect++;
+		suspect++;
+	} else if (suspect) {
+		suspect = 0;
 	}
 
 	for (i = 0; i < numrecs; i++)  {
