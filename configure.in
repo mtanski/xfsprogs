@@ -35,11 +35,10 @@ AC_ARG_ENABLE(termcap,
 	test $enable_termcap = yes && libtermcap="-ltermcap",)
 AC_SUBST(libtermcap)
 
+# AC_HAVE_BLKID_TOPO below wil find the library & check for topo support
 AC_ARG_ENABLE(blkid,
-[ --enable-blkid=[yes/no] Enable block device id library [default=no]],
-	test $enable_blkid = yes && libblkid="-lblkid",)
-AC_SUBST(libblkid)
-AC_SUBST(enable_blkid)
+[ --enable-blkid=[yes/no] Enable block device id library [default=yes]],,
+	enable_blkid=yes)
 
 AC_ARG_ENABLE(lib64,
 [ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
@@ -99,6 +98,7 @@ AC_HAVE_SENDFILE
 AC_HAVE_GETMNTENT
 AC_HAVE_GETMNTINFO
 AC_HAVE_FALLOCATE
+AC_HAVE_BLKID_TOPO($enable_blkid)
 
 AC_TYPE_PSINT
 AC_TYPE_PSUNSIGNED
