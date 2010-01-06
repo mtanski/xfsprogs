@@ -16,6 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <libgen.h>
 #include <xfs/xfs.h>
 #include <xfs/handle.h>
 #include <xfs/parent.h>
@@ -40,6 +41,7 @@ typedef union {
 
 static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
 static int handle_to_fsfd(void *, char **);
+static char *path_to_fspath(char *path);
 
 
 /*
@@ -70,13 +72,18 @@ path_to_fshandle(
 	comarg_t	obj;
 	struct fdhash	*fdhp;
 	char		*tmppath;
+	char		*fspath;
 
-	fd = open(path, O_RDONLY);
+	fspath = path_to_fspath(path);
+	if (fspath == NULL)
+		return -1;
+
+	fd = open(fspath, O_RDONLY);
 	if (fd < 0)
 		return -1;
 
 	obj.path = path;
-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_FSHANDLE,
 				obj, fshanp, fshlen);
 	if (result < 0) {
 		close(fd);
@@ -95,7 +102,7 @@ path_to_fshandle(
 		}
 
 		fdhp->fsfd = fd;
-		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
+		strncpy(fdhp->fspath, fspath, sizeof(fdhp->fspath));
 		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
 
 		fdhp->fnxt = fdhash_head;
@@ -114,18 +121,46 @@ path_to_handle(
 	int		fd;
 	int		result;
 	comarg_t	obj;
+	char		*fspath;
 
-	fd = open(path, O_RDONLY);
+	fspath = path_to_fspath(path);
+	if (fspath == NULL)
+		return -1;
+
+	fd = open(fspath, O_RDONLY);
 	if (fd < 0)
 		return -1;
 
 	obj.path = path;
-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
 				obj, hanp, hlen);
 	close(fd);
 	return result;
 }
 
+/* Given a path, return a suitable "fspath" for use in obtaining
+ * an fd for xfsctl calls. For regular files and directories the
+ * input path is sufficient. For other types the parent directory
+ * is used to avoid issues with opening dangling symlinks and
+ * potentially blocking in an open on a named pipe. Also
+ * symlinks to files on other filesystems would be a problem,
+ * since an fd would be obtained for the wrong fs.
+ */
+static char *
+path_to_fspath(char *path)
+{
+	static char dirpath[MAXPATHLEN];
+	struct stat statbuf;
+
+	if (lstat(path, &statbuf) != 0)
+		return NULL;
+
+	if (S_ISREG(statbuf.st_mode) || S_ISDIR(statbuf.st_mode))
+		return path;
+
+	strcpy(dirpath, path);
+	return dirname(dirpath);
+}
 
 int
 fd_to_handle (
