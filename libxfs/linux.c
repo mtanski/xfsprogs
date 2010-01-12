@@ -112,9 +112,9 @@ platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fata
 	if (major(device) != RAMDISK_MAJOR) {
 		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
 			fprintf(stderr, _("%s: %s - cannot set blocksize "
-					"on block device %s: %s\n"),
+					"%d on block device %s: %s\n"),
 				progname, fatal ? "error": "warning",
-				path, strerror(errno));
+				blocksize, path, strerror(errno));
 		}
 	}
 	return error;

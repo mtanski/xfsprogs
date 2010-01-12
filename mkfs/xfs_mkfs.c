@@ -33,6 +33,7 @@ struct fs_topology {
 	int	dsunit;		/* stripe unit - data subvolume */
 	int	dswidth;	/* stripe width - data subvolume */
 	int	rtswidth;	/* stripe width - rt subvolume */
+	int	sectorsize;
 	int	sectoralign;
 };
 
@@ -320,7 +321,7 @@ out_free_probe:
 	return ret;
 }
 
-static void blkid_get_topology(const char *device, int *sunit, int *swidth)
+static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
 {
 	blkid_topology tp;
 	blkid_probe pr;
@@ -348,6 +349,8 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth)
 	val = blkid_topology_get_optimal_io_size(tp) >> 9;
 	if (val > 1)
 		*swidth = val;
+	val = blkid_probe_get_sectorsize(pr);
+	*sectorsize = val;
 
 	if (blkid_topology_get_alignment_offset(tp) != 0) {
 		fprintf(stderr,
@@ -370,13 +373,14 @@ static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
 	if (!xi->disfile) {
 		const char *dfile = xi->volname ? xi->volname : xi->dname;
 
-		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth);
+		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+				   &ft->sectorsize);
 	}
 
 	if (xi->rtname && !xi->risfile) {
 		int dummy;
 
-		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth);
+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
 	}
 }
 #else /* ENABLE_BLKID */
@@ -406,11 +410,23 @@ check_overwrite(
 static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
 {
 	char *dfile = xi->volname ? xi->volname : xi->dname;
+	int bsz = BBSIZE;
 
 	if (!xi->disfile) {
+		int fd;
+		long long dummy;
+
 		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
 				&ft->dsunit, &ft->dswidth, &ft->sectoralign);
+		fd = open(dfile, O_RDONLY);
+		/* If this fails we just fall back to BBSIZE */
+		if (fd) {
+			platform_findsizes(dfile, fd, &dummy, &bsz);
+			close(fd);
+		}
 	}
+
+	ft->sectorsize = bsz;
 
 	if (xi->rtname && !xi->risfile) {
 		int dummy1;
@@ -1544,16 +1560,39 @@ main(
 	get_topology(&xi, &ft);
 
 	if (ft.sectoralign) {
+		/*
+		 * Older Linux software RAID versions want the sector size
+		 * to match the block size to avoid switching I/O sizes.
+		 * For the legacy libdisk case we thus set the sector size to
+		 * match the block size.  For systems using libblkid we assume
+		 * that the kernel is recent enough to not require this and
+		 * ft.sectoralign will never be set.
+		 */
 		sectorsize = blocksize;
+	} else if (!ssflag) {
+		/*
+		 * Unless specified manually on the command line use the
+		 * advertised sector size of the device.
+		 */
+		sectorsize = ft.sectorsize;
+	}
+
+	if (ft.sectoralign || !ssflag) {
 		sectorlog = libxfs_highbit32(sectorsize);
 		if (loginternal) {
 			lsectorsize = sectorsize;
 			lsectorlog = sectorlog;
 		}
 	}
+
 	if (sectorsize < XFS_MIN_SECTORSIZE ||
 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+		usage();
+	}
+	if (sectorsize < ft.sectorsize) {
+		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
+			sectorsize, ft.sectorsize);
 		usage();
 	}
 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
@@ -1749,10 +1788,7 @@ main(
 	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
 				&dsunit, &dswidth, &lsunit);
 
-	if (slflag || ssflag)
-		xi.setblksize = sectorsize;
-	else
-		xi.setblksize = 1;
+	xi.setblksize = sectorsize;
 
 	/*
 	 * Initialize.  This will open the log and rt devices as well.
