@@ -1,3 +1,25 @@
+xfsprogs-3.1.0
+	- Reduce memory usage in xfs_repair by using better data structures.
+	- Add additional checks in xfs_repair to detect freespace btree
+	  corruption instead of only rebuilding the btrees.  Useful for the
+	  no-modify mode.
+	- Fix libhandle to use the right path to issue by-handle ioctls for
+	  symbolic links and special files.
+	- Use lazy superblock counters by default.  At least kernel 2.6.22 is
+	  needed for this feature.
+	- Use physical device sector size if available in mkfs.xfs,
+	  so 4K sector devices are handed more gracefully.
+	- Add a German translation, thanks to Chris Leick.
+	- Enable the madvise and mincor commands in xfs_io.
+	- Fix unsafe temporary file creation in xfs_fsr.
+	- Add support for discarding unused space on SSDs or thin provisioned
+	  arrays in mkfs.xfs.
+	- Allow linking against libblkid for topology information.
+	- Add symbol versioning for libhandle.
+	- Remove the included RPM and binary tarball built infrastructure.
+	- Various build system improvements.
+	- Small fixes to xfs_db and xfs_io.
+
 xfsprogs-3.0.4 (17 September 2009)
 	- Fix a memory leak in xfsprogs.
 	- Increase hash chain length in xfsprogs when running out of memory.

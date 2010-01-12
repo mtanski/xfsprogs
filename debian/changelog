@@ -1,6 +1,6 @@
 xfsprogs (3.1.0) unstable; urgency=low
 
-  * New bugfix release
+  * New upstream release
   * Merged German translation (closes: #521389)
   * Merged German translation update (closes: #557100)
   * Uptodate po file is provided now (closes: #538962)
