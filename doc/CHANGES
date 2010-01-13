@@ -1,4 +1,4 @@
-xfsprogs-3.1.0
+xfsprogs-3.1.0 (13 January 2010)
 	- Reduce memory usage in xfs_repair by using better data structures.
 	- Add additional checks in xfs_repair to detect freespace btree
 	  corruption instead of only rebuilding the btrees.  Useful for the
