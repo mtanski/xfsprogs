@@ -283,27 +283,47 @@ calc_stripe_factors(
 }
 
 #ifdef ENABLE_BLKID
+/*
+ * Check for existing filesystem or partition table on device.
+ * Returns:
+ *	 1 for existing fs or partition
+ *	 0 for nothing found
+ *	-1 for internal error
+ */
 static int
 check_overwrite(
 	char		*device)
 {
 	const char	*type;
-	blkid_probe	pr;
-	int		ret = 0;
+	blkid_probe	pr = NULL;
+	int		ret;
+	struct stat	statbuf;
 
 	if (!device || !*device)
 		return 0;
 
+	ret = -1; /* will reset on success of all setup calls */
+
+	if (stat(device, &statbuf) < 0)
+		goto out;
+
+	/* nothing to overwrite on a 0-length device */
+	if (statbuf.st_size == 0) {
+		ret = 0;
+		goto out;
+	}
+
 	pr = blkid_new_probe_from_filename(device);
 	if (!pr)
-		return -1;
+		goto out;
 
 	if (blkid_probe_enable_partitions(pr, 1))
-		goto out_free_probe;
+		goto out;
 
 	if (blkid_do_fullprobe(pr))
-		goto out_free_probe;
+		goto out;
 
+	ret = 0;
 	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
 		fprintf(stderr,
 			_("%s: %s appears to contain an existing "
@@ -316,8 +336,13 @@ check_overwrite(
 		ret = 1;
 	}
 
-out_free_probe:
-	blkid_free_probe(pr);
+out:
+	if (pr)
+		blkid_free_probe(pr);
+	if (ret == -1)
+		fprintf(stderr,
+			_("%s: probe of %s failed, cannot detect "
+			  "existing filesystem.\n"), progname, device);
 	return ret;
 }
 
