@@ -1574,7 +1574,7 @@ main(
 		 * Unless specified manually on the command line use the
 		 * advertised sector size of the device.
 		 */
-		sectorsize = ft.sectorsize;
+		sectorsize = ft.sectorsize ? ft.sectorsize : XFS_MIN_SECTORSIZE;
 	}
 
 	if (ft.sectoralign || !ssflag) {
