@@ -297,18 +297,23 @@ check_overwrite(
 	const char	*type;
 	blkid_probe	pr = NULL;
 	int		ret;
-	struct stat	statbuf;
+	int		fd;
+	long long	size;
+	int		bsz;
 
 	if (!device || !*device)
 		return 0;
 
 	ret = -1; /* will reset on success of all setup calls */
 
-	if (stat(device, &statbuf) < 0)
+	fd = open(device, O_RDONLY);
+	if (fd < 0)
 		goto out;
+	platform_findsizes(device, fd, &size, &bsz);
+	close(fd);
 
 	/* nothing to overwrite on a 0-length device */
-	if (statbuf.st_size == 0) {
+	if (size == 0) {
 		ret = 0;
 		goto out;
 	}
