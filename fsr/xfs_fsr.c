@@ -133,7 +133,7 @@ xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
 {
     xfs_fsop_bulkreq_t  bulkreq;
 
-    bulkreq.lastip = lastip;
+    bulkreq.lastip = (__u64 *)lastip;
     bulkreq.icount = 1;
     bulkreq.ubuffer = ubuffer;
     bulkreq.ocount = NULL;
@@ -146,7 +146,7 @@ xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount,
 {
     xfs_fsop_bulkreq_t  bulkreq;
 
-    bulkreq.lastip = lastip;
+    bulkreq.lastip = (__u64 *)lastip;
     bulkreq.icount = icount;
     bulkreq.ubuffer = ubuffer;
     bulkreq.ocount = ocount;
