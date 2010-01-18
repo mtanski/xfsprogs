@@ -142,16 +142,16 @@ may_be_swap(const char *s) {
 
 /* rather weak necessary condition */
 static int
-may_be_adfs(const char *s) {
+may_be_adfs(const struct adfs_super_block *sb) {
 	char *p;
 	int sum;
 
-	p = (char *) s + 511;
+	p = (char *)sb->s_checksum;
 	sum = 0;
-	while(--p != s)
+	while(--p != (char *)sb)
 		sum = (sum >> 8) + (sum & 0xff) + *p;
 
-	return (sum == p[511]);
+	return (sum & 0xff) == sb->s_checksum[0];
 }
 
 static int is_reiserfs_magic_string (struct reiserfs_super_block * rs)
@@ -304,7 +304,7 @@ fstype(const char *device) {
              goto io_error;
 
 	/* only a weak test */
-        if (may_be_adfs((char *) &adfssb)
+        if (may_be_adfs(&adfssb)
             && (adfsblksize(adfssb) >= 8 &&
                 adfsblksize(adfssb) <= 10))
              type = "adfs";
