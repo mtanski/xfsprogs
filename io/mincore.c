@@ -56,7 +56,7 @@ mincore_f(
 			return 0;
 		} else if (llength > (size_t)llength) {
 			printf(_("length argument too large -- %lld\n"),
-				llength);
+				(long long)llength);
 			return 0;
 		} else
 			length = (size_t)llength;
