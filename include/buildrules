@@ -7,10 +7,11 @@ _BUILDRULES_INCLUDED_ = 1
 include $(TOPDIR)/include/builddefs
 
 clean clobber : $(addsuffix -clean,$(SUBDIRS))
-	rm -f $(DIRT)
-	rm -fr $(DIRDIRT)
+	@rm -f $(DIRT)
+	@rm -fr $(DIRDIRT)
 %-clean:
-	$(MAKE) -C $* clean
+	@echo "Cleaning $*"
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* clean
 
 # Never blow away subdirs
 ifdef SUBDIRS
@@ -18,7 +19,8 @@ ifdef SUBDIRS
 .PHONY: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	@echo "Building $@"
+	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
 endif
 
 source-link: 
@@ -38,20 +40,29 @@ source-link:
 
 ifdef LTCOMMAND
 $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
-	$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
+	@echo "    [LD]     $@"
+	$(Q)$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
 endif
 
 ifdef LTLIBRARY
 $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
-	$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
+	@echo "    [LD]     $@"
+	$(Q)$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
 
 %.lo: %.c
-	$(LTCOMPILE) -c $<
+	@echo "    [CC]     $@"
+	$(Q)$(LTCOMPILE) -c $<
+else
+%.o: %.c
+	@echo "    [CC]     $@"
+	$(Q)$(CC) $(CFLAGS) -c $<
+
 endif
 
 ifdef POTHEAD
 $(POTHEAD): $(XGETTEXTFILES)
-	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
+	@echo "    [GETTXT] $@"
+	$(Q)$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
 
 # Update translations
 update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
@@ -70,7 +81,8 @@ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
 	done
 
 %.mo: %.po
-	$(MSGFMT) -c --statistics -o $@ $<
+	@echo "    [MSGFMT] $@"
+	$(Q)$(MSGFMT) -c --statistics -o $@ $<
 endif
 
 endif # _BUILDRULES_INCLUDED_

@@ -13,7 +13,8 @@ default: CHANGES.gz
 include $(BUILDRULES)
 
 CHANGES.gz:
-	$(ZIP) --best -c < CHANGES > $@
+	@echo "    [ZIP]    $@"
+	$(Q)$(ZIP) --best -c < CHANGES > $@
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)

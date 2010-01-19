@@ -2,6 +2,21 @@
 # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
 #
 
+ifeq ("$(origin V)", "command line")
+  BUILD_VERBOSE = $(V)
+endif
+ifndef BUILD_VERBOSE
+  BUILD_VERBOSE = 0
+endif
+
+ifeq ($(BUILD_VERBOSE),1)
+  Q =
+else
+  Q = @
+endif
+
+MAKEOPTS = --no-print-directory Q=$(Q)
+
 TOPDIR = .
 HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
 
@@ -36,9 +51,9 @@ SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 
 default: include/builddefs include/platform_defs.h
 ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
 else
-	$(MAKE) $(SUBDIRS)
+	$(Q)$(MAKE) $(MAKEOPTS) $(SUBDIRS)
 endif
 
 # tool/lib dependencies
@@ -80,7 +95,7 @@ include/platform_defs.h: include/builddefs
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 		rm -f include/builddefs; \
-		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
+		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
 	fi
 
 install: default $(addsuffix -install,$(SUBDIRS))
@@ -101,29 +116,29 @@ install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
 	$(MAKE) -C $* install-qa
 
 distclean: clean
-	rm -f $(LDIRT)
+	$(Q)rm -f $(LDIRT)
 
 realclean: distclean
-	rm -f $(CONFIGURE)
+	$(Q)rm -f $(CONFIGURE)
 
 #
 # All this gunk is to allow for a make dist on an unconfigured tree
 #
 dist: include/builddefs include/platform_defs.h default
 ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
 else
-	$(MAKE) $(SRCTAR)
+	$(Q)$(MAKE) $(MAKEOPTS) $(SRCTAR)
 endif
 
 deb: include/builddefs include/platform_defs.h
 ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
 else
-	$(MAKE) $(SRCDIR)
-	$(MAKE) -C po
-	$(MAKE) source-link
-	cd $(SRCDIR) && dpkg-buildpackage
+	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
+	$(Q)$(MAKE) $(MAKEOPTS) -C po
+	$(Q)$(MAKE) $(MAKEOPTS) source-link
+	$(Q)cd $(SRCDIR) && dpkg-buildpackage
 endif
 
 $(SRCDIR) : $(_FORCE)
@@ -131,6 +146,6 @@ $(SRCDIR) : $(_FORCE)
 	mkdir -p $@
 
 $(SRCTAR) : default $(SRCDIR)
-	$(MAKE) source-link
+	$(Q)$(MAKE) $(MAKEOPTS) source-link
 	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
 	echo Wrote: $@

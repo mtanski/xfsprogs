@@ -43,7 +43,8 @@ LDIRT = xfs disk
 default install: xfs disk
 
 xfs disk:
-	$(LN_S) . $@
+	@echo "    [LN]     $@"
+	$(Q)$(LN_S) . $@
 
 include $(BUILDRULES)
 
