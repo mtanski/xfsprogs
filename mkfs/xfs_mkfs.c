@@ -356,6 +356,11 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int 
 	blkid_topology tp;
 	blkid_probe pr;
 	unsigned long val;
+	struct stat statbuf;
+
+	/* can't get topology info from a file */
+	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode))
+		return;
 
 	pr = blkid_new_probe_from_filename(device);
 	if (!pr)
