@@ -194,12 +194,14 @@ btree_get_prev(
 	}
 
 	/* else need to go up and back down the tree to find the previous */
-
-	while (cur->index == 0) {
-		if (++level == root->height)
-			return NULL;
+	do {
+		if (cur->index)
+			break;
 		cur++;
-	}
+	} while (++level < root->height);
+
+	if (level == root->height)
+		return NULL;
 
 	/* the key is in the current level */
 	if (key)
