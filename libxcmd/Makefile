@@ -28,8 +28,10 @@ ifeq ($(ENABLE_EDITLINE),yes)
 LCFLAGS += -DENABLE_EDITLINE
 endif
 
-default: $(LTLIBRARY)
+default: ltdepend $(LTLIBRARY)
 
 include $(BUILDRULES)
 
 install install-dev install-qa: default
+
+-include .dep

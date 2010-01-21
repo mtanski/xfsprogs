@@ -12,7 +12,7 @@ LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS)
 LLDFLAGS = -static
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -20,3 +20,5 @@ install:
 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:
+
+-include .dep

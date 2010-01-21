@@ -63,7 +63,7 @@ ifeq ($(HAVE_FALLOCATE),yes)
 LCFLAGS += -DHAVE_FALLOCATE
 endif
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -74,3 +74,5 @@ install: default
 	$(LTINSTALL) -m 755 xfs_freeze.sh $(PKG_SBIN_DIR)/xfs_freeze
 	$(LTINSTALL) -m 755 xfs_mkfile.sh $(PKG_SBIN_DIR)/xfs_mkfile
 install-dev:
+
+-include .dep

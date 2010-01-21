@@ -11,6 +11,23 @@ AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
   ])
 
 #
+#check compiler can generate dependencies
+#
+AC_DEFUN([AC_PACKAGE_GCC_DEPS],
+  [AC_CACHE_CHECK(whether gcc -MM is supported,
+                  ac_cv_gcc_nodeps,
+                  [cat > conftest.c <<EOF
+		   #include <stdio.h>
+		   int main() { exit(0); }
+EOF
+                  ac_cv_gcc_nodeps=no
+                  if ${CC} -MM conftest.c >/dev/null 2>&1; then
+                     ac_cv_gcc_nodeps=yes
+                  fi
+                  rm -f conftest.c a.out
+                  ])
+  ])
+#
 # Generic macro, sets up all of the global build variables.
 # The following environment variables may be set to override defaults:
 #  CC MAKE LIBTOOL TAR ZIP MAKEDEPEND AWK SED ECHO SORT
@@ -44,10 +61,11 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     zip=$ZIP
     AC_SUBST(zip)
 
-    if test -z "$MAKEDEPEND"; then
-        AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)
+    AC_PACKAGE_GCC_DEPS()
+    makedepend="$cc -MM"
+    if test $ac_cv_gcc_nodeps = no; then
+	makedepend=/bin/true
     fi
-    makedepend=$MAKEDEPEND
     AC_SUBST(makedepend)
 
     if test -z "$AWK"; then

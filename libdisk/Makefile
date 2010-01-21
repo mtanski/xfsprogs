@@ -20,7 +20,7 @@ else
 LSRCFILES = $(LINUX_DRIVERS)
 endif
 
-default: $(LTLIBRARY)
+default: ltdepend $(LTLIBRARY)
 
 include $(BUILDRULES)
 
@@ -29,3 +29,5 @@ install: default
 install-dev: default
 
 install-qa: install-dev
+
+-include .dep

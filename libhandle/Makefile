@@ -15,7 +15,7 @@ LTLDFLAGS += -Wl,--version-script,libhandle.sym
 CFILES = handle.c jdm.c
 LSRCFILES = libhandle.sym
 
-default:  $(LTLIBRARY)
+default: ltdepend $(LTLIBRARY)
 
 include $(BUILDRULES)
 
@@ -26,3 +26,5 @@ install-dev: default
 	$(INSTALL_LTLIB_DEV)
 
 install-qa: install-dev
+
+-include .dep

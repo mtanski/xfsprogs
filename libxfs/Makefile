@@ -36,7 +36,7 @@ FCFLAGS = -I.
 # don't try linking xfs_repair with a debug libxfs.
 DEBUG = -DNDEBUG
 
-default:  $(LTLIBRARY)
+default: ltdepend $(LTLIBRARY)
 
 include $(BUILDRULES)
 
@@ -45,3 +45,5 @@ install: default
 install-dev: default
 
 install-qa: default
+
+-include .dep

@@ -22,7 +22,7 @@ LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
 LLDFLAGS = -static
 LSRCFILES = xfs_info.sh
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -31,3 +31,5 @@ install: default
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
 install-dev:
+
+-include .dep
