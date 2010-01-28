@@ -1,3 +1,11 @@
+xfsprogs-3.1.1
+	- Fix various blkid topology support problems in mkfs.xfs.
+	- Fix various build warnings.
+	- Add automatic build dependency calculations.
+	- Cleaner build system output.
+	- Add missing aclocal m4 file to the package generation.
+	- Arrange for release tags to be digitally signed.
+
 xfsprogs-3.1.0 (13 January 2010)
 	- Reduce memory usage in xfs_repair by using better data structures.
 	- Add additional checks in xfs_repair to detect freespace btree
