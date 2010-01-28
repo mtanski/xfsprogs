@@ -28,6 +28,7 @@ Description: Utilities for managing the XFS filesystem
 
 Package: xfslibs-dev
 Section: libdevel
+Priority: extra
 Depends: libc6-dev | libc-dev, uuid-dev, xfsprogs (>= 3.0.0)
 Conflicts: xfsprogs (<< 3.0.0)
 Architecture: any
