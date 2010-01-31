@@ -455,7 +455,7 @@ static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
 				&ft->dsunit, &ft->dswidth, &ft->sectoralign);
 		fd = open(dfile, O_RDONLY);
 		/* If this fails we just fall back to BBSIZE */
-		if (fd) {
+		if (fd >= 0) {
 			platform_findsizes(dfile, fd, &dummy, &bsz);
 			close(fd);
 		}
