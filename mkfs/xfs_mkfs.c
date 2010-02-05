@@ -322,24 +322,40 @@ check_overwrite(
 	if (!pr)
 		goto out;
 
-	if (blkid_probe_enable_partitions(pr, 1))
+	ret = blkid_probe_enable_partitions(pr, 1);
+	if (ret < 0)
 		goto out;
 
-	if (blkid_do_fullprobe(pr))
+	ret = blkid_do_fullprobe(pr);
+	if (ret < 0)
 		goto out;
 
-	ret = 0;
+	/*
+	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
+	 * but we want the exact opposite, so reverse the return value here.
+	 *
+	 * In addition print some useful diagnostics about what actually is
+	 * on the device.
+	 */
+	if (ret) {
+		ret = 0;
+		goto out;
+	}
+
 	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
 		fprintf(stderr,
 			_("%s: %s appears to contain an existing "
 			"filesystem (%s).\n"), progname, device, type);
-		ret = 1;
 	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
 		fprintf(stderr,
 			_("%s: %s appears to contain a partition "
 			"table (%s).\n"), progname, device, type);
-		ret = 1;
+	} else {
+		fprintf(stderr,
+			_("%s: %s appears to contain something weird "
+			"according to blkid\n"), progname, device);
 	}
+	ret = 1;
 
 out:
 	if (pr)
