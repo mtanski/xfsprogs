@@ -3059,7 +3059,7 @@ process_leaf_node_dir_v2(
 	xfs_ino_t		lino;
 	int			nex;
 	xfs_ino_t		parent;
-	int			t;
+	int			t = 0;
 	int			v;
 	int			v2;
 	int			x;
@@ -3403,7 +3403,7 @@ process_quota(
 	xfs_fileoff_t	qbno;
 	char		*s = NULL;
 	int		scicb;
-	int		t;
+	int		t = 0;
 
 	switch (qtype) {
 	case IS_USER_QUOTA:
