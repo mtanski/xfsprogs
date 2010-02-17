@@ -98,22 +98,25 @@ include/platform_defs.h: include/builddefs
 		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
 	fi
 
-install: default $(addsuffix -install,$(SUBDIRS))
+install: $(addsuffix -install,$(SUBDIRS))
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
 
-install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
+install-dev: $(addsuffix -install-dev,$(SUBDIRS))
 
 install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
 
 %-install:
-	$(MAKE) -C $* install
+	@echo "Installing $@"
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install
 
 %-install-dev:
-	$(MAKE) -C $* install-dev
+	@echo "Installing $@"
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-dev
 
 %-install-qa:
-	$(MAKE) -C $* install-qa
+	@echo "Installing $@"
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-qa
 
 distclean: clean
 	$(Q)rm -f $(LDIRT)

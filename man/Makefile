@@ -14,9 +14,9 @@ install : $(addsuffix -install,$(SUBDIRS))
 install-dev : $(addsuffix -install-dev,$(SUBDIRS))
 
 %-install:
-	$(MAKE) -C $* install
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install
 
 %-install-dev:
-	$(MAKE) -C $* install-dev
+	$(Q)$(MAKE) $(MAKEOPTS) -C $* install-dev
 
 include $(BUILDRULES)

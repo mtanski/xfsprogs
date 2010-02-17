@@ -101,7 +101,3 @@ ltdepend: $(CFILES) $(HFILES)
 depend: $(CFILES) $(HFILES)
 	@echo "    [DEP]"
 	$(Q)$(MAKEDEP) $(CFILES) > .dep
-
-
-#	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1,' > .dep
-
