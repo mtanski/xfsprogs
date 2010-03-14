@@ -74,6 +74,7 @@ static rt_ext_flist_t rt_ext_flist;
 static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
 
 static struct btree_root **dup_extent_trees;	/* per ag dup extent trees */
+static pthread_mutex_t *dup_extent_tree_locks;
 
 static avltree_desc_t	**extent_bno_ptrs;	/*
 						 * array of extent tree ptrs
@@ -108,7 +109,9 @@ void
 release_dup_extent_tree(
 	xfs_agnumber_t		agno)
 {
+	pthread_mutex_lock(&dup_extent_tree_locks[agno]);
 	btree_clear(dup_extent_trees[agno]);
+	pthread_mutex_unlock(&dup_extent_tree_locks[agno]);
 }
 
 int
@@ -117,12 +120,16 @@ add_dup_extent(
 	xfs_agblock_t		startblock,
 	xfs_extlen_t		blockcount)
 {
+	int	ret;
 #ifdef XR_DUP_TRACE
 	fprintf(stderr, "Adding dup extent - %d/%d %d\n", agno, startblock,
 		blockcount);
 #endif
-	return btree_insert(dup_extent_trees[agno], startblock,
+	pthread_mutex_lock(&dup_extent_tree_locks[agno]);
+	ret = btree_insert(dup_extent_trees[agno], startblock,
 				(void *)(uintptr_t)(startblock + blockcount));
+	pthread_mutex_unlock(&dup_extent_tree_locks[agno]);
+	return ret;
 }
 
 int
@@ -132,13 +139,22 @@ search_dup_extent(
 	xfs_agblock_t		end_agbno)
 {
 	unsigned long	bno;
+	int		ret;
 
-	if (!btree_find(dup_extent_trees[agno], start_agbno, &bno))
-		return 0;	/* this really shouldn't happen */
-	if (bno < end_agbno)
-		return 1;
-	return (uintptr_t)btree_peek_prev(dup_extent_trees[agno], NULL) >
+	pthread_mutex_lock(&dup_extent_tree_locks[agno]);
+	if (!btree_find(dup_extent_trees[agno], start_agbno, &bno)) {
+		ret = 0;
+		goto out;	/* this really shouldn't happen */
+	}
+	if (bno < end_agbno) {
+		ret = 1;
+		goto out;
+	}
+	ret = (uintptr_t)btree_peek_prev(dup_extent_trees[agno], NULL) >
 								start_agbno;
+out:
+	pthread_mutex_unlock(&dup_extent_tree_locks[agno]);
+	return ret;
 }
 
 
@@ -856,6 +872,10 @@ incore_ext_init(xfs_mount_t *mp)
 	if (!dup_extent_trees)
 		do_error(_("couldn't malloc dup extent tree descriptor table\n"));
 
+	dup_extent_tree_locks = calloc(agcount, sizeof(pthread_mutex_t));
+	if (!dup_extent_tree_locks)
+		do_error(_("couldn't malloc dup extent tree descriptor table\n"));
+
 	if ((extent_bno_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
 		do_error(
@@ -879,6 +899,7 @@ incore_ext_init(xfs_mount_t *mp)
 
 	for (i = 0; i < agcount; i++)  {
 		btree_init(&dup_extent_trees[i]);
+		pthread_mutex_init(&dup_extent_tree_locks[i], NULL);
 		avl_init_tree(extent_bno_ptrs[i], &avl_extent_tree_ops);
 		avl_init_tree(extent_bcnt_ptrs[i], &avl_extent_bcnt_tree_ops);
 	}
