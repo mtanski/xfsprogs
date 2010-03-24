@@ -29,12 +29,12 @@ extern char *progname;
 int
 platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
 {
-	struct stat	st;
+	struct stat64	st;
         int cnt, i;
         struct statfs *fsinfo;
 
 	if (!s) {
-		if (stat(block, &st) < 0)
+		if (stat64(block, &st) < 0)
 			return 0;
 		s = &st;
 	}
