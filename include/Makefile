@@ -33,7 +33,7 @@ QAHFILES = libxfs.h libxlog.h \
 
 HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h
 HFILES += $(PKG_PLATFORM).h
-PHFILES = darwin.h freebsd.h irix.h linux.h
+PHFILES = darwin.h freebsd.h irix.h linux.h gnukfreebsd.h
 DKHFILES = volume.h fstyp.h dvh.h
 LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
 LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
