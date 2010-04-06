@@ -17,8 +17,13 @@
  */
 
 #include <xfs/xfs.h>
+#include <libxfs.h>
+#include <xfs/xfs_types.h>
 #include <xfs/jdm.h>
 #include <xfs/xfs_dfrag.h>
+#include <xfs/xfs_bmap_btree.h>
+#include <xfs/xfs_dinode.h>
+#include <xfs/xfs_attr_sf.h>
 
 #include <fcntl.h>
 #include <errno.h>
@@ -946,6 +951,147 @@ fsrfile_common(
 	return -1; /* no error */
 }
 
+/*
+ * Attempt to set the attr fork up correctly. This is simple for attr1
+ * filesystems as they have a fixed inode fork offset. In that case
+ * just create an attribute and that's all we need to do.
+ *
+ * For attr2 filesystems, see if we have the actual fork offset in
+ * the bstat structure. If so, just create additional attributes on
+ * the temporary inode until the offset matches.
+ *
+ * If it doesn't exist, we can only do best effort. Add an attribute at a time
+ * to move the inode fork around, but take into account that the attribute
+ * might be too small to move the fork every time we add one.  This should
+ * hopefully put the fork offset in the right place. It's not a big deal if we
+ * don't get it right - the kernel will reject it when we try to swap extents.
+ */
+static int
+fsr_setup_attr_fork(
+	int		fd,
+	int		tfd,
+	xfs_bstat_t	*bstatp)
+{
+	struct stat64	tstatbuf;
+	int		i;
+	int		last_forkoff = 0;
+	int		no_change_cnt = 0;
+	int		ret;
+
+	if (!(bstatp->bs_xflags & XFS_XFLAG_HASATTR))
+		return 0;
+
+	/*
+	 * use the old method if we have attr1 or the kernel does not yet
+	 * support passing the fork offset in the bulkstat data.
+	 */
+	if (!(fsgeom.flags & XFS_FSOP_GEOM_FLAGS_ATTR2) ||
+	    bstatp->bs_forkoff == 0) {
+		/* attr1 */
+		ret = fsetxattr(tfd, "user.X", "X", 1, XATTR_CREATE);
+		if (ret) {
+			fsrprintf(_("could not set ATTR\n"));
+			return -1;
+		}
+		goto out;
+	}
+
+	/* attr2 w/ fork offsets */
+
+	if (fstat64(tfd, &tstatbuf) < 0) {
+		fsrprintf(_("unable to stat temp file: %s\n"),
+					strerror(errno));
+		return -1;
+	}
+
+	i = 0;
+	do {
+		xfs_bstat_t	tbstat;
+		xfs_ino_t	ino;
+		char		name[64];
+		int		diff;
+
+		/*
+		 * bulkstat the temp inode  to see what the forkoff is. Use
+		 * this to compare against the target and determine what we
+		 * need to do.
+		 */
+		ino = tstatbuf.st_ino;
+		if ((xfs_bulkstat_single(tfd, &ino, &tbstat)) < 0) {
+			fsrprintf(_("unable to get bstat on temp file: %s\n"),
+						strerror(errno));
+			return -1;
+		}
+		if (dflag)
+			fsrprintf(_("orig forkoff %d, temp forkoff %d\n"),
+					bstatp->bs_forkoff, tbstat.bs_forkoff);
+
+		snprintf(name, sizeof(name), "user.%d", i);
+
+		/*
+		 * If there is no attribute, then we need to create one to get
+		 * an attribute fork at the default location.
+		 */
+		if (!tbstat.bs_forkoff) {
+			ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
+			if (ret) {
+				fsrprintf(_("could not set ATTR\n"));
+				return -1;
+			}
+			continue;
+		}
+
+		/*
+		 * make a progress check so we don't get stuck trying to extend
+		 * a large btree form attribute fork.
+		 */
+		if (last_forkoff == tbstat.bs_forkoff) {
+			if (no_change_cnt++ > 10)
+				break;
+		}
+		no_change_cnt = 0;
+		last_forkoff = tbstat.bs_forkoff;
+
+		/* work out which way to grow the fork */
+		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
+		if (abs(diff) > fsgeom.inodesize - sizeof(struct xfs_dinode)) {
+			fsrprintf(_("forkoff diff %d too large!\n"), diff);
+			return -1;
+		}
+
+		/* if they are equal, we are done */
+		if (!diff)
+			goto out;
+
+		/*
+		 * if the temp inode fork offset is smaller then we have to
+		 * grow the data fork
+		 */
+		if (diff < 0) {
+			/*
+			 * create some temporary extents in the inode to move
+			 * the fork in the direction we need. This can be done
+			 * by preallocating some single block extents at
+			 * non-contiguous offsets.
+			 */
+			/* XXX: unimplemented! */
+			goto out;
+		}
+
+		/* we need to grow the attr fork, so create another attr */
+		ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
+		if (ret) {
+			fsrprintf(_("could not set ATTR\n"));
+			return -1;
+		}
+
+	} while (++i < 100); /* don't go forever */
+
+out:
+	if (dflag)
+		fsrprintf(_("set temp attr\n"));
+	return 0;
+}
 
 /*
  * Do the defragmentation of a single file.
@@ -1000,14 +1146,10 @@ packfile(char *fname, char *tname, int fd,
 	unlink(tname);
 
 	/* Setup extended attributes */
-	if (statp->bs_xflags & XFS_XFLAG_HASATTR) {
-		if (fsetxattr(tfd, "user.X", "X", 1, XATTR_CREATE) != 0) {
-			fsrprintf(_("could not set ATTR on tmp: %s:\n"), tname);
-			close(tfd);
-			return -1;
-		}
-		if (dflag)
-			fsrprintf(_("%s set temp attr\n"), tname);
+	if (fsr_setup_attr_fork(fd, tfd, statp) != 0) {
+		fsrprintf(_("failed to set ATTR fork on tmp: %s:\n"), tname);
+		close(tfd);
+		return -1;
 	}
 
 	/* Setup extended inode flags, project identifier, etc */
