@@ -117,11 +117,13 @@ phase1(xfs_mount_t *mp)
 		if (lazy_count && !xfs_sb_version_haslazysbcount(sb)) {
 			sb->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
 			sb->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+			sb->sb_bad_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
 			primary_sb_modified = 1;
 			printf(_("Enabling lazy-counters\n"));
 		} else
 		if (!lazy_count && xfs_sb_version_haslazysbcount(sb)) {
 			sb->sb_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+			sb->sb_bad_features2 &= ~XFS_SB_VERSION2_LAZYSBCOUNTBIT;
 			printf(_("Disabling lazy-counters\n"));
 			primary_sb_modified = 1;
 		} else {
