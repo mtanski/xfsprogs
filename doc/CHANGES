@@ -1,3 +1,15 @@
+xfsprogs-3.1.2
+	- Fix missing thread synchronization in xfs_repair duplicate
+	  extent tracking.
+	- Fix handling of dynamic attribute fork roots in xfs_fsr.
+	- Fix sb_bad_features2 manipulations when tweaking the lazy count
+	  flag.
+	- Add support for building on Debian GNU/kFreeBSD, thanks
+	  to Petr Salinger.
+	- Improvements to the mkfs.xfs manpage, thanks to Wengang Wang.
+	- Various small blkid integration fixes in mkfs.xfs.
+	- Fix build against stricter system headers.
+
 xfsprogs-3.1.1 (29 January 2010)
 	- Fix various blkid topology support problems in mkfs.xfs.
 	- Fix various build warnings.
