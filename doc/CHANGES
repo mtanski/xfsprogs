@@ -1,4 +1,4 @@
-xfsprogs-3.1.2
+xfsprogs-3.1.2 (6 May 2010)
 	- Fix missing thread synchronization in xfs_repair duplicate
 	  extent tracking.
 	- Fix handling of dynamic attribute fork roots in xfs_fsr.
