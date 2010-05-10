@@ -33,6 +33,8 @@ LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 
 FCFLAGS = -I.
 
+LTLIBS = $(LIBPTHREAD) $(LIBRT)
+
 # don't try linking xfs_repair with a debug libxfs.
 DEBUG = -DNDEBUG
 

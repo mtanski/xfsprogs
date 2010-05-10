@@ -29,7 +29,7 @@ AC_DEFUN([AC_PACKAGE_NEED_LIO_LISTIO],
 	AC_CHECK_LIB(rt, lio_listio,, [
 	    echo
 	    echo 'FATAL ERROR: could not find a library with lio_listio.'
-	    exit 1])
+	    exit 1],[-lpthread])
 	librt="-lrt"
     fi
     AC_SUBST(librt)

@@ -24,6 +24,7 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 LOADERFLAGS = @LDFLAGS@
+LTLDFLAGS = @LDFLAGS@
 
 LIBRT = @librt@
 LIBUUID = @libuuid@
