@@ -2619,6 +2619,7 @@ process_inode(
 	xfs_qcnt_t		ic = 0;
 	xfs_qcnt_t		rc = 0;
 	xfs_dqid_t		dqprid;
+	int			v = 0;
 	static char		okfmts[] = {
 		0,				/* type 0 unused */
 		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
@@ -2653,15 +2654,16 @@ process_inode(
 		bno = XFS_INO_TO_FSB(mp, ino);
 		blkmap = NULL;
 	}
+	v = (!sflag || (id && id->ilist) || CHECK_BLIST(bno));
 	if (idic.di_magic != XFS_DINODE_MAGIC) {
-		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+		if (isfree || v)
 			dbprintf(_("bad magic number %#x for inode %lld\n"),
 				idic.di_magic, ino);
 		error++;
 		return;
 	}
 	if (!XFS_DINODE_GOOD_VERSION(idic.di_version)) {
-		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+		if (isfree || v)
 			dbprintf(_("bad version number %#x for inode %lld\n"),
 				idic.di_version, ino);
 		error++;
@@ -2669,7 +2671,7 @@ process_inode(
 	}
 	if (isfree) {
 		if (idic.di_nblocks != 0) {
-			if (!sflag || id->ilist || CHECK_BLIST(bno))
+			if (v)
 				dbprintf(_("bad nblocks %lld for free inode "
 					 "%lld\n"),
 					idic.di_nblocks, ino);
@@ -2680,21 +2682,22 @@ process_inode(
 		else
 			nlink = idic.di_nlink;
 		if (nlink != 0) {
-			if (!sflag || id->ilist || CHECK_BLIST(bno))
+			if (v)
 				dbprintf(_("bad nlink %d for free inode %lld\n"),
 					nlink, ino);
 			error++;
 		}
 		if (idic.di_mode != 0) {
-			if (!sflag || id->ilist || CHECK_BLIST(bno))
+			if (v)
 				dbprintf(_("bad mode %#o for free inode %lld\n"),
 					idic.di_mode, ino);
 			error++;
 		}
 		return;
 	}
+
 	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
-		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+		if (v)
 			dbprintf(_("bad next unlinked %#x for inode %lld\n"),
 				be32_to_cpu(dip->di_next_unlinked), ino);
 		error++;
@@ -2704,27 +2707,27 @@ process_inode(
 	 */
 	if ((((idic.di_mode & S_IFMT) >> 12) > 15) ||
 	    (!(okfmts[(idic.di_mode & S_IFMT) >> 12] & (1 << idic.di_format)))) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
+		if (v)
 			dbprintf(_("bad format %d for inode %lld type %#o\n"),
 				idic.di_format, id->ino, idic.di_mode & S_IFMT);
 		error++;
 		return;
 	}
 	if ((unsigned int)XFS_DFORK_ASIZE(dip, mp) >= XFS_LITINO(mp))  {
-		if (!sflag || id->ilist)
+		if (v)
 			dbprintf(_("bad fork offset %d for inode %lld\n"),
 				idic.di_forkoff, id->ino);
 		error++;
 		return;
 	}
 	if ((unsigned int)idic.di_aformat > XFS_DINODE_FMT_BTREE)  {
-		if (!sflag || id->ilist)
+		if (v)
 			dbprintf(_("bad attribute format %d for inode %lld\n"),
 				idic.di_aformat, id->ino);
 		error++;
 		return;
 	}
-	if (verbose || id->ilist || CHECK_BLIST(bno))
+	if (verbose || (id && id->ilist) || CHECK_BLIST(bno))
 		dbprintf(_("inode %lld mode %#o fmt %s "
 			 "afmt %s "
 			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n"),
@@ -2844,20 +2847,20 @@ process_inode(
 	}
 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
 	if (totblocks != idic.di_nblocks) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
+		if (v)
 			dbprintf(_("bad nblocks %lld for inode %lld, counted "
 				 "%lld\n"),
 				idic.di_nblocks, id->ino, totblocks);
 		error++;
 	}
 	if (nextents != idic.di_nextents) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
+		if (v)
 			dbprintf(_("bad nextents %d for inode %lld, counted %d\n"),
 				idic.di_nextents, id->ino, nextents);
 		error++;
 	}
 	if (anextents != idic.di_anextents) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
+		if (v)
 			dbprintf(_("bad anextents %d for inode %lld, counted "
 				 "%d\n"),
 				idic.di_anextents, id->ino, anextents);
