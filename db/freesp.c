@@ -286,6 +286,9 @@ scanfunc_bno(
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
 
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC)
+		return;
+
 	if (level == 0) {
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
@@ -309,6 +312,9 @@ scanfunc_cnt(
 	int			i;
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
+
+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC)
+		return;
 
 	if (level == 0) {
 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
