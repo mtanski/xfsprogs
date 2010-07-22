@@ -65,11 +65,16 @@ esac
 case $exec_prefix:$prefix in
 NONE:NONE | NONE:/usr | /usr:*)
   root_sbindir='/sbin'
-  AC_SUBST([root_sbindir])
-
   root_libdir="/${base_libdir}"
-  AC_SUBST([root_libdir])
+  ;;
+*)
+  root_sbindir="${sbindir}"
+  root_libdir="${libdir}"
+  ;;
 esac
+
+AC_SUBST([root_sbindir])
+AC_SUBST([root_libdir])
 
 # Find localized files
 LOCALIZED_FILES=""
