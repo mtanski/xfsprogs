@@ -182,7 +182,7 @@ prealloc_init(void)
 	resvsp_cmd.cfunc = resvsp_f;
 	resvsp_cmd.argmin = 2;
 	resvsp_cmd.argmax = 2;
-	resvsp_cmd.flags = CMD_NOMAP_OK;
+	resvsp_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	resvsp_cmd.args = _("off len");
 	resvsp_cmd.oneline =
 		_("reserves space associated with part of a file");
