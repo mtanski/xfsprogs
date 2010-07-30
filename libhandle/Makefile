@@ -27,4 +27,4 @@ install-dev: default
 
 install-qa: install-dev
 
--include .dep
+-include .ltdep

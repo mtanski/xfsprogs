@@ -48,4 +48,4 @@ install-dev: default
 
 install-qa: default
 
--include .dep
+-include .ltdep

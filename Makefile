@@ -30,9 +30,9 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
 CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
 LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
 
-LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
-	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
-	include/builddefs include/platform_defs.h
+LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+	conftest* built .census install.* install-dev.* *.gz \
+	autom4te.cache/* libtool include/builddefs include/platform_defs.h
 
 ifeq ($(HAVE_BUILDDEFS), yes)
 LDIRDIRT = $(SRCDIR)

@@ -34,4 +34,4 @@ include $(BUILDRULES)
 
 install install-dev install-qa: default
 
--include .dep
+-include .ltdep
