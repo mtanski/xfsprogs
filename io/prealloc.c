@@ -29,6 +29,7 @@ static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
 static cmdinfo_t resvsp_cmd;
 static cmdinfo_t unresvsp_cmd;
+static cmdinfo_t zero_cmd;
 #if defined(HAVE_FALLOCATE)
 static cmdinfo_t falloc_cmd;
 #endif
@@ -125,6 +126,24 @@ unresvsp_f(
 	return 0;
 }
 
+static int
+zero_f(
+	int		argc,
+	char		**argv)
+{
+	xfs_flock64_t	segment;
+
+	if (!offset_length(argv[1], argv[2], &segment))
+		return 0;
+
+	if (xfsctl(file->name, file->fd, XFS_IOC_ZERO_RANGE, &segment) < 0) {
+		perror("XFS_IOC_ZERO_RANGE");
+		return 0;
+	}
+	return 0;
+}
+
+
 #if defined (HAVE_FALLOCATE)
 static int
 fallocate_f(
@@ -196,10 +215,20 @@ prealloc_init(void)
 	unresvsp_cmd.oneline =
 		_("frees reserved space associated with part of a file");
 
+	zero_cmd.name = _("zero");
+	zero_cmd.cfunc = zero_f;
+	zero_cmd.argmin = 2;
+	zero_cmd.argmax = 2;
+	zero_cmd.flags = CMD_NOMAP_OK;
+	zero_cmd.args = _("off len");
+	zero_cmd.oneline =
+		_("Converts the given range of a file to allocated zeros");
+
 	add_command(&allocsp_cmd);
 	add_command(&freesp_cmd);
 	add_command(&resvsp_cmd);
 	add_command(&unresvsp_cmd);
+	add_command(&zero_cmd);
 
 #if defined (HAVE_FALLOCATE)
 	falloc_cmd.name = _("falloc");

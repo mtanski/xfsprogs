@@ -338,6 +338,24 @@ in the final argument.
 Partial filesystem blocks are zeroed, and whole filesystem blocks are
 removed from the file.  The file size does not change.
 
+.TP
+.B XFS_IOC_ZERO_RANGE
+This command is used to convert a range of a file to zeros without issuing data
+IO.
+A range of bytes is specified using a pointer to a variable of type
+.B xfs_flock64_t
+in the final argument.
+Blocks are preallocated for regions that span holes in the file, and the entire
+range is converted to unwritten extents.
+This operation is a fast method of overwriting any from the range specified
+with zeros without removing any blocks or having to write zeros to disk.
+Any subsequent read in the given range will return zeros until new data is
+written.
+This functionality requires filesystems to support unwritten extents.
+If
+.BR xfs_info (8)
+reports unwritten=1, then the filesystem was made to flag unwritten extents.
+
 .\" .TP
 .\" .B XFS_IOC_GETBIOSIZE
 .\" This command gets information about the preferred buffered I/O
