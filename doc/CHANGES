@@ -1,3 +1,17 @@
+xfsprogs-3.1.3 (26 August 2010)
+	- Add xfs_io support for XFS_IOC_ZERO_RANGE
+	- Fix depend targets.
+	- Allow xfs_io resvsp command for foreign filesystems.
+	- Fix configure --prefix.
+	- Make xfs_db check for valid inode data pointer before dereferencing.
+	- Validate btree block magic in the xfs_db freesp command,
+	  thanks to Peter Watkins.
+	- Unbreak make update-po, permissions problem,
+	  thanks to Arkadiusz Miśkiewicz.
+	- Fix linking of libxfs and librt detection (needs pthread),
+	  thanks to Arkadiusz Miśkiewicz.
+	- Add a platform_discard_blocks stub for GNU/kFreebsd.
+
 xfsprogs-3.1.2 (6 May 2010)
 	- Fix missing thread synchronization in xfs_repair duplicate
 	  extent tracking.
