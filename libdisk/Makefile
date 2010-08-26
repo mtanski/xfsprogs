@@ -20,7 +20,11 @@ else
 LSRCFILES = $(LINUX_DRIVERS)
 endif
 
+ifneq ($(ENABLE_BLKID), yes)
 default: ltdepend $(LTLIBRARY)
+else
+default:
+endif
 
 include $(BUILDRULES)
 
