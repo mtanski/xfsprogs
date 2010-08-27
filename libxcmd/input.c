@@ -336,16 +336,20 @@ prid_from_string(
 	char		*project)
 {
 	fs_project_t	*prj;
-	prid_t		prid;
+	unsigned long	prid_long;
 	char		*sp;
 
 	/*
 	 * Allow either a full numeric or a valid projectname, even
 	 * if it starts with a digit.
 	 */
-	prid = (prid_t)strtoul(project, &sp, 10);
-	if (*project != '\0' && *sp == '\0')
-		return prid;
+	prid_long = strtoul(project, &sp, 10);
+	if (*project != '\0' && *sp == '\0') {
+		if ((prid_long == ULONG_MAX && errno == ERANGE)
+				|| (prid_long > (prid_t)-1))
+			return -1;
+		return (prid_t)prid_long;
+	}
 	prj = getprnam(project);
 	if (prj)
 		return prj->pr_prid;
@@ -357,12 +361,16 @@ uid_from_string(
 	char		*user)
 {
 	struct passwd	*pwd;
-	uid_t		uid;
+	unsigned long	uid_long;
 	char		*sp;
 
-	uid = (uid_t)strtoul(user, &sp, 10);
-	if (sp != user)
-		return uid;
+	uid_long = strtoul(user, &sp, 10);
+	if (sp != user) {
+		if ((uid_long == ULONG_MAX && errno == ERANGE)
+				|| (uid_long > (uid_t)-1))
+			return -1;
+		return (uid_t)uid_long;
+	}
 	pwd = getpwnam(user);
 	if (pwd)
 		return pwd->pw_uid;
@@ -374,12 +382,16 @@ gid_from_string(
 	char		*group)
 {
 	struct group	*grp;
-	gid_t		gid;
+	unsigned long	gid_long;
 	char		*sp;
 
-	gid = (gid_t)strtoul(group, &sp, 10);
-	if (sp != group)
-		return gid;
+	gid_long = strtoul(group, &sp, 10);
+	if (sp != group) {
+		if ((gid_long == ULONG_MAX && errno == ERANGE)
+				|| (gid_long > (gid_t)-1))
+			return -1;
+		return (gid_t)gid_long;
+	}
 	grp = getgrnam(group);
 	if (grp)
 		return grp->gr_gid;

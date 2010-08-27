@@ -268,7 +268,8 @@ project(
 		count++;
 	}
 
-	printf(_("Processed %d (%s and cmdline) paths for project %s with recursion depth %s (%d).\n"),
+	printf(_("Processed %d (%s and cmdline) paths for project %s with "
+		"recursion depth %s (%d).\n"),
 		 count, projects_file, project,
 		 recurse_depth < 0 ? _("infinite") : _("limited"), recurse_depth);
 }
@@ -322,8 +323,9 @@ project_f(
 
 	if (ispath && argc - optind > 1) {
 		exitcode = 1;
-		fprintf(stderr, _("%s: only one projid/name can be specified when using -p <path>, %d found.\n"),
-				progname, argc - optind);
+		fprintf(stderr, _("%s: only one projid/name can be specified "
+			    "when using -p <path>, %d found.\n"),
+			progname, argc - optind);
 		return 0;
 	}
 
@@ -331,7 +333,8 @@ project_f(
 		prid = prid_from_string(argv[optind]);
 		if (prid == -1) {
 			exitcode = 1;
-			fprintf(stderr, _("%s - no such project in %s\n"),
+			fprintf(stderr, _("%s - no such project in %s "
+				    "or invalid project number\n"),
 				argv[optind], projects_file);
 		} else
 	                project(argv[optind], type);
