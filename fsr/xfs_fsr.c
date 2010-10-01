@@ -42,7 +42,9 @@
 #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
 #endif
 
-#define _PATH_FSRLAST	"/var/tmp/.fsrlast_xfs"
+#define _PATH_FSRLAST		"/var/tmp/.fsrlast_xfs"
+#define _PATH_PROC_MOUNTS	"/proc/mounts"
+
 
 char *progname;
 
@@ -79,7 +81,6 @@ static __int64_t	minimumfree = 2048;
 
 static time_t howlong = 7200;		/* default seconds of reorganizing */
 static char *leftofffile = _PATH_FSRLAST; /* where we left off last */
-static char *mtab = MOUNTED;
 static time_t endtime;
 static time_t starttime;
 static xfs_ino_t	leftoffino = 0;
@@ -94,7 +95,7 @@ static int  packfile(char *fname, char *tname, int fd,
 static void fsrdir(char *dirname);
 static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
 static void initallfs(char *mtab);
-static void fsrallfs(int howlong, char *leftofffile);
+static void fsrallfs(char *mtab, int howlong, char *leftofffile);
 static void fsrall_cleanup(int timeout);
 static int  getnextents(int);
 int xfsrtextsize(int fd);
@@ -187,6 +188,7 @@ main(int argc, char **argv)
 	struct mntent mntpref;
 	register struct mntent *mntp;
 	struct mntent ment;
+	char *mtab = NULL;
 	register FILE *mtabp;
 
 	setlinebuf(stdout);
@@ -198,7 +200,7 @@ main(int argc, char **argv)
 
 	gflag = ! isatty(0);
 
-	while ((c = getopt(argc, argv, "C:p:e:MgsdnvTt:f:m:b:N:FV")) != -1 )
+	while ((c = getopt(argc, argv, "C:p:e:MgsdnvTt:f:m:b:N:FV")) != -1) {
 		switch (c) {
 		case 'M':
 			Mflag = 1;
@@ -250,6 +252,22 @@ main(int argc, char **argv)
 		default:
 			usage(1);
 		}
+	}
+
+	/*
+	 * If the user did not specify an explicit mount table, try to use
+	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
+	 * /proc/mounts because it is kernel controlled, while /etc/mtab
+	 * may contain garbage that userspace tools like pam_mounts wrote
+	 * into it.
+	 */
+	if (!mtab) {
+		if (access(_PATH_PROC_MOUNTS, R_OK) == 0)
+			mtab = _PATH_PROC_MOUNTS;
+		else
+			mtab = _PATH_MOUNTED;
+	}
+
 	if (vflag)
 		setbuf(stdout, NULL);
 
@@ -330,7 +348,7 @@ main(int argc, char **argv)
 		}
 	} else {
 		initallfs(mtab);
-		fsrallfs(howlong, leftofffile);
+		fsrallfs(mtab, howlong, leftofffile);
 	}
 	return 0;
 }
@@ -447,7 +465,7 @@ initallfs(char *mtab)
 }
 
 static void
-fsrallfs(int howlong, char *leftofffile)
+fsrallfs(char *mtab, int howlong, char *leftofffile)
 {
 	int fd;
 	int error;
