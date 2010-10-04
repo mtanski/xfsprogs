@@ -106,6 +106,8 @@ char	*iopts[] = {
 	"size",
 #define	I_ATTR		5
 	"attr",
+#define	I_PROJID32BIT	6
+	"projid32bit",
 	NULL
 };
 
@@ -829,6 +831,7 @@ main(
 	__uint64_t		agsize;
 	xfs_alloc_rec_t		*arec;
 	int			attrversion;
+	int			projid32bit;
 	struct xfs_btree_block	*block;
 	int			blflag;
 	int			blocklog;
@@ -923,6 +926,7 @@ main(
 	textdomain(PACKAGE);
 
 	attrversion = 2;
+	projid32bit = 0;
 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
@@ -1258,6 +1262,14 @@ main(
 					if (c < 0 || c > 2)
 						illegal(value, "i attr");
 					attrversion = c;
+					break;
+				case I_PROJID32BIT:
+					if (!value)
+						value = "0";
+					c = atoi(value);
+					if (c < 0 || c > 1)
+						illegal(value, "i projid32bit");
+					projid32bit = c;
 					break;
 				default:
 					unknown('i', value);
@@ -2261,7 +2273,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	if (!qflag || Nflag) {
 		printf(_(
 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-		   "         =%-22s sectsz=%-5u attr=%u\n"
+		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
@@ -2269,7 +2281,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
-			"", sectorsize, attrversion,
+			"", sectorsize, attrversion, projid32bit,
 			"", blocksize, (long long)dblocks, imaxpct,
 			"", dsunit, dswidth,
 			dirversion, dirblocksize, nci,
@@ -2336,7 +2348,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		sbp->sb_logsectsize = 0;
 	}
 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters,
-					attrversion == 2, 0);
+					attrversion == 2, projid32bit == 1, 0);
 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(iaflag, dsunit != 0,
 					logversion == 2, attrversion == 1,
 					(sectorsize != BBSIZE ||
@@ -2804,7 +2816,8 @@ usage( void )
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
 			    (sunit=value,swidth=value|su=num,sw=num),\n\
 			    sectlog=n|sectsize=num\n\
-/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2]\n\
+/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+			    projid32bit=0|1]\n\
 /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
 			    lazy-count=0|1]\n\

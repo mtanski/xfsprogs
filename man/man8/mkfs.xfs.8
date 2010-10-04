@@ -350,6 +350,12 @@ between attribute and extent data.
 The previous version 1, which has fixed regions for attribute and
 extent data, is kept for backwards compatibility with kernels older
 than version 2.6.16.
+.TP
+.BI projid32bit[= value ]
+This is used to enable 32bit quota project identifiers. The
+.I value
+is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
+If the value is omitted, 0 is assumed.
 .RE
 .TP
 .BI \-l " log_section_options"

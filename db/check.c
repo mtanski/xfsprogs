@@ -2840,7 +2840,7 @@ process_inode(
 			break;
 		}
 		if (ic) {
-			dqprid = idic.di_projid;	/* dquot ID is u32 */
+			dqprid = xfs_get_projid(idic);	/* dquot ID is u32 */
 			quota_add(&dqprid, &idic.di_gid, &idic.di_uid,
 				  0, bc, ic, rc);
 		}

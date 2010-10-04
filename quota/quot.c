@@ -102,7 +102,7 @@ quot_bulkstat_add(
 	}
 	for (i = 0; i < 3; i++) {
 		id = (i == 0) ? p->bs_uid : ((i == 1) ?
-				p->bs_gid : p->bs_projid);
+			p->bs_gid : bstat_get_projid(p));
 		hp = &duhash[i][id % DUHASH];
 		for (dp = *hp; dp; dp = dp->next)
 			if (dp->id == id)

@@ -4,7 +4,7 @@ xfs_admin \- change parameters of an XFS filesystem
 .SH SYNOPSIS
 .B xfs_admin
 [
-.B \-eflu
+.B \-eflpu
 ] [
 .BR "\-c 0" | 1
 ] [
@@ -51,6 +51,9 @@ log buffers).
 .TP
 .B \-l
 Print the current filesystem label.
+.TP
+.B \-p
+Enable 32bit project identifier support (PROJID32BIT feature).
 .TP
 .B \-u
 Print the current filesystem UUID (Universally Unique IDentifier).

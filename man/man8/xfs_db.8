@@ -1474,8 +1474,10 @@ number of links to the file in a version 1 inode.
 .B nlinkv2
 number of links to the file in a version 2 inode.
 .TP
-.B projid
-owner's project id (version 2 inode only).
+.B projid_lo
+owner's project id (low word; version 2 inode only).
+.B projid_hi
+owner's project id (high word; version 2 inode only).
 .TP
 .B uid
 owner's user id.

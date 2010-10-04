@@ -620,6 +620,8 @@ version_string(
 		strcat(s, ",ATTR2");
 	if (xfs_sb_version_haslazysbcount(sbp))
 		strcat(s, ",LAZYSBCOUNT");
+	if (xfs_sb_version_hasprojid32bit(sbp))
+		strcat(s, ",PROJID32BIT");
 	return s;
 }
 
@@ -694,6 +696,10 @@ version_f(
 		} else if (!strcasecmp(argv[1], "attr2")) {
 			xfs_sb_version_addattr(&mp->m_sb);
 			xfs_sb_version_addattr2(&mp->m_sb);
+			version = mp->m_sb.sb_versionnum;
+			features = mp->m_sb.sb_features2;
+		} else if (!strcasecmp(argv[1], "projid32bit")) {
+			xfs_sb_version_addprojid32bit(&mp->m_sb);
 			version = mp->m_sb.sb_versionnum;
 			features = mp->m_sb.sb_features2;
 		} else {

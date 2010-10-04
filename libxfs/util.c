@@ -134,7 +134,7 @@ libxfs_iread(
 	 * made it 32 bits long.  If this is an old format inode,
 	 * convert it in memory to look like a new one.  If it gets
 	 * flushed to disk we will convert back before flushing or
-	 * logging it.  We zero out the new projid field and the old link
+	 * logging it.  We zero out the new projid_lo/hi field and the old link
 	 * count field.  We'll handle clearing the pad field (the remains
 	 * of the old uuid field) when we actually convert the inode to
 	 * the new format. We don't change the version number so that we
@@ -143,7 +143,7 @@ libxfs_iread(
 	if (ip->i_d.di_version == XFS_DINODE_VERSION_1) {
 		ip->i_d.di_nlink = ip->i_d.di_onlink;
 		ip->i_d.di_onlink = 0;
-		ip->i_d.di_projid = 0;
+		xfs_set_projid(&ip->i_d, 0);
 	}
 
 	ip->i_delayed_blks = 0;
@@ -219,7 +219,7 @@ libxfs_ialloc(
 	ASSERT(ip->i_d.di_nlink == nlink);
 	ip->i_d.di_uid = cr->cr_uid;
 	ip->i_d.di_gid = cr->cr_gid;
-	ip->i_d.di_projid = pip ? 0 : fsx->fsx_projid;
+	xfs_set_projid(&ip->i_d, pip ? 0 : fsx->fsx_projid);
 	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 
 	/*
@@ -231,7 +231,10 @@ libxfs_ialloc(
 	if (xfs_sb_version_hasnlink(&tp->t_mountp->m_sb) &&
 	    ip->i_d.di_version == XFS_DINODE_VERSION_1) {
 		ip->i_d.di_version = XFS_DINODE_VERSION_2;
-		/* old link count, projid field, pad field already zeroed */
+		/*
+		 * old link count, projid_lo/hi field, pad field
+		 * already zeroed
+		 */
 	}
 
 	if (pip && (pip->i_d.di_mode & S_ISGID)) {
@@ -446,7 +449,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 			memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 			memset(&(dip->di_core.di_pad[0]), 0,
 			      sizeof(dip->di_core.di_pad));
-			ASSERT(ip->i_d.di_projid == 0);
+			ASSERT(xfs_get_projid(ip->i_d) == 0);
 		}
 	}
 

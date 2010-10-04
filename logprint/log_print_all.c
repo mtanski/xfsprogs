@@ -238,8 +238,8 @@ xlog_recover_print_inode_core(
 	     "onlink:%d\n"),
 	       (di->di_magic>>8) & 0xff, di->di_magic & 0xff,
 	       di->di_mode, di->di_version, di->di_format, di->di_onlink);
-	printf(_("		uid:%d  gid:%d  nlink:%d projid:%d\n"),
-	       di->di_uid, di->di_gid, di->di_nlink, (uint)di->di_projid);
+	printf(_("		uid:%d  gid:%d  nlink:%d projid:%u\n"),
+	       di->di_uid, di->di_gid, di->di_nlink, xfs_get_projid(*di));
 	printf(_("		atime:%d  mtime:%d  ctime:%d\n"),
 	       di->di_atime.t_sec, di->di_mtime.t_sec, di->di_ctime.t_sec);
 	printf(_("		flushiter:%d\n"), di->di_flushiter);

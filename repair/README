@@ -130,7 +130,7 @@ D - 0)	rewrite directory leaf block holemap comparison code.
 	it does describe doesn't conflict with reality.
 
 D - 0)	rewrite setting nlinks handling -- for version 1
-	inodes, set both nlinks and onlinks (zero projid
+	inodes, set both nlinks and onlinks (zero projid_lo/hi
 	and pad) if we have to change anything.  For
 	version 2, I think we're ok.
 

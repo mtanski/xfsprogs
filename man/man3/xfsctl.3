@@ -564,8 +564,10 @@ The structure has the following elements:
 (number of extents),
 .B bs_gen
 (generation count),
-.B bs_projid
-(project id),
+.B bs_projid_lo
+(project id - low word),
+.B bs_projid_hi
+(project id - high word, used when projid32bit feature is enabled),
 .B bs_dmevmask
 (DMIG event mask),
 .B bs_dmstate

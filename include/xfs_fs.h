@@ -299,9 +299,11 @@ typedef struct xfs_bstat {
 	__s32		bs_extsize;	/* extent size			*/
 	__s32		bs_extents;	/* number of extents		*/
 	__u32		bs_gen;		/* generation count		*/
-	__u16		bs_projid;	/* project id			*/
+	__u16		bs_projid_lo;	/* lower part of project id	*/
+#define	bs_projid	bs_projid_lo
 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
-	unsigned char	bs_pad[12];	/* pad space, unused		*/
+	__u16		bs_projid_hi;	/* higher part of project id	*/
+	unsigned char	bs_pad[10];	/* pad space, unused		*/
 	__u32		bs_dmevmask;	/* DMIG event mask		*/
 	__u16		bs_dmstate;	/* DMIG state info		*/
 	__u16		bs_aextents;	/* attribute number of extents	*/
@@ -505,5 +507,16 @@ typedef struct xfs_handle {
 #define BTOBBT(bytes)	((__u64)(bytes) >> BBSHIFT)
 #define BBTOB(bbs)	((bbs) << BBSHIFT)
 #endif
+
+/*
+ * Project quota id helpers (previously projid was 16bit only
+ * and using two 16bit values to hold new 32bit projid was choosen
+ * to retain compatibility with "old" filesystems).
+ */
+static inline __uint32_t
+bstat_get_projid(struct xfs_bstat *bs)
+{
+	return (__uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
+}
 
 #endif	/* __XFS_FS_H__ */
