@@ -12,6 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: fsck-backend
 Suggests: xfsdump, acl, attr, quota
 Breaks: xfsdump (<< 3.0.0)
+Replaces: xfsdump (<< 3.0.0)
 Architecture: any
 Description: Utilities for managing the XFS filesystem
  A set of commands to use the XFS filesystem, including mkfs.xfs.
