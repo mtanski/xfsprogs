@@ -1,8 +1,8 @@
 Source: xfsprogs
 Section: admin
 Priority: optional
-Maintainer: Nathan Scott <nathans@debian.org>
-Uploaders: Anibal Monsalve Salazar <anibal@debian.org>
+Maintainer: XFS Development Team <xfs@oss.sgi.com>
+Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
 Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev, libblkid-dev (>= 2.17)
 Standards-Version: 3.9.1
 Homepage: http://oss.sgi.com/projects/xfs/
