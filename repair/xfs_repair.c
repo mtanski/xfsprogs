@@ -650,12 +650,18 @@ main(int argc, char **argv)
 			 * Turn off prefetch and minimise libxfs cache if
 			 * physical memory is deemed insufficient
 			 */
-			if (max_mem_specified)
-				do_abort(_("Required memory for repair is "
-					"greater that the maximum specified "
-					"with the -m option. Please increase "
-					"it to at least %lu.\n"),
+			if (max_mem_specified) {
+				do_abort(
+	_("Required memory for repair is greater that the maximum specified\n"
+	  "with the -m option. Please increase it to at least %lu.\n"),
 					mem_used / 1024);
+			} else {
+				do_warn(
+	_("Not enough RAM available for repair to enable prefetching.\n"
+	  "This will be _slow_.\n"
+	  "You need at least %luMB RAM to run with prefetching enabled.\n"),
+					mem_used * 1280 / (1024 * 1024));
+			}
 			do_prefetch = 0;
 			libxfs_bhash_size = 64;
 		} else {
