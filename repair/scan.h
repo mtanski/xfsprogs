@@ -20,19 +20,6 @@
 
 struct blkmap;
 
-void scan_sbtree(
-	xfs_agblock_t	root,
-	int		nlevels,
-	xfs_agnumber_t	agno,
-	int		suspect,
-	void		(*func)(struct xfs_btree_block	*block,
-				int			level,
-				xfs_agblock_t		bno,
-				xfs_agnumber_t		agno,
-				int			suspect,
-				int			isroot),
-	int		isroot);
-
 int scan_lbtree(
 	xfs_dfsbno_t	root,
 	int		nlevels,
@@ -74,29 +61,9 @@ int scanfunc_bmap(
 	int			check_dups,
 	int			*dirty);
 
-void scanfunc_bno(
-	struct xfs_btree_block	*block,
-	int			level,
-	xfs_agblock_t		bno,
-	xfs_agnumber_t		agno,
-	int			suspect,
-	int			isroot);
-
-void scanfunc_cnt(
-	struct xfs_btree_block	*block,
-	int			level,
-	xfs_agblock_t		bno,
-	xfs_agnumber_t		agno,
-	int			suspect,
-	int			isroot);
-
 void
-scanfunc_ino(
-	struct xfs_btree_block	*block,
-	int			level,
-	xfs_agblock_t		bno,
-	xfs_agnumber_t		agno,
-	int			suspect,
-	int			isroot);
+scan_ags(
+	struct xfs_mount	*mp,
+	int			scan_threads);
 
 #endif /* _XR_SCAN_H */

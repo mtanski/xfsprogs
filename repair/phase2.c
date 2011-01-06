@@ -24,10 +24,9 @@
 #include "err_protos.h"
 #include "incore.h"
 #include "progress.h"
+#include "scan.h"
 
 void	set_mp(xfs_mount_t *mpp);
-void	scan_ag(xfs_agnumber_t agno);
-void	validate_sb(struct xfs_sb *sb);
 
 /* workaround craziness in the xlog routines */
 int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
@@ -107,9 +106,10 @@ zero_log(xfs_mount_t *mp)
  */
 
 void
-phase2(xfs_mount_t *mp)
+phase2(
+	struct xfs_mount	*mp,
+	int			scan_threads)
 {
-	xfs_agnumber_t		i;
 	int			j;
 	ino_tree_node_t		*ino_rec;
 
@@ -138,17 +138,7 @@ phase2(xfs_mount_t *mp)
 
 	set_progress_msg(PROG_FMT_SCAN_AG, (__uint64_t) glob_agcount);
 
-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
-		scan_ag(i);
-#ifdef XR_INODE_TRACE
-		print_inode_list(i);
-#endif
-	}
-
-	/*
-	 * Validate that our manual counts match the superblock.
-	 */
-	validate_sb(&mp->m_sb);
+	scan_ags(mp, scan_threads);
 
 	print_final_rpt();
 

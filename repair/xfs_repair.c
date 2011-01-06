@@ -33,7 +33,7 @@
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
 extern void	phase1(xfs_mount_t *);
-extern void	phase2(xfs_mount_t *);
+extern void	phase2(xfs_mount_t *, int);
 extern void	phase3(xfs_mount_t *);
 extern void	phase4(xfs_mount_t *);
 extern void	phase5(xfs_mount_t *);
@@ -63,6 +63,8 @@ char *o_opts[] = {
 	"ag_stride",
 #define FORCE_GEO	5
 	"force_geometry",
+#define PHASE2_THREADS	6
+	"phase2_threads",
 	NULL
 };
 
@@ -80,6 +82,7 @@ char *c_opts[] = {
 static int	ihash_option_used;
 static int	bhash_option_used;
 static long	max_mem_specified;	/* in megabytes */
+static int	phase2_threads = 32;
 
 static void
 usage(void)
@@ -265,6 +268,9 @@ process_args(int argc, char **argv)
 					if (force_geo)
 						respec('o', o_opts, FORCE_GEO);
 					force_geo = 1;
+					break;
+				case PHASE2_THREADS:
+					phase2_threads = (int)strtol(val, NULL, 0);
 					break;
 				default:
 					unknown('o', val);
@@ -709,7 +715,7 @@ main(int argc, char **argv)
 	}
 
 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
-	phase2(mp);
+	phase2(mp, phase2_threads);
 	timestamp(PHASE_END, 2, NULL);
 
 	if (do_prefetch)
