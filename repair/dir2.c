@@ -110,8 +110,10 @@ da_read_buf(
 		bplist[i] = libxfs_readbuf(mp->m_dev,
 				XFS_FSB_TO_DADDR(mp, bmp[i].startblock),
 				XFS_FSB_TO_BB(mp, bmp[i].blockcount), 0);
-		if (!bplist[i])
+		if (!bplist[i]) {
+			nex = i;
 			goto failed;
+		}
 
 		pftrace("readbuf %p (%llu, %d)", bplist[i],
 			(long long)XFS_BUF_ADDR(bplist[i]),
