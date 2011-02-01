@@ -122,7 +122,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			done = 1;
 		}
 
-		if (!done && (bsize = read(x.dfd, sb, BSIZE)) == 0)  {
+		if (!done && (bsize = read(x.dfd, sb, BSIZE)) <= 0)  {
 			done = 1;
 		}
 
