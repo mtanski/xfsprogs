@@ -508,6 +508,10 @@ libxfs_trans_read_buf(
 	}
 
 	bp = libxfs_readbuf(dev, blkno, len, flags);
+       if (!bp){
+               *bpp = NULL;
+               return errno;
+       }
 #ifdef XACT_DEBUG
 	fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
 #endif

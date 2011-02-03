@@ -207,9 +207,11 @@ libxfs_trace_readbuf(const char *func, const char *file, int line, dev_t dev, xf
 {
 	xfs_buf_t	*bp = libxfs_readbuf(dev, blkno, len, flags);
 
-	bp->b_func = func;
-	bp->b_file = file;
-	bp->b_line = line;
+       if (bp){
+               bp->b_func = func;
+               bp->b_file = file;
+               bp->b_line = line;
+       }
 
 	return bp;
 }
