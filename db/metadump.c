@@ -337,12 +337,12 @@ copy_free_cnt_btree(
 
 /* filename and extended attribute obfuscation routines */
 
-typedef struct name_ent {
+struct name_ent {
 	struct name_ent		*next;
 	xfs_dahash_t		hash;
-	int	  	    	namelen;
-	uchar_t    	    	name[1];
-} name_ent_t;
+	int			namelen;
+	uchar_t			name[1];
+};
 
 #define NAME_TABLE_SIZE		4096
 
@@ -352,7 +352,7 @@ static void
 nametable_clear(void)
 {
 	int		i;
-	name_ent_t	*ent;
+	struct name_ent	*ent;
 
 	for (i = 0; i < NAME_TABLE_SIZE; i++) {
 		while ((ent = nametable[i])) {
