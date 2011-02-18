@@ -511,41 +511,16 @@ generate_obfuscated_name(
 		newhash = rol32(newhash, 3) ^ hash;
 
 		high_bit = 0;
+		for (i = 5; i > 0; i--) {
+			int shift = (i - 1) * 7;
 
-		newp[namelen - 5] = ((newhash >> 28) & 0x7f) ^ high_bit;
-		if (is_invalid_char(newp[namelen - 5])) {
-			newp[namelen - 5] ^= 1;
-			high_bit = 0x80;
-		} else
-			high_bit = 0;
-
-		newp[namelen - 4] = ((newhash >> 21) & 0x7f) ^ high_bit;
-		if (is_invalid_char(newp[namelen - 4])) {
-			newp[namelen - 4] ^= 1;
-			high_bit = 0x80;
-		} else
-			high_bit = 0;
-
-		newp[namelen - 3] = ((newhash >> 14) & 0x7f) ^ high_bit;
-		if (is_invalid_char(newp[namelen - 3])) {
-			newp[namelen - 3] ^= 1;
-			high_bit = 0x80;
-		} else
-			high_bit = 0;
-
-		newp[namelen - 2] = ((newhash >> 7) & 0x7f) ^ high_bit;
-		if (is_invalid_char(newp[namelen - 2])) {
-			newp[namelen - 2] ^= 1;
-			high_bit = 0x80;
-		} else
-			high_bit = 0;
-
-		newp[namelen - 1] = ((newhash >> 0) & 0x7f) ^ high_bit;
-		if (is_invalid_char(newp[namelen - 1])) {
-			newp[namelen - 1] ^= 1;
-			high_bit = 0x80;
-		} else
-			high_bit = 0;
+			newp[namelen - i] = ((newhash >> shift) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - i])) {
+				newp[namelen - i] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+		}
 
 		/*
 		 * If we flipped a bit on the last byte, we need to
