@@ -408,12 +408,11 @@ nametable_add(xfs_dahash_t hash, int namelen, uchar_t *name)
 static inline uchar_t
 random_filename_char(void)
 {
-	uchar_t			c;
+	static uchar_t filename_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+						"abcdefghijklmnopqrstuvwxyz"
+						"0123456789-_";
 
-	do {
-		c = random() % 127 + 1;
-	} while (c == '/');
-	return c;
+	return filename_alphabet[random() % (sizeof filename_alphabet - 1)];
 }
 
 #define	ORPHANAGE	"lost+found"
