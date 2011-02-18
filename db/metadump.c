@@ -448,6 +448,7 @@ generate_obfuscated_name(
 	int			dup;
 	xfs_dahash_t		newhash;
 	uchar_t			newname[NAME_MAX];
+	uchar_t			*newp = &newname[0];
 
 	/*
 	 * Our obfuscation algorithm requires at least 5-character
@@ -468,40 +469,57 @@ generate_obfuscated_name(
 	if (ino && in_lost_found(ino, namelen, name))
 		return;
 
-	/* create a random name with the same hash value */
+	/*
+	 * If the name starts with a slash, just skip over it.  We
+	 * will copy our obfuscated name back into space following
+	 * the slash when we're done.  Our new name will not have
+	 * the '/', and that's the version we'll keep in our
+	 * duplicates table.  Note that the namelen value passed in
+	 * does not include the leading slash (if any).
+	 */
+	if (*name == '/')
+		name++;
 
 	hash = libxfs_da_hashname(name, namelen);
 	do {
 		dup = 0;
-		newname[0] = '/';
-
 		for (;;) {
-			/* if the first char is a "/", preserve it */
-			i = (name[0] == '/');
+			/*
+			 * The beginning of the obfuscated name can
+			 * be pretty much anything, so fill it in
+			 * with random characters.  Accumulate its
+			 * new hash value as we go.
+			 */
+			newhash = 0;
+			for (i = 0; i < namelen - 5; i++) {
+				newp[i] = random_filename_char();
+				newhash = newp[i] ^ rol32(newhash, 7);
+			}
 
-			for (newhash = 0; i < namelen - 5; i++) {
-				newname[i] = random_filename_char();
-				newhash = newname[i] ^ rol32(newhash, 7);
-			}
+			/*
+			 * Compute which five bytes need to be used
+			 * at the end of the name so the hash of the
+			 * obfuscated name is the same as the hash
+			 * of the original.
+			 */
 			newhash = rol32(newhash, 3) ^ hash;
-			if (name[0] != '/' || namelen > 5) {
-				newname[namelen - 5] = (newhash >> 28) |
-						(random_filename_char() & 0xf0);
-				if (is_invalid_char(newname[namelen - 5]))
-					continue;
-			}
-			newname[namelen - 4] = (newhash >> 21) & 0x7f;
-			if (is_invalid_char(newname[namelen - 4]))
+
+			newp[namelen - 5] = (newhash >> 28) |
+					(random_filename_char() & 0xf0);
+			if (is_invalid_char(newp[namelen - 5]))
 				continue;
-			newname[namelen - 3] = (newhash >> 14) & 0x7f;
-			if (is_invalid_char(newname[namelen - 3]))
+			newp[namelen - 4] = (newhash >> 21) & 0x7f;
+			if (is_invalid_char(newp[namelen - 4]))
 				continue;
-			newname[namelen - 2] = (newhash >> 7) & 0x7f;
-			if (is_invalid_char(newname[namelen - 2]))
+			newp[namelen - 3] = (newhash >> 14) & 0x7f;
+			if (is_invalid_char(newp[namelen - 3]))
 				continue;
-			newname[namelen - 1] = ((newhash >> 0) ^
-					(newname[namelen - 5] >> 4)) & 0x7f;
-			if (is_invalid_char(newname[namelen - 1]))
+			newp[namelen - 2] = (newhash >> 7) & 0x7f;
+			if (is_invalid_char(newp[namelen - 2]))
+				continue;
+			newp[namelen - 1] = ((newhash >> 0) ^
+					(newp[namelen - 5] >> 4)) & 0x7f;
+			if (is_invalid_char(newp[namelen - 1]))
 				continue;
 			break;
 		}
