@@ -504,8 +504,7 @@ generate_obfuscated_name(
 			 */
 			newhash = rol32(newhash, 3) ^ hash;
 
-			newp[namelen - 5] = (newhash >> 28) |
-					(random_filename_char() & 0xf0);
+			newp[namelen - 5] = (newhash >> 28) & 0x7f;
 			if (is_invalid_char(newp[namelen - 5]))
 				continue;
 			newp[namelen - 4] = (newhash >> 21) & 0x7f;
@@ -517,8 +516,7 @@ generate_obfuscated_name(
 			newp[namelen - 2] = (newhash >> 7) & 0x7f;
 			if (is_invalid_char(newp[namelen - 2]))
 				continue;
-			newp[namelen - 1] = ((newhash >> 0) ^
-					(newp[namelen - 5] >> 4)) & 0x7f;
+			newp[namelen - 1] = (newhash >> 0) & 0x7f;
 			if (is_invalid_char(newp[namelen - 1]))
 				continue;
 			break;
