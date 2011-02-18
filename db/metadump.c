@@ -486,8 +486,7 @@ obfuscate_name(
 	size_t		name_len,
 	uchar_t		*name)
 {
-	uchar_t		newname[NAME_MAX];
-	uchar_t		*newp = newname;
+	uchar_t		*newp = name;
 	int		i;
 	xfs_dahash_t	new_hash = 0;
 	uchar_t		*first;
@@ -550,11 +549,7 @@ obfuscate_name(
 		*first ^= 0x10;
 		ASSERT(!is_invalid_char(*first));
 	}
-	ASSERT(libxfs_da_hashname(newname, name_len) == hash);
-
-	/* Copy the fully obfuscated name back to the caller's buffer */
-
-	memcpy(name, newname, name_len);
+	ASSERT(libxfs_da_hashname(name, name_len) == hash);
 }
 
 static void
