@@ -444,11 +444,8 @@ generate_obfuscated_name(
 {
 	xfs_dahash_t		hash;
 	name_ent_t		*p;
-	int			i;
 	int			dup;
-	xfs_dahash_t		newhash;
 	uchar_t			newname[NAME_MAX];
-	uchar_t			*newp = &newname[0];
 
 	/*
 	 * Our obfuscation algorithm requires at least 5-character
@@ -482,7 +479,12 @@ generate_obfuscated_name(
 
 	hash = libxfs_da_hashname(name, namelen);
 	do {
-		uchar_t	high_bit;
+		int		i;
+		xfs_dahash_t	newhash = 0;
+		uchar_t		*newp = &newname[0];
+		uchar_t		*first;
+		uchar_t		high_bit;
+		int		shift;
 
 		dup = 0;
 
@@ -492,10 +494,10 @@ generate_obfuscated_name(
 		 * characters.  Accumulate its new hash value as we
 		 * go.
 		 */
-		newhash = 0;
 		for (i = 0; i < namelen - 5; i++) {
-			newp[i] = random_filename_char();
-			newhash = newp[i] ^ rol32(newhash, 7);
+			*newp = random_filename_char();
+			newhash = *newp ^ rol32(newhash, 7);
+			newp++;
 		}
 
 		/*
@@ -510,16 +512,17 @@ generate_obfuscated_name(
 		 */
 		newhash = rol32(newhash, 3) ^ hash;
 
+		first = newp;
 		high_bit = 0;
-		for (i = 5; i > 0; i--) {
-			int shift = (i - 1) * 7;
-
-			newp[namelen - i] = ((newhash >> shift) & 0x7f) ^ high_bit;
-			if (is_invalid_char(newp[namelen - i])) {
-				newp[namelen - i] ^= 1;
+		for (shift = 28; shift >= 0; shift -= 7) {
+			*newp = ((newhash >> shift) & 0x7f) ^ high_bit;
+			if (is_invalid_char(*newp)) {
+				*newp ^= 1;
 				high_bit = 0x80;
 			} else
 				high_bit = 0;
+			ASSERT(!is_invalid_char(*newp));
+			newp++;
 		}
 
 		/*
@@ -532,15 +535,15 @@ generate_obfuscated_name(
 		 * worry about it becoming invalid as a result.
 		 */
 		if (high_bit) {
-			newp[namelen - 5] ^= 0x10;
-			ASSERT(!is_invalid_char(newp[namelen - 5]));
+			*first ^= 0x10;
+			ASSERT(!is_invalid_char(*first));
 		}
 
 		ASSERT(libxfs_da_hashname(newname, namelen) == hash);
 
 		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
 			if (p->hash == hash && p->namelen == namelen &&
-					memcmp(p->name, newname, namelen) == 0){
+					!memcmp(p->name, newname, namelen)) {
 				dup = 1;
 				break;
 			}
