@@ -550,18 +550,22 @@ generate_obfuscated_name(
 		}
 	} while (dup);
 
-	memcpy(name, newname, namelen);
+	/* Create an entry for the name in the name table */
 
 	p = malloc(sizeof(name_ent_t) + namelen);
 	if (p == NULL)
 		return;
 
-	p->next = nametable[hash % NAME_TABLE_SIZE];
-	p->hash = hash;
 	p->namelen = namelen;
-	memcpy(p->name, name, namelen);
+	memcpy(p->name, newname, namelen);
+	p->hash = hash;
+	p->next = nametable[hash % NAME_TABLE_SIZE];
 
 	nametable[hash % NAME_TABLE_SIZE] = p;
+
+	/* Update the caller's copy with the obfuscated name */
+
+	memcpy(name, newname, namelen);
 }
 
 static void
