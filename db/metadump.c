@@ -484,6 +484,8 @@ generate_obfuscated_name(
 	do {
 		dup = 0;
 		for (;;) {
+			uchar_t	high_bit;
+
 			/*
 			 * The beginning of the obfuscated name can
 			 * be pretty much anything, so fill it in
@@ -500,25 +502,66 @@ generate_obfuscated_name(
 			 * Compute which five bytes need to be used
 			 * at the end of the name so the hash of the
 			 * obfuscated name is the same as the hash
-			 * of the original.
+			 * of the original.  If any result in an
+			 * invalid character, flip a bit and arrange
+			 * for a corresponding bit in a neighboring
+			 * byte to be flipped as well.  For the last
+			 * byte, the "neighbor" to change is the
+			 * first byte we're computing here.
 			 */
 			newhash = rol32(newhash, 3) ^ hash;
 
-			newp[namelen - 5] = (newhash >> 28) & 0x7f;
-			if (is_invalid_char(newp[namelen - 5]))
-				continue;
-			newp[namelen - 4] = (newhash >> 21) & 0x7f;
-			if (is_invalid_char(newp[namelen - 4]))
-				continue;
-			newp[namelen - 3] = (newhash >> 14) & 0x7f;
-			if (is_invalid_char(newp[namelen - 3]))
-				continue;
-			newp[namelen - 2] = (newhash >> 7) & 0x7f;
-			if (is_invalid_char(newp[namelen - 2]))
-				continue;
-			newp[namelen - 1] = (newhash >> 0) & 0x7f;
-			if (is_invalid_char(newp[namelen - 1]))
-				continue;
+			high_bit = 0;
+
+			newp[namelen - 5] = ((newhash >> 28) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - 5])) {
+				newp[namelen - 5] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+
+			newp[namelen - 4] = ((newhash >> 21) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - 4])) {
+				newp[namelen - 4] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+
+			newp[namelen - 3] = ((newhash >> 14) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - 3])) {
+				newp[namelen - 3] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+
+			newp[namelen - 2] = ((newhash >> 7) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - 2])) {
+				newp[namelen - 2] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+
+			newp[namelen - 1] = ((newhash >> 0) & 0x7f) ^ high_bit;
+			if (is_invalid_char(newp[namelen - 1])) {
+				newp[namelen - 1] ^= 1;
+				high_bit = 0x80;
+			} else
+				high_bit = 0;
+
+			/*
+			 * If we flipped a bit on the last byte, we
+			 * need to fix up the first one we computed.
+			 *
+			 * That first byte had 0's in its upper four
+			 * bits (it's the result of shifting a
+			 * 32-bit unsigned value Right by 28 bits),
+			 * so we don't need to worry about it
+			 * becoming invalid as a result.
+			 */
+			if (high_bit) {
+				newp[namelen - 5] ^= 0x10;
+				ASSERT(!is_invalid_char(newp[namelen - 5]));
+			}
 			break;
 		}
 
