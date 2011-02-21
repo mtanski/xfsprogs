@@ -82,7 +82,7 @@ dump_file(
 	fs_disk_quota_t	d;
 
 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
-		if (errno != ENOENT && errno != ENOSYS)
+		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
 			perror("XFS_GETQUOTA");
 		return;
 	}
@@ -302,7 +302,7 @@ report_mount(
 	int		count;
 
 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
-		if (errno != ENOENT && errno != ENOSYS)
+		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
 			perror("XFS_GETQUOTA");
 		return 0;
 	}
