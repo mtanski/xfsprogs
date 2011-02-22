@@ -2530,6 +2530,68 @@ process_dinode_int(xfs_mount_t *mp,
 		goto clear_bad_out;
 	}
 
+	/*
+	 * check that we only have valid flags set, and those that are set make
+	 * sense.
+	 */
+	if (dinoc->di_flags) {
+		uint16_t flags = be16_to_cpu(dinoc->di_flags);
+
+		if (flags & ~XFS_DIFLAG_ANY) {
+			do_warn(_("Bad flags set in inode %llu"), lino);
+			flags &= ~XFS_DIFLAG_ANY;
+		}
+
+		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) {
+			/* need an rt-dev! */
+			if (!rt_name) {
+				do_warn(_(
+	"inode %llu has RT flag set but there is no RT device"), lino);
+				flags &= ~(XFS_DIFLAG_REALTIME |
+						XFS_DIFLAG_RTINHERIT);
+			}
+		}
+		if (flags & XFS_DIFLAG_NEWRTBM_BIT) {
+			/* must be a rt bitmap inode */
+			if (lino != mp->m_sb.sb_rbmino) {
+				do_warn(_("inode %llu not rt bitmap"), lino);
+				flags &= ~XFS_DIFLAG_NEWRTBM_BIT;
+			}
+		}
+		if (flags & (XFS_DIFLAG_RTINHERIT |
+			     XFS_DIFLAG_EXTSZINHERIT |
+			     XFS_DIFLAG_PROJINHERIT |
+			     XFS_DIFLAG_NOSYMLINKS)) {
+			/* must be a directory */
+			if (di_mode && !S_ISDIR(di_mode)) {
+				do_warn(_(
+			"directory flags set on non-directory inode %llu"),
+					lino);
+				flags &= ~(XFS_DIFLAG_RTINHERIT |
+						XFS_DIFLAG_EXTSZINHERIT |
+						XFS_DIFLAG_PROJINHERIT |
+						XFS_DIFLAG_NOSYMLINKS);
+			}
+		}
+		if (flags & (XFS_DIFLAG_REALTIME | XFS_XFLAG_EXTSIZE)) {
+			/* must be a file */
+			if (di_mode && !S_ISREG(di_mode)) {
+				do_warn(_(
+			"file flags set on non-file inode %llu"), lino);
+				flags &= ~(XFS_DIFLAG_REALTIME |
+						XFS_XFLAG_EXTSIZE);
+			}
+		}
+		if (!verify_mode && flags != be16_to_cpu(dinoc->di_flags)) {
+			if (!no_modify) {
+				do_warn(_(", fixing bad flags.\n"));
+				dinoc->di_flags = cpu_to_be16(flags);
+				*dirty = 1;
+			} else
+				do_warn(_(", would fix bad flags.\n"));
+		}
+	}
+
 	if (verify_mode)
 		return retval;
 
