@@ -143,7 +143,7 @@ xfs_init(libxfs_init_t *args)
 	}
 
 	args->usebuflock = do_prefetch;
-	args->setblksize = !dangerously;
+	args->setblksize = 0;
 	args->isdirect = LIBXFS_DIRECT;
 	if (no_modify)
 		args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
