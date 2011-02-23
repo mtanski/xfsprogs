@@ -2551,11 +2551,11 @@ process_dinode_int(xfs_mount_t *mp,
 						XFS_DIFLAG_RTINHERIT);
 			}
 		}
-		if (flags & XFS_DIFLAG_NEWRTBM_BIT) {
+		if (flags & XFS_DIFLAG_NEWRTBM) {
 			/* must be a rt bitmap inode */
 			if (lino != mp->m_sb.sb_rbmino) {
 				do_warn(_("inode %llu not rt bitmap"), lino);
-				flags &= ~XFS_DIFLAG_NEWRTBM_BIT;
+				flags &= ~XFS_DIFLAG_NEWRTBM;
 			}
 		}
 		if (flags & (XFS_DIFLAG_RTINHERIT |
