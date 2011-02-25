@@ -29,6 +29,14 @@
 
 #define DEFAULT_MAX_EXT_SIZE	1000
 
+/*
+ * It's possible that multiple files in a directory (or attributes
+ * in a file) produce the same obfuscated name.  If that happens, we
+ * try to create another one.  After several rounds of this though,
+ * we just give up and leave the original name as-is.
+ */
+#define	DUP_MAX		5	/* Max duplicates before we give up */
+
 /* copy all metadata structures to/from a file */
 
 static int	metadump_f(int argc, char **argv);
@@ -444,8 +452,9 @@ generate_obfuscated_name(
 {
 	xfs_dahash_t		hash;
 	name_ent_t		*p;
-	int			dup;
+	int			dup = 0;
 	uchar_t			newname[NAME_MAX];
+	uchar_t			*newp;
 
 	/*
 	 * Our obfuscation algorithm requires at least 5-character
@@ -481,12 +490,9 @@ generate_obfuscated_name(
 	do {
 		int		i;
 		xfs_dahash_t	newhash = 0;
-		uchar_t		*newp = &newname[0];
 		uchar_t		*first;
 		uchar_t		high_bit;
 		int		shift;
-
-		dup = 0;
 
 		/*
 		 * The beginning of the obfuscated name can be
@@ -494,6 +500,7 @@ generate_obfuscated_name(
 		 * characters.  Accumulate its new hash value as we
 		 * go.
 		 */
+		newp = &newname[0];
 		for (i = 0; i < namelen - 5; i++) {
 			*newp = random_filename_char();
 			newhash = *newp ^ rol32(newhash, 7);
@@ -541,14 +548,31 @@ generate_obfuscated_name(
 
 		ASSERT(libxfs_da_hashname(newname, namelen) == hash);
 
+		/*
+		 * Search the name table to be sure we don't produce
+		 * a name that's already been used.
+		 */
 		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
 			if (p->hash == hash && p->namelen == namelen &&
 					!memcmp(p->name, newname, namelen)) {
-				dup = 1;
+				dup++;
 				break;
 			}
 		}
-	} while (dup);
+	} while (dup && dup < DUP_MAX);
+
+	/*
+	 * Update the caller's copy with the obfuscated name.  Use
+	 * the original name if we got too many duplicates--and if
+	 * so, issue a warning.
+	 */
+	if (dup < DUP_MAX)
+		memcpy(name, newname, namelen);
+	else
+		print_warning("duplicate name for inode %llu "
+				"in dir inode %llu\n",
+			(unsigned long long) ino,
+			(unsigned long long) cur_ino);
 
 	/* Create an entry for the name in the name table */
 
@@ -557,15 +581,11 @@ generate_obfuscated_name(
 		return;
 
 	p->namelen = namelen;
-	memcpy(p->name, newname, namelen);
+	memcpy(p->name, name, namelen);
 	p->hash = hash;
 	p->next = nametable[hash % NAME_TABLE_SIZE];
 
 	nametable[hash % NAME_TABLE_SIZE] = p;
-
-	/* Update the caller's copy with the obfuscated name */
-
-	memcpy(name, newname, namelen);
 }
 
 static void
