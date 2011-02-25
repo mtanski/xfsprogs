@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Silicon Graphics, Inc.
+ * Copyright (c) 2007, 2011 SGI
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -377,40 +377,63 @@ random_filename_char(void)
 	return c;
 }
 
+#define	ORPHANAGE	"lost+found"
+#define	ORPHANAGE_LEN	(sizeof (ORPHANAGE) - 1)
+
+static inline int
+is_orphanage_dir(
+	struct xfs_mount	*mp,
+	xfs_ino_t		dir_ino,
+	size_t			name_len,
+	uchar_t			*name)
+{
+	return dir_ino == mp->m_sb.sb_rootino &&
+			name_len == ORPHANAGE_LEN &&
+			!memcmp(name, ORPHANAGE, ORPHANAGE_LEN);
+}
+
+/*
+ * Determine whether a name is one we shouldn't obfuscate because
+ * it's an orphan (or the "lost+found" directory itself).  Note
+ * "cur_ino" is the inode for the directory currently being
+ * processed.
+ *
+ * Returns 1 if the name should NOT be obfuscated or 0 otherwise.
+ */
 static int
-is_special_dirent(
+in_lost_found(
 	xfs_ino_t		ino,
 	int			namelen,
 	uchar_t			*name)
 {
 	static xfs_ino_t	orphanage_ino = 0;
-	char			s[32];
+	char			s[24];	/* 21 is enough (64 bits in decimal) */
 	int			slen;
 
-	/*
-	 * due to the XFS name hashing algorithm, we cannot obfuscate
-	 * names with 4 chars or less.
-	 */
-	if (namelen <= 4)
-		return 1;
+	/* Record the "lost+found" inode if we haven't done so already */
 
-	if (ino == 0)
-		return 0;
-
-	/*
-	 * don't obfuscate lost+found nor any inodes within lost+found with
-	 * the inode number
-	 */
-	if (cur_ino == mp->m_sb.sb_rootino && namelen == 10 &&
-			memcmp(name, "lost+found", 10) == 0) {
+	ASSERT(ino != 0);
+	if (!orphanage_ino && is_orphanage_dir(mp, cur_ino, namelen, name))
 		orphanage_ino = ino;
+
+	/* We don't obfuscate the "lost+found" directory itself */
+
+	if (ino == orphanage_ino)
 		return 1;
-	}
+
+	/* Most files aren't in "lost+found" at all */
+
 	if (cur_ino != orphanage_ino)
 		return 0;
 
-	slen = sprintf(s, "%lld", (long long)ino);
-	return (slen == namelen && memcmp(name, s, namelen) == 0);
+	/*
+	 * Within "lost+found", we don't obfuscate any file whose
+	 * name is the same as its inode number.  Any others are
+	 * stray files and can be obfuscated.
+	 */
+	slen = snprintf(s, sizeof (s), "%llu", (unsigned long long) ino);
+
+	return slen == namelen && !memcmp(name, s, namelen);
 }
 
 static void
@@ -426,13 +449,28 @@ generate_obfuscated_name(
 	xfs_dahash_t		newhash;
 	uchar_t			newname[NAME_MAX];
 
-	if (is_special_dirent(ino, namelen, name))
+	/*
+	 * Our obfuscation algorithm requires at least 5-character
+	 * names, so don't bother if the name is too short.  We
+	 * work backward from a hash value to determine the last
+	 * five bytes in a name required to produce a new name
+	 * with the same hash.
+	 */
+	if (namelen < 5)
 		return;
 
-	hash = libxfs_da_hashname(name, namelen);
+	/*
+	 * We don't obfuscate "lost+found" or any orphan files
+	 * therein.  When the name table is used for extended
+	 * attributes, the inode number provided is 0, in which
+	 * case we don't need to make this check.
+	 */
+	if (ino && in_lost_found(ino, namelen, name))
+		return;
 
 	/* create a random name with the same hash value */
 
+	hash = libxfs_da_hashname(name, namelen);
 	do {
 		dup = 0;
 		newname[0] = '/';
