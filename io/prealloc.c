@@ -36,6 +36,7 @@ static cmdinfo_t unresvsp_cmd;
 static cmdinfo_t zero_cmd;
 #if defined(HAVE_FALLOCATE)
 static cmdinfo_t falloc_cmd;
+static cmdinfo_t fpunch_cmd;
 #endif
 
 static int
@@ -183,7 +184,26 @@ fallocate_f(
 	}
 	return 0;
 }
-#endif
+
+static int
+fpunch_f(
+	 int		argc,
+	 char		**argv)
+{
+	xfs_flock64_t	segment;
+	int		mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
+
+	if (!offset_length(argv[1], argv[2], &segment))
+		return 0;
+
+	if (fallocate(file->fd, mode,
+			segment.l_start, segment.l_len)) {
+		perror("fallocate");
+		return 0;
+	}
+	return 0;
+}
+#endif	/* HAVE_FALLOCATE */
 
 void
 prealloc_init(void)
@@ -246,7 +266,16 @@ prealloc_init(void)
 	falloc_cmd.args = _("[-k] [-p] off len");
 	falloc_cmd.oneline =
 		_("allocates space associated with part of a file via fallocate");
-
 	add_command(&falloc_cmd);
-#endif
+
+	fpunch_cmd.name = _("fpunch");
+	fpunch_cmd.cfunc = fpunch_f;
+	fpunch_cmd.argmin = 2;
+	fpunch_cmd.argmax = 2;
+	fpunch_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+	fpunch_cmd.args = _("off len");
+	fpunch_cmd.oneline =
+		_("de-allocates space assocated with part of a file via fallocate");
+	add_command(&fpunch_cmd);
+#endif	/* HAVE_FALLOCATE */
 }
