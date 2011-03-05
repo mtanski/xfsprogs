@@ -116,3 +116,11 @@ AC_DEFUN([AC_HAVE_FALLOCATE],
        AC_MSG_RESULT(no))
     AC_SUBST(have_fallocate)
   ])
+
+#
+# Check if we have the fiemap ioctl (Linux)
+#
+AC_DEFUN([AC_HAVE_FIEMAP],
+  [ AC_CHECK_HEADERS([linux/fiemap.h], [ have_fiemap=yes ], [ have_fiemap=no ])
+    AC_SUBST(have_fiemap)
+  ])

@@ -135,3 +135,9 @@ extern void		mincore_init(void);
 #else
 #define mincore_init()	do { } while (0)
 #endif
+
+#ifdef HAVE_FIEMAP
+extern void		fiemap_init(void);
+#else
+#define fiemap_init()	do { } while (0)
+#endif

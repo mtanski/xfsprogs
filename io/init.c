@@ -71,6 +71,7 @@ init_commands(void)
 	parent_init();
 	pread_init();
 	prealloc_init();
+	fiemap_init();
 	pwrite_init();
 	quit_init();
 	resblks_init();

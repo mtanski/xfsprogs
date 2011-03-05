@@ -44,6 +44,13 @@ else
 LSRCFILES += sendfile.c
 endif
 
+ifeq ($(HAVE_FIEMAP),yes)
+CFILES += fiemap.c
+LCFLAGS += -DHAVE_FIEMAP
+else
+LSRCFILES += fiemap.c
+endif
+
 ifeq ($(PKG_PLATFORM),irix)
 LSRCFILES += inject.c resblks.c
 else
