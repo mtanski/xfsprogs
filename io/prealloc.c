@@ -25,6 +25,10 @@
 #include "init.h"
 #include "io.h"
 
+#ifndef FALLOC_FL_PUNCH_HOLE
+#define FALLOC_FL_PUNCH_HOLE	0x02
+#endif
+
 static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
 static cmdinfo_t resvsp_cmd;
@@ -154,10 +158,13 @@ fallocate_f(
 	int		mode = 0;
 	int		c;
 
-	while ((c = getopt(argc, argv, "k")) != EOF) {
+	while ((c = getopt(argc, argv, "kp")) != EOF) {
 		switch (c) {
 		case 'k':
 			mode = FALLOC_FL_KEEP_SIZE;
+			break;
+		case 'p':
+			mode = FALLOC_FL_PUNCH_HOLE;
 			break;
 		default:
 			command_usage(&falloc_cmd);
@@ -236,7 +243,7 @@ prealloc_init(void)
 	falloc_cmd.argmin = 2;
 	falloc_cmd.argmax = -1;
 	falloc_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-	falloc_cmd.args = _("[-k] off len");
+	falloc_cmd.args = _("[-k] [-p] off len");
 	falloc_cmd.oneline =
 		_("allocates space associated with part of a file via fallocate");
 
