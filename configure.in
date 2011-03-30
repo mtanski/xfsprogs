@@ -76,9 +76,12 @@ esac
 AC_SUBST([root_sbindir])
 AC_SUBST([root_libdir])
 
-# Find localized files
+# Find localized files.  Don't descend into any "dot directories"
+# (like .git or .pc from quilt).  Strangely, the "-print" argument
+# to "find" is required, to avoid including such directories in the
+# list.
 LOCALIZED_FILES=""
-for lfile in `find ${srcdir} -name '*.c' -type f || exit 1`; do
+for lfile in `find ${srcdir} -path './.??*' -prune -o -name '*.c' -type f -print || exit 1`; do
     LOCALIZED_FILES="$LOCALIZED_FILES \$(TOPDIR)/$lfile"
 done
 AC_SUBST(LOCALIZED_FILES)
