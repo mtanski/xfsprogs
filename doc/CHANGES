@@ -1,3 +1,18 @@
+xfsprogs-3.1.5 (30 March 2011)
+	- Polish translation update, thanks to Jakub Bogusz
+	- xfs_repair now warns if running in low memory mode
+	- Phase 2 of xfs_repair is now multithreaded
+	- xfs_quota no longer attempts to get quota information if
+	  not enabled
+	- Inode flags are now properly validated by xfs_repair
+	- Metadump now obfuscates all file names reliably
+	- xfs_io now supports the "fiemap" command, a more generic
+	  form of the "bmap" command
+	- xfs_io now supports the "fpunch" command, as well as a
+	  "-p" flag to the "fallocate command.  Both implement hole
+	  punching.  Thanks to Josef Bacik
+	- A number of other bug fixes thanks to Ajeet Yadav
+
 xfsprogs-3.1.4 (9 November 2010)
 	- Add projid32bit handling to userspace, resolving type
 	  sizing issues when dealing with 32 bit project ids.
