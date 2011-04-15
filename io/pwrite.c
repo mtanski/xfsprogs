@@ -349,8 +349,8 @@ done:
 void
 pwrite_init(void)
 {
-	pwrite_cmd.name = _("pwrite");
-	pwrite_cmd.altname = _("w");
+	pwrite_cmd.name = "pwrite";
+	pwrite_cmd.altname = "w";
 	pwrite_cmd.cfunc = pwrite_f;
 	pwrite_cmd.argmin = 2;
 	pwrite_cmd.argmax = -1;

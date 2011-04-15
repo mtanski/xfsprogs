@@ -176,8 +176,8 @@ done:
 void
 sendfile_init(void)
 {
-	sendfile_cmd.name = _("sendfile");
-	sendfile_cmd.altname = _("send");
+	sendfile_cmd.name = "sendfile";
+	sendfile_cmd.altname = "send";
 	sendfile_cmd.cfunc = sendfile_f;
 	sendfile_cmd.argmin = 2;
 	sendfile_cmd.argmax = -1;

@@ -148,7 +148,7 @@ inject_f(
 void
 inject_init(void)
 {
-	inject_cmd.name = _("inject");
+	inject_cmd.name = "inject";
 	inject_cmd.cfunc = inject_f;
 	inject_cmd.argmin = 0;
 	inject_cmd.argmax = -1;

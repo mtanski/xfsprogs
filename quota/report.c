@@ -640,7 +640,7 @@ report_f(
 void
 report_init(void)
 {
-	dump_cmd.name = _("dump");
+	dump_cmd.name = "dump";
 	dump_cmd.cfunc = dump_f;
 	dump_cmd.argmin = 0;
 	dump_cmd.argmax = -1;
@@ -648,8 +648,8 @@ report_init(void)
 	dump_cmd.oneline = _("dump quota information for backup utilities");
 	dump_cmd.help = dump_help;
 
-	report_cmd.name = _("report");
-	report_cmd.altname = _("repquota");
+	report_cmd.name = "report";
+	report_cmd.altname = "repquota";
 	report_cmd.cfunc = report_f;
 	report_cmd.argmin = 0;
 	report_cmd.argmax = -1;

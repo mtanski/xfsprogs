@@ -49,8 +49,8 @@ truncate_f(
 void
 truncate_init(void)
 {
-	truncate_cmd.name = _("truncate");
-	truncate_cmd.altname = _("t");
+	truncate_cmd.name = "truncate";
+	truncate_cmd.altname = "t";
 	truncate_cmd.cfunc = truncate_f;
 	truncate_cmd.argmin = 1;
 	truncate_cmd.argmax = 1;

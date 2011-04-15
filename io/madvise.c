@@ -118,8 +118,8 @@ madvise_f(
 void
 madvise_init(void)
 {
-	madvise_cmd.name = _("madvise");
-	madvise_cmd.altname = _("ma");
+	madvise_cmd.name = "madvise";
+	madvise_cmd.altname = "ma";
 	madvise_cmd.cfunc = madvise_f;
 	madvise_cmd.argmin = 0;
 	madvise_cmd.argmax = -1;

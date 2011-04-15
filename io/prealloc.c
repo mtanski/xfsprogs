@@ -208,7 +208,7 @@ fpunch_f(
 void
 prealloc_init(void)
 {
-	allocsp_cmd.name = _("allocsp");
+	allocsp_cmd.name = "allocsp";
 	allocsp_cmd.cfunc = allocsp_f;
 	allocsp_cmd.argmin = 2;
 	allocsp_cmd.argmax = 2;
@@ -216,7 +216,7 @@ prealloc_init(void)
 	allocsp_cmd.args = _("off len");
 	allocsp_cmd.oneline = _("allocates zeroed space for part of a file");
 
-	freesp_cmd.name = _("freesp");
+	freesp_cmd.name = "freesp";
 	freesp_cmd.cfunc = freesp_f;
 	freesp_cmd.argmin = 2;
 	freesp_cmd.argmax = 2;
@@ -224,7 +224,7 @@ prealloc_init(void)
 	freesp_cmd.args = _("off len");
 	freesp_cmd.oneline = _("frees space associated with part of a file");
 
-	resvsp_cmd.name = _("resvsp");
+	resvsp_cmd.name = "resvsp";
 	resvsp_cmd.cfunc = resvsp_f;
 	resvsp_cmd.argmin = 2;
 	resvsp_cmd.argmax = 2;
@@ -233,7 +233,7 @@ prealloc_init(void)
 	resvsp_cmd.oneline =
 		_("reserves space associated with part of a file");
 
-	unresvsp_cmd.name = _("unresvsp");
+	unresvsp_cmd.name = "unresvsp";
 	unresvsp_cmd.cfunc = unresvsp_f;
 	unresvsp_cmd.argmin = 2;
 	unresvsp_cmd.argmax = 2;
@@ -242,7 +242,7 @@ prealloc_init(void)
 	unresvsp_cmd.oneline =
 		_("frees reserved space associated with part of a file");
 
-	zero_cmd.name = _("zero");
+	zero_cmd.name = "zero";
 	zero_cmd.cfunc = zero_f;
 	zero_cmd.argmin = 2;
 	zero_cmd.argmax = 2;
@@ -258,7 +258,7 @@ prealloc_init(void)
 	add_command(&zero_cmd);
 
 #if defined (HAVE_FALLOCATE)
-	falloc_cmd.name = _("falloc");
+	falloc_cmd.name = "falloc";
 	falloc_cmd.cfunc = fallocate_f;
 	falloc_cmd.argmin = 2;
 	falloc_cmd.argmax = -1;
@@ -268,7 +268,7 @@ prealloc_init(void)
 		_("allocates space associated with part of a file via fallocate");
 	add_command(&falloc_cmd);
 
-	fpunch_cmd.name = _("fpunch");
+	fpunch_cmd.name = "fpunch";
 	fpunch_cmd.cfunc = fpunch_f;
 	fpunch_cmd.argmin = 2;
 	fpunch_cmd.argmax = 2;

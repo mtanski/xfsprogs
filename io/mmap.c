@@ -577,8 +577,8 @@ mwrite_f(
 void
 mmap_init(void)
 {
-	mmap_cmd.name = _("mmap");
-	mmap_cmd.altname = _("mm");
+	mmap_cmd.name = "mmap";
+	mmap_cmd.altname = "mm";
 	mmap_cmd.cfunc = mmap_f;
 	mmap_cmd.argmin = 0;
 	mmap_cmd.argmax = -1;
@@ -588,8 +588,8 @@ mmap_init(void)
 		_("mmap a range in the current file, show mappings");
 	mmap_cmd.help = mmap_help;
 
-	mread_cmd.name = _("mread");
-	mread_cmd.altname = _("mr");
+	mread_cmd.name = "mread";
+	mread_cmd.altname = "mr";
 	mread_cmd.cfunc = mread_f;
 	mread_cmd.argmin = 0;
 	mread_cmd.argmax = -1;
@@ -599,8 +599,8 @@ mmap_init(void)
 		_("reads data from a region in the current memory mapping");
 	mread_cmd.help = mread_help;
 
-	msync_cmd.name = _("msync");
-	msync_cmd.altname = _("ms");
+	msync_cmd.name = "msync";
+	msync_cmd.altname = "ms";
 	msync_cmd.cfunc = msync_f;
 	msync_cmd.argmin = 0;
 	msync_cmd.argmax = -1;
@@ -609,16 +609,16 @@ mmap_init(void)
 	msync_cmd.oneline = _("flush a region in the current memory mapping");
 	msync_cmd.help = msync_help;
 
-	munmap_cmd.name = _("munmap");
-	munmap_cmd.altname = _("mu");
+	munmap_cmd.name = "munmap";
+	munmap_cmd.altname = "mu";
 	munmap_cmd.cfunc = munmap_f;
 	munmap_cmd.argmin = 0;
 	munmap_cmd.argmax = 0;
 	munmap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
 	munmap_cmd.oneline = _("unmaps the current memory mapping");
 
-	mwrite_cmd.name = _("mwrite");
-	mwrite_cmd.altname = _("mw");
+	mwrite_cmd.name = "mwrite";
+	mwrite_cmd.altname = "mw";
 	mwrite_cmd.cfunc = mwrite_f;
 	mwrite_cmd.argmin = 0;
 	mwrite_cmd.argmax = -1;

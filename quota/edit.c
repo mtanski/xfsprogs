@@ -675,7 +675,7 @@ warn_f(
 void
 edit_init(void)
 {
-	limit_cmd.name = _("limit");
+	limit_cmd.name = "limit";
 	limit_cmd.cfunc = limit_f;
 	limit_cmd.argmin = 2;
 	limit_cmd.argmax = -1;
@@ -684,14 +684,14 @@ edit_init(void)
 	limit_cmd.oneline = _("modify quota limits");
 	limit_cmd.help = limit_help;
 
-	restore_cmd.name = _("restore");
+	restore_cmd.name = "restore";
 	restore_cmd.cfunc = restore_f;
 	restore_cmd.argmin = 0;
 	restore_cmd.argmax = -1;
 	restore_cmd.args = _("[-gpu] [-f file]");
 	restore_cmd.oneline = _("restore quota limits from a backup file");
 
-	timer_cmd.name = _("timer");
+	timer_cmd.name = "timer";
 	timer_cmd.cfunc = timer_f;
 	timer_cmd.argmin = 2;
 	timer_cmd.argmax = -1;
@@ -699,7 +699,7 @@ edit_init(void)
 	timer_cmd.oneline = _("get/set quota enforcement timeouts");
 	timer_cmd.help = timer_help;
 
-	warn_cmd.name = _("warn");
+	warn_cmd.name = "warn";
 	warn_cmd.cfunc = warn_f;
 	warn_cmd.argmin = 2;
 	warn_cmd.argmax = -1;

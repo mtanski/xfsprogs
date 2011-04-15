@@ -33,8 +33,8 @@ quit_f(
 void
 quit_init(void)
 {
-	quit_cmd.name = _("quit");
-	quit_cmd.altname = _("q");
+	quit_cmd.name = "quit";
+	quit_cmd.altname = "q";
 	quit_cmd.cfunc = quit_f;
 	quit_cmd.argmin = -1;
 	quit_cmd.argmax = -1;

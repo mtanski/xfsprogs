@@ -333,7 +333,7 @@ chattr_f(
 void
 attr_init(void)
 {
-	chattr_cmd.name = _("chattr");
+	chattr_cmd.name = "chattr";
 	chattr_cmd.cfunc = chattr_f;
 	chattr_cmd.args = _("[-R|-D] [+/-"CHATTR_XFLAG_LIST"]");
 	chattr_cmd.argmin = 1;
@@ -343,7 +343,7 @@ attr_init(void)
 		_("change extended inode flags on the currently open file");
 	chattr_cmd.help = chattr_help;
 
-	lsattr_cmd.name = _("lsattr");
+	lsattr_cmd.name = "lsattr";
 	lsattr_cmd.cfunc = lsattr_f;
 	lsattr_cmd.args = _("[-R|-D|-a|-v]");
 	lsattr_cmd.argmin = 0;

@@ -411,7 +411,7 @@ quot_f(
 void
 quot_init(void)
 {
-	quot_cmd.name = _("quot");
+	quot_cmd.name = "quot";
 	quot_cmd.cfunc = quot_f;
 	quot_cmd.argmin = 0;
 	quot_cmd.argmax = -1;

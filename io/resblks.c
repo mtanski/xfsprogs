@@ -58,7 +58,7 @@ resblks_f(
 void
 resblks_init(void)
 {
-	resblks_cmd.name = _("resblks");
+	resblks_cmd.name = "resblks";
 	resblks_cmd.cfunc = resblks_f;
 	resblks_cmd.argmin = 0;
 	resblks_cmd.argmax = 1;

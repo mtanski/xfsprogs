@@ -64,7 +64,7 @@ imap_f(int argc, char **argv)
 void
 imap_init(void)
 {
-	imap_cmd.name = _("imap");
+	imap_cmd.name = "imap";
 	imap_cmd.cfunc = imap_f;
 	imap_cmd.argmin = 0;
 	imap_cmd.argmax = 0;

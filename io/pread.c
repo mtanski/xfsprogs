@@ -387,8 +387,8 @@ pread_f(
 void
 pread_init(void)
 {
-	pread_cmd.name = _("pread");
-	pread_cmd.altname = _("r");
+	pread_cmd.name = "pread";
+	pread_cmd.altname = "r";
 	pread_cmd.cfunc = pread_f;
 	pread_cmd.argmin = 2;
 	pread_cmd.argmax = -1;

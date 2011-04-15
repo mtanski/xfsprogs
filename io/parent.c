@@ -429,7 +429,7 @@ parent_help(void)
 void
 parent_init(void)
 {
-	parent_cmd.name = _("parent");
+	parent_cmd.name = "parent";
 	parent_cmd.cfunc = parent_f;
 	parent_cmd.argmin = 0;
 	parent_cmd.argmax = -1;

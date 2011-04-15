@@ -83,8 +83,8 @@ help_oneline(
 void
 help_init(void)
 {
-	help_cmd.name = _("help");
-	help_cmd.altname = _("?");
+	help_cmd.name = "help";
+	help_cmd.altname = "?";
 	help_cmd.cfunc = help_f;
 	help_cmd.argmin = 0;
 	help_cmd.argmax = 1;

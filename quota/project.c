@@ -347,8 +347,8 @@ project_f(
 void
 project_init(void)
 {
-	project_cmd.name = _("project");
-	project_cmd.altname = _("tree");
+	project_cmd.name = "project";
+	project_cmd.altname = "tree";
 	project_cmd.cfunc = project_f;
 	project_cmd.args = _("[-c|-s|-C|-d <depth>|-p <path>] project ...");
 	project_cmd.argmin = 1;

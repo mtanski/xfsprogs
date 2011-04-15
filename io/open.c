@@ -772,8 +772,8 @@ statfs_f(
 void
 open_init(void)
 {
-	open_cmd.name = _("open");
-	open_cmd.altname = _("o");
+	open_cmd.name = "open";
+	open_cmd.altname = "o";
 	open_cmd.cfunc = open_f;
 	open_cmd.argmin = 0;
 	open_cmd.argmax = -1;
@@ -782,7 +782,7 @@ open_init(void)
 	open_cmd.oneline = _("open the file specified by path");
 	open_cmd.help = open_help;
 
-	stat_cmd.name = _("stat");
+	stat_cmd.name = "stat";
 	stat_cmd.cfunc = stat_f;
 	stat_cmd.argmin = 0;
 	stat_cmd.argmax = 1;
@@ -790,28 +790,28 @@ open_init(void)
 	stat_cmd.args = _("[-v]");
 	stat_cmd.oneline = _("statistics on the currently open file");
 
-	close_cmd.name = _("close");
-	close_cmd.altname = _("c");
+	close_cmd.name = "close";
+	close_cmd.altname = "c";
 	close_cmd.cfunc = close_f;
 	close_cmd.argmin = 0;
 	close_cmd.argmax = 0;
 	close_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	close_cmd.oneline = _("close the current open file");
 
-	setfl_cmd.name = _("setfl");
+	setfl_cmd.name = "setfl";
 	setfl_cmd.cfunc = setfl_f;
 	setfl_cmd.args = _("[-adx]");
 	setfl_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	setfl_cmd.oneline =
 		_("set/clear append/direct flags on the open file");
 
-	statfs_cmd.name = _("statfs");
+	statfs_cmd.name = "statfs";
 	statfs_cmd.cfunc = statfs_f;
 	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	statfs_cmd.oneline =
 		_("statistics on the filesystem of the currently open file");
 
-	chproj_cmd.name = _("chproj");
+	chproj_cmd.name = "chproj";
 	chproj_cmd.cfunc = chproj_f;
 	chproj_cmd.args = _("[-D | -R] projid");
 	chproj_cmd.argmin = 1;
@@ -821,7 +821,7 @@ open_init(void)
 		_("change project identifier on the currently open file");
 	chproj_cmd.help = chproj_help;
 
-	lsproj_cmd.name = _("lsproj");
+	lsproj_cmd.name = "lsproj";
 	lsproj_cmd.cfunc = lsproj_f;
 	lsproj_cmd.args = _("[-D | -R]");
 	lsproj_cmd.argmin = 0;
@@ -831,7 +831,7 @@ open_init(void)
 		_("list project identifier set on the currently open file");
 	lsproj_cmd.help = lsproj_help;
 
-	extsize_cmd.name = _("extsize");
+	extsize_cmd.name = "extsize";
 	extsize_cmd.cfunc = extsize_f;
 	extsize_cmd.args = _("[-D | -R] [extsize]");
 	extsize_cmd.argmin = 0;

@@ -357,8 +357,8 @@ free_f(
 void
 free_init(void)
 {
-	free_cmd.name = _("df");
-	free_cmd.altname = _("free");
+	free_cmd.name = "df";
+	free_cmd.altname = "free";
 	free_cmd.cfunc = free_f;
 	free_cmd.argmin = 0;
 	free_cmd.argmax = -1;

@@ -109,8 +109,8 @@ getrusage_f(
 void
 getrusage_init(void)
 {
-	getrusage_cmd.name = _("getrusage");
-	getrusage_cmd.altname = _("g");
+	getrusage_cmd.name = "getrusage";
+	getrusage_cmd.altname = "g";
 	getrusage_cmd.argmin = 0;
 	getrusage_cmd.argmax = -1;
 	getrusage_cmd.cfunc = getrusage_f;

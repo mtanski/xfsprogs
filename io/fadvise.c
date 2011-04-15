@@ -114,7 +114,7 @@ fadvise_f(
 void
 fadvise_init(void)
 {
-	fadvise_cmd.name = _("fadvise");
+	fadvise_cmd.name = "fadvise";
 	fadvise_cmd.cfunc = fadvise_f;
 	fadvise_cmd.argmin = 0;
 	fadvise_cmd.argmax = -1;

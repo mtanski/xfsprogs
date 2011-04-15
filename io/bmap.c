@@ -430,7 +430,7 @@ bmap_f(
 void
 bmap_init(void)
 {
-	bmap_cmd.name = _("bmap");
+	bmap_cmd.name = "bmap";
 	bmap_cmd.cfunc = bmap_f;
 	bmap_cmd.argmin = 0;
 	bmap_cmd.argmax = -1;

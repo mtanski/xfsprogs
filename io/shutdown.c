@@ -51,7 +51,7 @@ shutdown_f(
 void
 shutdown_init(void)
 {
-	shutdown_cmd.name = _("shutdown");
+	shutdown_cmd.name = "shutdown";
 	shutdown_cmd.cfunc = shutdown_f;
 	shutdown_cmd.argmin = 0;
 	shutdown_cmd.argmax = 1;

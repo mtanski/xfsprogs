@@ -62,14 +62,14 @@ thaw_f(
 void
 freeze_init(void)
 {
-	freeze_cmd.name = _("freeze");
+	freeze_cmd.name = "freeze";
 	freeze_cmd.cfunc = freeze_f;
 	freeze_cmd.argmin = 0;
 	freeze_cmd.argmax = 0;
 	freeze_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	freeze_cmd.oneline = _("freeze filesystem of current file");
 
-	thaw_cmd.name = _("thaw");
+	thaw_cmd.name = "thaw";
 	thaw_cmd.cfunc = thaw_f;
 	thaw_cmd.argmin = 0;
 	thaw_cmd.argmax = 0;

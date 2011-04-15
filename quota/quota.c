@@ -452,8 +452,8 @@ quota_f(
 void
 quota_init(void)
 {
-	quota_cmd.name = _("quota");
-	quota_cmd.altname = _("l");
+	quota_cmd.name = "quota";
+	quota_cmd.altname = "l";
 	quota_cmd.cfunc = quota_f;
 	quota_cmd.argmin = 0;
 	quota_cmd.argmax = -1;

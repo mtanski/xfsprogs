@@ -517,7 +517,7 @@ remove_f(
 void
 state_init(void)
 {
-	off_cmd.name = _("off");
+	off_cmd.name = "off";
 	off_cmd.cfunc = off_f;
 	off_cmd.argmin = 0;
 	off_cmd.argmax = -1;
@@ -525,7 +525,7 @@ state_init(void)
 	off_cmd.oneline = _("permanently switch quota off for a path");
 	off_cmd.help = off_help;
 
-	state_cmd.name = _("state");
+	state_cmd.name = "state";
 	state_cmd.cfunc = state_f;
 	state_cmd.argmin = 0;
 	state_cmd.argmax = -1;
@@ -533,7 +533,7 @@ state_init(void)
 	state_cmd.oneline = _("get overall quota state information");
 	state_cmd.help = state_help;
 
-	enable_cmd.name = _("enable");
+	enable_cmd.name = "enable";
 	enable_cmd.cfunc = enable_f;
 	enable_cmd.argmin = 0;
 	enable_cmd.argmax = -1;
@@ -541,7 +541,7 @@ state_init(void)
 	enable_cmd.oneline = _("enable quota enforcement");
 	enable_cmd.help = enable_help;
 
-	disable_cmd.name = _("disable");
+	disable_cmd.name = "disable";
 	disable_cmd.cfunc = disable_f;
 	disable_cmd.argmin = 0;
 	disable_cmd.argmax = -1;
@@ -549,7 +549,7 @@ state_init(void)
 	disable_cmd.oneline = _("disable quota enforcement");
 	disable_cmd.help = disable_help;
 
-	remove_cmd.name = _("remove");
+	remove_cmd.name = "remove";
 	remove_cmd.cfunc = remove_f;
 	remove_cmd.argmin = 0;
 	remove_cmd.argmax = -1;

@@ -121,8 +121,8 @@ path_f(
 void
 path_init(void)
 {
-	path_cmd.name = _("path");
-	path_cmd.altname = _("paths");
+	path_cmd.name = "path";
+	path_cmd.altname = "paths";
 	path_cmd.args = _("[N]");
 	path_cmd.cfunc = path_f;
 	path_cmd.argmin = 0;
@@ -130,8 +130,8 @@ path_init(void)
 	path_cmd.flags = CMD_FLAG_GLOBAL;
 	path_cmd.oneline = _("set current path, or show the list of paths");
 
-	print_cmd.name = _("print");
-	print_cmd.altname = _("p");
+	print_cmd.name = "print";
+	print_cmd.altname = "p";
 	print_cmd.cfunc = print_f;
 	print_cmd.argmin = 0;
 	print_cmd.argmax = 0;

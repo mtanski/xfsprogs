@@ -113,8 +113,8 @@ mincore_f(
 void
 mincore_init(void)
 {
-	mincore_cmd.name = _("mincore");
-	mincore_cmd.altname = _("mi");
+	mincore_cmd.name = "mincore";
+	mincore_cmd.altname = "mi";
 	mincore_cmd.cfunc = mincore_f;
 	mincore_cmd.argmin = 0;
 	mincore_cmd.argmax = 2;
