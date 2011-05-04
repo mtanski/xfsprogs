@@ -520,6 +520,7 @@ btree_update_key(
 		return EINVAL;
 
 	btree_update_node_key(root, root->cursor, 0, new_key);
+	root->cur_key = new_key;
 
 	return 0;
 }
