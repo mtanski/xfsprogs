@@ -292,14 +292,9 @@ open_by_handle(
 {
 	int		fsfd;
 	char		*path;
-	void		*fshanp;
-	size_t		fshlen;
 	xfs_fsop_handlereq_t hreq;
 
-	if (handle_to_fshandle(hanp, hlen, &fshanp, &fshlen) != 0)
-		return -1;
-
-	if ((fsfd = handle_to_fsfd(fshanp, &path)) < 0)
+	if ((fsfd = handle_to_fsfd(hanp, &path)) < 0)
 		return -1;
 
 	hreq.fd       = 0;
