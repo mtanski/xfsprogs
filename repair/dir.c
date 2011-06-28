@@ -173,7 +173,8 @@ process_shortform_dir(
 	_("entry in shortform dir %llu references group quota inode %llu\n"),
 				ino, lino);
 			junkit = 1;
-		} else if ((irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
+		} else if ((irec_p = find_inode_rec(mp,
+					XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino))) != NULL)  {
 			/*
 			 * if inode is marked free and we're in inode
@@ -1658,7 +1659,7 @@ _("entry #%d, bno %d in directory %llu references group quota inode %llu\n"),
 				_("\twould clear ino number in entry %d...\n"),
 					i);
 			}
-		} else if ((irec_p = find_inode_rec(
+		} else if ((irec_p = find_inode_rec(mp,
 				XFS_INO_TO_AGNO(mp, lino),
 				XFS_INO_TO_AGINO(mp, lino))) != NULL)  {
 			/*

@@ -810,7 +810,7 @@ _("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
 	/*
 	 * ensure only one avl entry per chunk
 	 */
-	find_inode_rec_range(agno, ino, ino + XFS_INODES_PER_CHUNK,
+	find_inode_rec_range(mp, agno, ino, ino + XFS_INODES_PER_CHUNK,
 			     &first_rec, &last_rec);
 	if (first_rec != NULL)  {
 		/*
@@ -841,9 +841,9 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 	if (!suspect)  {
 		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
 			nfree++;
-			ino_rec = set_inode_free_alloc(agno, ino);
+			ino_rec = set_inode_free_alloc(mp, agno, ino);
 		} else  {
-			ino_rec = set_inode_used_alloc(agno, ino);
+			ino_rec = set_inode_used_alloc(mp, agno, ino);
 		}
 		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
 			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {

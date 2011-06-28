@@ -194,9 +194,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		 * put new inode record(s) into inode tree
 		 */
 		for (j = 0; j < chunks_pblock; j++)  {
-			if ((irec_p = find_inode_rec(agno, start_agino))
+			if ((irec_p = find_inode_rec(mp, agno, start_agino))
 					== NULL)  {
-				irec_p = set_inode_free_alloc(agno,
+				irec_p = set_inode_free_alloc(mp, agno,
 							start_agino);
 				for (i = 1; i < XFS_INODES_PER_CHUNK; i++)
 					set_inode_free(irec_p, i);
@@ -254,7 +254,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		start_agino = XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0);
 		*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
 
-		irec_p = set_inode_free_alloc(agno,
+		irec_p = set_inode_free_alloc(mp, agno,
 				XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0));
 
 		for (i = 1; i < XFS_INODES_PER_CHUNK; i++)
@@ -292,7 +292,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	 */
 	irec_before_p = irec_after_p = NULL;
 
-	find_inode_rec_range(agno, XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0),
+	find_inode_rec_range(mp, agno, XFS_OFFBNO_TO_AGINO(mp, start_agbno, 0),
 		XFS_OFFBNO_TO_AGINO(mp, end_agbno, mp->m_sb.sb_inopblock - 1),
 		&irec_before_p, &irec_after_p);
 
@@ -470,9 +470,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	start_agino = XFS_OFFBNO_TO_AGINO(mp, chunk_start_agbno, 0);
 	*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
 
-	ASSERT(find_inode_rec(agno, start_agino) == NULL);
+	ASSERT(find_inode_rec(mp, agno, start_agino) == NULL);
 
-	irec_p = set_inode_free_alloc(agno, start_agino);
+	irec_p = set_inode_free_alloc(mp, agno, start_agino);
 	for (i = 1; i < XFS_INODES_PER_CHUNK; i++)
 		set_inode_free(irec_p, i);
 
@@ -554,7 +554,7 @@ verify_aginode_chunk_irec(xfs_mount_t	*mp,
 	ino_tree_node_t *irec = NULL;
 
 	if (verify_aginode_chunk(mp, agno, agino, &start_agino))
-		irec = find_inode_rec(agno, start_agino);
+		irec = find_inode_rec(mp, agno, start_agino);
 
 	return(irec);
 }
@@ -1049,7 +1049,7 @@ process_aginodes(
 				if ((ino_rec = next_ino_rec(ino_rec)) != NULL)
 					num_inos += XFS_INODES_PER_CHUNK;
 
-				get_inode_rec(agno, prev_ino_rec);
+				get_inode_rec(mp, agno, prev_ino_rec);
 				free_inode_rec(agno, prev_ino_rec);
 			}
 
@@ -1117,14 +1117,14 @@ check_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 					XFS_INODES_PER_CHUNK)
 				continue;
 
-			if ((nrec = find_inode_rec(agno, agino)) == NULL)
+			if ((nrec = find_inode_rec(mp, agno, agino)) == NULL)
 				if (!verify_aginum(mp, agno, agino))
 					if (verify_aginode_chunk(mp, agno,
 							agino, &start))
 						got_some = 1;
 		}
 
-		get_uncertain_inode_rec(agno, irec);
+		get_uncertain_inode_rec(mp, agno, irec);
 		free_inode_rec(agno, irec);
 
 		irec = findfirst_uncertain_inode_rec(agno);
@@ -1207,7 +1207,7 @@ process_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 					XFS_INODES_PER_CHUNK)
 				continue;
 
-			if ((nrec = find_inode_rec(agno, agino)) != NULL)
+			if ((nrec = find_inode_rec(mp, agno, agino)) != NULL)
 				continue;
 
 			/*
@@ -1238,7 +1238,7 @@ process_uncertain_aginodes(xfs_mount_t *mp, xfs_agnumber_t agno)
 		 * now return the uncertain inode record to the free pool
 		 * and pull another one off the list for processing
 		 */
-		get_uncertain_inode_rec(agno, irec);
+		get_uncertain_inode_rec(mp, agno, irec);
 		free_inode_rec(agno, irec);
 
 		irec = findfirst_uncertain_inode_rec(agno);

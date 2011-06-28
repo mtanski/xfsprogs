@@ -854,7 +854,7 @@ get_agino_buf(xfs_mount_t	 *mp,
 	xfs_buf_t *bp;
 	int size;
 
-	if ((irec = find_inode_rec(agno, agino)) == NULL)
+	if ((irec = find_inode_rec(mp, agno, agino)) == NULL)
 		return(NULL);
 
 	size = XFS_FSB_TO_BB(mp, MAX(1, XFS_INODES_PER_CHUNK/inodes_per_block));

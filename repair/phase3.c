@@ -56,7 +56,7 @@ walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
 			 * inode.  if so, put it on the uncertain inode list
 			 * and set block map appropriately.
 			 */
-			if (find_inode_rec(agno, current_ino) == NULL)  {
+			if (find_inode_rec(mp, agno, current_ino) == NULL)  {
 				add_aginode_uncertain(agno, current_ino, 1);
 				agbno = XFS_AGINO_TO_AGBNO(mp, current_ino);
 

@@ -145,7 +145,7 @@ phase2(
 	/*
 	 * make sure we know about the root inode chunk
 	 */
-	if ((ino_rec = find_inode_rec(0, mp->m_sb.sb_rootino)) == NULL)  {
+	if ((ino_rec = find_inode_rec(mp, 0, mp->m_sb.sb_rootino)) == NULL)  {
 		ASSERT(mp->m_sb.sb_rbmino == mp->m_sb.sb_rootino + 1 &&
 			mp->m_sb.sb_rsumino == mp->m_sb.sb_rootino + 2);
 		do_warn(_("root inode chunk not found\n"));
@@ -153,7 +153,7 @@ phase2(
 		/*
 		 * mark the first 3 used, the rest are free
 		 */
-		ino_rec = set_inode_used_alloc(0,
+		ino_rec = set_inode_used_alloc(mp, 0,
 				(xfs_agino_t) mp->m_sb.sb_rootino);
 		set_inode_used(ino_rec, 1);
 		set_inode_used(ino_rec, 2);

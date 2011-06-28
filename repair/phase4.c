@@ -49,7 +49,7 @@ quotino_check(xfs_mount_t *mp)
 		if (verify_inum(mp, mp->m_sb.sb_uquotino))
 			irec = NULL;
 		else
-			irec = find_inode_rec(
+			irec = find_inode_rec(mp,
 				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_uquotino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
 
@@ -65,7 +65,7 @@ quotino_check(xfs_mount_t *mp)
 		if (verify_inum(mp, mp->m_sb.sb_gquotino))
 			irec = NULL;
 		else
-			irec = find_inode_rec(
+			irec = find_inode_rec(mp,
 				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_gquotino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
 
@@ -206,7 +206,7 @@ phase4(xfs_mount_t *mp)
 
 	set_progress_msg(PROG_FMT_DUP_EXTENT, (__uint64_t) glob_agcount);
 
-	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
 
 	/*

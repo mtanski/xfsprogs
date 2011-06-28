@@ -806,7 +806,7 @@ mk_root_dir(xfs_mount_t *mp)
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 
-	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
 	set_inode_isadir(irec, XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino) -
 				irec->ino_startnum);
@@ -897,7 +897,8 @@ mk_orphanage(xfs_mount_t *mp)
 	 * for .. in the new directory
 	 */
 	pip->i_d.di_nlink++;
-	add_inode_ref(find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+	add_inode_ref(find_inode_rec(mp,
+				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
 
 
@@ -966,7 +967,7 @@ mv_orphanage(
 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
 
 	if (isa_dir)  {
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, orphanage_ino),
+		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
 				XFS_INO_TO_AGINO(mp, orphanage_ino));
 		if (irec)
 			ino_offset = XFS_INO_TO_AGINO(mp, orphanage_ino) -
@@ -1379,7 +1380,7 @@ lf_block_dir_entry_check(xfs_mount_t		*mp,
 		/*
 		 * ok, now handle the rest of the cases besides '.' and '..'
 		 */
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
+		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
 
 		if (irec == NULL)  {
@@ -2044,7 +2045,7 @@ longform_dir2_entry_check_data(
 		fname[dep->namelen] = '\0';
 		ASSERT(inum != NULLFSINO);
 
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, inum),
+		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, inum),
 					XFS_INO_TO_AGINO(mp, inum));
 		if (irec == NULL)  {
 			nbad++;
@@ -2680,7 +2681,7 @@ shortform_dir_entry_check(xfs_mount_t	*mp,
 		ASSERT(no_modify || lino != NULLFSINO);
 		ASSERT(no_modify || !verify_inum(mp, lino));
 
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
+		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
 		if (irec == NULL) {
 			do_warn(_("entry \"%s\" in shortform dir %llu "
@@ -3004,7 +3005,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			continue;
 		}
 
-		irec = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
+		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino));
 
 		if (irec == NULL)  {
@@ -3490,7 +3491,7 @@ mark_standalone_inodes(xfs_mount_t *mp)
 	ino_tree_node_t		*irec;
 	int			offset;
 
-	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rbmino),
+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rbmino),
 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rbmino));
 
 	ASSERT(irec != NULL);
@@ -3500,7 +3501,7 @@ mark_standalone_inodes(xfs_mount_t *mp)
 
 	add_inode_reached(irec, offset);
 
-	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
 
 	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
@@ -3513,7 +3514,7 @@ mark_standalone_inodes(xfs_mount_t *mp)
 	if (fs_quotas)  {
 		if (mp->m_sb.sb_uquotino
 				&& mp->m_sb.sb_uquotino != NULLFSINO)  {
-			irec = find_inode_rec(XFS_INO_TO_AGNO(mp,
+			irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp,
 						mp->m_sb.sb_uquotino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
 			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino)
@@ -3522,7 +3523,7 @@ mark_standalone_inodes(xfs_mount_t *mp)
 		}
 		if (mp->m_sb.sb_gquotino
 				&& mp->m_sb.sb_gquotino != NULLFSINO)  {
-			irec = find_inode_rec(XFS_INO_TO_AGNO(mp,
+			irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp,
 						mp->m_sb.sb_gquotino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
 			offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino)
@@ -3720,7 +3721,7 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
 
 	do_log(_("        - traversing filesystem ...\n"));
 
-	irec = find_inode_rec(XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
 
 	/*

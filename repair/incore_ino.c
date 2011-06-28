@@ -418,9 +418,11 @@ add_inode_uncertain(xfs_mount_t *mp, xfs_ino_t ino, int free)
  * pull the indicated inode record out of the uncertain inode tree
  */
 void
-get_uncertain_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+get_uncertain_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno,
+			ino_tree_node_t *ino_rec)
 {
 	ASSERT(inode_tree_ptrs != NULL);
+	ASSERT(agno < mp->m_sb.sb_agcount);
 	ASSERT(inode_tree_ptrs[agno] != NULL);
 
 	avl_delete(inode_uncertain_tree_ptrs[agno], &ino_rec->avl_node);
@@ -474,7 +476,7 @@ clear_uncertain_ino_cache(xfs_agnumber_t agno)
  * don't.
  */
 static ino_tree_node_t *
-add_inode(xfs_agnumber_t agno, xfs_agino_t ino)
+add_inode(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
 {
 	ino_tree_node_t *ino_rec;
 
@@ -495,9 +497,10 @@ add_inode(xfs_agnumber_t agno, xfs_agino_t ino)
  * pull the indicated inode record out of the inode tree
  */
 void
-get_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+get_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
 {
 	ASSERT(inode_tree_ptrs != NULL);
+	ASSERT(agno < mp->m_sb.sb_agcount);
 	ASSERT(inode_tree_ptrs[agno] != NULL);
 
 	avl_delete(inode_tree_ptrs[agno], &ino_rec->avl_node);
@@ -518,14 +521,18 @@ free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
 }
 
 void
-find_inode_rec_range(xfs_agnumber_t agno, xfs_agino_t start_ino,
-			xfs_agino_t end_ino, ino_tree_node_t **first,
-			ino_tree_node_t **last)
+find_inode_rec_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+			xfs_agino_t start_ino, xfs_agino_t end_ino,
+			ino_tree_node_t **first, ino_tree_node_t **last)
 {
 	*first = *last = NULL;
 
-	avl_findranges(inode_tree_ptrs[agno], start_ino,
-		end_ino, (avlnode_t **) first, (avlnode_t **) last);
+	/*
+	 * Is the AG inside the file system ?
+	 */
+	if (agno < mp->m_sb.sb_agcount)
+		avl_findranges(inode_tree_ptrs[agno], start_ino,
+			end_ino, (avlnode_t **) first, (avlnode_t **) last);
 }
 
 /*
@@ -534,7 +541,7 @@ find_inode_rec_range(xfs_agnumber_t agno, xfs_agino_t start_ino,
  * whichever alignment is larger.
  */
 ino_tree_node_t *
-set_inode_used_alloc(xfs_agnumber_t agno, xfs_agino_t ino)
+set_inode_used_alloc(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
 {
 	ino_tree_node_t *ino_rec;
 
@@ -543,7 +550,7 @@ set_inode_used_alloc(xfs_agnumber_t agno, xfs_agino_t ino)
 	 * is too see if the chunk overlaps another chunk
 	 * already in the tree
 	 */
-	ino_rec = add_inode(agno, ino);
+	ino_rec = add_inode(mp, agno, ino);
 
 	ASSERT(ino_rec != NULL);
 	ASSERT(ino >= ino_rec->ino_startnum &&
@@ -555,11 +562,11 @@ set_inode_used_alloc(xfs_agnumber_t agno, xfs_agino_t ino)
 }
 
 ino_tree_node_t *
-set_inode_free_alloc(xfs_agnumber_t agno, xfs_agino_t ino)
+set_inode_free_alloc(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
 {
 	ino_tree_node_t *ino_rec;
 
-	ino_rec = add_inode(agno, ino);
+	ino_rec = add_inode(mp, agno, ino);
 
 	ASSERT(ino_rec != NULL);
 	ASSERT(ino >= ino_rec->ino_startnum &&

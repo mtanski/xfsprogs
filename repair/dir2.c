@@ -928,7 +928,8 @@ process_sf_dir2(
 		} else if (lino == mp->m_sb.sb_gquotino)  {
 			junkit = 1;
 			junkreason = _("group quota");
-		} else if ((irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, lino),
+		} else if ((irec_p = find_inode_rec(mp,
+					XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino))) != NULL) {
 			/*
 			 * if inode is marked free and we're in inode
@@ -1448,7 +1449,8 @@ process_dir2_data(
 		} else if (ent_ino == mp->m_sb.sb_gquotino) {
 			clearreason = _("group quota");
 		} else {
-			irec_p = find_inode_rec(XFS_INO_TO_AGNO(mp, ent_ino),
+			irec_p = find_inode_rec(mp,
+						XFS_INO_TO_AGNO(mp, ent_ino),
 						XFS_INO_TO_AGINO(mp, ent_ino));
 			if (irec_p == NULL) {
 				if (ino_discovery) {
