@@ -304,7 +304,6 @@ main(int argc, char **argv)
 	error = 0;
 	if (dflag | aflag) {
 		xfs_growfs_data_t	in;
-		__uint64_t		new_agcount;
 
 		if (!mflag)
 			maxpct = geo.imaxpct;
@@ -317,9 +316,6 @@ main(int argc, char **argv)
 				(long long)(ddsize/(geo.blocksize/BBSIZE)));
 			error = 1;
 		}
-
-		new_agcount = dsize / geo.agblocks
-			   + (dsize % geo.agblocks != 0);
 
 		if (!error && dsize < geo.datablocks) {
 			fprintf(stderr, _("data size %lld too small,"

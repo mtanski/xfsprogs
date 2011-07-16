@@ -36,7 +36,6 @@ main(int argc, char **argv)
 {
 	register int	c, i, r, errflg = 0;
 	struct stat64	s2;
-	int		eflag;
 	int		extsize = - 1;
 
 	progname = basename(argv[0]);
@@ -47,7 +46,6 @@ main(int argc, char **argv)
 	while ((c = getopt(argc, argv, "pe:V")) != EOF) {
 		switch (c) {
 		case 'e':
-			eflag = 1;
 			extsize = atoi(optarg);
 			break;
 		case 'p':

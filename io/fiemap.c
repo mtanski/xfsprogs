@@ -163,7 +163,6 @@ fiemap_f(
 	int		max_extents = 0;
 	int		num_extents = 32;
 	int		last = 0;
-	int		nflag = 0;
 	int		lflag = 0;
 	int		vflag = 0;
 	int		fiemap_flags = FIEMAP_FLAG_SYNC;
@@ -190,7 +189,6 @@ fiemap_f(
 			break;
 		case 'n':
 			max_extents = atoi(optarg);
-			nflag = 1;
 			break;
 		case 'v':
 			vflag++;

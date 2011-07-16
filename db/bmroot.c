@@ -192,11 +192,9 @@ bmrootd_key_offset(
 {
 	xfs_bmdr_block_t	*block;
 	xfs_bmdr_key_t		*kp;
-	xfs_dinode_t		*dip;
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(obj == iocur_top->data);
-	dip = obj;
 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
 	ASSERT(be16_to_cpu(block->bb_level) > 0);
 	kp = XFS_BMDR_KEY_ADDR(block, idx);

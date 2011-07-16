@@ -80,7 +80,7 @@ attr_set_f(
 {
 	xfs_inode_t	*ip = NULL;
 	char		*name, *value, *sp;
-	int		c, namelen, valuelen = 0, flags = 0;
+	int		c, valuelen = 0, flags = 0;
 
 	if (cur_typ == NULL) {
 		dbprintf(_("no current type\n"));
@@ -139,7 +139,6 @@ attr_set_f(
 	}
 
 	name = argv[optind];
-	namelen = strlen(name);
 
 	if (valuelen) {
 		value = (char *)memalign(getpagesize(), valuelen);
@@ -183,7 +182,7 @@ attr_remove_f(
 {
 	xfs_inode_t	*ip = NULL;
 	char		*name;
-	int		c, namelen, flags = 0;
+	int		c, flags = 0;
 
 	if (cur_typ == NULL) {
 		dbprintf(_("no current type\n"));
@@ -225,7 +224,6 @@ attr_remove_f(
 	}
 
 	name = argv[optind];
-	namelen = strlen(name);
 
 	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip, 0)) {
 		dbprintf(_("failed to iget inode %llu\n"),

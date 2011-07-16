@@ -3217,7 +3217,6 @@ process_dir_inode(
 	xfs_fsblock_t		first;
 	xfs_inode_t		*ip;
 	xfs_trans_t		*tp;
-	xfs_dahash_t		hashval;
 	dir_hash_tab_t		*hashtab;
 	int			need_dot, committed;
 	int			dirty, num_illegal, error, nres;
@@ -3343,8 +3342,6 @@ process_dir_inode(
 			break;
 	}
 	dir_hash_done(hashtab);
-
-	hashval = 0;
 
 	/*
 	 * We don't support repairing of v1 dir anymore, report errors and exit
