@@ -28,6 +28,7 @@
 #include <xfs/cache.h>
 #include <xfs/bitops.h>
 #include <xfs/kmem.h>
+#include <xfs/radix-tree.h>
 #include <xfs/swab.h>
 
 #include <xfs/xfs_fs.h>

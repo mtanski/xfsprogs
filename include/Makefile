@@ -19,7 +19,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 QAHFILES = libxfs.h libxlog.h \
-	bitops.h cache.h kmem.h list.h parent.h swab.h \
+	bitops.h cache.h kmem.h list.h parent.h radix-tree.h swab.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
 	xfs_btree_trace.h xfs_buf_item.h xfs_da_btree.h xfs_dinode.h \
