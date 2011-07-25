@@ -27,6 +27,12 @@ struct list_head {
 	struct list_head *prev;
 };
 
+#define LIST_HEAD_INIT(name) { &(name), &(name) }
+
+#define LIST_HEAD(name) \
+		struct list_head name = LIST_HEAD_INIT(name)
+
+#define INIT_LIST_HEAD(list) list_head_init(list)
 static inline void list_head_init(struct list_head *list)
 {
 	list->next = list->prev = list;
@@ -66,6 +72,11 @@ static inline void list_del_init(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
 	list_head_init(entry);
+}
+
+static inline void list_del(struct list_head *entry)
+{
+	__list_del(entry->prev, entry->next);
 }
 
 static inline void list_move(struct list_head *list, struct list_head *head)

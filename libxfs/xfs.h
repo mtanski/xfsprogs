@@ -108,8 +108,6 @@ typedef __uint32_t		inst_t;		/* an instruction */
 
 #define PAGE_CACHE_SIZE 	getpagesize()
 
-#define INIT_LIST_HEAD(x)
-
 static inline int __do_div(unsigned long long *n, unsigned base)
 {
 	int __res;
@@ -329,10 +327,9 @@ void xfs_mount_common(xfs_mount_t *, xfs_sb_t *);
  */
 
 /* xfs_trans_item.c */
-xfs_log_item_desc_t *xfs_trans_add_item (xfs_trans_t *, xfs_log_item_t *);
-xfs_log_item_desc_t *xfs_trans_find_item (xfs_trans_t *, xfs_log_item_t *);
-void xfs_trans_free_item (xfs_trans_t *, xfs_log_item_desc_t *);
-void xfs_trans_free_items (xfs_trans_t *, int);
+void xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+void xfs_trans_del_item(struct xfs_log_item *);
+void xfs_trans_free_items(struct xfs_trans *, int);
 
 /* xfs_inode_item.c */
 void xfs_inode_item_init (xfs_inode_t *, xfs_mount_t *);
@@ -344,10 +341,7 @@ void xfs_buf_item_log (xfs_buf_log_item_t *, uint, uint);
 /* xfs_trans_buf.c */
 xfs_buf_t *xfs_trans_buf_item_match (xfs_trans_t *, xfs_buftarg_t *,
 			xfs_daddr_t, int);
-xfs_buf_t *xfs_trans_buf_item_match_all (xfs_trans_t *, xfs_buftarg_t *,
-			xfs_daddr_t, int);
 
 /* local source files */
 int  xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
 void xfs_trans_mod_sb(xfs_trans_t *, uint, long);
-int  xfs_trans_unlock_chunk (xfs_log_item_chunk_t *, int, int, xfs_lsn_t);

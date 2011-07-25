@@ -36,10 +36,10 @@ xlog_print_find_oldest(
 
 	first_blk = 0;		/* read first block */
 	bp = xlog_get_bp(log, 1);
-	xlog_bread(log, 0, 1, bp);
+	xlog_bread_noalign(log, 0, 1, bp);
 	first_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
 	*last_blk = log->l_logBBsize-1;	/* read last block */
-	xlog_bread(log, *last_blk, 1, bp);
+	xlog_bread_noalign(log, *last_blk, 1, bp);
 	last_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
 	ASSERT(last_half_cycle != 0);
 
@@ -486,19 +486,16 @@ xlog_recover_print_item(
 void
 xlog_recover_print_trans(
 	xlog_recover_t		*trans,
-	xlog_recover_item_t	*itemq,
+	struct list_head	*itemq,
 	int			print)
 {
-	xlog_recover_item_t	*first_item, *item;
+	xlog_recover_item_t	*item;
 
 	if (print < 3)
 		return;
 
 	print_xlog_record_line();
 	xlog_recover_print_trans_head(trans);
-	item = first_item = itemq;
-	do {
+	list_for_each_entry(item, itemq, ri_list)
 		xlog_recover_print_item(item);
-		item = item->ri_next;
-	} while (first_item != item);
 }

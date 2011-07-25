@@ -71,6 +71,7 @@ char *trans_type[] = {
 	"GROWFSRT_FREE",
 	"SWAPEXT",
 	"SB_COUNT",
+	"CHECKPOINT",
 };
 
 typedef struct xlog_split_item {

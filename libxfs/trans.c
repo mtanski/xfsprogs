@@ -36,8 +36,7 @@ libxfs_trans_alloc(
 	}
 	ptr->t_mountp = mp;
 	ptr->t_type = type;
-	ptr->t_items_free = XFS_LIC_NUM_SLOTS;
-	xfs_lic_init(&ptr->t_items);
+	INIT_LIST_HEAD(&ptr->t_items);
 #ifdef XACT_DEBUG
 	fprintf(stderr, "allocated new transaction %p\n", ptr);
 #endif
@@ -139,7 +138,6 @@ libxfs_trans_iput(
 	uint			lock_flags)
 {
 	xfs_inode_log_item_t	*iip;
-	xfs_log_item_desc_t	*lidp;
 
 	if (tp == NULL) {
 		libxfs_iput(ip, lock_flags);
@@ -149,12 +147,7 @@ libxfs_trans_iput(
 	ASSERT(ip->i_transp == tp);
 	iip = ip->i_itemp;
 	ASSERT(iip != NULL);
-
-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t *)iip);
-	ASSERT(lidp != NULL);
-	ASSERT(lidp->lid_item == (xfs_log_item_t *)iip);
-	ASSERT(!(lidp->lid_flags & XFS_LID_DIRTY));
-	xfs_trans_free_item(tp, lidp);
+	xfs_trans_del_item(&iip->ili_item);
 
 	libxfs_iput(ip, lock_flags);
 }
@@ -183,6 +176,23 @@ libxfs_trans_ijoin(
 }
 
 void
+libxfs_trans_ijoin_ref(
+	xfs_trans_t		*tp,
+	xfs_inode_t		*ip,
+	int			lock_flags)
+{
+	ASSERT(ip->i_transp == tp);
+	ASSERT(ip->i_itemp != NULL);
+
+	xfs_trans_ijoin(tp, ip, lock_flags);
+	ip->i_itemp->ili_lock_flags = lock_flags;
+
+#ifdef XACT_DEBUG
+	fprintf(stderr, "ijoin_ref'd inode %llu, transaction %p\n", ip->i_ino, tp);
+#endif
+}
+
+void
 libxfs_trans_ihold(
 	xfs_trans_t		*tp,
 	xfs_inode_t		*ip)
@@ -190,7 +200,8 @@ libxfs_trans_ihold(
 	ASSERT(ip->i_transp == tp);
 	ASSERT(ip->i_itemp != NULL);
 
-	ip->i_itemp->ili_flags |= XFS_ILI_HOLD;
+	ip->i_itemp->ili_lock_flags = 1;
+
 #ifdef XACT_DEBUG
 	fprintf(stderr, "ihold'd inode %llu, transaction %p\n", ip->i_ino, tp);
 #endif
@@ -224,19 +235,14 @@ xfs_trans_log_inode(
 	xfs_inode_t		*ip,
 	uint			flags)
 {
-	xfs_log_item_desc_t	*lidp;
-
 	ASSERT(ip->i_transp == tp);
 	ASSERT(ip->i_itemp != NULL);
 #ifdef XACT_DEBUG
 	fprintf(stderr, "dirtied inode %llu, transaction %p\n", ip->i_ino, tp);
 #endif
 
-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)(ip->i_itemp));
-	ASSERT(lidp != NULL);
-
 	tp->t_flags |= XFS_TRANS_DIRTY;
-	lidp->lid_flags |= XFS_LID_DIRTY;
+	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 
 	/*
 	 * Always OR in the bits from the ili_last_fields field.
@@ -266,7 +272,6 @@ libxfs_trans_log_buf(
 	uint			last)
 {
 	xfs_buf_log_item_t	*bip;
-	xfs_log_item_desc_t	*lidp;
 
 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
@@ -277,11 +282,8 @@ libxfs_trans_log_buf(
 
 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
 
-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t *)bip);
-	ASSERT(lidp != NULL);
-
 	tp->t_flags |= XFS_TRANS_DIRTY;
-	lidp->lid_flags |= XFS_LID_DIRTY;
+	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 	xfs_buf_item_log(bip, first, last);
 }
 
@@ -291,7 +293,6 @@ libxfs_trans_brelse(
 	xfs_buf_t		*bp)
 {
 	xfs_buf_log_item_t	*bip;
-	xfs_log_item_desc_t	*lidp;
 #ifdef XACT_DEBUG
 	fprintf(stderr, "released buffer %p, transaction %p\n", bp, tp);
 #endif
@@ -304,8 +305,6 @@ libxfs_trans_brelse(
 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
-	ASSERT(lidp != NULL);
 	if (bip->bli_recur > 0) {
 		bip->bli_recur--;
 		return;
@@ -313,9 +312,9 @@ libxfs_trans_brelse(
 	/* If dirty/stale, can't release till transaction committed */
 	if (bip->bli_flags & XFS_BLI_STALE)
 		return;
-	if (lidp->lid_flags & XFS_LID_DIRTY)
+	if (bip->bli_item.li_desc->lid_flags & XFS_LID_DIRTY)
 		return;
-	xfs_trans_free_item(tp, lidp);
+	xfs_trans_del_item(&bip->bli_item);
 	if (bip->bli_flags & XFS_BLI_HOLD)
 		bip->bli_flags &= ~XFS_BLI_HOLD;
 	XFS_BUF_SET_FSPRIVATE2(bp, NULL);
@@ -327,7 +326,6 @@ libxfs_trans_binval(
 	xfs_trans_t		*tp,
 	xfs_buf_t		*bp)
 {
-	xfs_log_item_desc_t	*lidp;
 	xfs_buf_log_item_t	*bip;
 #ifdef XACT_DEBUG
 	fprintf(stderr, "binval'd buffer %p, transaction %p\n", bp, tp);
@@ -337,17 +335,15 @@ libxfs_trans_binval(
 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
 
 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
-	ASSERT(lidp != NULL);
 	if (bip->bli_flags & XFS_BLI_STALE)
 		return;
 	XFS_BUF_UNDELAYWRITE(bp);
 	XFS_BUF_STALE(bp);
 	bip->bli_flags |= XFS_BLI_STALE;
 	bip->bli_flags &= ~XFS_BLI_DIRTY;
-	bip->bli_format.blf_flags &= ~XFS_BLI_INODE_BUF;
-	bip->bli_format.blf_flags |= XFS_BLI_CANCEL;
-	lidp->lid_flags |= XFS_LID_DIRTY;
+	bip->bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
+	bip->bli_format.blf_flags |= XFS_BLF_CANCEL;
+	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 	tp->t_flags |= XFS_TRANS_DIRTY;
 }
 
@@ -402,10 +398,7 @@ libxfs_trans_get_buf(
 		return libxfs_getbuf(dev, d, len);
 
 	bdev.dev = dev;
-	if (tp->t_items.lic_next == NULL)
-		bp = xfs_trans_buf_item_match(tp, &bdev, d, len);
-	else
-		bp = xfs_trans_buf_item_match_all(tp, &bdev, d, len);
+	bp = xfs_trans_buf_item_match(tp, &bdev, d, len);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
@@ -447,10 +440,7 @@ libxfs_trans_getsb(
 
 	bdev.dev = mp->m_dev;
 	len = XFS_FSS_TO_BB(mp, 1);
-	if (tp->t_items.lic_next == NULL)
-		bp = xfs_trans_buf_item_match(tp, &bdev, XFS_SB_DADDR, len);
-	else
-		bp = xfs_trans_buf_item_match_all(tp, &bdev, XFS_SB_DADDR, len);
+	bp = xfs_trans_buf_item_match(tp, &bdev, XFS_SB_DADDR, len);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
@@ -494,10 +484,7 @@ libxfs_trans_read_buf(
 	}
 
 	bdev.dev = dev;
-	if (tp->t_items.lic_next == NULL)
-		bp = xfs_trans_buf_item_match(tp, &bdev, blkno, len);
-	else
-		bp = xfs_trans_buf_item_match_all(tp, &bdev, blkno, len);
+	bp = xfs_trans_buf_item_match(tp, &bdev, blkno, len);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
@@ -578,13 +565,11 @@ inode_item_done(
 	xfs_inode_t		*ip;
 	xfs_mount_t		*mp;
 	xfs_buf_t		*bp;
-	int			hold;
 	int			error;
 	extern kmem_zone_t	*xfs_ili_zone;
 
 	ip = iip->ili_inode;
 	mp = iip->ili_item.li_mountp;
-	hold = iip->ili_flags & XFS_ILI_HOLD;
 	ASSERT(ip != NULL);
 
 	if (!(iip->ili_format.ilf_fields & XFS_ILOG_ALL)) {
@@ -617,11 +602,11 @@ inode_item_done(
 	libxfs_writebuf(bp, 0);
 #ifdef XACT_DEBUG
 	fprintf(stderr, "flushing dirty inode %llu, buffer %p (hold=%u)\n",
-			ip->i_ino, bp, hold);
+			ip->i_ino, bp, iip->ili_lock_flags);
 #endif
 ili_done:
-	if (hold) {
-		iip->ili_flags &= ~XFS_ILI_HOLD;
+	if (iip->ili_lock_flags) {
+		iip->ili_lock_flags = 0;
 		return;
 	} else {
 		libxfs_iput(ip, 0);
@@ -663,63 +648,26 @@ buf_item_done(
 	kmem_zone_free(xfs_buf_item_zone, bip);
 }
 
-/*
- * This is called to perform the commit processing for each
- * item described by the given chunk.
- */
 static void
-trans_chunk_committed(
-	xfs_log_item_chunk_t	*licp)
+trans_committed(
+	xfs_trans_t		*tp)
 {
-	xfs_log_item_desc_t	*lidp;
-	xfs_log_item_t		*lip;
-	int			i;
+        struct xfs_log_item_desc *lidp, *next;
 
-	lidp = licp->lic_descs;
-	for (i = 0; i < licp->lic_unused; i++, lidp++) {
-		if (xfs_lic_isfree(licp, i))
-			continue;
-		lip = lidp->lid_item;
+        list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
+		struct xfs_log_item *lip = lidp->lid_item;
+
+                xfs_trans_del_item(lip);
 		if (lip->li_type == XFS_LI_BUF)
-			buf_item_done((xfs_buf_log_item_t *)lidp->lid_item);
+			buf_item_done((xfs_buf_log_item_t *)lip);
 		else if (lip->li_type == XFS_LI_INODE)
-			inode_item_done((xfs_inode_log_item_t *)lidp->lid_item);
+			inode_item_done((xfs_inode_log_item_t *)lip);
 		else {
 			fprintf(stderr, _("%s: unrecognised log item type\n"),
 				progname);
 			ASSERT(0);
 		}
-	}
-}
-
-/*
- * Calls trans_chunk_committed() to process the items in each chunk.
- */
-static void
-trans_committed(
-	xfs_trans_t		*tp)
-{
-	xfs_log_item_chunk_t	*licp;
-	xfs_log_item_chunk_t	*next_licp;
-
-	/*
-	 * Special case the chunk embedded in the transaction.
-	 */
-	licp = &(tp->t_items);
-	if (!(xfs_lic_are_all_free(licp))) {
-		trans_chunk_committed(licp);
-	}
-
-	/*
-	 * Process the items in each chunk in turn.
-	 */
-	licp = licp->lic_next;
-	while (licp != NULL) {
-		trans_chunk_committed(licp);
-		next_licp = licp->lic_next;
-		kmem_free(licp);
-		licp = next_licp;
-	}
+        }
 }
 
 static void
@@ -733,9 +681,9 @@ buf_item_unlock(
 	XFS_BUF_SET_FSPRIVATE2(bip->bli_buf, NULL);
 
 	hold = bip->bli_flags & XFS_BLI_HOLD;
+	bip->bli_flags &= ~XFS_BLI_HOLD;
 	if (!hold)
 		libxfs_putbuf(bp);
-	bip->bli_flags &= ~XFS_BLI_HOLD;
 }
 
 static void
@@ -743,74 +691,43 @@ inode_item_unlock(
 	xfs_inode_log_item_t	*iip)
 {
 	xfs_inode_t		*ip = iip->ili_inode;
-	uint			hold;
 
 	/* Clear the transaction pointer in the inode. */
 	ip->i_transp = NULL;
 
-	hold = iip->ili_flags & XFS_ILI_HOLD;
-	if (!hold)
-		libxfs_iput(ip, 0);
 	iip->ili_flags = 0;
+	if (!iip->ili_lock_flags)
+		libxfs_iput(ip, 0);
+	else
+		iip->ili_lock_flags = 0;
 }
 
 /*
- * Unlock each item pointed to by a descriptor in the given chunk.
- * Free descriptors pointing to items which are not dirty if freeing_chunk
- * is zero. If freeing_chunk is non-zero, then we need to unlock all
- * items in the chunk.	Return the number of descriptors freed.
- * Originally based on xfs_trans_unlock_chunk() - adapted for libxfs
- * transactions though.
+ * Unlock all of the items of a transaction and free all the descriptors
+ * of that transaction.
  */
-int
-xfs_trans_unlock_chunk(
-	xfs_log_item_chunk_t	*licp,
-	int			freeing_chunk,
-	int			abort,
-	xfs_lsn_t		commit_lsn)	/* nb: unused */
+void
+xfs_trans_free_items(
+	struct xfs_trans	*tp,
+	int			flags)
 {
-	xfs_log_item_desc_t	*lidp;
-	xfs_log_item_t		*lip;
-	int			i;
-	int			freed;
+	struct xfs_log_item_desc *lidp, *next;
 
-	freed = 0;
-	lidp = licp->lic_descs;
-	for (i = 0; i < licp->lic_unused; i++, lidp++) {
-		if (xfs_lic_isfree(licp, i)) {
-			continue;
-		}
-		lip = lidp->lid_item;
-		lip->li_desc = NULL;
+	list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
+		struct xfs_log_item	*lip = lidp->lid_item;
 
-		/*
-		 * Disassociate the logged item from this transaction
-		 */
+                xfs_trans_del_item(lip);
 		if (lip->li_type == XFS_LI_BUF)
-			buf_item_unlock((xfs_buf_log_item_t *)lidp->lid_item);
+			buf_item_unlock((xfs_buf_log_item_t *)lip);
 		else if (lip->li_type == XFS_LI_INODE)
-			inode_item_unlock((xfs_inode_log_item_t *)lidp->lid_item);
+			inode_item_unlock((xfs_inode_log_item_t *)lip);
 		else {
 			fprintf(stderr, _("%s: unrecognised log item type\n"),
 				progname);
 			ASSERT(0);
 		}
-
-		/*
-		 * Free the descriptor if the item is not dirty
-		 * within this transaction and the caller is not
-		 * going to just free the entire thing regardless.
-		 */
-		if (!(freeing_chunk) &&
-		    (!(lidp->lid_flags & XFS_LID_DIRTY) || abort)) {
-			xfs_lic_relse(licp, i);
-			freed++;
-		}
 	}
-
-	return (freed);
 }
-
 
 /*
  * Commit the changes represented by this transaction

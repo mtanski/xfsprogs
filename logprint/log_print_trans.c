@@ -25,7 +25,7 @@ xlog_recover_print_trans_head(
 	printf(_("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n"),
 	       tr->r_log_tid, trans_type[tr->r_theader.th_type],
 	       tr->r_theader.th_num_items,
-	       tr->r_theader.th_tid, (long)tr->r_itemq);
+	       tr->r_theader.th_tid, (long)&tr->r_itemq);
 }
 
 int
@@ -34,7 +34,7 @@ xlog_recover_do_trans(
 	xlog_recover_t	*trans,
 	int		pass)
 {
-	xlog_recover_print_trans(trans, trans->r_itemq, 3);
+	xlog_recover_print_trans(trans, &trans->r_itemq, 3);
 	return 0;
 }
 

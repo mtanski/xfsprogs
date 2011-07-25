@@ -25,11 +25,13 @@
 #include <xfs/platform_defs.h>
 
 #include <xfs/list.h>
+#include <xfs/hlist.h>
 #include <xfs/cache.h>
 #include <xfs/bitops.h>
 #include <xfs/kmem.h>
 #include <xfs/radix-tree.h>
 #include <xfs/swab.h>
+#include <xfs/atomic.h>
 
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_types.h>
@@ -55,6 +57,7 @@
 #include <xfs/xfs_btree.h>
 #include <xfs/xfs_btree_trace.h>
 #include <xfs/xfs_bmap.h>
+#include <xfs/xfs_trace.h>
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -65,6 +68,10 @@
 #endif
 
 #define xfs_isset(a,i)	((a)[(i)/(sizeof((a))*NBBY)] & (1<<((i)%(sizeof((a))*NBBY))))
+
+#define __round_mask(x, y) ((__typeof__(x))((y)-1))
+#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+#define round_down(x, y) ((x) & ~__round_mask(x, y))
 
 /*
  * Argument structure for libxfs_init().
@@ -244,8 +251,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
 #define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
 #define XFS_BUF_TARGET(bp)		((bp)->b_dev)
-#define XFS_BUF_SET_PTR(bp,p,cnt)	((bp)->b_addr = (char *)(p)); \
-						XFS_BUF_SET_COUNT(bp,cnt)
+#define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+	(bp)->b_addr = (char *)(p);		\
+	XFS_BUF_SET_COUNT(bp,cnt);		\
+})
+
 #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_blkno = (blk))
 #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
 
@@ -333,6 +343,7 @@ typedef struct xfs_inode_log_item {
 	unsigned short		ili_flags;		/* misc flags */
 	unsigned int		ili_last_fields;	/* fields when flushed*/
 	xfs_inode_log_format_t	ili_format;		/* logged structure */
+	int			ili_lock_flags;
 } xfs_inode_log_item_t;
 
 typedef struct xfs_buf_log_item {
@@ -355,8 +366,7 @@ typedef struct xfs_trans {
 	long		t_ifree_delta;		/* superblock ifree change */
 	long		t_fdblocks_delta;	/* superblock fdblocks chg */
 	long		t_frextents_delta;	/* superblock freextents chg */
-	unsigned int	t_items_free;		/* log item descs free */
-	xfs_log_item_chunk_t	t_items;	/* first log item desc chunk */
+	struct list_head	t_items;	/* first log item desc chunk */
 } xfs_trans_t;
 
 extern xfs_trans_t	*libxfs_trans_alloc (xfs_mount_t *, int);
