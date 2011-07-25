@@ -450,6 +450,9 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
 	XFS_INOCF_SET_CF((ino_rec), (ino_offset)), \
 	XFS_INOBT_CLR_FREE((ino_rec), (ino_offset))
 
+#define XFS_INOBT_IS_FREE(ino_rec, ino_offset) \
+	(((ino_rec)->ir_free & XFS_INOBT_MASK(ino_offset)) != 0)
+
 #define is_inode_used(ino_rec, ino_offset)	\
 	!XFS_INOBT_IS_FREE((ino_rec), (ino_offset))
 

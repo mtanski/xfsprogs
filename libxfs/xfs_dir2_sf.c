@@ -148,7 +148,8 @@ xfs_dir2_block_to_sf(
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
 	xfs_ino_t               temp;
 
-	xfs_dir2_trace_args_sb("block_to_sf", args, size, bp);
+	trace_xfs_dir2_block_to_sf(args);
+
 	dp = args->dp;
 	mp = dp->i_mount;
 
@@ -260,7 +261,8 @@ xfs_dir2_sf_addname(
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
 	xfs_dir2_sf_entry_t	*sfep = NULL;	/* shortform entry */
 
-	xfs_dir2_trace_args("sf_addname", args);
+	trace_xfs_dir2_sf_addname(args);
+
 	ASSERT(xfs_dir2_sf_lookup(args) == ENOENT);
 	dp = args->dp;
 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
@@ -633,7 +635,8 @@ xfs_dir2_sf_create(
 	xfs_dir2_sf_t	*sfp;		/* shortform structure */
 	int		size;		/* directory size */
 
-	xfs_dir2_trace_args_i("sf_create", args, pino);
+	trace_xfs_dir2_sf_create(args);
+
 	dp = args->dp;
 
 	ASSERT(dp != NULL);
@@ -688,7 +691,8 @@ xfs_dir2_sf_lookup(
 	enum xfs_dacmp		cmp;		/* comparison result */
 	xfs_dir2_sf_entry_t	*ci_sfep;	/* case-insens. entry */
 
-	xfs_dir2_trace_args("sf_lookup", args);
+	trace_xfs_dir2_sf_lookup(args);
+
 	xfs_dir2_sf_check(args);
 	dp = args->dp;
 
@@ -771,7 +775,8 @@ xfs_dir2_sf_removename(
 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
 
-	xfs_dir2_trace_args("sf_removename", args);
+	trace_xfs_dir2_sf_removename(args);
+
 	dp = args->dp;
 
 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
@@ -862,7 +867,8 @@ xfs_dir2_sf_replace(
 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
 
-	xfs_dir2_trace_args("sf_replace", args);
+	trace_xfs_dir2_sf_replace(args);
+
 	dp = args->dp;
 
 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
@@ -1005,7 +1011,8 @@ xfs_dir2_sf_toino4(
 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
 	xfs_dir2_sf_t		*sfp;		/* new sf directory */
 
-	xfs_dir2_trace_args("sf_toino4", args);
+	trace_xfs_dir2_sf_toino4(args);
+
 	dp = args->dp;
 
 	/*
@@ -1082,7 +1089,8 @@ xfs_dir2_sf_toino8(
 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
 	xfs_dir2_sf_t		*sfp;		/* new sf directory */
 
-	xfs_dir2_trace_args("sf_toino8", args);
+	trace_xfs_dir2_sf_toino8(args);
+
 	dp = args->dp;
 
 	/*

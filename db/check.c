@@ -2317,7 +2317,7 @@ process_data_dir_v2(
 		tag_err += be16_to_cpu(*tagp) != (char *)dep - (char *)data;
 		addr = xfs_dir2_db_off_to_dataptr(mp, db,
 			(char *)dep - (char *)data);
-		xname.name = (char *)dep->name;
+		xname.name = dep->name;
 		xname.len = dep->namelen;
 		dir_hash_add(mp->m_dirnameops->hashname(&xname), addr);
 		ptr += xfs_dir2_data_entsize(dep->namelen);
@@ -2508,23 +2508,23 @@ process_dir_v1(
 	inodata_t	*id,
 	xfs_ino_t	*parent)
 {
-	xfs_fsize_t	size = be64_to_cpu(dip->di_core.di_size);
+	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
 
 	if (size <= XFS_DFORK_DSIZE(dip, mp) && 
-				dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
+				dip->di_format == XFS_DINODE_FMT_LOCAL)
 		*parent = process_shortform_dir_v1(dip, dot, dotdot, id);
 	else if (size == XFS_LBSIZE(mp) &&
-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
+			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_format == XFS_DINODE_FMT_BTREE))
 		*parent = process_leaf_dir_v1(blkmap, dot, dotdot, id);
 	else if (size >= XFS_LBSIZE(mp) &&
-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
+			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_format == XFS_DINODE_FMT_BTREE))
 		*parent = process_node_dir_v1(blkmap, dot, dotdot, id);
 	else  {
 		dbprintf(_("bad size (%lld) or format (%d) for directory inode "
 			 "%lld\n"),
-			size, dip->di_core.di_format, id->ino);
+			size, dip->di_format, id->ino);
 		error++;
 		return 1;
 	}
@@ -2541,25 +2541,25 @@ process_dir_v2(
 	xfs_ino_t	*parent)
 {
 	xfs_fileoff_t	last = 0;
-	xfs_fsize_t	size = be64_to_cpu(dip->di_core.di_size);
+	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
 
 	if (blkmap)
 		last = blkmap_last_off(blkmap);
 	if (size <= XFS_DFORK_DSIZE(dip, mp) &&
-				dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
+				dip->di_format == XFS_DINODE_FMT_LOCAL)
 		*parent = process_sf_dir_v2(dip, dot, dotdot, id);
 	else if (last == mp->m_dirblkfsbs &&
-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
+			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_format == XFS_DINODE_FMT_BTREE))
 		*parent = process_block_dir_v2(blkmap, dot, dotdot, id);
 	else if (last >= mp->m_dirleafblk + mp->m_dirblkfsbs &&
-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
+			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
+			dip->di_format == XFS_DINODE_FMT_BTREE))
 		*parent = process_leaf_node_dir_v2(blkmap, dot, dotdot, id, size);
 	else  {
 		dbprintf(_("bad size (%lld) or format (%d) for directory inode "
 			 "%lld\n"),
-			size, dip->di_core.di_format, id->ino);
+			size, dip->di_format, id->ino);
 		error++;
 		return 1;
 	}
@@ -2646,7 +2646,7 @@ process_inode(
 		"dev", "local", "extents", "btree", "uuid"
 	};
 
-	libxfs_dinode_from_disk(&idic, &dip->di_core);
+	libxfs_dinode_from_disk(&idic, dip);
 
 	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
 	if (!isfree) {
@@ -2677,7 +2677,7 @@ process_inode(
 					idic.di_nblocks, ino);
 			error++;
 		}
-		if (idic.di_version == XFS_DINODE_VERSION_1)
+		if (idic.di_version == 1)
 			nlink = idic.di_onlink;
 		else
 			nlink = idic.di_nlink;
@@ -2782,7 +2782,7 @@ process_inode(
 		type = DBM_UNKNOWN;
 		break;
 	}
-	if (idic.di_version == XFS_DINODE_VERSION_1)
+	if (idic.di_version == 1)
 		setlink_inode(id, idic.di_onlink, type == DBM_DIR, security);
 	else {
 		sbversion |= XFS_SB_VERSION_NLINKBIT;
@@ -2910,12 +2910,12 @@ process_lclinode(
 	xfs_fsblock_t		bno;
 
 	bno = XFS_INO_TO_FSB(mp, id->ino);
-	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_core.di_size) >
+	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_size) >
 						XFS_DFORK_DSIZE(dip, mp)) {
 		if (!sflag || id->ilist || CHECK_BLIST(bno))
 			dbprintf(_("local inode %lld data is too large (size "
 				 "%lld)\n"),
-				id->ino, be64_to_cpu(dip->di_core.di_size));
+				id->ino, be64_to_cpu(dip->di_size));
 		error++;
 	}
 	else if (whichfork == XFS_ATTR_FORK) {
@@ -3647,7 +3647,7 @@ process_sf_dir_v2(
 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
 	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
 		if ((__psint_t)sfe + xfs_dir2_sf_entsize_byentry(sf, sfe) -
-		    (__psint_t)sf > be64_to_cpu(dip->di_core.di_size)) {
+		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
 			if (!sflag)
 				dbprintf(_("dir %llu bad size in entry at %d\n"),
 					id->ino,
@@ -3689,10 +3689,10 @@ process_sf_dir_v2(
 		sfe = xfs_dir2_sf_nextentry(sf, sfe);
 	}
 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
-					be64_to_cpu(dip->di_core.di_size)) {
+					be64_to_cpu(dip->di_size)) {
 		if (!sflag)
 			dbprintf(_("dir %llu size is %lld, should be %u\n"),
-				id->ino, be64_to_cpu(dip->di_core.di_size),
+				id->ino, be64_to_cpu(dip->di_size),
 				(uint)((char *)sfe - (char *)sf));
 		error++;
 	}
@@ -3769,9 +3769,9 @@ process_shortform_dir_v1(
 				sfe->namelen, sfe->namelen, sfe->name, lino);
 		sfe = xfs_dir_sf_nextentry(sfe);
 	}
-	if ((__psint_t)sfe - (__psint_t)sf != be64_to_cpu(dip->di_core.di_size))
+	if ((__psint_t)sfe - (__psint_t)sf != be64_to_cpu(dip->di_size))
 		dbprintf(_("dir %llu size is %lld, should be %d\n"),
-			id->ino, be64_to_cpu(dip->di_core.di_size),
+			id->ino, be64_to_cpu(dip->di_size),
 			(int)((char *)sfe - (char *)sf));
 	lino = XFS_GET_DIR_INO8(sf->hdr.parent);
 	cid = find_inode(lino, 1);

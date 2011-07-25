@@ -107,7 +107,7 @@ process_shortform_dir(
 	sf = (xfs_dir_shortform_t *)XFS_DFORK_DPTR(dip);
 	max_size = XFS_DFORK_DSIZE(dip, mp);
 	num_entries = sf->hdr.count;
-	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
+	ino_dir_size = be64_to_cpu(dip->di_size);
 	*repair = 0;
 
 	ASSERT(ino_dir_size <= max_size);
@@ -339,7 +339,7 @@ process_shortform_dir(
 
 			if (!no_modify)  {
 				tmp_elen = xfs_dir_sf_entsize_byentry(sf_entry);
-				be64_add_cpu(&dip->di_core.di_size, -tmp_elen);
+				be64_add_cpu(&dip->di_size, -tmp_elen);
 				ino_dir_size -= tmp_elen;
 
 				tmp_sfe = (xfs_dir_sf_entry_t *)
@@ -426,7 +426,7 @@ process_shortform_dir(
 				ino, (__int64_t) ino_dir_size,
 			(__int64_t)((__psint_t) next_sfe - (__psint_t) sf));
 
-			dip->di_core.di_size = cpu_to_be64((__psint_t)next_sfe 
+			dip->di_size = cpu_to_be64((__psint_t)next_sfe 
 							- (__psint_t)sf);
 			*dino_dirty = 1;
 			*repair = 1;
@@ -955,7 +955,7 @@ get_first_dblock_fsbno(xfs_mount_t	*mp,
 		return(fsbno);
 	}
 
-	if (be64_to_cpu(dino->di_core.di_size) <= XFS_LBSIZE(mp))
+	if (be64_to_cpu(dino->di_size) <= XFS_LBSIZE(mp))
 		return(fsbno);
 
 	do {
@@ -2552,7 +2552,7 @@ process_node_dir(
 	/*
 	 * sanity check inode size
 	 */
-	if (be64_to_cpu(dip->di_core.di_size) <
+	if (be64_to_cpu(dip->di_size) <
 			(da_cursor.greatest_bno + 1) * mp->m_sb.sb_blocksize)  {
 		if ((xfs_fsize_t) da_cursor.greatest_bno
 				* mp->m_sb.sb_blocksize > UINT_MAX)  {
@@ -2566,9 +2566,9 @@ process_node_dir(
 _("setting directory inode (%llu) size to %llu bytes, was %lld bytes\n"),
 			ino, (xfs_dfiloff_t) (da_cursor.greatest_bno + 1)
 				* mp->m_sb.sb_blocksize,
-			be64_to_cpu(dip->di_core.di_size));
+			be64_to_cpu(dip->di_size));
 
-		dip->di_core.di_size = cpu_to_be64((da_cursor.greatest_bno + 1) 
+		dip->di_size = cpu_to_be64((da_cursor.greatest_bno + 1) 
 						* mp->m_sb.sb_blocksize);
 	}
 	return(0);
@@ -2710,13 +2710,13 @@ process_dir(
 	 * is only called ONCE so all the subordinate routines will
 	 * fix '.' and junk '..' if they're bogus.
 	 */
-	if (be64_to_cpu(dip->di_core.di_size) <= XFS_DFORK_DSIZE(dip, mp))  {
+	if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp))  {
 		dot = 1;
 		dotdot = 1;
 		if (process_shortform_dir(mp, ino, dip, ino_discovery,
 				dino_dirty, parent, dirname, &repair))
 			res = 1;
-	} else if (be64_to_cpu(dip->di_core.di_size) <= XFS_LBSIZE(mp))  {
+	} else if (be64_to_cpu(dip->di_size) <= XFS_LBSIZE(mp))  {
 		if (process_leaf_dir(mp, ino, dip, ino_discovery,
 				dino_dirty, blkmap, &dot, &dotdot,
 				parent, dirname, &repair))

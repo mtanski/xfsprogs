@@ -175,7 +175,7 @@ typedef struct xfs_mount {
 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
 	uint			m_in_maxlevels;	/* XFS_IN_MAXLEVELS */
-	xfs_perag_t		*m_perag;	/* per-ag accounting info */
+	struct radix_tree_root	m_perag_tree;
 	uint			m_flags;	/* global mount flags */
 	uint			m_qflags;	/* quota status flags */
 	uint			m_attroffset;	/* inode attribute offset */
@@ -382,6 +382,7 @@ extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 extern void	libxfs_trans_iput(xfs_trans_t *, struct xfs_inode *, uint);
 extern void	libxfs_trans_ijoin (xfs_trans_t *, struct xfs_inode *, uint);
 extern void	libxfs_trans_ihold (xfs_trans_t *, struct xfs_inode *);
+extern void	libxfs_trans_ijoin_ref(xfs_trans_t *, struct xfs_inode *, int);
 extern void	libxfs_trans_log_inode (xfs_trans_t *, struct xfs_inode *,
 				uint);
 
@@ -404,10 +405,8 @@ typedef struct xfs_inode {
 	struct cache_node	i_node;
 	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
 	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
-	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
+	struct xfs_imap		i_imap;		/* location for xfs_imap() */
 	dev_t			i_dev;		/* dev for this inode */
-	ushort			i_len;		/* len of inode buffer */
-	ushort			i_boffset;	/* off of inode in buffer */
 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
 	xfs_ifork_t		i_df;		/* data fork */
 	xfs_trans_t		*i_transp;	/* ptr to owning transaction */
@@ -432,7 +431,8 @@ extern int	libxfs_inode_alloc (xfs_trans_t **, xfs_inode_t *, mode_t,
 				struct fsxattr *, xfs_inode_t **);
 extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 
-extern void	libxfs_ichgtime (xfs_inode_t *, int);
+extern void	libxfs_trans_ichgtime(struct xfs_trans *,
+					struct xfs_inode *, int);
 extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				xfs_inode_t *, xfs_daddr_t);
@@ -444,6 +444,9 @@ extern void	libxfs_icache_purge (void);
 extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);
+
+extern int	xfs_imap_to_bp(xfs_mount_t *mp, xfs_trans_t *tp, struct xfs_imap *imap,
+			xfs_buf_t **bpp, uint buf_flags, uint iget_flags);
 
 #include <xfs/xfs_dir_leaf.h>	/* dirv1 support in db & repair */ 
 #include <xfs/xfs_dir2_data.h>
@@ -480,12 +483,14 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 #include <xfs/xfs_attr_leaf.h>
 #include <xfs/xfs_quota.h>
 #include <xfs/xfs_trans_space.h>
-#include <xfs/xfs_imap.h>
 #include <xfs/xfs_log.h>
 #include <xfs/xfs_log_priv.h>
 
+#define XFS_INOBT_CLR_FREE(rp,i)	((rp)->ir_free &= ~XFS_INOBT_MASK(i))
+#define XFS_INOBT_SET_FREE(rp,i)	((rp)->ir_free |= XFS_INOBT_MASK(i))
 #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
 			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
+
 /*
  * public xfs kernel routines to be called as libxfs_*
  */
@@ -494,14 +499,17 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 int libxfs_alloc_fix_freelist(xfs_alloc_arg_t *, int);
 
 /* xfs_attr.c */
-int libxfs_attr_get(struct xfs_inode *, const char *, char *, int *, int);
-int libxfs_attr_set(struct xfs_inode *, const char *, char *, int, int);
-int libxfs_attr_remove(struct xfs_inode *, const char *, int);
+int libxfs_attr_get(struct xfs_inode *, const unsigned char *,
+					unsigned char *, int *, int);
+int libxfs_attr_set(struct xfs_inode *, const unsigned char *,
+					unsigned char *, int, int);
+int libxfs_attr_remove(struct xfs_inode *, const unsigned char *, int);
 
 /* xfs_bmap.c */
 xfs_bmbt_rec_host_t *xfs_bmap_search_extents(xfs_inode_t *, xfs_fileoff_t,
 				int, int *, xfs_extnum_t *, xfs_bmbt_irec_t *,
 				xfs_bmbt_irec_t	*);
+void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 
 /* xfs_attr_leaf.h */
 #define libxfs_attr_leaf_newentsize	xfs_attr_leaf_newentsize

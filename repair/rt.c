@@ -193,7 +193,7 @@ process_rtbitmap(xfs_mount_t	*mp,
 	extno = 0;
 	error = 0;
 
-	end_bmbno = howmany(be64_to_cpu(dino->di_core.di_size),
+	end_bmbno = howmany(be64_to_cpu(dino->di_size),
 						mp->m_sb.sb_blocksize);
 
 	for (bmbno = 0; bmbno < end_bmbno; bmbno++) {

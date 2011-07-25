@@ -581,7 +581,7 @@ inode_item_done(
 	/*
 	 * Get the buffer containing the on-disk inode.
 	 */
-	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0, 0, 0);
+	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0);
 	if (error) {
 		fprintf(stderr, _("%s: warning - itobp failed (%d)\n"),
 			progname, error);

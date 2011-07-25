@@ -388,7 +388,7 @@ process_leaf_attr_local(
 {
 	xfs_attr_leaf_name_local_t *local;
 
-	local = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);
+	local = xfs_attr_leaf_name_local(leaf, i);
 	if (local->namelen == 0 || namecheck((char *)&local->nameval[0], 
 							local->namelen)) {
 		do_warn(_("attribute entry %d in attr block %u, inode %llu "
@@ -423,7 +423,7 @@ process_leaf_attr_local(
 			return -1;
 		}
 	}
-	return XFS_ATTR_LEAF_ENTSIZE_LOCAL(local->namelen, 
+	return xfs_attr_leaf_entsize_local(local->namelen, 
 						be16_to_cpu(local->valuelen));
 }
 
@@ -441,7 +441,7 @@ process_leaf_attr_remote(
 	xfs_attr_leaf_name_remote_t *remotep;
 	char*			value;
 
-	remotep = XFS_ATTR_LEAF_NAME_REMOTE(leaf, i);
+	remotep = xfs_attr_leaf_name_remote(leaf, i);
 
 	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0], 
 						remotep->namelen) || 
@@ -479,7 +479,7 @@ process_leaf_attr_remote(
 	}
 	free(value);
 out:
-	return XFS_ATTR_LEAF_ENTSIZE_REMOTE(remotep->namelen);
+	return xfs_attr_leaf_entsize_remote(remotep->namelen);
 
 bad_free_out:
 	free(value);
@@ -840,8 +840,8 @@ process_longform_attr(
 	bno = blkmap_get(blkmap, 0);
 
 	if ( bno == NULLDFSBNO ) {
-		if (dip->di_core.di_aformat == XFS_DINODE_FMT_EXTENTS && 
-				be16_to_cpu(dip->di_core.di_anextents) == 0)
+		if (dip->di_aformat == XFS_DINODE_FMT_EXTENTS && 
+				be16_to_cpu(dip->di_anextents) == 0)
 			return(0); /* the kernel can handle this state */
 		do_warn(_("block 0 of inode %llu attribute fork is missing\n"), 
 			ino);
@@ -958,7 +958,7 @@ process_attributes(
 	int		*repair)  /* returned if we did repair */
 {
 	int		err;
-	__u8		aformat = dip->di_core.di_aformat;
+	__u8		aformat = dip->di_aformat;
 	xfs_attr_shortform_t *asf;
 
 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);

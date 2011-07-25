@@ -62,7 +62,7 @@ check_aginode_block(xfs_mount_t	*mp,
 	}
 
 	for (i = 0; i < mp->m_sb.sb_inopblock; i++)  {
-		dino_p = XFS_MAKE_IPTR(mp, bp, i);
+		dino_p = xfs_make_iptr(mp, bp, i);
 		if (!verify_uncertain_dinode(mp, dino_p, agno,
 				XFS_OFFBNO_TO_AGINO(mp, agbno, i)))
 			cnt++;
@@ -674,7 +674,7 @@ process_inode_chunk(
 			/*
 			 * make inode pointer
 			 */
-			dino = XFS_MAKE_IPTR(mp, bplist[bp_index], cluster_offset);
+			dino = xfs_make_iptr(mp, bplist[bp_index], cluster_offset);
 			agino = irec_offset + ino_rec->ino_startnum;
 
 			/*
@@ -767,7 +767,7 @@ process_inode_chunk(
 		/*
 		 * make inode pointer
 		 */
-		dino = XFS_MAKE_IPTR(mp, bplist[bp_index], cluster_offset);
+		dino = xfs_make_iptr(mp, bplist[bp_index], cluster_offset);
 		agino = irec_offset + ino_rec->ino_startnum;
 
 		is_used = 3;
@@ -809,9 +809,9 @@ process_inode_chunk(
 			 * store on-disk nlink count for comparing in phase 7
 			 */
 			set_inode_disk_nlinks(ino_rec, irec_offset,
-				dino->di_core.di_version > XFS_DINODE_VERSION_1
-					? be32_to_cpu(dino->di_core.di_nlink)
-					: be16_to_cpu(dino->di_core.di_onlink));
+				dino->di_version > 1
+					? be32_to_cpu(dino->di_nlink)
+					: be16_to_cpu(dino->di_onlink));
 
 		} else  {
 			set_inode_free(ino_rec, irec_offset);

@@ -51,9 +51,9 @@ typedef __uint32_t		inst_t;		/* an instruction */
 
 
 #define m_ddev_targp 			m_dev
+#define xfs_error_level			0
 
 #define STATIC				static
-#define STATIC_INLINE			static inline
 
 #define ATTR_ROOT			LIBXFS_ATTR_ROOT
 #define ATTR_SECURE			LIBXFS_ATTR_SECURE
@@ -83,10 +83,6 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define XFS_WANT_CORRUPTED_RETURN(expr)	\
 		{ if (!(expr)) { return EFSCORRUPTED; } }
 
-#define TRACE_FREE(s,a,b,x,f)		((void) 0)
-#define TRACE_ALLOC(s,a)		((void) 0)
-#define TRACE_MODAGF(a,b,c)		((void) 0)
-
 #ifdef __GNUC__
 #define __return_address	__builtin_return_address(0)
 #endif
@@ -99,6 +95,8 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define spin_unlock(a)		((void) 0)
 #define likely(x)		(x)
 #define unlikely(x)		(x)
+#define rcu_read_lock()		((void) 0)
+#define rcu_read_unlock()	((void) 0)
 
 /*
  * random32 is used for di_gen inode allocation, it must be zero for libxfs
@@ -190,6 +188,9 @@ roundup_pow_of_two(uint v)
 /* buffer management */
 #define XFS_BUF_LOCK			0
 #define XFS_BUF_TRYLOCK			0
+#define XBF_LOCK			XFS_BUF_LOCK
+#define XBF_TRYLOCK			XFS_BUF_TRYLOCK
+#define XBF_DONT_BLOCK			0
 #define XFS_BUF_GETERROR(bp)		0
 #define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
 #define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
@@ -204,14 +205,14 @@ roundup_pow_of_two(uint v)
 #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
 					(*(bpp) = libxfs_readbuf((devp), \
 							(blkno), (len), 1), 0)
-#define xfs_buf_get_flags(devp,blkno,len,f)	\
+#define xfs_buf_get(devp,blkno,len,f)	\
 					(libxfs_getbuf((devp), (blkno), (len)))
 #define xfs_bwrite(mp,bp)		libxfs_writebuf((bp), 0)
 
-#define XFS_B_READ			LIBXFS_BREAD
-#define XFS_B_WRITE			LIBXFS_BWRITE
-#define xfs_biomove(bp,off,len,data,f)	libxfs_iomove(bp,off,len,data,f)
-#define xfs_biozero(bp,off,len)		libxfs_iomove(bp,off,len,0,LIBXFS_BZERO)
+#define XBRW_READ			LIBXFS_BREAD
+#define XBRW_WRITE			LIBXFS_BWRITE
+#define xfs_buf_iomove(bp,off,len,data,f)	libxfs_iomove(bp,off,len,data,f)
+#define xfs_buf_zero(bp,off,len)	libxfs_iomove(bp,off,len,0,LIBXFS_BZERO)
 
 /* mount stuff */
 #define XFS_MOUNT_32BITINODES		LIBXFS_MOUNT_32BITINODES
@@ -219,6 +220,9 @@ roundup_pow_of_two(uint v)
 #define XFS_MOUNT_SMALL_INUMS		0	/* ignored in userspace */
 #define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
 #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
+
+#define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
+	xfs_mod_incore_sb(mp, field, delta, rsvd)
 
 /*
  * Map XFS kernel routine names to libxfs versions
@@ -234,7 +238,7 @@ roundup_pow_of_two(uint v)
 #define xfs_fs_cmn_err			libxfs_fs_cmn_err
 
 #define xfs_bmap_finish			libxfs_bmap_finish
-#define xfs_ichgtime			libxfs_ichgtime
+#define xfs_trans_ichgtime		libxfs_trans_ichgtime
 #define xfs_mod_incore_sb		libxfs_mod_incore_sb
 
 #define xfs_trans_alloc			libxfs_trans_alloc
@@ -250,6 +254,7 @@ roundup_pow_of_two(uint v)
 #define xfs_trans_iget			libxfs_trans_iget
 #define xfs_trans_ihold			libxfs_trans_ihold
 #define xfs_trans_ijoin			libxfs_trans_ijoin
+#define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
 #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
 #define xfs_trans_log_buf		libxfs_trans_log_buf
 #define xfs_trans_log_inode		libxfs_trans_log_inode
@@ -263,7 +268,7 @@ roundup_pow_of_two(uint v)
 #define	xfs_trans_agflist_delta(tp, d)
 #define	xfs_trans_agbtree_delta(tp, d)
 
-#define xfs_baread(a,b,c)		((void) 0)	/* no readahead */
+#define xfs_buf_readahead(a,b,c)	((void) 0)	/* no readahead */
 #define xfs_btree_reada_bufl(m,fsb,c)	((void) 0)
 #define xfs_btree_reada_bufs(m,fsb,c,x)	((void) 0)
 #define xfs_buftrace(x,y)		((void) 0)	/* debug only */
@@ -287,8 +292,12 @@ roundup_pow_of_two(uint v)
 #define xfs_iunlock(ip,mode)				((void) 0)
 
 /* space allocation */
-#define xfs_alloc_search_busy(tp,ag,b,len)	((void) 0)
-#define xfs_alloc_mark_busy(tp,ag,b,len)	((void) 0)
+#define xfs_alloc_busy_search(tp,ag,b,len)	0
+/* avoid unused variable warning */
+#define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+	xfs_agnumber_t __foo = ag;			\
+	__foo = 0;					\
+})
 #define xfs_rotorstep				1
 #define xfs_bmap_rtalloc(a)			(ENOSYS)
 #define xfs_rtpick_extent(mp,tp,len,p)		(ENOSYS)

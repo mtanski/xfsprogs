@@ -219,7 +219,7 @@ attr_leaf_name_local_name_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (e->flags & XFS_ATTR_LOCAL) {
-				l = XFS_ATTR_LEAF_NAME_LOCAL(block, i);
+				l = xfs_attr_leaf_name_local(block, i);
 				return l->namelen;
 			} else
 				return 0;
@@ -248,7 +248,7 @@ attr_leaf_name_local_value_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (e->flags & XFS_ATTR_LOCAL) {
-				l = XFS_ATTR_LEAF_NAME_LOCAL(block, i);
+				l = xfs_attr_leaf_name_local(block, i);
 				return be16_to_cpu(l->valuelen);
 			} else
 				return 0;
@@ -285,7 +285,7 @@ attr_leaf_name_local_value_offset(
 	if (i >= be16_to_cpu(block->hdr.count)) 
 		return 0;
 
-	l = XFS_ATTR_LEAF_NAME_LOCAL(block, i);
+	l = xfs_attr_leaf_name_local(block, i);
 	vp = (char *)&l->nameval[l->namelen];
 	return (int)bitize(vp - (char *)l);
 }
@@ -333,7 +333,7 @@ attr_leaf_name_remote_name_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (!(e->flags & XFS_ATTR_LOCAL)) {
-				r = XFS_ATTR_LEAF_NAME_REMOTE(block, i);
+				r = xfs_attr_leaf_name_remote(block, i);
 				return r->namelen;
 			} else
 				return 0;
@@ -360,12 +360,12 @@ attr_leaf_name_size(
 		return 0;
 	e = &block->entries[idx];
 	if (e->flags & XFS_ATTR_LOCAL) {
-		l = XFS_ATTR_LEAF_NAME_LOCAL(block, idx);
-		return (int)bitize(XFS_ATTR_LEAF_ENTSIZE_LOCAL(l->namelen,
+		l = xfs_attr_leaf_name_local(block, idx);
+		return (int)bitize(xfs_attr_leaf_entsize_local(l->namelen,
 					be16_to_cpu(l->valuelen)));
 	} else {
-		r = XFS_ATTR_LEAF_NAME_REMOTE(block, idx);
-		return (int)bitize(XFS_ATTR_LEAF_ENTSIZE_REMOTE(r->namelen));
+		r = xfs_attr_leaf_name_remote(block, idx);
+		return (int)bitize(xfs_attr_leaf_entsize_remote(r->namelen));
 	}
 }
 

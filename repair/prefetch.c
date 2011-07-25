@@ -316,7 +316,7 @@ pf_read_exinode(
 	xfs_dinode_t		*dino)
 {
 	pf_read_bmbt_reclist(args, (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dino),
-			be32_to_cpu(dino->di_core.di_nextents));
+			be32_to_cpu(dino->di_nextents));
 }
 
 static void
@@ -328,23 +328,21 @@ pf_read_inode_dirs(
 	int			icnt = 0;
 	int			hasdir = 0;
 	int			isadir;
-	xfs_dinode_core_t	*dinoc;
 
 	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
-		dino = XFS_MAKE_IPTR(mp, bp, icnt);
-		dinoc = &dino->di_core;
+		dino = xfs_make_iptr(mp, bp, icnt);
 
 		/*
 		 * We are only prefetching directory contents in extents
 		 * and btree nodes for other inodes
 		 */
-		isadir = (be16_to_cpu(dinoc->di_mode) & S_IFMT) == S_IFDIR;
+		isadir = (be16_to_cpu(dino->di_mode) & S_IFMT) == S_IFDIR;
 		hasdir |= isadir;
 
-		if (dinoc->di_format <= XFS_DINODE_FMT_LOCAL)
+		if (dino->di_format <= XFS_DINODE_FMT_LOCAL)
 			continue;
 
-		if (!isadir && (dinoc->di_format == XFS_DINODE_FMT_EXTENTS ||
+		if (!isadir && (dino->di_format == XFS_DINODE_FMT_EXTENTS ||
 				args->dirs_only))
 			continue;
 
@@ -353,25 +351,24 @@ pf_read_inode_dirs(
 		 * its directory data. It's a cut down version of
 		 * process_dinode_int() in dinode.c.
 		 */
-		if (dinoc->di_format > XFS_DINODE_FMT_BTREE)
+		if (dino->di_format > XFS_DINODE_FMT_BTREE)
 			continue;
 
-		if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)
+		if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)
 			continue;
 
-		if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
-				(!fs_inode_nlink && dinoc->di_version >
-					XFS_DINODE_VERSION_1))
+		if (!XFS_DINODE_GOOD_VERSION(dino->di_version) ||
+				(!fs_inode_nlink && dino->di_version > 1))
 			continue;
 
-		if (be64_to_cpu(dinoc->di_size) <= XFS_DFORK_DSIZE(dino, mp))
+		if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp))
 			continue;
 
-		if ((dinoc->di_forkoff != 0) &&
-				(dinoc->di_forkoff >= (XFS_LITINO(mp) >> 3)))
+		if ((dino->di_forkoff != 0) &&
+				(dino->di_forkoff >= (XFS_LITINO(mp) >> 3)))
 			continue;
 
-		switch (dinoc->di_format) {
+		switch (dino->di_format) {
 			case XFS_DINODE_FMT_EXTENTS:
 				pf_read_exinode(args, dino);
 				break;

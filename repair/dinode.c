@@ -43,27 +43,27 @@
 int
 calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
 {
-	xfs_dinode_core_t	*dinoc = &dino->di_core;
-	int			offset = ((__psint_t) &dino->di_u)
-						- (__psint_t)dino;
+	int	offset = (__psint_t)XFS_DFORK_DPTR(dino) - (__psint_t)dino;
+	xfs_bmdr_block_t        *dfp;
 
 	/*
 	 * don't worry about alignment when calculating offset
 	 * because the data fork is already 8-byte aligned
 	 */
-	switch (dinoc->di_format)  {
+	switch (dino->di_format)  {
 	case XFS_DINODE_FMT_DEV:
 		offset += sizeof(xfs_dev_t);
 		break;
 	case XFS_DINODE_FMT_LOCAL:
-		offset += be64_to_cpu(dinoc->di_size);
+		offset += be64_to_cpu(dino->di_size);
 		break;
 	case XFS_DINODE_FMT_EXTENTS:
-		offset += be32_to_cpu(dinoc->di_nextents) * 
+		offset += be32_to_cpu(dino->di_nextents) *
 						sizeof(xfs_bmbt_rec_t);
 		break;
 	case XFS_DINODE_FMT_BTREE:
-		offset += be16_to_cpu(dino->di_u.di_bmbt.bb_numrecs) * 
+		dfp = (xfs_bmdr_block_t *)XFS_DFORK_DPTR(dino);
+		offset += be16_to_cpu(dfp->bb_numrecs) *
 						sizeof(xfs_bmbt_rec_t);
 		break;
 	default:
@@ -79,9 +79,7 @@ calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
 int
 clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 {
-	xfs_dinode_core_t *dinoc = &dino->di_core;
-
-	ASSERT(dinoc->di_forkoff != 0);
+	ASSERT(dino->di_forkoff != 0);
 
 	if (!no_modify)
 		fprintf(stderr, _("clearing inode %llu attributes\n"),
@@ -90,16 +88,16 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 		fprintf(stderr, _("would have cleared inode %llu attributes\n"),
 			(unsigned long long)ino_num);
 
-	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
+	if (be16_to_cpu(dino->di_anextents) != 0)  {
 		if (no_modify)
 			return(1);
-		dinoc->di_anextents = cpu_to_be16(0);
+		dino->di_anextents = cpu_to_be16(0);
 	}
 
-	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
+	if (dino->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
 		if (no_modify)
 			return(1);
-		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
+		dino->di_aformat = XFS_DINODE_FMT_EXTENTS;
 	}
 
 	/* get rid of the fork by clearing forkoff */
@@ -118,7 +116,7 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 				XFS_DFORK_APTR(dino);
 		asf->hdr.totsize = cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
 		asf->hdr.count = 0;
-		dinoc->di_forkoff = 0;  /* got to do this after asf is set */
+		dino->di_forkoff = 0;  /* got to do this after asf is set */
 	}
 
 	/*
@@ -129,7 +127,7 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 
 /* ARGSUSED */
 int
-clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
+clear_dinode_core(xfs_dinode_t *dinoc, xfs_ino_t ino_num)
 {
 	int dirty = 0;
 
@@ -143,14 +141,13 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 	}
 
 	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
-	    (!fs_inode_nlink && dinoc->di_version > XFS_DINODE_VERSION_1))  {
+	    (!fs_inode_nlink && dinoc->di_version > 1))  {
 		dirty = 1;
 
 		if (no_modify)
 			return(1);
 
-		dinoc->di_version = (fs_inode_nlink) ? XFS_DINODE_VERSION_2
-						: XFS_DINODE_VERSION_1;
+		dinoc->di_version = (fs_inode_nlink) ? 2 : 1;
 	}
 
 	if (be16_to_cpu(dinoc->di_mode) != 0)  {
@@ -252,7 +249,7 @@ clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
 		dinoc->di_anextents = 0;
 	}
 
-	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
+	if (dinoc->di_version > 1 &&
 			be32_to_cpu(dinoc->di_nlink) != 0)  {
 		dirty = 1;
 
@@ -289,13 +286,13 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 {
 	int dirty;
 
-	dirty = clear_dinode_core(&dino->di_core, ino_num);
+	dirty = clear_dinode_core(dino, ino_num);
 	dirty += clear_dinode_unlinked(mp, dino);
 
 	/* and clear the forks */
 
 	if (dirty && !no_modify)
-		memset(&dino->di_u, 0, XFS_LITINO(mp));
+		memset(XFS_DFORK_DPTR(dino), 0, XFS_LITINO(mp));
 
 	return(dirty);
 }
@@ -868,7 +865,7 @@ get_agino_buf(xfs_mount_t	 *mp,
 		return(NULL);
 	}
 
-	*dipp = XFS_MAKE_IPTR(mp, bp, agino -
+	*dipp = xfs_make_iptr(mp, bp, agino -
 		XFS_OFFBNO_TO_AGINO(mp, XFS_AGINO_TO_AGBNO(mp,
 						irec->ino_startnum),
 		0));
@@ -1347,11 +1344,11 @@ process_lclinode(
 	xfs_ino_t		lino;
 
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_core.di_size) >
+	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_size) >
 						XFS_DFORK_DSIZE(dip, mp)) {
 		do_warn(
 	_("local inode %llu data fork is too large (size = %lld, max = %d)\n"),
-			lino, be64_to_cpu(dip->di_core.di_size),
+			lino, be64_to_cpu(dip->di_size),
 			XFS_DFORK_DSIZE(dip, mp));
 		return(1);
 	} else if (whichfork == XFS_ATTR_FORK) {
@@ -1385,23 +1382,23 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 	int			i;
 	int			max_blocks;
 
-	if (be64_to_cpu(dino->di_core.di_size) <= XFS_DFORK_DSIZE(dino, mp)) {
-		if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  
+	if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp)) {
+		if (dino->di_format == XFS_DINODE_FMT_LOCAL)  
 			return 0;
 		do_warn(_("mismatch between format (%d) and size (%lld) in "
-			"symlink ino %llu\n"), dino->di_core.di_format, 
-			be64_to_cpu(dino->di_core.di_size), lino);
+			"symlink ino %llu\n"), dino->di_format, 
+			be64_to_cpu(dino->di_size), lino);
 		return 1;
 	}
-	if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
+	if (dino->di_format == XFS_DINODE_FMT_LOCAL) {
 		do_warn(_("mismatch between format (%d) and size (%lld) in "
-			"symlink inode %llu\n"), dino->di_core.di_format,
-			be64_to_cpu(dino->di_core.di_size), lino);
+			"symlink inode %llu\n"), dino->di_format,
+			be64_to_cpu(dino->di_size), lino);
 		return 1;
 	}
 
 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dino);
-	numrecs = be32_to_cpu(dino->di_core.di_nextents);
+	numrecs = be32_to_cpu(dino->di_nextents);
 
 	/*
 	 * the max # of extents in a symlink inode is equal to the
@@ -1471,7 +1468,6 @@ process_symlink(
 	blkmap_t 	*blkmap)
 {
 	xfs_dfsbno_t		fsbno;
-	xfs_dinode_core_t	*dinoc = &dino->di_core;
 	xfs_buf_t		*bp = NULL;
 	char			*symlink, *cptr, *buf_data;
 	int			i, size, amountdone;
@@ -1483,9 +1479,9 @@ process_symlink(
 	 * the inode is structurally ok so we don't have to check
 	 * for that
 	 */
-	if (be64_to_cpu(dinoc->di_size) >= MAXPATHLEN)  {
+	if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
 		do_warn(_("symlink in inode %llu too long (%lld chars)\n"),
-			lino, be64_to_cpu(dinoc->di_size));
+			lino, be64_to_cpu(dino->di_size));
 		return(1);
 	}
 
@@ -1494,13 +1490,13 @@ process_symlink(
 	 * get symlink contents into data area
 	 */
 	symlink = &data[0];
-	if (be64_to_cpu(dinoc->di_size) <= XFS_DFORK_DSIZE(dino, mp))  {
+	if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp))  {
 		/*
 		 * local symlink, just copy the symlink out of the
 		 * inode into the data area
 		 */
 		memmove(symlink, XFS_DFORK_DPTR(dino), 
-						be64_to_cpu(dinoc->di_size));
+						be64_to_cpu(dino->di_size));
 	} else {
 		/*
 		 * stored in a meta-data file, have to bmap one block
@@ -1509,7 +1505,7 @@ process_symlink(
 		i = size = amountdone = 0;
 		cptr = symlink;
 
-		while (amountdone < be64_to_cpu(dinoc->di_size)) {
+		while (amountdone < be64_to_cpu(dino->di_size)) {
 			fsbno = blkmap_get(blkmap, i);
 			if (fsbno != NULLDFSBNO)
 				bp = libxfs_readbuf(mp->m_dev,
@@ -1523,7 +1519,7 @@ process_symlink(
 			}
 
 			buf_data = (char *)XFS_BUF_PTR(bp);
-			size = MIN(be64_to_cpu(dinoc->di_size) - amountdone, 
+			size = MIN(be64_to_cpu(dino->di_size) - amountdone, 
 						XFS_FSB_TO_BB(mp, 1) * BBSIZE);
 			memmove(cptr, buf_data, size);
 			cptr += size;
@@ -1532,12 +1528,12 @@ process_symlink(
 			libxfs_putbuf(bp);
 		}
 	}
-	data[be64_to_cpu(dinoc->di_size)] = '\0';
+	data[be64_to_cpu(dino->di_size)] = '\0';
 
 	/*
 	 * check for nulls
 	 */
-	if (null_check(symlink, be64_to_cpu(dinoc->di_size)))  {
+	if (null_check(symlink, be64_to_cpu(dino->di_size)))  {
 		do_warn(
 		_("found illegal null character in symlink inode %llu\n"),
 			lino);
@@ -1547,7 +1543,7 @@ process_symlink(
 	/*
 	 * check for any component being too long
 	 */
-	if (be64_to_cpu(dinoc->di_size) >= MAXNAMELEN)  {
+	if (be64_to_cpu(dino->di_size) >= MAXNAMELEN)  {
 		cptr = strchr(symlink, '/');
 
 		while (cptr != NULL)  {
@@ -1595,27 +1591,27 @@ process_misc_ino_types(xfs_mount_t	*mp,
 	/*
 	 * must also have a zero size
 	 */
-	if (be64_to_cpu(dino->di_core.di_size) != 0)  {
+	if (be64_to_cpu(dino->di_size) != 0)  {
 		switch (type)  {
 		case XR_INO_CHRDEV:
 			do_warn(_("size of character device inode %llu != 0 "
 				  "(%lld bytes)\n"), lino,
-				be64_to_cpu(dino->di_core.di_size));
+				be64_to_cpu(dino->di_size));
 			break;
 		case XR_INO_BLKDEV:
 			do_warn(_("size of block device inode %llu != 0 "
 				  "(%lld bytes)\n"), lino,
-				be64_to_cpu(dino->di_core.di_size));
+				be64_to_cpu(dino->di_size));
 			break;
 		case XR_INO_SOCK:
 			do_warn(_("size of socket inode %llu != 0 "
 				  "(%lld bytes)\n"), lino,
-				be64_to_cpu(dino->di_core.di_size));
+				be64_to_cpu(dino->di_size));
 			break;
 		case XR_INO_FIFO:
 			do_warn(_("size of fifo inode %llu != 0 "
 				  "(%lld bytes)\n"), lino,
-				be64_to_cpu(dino->di_core.di_size));
+				be64_to_cpu(dino->di_size));
 			break;
 		default:
 			do_warn(_("Internal error - process_misc_ino_types, "
@@ -1634,7 +1630,7 @@ process_misc_ino_types_blocks(xfs_drfsbno_t totblocks, xfs_ino_t lino, int type)
 {
 	/*
 	 * you can not enforce all misc types have zero data fork blocks
-	 * by checking dino->di_core.di_nblocks because atotblocks (attribute
+	 * by checking dino->di_nblocks because atotblocks (attribute
 	 * blocks) are part of nblocks. We must check this later when atotblocks
 	 * has been calculated or by doing a simple check that anExtents == 0.
 	 * We must also guarantee that totblocks is 0. Thus nblocks checking
@@ -1673,28 +1669,28 @@ process_misc_ino_types_blocks(xfs_drfsbno_t totblocks, xfs_ino_t lino, int type)
 
 static inline int
 dinode_fmt(
-	xfs_dinode_core_t *dinoc)
+	xfs_dinode_t *dino)
 {
-	return be16_to_cpu(dinoc->di_mode) & S_IFMT;
+	return be16_to_cpu(dino->di_mode) & S_IFMT;
 }
 
 static inline void
 change_dinode_fmt(
-	xfs_dinode_core_t *dinoc,
+	xfs_dinode_t	*dino,
 	int		new_fmt)
 {
-	int		mode = be16_to_cpu(dinoc->di_mode);
+	int		mode = be16_to_cpu(dino->di_mode);
 
 	ASSERT((new_fmt & ~S_IFMT) == 0);
 
 	mode &= ~S_IFMT;
 	mode |= new_fmt;
-	dinoc->di_mode = cpu_to_be16(mode);
+	dino->di_mode = cpu_to_be16(mode);
 }
 
 static int
 check_dinode_mode_format(
-	xfs_dinode_core_t *dinoc)
+	xfs_dinode_t *dinoc)
 {
 	if (dinoc->di_format >= XFS_DINODE_FMT_UUID)
 		return -1;	/* FMT_UUID is not used */
@@ -1731,7 +1727,7 @@ check_dinode_mode_format(
 static int
 process_check_sb_inodes(
 	xfs_mount_t	*mp,
-	xfs_dinode_core_t *dinoc,
+	xfs_dinode_t	*dinoc,
 	xfs_ino_t	lino,
 	int		*type,
 	int		*dirty)
@@ -1827,17 +1823,16 @@ process_check_inode_sizes(
 	xfs_ino_t	lino,
 	int		type)
 {
-	xfs_dinode_core_t *dinoc = &dino->di_core;
-	xfs_fsize_t	size = be64_to_cpu(dinoc->di_size);
+	xfs_fsize_t	size = be64_to_cpu(dino->di_size);
 
 	switch (type)  {
 
 	case XR_INO_DIR:
 		if (size <= XFS_DFORK_DSIZE(dino, mp) &&
-				dinoc->di_format != XFS_DINODE_FMT_LOCAL) {
+				dino->di_format != XFS_DINODE_FMT_LOCAL) {
 			do_warn(_("mismatch between format (%d) and size "
 				"(%lld) in directory ino %llu\n"),
-				dinoc->di_format, size, lino);
+				dino->di_format, size, lino);
 			return 1;
 		}
 		if (size > XFS_DIR2_LEAF_OFFSET) {
@@ -1907,17 +1902,17 @@ process_check_inode_sizes(
 static int
 process_check_inode_forkoff(
 	xfs_mount_t	*mp,
-	xfs_dinode_core_t *dinoc,
+	xfs_dinode_t	*dino,
 	xfs_ino_t	lino)
 {
-	if (dinoc->di_forkoff == 0)
+	if (dino->di_forkoff == 0)
 		return 0;
 
-	switch (dinoc->di_format)  {
+	switch (dino->di_format)  {
 	case XFS_DINODE_FMT_DEV:
-		if (dinoc->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3)) {
+		if (dino->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3)) {
 			do_warn(_("bad attr fork offset %d in dev inode %llu, "
-				"should be %d\n"), dinoc->di_forkoff, lino,
+				"should be %d\n"), dino->di_forkoff, lino,
 				(int)(roundup(sizeof(xfs_dev_t), 8) >> 3));
 			return 1;
 		}
@@ -1925,15 +1920,15 @@ process_check_inode_forkoff(
 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
 	case XFS_DINODE_FMT_EXTENTS:	/* fall through ... */
 	case XFS_DINODE_FMT_BTREE:
-		if (dinoc->di_forkoff >= (XFS_LITINO(mp) >> 3)) {
+		if (dino->di_forkoff >= (XFS_LITINO(mp) >> 3)) {
 			do_warn(_("bad attr fork offset %d in inode %llu, "
-				"max=%d\n"), dinoc->di_forkoff, lino,
+				"max=%d\n"), dino->di_forkoff, lino,
 				XFS_LITINO(mp) >> 3);
 			return 1;
 		}
 		break;
 	default:
-		do_error(_("unexpected inode format %d\n"), dinoc->di_format);
+		do_error(_("unexpected inode format %d\n"), dino->di_format);
 		break;
 	}
 	return 0;
@@ -1944,24 +1939,24 @@ process_check_inode_forkoff(
  */
 static int
 process_inode_blocks_and_extents(
-	xfs_dinode_core_t *dinoc,
+	xfs_dinode_t	*dino,
 	xfs_drfsbno_t	nblocks,
 	__uint64_t	nextents,
 	__uint64_t	anextents,
 	xfs_ino_t	lino,
 	int		*dirty)
 {
-	if (nblocks != be64_to_cpu(dinoc->di_nblocks))  {
+	if (nblocks != be64_to_cpu(dino->di_nblocks))  {
 		if (!no_modify)  {
 			do_warn(_("correcting nblocks for inode %llu, "
 				"was %llu - counted %llu\n"), lino,
-				be64_to_cpu(dinoc->di_nblocks), nblocks);
-			dinoc->di_nblocks = cpu_to_be64(nblocks);
+				be64_to_cpu(dino->di_nblocks), nblocks);
+			dino->di_nblocks = cpu_to_be64(nblocks);
 			*dirty = 1;
 		} else  {
 			do_warn(_("bad nblocks %llu for inode %llu, "
 				"would reset to %llu\n"),
-				be64_to_cpu(dinoc->di_nblocks), lino, nblocks);
+				be64_to_cpu(dino->di_nblocks), lino, nblocks);
 		}
 	}
 
@@ -1970,16 +1965,16 @@ process_inode_blocks_and_extents(
 			nextents, lino);
 		return 1;
 	}
-	if (nextents != be32_to_cpu(dinoc->di_nextents))  {
+	if (nextents != be32_to_cpu(dino->di_nextents))  {
 		if (!no_modify)  {
 			do_warn(_("correcting nextents for inode %llu, "
 				"was %d - counted %llu\n"), lino,
-				be32_to_cpu(dinoc->di_nextents), nextents);
-			dinoc->di_nextents = cpu_to_be32(nextents);
+				be32_to_cpu(dino->di_nextents), nextents);
+			dino->di_nextents = cpu_to_be32(nextents);
 			*dirty = 1;
 		} else  {
 			do_warn(_("bad nextents %d for inode %llu, would reset "
-				"to %llu\n"), be32_to_cpu(dinoc->di_nextents),
+				"to %llu\n"), be32_to_cpu(dino->di_nextents),
 				lino, nextents);
 		}
 	}
@@ -1989,16 +1984,16 @@ process_inode_blocks_and_extents(
 			anextents, lino);
 		return 1;
 	}
-	if (anextents != be16_to_cpu(dinoc->di_anextents))  {
+	if (anextents != be16_to_cpu(dino->di_anextents))  {
 		if (!no_modify)  {
 			do_warn(_("correcting anextents for inode %llu, "
 				"was %d - counted %llu\n"), lino,
-				be16_to_cpu(dinoc->di_anextents), anextents);
-			dinoc->di_anextents = cpu_to_be16(anextents);
+				be16_to_cpu(dino->di_anextents), anextents);
+			dino->di_anextents = cpu_to_be16(anextents);
 			*dirty = 1;
 		} else  {
 			do_warn(_("bad anextents %d for inode %llu, would reset"
-				" to %llu\n"), be16_to_cpu(dinoc->di_anextents),
+				" to %llu\n"), be16_to_cpu(dino->di_anextents),
 				lino, anextents);
 		}
 	}
@@ -2021,19 +2016,18 @@ process_inode_data_fork(
 	blkmap_t	**dblkmap,
 	int		check_dups)
 {
-	xfs_dinode_core_t *dinoc = &dino->di_core;
 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	int		err = 0;
 
-	*nextents = be32_to_cpu(dinoc->di_nextents);
-	if (*nextents > be64_to_cpu(dinoc->di_nblocks))
+	*nextents = be32_to_cpu(dino->di_nextents);
+	if (*nextents > be64_to_cpu(dino->di_nblocks))
 		*nextents = 1;
 
-	if (dinoc->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
+	if (dino->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
 		*dblkmap = blkmap_alloc(*nextents, XFS_DATA_FORK);
 	*nextents = 0;
 
-	switch (dinoc->di_format) {
+	switch (dino->di_format) {
 	case XFS_DINODE_FMT_LOCAL:
 		err = process_lclinode(mp, agno, ino, dino, XFS_DATA_FORK);
 		*totblocks = 0;
@@ -2053,7 +2047,7 @@ process_inode_data_fork(
 		break;
 	default:
 		do_error(_("unknown format %d, ino %llu (mode = %d)\n"),
-			dinoc->di_format, lino, be16_to_cpu(dinoc->di_mode));
+			dino->di_format, lino, be16_to_cpu(dino->di_mode));
 	}
 
 	if (err)  {
@@ -2071,7 +2065,7 @@ process_inode_data_fork(
 		 * re-process data fork to set bitmap since the
 		 * bitmap wasn't set the first time through
 		 */
-		switch (dinoc->di_format) {
+		switch (dino->di_format) {
 		case XFS_DINODE_FMT_LOCAL:
 			err = process_lclinode(mp, agno, ino, dino, 
 						XFS_DATA_FORK);
@@ -2091,8 +2085,8 @@ process_inode_data_fork(
 			break;
 		default:
 			do_error(_("unknown format %d, ino %llu (mode = %d)\n"),
-				dinoc->di_format, lino,
-				be16_to_cpu(dinoc->di_mode));
+				dino->di_format, lino,
+				be16_to_cpu(dino->di_mode));
 		}
 
 		if (no_modify && err != 0)
@@ -2120,7 +2114,6 @@ process_inode_attr_fork(
 	int		extra_attr_check,
 	int		*retval)
 {
-	xfs_dinode_core_t *dinoc = &dino->di_core;
 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	blkmap_t	*ablkmap = NULL;
 	int		repair = 0;
@@ -2128,12 +2121,12 @@ process_inode_attr_fork(
 
 	if (!XFS_DFORK_Q(dino)) {
 		*anextents = 0;
-		if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS) {
+		if (dino->di_aformat != XFS_DINODE_FMT_EXTENTS) {
 			do_warn(_("bad attribute format %d in inode %llu, "),
-				dinoc->di_aformat, lino);
+				dino->di_aformat, lino);
 			if (!no_modify) {
 				do_warn(_("resetting value\n"));
-				dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
+				dino->di_aformat = XFS_DINODE_FMT_EXTENTS;
 				*dirty = 1;
 			} else
 				do_warn(_("would reset value\n"));
@@ -2141,11 +2134,11 @@ process_inode_attr_fork(
 		return 0;
 	}
 
-	*anextents = be16_to_cpu(dinoc->di_anextents);
-	if (*anextents > be64_to_cpu(dinoc->di_nblocks))
+	*anextents = be16_to_cpu(dino->di_anextents);
+	if (*anextents > be64_to_cpu(dino->di_nblocks))
 		*anextents = 1;
 
-	switch (dinoc->di_aformat) {
+	switch (dino->di_aformat) {
 	case XFS_DINODE_FMT_LOCAL:
 		*anextents = 0;
 		*atotblocks = 0;
@@ -2167,7 +2160,7 @@ process_inode_attr_fork(
 		break;
 	default:
 		do_warn(_("illegal attribute format %d, ino %llu\n"),
-				dinoc->di_aformat, lino);
+				dino->di_aformat, lino);
 		err = 1;
 		break;
 	}
@@ -2187,7 +2180,7 @@ process_inode_attr_fork(
 			if (delete_attr_ok)  {
 				do_warn(_(", clearing attr fork\n"));
 				*dirty += clear_dinode_attr(mp, dino, lino);
-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
+				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
 			} else  {
 				do_warn("\n");
 				*dirty += clear_dinode(mp, dino, lino);
@@ -2206,7 +2199,7 @@ process_inode_attr_fork(
 	}
 
 	if (check_dups)  {
-		switch (dinoc->di_aformat) {
+		switch (dino->di_aformat) {
 		case XFS_DINODE_FMT_LOCAL:
 			err = process_lclinode(mp, agno, ino, dino, 
 						XFS_ATTR_FORK);
@@ -2223,7 +2216,7 @@ process_inode_attr_fork(
 			break;
 		default:
 			do_error(_("illegal attribute fmt %d, ino %llu\n"),
-				dinoc->di_aformat, lino);
+				dino->di_aformat, lino);
 		}
 
 		if (no_modify && err != 0) {
@@ -2247,7 +2240,7 @@ process_inode_attr_fork(
 			/* clear attributes if not done already */
 			if (!no_modify)  {
 				*dirty += clear_dinode_attr(mp, dino, lino);
-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
+				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
 			} else  {
 				do_warn(_("would clear attr fork\n"));
 			}
@@ -2270,18 +2263,18 @@ process_inode_attr_fork(
 
 static int
 process_check_inode_nlink_version(
-	xfs_dinode_core_t *dinoc,
+	xfs_dinode_t	*dino,
 	xfs_ino_t	lino)
 {
 	int		dirty = 0;
 
-	if (dinoc->di_version > XFS_DINODE_VERSION_1 && !fs_inode_nlink)  {
+	if (dino->di_version > 1 && !fs_inode_nlink)  {
 		/*
 		 * do we have a fs/inode version mismatch with a valid
 		 * version 2 inode here that has to stay version 2 or
 		 * lose links?
 		 */
-		if (be32_to_cpu(dinoc->di_nlink) > XFS_MAXLINK_1)  {
+		if (be32_to_cpu(dino->di_nlink) > XFS_MAXLINK_1)  {
 			/*
 			 * yes.  are nlink inodes allowed?
 			 */
@@ -2311,17 +2304,17 @@ process_check_inode_nlink_version(
 				if (!no_modify)  {
 					do_warn(_("converting back to version 1,\n"
 						"this may destroy %d links\n"),
-						be32_to_cpu(dinoc->di_nlink) -
+						be32_to_cpu(dino->di_nlink) -
 							XFS_MAXLINK_1);
 
-					dinoc->di_version = XFS_DINODE_VERSION_1;
-					dinoc->di_nlink = cpu_to_be32(XFS_MAXLINK_1);
-					dinoc->di_onlink = cpu_to_be16(XFS_MAXLINK_1);
+					dino->di_version = 1;
+					dino->di_nlink = cpu_to_be32(XFS_MAXLINK_1);
+					dino->di_onlink = cpu_to_be16(XFS_MAXLINK_1);
 					dirty = 1;
 				} else  {
 					do_warn(_("would convert back to version 1,\n"
 						"\tthis might destroy %d links\n"),
-						be32_to_cpu(dinoc->di_nlink) -
+						be32_to_cpu(dino->di_nlink) -
 							XFS_MAXLINK_1);
 				}
 			}
@@ -2337,9 +2330,9 @@ process_check_inode_nlink_version(
 			do_warn(_("found version 2 inode %llu, "), lino);
 			if (!no_modify)  {
 				do_warn(_("converting back to version 1\n"));
-				dinoc->di_version = XFS_DINODE_VERSION_1;
-				dinoc->di_onlink = cpu_to_be16(
-					be32_to_cpu(dinoc->di_nlink));
+				dino->di_version = 1;
+				dino->di_onlink = cpu_to_be16(
+					be32_to_cpu(dino->di_nlink));
 				dirty = 1;
 			} else  {
 				do_warn(_("would convert back to version 1\n"));
@@ -2352,18 +2345,18 @@ process_check_inode_nlink_version(
 	 * to stay a version 2 inode.  it should have a zero
 	 * onlink field, so clear it.
 	 */
-	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
-			dinoc->di_onlink != 0 && fs_inode_nlink > 0) {
+	if (dino->di_version > 1 &&
+			dino->di_onlink != 0 && fs_inode_nlink > 0) {
 		if (!no_modify) {
 			do_warn(_("clearing obsolete nlink field in "
 				"version 2 inode %llu, was %d, now 0\n"),
-				lino, be16_to_cpu(dinoc->di_onlink));
-			dinoc->di_onlink = 0;
+				lino, be16_to_cpu(dino->di_onlink));
+			dino->di_onlink = 0;
 			dirty = 1;
 		} else  {
 			do_warn(_("would clear obsolete nlink field in "
 				"version 2 inode %llu, currently %d\n"),
-				lino, be16_to_cpu(dinoc->di_onlink));
+				lino, be16_to_cpu(dino->di_onlink));
 		}
 	}
 	return dirty;
@@ -2398,7 +2391,6 @@ process_dinode_int(xfs_mount_t *mp,
 {
 	xfs_drfsbno_t		totblocks = 0;
 	xfs_drfsbno_t		atotblocks = 0;
-	xfs_dinode_core_t	*dinoc;
 	int			di_mode;
 	int			type;
 	int			retval = 0;
@@ -2413,9 +2405,8 @@ process_dinode_int(xfs_mount_t *mp,
 	*used = is_used;
 	type = XR_INO_UNKNOWN;
 
-	dinoc = &dino->di_core;
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-	di_mode = be16_to_cpu(dinoc->di_mode);
+	di_mode = be16_to_cpu(dino->di_mode);
 
 	/*
 	 * if in verify mode, don't modify the inode.
@@ -2431,35 +2422,33 @@ process_dinode_int(xfs_mount_t *mp,
 	 */
 	ASSERT(uncertain == 0 || verify_mode != 0);
 
-	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
+	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
 		retval = 1;
 		if (!uncertain)
 			do_warn(_("bad magic number 0x%x on inode %llu%c"),
-				be16_to_cpu(dinoc->di_magic), lino,
+				be16_to_cpu(dino->di_magic), lino,
 				verify_mode ? '\n' : ',');
 		if (!verify_mode) {
 			if (!no_modify)  {
 				do_warn(_(" resetting magic number\n"));
-				dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+				dino->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
 				*dirty = 1;
 			} else
 				do_warn(_(" would reset magic number\n"));
 		}
 	}
 
-	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
-	    (!fs_inode_nlink && dinoc->di_version > XFS_DINODE_VERSION_1))  {
+	if (!XFS_DINODE_GOOD_VERSION(dino->di_version) ||
+	    (!fs_inode_nlink && dino->di_version > 1))  {
 		retval = 1;
 		if (!uncertain)
 			do_warn(_("bad version number 0x%x on inode %llu%c"),
-				(__s8)dinoc->di_version, lino,
+				(__s8)dino->di_version, lino,
 				verify_mode ? '\n' : ',');
 		if (!verify_mode) {
 			if (!no_modify) {
 				do_warn(_(" resetting version number\n"));
-				dinoc->di_version = (fs_inode_nlink) ?
-					XFS_DINODE_VERSION_2 :
-					XFS_DINODE_VERSION_1;
+				dino->di_version = (fs_inode_nlink) ?  2 : 1;
 				*dirty = 1;
 			} else
 				do_warn(_(" would reset version number\n"));
@@ -2469,10 +2458,10 @@ process_dinode_int(xfs_mount_t *mp,
 	/*
 	 * blow out of here if the inode size is < 0
 	 */
-	if ((xfs_fsize_t)be64_to_cpu(dinoc->di_size) < 0)  {
+	if ((xfs_fsize_t)be64_to_cpu(dino->di_size) < 0)  {
 		if (!uncertain)
 			do_warn(_("bad (negative) size %lld on inode %llu\n"),
-				be64_to_cpu(dinoc->di_size), lino);
+				be64_to_cpu(dino->di_size), lino);
 		if (verify_mode)
 			return 1;
 		goto clear_bad_out;
@@ -2522,7 +2511,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 * free inodes since technically any format is legal
 	 * as we reset the inode when we re-use it.
 	 */
-	if (di_mode != 0 && check_dinode_mode_format(dinoc) != 0) {
+	if (di_mode != 0 && check_dinode_mode_format(dino) != 0) {
 		if (!uncertain)
 			do_warn(_("bad inode format in inode %llu\n"), lino);
 		if (verify_mode)
@@ -2534,8 +2523,8 @@ process_dinode_int(xfs_mount_t *mp,
 	 * check that we only have valid flags set, and those that are set make
 	 * sense.
 	 */
-	if (dinoc->di_flags) {
-		uint16_t flags = be16_to_cpu(dinoc->di_flags);
+	if (dino->di_flags) {
+		uint16_t flags = be16_to_cpu(dino->di_flags);
 
 		if (flags & ~XFS_DIFLAG_ANY) {
 			do_warn(_("Bad flags set in inode %llu"), lino);
@@ -2582,10 +2571,10 @@ process_dinode_int(xfs_mount_t *mp,
 						XFS_XFLAG_EXTSIZE);
 			}
 		}
-		if (!verify_mode && flags != be16_to_cpu(dinoc->di_flags)) {
+		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
 			if (!no_modify) {
 				do_warn(_(", fixing bad flags.\n"));
-				dinoc->di_flags = cpu_to_be16(flags);
+				dino->di_flags = cpu_to_be16(flags);
 				*dirty = 1;
 			} else
 				do_warn(_(", would fix bad flags.\n"));
@@ -2614,7 +2603,7 @@ process_dinode_int(xfs_mount_t *mp,
 		*isa_dir = 1;
 		break;
 	case S_IFREG:
-		if (be16_to_cpu(dinoc->di_flags) & XFS_DIFLAG_REALTIME)
+		if (be16_to_cpu(dino->di_flags) & XFS_DIFLAG_REALTIME)
 			type = XR_INO_RTDATA;
 		else if (lino == mp->m_sb.sb_rbmino)
 			type = XR_INO_RTBITMAP;
@@ -2647,27 +2636,27 @@ process_dinode_int(xfs_mount_t *mp,
 	/*
 	 * type checks for superblock inodes
 	 */
-	if (process_check_sb_inodes(mp, dinoc, lino, &type, dirty) != 0)
+	if (process_check_sb_inodes(mp, dino, lino, &type, dirty) != 0)
 		goto clear_bad_out;
 
 	/*
 	 * only regular files with REALTIME or EXTSIZE flags set can have
 	 * extsize set, or directories with EXTSZINHERIT.
 	 */
-	if (be32_to_cpu(dinoc->di_extsize) != 0) {
+	if (be32_to_cpu(dino->di_extsize) != 0) {
 		if ((type == XR_INO_RTDATA) ||
-		    (type == XR_INO_DIR && (be16_to_cpu(dinoc->di_flags) &
+		    (type == XR_INO_DIR && (be16_to_cpu(dino->di_flags) &
 					XFS_DIFLAG_EXTSZINHERIT)) ||
-		    (type == XR_INO_DATA && (be16_to_cpu(dinoc->di_flags) &
+		    (type == XR_INO_DATA && (be16_to_cpu(dino->di_flags) &
 				 XFS_DIFLAG_EXTSIZE)))  {
 			/* s'okay */ ;
 		} else {
 			do_warn(_("bad non-zero extent size %u for "
 					"non-realtime/extsize inode %llu, "),
-					be32_to_cpu(dinoc->di_extsize), lino);
+					be32_to_cpu(dino->di_extsize), lino);
 			if (!no_modify)  {
 				do_warn(_("resetting to zero\n"));
-				dinoc->di_extsize = 0;
+				dino->di_extsize = 0;
 				*dirty = 1;
 			} else
 				do_warn(_("would reset to zero\n"));
@@ -2683,7 +2672,7 @@ process_dinode_int(xfs_mount_t *mp,
 	/*
 	 * check for illegal values of forkoff
 	 */
-	if (process_check_inode_forkoff(mp, dinoc, lino) != 0)
+	if (process_check_inode_forkoff(mp, dino, lino) != 0)
 		goto clear_bad_out;
 
 	/*
@@ -2711,7 +2700,7 @@ process_dinode_int(xfs_mount_t *mp,
 	/*
 	 * correct space counters if required
 	 */
-	if (process_inode_blocks_and_extents(dinoc, totblocks + atotblocks,
+	if (process_inode_blocks_and_extents(dino, totblocks + atotblocks,
 			nextents, anextents, lino, dirty) != 0)
 		goto clear_bad_out;
 
@@ -2749,7 +2738,7 @@ process_dinode_int(xfs_mount_t *mp,
 	 * just leave nlinks alone.  even if it's set wrong,
 	 * it'll be reset when read in.
 	 */
-	*dirty += process_check_inode_nlink_version(dinoc, lino);
+	*dirty += process_check_inode_nlink_version(dino, lino);
 
 	return retval;
 

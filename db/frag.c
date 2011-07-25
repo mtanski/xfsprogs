@@ -307,20 +307,18 @@ process_inode(
 	xfs_dinode_t		*dip)
 {
 	__uint64_t		actual;
-	xfs_dinode_core_t	*dic;
 	__uint64_t		ideal;
 	xfs_ino_t		ino;
 	int			skipa;
 	int			skipd;
 
-	dic = &dip->di_core;
 	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
-	switch (be16_to_cpu(dic->di_mode) & S_IFMT) {
+	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
 	case S_IFDIR:
 		skipd = !dflag;
 		break;
 	case S_IFREG:
-		if (!rflag && (be16_to_cpu(dic->di_flags) & XFS_DIFLAG_REALTIME))
+		if (!rflag && (be16_to_cpu(dip->di_flags) & XFS_DIFLAG_REALTIME))
 			skipd = 1;
 		else if (!Rflag &&
 			 (ino == mp->m_sb.sb_rbmino ||

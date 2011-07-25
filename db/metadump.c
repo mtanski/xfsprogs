@@ -907,8 +907,8 @@ obfuscate_sf_dir(
 	__uint64_t		ino_dir_size;
 	int			i;
 
-	sfp = &dip->di_u.di_dir2sf;
-	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
+	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+	ino_dir_size = be64_to_cpu(dip->di_size);
 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
 		if (show_warnings)
@@ -960,8 +960,9 @@ obfuscate_sf_symlink(
 	xfs_dinode_t		*dip)
 {
 	__uint64_t		len;
+	char			*buf;
 
-	len = be64_to_cpu(dip->di_core.di_size);
+	len = be64_to_cpu(dip->di_size);
 	if (len > XFS_DFORK_DSIZE(dip, mp)) {
 		if (show_warnings)
 			print_warning("invalid size (%d) in symlink inode %llu",
@@ -969,8 +970,9 @@ obfuscate_sf_symlink(
 		len = XFS_DFORK_DSIZE(dip, mp);
 	}
 
+	buf = (char *)XFS_DFORK_DPTR(dip);
 	while (len > 0)
-		dip->di_u.di_symlink[--len] = random() % 127 + 1;
+		buf[--len] = random() % 127 + 1;
 }
 
 static void
@@ -1246,7 +1248,7 @@ obfuscate_attr_blocks(
 				break;
 			}
 			if (entry->flags & XFS_ATTR_LOCAL) {
-				local = XFS_ATTR_LEAF_NAME_LOCAL(leaf, i);
+				local = xfs_attr_leaf_name_local(leaf, i);
 				if (local->namelen == 0) {
 					if (show_warnings)
 						print_warning("zero length for "
@@ -1259,7 +1261,7 @@ obfuscate_attr_blocks(
 				memset(&local->nameval[local->namelen], 0,
 					be16_to_cpu(local->valuelen));
 			} else {
-				remote = XFS_ATTR_LEAF_NAME_REMOTE(leaf, i);
+				remote = xfs_attr_leaf_name_remote(leaf, i);
 				if (remote->namelen == 0 ||
 						remote->valueblk == 0) {
 					if (show_warnings)
@@ -1548,7 +1550,7 @@ process_inode_data(
 	xfs_dinode_t		*dip,
 	typnm_t			itype)
 {
-	switch (dip->di_core.di_format) {
+	switch (dip->di_format) {
 		case XFS_DINODE_FMT_LOCAL:
 			if (!dont_obfuscate)
 				switch (itype) {
@@ -1585,7 +1587,7 @@ process_inode(
 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
 
 	/* copy appropriate data fork metadata */
-	switch (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) {
+	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
 		case S_IFDIR:
 			memset(&dir_data, 0, sizeof(dir_data));
 			success = process_inode_data(dip, TYP_DIR2);
@@ -1603,7 +1605,7 @@ process_inode(
 	/* copy extended attributes if they exist and forkoff is valid */
 	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
 		attr_data.remote_val_count = 0;
-		switch (dip->di_core.di_aformat) {
+		switch (dip->di_aformat) {
 			case XFS_DINODE_FMT_LOCAL:
 				if (!dont_obfuscate)
 					obfuscate_sf_attr(dip);

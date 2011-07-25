@@ -76,7 +76,7 @@ dir2_inou_i4_count(
 	xfs_dir2_sf_t	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
 	return sf->hdr.i8count == 0;
 }
 
@@ -89,7 +89,7 @@ dir2_inou_i8_count(
 	xfs_dir2_sf_t	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
 	return sf->hdr.i8count != 0;
 }
 
@@ -104,7 +104,7 @@ dir2_inou_size(
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
 	return bitize(sf->hdr.i8count ?
 		      (uint)sizeof(xfs_dir2_ino8_t) :
 		      (uint)sizeof(xfs_dir2_ino4_t));

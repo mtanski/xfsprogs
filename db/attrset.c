@@ -157,7 +157,8 @@ attr_set_f(
 		goto out;
 	}
 
-	if (libxfs_attr_set(ip, name, value, valuelen, flags)) {
+	if (libxfs_attr_set(ip, (unsigned char *)name,
+				(unsigned char *)value, valuelen, flags)) {
 		dbprintf(_("failed to set attr %s on inode %llu\n"),
 			name, (unsigned long long)iocur_top->ino);
 		goto out;
@@ -231,7 +232,7 @@ attr_remove_f(
 		goto out;
 	}
 
-	if (libxfs_attr_remove(ip, name, flags)) {
+	if (libxfs_attr_remove(ip, (unsigned char *)name, flags)) {
 		dbprintf(_("failed to remove attr %s from inode %llu\n"),
 			name, (unsigned long long)iocur_top->ino);
 		goto out;

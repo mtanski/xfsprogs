@@ -210,14 +210,14 @@ convert_f(int argc, char **argv)
 	}
 	switch (wtype) {
 	case CT_AGBLOCK:
-		v = XFS_DADDR_TO_AGBNO(mp, v >> BBSHIFT);
+		v = xfs_daddr_to_agbno(mp, v >> BBSHIFT);
 		break;
 	case CT_AGINO:
 		v = (v >> mp->m_sb.sb_inodelog) %
 		    (mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog);
 		break;
 	case CT_AGNUMBER:
-		v = XFS_DADDR_TO_AGNO(mp, v >> BBSHIFT);
+		v = xfs_daddr_to_agno(mp, v >> BBSHIFT);
 		break;
 	case CT_BBOFF:
 		v &= BBMASK;
@@ -234,7 +234,7 @@ convert_f(int argc, char **argv)
 		v = XFS_DADDR_TO_FSB(mp, v >> BBSHIFT);
 		break;
 	case CT_INO:
-		v = XFS_AGINO_TO_INO(mp, XFS_DADDR_TO_AGNO(mp, v >> BBSHIFT),
+		v = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, v >> BBSHIFT),
 			(v >> mp->m_sb.sb_inodelog) %
 			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
 		break;

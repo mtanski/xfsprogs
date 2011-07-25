@@ -2611,10 +2611,11 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		args.mp = mp;
 		args.agno = agno;
 		args.alignment = 1;
-		args.pag = &mp->m_perag[agno];
+		args.pag = xfs_perag_get(mp,agno);
 		if ((c = libxfs_trans_reserve(tp, worst_freelist, 0, 0, 0, 0)))
 			res_failed(c);
 		libxfs_alloc_fix_freelist(&args, 0);
+		xfs_perag_put(args.pag);
 		libxfs_trans_commit(tp, 0);
 	}
 

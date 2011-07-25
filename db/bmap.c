@@ -29,7 +29,7 @@
 #include "init.h"
 
 static int		bmap_f(int argc, char **argv);
-static int		bmap_one_extent(xfs_bmbt_rec_64_t *ep,
+static int		bmap_one_extent(xfs_bmbt_rec_t *ep,
 					xfs_dfiloff_t *offp, xfs_dfiloff_t eoff,
 					int *idxp, bmap_ext_t *bep);
 static xfs_fsblock_t	select_child(xfs_dfiloff_t off, xfs_bmbt_key_t *kp,
@@ -52,7 +52,7 @@ bmap(
 	xfs_dfiloff_t		curoffset;
 	xfs_dinode_t		*dip;
 	xfs_dfiloff_t		eoffset;
-	xfs_bmbt_rec_64_t	*ep;
+	xfs_bmbt_rec_t		*ep;
 	xfs_dinode_fmt_t	fmt;
 	int			fsize;
 	xfs_bmbt_key_t		*kp;
@@ -63,7 +63,7 @@ bmap(
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmdr_block_t	*rblock;
 	typnm_t			typ;
-	xfs_bmbt_rec_64_t	*xp;
+	xfs_bmbt_rec_t		*xp;
 
 	push_cur();
 	set_cur_inode(iocur_top->ino);
@@ -81,7 +81,7 @@ bmap(
 		fmt == XFS_DINODE_FMT_BTREE);
 	if (fmt == XFS_DINODE_FMT_EXTENTS) {
 		nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-		xp = (xfs_bmbt_rec_64_t *)XFS_DFORK_PTR(dip, whichfork);
+		xp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
 		for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
 			if (!bmap_one_extent(ep, &curoffset, eoffset, &n, bep))
 				break;
@@ -110,7 +110,7 @@ bmap(
 		for (;;) {
 			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
 			nextents = be16_to_cpu(block->bb_numrecs);
-			xp = (xfs_bmbt_rec_64_t *)
+			xp = (xfs_bmbt_rec_t *)
 				XFS_BMBT_REC_ADDR(mp, block, 1);
 			for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
 				if (!bmap_one_extent(ep, &curoffset, eoffset,
@@ -171,9 +171,9 @@ bmap_f(
 		push_cur();
 		set_cur_inode(iocur_top->ino);
 		dip = iocur_top->data;
-		if (be32_to_cpu(dip->di_core.di_nextents))
+		if (be32_to_cpu(dip->di_nextents))
 			dfork = 1;
-		if (be16_to_cpu(dip->di_core.di_anextents))
+		if (be16_to_cpu(dip->di_anextents))
 			afork = 1;
 		pop_cur();
 	}
@@ -233,7 +233,7 @@ bmap_init(void)
 
 static int
 bmap_one_extent(
-	xfs_bmbt_rec_64_t	*ep,
+	xfs_bmbt_rec_t		*ep,
 	xfs_dfiloff_t		*offp,
 	xfs_dfiloff_t		eoff,
 	int			*idxp,
@@ -271,7 +271,7 @@ bmap_one_extent(
 
 void
 convert_extent(
-	xfs_bmbt_rec_64_t	*rp,
+	xfs_bmbt_rec_t		*rp,
 	xfs_dfiloff_t		*op,
 	xfs_dfsbno_t		*sp,
 	xfs_dfilblks_t		*cp,
