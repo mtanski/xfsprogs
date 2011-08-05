@@ -1,3 +1,14 @@
+.\" Verbatim blocks taken from openssl req manpage content
+.de Vb \" Begin verbatim text
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve \" End verbatim text
+.ft R
+.fi
+..
+
 .TH xfs_growfs 8
 .SH NAME
 xfs_growfs, xfs_info \- expand an XFS filesystem
@@ -105,6 +116,7 @@ this is specified with
 Specifies that no change to the filesystem is to be made.
 The filesystem geometry is printed, and argument checking is performed,
 but no growth occurs.
+.B See output examples below.
 .TP
 .BI "\-r | \-R " size
 Specifies that the real-time section of the filesystem should be grown. If the
@@ -152,6 +164,33 @@ reside. In order to grow a filesystem, it is necessary to provide added
 space for it to occupy. Therefore there must be at least one spare new
 disk partition available. Adding the space is often done through the use
 of a logical volume manager.
+.SH "EXAMPLES"
+
+Understanding xfs_info output.
+.PP
+Suppose one has the following "xfs_info /dev/sda" output:
+.PP
+.RS 2
+.Vb
+\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+\&         =              sectsz=512   attr=2
+\&data     =              bsize=4096   blocks=536869888, imaxpct=5
+\&         =              sunit=32     swidth=128 blks
+\&naming   =version 2     bsize=4096
+\&log      =internal      bsize=4096   blocks=32768, version=2
+\&         =              sectsz=512   sunit=32 blks, lazy-count=1
+\&realtime =none          extsz=524288 blocks=0, rtextents=0
+.Ve
+.RE
+.PP
+
+Here, the data section of the output indicates "bsize=4096",
+meaning the data block size for this filesystem is 4096 bytes.
+This section also shows "sunit=32 swidth=128 blks", which means
+the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
+width is 128*4096 bytes = 512 kibibytes.
+A single stripe of this filesystem therefore consists
+of four stripe units (128 blocks / 32 blocks per unit).
 .SH SEE ALSO
 .BR mkfs.xfs (8),
 .BR md (4),
