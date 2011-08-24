@@ -41,6 +41,10 @@ free_help(void)
 "\n"));
 }
 
+/*
+ * The data and realtime block counts returned (count, used, and
+ * free) are all in basic block units.
+ */
 static int
 mount_free_space_data(
 	struct fs_path		*mount,
@@ -104,6 +108,10 @@ mount_free_space_data(
 	return 1;
 }
 
+/*
+ * The data and realtime block counts returned (count, used, and
+ * free) are all in basic block units.
+ */
 static int
 projects_free_space_data(
 	struct fs_path		*path,
@@ -173,10 +181,10 @@ projects_free_space_data(
 	}
 
 	if (d.d_blk_softlimit) {
-		*bcount = d.d_blk_softlimit << 1;
-		*bfree = (d.d_blk_softlimit - d.d_bcount) << 1;
+		*bcount = d.d_blk_softlimit;
+		*bfree = (d.d_blk_softlimit - d.d_bcount);
 	}
-	*bused = d.d_bcount << 1;
+	*bused = d.d_bcount;
 
 	if (d.d_ino_softlimit) {
 		*icount = d.d_ino_softlimit;
@@ -185,10 +193,10 @@ projects_free_space_data(
 	*iused = d.d_icount;
 
 	if (d.d_rtb_softlimit) {
-		*rcount = d.d_rtb_softlimit << 1;
-		*rfree = (d.d_rtb_softlimit - d.d_rtbcount) << 1;
+		*rcount = d.d_rtb_softlimit;
+		*rfree = (d.d_rtb_softlimit - d.d_rtbcount);
 	}
-	*rused = d.d_rtbcount << 1;
+	*rused = d.d_rtbcount;
 
 	close(fd);
 	return 1;
