@@ -172,18 +172,18 @@ num_to_string(
 
 char *
 pct_to_string(
-	__uint64_t	v,
-	__uint64_t	t,
-	char		*sp,
+	__uint64_t	portion,
+	__uint64_t	whole,
+	char		*buf,
 	uint		size)
 {
-	if (t == 0 || v == 0)
-		snprintf(sp, size, "%3u", (uint)0);
-	else if (t == v)
-		snprintf(sp, size, "%3u", (uint)100);
-	else
-		snprintf(sp, size, "%3u", (uint)(((double)v / t) * 100 + 1));
-	return sp;
+	uint		percent;
+
+	percent = whole ? (uint) (100.0 * portion / whole + 0.5) : 0;
+	if (snprintf(buf, size, "%3u", percent) < 0)
+		return "???";
+
+	return buf;
 }
 
 char *
