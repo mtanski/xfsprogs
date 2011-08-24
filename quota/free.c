@@ -177,16 +177,18 @@ projects_free_space_data(
 		*bfree = (d.d_blk_softlimit - d.d_bcount) << 1;
 	}
 	*bused = d.d_bcount << 1;
+
 	if (d.d_ino_softlimit) {
 		*icount = d.d_ino_softlimit;
 		*ifree = (d.d_ino_softlimit - d.d_icount);
 	}
 	*iused = d.d_icount;
+
 	if (d.d_rtb_softlimit) {
 		*rcount = d.d_rtb_softlimit << 1;
 		*rfree = (d.d_rtb_softlimit - d.d_rtbcount) << 1;
 	}
-	*rcount = d.d_rtbcount << 1;
+	*rused = d.d_rtbcount << 1;
 
 	close(fd);
 	return 1;
