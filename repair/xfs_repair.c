@@ -457,18 +457,18 @@ calc_mkfs(xfs_mount_t *mp)
 	 */
 	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
 		do_warn(
-_("sb root inode value %llu %sinconsistent with calculated value %lu\n"),
+_("sb root inode value %" PRIu64 " %sinconsistent with calculated value %u\n"),
 			mp->m_sb.sb_rootino,
 			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
 			first_prealloc_ino);
 
 		if (!no_modify)
 			do_warn(
-		_("resetting superblock root inode pointer to %lu\n"),
+		_("resetting superblock root inode pointer to %u\n"),
 				first_prealloc_ino);
 		else
 			do_warn(
-		_("would reset superblock root inode pointer to %lu\n"),
+		_("would reset superblock root inode pointer to %u\n"),
 				first_prealloc_ino);
 
 		/*
@@ -480,18 +480,18 @@ _("sb root inode value %llu %sinconsistent with calculated value %lu\n"),
 
 	if (mp->m_sb.sb_rbmino != first_prealloc_ino + 1)  {
 		do_warn(
-_("sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n"),
+_("sb realtime bitmap inode %" PRIu64 " %sinconsistent with calculated value %u\n"),
 			mp->m_sb.sb_rbmino,
 			(mp->m_sb.sb_rbmino == NULLFSINO ? "(NULLFSINO) ":""),
 			first_prealloc_ino + 1);
 
 		if (!no_modify)
 			do_warn(
-		_("resetting superblock realtime bitmap ino pointer to %lu\n"),
+		_("resetting superblock realtime bitmap ino pointer to %u\n"),
 				first_prealloc_ino + 1);
 		else
 			do_warn(
-		_("would reset superblock realtime bitmap ino pointer to %lu\n"),
+		_("would reset superblock realtime bitmap ino pointer to %u\n"),
 				first_prealloc_ino + 1);
 
 		/*
@@ -503,18 +503,18 @@ _("sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n"),
 
 	if (mp->m_sb.sb_rsumino != first_prealloc_ino + 2)  {
 		do_warn(
-_("sb realtime summary inode %llu %sinconsistent with calculated value %lu\n"),
-		mp->m_sb.sb_rsumino,
-		(mp->m_sb.sb_rsumino == NULLFSINO ? "(NULLFSINO) ":""),
-		first_prealloc_ino + 2);
+_("sb realtime summary inode %" PRIu64 " %sinconsistent with calculated value %u\n"),
+			mp->m_sb.sb_rsumino,
+			(mp->m_sb.sb_rsumino == NULLFSINO ? "(NULLFSINO) ":""),
+			first_prealloc_ino + 2);
 
 		if (!no_modify)
 			do_warn(
-		_("resetting superblock realtime summary ino pointer to %lu\n"),
+		_("resetting superblock realtime summary ino pointer to %u\n"),
 				first_prealloc_ino + 2);
 		else
 			do_warn(
-		_("would reset superblock realtime summary ino pointer to %lu\n"),
+		_("would reset superblock realtime summary ino pointer to %u\n"),
 				first_prealloc_ino + 2);
 
 		/*
@@ -644,8 +644,8 @@ main(int argc, char **argv)
 			max_mem = MIN(max_mem, (LONG_MAX >> 10) + 1);
 
 		if (verbose > 1)
-			do_log(_("        - max_mem = %lu, icount = %llu, "
-				"imem = %llu, dblock = %llu, dmem = %llu\n"),
+			do_log(
+	_("        - max_mem = %lu, icount = %" PRIu64 ", imem = %" PRIu64 ", dblock = %" PRIu64 ", dmem = %" PRIu64 "\n"),
 				max_mem, mp->m_sb.sb_icount,
 				mp->m_sb.sb_icount >> (10 - 2),
 				mp->m_sb.sb_dblocks,

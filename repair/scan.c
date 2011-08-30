@@ -196,15 +196,16 @@ scanfunc_bmap(
 	 * highly unlikely.
 	 */
 	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
-		do_warn(_("bad magic # %#x in inode %llu (%s fork) bmbt "
-			"block %llu\n"), be32_to_cpu(block->bb_magic),
-			ino, forkname, bno);
+		do_warn(
+_("bad magic # %#x in inode %" PRIu64 " (%s fork) bmbt block %" PRIu64 "\n"),
+			be32_to_cpu(block->bb_magic), ino, forkname, bno);
 		return(1);
 	}
 	if (be16_to_cpu(block->bb_level) != level) {
-		do_warn(_("expected level %d got %d in inode %llu, (%s fork) "
-			"bmbt block %llu\n"), level,
-			be16_to_cpu(block->bb_level), ino, forkname, bno);
+		do_warn(
+_("expected level %d got %d in inode %" PRIu64 ", (%s fork) bmbt block %" PRIu64 "\n"),
+			level, be16_to_cpu(block->bb_level),
+			ino, forkname, bno);
 		return(1);
 	}
 
@@ -222,8 +223,8 @@ scanfunc_bmap(
 			 */
 			if (bno != bm_cursor->level[level].right_fsbno)  {
 				do_warn(
-_("bad fwd (right) sibling pointer (saw %llu parent block says %llu)\n"
-  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
+_("bad fwd (right) sibling pointer (saw %" PRIu64 " parent block says %" PRIu64 ")\n"
+  "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
 					bm_cursor->level[level].right_fsbno,
 					bno, ino, forkname,
 					bm_cursor->level[level].fsbno);
@@ -232,9 +233,10 @@ _("bad fwd (right) sibling pointer (saw %llu parent block says %llu)\n"
 			if (be64_to_cpu(block->bb_u.l.bb_leftsib) !=
 					bm_cursor->level[level].fsbno)  {
 				do_warn(
-_("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
-  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					be64_to_cpu(block->bb_u.l.bb_leftsib),
+_("bad back (left) sibling pointer (saw %llu parent block says %" PRIu64 ")\n"
+  "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
+				       (unsigned long long)
+					       be64_to_cpu(block->bb_u.l.bb_leftsib),
 					bm_cursor->level[level].fsbno,
 					ino, forkname, bno);
 				return(1);
@@ -247,8 +249,9 @@ _("bad back (left) sibling pointer (saw %llu parent block says %llu)\n"
 			if (be64_to_cpu(block->bb_u.l.bb_leftsib) != NULLDFSBNO) {
 				do_warn(
 _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
-  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
-					be64_to_cpu(block->bb_u.l.bb_leftsib),
+  "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
+				       (unsigned long long)
+					       be64_to_cpu(block->bb_u.l.bb_leftsib),
 					ino, forkname, bno);
 				return(1);
 			}
@@ -286,15 +289,15 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 			 */
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-		_("inode 0x%llx bmap block 0x%llx claimed, state is %d\n"),
-				ino, (__uint64_t) bno, state);
+_("inode 0x%" PRIu64 "bmap block 0x%" PRIu64 " claimed, state is %d\n"),
+				ino, bno, state);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE_FS:
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-		_("inode 0x%llx bmap block 0x%llx claimed, state is %d\n"),
-				ino, (__uint64_t) bno, state);
+_("inode 0x%" PRIu64 " bmap block 0x%" PRIu64 " claimed, state is %d\n"),
+				ino, bno, state);
 			/*
 			 * if we made it to here, this is probably a bmap block
 			 * that is being used by *another* file as a bmap block
@@ -308,8 +311,8 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		case XR_E_BAD_STATE:
 		default:
 			do_warn(
-		_("bad state %d, inode 0x%llx bmap block 0x%llx\n"),
-				state, ino, (__uint64_t) bno);
+_("bad state %d, inode 0x%" PRIu64 " bmap block 0x%" PRIu64 "\n"),
+				state, ino, bno);
 			break;
 		}
 		pthread_mutex_unlock(&ag_locks[agno]);
@@ -335,7 +338,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 		if (numrecs > mp->m_bmap_dmxr[0] || (isroot == 0 && numrecs <
 							mp->m_bmap_dmnr[0])) {
 				do_warn(
-	_("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n"),
+_("inode 0x%" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
 					ino, numrecs, mp->m_bmap_dmnr[0],
 					mp->m_bmap_dmxr[0]);
 			return(1);
@@ -365,7 +368,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 					bm_cursor->level[level].last_key !=
 					NULLDFILOFF)  {
 				do_warn(
-_("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
+_("out-of-order bmap key (file offset) in inode %" PRIu64 ", %s fork, fsbno %" PRIu64 "\n"),
 					ino, forkname, bno);
 				return(1);
 			}
@@ -385,7 +388,7 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
 							mp->m_bmap_dmnr[1])) {
 		do_warn(
-	_("inode 0x%llx bad # of bmap records (%u, min - %u, max - %u)\n"),
+_("inode 0x%" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
 			ino, numrecs, mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
 		return(1);
 	}
@@ -401,8 +404,9 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 		 * we'll bail out and presumably clear the inode.
 		 */
 		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-			do_warn(_("bad bmap btree ptr 0x%llx in ino %llu\n"),
-				be64_to_cpu(pp[i]), ino);
+			do_warn(
+_("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
+			       (unsigned long long) be64_to_cpu(pp[i]), ino);
 			return(1);
 		}
 
@@ -428,9 +432,10 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 					bm_cursor->level[level-1].first_key)  {
 			if (!no_modify)  {
 				do_warn(
-		_("correcting bt key (was %llu, now %llu) in inode %llu\n"
-		  "\t\t%s fork, btree block %llu\n"),
-					be64_to_cpu(pkey[i].br_startoff),
+_("correcting bt key (was %llu, now %" PRIu64 ") in inode %" PRIu64 "\n"
+  "\t\t%s fork, btree block %" PRIu64 "\n"),
+				       (unsigned long long)
+					       be64_to_cpu(pkey[i].br_startoff),
 					bm_cursor->level[level-1].first_key,
 					ino,
 					forkname, bno);
@@ -439,9 +444,10 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 					bm_cursor->level[level-1].first_key);
 			} else  {
 				do_warn(
-	_("bad btree key (is %llu, should be %llu) in inode %llu\n"
-	  "\t\t%s fork, btree block %llu\n"),
-					be64_to_cpu(pkey[i].br_startoff),
+_("bad btree key (is %llu, should be %" PRIu64 ") in inode %" PRIu64 "\n"
+  "\t\t%s fork, btree block %" PRIu64 "\n"),
+				       (unsigned long long)
+					       be64_to_cpu(pkey[i].br_startoff),
 					bm_cursor->level[level-1].first_key,
 					ino, forkname, bno);
 			}
@@ -456,8 +462,8 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
 			bm_cursor->level[level].right_fsbno == NULLDFSBNO &&
 			bm_cursor->level[level - 1].right_fsbno != NULLDFSBNO) {
 		do_warn(
-	_("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
-	  "\tin inode %llu (%s fork) bmap btree block %llu\n"),
+_("bad fwd (right) sibling pointer (saw %" PRIu64 " should be NULLDFSBNO)\n"
+  "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
 			bm_cursor->level[level - 1].right_fsbno,
 			ino, forkname, bm_cursor->level[level - 1].fsbno);
 		return(1);
@@ -600,13 +606,13 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
 
 			if (b == 0 || !verify_agbno(mp, agno, b)) {
 				do_warn(
-	_("invalid start block %u in record %u of %d btree block %u/%u\n"),
+	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
 					b, i, name, agno, bno);
 				continue;
 			}
 			if (len == 0 || !verify_agbno(mp, agno, end - 1)) {
 				do_warn(
-	_("invalid length %u in record %u of %d btree block %u/%u\n"),
+	_("invalid length %u in record %u of %s btree block %u/%u\n"),
 					len, i, name, agno, bno);
 				continue;
 			}
@@ -748,7 +754,7 @@ scan_single_ino_chunk(
 	     off % XFS_INODES_PER_CHUNK != 0) ||
 	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0))  {
 		do_warn(
-	_("badly aligned inode rec (starting inode = %llu)\n"),
+	_("badly aligned inode rec (starting inode = %" PRIu64 ")\n"),
 			lino);
 		suspect++;
 	}
@@ -764,7 +770,7 @@ scan_single_ino_chunk(
 	 */
 	if (verify_aginum(mp, agno, ino))  {
 		do_warn(
-_("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
+_("bad starting inode # (%" PRIu64 " (0x%x 0x%x)) in ino rec, skipping rec\n"),
 			lino, agno, ino);
 		return ++suspect;
 	}
@@ -772,9 +778,10 @@ _("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
 	if (verify_aginum(mp, agno,
 			ino + XFS_INODES_PER_CHUNK - 1))  {
 		do_warn(
-_("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
+_("bad ending inode # (%" PRIu64 " (0x%x 0x%zx)) in ino rec, skipping rec\n"),
 			lino + XFS_INODES_PER_CHUNK - 1,
-			agno, ino + XFS_INODES_PER_CHUNK - 1);
+			agno,
+			ino + XFS_INODES_PER_CHUNK - 1);
 		return ++suspect;
 	}
 
@@ -818,7 +825,7 @@ _("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
 		 * already in the tree
 		 */
 		do_warn(
-_("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
+_("inode rec for ino %" PRIu64 " (%d/%d) overlaps existing rec (start %d/%d)\n"),
 			lino, agno, ino, agno, first_rec->ino_startnum);
 		suspect++;
 
@@ -866,7 +873,7 @@ _("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
 
 	if (nfree != be32_to_cpu(rp->ir_freecount)) {
 		do_warn(_("ir_freecount/free mismatch, inode "
-			"chunk %d/%d, freecount %d nfree %d\n"),
+			"chunk %d/%u, freecount %d nfree %d\n"),
 			agno, ino, be32_to_cpu(rp->ir_freecount), nfree);
 	}
 
@@ -1124,7 +1131,7 @@ validate_agf(
 
 	if (xfs_sb_version_haslazysbcount(&mp->m_sb) &&
 	    be32_to_cpu(agf->agf_btreeblks) != agcnts->agfbtreeblks) {
-		do_warn(_("agf_btreeblks %u, counted %u in ag %u\n"),
+		do_warn(_("agf_btreeblks %u, counted %" PRIu64 " in ag %u\n"),
 			be32_to_cpu(agf->agf_btreeblks), agcnts->agfbtreeblks, agno);
 	}
 }
@@ -1162,7 +1169,7 @@ validate_agi(
 
 		if (agino != NULLAGINO) {
 			do_warn(
-	_("agi unlinked bucket %d is %u in ag %u (inode=%lld)\n"),
+	_("agi unlinked bucket %d is %u in ag %u (inode=%" PRIu64 ")\n"),
 				i, agino, agno,
 				XFS_AGINO_TO_INO(mp, agno, agino));
 		}
@@ -1355,17 +1362,17 @@ scan_ags(
 	 * Validate that our manual counts match the superblock.
 	 */
 	if (mp->m_sb.sb_icount != icount) {
-		do_warn(_("sb_icount %lld, counted %lld\n"),
+		do_warn(_("sb_icount %" PRIu64 ", counted %" PRIu64 "\n"),
 			mp->m_sb.sb_icount, icount);
 	}
 
 	if (mp->m_sb.sb_ifree != ifreecount) {
-		do_warn(_("sb_ifree %lld, counted %lld\n"),
+		do_warn(_("sb_ifree %" PRIu64 ", counted %" PRIu64 "\n"),
 			mp->m_sb.sb_ifree, ifreecount);
 	}
 
 	if (mp->m_sb.sb_fdblocks != fdblocks) {
-		do_warn(_("sb_fdblocks %lld, counted %lld\n"),
+		do_warn(_("sb_fdblocks %" PRIu64 ", counted %" PRIu64 "\n"),
 			mp->m_sb.sb_fdblocks, fdblocks);
 	}
 }

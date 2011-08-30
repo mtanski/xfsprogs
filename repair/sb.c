@@ -488,7 +488,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 	if (buf == NULL) {
 		do_error(
 	_("error reading superblock %u -- failed to memalign buffer\n"),
-			agno, off);
+			agno);
 		exit(1);
 	}
 	memset(buf, 0, size);
@@ -497,7 +497,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 
 	if (lseek64(x.dfd, off, SEEK_SET) != off)  {
 		do_warn(
-	_("error reading superblock %u -- seek to offset %lld failed\n"),
+	_("error reading superblock %u -- seek to offset %" PRId64 " failed\n"),
 			agno, off);
 		return(XR_EOF);
 	}
@@ -505,7 +505,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 	if ((rval = read(x.dfd, buf, size)) != size)  {
 		error = errno;
 		do_warn(
-	_("superblock read failed, offset %lld, size %d, ag %u, rval %d\n"),
+	_("superblock read failed, offset %" PRId64 ", size %d, ag %u, rval %d\n"),
 			off, size, agno, rval);
 		do_error("%s\n", strerror(error));
 	}

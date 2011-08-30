@@ -40,19 +40,19 @@ set_nlinks(
 
 	if (!no_modify) {
 		*dirty = 1;
-		do_warn(_("resetting inode %llu nlinks from %d to %d\n"),
+		do_warn(_("resetting inode %" PRIu64 " nlinks from %d to %d\n"),
 			ino, dinoc->di_nlink, nrefs);
 
 		if (nrefs > XFS_MAXLINK_1)  {
 			ASSERT(fs_inode_nlink);
 			do_warn(
-_("nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"),
+_("nlinks %d will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
 				nrefs, ino);
 
 		}
 		dinoc->di_nlink = nrefs;
 	} else  {
-		do_warn(_("would have reset inode %llu nlinks from %d to %d\n"),
+		do_warn(_("would have reset inode %" PRIu64 " nlinks from %d to %d\n"),
 			ino, dinoc->di_nlink, nrefs);
 	}
 }
@@ -80,11 +80,12 @@ update_inode_nlinks(
 
 	if (error)  {
 		if (!no_modify)
-			do_error(_("couldn't map inode %llu, err = %d\n"),
+			do_error(
+	_("couldn't map inode %" PRIu64 ", err = %d\n"),
 				ino, error);
 		else  {
 			do_warn(
-	_("couldn't map inode %llu, err = %d, can't compare link counts\n"),
+	_("couldn't map inode %" PRIu64 ", err = %d, can't compare link counts\n"),
 				ino, error);
 			return;
 		}

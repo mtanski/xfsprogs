@@ -227,7 +227,7 @@ init_rt_bmap(
 	rt_bmap = memalign(sizeof(__uint64_t), rt_bmap_size);
 	if (!rt_bmap) {
 		do_error(
-		_("couldn't allocate realtime block map, size = %llu\n"),
+	_("couldn't allocate realtime block map, size = %" PRIu64 "\n"),
 			mp->m_sb.sb_rextents);
 		return;
 	}

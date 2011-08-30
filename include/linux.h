@@ -23,6 +23,7 @@
 #include <sys/param.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
+#include <inttypes.h>
 #include <malloc.h>
 #include <getopt.h>
 #include <endian.h>

@@ -56,8 +56,8 @@ check_aginode_block(xfs_mount_t	*mp,
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno, agbno),
 			XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp) {
-		do_warn(_("cannot read agbno (%u/%u), disk block %lld\n"), agno,
-			agbno, (xfs_daddr_t)XFS_AGB_TO_DADDR(mp, agno, agbno));
+		do_warn(_("cannot read agbno (%u/%u), disk block %" PRId64 "\n"),
+			agno, agbno, XFS_AGB_TO_DADDR(mp, agno, agbno));
 		return(0);
 	}
 
@@ -444,14 +444,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		case XR_E_INUSE_FS:
 		case XR_E_FS_MAP:
 			do_warn(
-		_("inode block %d/%d multiply claimed, (state %d)\n"),
+	_("inode block %d/%d multiply claimed, (state %d)\n"),
 				agno, cur_agbno, state);
 			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
 			pthread_mutex_unlock(&ag_locks[agno]);
 			return 0;
 		case XR_E_INO:
 			do_error(
-		_("uncertain inode block overlap, agbno = %d, ino = %llu\n"),
+	_("uncertain inode block overlap, agbno = %d, ino = %" PRIu64 "\n"),
 				agbno, ino);
 			break;
 		default:
@@ -490,7 +490,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 		switch (state) {
 		case XR_E_INO:
 			do_error(
-		_("uncertain inode block %llu already known\n"),
+		_("uncertain inode block %" PRIu64 " already known\n"),
 				XFS_AGB_TO_FSB(mp, agno, cur_agbno));
 			break;
 		case XR_E_UNKNOWN:
@@ -593,6 +593,7 @@ process_inode_chunk(
 	int			ibuf_offset;
 	xfs_agino_t		agino;
 	xfs_agblock_t		agbno;
+	xfs_ino_t		ino;
 	int			dirty = 0;
 	int			isa_dir = 0;
 	int			blks_per_cluster;
@@ -626,21 +627,21 @@ process_inode_chunk(
 
 	bplist = malloc(cluster_count * sizeof(xfs_buf_t *));
 	if (bplist == NULL)
-		do_error(_("failed to allocate %d bytes of memory\n"),
-			cluster_count * sizeof(xfs_buf_t*));
+		do_error(_("failed to allocate %zd bytes of memory\n"),
+			cluster_count * sizeof(xfs_buf_t *));
 
 	for (bp_index = 0; bp_index < cluster_count; bp_index++) {
 		pftrace("about to read off %llu in AG %d",
-			(long long)XFS_AGB_TO_DADDR(mp, agno, agbno), agno);
+			XFS_AGB_TO_DADDR(mp, agno, agbno), agno);
 
 		bplist[bp_index] = libxfs_readbuf(mp->m_dev,
 					XFS_AGB_TO_DADDR(mp, agno, agbno),
 					XFS_FSB_TO_BB(mp, blks_per_cluster), 0);
 		if (!bplist[bp_index]) {
-			do_warn(_("cannot read inode %llu, disk block %lld, cnt %d\n"),
+			do_warn(_("cannot read inode %" PRIu64 ", disk block %" PRId64 ", cnt %d\n"),
 				XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
 				XFS_AGB_TO_DADDR(mp, agno, agbno),
-				(int)XFS_FSB_TO_BB(mp, blks_per_cluster));
+				XFS_FSB_TO_BB(mp, blks_per_cluster));
 			while (bp_index > 0) {
 				bp_index--;
 				libxfs_putbuf(bplist[bp_index]);
@@ -757,7 +758,7 @@ process_inode_chunk(
 		break;
 	default:
 		set_bmap(agno, agbno, XR_E_MULT);
-		do_warn(_("inode block %llu multiply claimed, state was %d\n"),
+		do_warn(_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
 			XFS_AGB_TO_FSB(mp, agno, agbno), state);
 		break;
 	}
@@ -769,6 +770,7 @@ process_inode_chunk(
 		 */
 		dino = xfs_make_iptr(mp, bplist[bp_index], cluster_offset);
 		agino = irec_offset + ino_rec->ino_startnum;
+		ino = XFS_AGINO_TO_INO(mp, agno, agino);
 
 		is_used = 3;
 		ino_dirty = 0;
@@ -792,10 +794,9 @@ process_inode_chunk(
 		if (is_used)  {
 			if (is_inode_free(ino_rec, irec_offset))  {
 				if (verbose || no_modify)  {
-					do_warn(_("imap claims in-use inode "
-						  "%llu is free, "),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("imap claims in-use inode %" PRIu64 " is free, "),
+						ino);
 				}
 
 				if (verbose || !no_modify)
@@ -842,55 +843,48 @@ process_inode_chunk(
 		}
 
 		if (status)  {
-			if (mp->m_sb.sb_rootino ==
-					XFS_AGINO_TO_INO(mp, agno, agino))  {
+			if (mp->m_sb.sb_rootino == ino) {
 				need_root_inode = 1;
 
 				if (!no_modify)  {
-					do_warn(_("cleared root inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("cleared root inode %" PRIu64 "\n"),
+						ino);
 				} else  {
-					do_warn(_("would clear root inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("would clear root inode %" PRIu64 "\n"),
+						ino);
 				}
-			} else if (mp->m_sb.sb_rbmino ==
-					XFS_AGINO_TO_INO(mp, agno, agino))  {
+			} else if (mp->m_sb.sb_rbmino == ino) {
 				need_rbmino = 1;
 
 				if (!no_modify)  {
-					do_warn(_("cleared realtime bitmap "
-						  "inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("cleared realtime bitmap inode %" PRIu64 "\n"),
+						ino);
 				} else  {
-					do_warn(_("would clear realtime bitmap "
-						  "inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("would clear realtime bitmap inode %" PRIu64 "\n"),
+						ino);
 				}
-			} else if (mp->m_sb.sb_rsumino ==
-					XFS_AGINO_TO_INO(mp, agno, agino))  {
+			} else if (mp->m_sb.sb_rsumino == ino) {
 				need_rsumino = 1;
 
 				if (!no_modify)  {
-					do_warn(_("cleared realtime summary "
-						  "inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("cleared realtime summary inode %" PRIu64 "\n"),
+						ino);
 				} else  {
-					do_warn(_("would clear realtime summary"
-						  " inode %llu\n"),
-						XFS_AGINO_TO_INO(mp, agno,
-						agino));
+					do_warn(
+	_("would clear realtime summary inode %" PRIu64 "\n"),
+						ino);
 				}
 			} else if (!no_modify)  {
-				do_warn(_("cleared inode %llu\n"),
-					XFS_AGINO_TO_INO(mp, agno, agino));
+				do_warn(_("cleared inode %" PRIu64 "\n"),
+					ino);
 			} else  {
-				do_warn(_("would have cleared inode %llu\n"),
-					XFS_AGINO_TO_INO(mp, agno, agino));
+				do_warn(_("would have cleared inode %" PRIu64 "\n"),
+					ino);
 			}
 		}
 
@@ -940,8 +934,8 @@ process_inode_chunk(
 				break;
 			default:
 				set_bmap(agno, agbno, XR_E_MULT);
-				do_warn(_("inode block %llu multiply claimed, "
-					  "state was %d\n"),
+				do_warn(
+	_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
 					XFS_AGB_TO_FSB(mp, agno, agbno), state);
 				break;
 			}

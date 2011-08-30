@@ -73,7 +73,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 			if (be32_to_cpu(agf->agf_length) != agblocks)  {
 				retval = XR_AG_AGF;
 				do_warn(
-			_("bad length %d for agf %d, should be %llu\n"),
+	_("bad length %d for agf %d, should be %" PRIu64 "\n"),
 					be32_to_cpu(agf->agf_length),
 						i, agblocks);
 				if (!no_modify)
@@ -87,15 +87,17 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 	 * space in the AGFL, we'll reclaim it later.
 	 */
 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
-		do_warn(_("flfirst %d in agf %d too large (max = %d)\n"),
-			be32_to_cpu(agf->agf_flfirst), i, XFS_AGFL_SIZE(mp));
+		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
+			be32_to_cpu(agf->agf_flfirst),
+			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
 			agf->agf_flfirst = cpu_to_be32(0);
 	}
 
 	if (be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp))  {
-		do_warn(_("fllast %d in agf %d too large (max = %d)\n"),
-			be32_to_cpu(agf->agf_fllast), i, XFS_AGFL_SIZE(mp));
+		do_warn(_("fllast %d in agf %d too large (max = %zu)\n"),
+			be32_to_cpu(agf->agf_fllast),
+			i, XFS_AGFL_SIZE(mp));
 		if (!no_modify)
 			agf->agf_fllast = cpu_to_be32(0);
 	}
@@ -156,7 +158,7 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t agno)
 			if (be32_to_cpu(agi->agi_length) != agblocks)  {
 				retval = XR_AG_AGI;
 				do_warn(
-			_("bad length # %d for agi %d, should be %llu\n"),
+	_("bad length # %d for agi %d, should be %" PRIu64 "\n"),
 					be32_to_cpu(agi->agi_length),
 						agno, agblocks);
 				if (!no_modify)

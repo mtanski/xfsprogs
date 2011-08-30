@@ -267,7 +267,8 @@ phase4(xfs_mount_t *mp)
 		switch (bstate)  {
 		case XR_E_BAD_STATE:
 		default:
-			do_warn(_("unknown rt extent state, extent %llu\n"),
+			do_warn(
+	_("unknown rt extent state, extent %" PRIu64 "\n"),
 				bno);
 			/* fall through .. */
 		case XR_E_UNKNOWN:

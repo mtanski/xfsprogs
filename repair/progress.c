@@ -261,7 +261,7 @@ progress_rpt_thread (void *p)
 				current_phase, duration(elapsed, msgbuf),
 				(int) (60*sum/(elapsed)), *msgp->format->type);
 			do_log(
-				_("\t- %02d:%02d:%02d: Phase %d: %llu%% done - estimated remaining time %s\n"),
+	_("\t- %02d:%02d:%02d: Phase %d: %" PRIu64 "%% done - estimated remaining time %s\n"),
 				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
 				current_phase, percent,
 				duration((int) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));

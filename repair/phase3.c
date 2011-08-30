@@ -107,7 +107,7 @@ process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE, 0);
 	if (!bp)
-		do_error(_("cannot read agi block %lld for ag %u\n"),
+		do_error(_("cannot read agi block %" PRId64 " for ag %u\n"),
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)), agno);
 
 	agip = XFS_BUF_TO_AGI(bp);

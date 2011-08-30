@@ -67,7 +67,8 @@ zero_log(xfs_mount_t *mp)
 			error);
 	} else {
 		if (verbose) {
-			do_warn(_("zero_log: head block %lld tail block %lld\n"),
+			do_warn(
+	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
 				head_blk, tail_blk);
 		}
 		if (head_blk != tail_blk) {

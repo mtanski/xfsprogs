@@ -52,7 +52,7 @@ blkmap_alloc(
 	if (!blkmap || blkmap->naexts < nex) {
 		blkmap = realloc(blkmap, BLKMAP_SIZE(nex));
 		if (!blkmap) {
-			do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
+			do_warn(_("malloc failed in blkmap_alloc (%zu bytes)\n"),
 				BLKMAP_SIZE(nex));
 			return NULL;
 		}
@@ -141,7 +141,7 @@ blkmap_getn(
 		 */
 		bmp = malloc(nb * sizeof(bmap_ext_t));
 		if (!bmp)
-			do_error(_("blkmap_getn malloc failed (%u bytes)\n"),
+			do_error(_("blkmap_getn malloc failed (%" PRIu64 " bytes)\n"),
 						nb * sizeof(bmap_ext_t));
 
 		bmp[nex].startblock = ext->startblock + (o - ext->startoff);

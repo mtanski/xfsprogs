@@ -170,7 +170,7 @@ process_shortform_attr(
 			/* whoops there's a discrepancy. Clear the hdr */
 			if (!no_modify) {
 				do_warn(
-		_("there are no attributes in the fork for inode %llu\n"),
+	_("there are no attributes in the fork for inode %" PRIu64 "\n"),
 					ino);
 				asf->hdr.totsize = 
 					cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
@@ -178,7 +178,7 @@ process_shortform_attr(
 				return(1);
 			} else {
 				do_warn(
-	_("would junk the attribute fork since count is 0 for inode %llu\n"),
+	_("would junk the attribute fork since count is 0 for inode %" PRIu64 "\n"),
 					ino);
 				return(1);
 			}
@@ -201,12 +201,12 @@ process_shortform_attr(
 			do_warn(_("zero length name entry in attribute fork,"));
 			if (!no_modify) {
 				do_warn(
-		_(" truncating attributes for inode %llu to %d\n"), ino, i);
+	_(" truncating attributes for inode %" PRIu64 " to %d\n"), ino, i);
 				*repair = 1;
 				break;	/* and then update hdr fields */
 			} else {
 				do_warn(
-		_(" would truncate attributes for inode %llu to %d\n"), ino, i);
+	_(" would truncate attributes for inode %" PRIu64 " to %d\n"), ino, i);
 				break;
 			}
 		} else {
@@ -218,16 +218,16 @@ process_shortform_attr(
 					((remainingspace - currententry->
 					namelen) < currententry->valuelen)) {
 				do_warn(
-			_("name or value attribute lengths are too large,\n"));
+	_("name or value attribute lengths are too large,\n"));
 				if (!no_modify) {
 					do_warn(
-			_(" truncating attributes for inode %llu to %d\n"),
+	_(" truncating attributes for inode %" PRIu64 " to %d\n"),
 						ino, i);
 					*repair = 1;
 					break; /* and then update hdr fields */
 				} else {
 					do_warn(
-			_(" would truncate attributes for inode %llu to %d\n"),
+	_(" would truncate attributes for inode %" PRIu64 " to %d\n"),
 						ino, i);
 					break;
 				}
@@ -263,7 +263,7 @@ process_shortform_attr(
 			if (!no_modify) {
 				/* get rid of only this entry */
 				do_warn(
-			_("removing attribute entry %d for inode %llu\n"),
+	_("removing attribute entry %d for inode %" PRIu64 "\n"),
 					i, ino);
 				tempentry = (xfs_attr_sf_entry_t *)
 					((__psint_t) currententry +
@@ -275,7 +275,7 @@ process_shortform_attr(
 				continue; /* go back up now */
 			} else {
 				do_warn(
-			_("would remove attribute entry %d for inode %llu\n"),
+	_("would remove attribute entry %d for inode %" PRIu64 "\n"),
 					i, ino);
 			}
 		}
@@ -289,12 +289,12 @@ process_shortform_attr(
 
 	if (asf->hdr.count != i)  {
 		if (no_modify)  {
-			do_warn(_("would have corrected attribute entry count "
-				  "in inode %llu from %d to %d\n"),
+			do_warn(
+	_("would have corrected attribute entry count in inode %" PRIu64 " from %d to %d\n"),
 				ino, asf->hdr.count, i);
 		} else  {
-			do_warn(_("corrected attribute entry count in inode "
-				  "%llu, was %d, now %d\n"),
+			do_warn(
+	_("corrected attribute entry count in inode %" PRIu64 ", was %d, now %d\n"),
 				ino, asf->hdr.count, i);
 			asf->hdr.count = i;
 			*repair = 1;
@@ -304,13 +304,13 @@ process_shortform_attr(
 	/* ASSUMPTION: currentsize <= totsize */
 	if (be16_to_cpu(asf->hdr.totsize) != currentsize)  {
 		if (no_modify)  {
-			do_warn(_("would have corrected attribute totsize in "
-				  "inode %llu from %d to %d\n"),
+			do_warn(
+	_("would have corrected attribute totsize in inode %" PRIu64 " from %d to %d\n"),
 				ino, be16_to_cpu(asf->hdr.totsize),
 				currentsize);
 		} else  {
-			do_warn(_("corrected attribute entry totsize in "
-				  "inode %llu, was %d, now %d\n"),
+			do_warn(
+	_("corrected attribute entry totsize in inode %" PRIu64 ", was %d, now %d\n"),
 				ino, be16_to_cpu(asf->hdr.totsize),
 				currentsize);
 			asf->hdr.totsize = cpu_to_be16(currentsize);
@@ -339,16 +339,16 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 	while (amountdone < valuelen) {
 		bno = blkmap_get(blkmap, blocknum + i);
 		if (bno == NULLDFSBNO) {
-			do_warn(_("remote block for attributes of inode %llu"
-				  " is missing\n"), ino);
+			do_warn(
+	_("remote block for attributes of inode %" PRIu64 " is missing\n"), ino);
 			clearit = 1;
 			break;
 		}
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn(_("can't read remote block for attributes"
-				  " of inode %llu\n"), ino);
+			do_warn(
+	_("can't read remote block for attributes of inode %" PRIu64 "\n"), ino);
 			clearit = 1;
 			break;
 		}
@@ -391,8 +391,8 @@ process_leaf_attr_local(
 	local = xfs_attr_leaf_name_local(leaf, i);
 	if (local->namelen == 0 || namecheck((char *)&local->nameval[0], 
 							local->namelen)) {
-		do_warn(_("attribute entry %d in attr block %u, inode %llu "
-			"has bad name (namelen = %d)\n"),
+		do_warn(
+	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
 			i, da_bno, ino, local->namelen);
 		return -1;
 	}
@@ -408,8 +408,9 @@ process_leaf_attr_local(
 	if (be32_to_cpu(entry->hashval) != libxfs_da_hashname(
 				&local->nameval[0], local->namelen) ||
 				be32_to_cpu(entry->hashval) < last_hashval) {
-		do_warn(_("bad hashvalue for attribute entry %d in "
-			"attr block %u, inode %llu\n"), i, da_bno, ino);
+		do_warn(
+	_("bad hashvalue for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
+			i, da_bno, ino);
 		return -1;
 	}
 
@@ -417,8 +418,8 @@ process_leaf_attr_local(
 	if (entry->flags & XFS_ATTR_ROOT) {
 		if (valuecheck((char *)&local->nameval[0], NULL, 
 				local->namelen, be16_to_cpu(local->valuelen))) {
-			do_warn(_("bad security value for attribute entry %d "
-				"in attr block %u, inode %llu\n"), 
+			do_warn(
+	_("bad security value for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
 				i, da_bno, ino);
 			return -1;
 		}
@@ -450,8 +451,8 @@ process_leaf_attr_remote(
 						remotep->namelen) ||
 			be32_to_cpu(entry->hashval) < last_hashval ||
 			be32_to_cpu(remotep->valueblk) == 0) {
-		do_warn(_("inconsistent remote attribute entry %d in "
-			"attr block %u, ino %llu\n"), i, da_bno, ino);
+		do_warn(
+	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
 		return -1;
 	}
 
@@ -460,21 +461,24 @@ process_leaf_attr_remote(
  
 	value = malloc(be32_to_cpu(remotep->valuelen));
 	if (value == NULL) {
-		do_warn(_("cannot malloc enough for remotevalue attribute "
-			"for inode %llu\n"), ino);
+		do_warn(
+	_("cannot malloc enough for remotevalue attribute for inode %" PRIu64 "\n"),
+			ino);
 		do_warn(_("SKIPPING this remote attribute\n"));
 		goto out;
 	}
 	if (rmtval_get(mp, ino, blkmap, be32_to_cpu(remotep->valueblk),
 				be32_to_cpu(remotep->valuelen), value)) {
-		do_warn(_("remote attribute get failed for entry %d, "
-			"inode %llu\n"), i, ino);
+		do_warn(
+	_("remote attribute get failed for entry %d, inode %" PRIu64 "\n"),
+			i, ino);
 		goto bad_free_out;
 	}
 	if (valuecheck((char *)&remotep->name[0], value, remotep->namelen,
 				be32_to_cpu(remotep->valuelen))) {
-		do_warn(_("remote attribute value check failed for entry %d, "
-			"inode %llu\n"), i, ino);
+		do_warn(
+	_("remote attribute value check failed for entry %d, inode %" PRIu64 "\n"),
+			i, ino);
 		goto bad_free_out;
 	}
 	free(value);
@@ -510,7 +514,7 @@ process_leaf_attr_block(
 	if (be16_to_cpu(leaf->hdr.count) * sizeof(xfs_attr_leaf_entry_t)
 			+ sizeof(xfs_attr_leaf_hdr_t) > XFS_LBSIZE(mp)) {
 		do_warn(
-	_("bad attribute count %d in attr block %u, inode %llu\n"),
+	_("bad attribute count %d in attr block %u, inode %" PRIu64 "\n"),
 			be16_to_cpu(leaf->hdr.count), da_bno, ino);
 		return (1);
 	}
@@ -525,7 +529,7 @@ process_leaf_attr_block(
 		/* check if index is within some boundary. */
 		if (be16_to_cpu(entry->nameidx) > XFS_LBSIZE(mp)) {
 			do_warn(
-		_("bad attribute nameidx %d in attr block %u, inode %llu\n"),
+	_("bad attribute nameidx %d in attr block %u, inode %" PRIu64 "\n"),
 				be16_to_cpu(entry->nameidx), da_bno, ino);
 			clearit = 1;
 			break;
@@ -534,7 +538,7 @@ process_leaf_attr_block(
 		if (entry->flags & XFS_ATTR_INCOMPLETE) {
 			/* we are inconsistent state. get rid of us */
 			do_warn(
-	_("attribute entry #%d in attr block %u, inode %llu is INCOMPLETE\n"),
+	_("attribute entry #%d in attr block %u, inode %" PRIu64 " is INCOMPLETE\n"),
 				i, da_bno, ino);
 			clearit = 1;
 			break;
@@ -545,8 +549,7 @@ process_leaf_attr_block(
 		stop = start + sizeof(xfs_attr_leaf_entry_t);
 		if (set_da_freemap(mp, attr_freemap, start, stop))  {
 			do_warn(
-		_("attribute entry %d in attr block %u, inode %llu claims "
-		  "already used space\n"),
+	_("attribute entry %d in attr block %u, inode %" PRIu64 " claims already used space\n"),
 				i, da_bno, ino);
 			clearit = 1;
 			break;	/* got an overlap */
@@ -568,8 +571,8 @@ process_leaf_attr_block(
 
 		if (set_da_freemap(mp, attr_freemap, be16_to_cpu(entry->nameidx),
 				be16_to_cpu(entry->nameidx) + thissize)) {
-			do_warn(_("attribute entry %d in attr block %u, "
-				  "inode %llu claims used space\n"),
+			do_warn(
+	_("attribute entry %d in attr block %u, inode %" PRIu64 " claims used space\n"),
 				i, da_bno, ino);
 			clearit = 1;
 			break;	/* got an overlap */
@@ -594,7 +597,7 @@ process_leaf_attr_block(
 			if (!no_modify)  {
 				do_warn(
 	_("- resetting first used heap value from %d to %d in "
-	  "block %u of attribute fork of inode %llu\n"),
+	  "block %u of attribute fork of inode %" PRIu64 "\n"),
 					be16_to_cpu(leaf->hdr.firstused), 
 					firstb, da_bno, ino);
 				leaf->hdr.firstused = cpu_to_be16(firstb);
@@ -602,7 +605,7 @@ process_leaf_attr_block(
 			} else  {
 				do_warn(
 	_("- would reset first used value from %d to %d in "
-	  "block %u of attribute fork of inode %llu\n"),
+	  "block %u of attribute fork of inode %" PRIu64 "\n"),
 					be16_to_cpu(leaf->hdr.firstused), 
 					firstb, da_bno, ino);
 			}
@@ -612,7 +615,7 @@ process_leaf_attr_block(
 			if (!no_modify)  {
 				do_warn(
 	_("- resetting usedbytes cnt from %d to %d in "
-	  "block %u of attribute fork of inode %llu\n"),
+	  "block %u of attribute fork of inode %" PRIu64 "\n"),
 					be16_to_cpu(leaf->hdr.usedbytes), 
 					usedbs, da_bno, ino);
 				leaf->hdr.usedbytes = cpu_to_be16(usedbs);
@@ -620,7 +623,7 @@ process_leaf_attr_block(
 			} else  {
 				do_warn(
 	_("- would reset usedbytes cnt from %d to %d in "
-	  "block %u of attribute fork of %llu\n"),
+	  "block %u of attribute fork of %" PRIu64 "\n"),
 					be16_to_cpu(leaf->hdr.usedbytes), 
 					usedbs, da_bno, ino);
 			}
@@ -668,16 +671,17 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		ASSERT(da_bno != 0);
 
 		if (dev_bno == NULLDFSBNO) {
-			do_warn(_("can't map block %u for attribute fork "
-				  "for inode %llu\n"), da_bno, ino);
+			do_warn(
+	_("can't map block %u for attribute fork for inode %" PRIu64 "\n"),
+				da_bno, ino);
 			goto error_out;
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
 					XFS_FSB_TO_BB(mp, 1), 0);
 		if (!bp) {
-			do_warn(_("can't read file block %u (fsbno %llu) for"
-				" attribute fork of inode %llu\n"),
+			do_warn(
+	_("can't read file block %u (fsbno %" PRIu64 ") for attribute fork of inode %" PRIu64 "\n"),
 				da_bno, dev_bno, ino);
 			goto error_out;
 		}
@@ -686,8 +690,8 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 
 		/* check magic number for leaf directory btree block */
 		if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
-			do_warn(_("bad attribute leaf magic %#x "
-				  "for inode %llu\n"),
+			do_warn(
+	_("bad attribute leaf magic %#x for inode %" PRIu64 "\n"),
 				 leaf->hdr.info.magic, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
@@ -717,8 +721,8 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		da_cursor->level[0].dirty = repair;
 
 		if (be32_to_cpu(leaf->hdr.info.back) != prev_bno)  {
-			do_warn(_("bad sibling back pointer for block %u in "
-				  "attribute fork for inode %llu\n"),
+			do_warn(
+	_("bad sibling back pointer for block %u in attribute fork for inode %" PRIu64 "\n"),
 				da_bno, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
@@ -744,7 +748,8 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		/*
 		 * verify the final path up (right-hand-side) if still ok
 		 */
-		do_warn(_("bad hash path in attribute fork for inode %llu\n"),
+		do_warn(
+	_("bad hash path in attribute fork for inode %" PRIu64 "\n"),
 			da_cursor->ino);
 		goto error_out;
 	}
@@ -843,21 +848,23 @@ process_longform_attr(
 		if (dip->di_aformat == XFS_DINODE_FMT_EXTENTS && 
 				be16_to_cpu(dip->di_anextents) == 0)
 			return(0); /* the kernel can handle this state */
-		do_warn(_("block 0 of inode %llu attribute fork is missing\n"), 
+		do_warn(
+	_("block 0 of inode %" PRIu64 " attribute fork is missing\n"),
 			ino);
 		return(1);
 	}
 	/* FIX FOR bug 653709 -- EKN */
 	if (mp->m_sb.sb_agcount < XFS_FSB_TO_AGNO(mp, bno)) {
-		do_warn(_("agno of attribute fork of inode %llu out of "
-			  "regular partition\n"), ino);
+		do_warn(
+	_("agno of attribute fork of inode %" PRIu64 " out of regular partition\n"), ino);
 		return(1);
 	}
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
 				XFS_FSB_TO_BB(mp, 1), 0);
 	if (!bp) {
-		do_warn(_("can't read block 0 of inode %llu attribute fork\n"),
+		do_warn(
+	_("can't read block 0 of inode %" PRIu64 " attribute fork\n"),
 			ino);
 		return(1);
 	}
@@ -871,14 +878,15 @@ process_longform_attr(
 	if (be32_to_cpu(leaf->hdr.info.forw) != 0 || 
 				be32_to_cpu(leaf->hdr.info.back) != 0)  {
 		if (!no_modify)  {
-			do_warn(_("clearing forw/back pointers in block 0 "
-				  "for attributes in inode %llu\n"), ino);
+			do_warn(
+	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
+				ino);
 			repairlinks = 1;
 			leaf->hdr.info.forw = cpu_to_be32(0);
 			leaf->hdr.info.back = cpu_to_be32(0);
 		} else  {
-			do_warn(_("would clear forw/back pointers in block 0 "
-				  "for attributes in inode %llu\n"), ino);
+			do_warn(
+	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
 		}
 	}
 
@@ -907,7 +915,8 @@ process_longform_attr(
 			libxfs_putbuf(bp);
 		return (process_node_attr(mp, ino, dip, blkmap)); /* + repair */
 	default:
-		do_warn(_("bad attribute leaf magic # %#x for dir ino %llu\n"),
+		do_warn(
+	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
 			be16_to_cpu(leaf->hdr.info.magic), ino);
 		libxfs_putbuf(bp);
 		return(1);
@@ -974,7 +983,7 @@ process_attributes(
 			/* if err, convert this to shortform and clear it */
 			/* if repair and no error, it's taken care of */
 	} else  {
-		do_warn(_("illegal attribute format %d, ino %llu\n"),
+		do_warn(_("illegal attribute format %d, ino %" PRIu64 "\n"),
 			aformat, ino);
 		err = 1;
 	}
