@@ -658,8 +658,11 @@ calc_default_ag_geometry(
 	 * last bit of the filesystem. The same principle applies
 	 * to the AG count, so we don't lose the last AG!
 	 */
-	blocks = (dblocks >> shift) + ((dblocks & xfs_mask32lo(shift)) != 0);
-
+	blocks = dblocks >> shift;
+	if (dblocks & xfs_mask32lo(shift)) {
+		if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
+		    blocks++;
+	}
 done:
 	*agsize = blocks;
 	*agcount = dblocks / blocks + (dblocks % blocks != 0);
