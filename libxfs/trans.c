@@ -478,9 +478,15 @@ libxfs_trans_read_buf(
 	xfs_buf_log_item_t	*bip;
 	xfs_buftarg_t		bdev;
 
+	*bpp = NULL;
+
 	if (tp == NULL) {
-		*bpp = libxfs_readbuf(dev, blkno, len, flags);
-		return 0;
+		bp = libxfs_readbuf(dev, blkno, len, flags);
+		if (!bp) {
+			return (flags & XBF_TRYLOCK) ?
+				EAGAIN : XFS_ERROR(ENOMEM);
+		}
+		goto done;
 	}
 
 	bdev.dev = dev;
@@ -490,15 +496,15 @@ libxfs_trans_read_buf(
 		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
 		bip->bli_recur++;
-		*bpp = bp;
-		return 0;
+		goto done;
 	}
 
 	bp = libxfs_readbuf(dev, blkno, len, flags);
-       if (!bp){
-               *bpp = NULL;
-               return errno;
-       }
+	if (!bp) {
+		return (flags & XBF_TRYLOCK) ?
+			EAGAIN : XFS_ERROR(ENOMEM);
+	}
+
 #ifdef XACT_DEBUG
 	fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
 #endif
@@ -510,6 +516,7 @@ libxfs_trans_read_buf(
 
 	/* initialise b_fsprivate2 so we can find it incore */
 	XFS_BUF_SET_FSPRIVATE2(bp, tp);
+done:
 	*bpp = bp;
 	return 0;
 }
