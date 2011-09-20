@@ -52,12 +52,12 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 	if (sts != 0) {
 		fprintf(stderr,
 			_("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
-			bstatp->bs_ino, fullpath);
+			(unsigned long long) bstatp->bs_ino, fullpath);
 		if (verbose_flag) {
 			fprintf(stderr,
 				_("path \"%s\" does not stat for inode: %llu; err = %s\n"),
 				fullpath,
-				bstatp->bs_ino,
+			       (unsigned long long) bstatp->bs_ino,
 				strerror(errno));
 		}
 		err_status++;
@@ -71,7 +71,7 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 	if (statbuf.st_ino != bstatp->bs_ino) {
 		fprintf(stderr,
 			_("inode-path for inode: %llu is incorrect - wrong inode#\n"),
-			bstatp->bs_ino);
+		       (unsigned long long) bstatp->bs_ino);
 		if (verbose_flag) {
 			fprintf(stderr,
 				_("ino mismatch for path \"%s\" %llu vs %llu\n"),
@@ -101,7 +101,7 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 		if (parent->p_ino != statbuf.st_ino) {
 			fprintf(stderr,
 				_("inode-path for inode: %llu is incorrect - wrong parent inode#\n"),
-				bstatp->bs_ino);
+			       (unsigned long long) bstatp->bs_ino);
 			if (verbose_flag) {
 				fprintf(stderr,
 					_("ino mismatch for path \"%s\" %llu vs %llu\n"),
@@ -113,7 +113,8 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
 			return;
 		} else {
 			if (verbose_flag > 1) {
-				printf(_("parent ino match for %llu\n"), parent->p_ino);
+			       printf(_("parent ino match for %llu\n"),
+				       (unsigned long long) parent->p_ino);
 			}
 		}
 	}
@@ -135,7 +136,7 @@ check_parents(parent_t *parentbuf, size_t *parentbuf_size,
 			parentbuf = (parent_t *)realloc(parentbuf, *parentbuf_size);
 		} else if (error) {
 			fprintf(stderr, _("parentpaths failed for ino %llu: %s\n"),
-				statp->bs_ino,
+			       (unsigned long long) statp->bs_ino,
 				strerror(errno));
 			err_status++;
 			break;
@@ -145,7 +146,8 @@ check_parents(parent_t *parentbuf, size_t *parentbuf_size,
 
 	if (count == 0) {
 		/* no links for inode - something wrong here */
-		fprintf(stderr, _("inode-path for inode: %llu is missing\n"), statp->bs_ino);
+	       fprintf(stderr, _("inode-path for inode: %llu is missing\n"),
+			       (unsigned long long) statp->bs_ino);
 		err_status++;
 	}
 
@@ -190,13 +192,13 @@ do_bulkstat(parent_t *parentbuf, size_t *parentbuf_size, xfs_bstat_t *bstatbuf,
 				if (xfsctl(mntpt, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq) < 0) {
 				    fprintf(stderr,
 					  _("failed to get bulkstat information for inode %llu\n"),
-					  p->bs_ino );
+					 (unsigned long long) p->bs_ino);
 				    continue;
 				}
 				if (!p->bs_nlink || !p->bs_mode || !p->bs_ino) {
 				    fprintf(stderr,
 					  _("failed to get valid bulkstat information for inode %llu\n"),
-					  p->bs_ino );
+					 (unsigned long long) p->bs_ino);
 				    continue;
 				}
 			}
@@ -207,7 +209,8 @@ do_bulkstat(parent_t *parentbuf, size_t *parentbuf_size, xfs_bstat_t *bstatbuf,
 			}
 
 			if (verbose_flag > 1) {
-				printf(_("checking inode %llu\n"), p->bs_ino);
+			       printf(_("checking inode %llu\n"),
+				       (unsigned long long) p->bs_ino);
 			}
 
 			/* print dotted progress */
@@ -264,7 +267,8 @@ parent_check(void)
 	if (err_status > 0)
 		fprintf(stderr, _("num errors: %d\n"), err_status);
 	else
-		printf(_("succeeded checking %llu inodes\n"), inodes_checked);
+		printf(_("succeeded checking %llu inodes\n"),
+			(unsigned long long) inodes_checked);
 
 	free(bstatbuf);
 	free(parentbuf);
@@ -274,7 +278,7 @@ parent_check(void)
 static void
 print_parent_entry(parent_t *parent, int fullpath)
 {
-	printf(_("p_ino    = %llu\n"),	parent->p_ino);
+       printf(_("p_ino    = %llu\n"),  (unsigned long long) parent->p_ino);
 	printf(_("p_gen    = %u\n"),	parent->p_gen);
 	printf(_("p_reclen = %u\n"),	parent->p_reclen);
 	if (fullpath)
