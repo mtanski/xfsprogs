@@ -230,6 +230,7 @@ typedef struct xfs_buf {
 	void			*b_fsprivate2;
 	void			*b_fsprivate3;
 	char			*b_addr;
+	int			b_error;
 #ifdef XFS_BUF_TRACING
 	struct list_head	b_lock_list;
 	const char		*b_func;

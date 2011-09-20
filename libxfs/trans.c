@@ -477,6 +477,7 @@ libxfs_trans_read_buf(
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
 	xfs_buftarg_t		bdev;
+	int			error;
 
 	*bpp = NULL;
 
@@ -486,6 +487,8 @@ libxfs_trans_read_buf(
 			return (flags & XBF_TRYLOCK) ?
 				EAGAIN : XFS_ERROR(ENOMEM);
 		}
+		if (bp->b_error)
+			goto out_relse;
 		goto done;
 	}
 
@@ -504,6 +507,8 @@ libxfs_trans_read_buf(
 		return (flags & XBF_TRYLOCK) ?
 			EAGAIN : XFS_ERROR(ENOMEM);
 	}
+	if (bp->b_error)
+		goto out_relse;
 
 #ifdef XACT_DEBUG
 	fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
@@ -519,6 +524,10 @@ libxfs_trans_read_buf(
 done:
 	*bpp = bp;
 	return 0;
+out_relse:
+	error = bp->b_error;
+	xfs_buf_relse(bp);
+	return error;
 }
 
 /*

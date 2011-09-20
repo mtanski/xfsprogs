@@ -314,6 +314,7 @@ libxfs_initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
 	bp->b_blkno = bno;
 	bp->b_bcount = bytes;
 	bp->b_dev = device;
+	bp->b_error = 0;
 	if (!bp->b_addr)
 		bp->b_addr = memalign(libxfs_device_alignment(), bytes);
 	if (!bp->b_addr) {
@@ -495,10 +496,8 @@ libxfs_readbuf(dev_t dev, xfs_daddr_t blkno, int len, int flags)
 	bp = libxfs_getbuf(dev, blkno, len);
 	if (bp && !(bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
 		error = libxfs_readbufr(dev, blkno, bp, len, flags);
-		if (error) {
-			libxfs_putbuf(bp);
-			return NULL;
-		}
+		if (error)
+			bp->b_error = error;
 	}
 	return bp;
 }
