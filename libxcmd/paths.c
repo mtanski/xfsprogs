@@ -37,18 +37,26 @@ struct fs_path *fs_path;
 char *mtab_file;
 #define PROC_MOUNTS	"/proc/self/mounts"
 
-static char *
+static int
 fs_device_number(
-	char		*name,
+	const char	*name,
 	dev_t		*devnum)
 {
 	struct stat64	sbuf;
 
 	if (stat64(name, &sbuf) < 0)
-		return NULL;
-	*devnum = sbuf.st_dev;
+		return errno;
+	/*
+	 * We want to match st_rdev if the path provided is a device
+	 * special file.  Otherwise we are looking for the the
+	 * device id for the containing filesystem, in st_dev.
+	 */
+	if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode))
+		*devnum = sbuf.st_rdev;
+	else
+		*devnum = sbuf.st_dev;
 
-	return name;
+	return 0;
 }
 
 /*
@@ -61,22 +69,11 @@ fs_table_lookup(
 	const char	*dir,
 	uint		flags)
 {
-	struct stat64	sbuf;
 	uint		i;
-	dev_t		dev;
+	dev_t		dev = 0;
 
-	if (stat64(dir, &sbuf) < 0)
+	if (fs_device_number(dir, &dev))
 		return NULL;
-
-	/*
-	 * We want to match st_rdev if the directory provided is a
-	 * device special file.  Otherwise we are looking for the
-	 * the device id for the containing filesystem, in st_dev.
-	 */
-	if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode))
-		dev = sbuf.st_rdev;
-	else
-		dev = sbuf.st_dev;
 
 	for (i = 0; i < fs_count; i++) {
 		if ((flags & fs_table[i].fs_flags) == 0)
@@ -103,11 +100,11 @@ fs_table_insert(
 		return EINVAL;
 
 	datadev = logdev = rtdev = 0;
-	if (!fs_device_number(dir, &datadev))
+	if (fs_device_number(dir, &datadev))
 		return errno;
-	if (fslog && !fs_device_number(fslog, &logdev))
+	if (fslog && fs_device_number(fslog, &logdev))
 		return errno;
-	if (fsrt && !fs_device_number(fsrt, &rtdev))
+	if (fsrt && fs_device_number(fsrt, &rtdev))
 		return errno;
 
 	tmp_fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
@@ -293,15 +290,14 @@ fs_mount_point_from_path(
 {
 	fs_cursor_t	cursor;
 	fs_path_t	*fs;
-	struct stat64	s;
+	dev_t		dev = 0;
 
-	if (stat64(dir, &s) < 0) {
+	if (fs_device_number(dir, &dev))
 		return NULL;
-	}
 
 	fs_cursor_initialise(NULL, FS_MOUNT_POINT, &cursor);
 	while ((fs = fs_cursor_next_entry(&cursor))) {
-		if (fs->fs_datadev == s.st_dev)
+		if (fs->fs_datadev == dev)
 			break;
 	}
 	return fs;
