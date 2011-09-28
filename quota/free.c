@@ -297,14 +297,13 @@ static void
 free_space_list(
 	FILE			*fp,
 	uint			form,
-	uint			type,
 	char			*dir,
 	uint			flags)
 {
 	fs_cursor_t		cursor;
 	fs_path_t		*path;
 
-	fs_cursor_initialise(dir, type, &cursor);
+	fs_cursor_initialise(dir, 0, &cursor);
 	while ((path = fs_cursor_next_entry(&cursor))) {
 		if (free_space(fp, form, path, flags))
 			flags |= NO_HEADER_FLAG;
@@ -318,7 +317,7 @@ free_f(
 {
 	FILE		*fp = NULL;
 	char		*fname = NULL;
-	int		c, flags = 0, form = 0, type = 0;
+	int		c, flags = 0, form = 0;
 
 	while ((c = getopt(argc, argv, "bf:hNir")) != EOF) {
 		switch (c) {
@@ -348,16 +347,13 @@ free_f(
 	if (!form)
 		form = XFS_BLOCK_QUOTA;
 
-	if (!type)
-		type = FS_MOUNT_POINT|FS_PROJECT_PATH;
-
 	if ((fp = fopen_write_secure(fname)) == NULL)
 		return 0;
 
 	if (argc == optind)
-		free_space_list(fp, form, type, NULL, flags);
+		free_space_list(fp, form, NULL, flags);
 	else while (argc > optind)
-		free_space_list(fp, form, type, argv[optind++], flags);
+		free_space_list(fp, form, argv[optind++], flags);
 
 	if (fname)
 		fclose(fp);
