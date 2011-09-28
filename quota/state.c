@@ -122,10 +122,13 @@ state_qfilestat(
 		mount->fs_dir, mount->fs_name);
 	fprintf(fp, _("  Accounting: %s\n"), accounting ? _("ON") : _("OFF"));
 	fprintf(fp, _("  Enforcement: %s\n"), enforcing ? _("ON") : _("OFF"));
-	fprintf(fp, _("  Inode: #%llu (%llu blocks, %lu extents)\n"),
-		(unsigned long long)qfs->qfs_ino,
-		(unsigned long long)qfs->qfs_nblks,
-		(unsigned long)qfs->qfs_nextents);
+	if (qfs->qfs_ino != (__u64) -1)
+		fprintf(fp, _("  Inode: #%llu (%llu blocks, %lu extents)\n"),
+			(unsigned long long)qfs->qfs_ino,
+			(unsigned long long)qfs->qfs_nblks,
+			(unsigned long)qfs->qfs_nextents);
+	else
+		fprintf(fp, _("  Inode: N/A\n"));
 }
 
 static void
