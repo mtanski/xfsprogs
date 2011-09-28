@@ -37,6 +37,20 @@ struct fs_path *fs_path;
 char *mtab_file;
 #define PROC_MOUNTS	"/proc/self/mounts"
 
+static char *
+fs_device_number(
+	char		*name,
+	dev_t		*devnum)
+{
+	struct stat64	sbuf;
+
+	if (stat64(name, &sbuf) < 0)
+		return NULL;
+	*devnum = sbuf.st_dev;
+
+	return name;
+}
+
 /*
  * Find the FS table entry for the given path.  The "flags" argument
  * is a mask containing FS_MOUNT_POINT or FS_PROJECT_PATH (or both)
@@ -71,20 +85,6 @@ fs_table_lookup(
 			return &fs_table[i];
 	}
 	return NULL;
-}
-
-static char *
-fs_device_number(
-	char		*name,
-	dev_t		*devnum)
-{
-	struct stat64	sbuf;
-
-	if (stat64(name, &sbuf) < 0)
-		return NULL;
-	*devnum = sbuf.st_dev;
-
-	return name;
 }
 
 static int
