@@ -76,33 +76,14 @@ fs_table_lookup(
 static char *
 fs_device_number(
 	char		*name,
-	dev_t		*devnum,
-	int		search)
+	dev_t		*devnum)
 {
 	struct stat64	sbuf;
-	int		len;
 
-	if (stat64(name, &sbuf) < 0) {
-		if (!search)
-			return NULL;
-		len = strlen(name) + 1;
-		name = realloc(name, len + 5);  /* "/dev/ */
-		if (!name) {
-			fprintf(stderr, _("%s: warning - out of memory\n"),
-				progname);
-			return NULL;
-		}
-		memmove(name + 5, name, len);
-		strncpy(name, "/dev/", 5);
-		if (stat64(name, &sbuf) < 0) {
-			fprintf(stderr,
-				_("%s: warning - cannot find %s: %s\n"),
-				progname, name, strerror(errno));
-			free(name);
-			return NULL;
-		}
-	}
+	if (stat64(name, &sbuf) < 0)
+		return NULL;
 	*devnum = sbuf.st_dev;
+
 	return name;
 }
 
@@ -122,11 +103,11 @@ fs_table_insert(
 		return EINVAL;
 
 	datadev = logdev = rtdev = 0;
-	if (!fs_device_number(dir, &datadev, 0))
+	if (!fs_device_number(dir, &datadev))
 		return errno;
-	if (fslog && (fslog = fs_device_number(fslog, &logdev, 1)) == NULL)
+	if (fslog && !fs_device_number(fslog, &logdev))
 		return errno;
-	if (fsrt && (fsrt = fs_device_number(fsrt, &rtdev, 1)) == NULL)
+	if (fsrt && !fs_device_number(fsrt, &rtdev))
 		return errno;
 
 	tmp_fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
