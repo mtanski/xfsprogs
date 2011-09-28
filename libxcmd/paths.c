@@ -102,6 +102,7 @@ fs_table_insert(
 	char		*fsrt)
 {
 	dev_t		datadev, logdev, rtdev;
+	struct fs_path	*tmp_fs_table;
 
 	if (!dir || !fsname)
 		return EINVAL;
@@ -114,9 +115,10 @@ fs_table_insert(
 	if (fsrt && (fsrt = fs_device_number(fsrt, &rtdev, 1)) == NULL)
 		return errno;
 
-	fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
-	if (!fs_table)
-		return errno;
+	tmp_fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
+	if (!tmp_fs_table)
+		return ENOMEM;
+	fs_table = tmp_fs_table;
 
 	fs_path = &fs_table[fs_count];
 	fs_path->fs_dir = dir;
