@@ -37,6 +37,11 @@ struct fs_path *fs_path;
 char *mtab_file;
 #define PROC_MOUNTS	"/proc/self/mounts"
 
+/*
+ * Find the FS table entry for the given path.  The "flags" argument
+ * is a mask containing FS_MOUNT_POINT or FS_PROJECT_PATH (or both)
+ * to indicate the type of table entry sought.
+ */
 struct fs_path *
 fs_table_lookup(
 	const char	*dir,
@@ -44,16 +49,25 @@ fs_table_lookup(
 {
 	struct stat64	sbuf;
 	uint		i;
+	dev_t		dev;
 
 	if (stat64(dir, &sbuf) < 0)
 		return NULL;
+
+	/*
+	 * We want to match st_rdev if the directory provided is a
+	 * device special file.  Otherwise we are looking for the
+	 * the device id for the containing filesystem, in st_dev.
+	 */
+	if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode))
+		dev = sbuf.st_rdev;
+	else
+		dev = sbuf.st_dev;
+
 	for (i = 0; i < fs_count; i++) {
 		if ((flags & fs_table[i].fs_flags) == 0)
 			continue;
-		if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode)) {
-			if (sbuf.st_rdev == fs_table[i].fs_datadev)
-				return &fs_table[i];
-		} else if (sbuf.st_dev == fs_table[i].fs_datadev)
+		if (fs_table[i].fs_datadev == dev)
 			return &fs_table[i];
 	}
 	return NULL;
