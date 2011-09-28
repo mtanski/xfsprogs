@@ -76,7 +76,7 @@ fs_table_lookup(
 		return NULL;
 
 	for (i = 0; i < fs_count; i++) {
-		if ((flags & fs_table[i].fs_flags) == 0)
+		if (flags && !(flags & fs_table[i].fs_flags))
 			continue;
 		if (fs_table[i].fs_datadev == dev)
 			return &fs_table[i];
@@ -432,6 +432,16 @@ fs_table_insert_project_path(
  * Table iteration (cursor-based) interfaces
  */
 
+/*
+ * Initialize an fs_table cursor.  If a directory path is supplied,
+ * the cursor is set up to appear as though the table contains only
+ * a single entry which represents the directory specified.
+ * Otherwise it is set up to prepare for visiting all entries in the
+ * global table, starting with the first.  "flags" can be either
+ * FS_MOUNT_POINT or FS_PROJECT_PATH to limit what type of entries
+ * will be selected by fs_cursor_next_entry().  0 can be used as a
+ * wild card (selecting either type).
+ */
 void
 fs_cursor_initialise(
 	char		*dir,
@@ -454,17 +464,19 @@ fs_cursor_initialise(
 	cur->flags = flags;
 }
 
+/*
+ * Use the cursor to find the next entry in the table having the
+ * type specified by the cursor's "flags" field.
+ */
 struct fs_path *
 fs_cursor_next_entry(
 	fs_cursor_t	*cur)
 {
-	fs_path_t	*next = NULL;
-
 	while (cur->index < cur->count) {
-		next = &cur->table[cur->index++];
-		if (cur->flags & next->fs_flags)
-			break;
-		next = NULL;
+		fs_path_t	*next = &cur->table[cur->index++];
+
+		if (!cur->flags || (cur->flags & next->fs_flags))
+			return next;
 	}
-	return next;
+	return NULL;
 }
