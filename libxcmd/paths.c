@@ -293,16 +293,17 @@ fs_table_initialise_mounts(
 		    ((strcmp(path, mnt->mnt_dir) != 0) &&
 		     (strcmp(path, mnt->mnt_fsname) != 0)))
 			continue;
-		found = 1;
 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
 			continue;
-		error = fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
+		(void) fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
 					mnt->mnt_fsname, fslog, fsrt);
-		if (error)
+		if (path) {
+			found = 1;
 			break;
+		}
 	}
 	endmntent(mtp);
-	if (!error && path && !found)
+	if (path && !found)
 		error = ENXIO;
 
 	return error;
@@ -332,15 +333,16 @@ fs_table_initialise_mounts(
 		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
 		     (strcmp(path, stats[i].f_mntfromname) != 0)))
 			continue;
-		found = 1;
 		/* TODO: external log and realtime device? */
-		error = fs_table_insert(stats[i].f_mntonname, 0,
+		(void) fs_table_insert(stats[i].f_mntonname, 0,
 					FS_MOUNT_POINT, stats[i].f_mntfromname,
 					NULL, NULL);
-		if (error)
+		if (path) {
+			found = 1;
 			break;
+		}
 	}
-	if (!error && path && !found)
+	if (path && !found)
 		error = ENXIO;
 
 	return error;
@@ -406,16 +408,17 @@ fs_table_initialise_projects(
 					progname, path->pp_pathname, strerror(errno));
 			continue;
 		}
-		found = 1;
-		error = fs_table_insert(path->pp_pathname, path->pp_prid,
+		(void) fs_table_insert(path->pp_pathname, path->pp_prid,
 					FS_PROJECT_PATH, fs->fs_name,
 					NULL, NULL);
-		if (error)
+		if (project) {
+			found = 1;
 			break;
+		}
 	}
 	endprpathent();
 
-	if (!error && project && !found)
+	if (project && !found)
 		error = ENOENT;
 
 	return error;
