@@ -143,6 +143,59 @@ fs_table_destroy(void)
 	fs_count = 0;
 }
 
+/*
+ * Table iteration (cursor-based) interfaces
+ */
+
+/*
+ * Initialize an fs_table cursor.  If a directory path is supplied,
+ * the cursor is set up to appear as though the table contains only
+ * a single entry which represents the directory specified.
+ * Otherwise it is set up to prepare for visiting all entries in the
+ * global table, starting with the first.  "flags" can be either
+ * FS_MOUNT_POINT or FS_PROJECT_PATH to limit what type of entries
+ * will be selected by fs_cursor_next_entry().  0 can be used as a
+ * wild card (selecting either type).
+ */
+void
+fs_cursor_initialise(
+	char		*dir,
+	uint		flags,
+	fs_cursor_t	*cur)
+{
+	fs_path_t	*path;
+
+	memset(cur, 0, sizeof(*cur));
+	if (dir) {
+		if ((path = fs_table_lookup(dir, flags)) == NULL)
+			return;
+		cur->local = *path;
+		cur->count = 1;
+		cur->table = &cur->local;
+	} else {
+		cur->count = fs_count;
+		cur->table = fs_table;
+	}
+	cur->flags = flags;
+}
+
+/*
+ * Use the cursor to find the next entry in the table having the
+ * type specified by the cursor's "flags" field.
+ */
+struct fs_path *
+fs_cursor_next_entry(
+	fs_cursor_t	*cur)
+{
+	while (cur->index < cur->count) {
+		fs_path_t	*next = &cur->table[cur->index++];
+
+		if (!cur->flags || (cur->flags & next->fs_flags))
+			return next;
+	}
+	return NULL;
+}
+
 
 #if defined(HAVE_GETMNTENT)
 #include <mntent.h>
@@ -303,6 +356,21 @@ fs_mount_point_from_path(
 	return fs;
 }
 
+void
+fs_table_insert_mount(
+	char		*mount)
+{
+	int		error;
+
+	error = fs_table_initialise_mounts(mount);
+	if (error) {
+		fs_table_destroy();
+		fprintf(stderr, _("%s: cannot setup path for mount %s: %s\n"),
+			progname, mount, strerror(error));
+		exit(1);
+	}
+}
+
 static int
 fs_table_initialise_projects(
 	char		*project)
@@ -348,37 +416,6 @@ fs_table_initialise_projects(
 }
 
 void
-fs_table_initialise(void)
-{
-	int		error;
-
-	error = fs_table_initialise_mounts(NULL);
-	if (!error)
-		error = fs_table_initialise_projects(NULL);
-	if (error) {
-		fs_table_destroy();
-		fprintf(stderr, _("%s: cannot initialise path table: %s\n"),
-			progname, strerror(error));
-		exit(1);
-	}
-}
-
-void
-fs_table_insert_mount(
-	char		*mount)
-{
-	int		error;
-
-	error = fs_table_initialise_mounts(mount);
-	if (error) {
-		fs_table_destroy();
-		fprintf(stderr, _("%s: cannot setup path for mount %s: %s\n"),
-			progname, mount, strerror(error));
-		exit(1);
-	}
-}
-
-void
 fs_table_insert_project(
 	char		*project)
 {
@@ -394,6 +431,22 @@ fs_table_insert_project(
 		fs_table_destroy();
 		fprintf(stderr, _("%s: cannot setup path for project %s: %s\n"),
 			progname, project, strerror(error));
+		exit(1);
+	}
+}
+
+void
+fs_table_initialise(void)
+{
+	int		error;
+
+	error = fs_table_initialise_mounts(NULL);
+	if (!error)
+		error = fs_table_initialise_projects(NULL);
+	if (error) {
+		fs_table_destroy();
+		fprintf(stderr, _("%s: cannot initialise path table: %s\n"),
+			progname, strerror(error));
 		exit(1);
 	}
 }
@@ -428,55 +481,4 @@ fs_table_insert_project_path(
 		exit(1);
 	}
 }
-/*
- * Table iteration (cursor-based) interfaces
- */
 
-/*
- * Initialize an fs_table cursor.  If a directory path is supplied,
- * the cursor is set up to appear as though the table contains only
- * a single entry which represents the directory specified.
- * Otherwise it is set up to prepare for visiting all entries in the
- * global table, starting with the first.  "flags" can be either
- * FS_MOUNT_POINT or FS_PROJECT_PATH to limit what type of entries
- * will be selected by fs_cursor_next_entry().  0 can be used as a
- * wild card (selecting either type).
- */
-void
-fs_cursor_initialise(
-	char		*dir,
-	uint		flags,
-	fs_cursor_t	*cur)
-{
-	fs_path_t	*path;
-
-	memset(cur, 0, sizeof(*cur));
-	if (dir) {
-		if ((path = fs_table_lookup(dir, flags)) == NULL)
-			return;
-		cur->local = *path;
-		cur->count = 1;
-		cur->table = &cur->local;
-	} else {
-		cur->count = fs_count;
-		cur->table = fs_table;
-	}
-	cur->flags = flags;
-}
-
-/*
- * Use the cursor to find the next entry in the table having the
- * type specified by the cursor's "flags" field.
- */
-struct fs_path *
-fs_cursor_next_entry(
-	fs_cursor_t	*cur)
-{
-	while (cur->index < cur->count) {
-		fs_path_t	*next = &cur->table[cur->index++];
-
-		if (!cur->flags || (cur->flags & next->fs_flags))
-			return next;
-	}
-	return NULL;
-}
