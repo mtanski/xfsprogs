@@ -160,23 +160,6 @@ out_nodev:
 	return error;
 }
 
-void
-fs_table_destroy(void)
-{
-	while (--fs_count >= 0) {
-		free(fs_table[fs_count].fs_name);
-		if (fs_table[fs_count].fs_log)
-			free(fs_table[fs_count].fs_log);
-		if (fs_table[fs_count].fs_rt)
-			free(fs_table[fs_count].fs_rt);
-		free(fs_table[fs_count].fs_dir);
-	}
-	if (fs_table)
-		free(fs_table);
-	fs_table = NULL;
-	fs_count = 0;
-}
-
 /*
  * Table iteration (cursor-based) interfaces
  */
@@ -242,7 +225,7 @@ fs_cursor_next_entry(
  * present.  Note that the path buffers returned are allocated
  * dynamically and it is the caller's responsibility to free them.
  */
-static void
+static int
 fs_extract_mount_options(
 	struct mntent	*mnt,
 	char		**logp,
@@ -259,24 +242,27 @@ fs_extract_mount_options(
 	/* Do this only after we've finished processing mount options */
 	if (fslog) {
 		fslog = strndup(fslog, strcspn(fslog, " ,"));
-		if (!fslog) {
-			fprintf(stderr, _("%s: %s: out of memory (fslog)\n"),
-				    progname, __func__);
-			exit(1);
-		}
+		if (!fslog)
+			goto out_nomem;
 	}
 	if (fsrt) {
 		fsrt = strndup(fsrt, strcspn(fsrt, " ,"));
 		if (!fsrt) {
-			fprintf(stderr, _("%s: %s: out of memory (fsrt)\n"),
-				    progname, __func__);
 			free(fslog);
-			exit(1);
+			goto out_nomem;
 		}
 	}
-
 	*logp = fslog;
 	*rtp = fsrt;
+
+	return 0;
+
+out_nomem:
+	*logp = NULL;
+	*rtp = NULL;
+	fprintf(stderr, _("%s: unable to extract mount options for \"%s\"\n"),
+		progname, mnt->mnt_dir);
+	return ENOMEM;
 }
 
 static int
@@ -308,7 +294,8 @@ fs_table_initialise_mounts(
 		     (strcmp(path, mnt->mnt_fsname) != 0)))
 			continue;
 		found = 1;
-		fs_extract_mount_options(mnt, &fslog, &fsrt);
+		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
+			continue;
 		error = fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
 					mnt->mnt_fsname, fslog, fsrt);
 		if (error)
@@ -392,12 +379,9 @@ fs_table_insert_mount(
 	int		error;
 
 	error = fs_table_initialise_mounts(mount);
-	if (error) {
-		fs_table_destroy();
+	if (error)
 		fprintf(stderr, _("%s: cannot setup path for mount %s: %s\n"),
 			progname, mount, strerror(error));
-		exit(1);
-	}
 }
 
 static int
@@ -443,18 +427,10 @@ fs_table_insert_project(
 {
 	int		error;
 
-	if (!fs_count) {
-		fprintf(stderr, _("%s: no mount table yet, so no projects\n"),
-			progname);
-		exit(1);
-	}
 	error = fs_table_initialise_projects(project);
-	if (error) {
-		fs_table_destroy();
+	if (error)
 		fprintf(stderr, _("%s: cannot setup path for project %s: %s\n"),
 			progname, project, strerror(error));
-		exit(1);
-	}
 }
 
 /*
@@ -480,7 +456,7 @@ fs_table_initialise(
 	} else {
 		error = fs_table_initialise_mounts(NULL);
 		if (error)
-			goto out_exit;
+			goto out_error;
 	}
 	if (project_count) {
 		for (i = 0; i < project_count; i++)
@@ -488,16 +464,14 @@ fs_table_initialise(
 	} else {
 		error = fs_table_initialise_projects(NULL);
 		if (error)
-			goto out_exit;
+			goto out_error;
 	}
 
 	return;
 
-out_exit:
-	fs_table_destroy();
+out_error:
 	fprintf(stderr, _("%s: cannot initialise path table: %s\n"),
 		progname, strerror(error));
-	exit(1);
 }
 
 void 
