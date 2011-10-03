@@ -216,12 +216,21 @@ fs_extract_mount_options(
 
 	/* Do this only after we've finished processing mount options */
 	if (fslog) {
-		strtok(fslog, " ,");
-		fslog = strdup(fslog);
+		fslog = strndup(fslog, strcspn(fslog, " ,"));
+		if (!fslog) {
+			fprintf(stderr, _("%s: %s: out of memory (fslog)\n"),
+				    progname, __func__);
+			exit(1);
+		}
 	}
 	if (fsrt) {
-		strtok(fsrt, " ,");
-		fsrt = strdup(fsrt);
+		fsrt = strndup(fsrt, strcspn(fsrt, " ,"));
+		if (!fsrt) {
+			fprintf(stderr, _("%s: %s: out of memory (fsrt)\n"),
+				    progname, __func__);
+			free(fslog);
+			exit(1);
+		}
 	}
 
 	*logp = fslog;
