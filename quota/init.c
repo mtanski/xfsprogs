@@ -135,19 +135,8 @@ init(
 		}
 	}
 
-	if (optind == argc) {
-		fs_table_initialise();
-	} else {
-		while (optind < argc)
-			fs_table_insert_mount(argv[optind++]);
-		if (!nprojopts)
-			fs_table_insert_project(NULL);
-		else
-			for (c = 0; c < nprojopts; c++)
-				fs_table_insert_project(projopts[c]);
-	}
-	if (projopts)
-		free(projopts);
+	fs_table_initialise(argc - optind, &argv[optind], nprojopts, projopts);
+	free(projopts);
 
 	init_commands();
 	add_args_command(init_args_command);

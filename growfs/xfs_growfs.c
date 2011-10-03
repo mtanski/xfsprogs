@@ -193,7 +193,7 @@ main(int argc, char **argv)
 	if (dflag + lflag + rflag == 0)
 		aflag = 1;
 
-	fs_table_initialise();
+	fs_table_initialise(0, NULL, 0, NULL);
 	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
 	if (!fs) {
 		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),

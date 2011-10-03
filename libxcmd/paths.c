@@ -365,7 +365,7 @@ fs_mount_point_from_path(
 	return fs;
 }
 
-void
+static void
 fs_table_insert_mount(
 	char		*mount)
 {
@@ -424,7 +424,7 @@ fs_table_initialise_projects(
 	return error;
 }
 
-void
+static void
 fs_table_insert_project(
 	char		*project)
 {
@@ -444,20 +444,47 @@ fs_table_insert_project(
 	}
 }
 
+/*
+ * Initialize fs_table to contain the given set of mount points and
+ * projects.  If mount_count is zero, mounts is ignored and the
+ * table is populated with mounted filesystems.  If project_count is
+ * zero, projects is ignored and the table is populated with all
+ * projects defined in the projects file.
+ */
 void
-fs_table_initialise(void)
+fs_table_initialise(
+	int	mount_count,
+	char	*mounts[],
+	int	project_count,
+	char	*projects[])
 {
-	int		error;
+	int	error;
+	int	i;
 
-	error = fs_table_initialise_mounts(NULL);
-	if (!error)
-		error = fs_table_initialise_projects(NULL);
-	if (error) {
-		fs_table_destroy();
-		fprintf(stderr, _("%s: cannot initialise path table: %s\n"),
-			progname, strerror(error));
-		exit(1);
+	if (mount_count) {
+		for (i = 0; i < mount_count; i++)
+			fs_table_insert_mount(mounts[i]);
+	} else {
+		error = fs_table_initialise_mounts(NULL);
+		if (error)
+			goto out_exit;
 	}
+	if (project_count) {
+		for (i = 0; i < project_count; i++)
+			fs_table_insert_project(projects[i]);
+	} else {
+		error = fs_table_initialise_projects(NULL);
+		if (error)
+			goto out_exit;
+	}
+
+	return;
+
+out_exit:
+	fs_table_destroy();
+	fprintf(stderr, _("%s: cannot initialise path table: %s\n"),
+		progname, strerror(error));
+	exit(1);
 }
 
 void 

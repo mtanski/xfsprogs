@@ -377,7 +377,7 @@ parent_f(int argc, char **argv)
 
 	if (!tab_init) {
 		tab_init = 1;
-		fs_table_initialise();
+		fs_table_initialise(0, NULL, 0, NULL);
 	}
 	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
 	if (!fs) {
