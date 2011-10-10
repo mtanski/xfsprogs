@@ -689,7 +689,14 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	 */
 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
 	skip = howmany(num_sbs, rsb->sb_agcount);
-	size = NUM_AGH_SECTS * rsb->sb_sectsize;
+
+	/*
+	 * We haven't been able to validate the sector size yet properly
+	 * (e.g. in the case of repairing an image in a file), so we need to
+	 * take into account sector mismatches and so use the maximum possible
+	 * sector size rather than the sector size in @rsb.
+	 */
+	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
 	retval = 0;
 	list = NULL;
 	num_ok = 0;

@@ -365,7 +365,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
 		libxfs_initbuf(bp, device, blkno, blen);
 #ifdef IO_DEBUG
 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
-		pthread_self(), __FUNCTION__, BBTOB(len),
+		pthread_self(), __FUNCTION__, blen,
 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
 #endif
 

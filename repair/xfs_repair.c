@@ -569,6 +569,35 @@ main(int argc, char **argv)
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
 
+	/*
+	 * if the sector size of the filesystem we are trying to repair is
+	 * smaller than that of the underlying filesystem (i.e. we are repairing
+	 * an image), the we have to turn off direct IO because we cannot do IO
+	 * smaller than the host filesystem's sector size.
+	 */
+	if (isa_file) {
+		int     fd = libxfs_device_to_fd(x.ddev);
+		struct xfs_fsop_geom_v1 geom = { 0 };
+
+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+			do_warn(_("Cannot get host filesystem geometry.\n"
+		"Repair may fail if there is a sector size mismatch between\n"
+		"the image and the host filesystem.\n"));
+			geom.sectsize = BBSIZE;
+		}
+
+		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
+			long	old_flags;
+
+			old_flags = fcntl(fd, F_GETFL, 0);
+			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
+				do_warn(_(
+		"Sector size on host filesystem larger than image sector size.\n"
+		"Cannot turn off direct IO, so exiting.\n"));
+				exit(1);
+			}
+		}
+	}
 	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
 
 	if (!mp)  {
