@@ -397,7 +397,7 @@ pf_batch_read(
 	int			len, size;
 	int			i;
 	int			inode_bufs;
-	unsigned long		fsbno;
+	unsigned long		fsbno = 0;
 	unsigned long		max_fsbno;
 	char			*pbuf;
 
