@@ -47,6 +47,17 @@ blkmap_alloc(
 	if (nex < 1)
 		nex = 1;
 
+	if (nex > BLKMAP_NEXTS_MAX) {
+#if (BITS_PER_LONG == 32)
+		do_warn(
+	_("Number of extents requested in blkmap_alloc (%d) overflows 32 bits.\n"
+	  "If this is not a corruption, then you will need a 64 bit system\n"
+	  "to repair this filesystem.\n"),
+			nex);
+#endif
+		return NULL;
+	}
+
 	key = whichfork ? ablkmap_key : dblkmap_key;
 	blkmap = pthread_getspecific(key);
 	if (!blkmap || blkmap->naexts < nex) {
@@ -234,6 +245,23 @@ blkmap_grow(
 	if (pthread_getspecific(key) != blkmap) {
 		key = ablkmap_key;
 		ASSERT(pthread_getspecific(key) == blkmap);
+	}
+
+	if (new_naexts > BLKMAP_NEXTS_MAX) {
+#if (BITS_PER_LONG == 32)
+		do_error(
+	_("Number of extents requested in blkmap_grow (%d) overflows 32 bits.\n"
+	  "You need a 64 bit system to repair this filesystem.\n"),
+			new_naexts);
+#endif
+		return NULL;
+	}
+	if (new_naexts <= 0) {
+		do_error(
+	_("Number of extents requested in blkmap_grow (%d) overflowed the\n"
+	  "maximum number of supported extents (%d).\n"),
+			new_naexts, BLKMAP_NEXTS_MAX);
+		return NULL;
 	}
 
 	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
