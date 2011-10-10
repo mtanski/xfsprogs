@@ -2807,8 +2807,7 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
 		break;
 	}
 
-	if (dblkmap)
-		blkmap_free(dblkmap);
+	blkmap_free(dblkmap);
 
 	/*
 	 * check nlinks feature, if it's a version 1 inode,
@@ -2827,8 +2826,7 @@ clear_bad_out:
 bad_out:
 	*used = is_free;
 	*isa_dir = 0;
-	if (dblkmap)
-		blkmap_free(dblkmap);
+	blkmap_free(dblkmap);
 	return 1;
 }
 
