@@ -43,7 +43,7 @@ typedef	struct blkmap {
 blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
 void		blkmap_free(blkmap_t *blkmap);
 
-void		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
+int		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
 			       xfs_dfsbno_t b, xfs_dfilblks_t c);
 
 xfs_dfsbno_t	blkmap_get(blkmap_t *blkmap, xfs_dfiloff_t o);

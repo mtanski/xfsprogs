@@ -207,29 +207,34 @@ blkmap_next_off(
  */
 static blkmap_t *
 blkmap_grow(
-	blkmap_t	**blkmapp)
+	blkmap_t	*blkmap)
 {
 	pthread_key_t	key = dblkmap_key;
-	blkmap_t	*blkmap = *blkmapp;
+	blkmap_t	*new_blkmap;
+	int		new_naexts = blkmap->naexts + 4;
 
 	if (pthread_getspecific(key) != blkmap) {
 		key = ablkmap_key;
 		ASSERT(pthread_getspecific(key) == blkmap);
 	}
 
-	blkmap->naexts += 4;
-	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
-	if (blkmap == NULL)
+	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
+	if (!new_blkmap) {
 		do_error(_("realloc failed in blkmap_grow\n"));
-	*blkmapp = blkmap;
-	pthread_setspecific(key, blkmap);
-	return blkmap;
+		return NULL;
+	}
+	new_blkmap->naexts = new_naexts;
+	pthread_setspecific(key, new_blkmap);
+	return new_blkmap;
 }
 
 /*
  * Set an extent into a block map.
+ *
+ * If this function fails, it leaves the blkmapp untouched so the caller can
+ * handle the error and free the blkmap appropriately.
  */
-void
+int
 blkmap_set_ext(
 	blkmap_t	**blkmapp,
 	xfs_dfiloff_t	o,
@@ -239,9 +244,14 @@ blkmap_set_ext(
 	blkmap_t	*blkmap = *blkmapp;
 	xfs_extnum_t	i;
 
-	if (blkmap->nexts == blkmap->naexts)
-		blkmap = blkmap_grow(blkmapp);
+	if (blkmap->nexts == blkmap->naexts) {
+		blkmap = blkmap_grow(blkmap);
+		if (!blkmap)
+			return ENOMEM;
+		*blkmapp = blkmap;
+	}
 
+	ASSERT(blkmap->nexts < blkmap->naexts);
 	for (i = 0; i < blkmap->nexts; i++) {
 		if (blkmap->exts[i].startoff > o) {
 			memmove(blkmap->exts + i + 1,
@@ -255,4 +265,5 @@ blkmap_set_ext(
 	blkmap->exts[i].startblock = b;
 	blkmap->exts[i].blockcount = c;
 	blkmap->nexts++;
+	return 0;
 }

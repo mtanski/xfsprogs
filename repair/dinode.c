@@ -730,9 +730,27 @@ _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
 			goto done;
 		}
 
-		if (blkmapp && *blkmapp)
-			blkmap_set_ext(blkmapp, irec.br_startoff,
+		if (blkmapp && *blkmapp) {
+			error = blkmap_set_ext(blkmapp, irec.br_startoff,
 					irec.br_startblock, irec.br_blockcount);
+			if (error) {
+				/*
+				 * we don't want to clear the inode due to an
+				 * internal bmap tracking error, but if we've
+				 * run out of memory then we simply can't
+				 * validate that the filesystem is consistent.
+				 * Hence just abort at this point with an ENOMEM
+				 * error.
+				 */
+				do_abort(
+_("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+  "\t%s fork, off - %" PRIu64 ", start - %" PRIu64 ", cnt %" PRIu64 "\n"),
+					ino, strerror(error), forkname,
+					irec.br_startoff, irec.br_startblock,
+					irec.br_blockcount);
+			}
+		}
+
 		/*
 		 * Profiling shows that the following loop takes the
 		 * most time in all of xfs_repair.
