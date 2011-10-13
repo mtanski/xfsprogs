@@ -1,3 +1,28 @@
+xfsprogs-3.1.6 (13 October 2011)
+	- Re-synch of the header and libxfs files with the kernel
+	  code as of Linux 2.6.37, including reviving xfs_repair
+	  radix tree code.
+	- Fix a xfs_repair phase 4 hang, thanks to Ajeet Yadav.
+	- Subcommand names within various programs are no longer
+	  translated/localized, thanks to Arkadiusz Mi?kiewicz.
+	- Build system fixes, thanks to Ted Ts'o.
+	- Updates to teh xfs_info(8)/xfs_growfs(8) man page, thanks
+	  to Roman Ovchinnikov.
+	- xfs_quota "df" no longer reports values twice what they
+	  should have been for project quotas.
+	- mkfs.xfs now requires that sub-options are non-empty
+	  strings; thanks to Chris Pearson for reporting.
+	- Better handling of short reads in libxfs.
+	- xfs_quota now prints "N/A" rather than a large number for
+	  the quota file inode number for disabled quota types.
+	- Bogus (unrelated) mount point entries no longer cause
+	  xfs_growfs, xfs_quota, and xfs_io to quit early.
+	- xfs_repair no longer fails when the sector size of an
+	  underlying device is larger than the sector size in a
+	  hosted filesystem image.
+	- Various other internal improvements, including refactoring
+	  and eliminating more build warnings.
+
 xfsprogs-3.1.5 (30 March 2011)
 	- Polish translation update, thanks to Jakub Bogusz
 	- xfs_repair now warns if running in low memory mode
