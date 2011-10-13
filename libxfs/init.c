@@ -249,6 +249,8 @@ libxfs_init(libxfs_init_t *a)
 	fd = -1;
 	flags = (a->isreadonly | a->isdirect);
 
+	radix_tree_init();
+
 	if (a->volname) {
 		if(!check_open(a->volname,flags,&rawfile,&blockfile))
 			goto done;
