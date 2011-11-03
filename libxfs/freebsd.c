@@ -126,15 +126,13 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 	}
 
 	if ((st.st_mode & S_IFMT) != S_IFCHR) {
-		fprintf(stderr, _("%s: "
-			"Not a device or file: \"%s\"n"),
+		fprintf(stderr, _("%s: Not a device or file: \"%s\"\n"),
 			progname, path);
 		exit(1);
 	}
 
 	if (ioctl(fd, DIOCGMEDIASIZE, &size) != 0) {
-		fprintf(stderr, _("%s: "
-			"DIOCGMEDIASIZE failed on \"%s\": %s\n"),
+		fprintf(stderr, _("%s: DIOCGMEDIASIZE failed on \"%s\": %s\n"),
 			progname, path, strerror(errno));
 		exit(1);
 	}

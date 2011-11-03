@@ -1174,7 +1174,7 @@ _("would have corrected entry count in directory %" PRIu64 " from %d to %d\n"),
 				ino, sfp->hdr.count, i);
 		} else {
 			do_warn(
-_("corrected entry count in directory %" PRIu64 "u, was %d, now %d\n"),
+_("corrected entry count in directory %" PRIu64 ", was %d, now %d\n"),
 				ino, sfp->hdr.count, i);
 			sfp->hdr.count = i;
 			*dino_dirty = 1;

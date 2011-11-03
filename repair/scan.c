@@ -289,14 +289,14 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 			 */
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-_("inode 0x%" PRIu64 "bmap block 0x%" PRIu64 " claimed, state is %d\n"),
+_("inode 0x%" PRIu64 "bmap block 0x%" PRIx64 " claimed, state is %d\n"),
 				ino, bno, state);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE_FS:
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-_("inode 0x%" PRIu64 " bmap block 0x%" PRIu64 " claimed, state is %d\n"),
+_("inode 0x%" PRIu64 " bmap block 0x%" PRIx64 " claimed, state is %d\n"),
 				ino, bno, state);
 			/*
 			 * if we made it to here, this is probably a bmap block
@@ -311,7 +311,7 @@ _("inode 0x%" PRIu64 " bmap block 0x%" PRIu64 " claimed, state is %d\n"),
 		case XR_E_BAD_STATE:
 		default:
 			do_warn(
-_("bad state %d, inode 0x%" PRIu64 " bmap block 0x%" PRIu64 "\n"),
+_("bad state %d, inode 0x%" PRIu64 " bmap block 0x%" PRIx64 "\n"),
 				state, ino, bno);
 			break;
 		}
@@ -338,7 +338,7 @@ _("bad state %d, inode 0x%" PRIu64 " bmap block 0x%" PRIu64 "\n"),
 		if (numrecs > mp->m_bmap_dmxr[0] || (isroot == 0 && numrecs <
 							mp->m_bmap_dmnr[0])) {
 				do_warn(
-_("inode 0x%" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
+_("inode %" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
 					ino, numrecs, mp->m_bmap_dmnr[0],
 					mp->m_bmap_dmxr[0]);
 			return(1);

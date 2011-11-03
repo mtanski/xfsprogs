@@ -1439,7 +1439,7 @@ _("mismatch between format (%d) and size (%" PRId64 ") in symlink ino %" PRIu64 
 	}
 	if (dino->di_format == XFS_DINODE_FMT_LOCAL) {
 		do_warn(
-_("mismatch between format (%d) and size (%" PRId64 ") in symlink inode %" PRIu64 "n"),
+_("mismatch between format (%d) and size (%" PRId64 ") in symlink inode %" PRIu64 "\n"),
 			dino->di_format,
 			(__int64_t)be64_to_cpu(dino->di_size), lino);
 		return 1;
