@@ -823,6 +823,8 @@ mk_orphanage(xfs_mount_t *mp)
 	xfs_inode_t	*ip;
 	xfs_inode_t	*pip;
 	xfs_fsblock_t	first;
+	ino_tree_node_t	*irec;
+	int		ino_offset = 0;
 	int		i;
 	int		committed;
 	int		error;
@@ -875,6 +877,19 @@ mk_orphanage(xfs_mount_t *mp)
 			ORPHANAGE, error);
 	}
 	ip->i_d.di_nlink++;		/* account for . */
+	ino = ip->i_ino;
+
+	irec = find_inode_rec(mp,
+			XFS_INO_TO_AGNO(mp, ino),
+			XFS_INO_TO_AGINO(mp, ino));
+	ino_offset = get_inode_offset(mp, ino, irec);
+
+	/*
+	 * Mark the inode allocated to lost+found as used in the AVL tree
+	 * so it is not skipped in phase 7
+	 */
+	set_inode_used(irec, ino_offset);
+	add_inode_ref(irec, ino_offset);
 
 	/*
 	 * now that we know the transaction will stay around,
@@ -902,6 +917,7 @@ mk_orphanage(xfs_mount_t *mp)
 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
 
 
+
 	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
 	libxfs_dir_init(tp, ip, pip);
 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
@@ -912,9 +928,9 @@ mk_orphanage(xfs_mount_t *mp)
 			ORPHANAGE, error);
 	}
 
-	ino = ip->i_ino;
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+	add_inode_reached(irec,ino_offset);
 
 	return(ino);
 }
