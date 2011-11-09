@@ -311,6 +311,12 @@ void		get_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno,
 			      ino_tree_node_t *ino_rec);
 
 extern avltree_desc_t     **inode_tree_ptrs;
+
+static inline int
+get_inode_offset(struct xfs_mount *mp, xfs_ino_t ino, ino_tree_node_t *irec)
+{
+	return XFS_INO_TO_AGINO(mp, ino) - irec->ino_startnum;
+}
 static inline ino_tree_node_t *
 findfirst_inode_rec(xfs_agnumber_t agno)
 {
