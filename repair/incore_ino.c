@@ -25,6 +25,7 @@
 #include "threads.h"
 #include "err_protos.h"
 
+static pthread_mutex_t	ino_flist_lock;
 extern avlnode_t	*avl_firstino(avlnode_t *root);
 
 /*
@@ -36,6 +37,18 @@ avltree_desc_t	**inode_tree_ptrs;
  * ditto for uncertain inodes
  */
 static avltree_desc_t	**inode_uncertain_tree_ptrs;
+
+#define ALLOC_NUM_INOS		100
+
+/* free lists -- inode nodes and extent nodes */
+
+typedef struct ino_flist_s  {
+	ino_tree_node_t		*list;
+	ino_tree_node_t		*last;
+	long long		cnt;
+} ino_flist_t;
+
+static ino_flist_t ino_flist;	/* free list must be initialized before use */
 
 /* memory optimised nlink counting for all inodes */
 
@@ -225,63 +238,102 @@ nlink_grow_16_to_32(ino_tree_node_t *irec)
 }
 
 /*
- * Next is the uncertain inode list -- a sorted (in ascending order)
+ * next is the uncertain inode list -- a sorted (in ascending order)
  * list of inode records sorted on the starting inode number.  There
  * is one list per ag.
  */
 
 /*
- * Common code for creating inode records for use by trees and lists.
+ * common code for creating inode records for use by trees and lists.
  * called only from add_inodes and add_inodes_uncertain
  *
  * IMPORTANT:  all inodes (inode records) start off as free and
  *		unconfirmed.
  */
-static struct ino_tree_node *
-alloc_ino_node(
+/* ARGSUSED */
+static ino_tree_node_t *
+mk_ino_tree_nodes(
 	xfs_agino_t		starting_ino)
 {
-	struct ino_tree_node 	*irec;
+	int 			i;
+	ino_tree_node_t 	*ino_rec;
+	avlnode_t 		*node;
 
-	irec = malloc(sizeof(*irec));
-	if (!irec)
-		do_error(_("inode map malloc failed\n"));
+	pthread_mutex_lock(&ino_flist_lock);
+	if (ino_flist.cnt == 0)  {
+		ASSERT(ino_flist.list == NULL);
 
-	irec->avl_node.avl_nextino = NULL;
-	irec->avl_node.avl_forw = NULL;
-	irec->avl_node.avl_back = NULL;
+		if ((ino_rec = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
+					== NULL)
+			do_error(_("inode map malloc failed\n"));
 
-	irec->ino_startnum = starting_ino;
-	irec->ino_confirmed = 0;
-	irec->ino_isa_dir = 0;
-	irec->ir_free = (xfs_inofree_t) - 1;
-	irec->ino_un.ex_data = NULL;
-	irec->nlinkops = &nlinkops[0];
-	irec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
-	if (!irec->disk_nlinks)
-		do_error(_("could not allocate nlink array\n"));
-	return irec;
-}
-
-static void
-free_ino_tree_node(
-	struct ino_tree_node	*irec)
-{
-	irec->avl_node.avl_nextino = NULL;
-	irec->avl_node.avl_forw = NULL;
-	irec->avl_node.avl_back = NULL;
-
-	free(irec->disk_nlinks);
-	if (irec->ino_un.ex_data != NULL)  {
-		if (full_ino_ex_data) {
-			free(irec->ino_un.ex_data->parents);
-			free(irec->ino_un.ex_data->counted_nlinks);
+		for (i = 0; i < ALLOC_NUM_INOS; i++)  {
+			ino_rec->avl_node.avl_nextino =
+				(avlnode_t *) ino_flist.list;
+			ino_flist.list = ino_rec;
+			ino_flist.cnt++;
+			ino_rec++;
 		}
-		free(irec->ino_un.ex_data);
-
 	}
 
-	free(irec);
+	ASSERT(ino_flist.list != NULL);
+
+	ino_rec = ino_flist.list;
+	ino_flist.list = (ino_tree_node_t *) ino_rec->avl_node.avl_nextino;
+	ino_flist.cnt--;
+	node = &ino_rec->avl_node;
+	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
+	pthread_mutex_unlock(&ino_flist_lock);
+
+	/* initialize node */
+
+	ino_rec->ino_startnum = 0;
+	ino_rec->ino_confirmed = 0;
+	ino_rec->ino_isa_dir = 0;
+	ino_rec->ir_free = (xfs_inofree_t) - 1;
+	ino_rec->ino_un.ex_data = NULL;
+	ino_rec->nlinkops = &nlinkops[0];
+	ino_rec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
+	if (ino_rec->disk_nlinks == NULL)
+		do_error(_("could not allocate nlink array\n"));
+
+	return(ino_rec);
+}
+
+/*
+ * return inode record to free list, will be initialized when
+ * it gets pulled off list
+ */
+static void
+free_ino_tree_node(ino_tree_node_t *ino_rec)
+{
+	ino_rec->avl_node.avl_nextino = NULL;
+	ino_rec->avl_node.avl_forw = NULL;
+	ino_rec->avl_node.avl_back = NULL;
+
+	pthread_mutex_lock(&ino_flist_lock);
+	if (ino_flist.list != NULL)  {
+		ASSERT(ino_flist.cnt > 0);
+		ino_rec->avl_node.avl_nextino = (avlnode_t *) ino_flist.list;
+	} else  {
+		ASSERT(ino_flist.cnt == 0);
+		ino_rec->avl_node.avl_nextino = NULL;
+	}
+
+	ino_flist.list = ino_rec;
+	ino_flist.cnt++;
+
+	free(ino_rec->disk_nlinks);
+
+	if (ino_rec->ino_un.ex_data != NULL)  {
+		if (full_ino_ex_data) {
+			free(ino_rec->ino_un.ex_data->parents);
+			free(ino_rec->ino_un.ex_data->counted_nlinks);
+		}
+		free(ino_rec->ino_un.ex_data);
+
+	}
+	pthread_mutex_unlock(&ino_flist_lock);
 }
 
 /*
@@ -327,15 +379,17 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 	 * check to see if record containing inode is already in the tree.
 	 * if not, add it
 	 */
-	ino_rec = (ino_tree_node_t *)
-		avl_findrange(inode_uncertain_tree_ptrs[agno], s_ino);
-	if (!ino_rec) {
-		ino_rec = alloc_ino_node(s_ino);
+	if ((ino_rec = (ino_tree_node_t *)
+			avl_findrange(inode_uncertain_tree_ptrs[agno],
+				s_ino)) == NULL)  {
+		ino_rec = mk_ino_tree_nodes(s_ino);
+		ino_rec->ino_startnum = s_ino;
 
-		if (!avl_insert(inode_uncertain_tree_ptrs[agno],
-				&ino_rec->avl_node))
-			do_error(
-	_("add_aginode_uncertain - duplicate inode range\n"));
+		if (avl_insert(inode_uncertain_tree_ptrs[agno],
+				(avlnode_t *) ino_rec) == NULL)  {
+			do_error(_("add_aginode_uncertain - "
+				   "duplicate inode range\n"));
+		}
 	}
 
 	if (free)
@@ -400,38 +454,43 @@ clear_uncertain_ino_cache(xfs_agnumber_t agno)
 
 
 /*
- * Next comes the inode trees.  One per AG,  AVL trees of inode records, each
- * inode record tracking 64 inodes
+ * next comes the inode trees.  One per ag.  AVL trees
+ * of inode records, each inode record tracking 64 inodes
  */
-
 /*
- * Set up an inode tree record for a group of inodes that will include the
- * requested inode.
+ * set up an inode tree record for a group of inodes that will
+ * include the requested inode.
  *
- * This does NOT do error-check for duplicate records.  The caller is
- * responsible for checking that. Ino must be the start of an
- * XFS_INODES_PER_CHUNK (64) inode chunk
+ * does NOT error-check for duplicate records.  Caller is
+ * responsible for checking that.
  *
- * Each inode resides in a 64-inode chunk which can be part one or more chunks
- * (MAX(64, inodes-per-block).  The fs allocates in chunks (as opposed to 1
- * chunk) when a block can hold more than one chunk (inodes per block > 64).
- * Allocating in one chunk pieces causes us problems when it takes more than
- * one fs block to contain an inode chunk because the chunks can start on
- * *any* block boundary. So we assume that the caller has a clue because at
- * this level, we don't.
+ * ino must be the start of an XFS_INODES_PER_CHUNK (64) inode chunk
+ *
+ * Each inode resides in a 64-inode chunk which can be part
+ * one or more chunks (MAX(64, inodes-per-block).  The fs allocates
+ * in chunks (as opposed to 1 chunk) when a block can hold more than
+ * one chunk (inodes per block > 64).  Allocating in one chunk pieces
+ * causes us problems when it takes more than one fs block to contain
+ * an inode chunk because the chunks can start on *any* block boundary.
+ * So we assume that the caller has a clue because at this level, we
+ * don't.
  */
-static struct ino_tree_node *
-add_inode(
-	struct xfs_mount	*mp,
-	xfs_agnumber_t		agno,
-	xfs_agino_t		agino)
+static ino_tree_node_t *
+add_inode(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
 {
-	struct ino_tree_node	*irec;
+	ino_tree_node_t *ino_rec;
 
-	irec = alloc_ino_node(agino);
-	if (!avl_insert(inode_tree_ptrs[agno],	&irec->avl_node))
+	/* no record exists, make some and put them into the tree */
+
+	ino_rec = mk_ino_tree_nodes(ino);
+	ino_rec->ino_startnum = ino;
+
+	if (avl_insert(inode_tree_ptrs[agno],
+			(avlnode_t *) ino_rec) == NULL)  {
 		do_warn(_("add_inode - duplicate inode range\n"));
-	return irec;
+	}
+
+	return(ino_rec);
 }
 
 /*
@@ -757,6 +816,7 @@ incore_ino_init(xfs_mount_t *mp)
 	int i;
 	int agcount = mp->m_sb.sb_agcount;
 
+	pthread_mutex_init(&ino_flist_lock, NULL);
 	if ((inode_tree_ptrs = malloc(agcount *
 					sizeof(avltree_desc_t *))) == NULL)
 		do_error(_("couldn't malloc inode tree descriptor table\n"));
@@ -778,6 +838,9 @@ incore_ino_init(xfs_mount_t *mp)
 		avl_init_tree(inode_tree_ptrs[i], &avl_ino_tree_ops);
 		avl_init_tree(inode_uncertain_tree_ptrs[i], &avl_ino_tree_ops);
 	}
+
+	ino_flist.cnt = 0;
+	ino_flist.list = NULL;
 
 	if ((last_rec = malloc(sizeof(ino_tree_node_t *) * agcount)) == NULL)
 		do_error(_("couldn't malloc uncertain inode cache area\n"));
