@@ -289,14 +289,14 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
 			 */
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-_("inode 0x%" PRIu64 "bmap block 0x%" PRIx64 " claimed, state is %d\n"),
+_("inode 0x%" PRIx64 "bmap block 0x%" PRIx64 " claimed, state is %d\n"),
 				ino, bno, state);
 			break;
 		case XR_E_MULT:
 		case XR_E_INUSE_FS:
 			set_bmap(agno, agbno, XR_E_MULT);
 			do_warn(
-_("inode 0x%" PRIu64 " bmap block 0x%" PRIx64 " claimed, state is %d\n"),
+_("inode 0x%" PRIx64 " bmap block 0x%" PRIx64 " claimed, state is %d\n"),
 				ino, bno, state);
 			/*
 			 * if we made it to here, this is probably a bmap block
