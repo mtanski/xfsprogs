@@ -1,4 +1,4 @@
-xfsprogs-3.1.7 (16 November 2011)
+xfsprogs-3.1.7 (17 November 2011)
 	- Pull in fix for debian/control
 	- Polish translation update, thanks to Jakub Bogusz
 	- Fix xfs_repair link count on lost+found, thanks to Carlos Maiolino
