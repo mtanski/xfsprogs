@@ -1,3 +1,9 @@
+xfsprogs-3.1.7 (16 November 2011)
+	- Pull in fix for debian/control
+	- Polish translation update, thanks to Jakub Bogusz
+	- Fix xfs_repair link count on lost+found, thanks to Carlos Maiolino
+	- Fix various incorrect printf formats
+
 xfsprogs-3.1.6 (14 October 2011)
 	- Re-synch of the header and libxfs files with the kernel
 	  code as of Linux 2.6.37, including reviving xfs_repair
