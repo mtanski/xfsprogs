@@ -195,6 +195,7 @@ libxfs_log_header(
 #undef libxfs_readbuf
 #undef libxfs_writebuf
 #undef libxfs_getbuf
+#undef libxfs_getbuf_flags
 #undef libxfs_putbuf
 
 xfs_buf_t 	*libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
@@ -230,6 +231,19 @@ xfs_buf_t *
 libxfs_trace_getbuf(const char *func, const char *file, int line, dev_t device, xfs_daddr_t blkno, int len)
 {
 	xfs_buf_t	*bp = libxfs_getbuf(device, blkno, len);
+
+	bp->b_func = func;
+	bp->b_file = file;
+	bp->b_line = line;
+
+	return bp;
+}
+
+xfs_buf_t *
+libxfs_trace_getbuf_flags(const char *func, const char *file, int line,
+		dev_t device, xfs_daddr_t blkno, int len, unsigned long flags)
+{
+	xfs_buf_t	*bp = libxfs_getbuf(device, blkno, len, flags);
 
 	bp->b_func = func;
 	bp->b_file = file;
@@ -380,8 +394,8 @@ int			lock_buf_count = 0;
 
 extern int     use_xfs_buf_lock;
 
-xfs_buf_t *
-libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
+struct xfs_buf *
+libxfs_getbuf_flags(dev_t device, xfs_daddr_t blkno, int len, unsigned int flags)
 {
 	xfs_buf_t	*bp;
 	xfs_bufkey_t	key;
@@ -392,26 +406,46 @@ libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
 	key.bblen = len;
 
 	miss = cache_node_get(libxfs_bcache, &key, (struct cache_node **)&bp);
-	if (bp) {
-		if (use_xfs_buf_lock)
+	if (!bp)
+		return NULL;
+
+	if (use_xfs_buf_lock) {
+		if (flags & LIBXFS_GETBUF_TRYLOCK) {
+			int ret;
+
+			ret = pthread_mutex_trylock(&bp->b_lock);
+			if (ret) {
+				ASSERT(ret == EAGAIN);
+				cache_node_put(libxfs_bcache, (struct cache_node *)bp);
+				return NULL;
+			}
+		} else {
 			pthread_mutex_lock(&bp->b_lock);
-		cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
-			cache_node_get_priority((struct cache_node *)bp) -
-						CACHE_PREFETCH_PRIORITY);
-#ifdef XFS_BUF_TRACING
-		pthread_mutex_lock(&libxfs_bcache->c_mutex);
-		lock_buf_count++;
-		list_add(&bp->b_lock_list, &lock_buf_list);
-		pthread_mutex_unlock(&libxfs_bcache->c_mutex);
-#endif
-#ifdef IO_DEBUG
-		printf("%lx %s: %s buffer %p for bno = %llu\n",
-			pthread_self(), __FUNCTION__, miss ? "miss" : "hit",
-			bp, (long long)LIBXFS_BBTOOFF64(blkno));
-#endif
+		}
 	}
 
+	cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
+		cache_node_get_priority((struct cache_node *)bp) -
+						CACHE_PREFETCH_PRIORITY);
+#ifdef XFS_BUF_TRACING
+	pthread_mutex_lock(&libxfs_bcache->c_mutex);
+	lock_buf_count++;
+	list_add(&bp->b_lock_list, &lock_buf_list);
+	pthread_mutex_unlock(&libxfs_bcache->c_mutex);
+#endif
+#ifdef IO_DEBUG
+	printf("%lx %s: %s buffer %p for bno = %llu\n",
+		pthread_self(), __FUNCTION__, miss ? "miss" : "hit",
+		bp, (long long)LIBXFS_BBTOOFF64(blkno));
+#endif
+
 	return bp;
+}
+
+struct xfs_buf *
+libxfs_getbuf(dev_t device, xfs_daddr_t blkno, int len)
+{
+	return libxfs_getbuf_flags(device, blkno, len, 0);
 }
 
 void

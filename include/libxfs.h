@@ -279,27 +279,41 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 extern struct cache	*libxfs_bcache;
 extern struct cache_operations	libxfs_bcache_operations;
 
+#define LIBXFS_GETBUF_TRYLOCK	(1 << 0)
+
 #ifdef XFS_BUF_TRACING
 
 #define libxfs_readbuf(dev, daddr, len, flags) \
-		libxfs_trace_readbuf(__FUNCTION__, __FILE__, __LINE__, (dev), (daddr), (len), (flags))
+	libxfs_trace_readbuf(__FUNCTION__, __FILE__, __LINE__, \
+			    (dev), (daddr), (len), (flags))
 #define libxfs_writebuf(buf, flags) \
-		libxfs_trace_writebuf(__FUNCTION__, __FILE__, __LINE__, (buf), (flags))
+	libxfs_trace_writebuf(__FUNCTION__, __FILE__, __LINE__, \
+			      (buf), (flags))
 #define libxfs_getbuf(dev, daddr, len) \
-		libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, (dev), (daddr), (len))
+	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
+			    (dev), (daddr), (len))
+#define libxfs_getbuf_flags(dev, daddr, len, flags) \
+	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
+			    (dev), (daddr), (len), (flags))
 #define libxfs_putbuf(buf) \
-		libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
+	libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
 
-extern xfs_buf_t *libxfs_trace_readbuf(const char *, const char *, int, dev_t, xfs_daddr_t, int, int);
-extern int	libxfs_trace_writebuf(const char *, const char *, int, xfs_buf_t *, int);
+extern xfs_buf_t *libxfs_trace_readbuf(const char *, const char *, int,
+			dev_t, xfs_daddr_t, int, int);
+extern int	libxfs_trace_writebuf(const char *, const char *, int,
+			xfs_buf_t *, int);
 extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int, dev_t, xfs_daddr_t, int);
-extern void	libxfs_trace_putbuf (const char *, const char *, int, xfs_buf_t *);
+extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
+			dev_t, xfs_daddr_t, int, unsigned int);
+extern void	libxfs_trace_putbuf (const char *, const char *, int,
+			xfs_buf_t *);
 
 #else
 
 extern xfs_buf_t *libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
 extern int	libxfs_writebuf(xfs_buf_t *, int);
 extern xfs_buf_t *libxfs_getbuf(dev_t, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_getbuf_flags(dev_t, xfs_daddr_t, int, unsigned int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 
 #endif

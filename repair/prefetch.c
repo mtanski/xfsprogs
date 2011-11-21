@@ -112,8 +112,17 @@ pf_queue_io(
 {
 	xfs_buf_t		*bp;
 
-	bp = libxfs_getbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-			XFS_FSB_TO_BB(mp, blen));
+	/*
+	 * Never block on a buffer lock here, given that the actual repair
+	 * code might lock buffers in a different order from us.  Given that
+	 * the lock holder is either reading it from disk himself or
+	 * completely overwriting it this behaviour is perfectly fine.
+	 */
+	bp = libxfs_getbuf_flags(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
+			XFS_FSB_TO_BB(mp, blen), LIBXFS_GETBUF_TRYLOCK);
+	if (!bp)
+		return;
+
 	if (bp->b_flags & LIBXFS_B_UPTODATE) {
 		if (B_IS_INODE(flag))
 			pf_read_inode_dirs(args, bp);
