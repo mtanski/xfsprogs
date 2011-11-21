@@ -931,8 +931,8 @@ process_longform_attr(
 }
 
 
-static xfs_acl_t *
-xfs_acl_from_disk(xfs_acl_disk_t *dacl)
+static int
+xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
 {
 	int			count;
 	xfs_acl_t		*acl;
@@ -940,10 +940,22 @@ xfs_acl_from_disk(xfs_acl_disk_t *dacl)
 	xfs_acl_entry_disk_t	*dace, *end;
 
 	count = be32_to_cpu(dacl->acl_cnt);
+	if (count > XFS_ACL_MAX_ENTRIES) {
+		do_warn(_("Too many ACL entries, count %d\n"), count);
+		*aclp = NULL;
+		return EINVAL;
+	}
+
+
 	end = &dacl->acl_entry[0] + count;
 	acl = malloc((int)((char *)end - (char *)dacl));
-	if (!acl)
-		return NULL;
+	if (!acl) {
+		do_warn(_("cannot malloc enough for ACL attribute\n"));
+		do_warn(_("SKIPPING this ACL\n"));
+		*aclp = NULL;
+		return ENOMEM;
+	}
+
 	acl->acl_cnt = count;
 	ace = &acl->acl_entry[0];
 	for (dace = &dacl->acl_entry[0]; dace < end; ace++, dace++) {
@@ -951,7 +963,9 @@ xfs_acl_from_disk(xfs_acl_disk_t *dacl)
 		ace->ae_id = be32_to_cpu(dace->ae_id);
 		ace->ae_perm = be16_to_cpu(dace->ae_perm);
 	}
-	return acl;
+
+	*aclp = acl;
+	return 0;
 }
 
 /*
@@ -1004,15 +1018,14 @@ xfs_acl_valid(xfs_acl_disk_t *daclp)
 	if (daclp == NULL)
 		goto acl_invalid;
 
-	aclp = xfs_acl_from_disk(daclp);
-	if (aclp == NULL) {
-		do_warn(_("cannot malloc enough for ACL attribute\n"));
-		do_warn(_("SKIPPING this ACL\n"));
+	switch (xfs_acl_from_disk(&aclp, daclp)) {
+	case ENOMEM:
 		return 0;
-	}
-
-	if (aclp->acl_cnt > XFS_ACL_MAX_ENTRIES)
+	case EINVAL:
 		goto acl_invalid;
+	default:
+		break;
+	}
 
 	for (i = 0; i < aclp->acl_cnt; i++) {
 		entry = &aclp->acl_entry[i];
