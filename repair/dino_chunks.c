@@ -72,14 +72,6 @@ check_aginode_block(xfs_mount_t	*mp,
 	return(cnt);
 }
 
-int
-check_inode_block(xfs_mount_t		*mp,
-			xfs_ino_t	ino)
-{
-	return(check_aginode_block(mp, XFS_INO_TO_AGNO(mp, ino),
-					XFS_INO_TO_AGBNO(mp, ino)));
-}
-
 /*
  * tries to establish if the inode really exists in a valid
  * inode chunk.  returns number of new inodes if things are good
@@ -145,10 +137,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
 	 */
 	if (XFS_IALLOC_BLOCKS(mp) == 1)  {
 		if (agbno > max_agbno)
-			return(0);
-
-		if (check_inode_block(mp, ino) == 0)
-			return(0);
+			return 0;
+		if (check_aginode_block(mp, agno, agino) == 0)
+			return 0;
 
 		pthread_mutex_lock(&ag_locks[agno]);
 
