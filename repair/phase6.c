@@ -3258,7 +3258,7 @@ process_dir_inode(
 	 * remaining illegal directory entries.
 	 */
 
-	ASSERT(!is_inode_refchecked(ino, irec, ino_offset) || dotdot_update);
+	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
 
 	error = libxfs_iget(mp, NULL, ino, 0, &ip, 0);
 	if (error) {
@@ -3282,7 +3282,7 @@ process_dir_inode(
 			}
 		}
 
-		add_inode_refchecked(ino, irec, 0);
+		add_inode_refchecked(irec, 0);
 		return;
 	}
 
@@ -3300,7 +3300,7 @@ process_dir_inode(
 		add_inode_reached(irec, ino_offset);
 	}
 
-	add_inode_refchecked(ino, irec, ino_offset);
+	add_inode_refchecked(irec, ino_offset);
 
 	hashtab = dir_hash_init(ip->i_d.di_size);
 

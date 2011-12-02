@@ -143,10 +143,9 @@ phase7(xfs_mount_t *mp)
 					continue;
 
 				ASSERT(no_modify || is_inode_reached(irec, j));
-				ASSERT(no_modify ||
-						is_inode_referenced(irec, j));
 
 				nrefs = num_inode_references(irec, j);
+				ASSERT(no_modify || nrefs > 0);
 
 				if (get_inode_disk_nlinks(irec, j) != nrefs)
 					update_inode_nlinks(mp,

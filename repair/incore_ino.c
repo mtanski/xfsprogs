@@ -784,19 +784,3 @@ incore_ino_init(xfs_mount_t *mp)
 
 	full_ino_ex_data = 0;
 }
-
-#ifdef XR_INO_REF_DEBUG
-void
-add_inode_refchecked(xfs_ino_t ino, ino_tree_node_t *ino_rec, int ino_offset)
-{
-	XFS_INOPROC_SET_PROC((ino_rec), (ino_offset));
-
-	ASSERT(is_inode_refchecked(ino, ino_rec, ino_offset));
-}
-
-int
-is_inode_refchecked(xfs_ino_t ino, ino_tree_node_t *ino_rec, int ino_offset)
-{
-	return(XFS_INOPROC_IS_PROC(ino_rec, ino_offset) == 0LL ? 0 : 1);
-}
-#endif /* XR_INO_REF_DEBUG */

@@ -503,8 +503,6 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 #include <xfs/xfs_log.h>
 #include <xfs/xfs_log_priv.h>
 
-#define XFS_INOBT_CLR_FREE(rp,i)	((rp)->ir_free &= ~XFS_INOBT_MASK(i))
-#define XFS_INOBT_SET_FREE(rp,i)	((rp)->ir_free |= XFS_INOBT_MASK(i))
 #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
 			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
 
