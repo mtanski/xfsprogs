@@ -49,8 +49,7 @@ extern void	phase7(xfs_mount_t *);
 /*
  * -o: user-supplied override options
  */
-
-char *o_opts[] = {
+static char *o_opts[] = {
 #define ASSUME_XFS	0
 	"assume_xfs",
 #define PRE_65_BETA	1
@@ -71,8 +70,7 @@ char *o_opts[] = {
 /*
  * -c: conversion options
  */
-
-char *c_opts[] = {
+static char *c_opts[] = {
 #define CONVERT_LAZY_COUNT	0
 	"lazycount",
 	NULL
@@ -183,7 +181,7 @@ unknown(char opt, char *s)
 /*
  * sets only the global argument flags and variables
  */
-void
+static void
 process_args(int argc, char **argv)
 {
 	char *p;
@@ -398,7 +396,7 @@ do_log(char const *msg, ...)
 	va_end(args);
 }
 
-void
+static void
 calc_mkfs(xfs_mount_t *mp)
 {
 	xfs_agblock_t	fino_bno;

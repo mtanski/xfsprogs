@@ -36,47 +36,7 @@
  * inode clearing routines
  */
 
-/*
- * return the offset into the inode where the attribute fork starts
- */
-/* ARGSUSED */
-int
-calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
-{
-	int	offset = (__psint_t)XFS_DFORK_DPTR(dino) - (__psint_t)dino;
-	xfs_bmdr_block_t        *dfp;
-
-	/*
-	 * don't worry about alignment when calculating offset
-	 * because the data fork is already 8-byte aligned
-	 */
-	switch (dino->di_format)  {
-	case XFS_DINODE_FMT_DEV:
-		offset += sizeof(xfs_dev_t);
-		break;
-	case XFS_DINODE_FMT_LOCAL:
-		offset += be64_to_cpu(dino->di_size);
-		break;
-	case XFS_DINODE_FMT_EXTENTS:
-		offset += be32_to_cpu(dino->di_nextents) *
-						sizeof(xfs_bmbt_rec_t);
-		break;
-	case XFS_DINODE_FMT_BTREE:
-		dfp = (xfs_bmdr_block_t *)XFS_DFORK_DPTR(dino);
-		offset += be16_to_cpu(dfp->bb_numrecs) *
-						sizeof(xfs_bmbt_rec_t);
-		break;
-	default:
-		do_error(_("Unknown inode format.\n"));
-		abort();
-		break;
-	}
-
-	return(offset);
-}
-
-/* ARGSUSED */
-int
+static int
 clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 {
 	ASSERT(dino->di_forkoff != 0);
@@ -125,8 +85,7 @@ _("would have cleared inode %" PRIu64 " attributes\n"), ino_num);
 	return(1);
 }
 
-/* ARGSUSED */
-int
+static int
 clear_dinode_core(xfs_dinode_t *dinoc, xfs_ino_t ino_num)
 {
 	int dirty = 0;
@@ -262,8 +221,7 @@ clear_dinode_core(xfs_dinode_t *dinoc, xfs_ino_t ino_num)
 	return(dirty);
 }
 
-/* ARGSUSED */
-int
+static int
 clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
 {
 
@@ -281,7 +239,7 @@ clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
  * until after the agi unlinked lists are walked in phase 3.
  * returns > zero if the inode has been altered while being cleared
  */
-int
+static int
 clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 {
 	int dirty;
@@ -445,31 +403,6 @@ verify_agbno(xfs_mount_t	*mp,
 	return verify_ag_bno(sbp, agno, agbno) == 0;
 }
 
-/*
- * return address of block fblock if it's within the range described
- * by the extent list.  Otherwise, returns a null address.
- */
-/* ARGSUSED */
-xfs_dfsbno_t
-get_bmbt_reclist(
-	xfs_mount_t		*mp,
-	xfs_bmbt_rec_t		*rp,
-	int			numrecs,
-	xfs_dfiloff_t		fblock)
-{
-	int			i;
-	xfs_bmbt_irec_t 	irec;
-
-	for (i = 0; i < numrecs; i++) {
-		libxfs_bmbt_disk_get_all(rp + i, &irec);
-		if (irec.br_startoff >= fblock &&
-				irec.br_startoff + irec.br_blockcount < fblock)
-			return (irec.br_startblock + fblock - irec.br_startoff);
-	}
-	return(NULLDFSBNO);
-}
-
-
 static int
 process_rt_rec(
 	xfs_mount_t		*mp,
@@ -601,8 +534,7 @@ _("illegal state %d in rt block map %" PRIu64 "\n"),
  * file overlaps with any duplicate extents (in the
  * duplicate extent list).
  */
-/* ARGSUSED */
-int
+static int
 process_bmbt_reclist_int(
 	xfs_mount_t		*mp,
 	xfs_bmbt_rec_t		*rp,
@@ -924,7 +856,7 @@ get_agino_buf(xfs_mount_t	 *mp,
  *
  * NOTE: getfunc_extlist only used by dirv1 checking code
  */
-xfs_dfsbno_t
+static xfs_dfsbno_t
 getfunc_extlist(xfs_mount_t		*mp,
 		xfs_ino_t		ino,
 		xfs_dinode_t		*dip,
@@ -953,7 +885,7 @@ getfunc_extlist(xfs_mount_t		*mp,
 /*
  * NOTE: getfunc_btree only used by dirv1 checking code... 
  */
-xfs_dfsbno_t
+static xfs_dfsbno_t
 getfunc_btree(xfs_mount_t		*mp,
 		xfs_ino_t		ino,
 		xfs_dinode_t		*dip,
@@ -1161,8 +1093,7 @@ get_bmapi(xfs_mount_t *mp, xfs_dinode_t *dino_p,
 /*
  * return 1 if inode should be cleared, 0 otherwise
  */
-/* ARGSUSED */
-int
+static int
 process_btinode(
 	xfs_mount_t		*mp,
 	xfs_agnumber_t		agno,
@@ -1337,8 +1268,7 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
 /*
  * return 1 if inode should be cleared, 0 otherwise
  */
-/* ARGSUSED */
-int
+static int
 process_exinode(
 	xfs_mount_t		*mp,
 	xfs_agnumber_t		agno,
@@ -1418,7 +1348,7 @@ process_lclinode(
 	return(0);
 }
 
-int
+static int
 process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
 {
 	xfs_dfiloff_t		expected_offset;
@@ -1489,7 +1419,7 @@ _("bad extent #%d count (%" PRIu64 ") in symlink %" PRIu64 " data fork\n"),
  * takes a name and length and returns 1 if the name contains
  * a \0, returns 0 otherwise
  */
-int
+static int
 null_check(char *name, int length)
 {
 	int i;
@@ -1508,7 +1438,7 @@ null_check(char *name, int length)
  * like usual, returns 0 if everything's ok and 1 if something's
  * bogus
  */
-int
+static int
 process_symlink(
 	xfs_mount_t	*mp,
 	xfs_ino_t	lino,
@@ -2439,8 +2369,7 @@ _("would clear obsolete nlink field in version 2 inode %" PRIu64 ", currently %d
  *
  * for detailed, info, look at process_dinode() comments.
  */
-/* ARGSUSED */
-int
+static int
 process_dinode_int(xfs_mount_t *mp,
 		xfs_dinode_t *dino,
 		xfs_agnumber_t agno,

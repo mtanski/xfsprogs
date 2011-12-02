@@ -61,19 +61,6 @@ scan_bmbt_reclist(
 	xfs_drfsbno_t		*tot,
 	int			whichfork);
 
-int
-verify_inode_chunk(xfs_mount_t		*mp,
-			xfs_ino_t	ino,
-			xfs_ino_t	*start_ino);
-
-int	verify_aginode_chunk(xfs_mount_t	*mp,
-				xfs_agnumber_t	agno,
-				xfs_agino_t	agino,
-				xfs_agino_t	*agino_start);
-
-int
-clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num);
-
 void
 update_rootino(xfs_mount_t *mp);
 

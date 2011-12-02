@@ -509,7 +509,7 @@ mk_rbmino(xfs_mount_t *mp)
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 }
 
-int
+static int
 fill_rbmino(xfs_mount_t *mp)
 {
 	xfs_buf_t	*bp;
@@ -576,7 +576,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
 	return(0);
 }
 
-int
+static int
 fill_rsumino(xfs_mount_t *mp)
 {
 	xfs_buf_t	*bp;
@@ -645,7 +645,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode 
 	return(0);
 }
 
-void
+static void
 mk_rsumino(xfs_mount_t *mp)
 {
 	xfs_trans_t	*tp;
@@ -751,7 +751,7 @@ mk_rsumino(xfs_mount_t *mp)
 /*
  * makes a new root directory.
  */
-void
+static void
 mk_root_dir(xfs_mount_t *mp)
 {
 	xfs_trans_t	*tp;
@@ -815,7 +815,7 @@ mk_root_dir(xfs_mount_t *mp)
 /*
  * orphanage name == lost+found
  */
-xfs_ino_t
+static xfs_ino_t
 mk_orphanage(xfs_mount_t *mp)
 {
 	xfs_ino_t	ino;
@@ -1130,9 +1130,6 @@ mv_orphanage(
 }
 
 /*
- * like get_first_dblock_fsbno only it uses the simulation code instead
- * of raw I/O.
- *
  * Returns the fsbno of the first (leftmost) block in the directory leaf.
  * sets *bno to the directory block # corresponding to the returned fsbno.
  */
@@ -3519,7 +3516,7 @@ out:
  * mark realtime bitmap and summary inodes as reached.
  * quota inode will be marked here as well
  */
-void
+static void
 mark_standalone_inodes(xfs_mount_t *mp)
 {
 	ino_tree_node_t		*irec;

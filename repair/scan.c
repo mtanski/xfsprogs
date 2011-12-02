@@ -69,7 +69,7 @@ set_mp(xfs_mount_t *mpp)
 	mp = mpp;
 }
 
-void
+static void
 scan_sbtree(
 	xfs_agblock_t	root,
 	int		nlevels,

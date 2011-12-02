@@ -75,12 +75,6 @@ err_release_da_cursor(
 	da_bt_cursor_t	*cursor,
 	int		prev_level);
 
-xfs_dfsbno_t
-get_first_dblock_fsbno(
-	xfs_mount_t	*mp,
-	xfs_ino_t	ino,
-	xfs_dinode_t	*dino);
-
 void
 init_da_freemap(
 	da_freemap_t *dir_freemap);
@@ -89,17 +83,6 @@ int
 namecheck(
 	char		*name,
 	int		length);
-
-int
-process_shortform_dir(
-	xfs_mount_t	*mp,
-	xfs_ino_t	ino,
-	xfs_dinode_t	*dip,
-	int		ino_discovery,
-	int		*dino_dirty,	/* is dinode buffer dirty? */
-	xfs_ino_t	*parent,	/* out - NULLFSINO if entry doesn't exist */
-	char		*dirname,	/* directory pathname */
-	int		*repair);	/* out - 1 if dir was fixed up */
 
 int
 process_dir(

@@ -34,8 +34,7 @@
  * the dinodes are verified using verify_uncertain_dinode() which
  * means only the basic inode info is checked, no fork checks.
  */
-
-int
+static int
 check_aginode_block(xfs_mount_t	*mp,
 			xfs_agnumber_t	agno,
 			xfs_agblock_t	agbno)
@@ -85,7 +84,7 @@ check_aginode_block(xfs_mount_t	*mp,
  * routines called by check_uncertain_aginodes() and
  * process_uncertain_aginodes().
  */
-int
+static int
 verify_inode_chunk(xfs_mount_t		*mp,
 			xfs_ino_t	ino,
 			xfs_ino_t	*start_ino)
@@ -513,7 +512,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
 /*
  * same as above only for ag inode chunks
  */
-int
+static int
 verify_aginode_chunk(xfs_mount_t	*mp,
 			xfs_agnumber_t	agno,
 			xfs_agino_t	agino,
@@ -536,7 +535,7 @@ verify_aginode_chunk(xfs_mount_t	*mp,
  * this does the same as the two above only it returns a pointer
  * to the inode record in the good inode tree
  */
-ino_tree_node_t *
+static ino_tree_node_t *
 verify_aginode_chunk_irec(xfs_mount_t	*mp,
 			xfs_agnumber_t	agno,
 			xfs_agino_t	agino)

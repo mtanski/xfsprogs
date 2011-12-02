@@ -80,8 +80,7 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
  * in user attribute land without a conflict.
  * If value is non-zero, then a remote attribute is being passed in
  */
-
-int
+static int
 valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 {
 	/* for proper alignment issues, get the structs and memmove the values */
@@ -146,7 +145,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
  * if you cannot modify the structures. repair is set to 1, if anything
  * was fixed.
  */
-int
+static int
 process_shortform_attr(
 	xfs_ino_t	ino,
 	xfs_dinode_t	*dip,
@@ -490,7 +489,7 @@ bad_free_out:
 	return -1;
 }
 
-int
+static int
 process_leaf_attr_block(
 	xfs_mount_t	*mp,
 	xfs_attr_leafblock_t *leaf,
@@ -643,7 +642,7 @@ process_leaf_attr_block(
 /*
  * returns 0 if the attribute fork is ok, 1 if it has to be junked.
  */
-int
+static int
 process_leaf_attr_level(xfs_mount_t	*mp,
 			da_bt_cursor_t	*da_cursor)
 {
@@ -775,7 +774,7 @@ error_out:
  * returns 0 if things are ok, 1 if bad
  * Note this code has been based off process_node_dir.
  */
-int
+static int
 process_node_attr(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,
@@ -825,8 +824,7 @@ process_node_attr(
  * returns 0 if things are ok, 1 if bad (attributes needs to be junked)
  * repair is set, if anything was changed, but attributes can live thru it
  */
-
-int
+static int
 process_longform_attr(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,

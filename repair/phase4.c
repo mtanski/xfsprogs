@@ -40,7 +40,7 @@
  * free in which case they'd never be cleared so the fields wouldn't
  * be cleared by process_dinode().
  */
-void
+static void
 quotino_check(xfs_mount_t *mp)
 {
 	ino_tree_node_t *irec;
@@ -81,7 +81,7 @@ quotino_check(xfs_mount_t *mp)
 	}
 }
 
-void
+static void
 quota_sb_check(xfs_mount_t *mp)
 {
 	/*

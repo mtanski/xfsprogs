@@ -72,8 +72,7 @@ namecheck(char *name, int length)
  * entries.  a non-zero return value means the directory is bogus
  * and should be blasted.
  */
-/* ARGSUSED */
-int
+static int
 process_shortform_dir(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,
@@ -553,7 +552,7 @@ set_da_freemap(xfs_mount_t *mp, da_freemap_t *map, int start, int stop)
  * returns 0 if holemap is consistent with reality (as expressed by
  * the da_freemap_t).  returns 1 if there's a conflict.
  */
-int
+static int
 verify_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes,
 			xfs_ino_t ino, xfs_dablk_t da_bno)
 {
@@ -591,7 +590,7 @@ verify_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes,
 	return(0);
 }
 
-void
+static void
 process_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes)
 {
 	int i, j, in_hole, start, length, smallest, num_holes;
@@ -678,8 +677,7 @@ process_da_freemap(xfs_mount_t *mp, da_freemap_t *map, da_hole_map_t *holes)
 /*
  * returns 1 if the hole info doesn't match, 0 if it does
  */
-/* ARGSUSED */
-int
+static int
 compare_da_freemaps(xfs_mount_t *mp, da_hole_map_t *holemap,
 			da_hole_map_t *block_hmap, int entries,
 			xfs_ino_t ino, xfs_dablk_t da_bno)
@@ -879,7 +877,7 @@ error_out:
  * buffers (e.g. if we do, it's a mistake).  if error == 1, we're
  * in an error-handling case so unreleased buffers may exist.
  */
-void
+static void
 release_da_cursor_int(xfs_mount_t	*mp,
 			da_bt_cursor_t	*cursor,
 			int		prev_level,
@@ -919,91 +917,6 @@ err_release_da_cursor(xfs_mount_t	*mp,
 			int		prev_level)
 {
 	release_da_cursor_int(mp, cursor, prev_level, 1);
-}
-
-/*
- * like traverse_int_dablock only it does far less checking
- * and doesn't maintain the cursor.  Just gets you to the
- * leftmost block in the directory.  returns the fsbno
- * of that block if successful, NULLDFSBNO if not.
- */
-xfs_dfsbno_t
-get_first_dblock_fsbno(xfs_mount_t	*mp,
-			xfs_ino_t	ino,
-			xfs_dinode_t	*dino)
-{
-	xfs_dablk_t		bno;
-	int			i;
-	xfs_da_intnode_t	*node;
-	xfs_dfsbno_t		fsbno;
-	xfs_buf_t		*bp;
-
-	/*
-	 * traverse down left-side of tree until we hit the
-	 * left-most leaf block setting up the btree cursor along
-	 * the way.
-	 */
-	bno = 0;
-	i = -1;
-	node = NULL;
-
-	fsbno = get_bmapi(mp, dino, ino, bno, XFS_DATA_FORK);
-
-	if (fsbno == NULLDFSBNO)  {
-		do_warn(_("bmap of block #%u of inode %" PRIu64 " failed\n"),
-			bno, ino);
-		return(fsbno);
-	}
-
-	if (be64_to_cpu(dino->di_size) <= XFS_LBSIZE(mp))
-		return(fsbno);
-
-	do {
-		/*
-		 * walk down left side of btree, release buffers as you
-		 * go.  if the root block is a leaf (single-level btree),
-		 * just return it.
-		 *
-		 */
-
-		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-				XFS_FSB_TO_BB(mp, 1), 0);
-		if (!bp) {
-			do_warn(
-	_("can't read block %u (fsbno %" PRIu64 ") for directory inode %" PRIu64 "\n"),
-				bno, fsbno, ino);
-			return(NULLDFSBNO);
-		}
-
-		node = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
-
-		if (XFS_DA_NODE_MAGIC !=
-		    be16_to_cpu(node->hdr.info.magic))  {
-			do_warn(
-	_("bad dir/attr magic number in inode %" PRIu64 ", file bno = %u, fsbno = %" PRIu64 "\n"),
-				ino, bno, fsbno);
-			libxfs_putbuf(bp);
-			return(NULLDFSBNO);
-		}
-
-		if (i == -1)
-			i = be16_to_cpu(node->hdr.level);
-		bno = be32_to_cpu(node->btree[0].before);
-
-		libxfs_putbuf(bp);
-
-		fsbno = get_bmapi(mp, dino, ino, bno, XFS_DATA_FORK);
-
-		if (fsbno == NULLDFSBNO)  {
-			do_warn(_("bmap of block #%u of inode %" PRIu64 " failed\n"),
-				bno, ino);
-			return(NULLDFSBNO);
-		}
-
-		i--;
-	} while(i > 0);
-
-	return(fsbno);
 }
 
 /*
@@ -1401,8 +1314,7 @@ size_t ts_dirbuf_size = 64*1024;
  * bad entry name index pointers), we lose the directory.  We could
  * try harder to fix this but it'll do for now.
  */
-/* ARGSUSED */
-int
+static int
 process_leaf_dir_block(
 	xfs_mount_t		*mp,
 	xfs_dir_leafblock_t	*leaf,
@@ -2311,7 +2223,7 @@ _("- existing hole info for block %d, dir inode %" PRIu64 " (base, size) - \n"),
 /*
  * returns 0 if the directory is ok, 1 if it has to be junked.
  */
-int
+static int
 process_leaf_dir_level(xfs_mount_t	*mp,
 			da_bt_cursor_t	*da_cursor,
 			int		ino_discovery,
@@ -2489,8 +2401,7 @@ error_out:
  *
  * returns 0 if things are ok, 1 if bad (directory needs to be junked)
  */
-/* ARGSUSED */
-int
+static int
 process_node_dir(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,
@@ -2588,8 +2499,7 @@ _("setting directory inode (%" PRIu64 ") size to %" PRIu64 " bytes, was %" PRId6
  *
  * returns 0 if things are ok, 1 if bad (directory needs to be junked)
  */
-/* ARGSUSED */
-int
+static int
 process_leaf_dir(
 	xfs_mount_t	*mp,
 	xfs_ino_t	ino,
