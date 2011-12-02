@@ -34,9 +34,6 @@ static pthread_key_t dirbuf_key;
 static pthread_key_t dir_freemap_key;
 static pthread_key_t attr_freemap_key;
 
-extern pthread_key_t dblkmap_key;
-extern pthread_key_t ablkmap_key;
-
 static void
 ts_alloc(pthread_key_t key, unsigned n, size_t size)
 {

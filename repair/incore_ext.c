@@ -386,8 +386,6 @@ findfirst_bcnt_extent(xfs_agnumber_t agno)
 extent_tree_node_t *
 findbiggest_bcnt_extent(xfs_agnumber_t agno)
 {
-	extern avlnode_t *avl_lastino(avlnode_t *root);
-
 	ASSERT(extent_bcnt_ptrs != NULL);
 	ASSERT(extent_bcnt_ptrs[agno] != NULL);
 

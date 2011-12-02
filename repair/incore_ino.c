@@ -25,8 +25,6 @@
 #include "threads.h"
 #include "err_protos.h"
 
-extern avlnode_t	*avl_firstino(avlnode_t *root);
-
 /*
  * array of inode tree ptrs, one per ag
  */

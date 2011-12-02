@@ -209,8 +209,11 @@ void		incore_ext_init(xfs_mount_t *);
  * the nodes.
  */
 void		incore_ext_teardown(xfs_mount_t *mp);
-
 void		incore_ino_init(xfs_mount_t *);
+
+int		count_bno_extents(xfs_agnumber_t);
+int		count_bno_extents_blocks(xfs_agnumber_t, uint *);
+int		count_bcnt_extents(xfs_agnumber_t);
 
 /*
  * inode definitions

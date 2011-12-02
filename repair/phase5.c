@@ -1404,11 +1404,6 @@ phase5_func(
 	xfs_extlen_t	freeblks2;
 #endif
 	xfs_agblock_t	num_extents;
-	extern int	count_bno_extents(xfs_agnumber_t);
-	extern int	count_bno_extents_blocks(xfs_agnumber_t, uint *);
-#ifdef XR_BLD_FREE_TRACE
-	extern int	count_bcnt_extents(xfs_agnumber_t);
-#endif
 
 	if (verbose)
 		do_log(_("        - agno = %d\n"), agno);

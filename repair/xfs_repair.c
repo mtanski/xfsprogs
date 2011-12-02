@@ -32,14 +32,6 @@
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
-extern void	phase1(xfs_mount_t *);
-extern void	phase2(xfs_mount_t *, int);
-extern void	phase3(xfs_mount_t *);
-extern void	phase4(xfs_mount_t *);
-extern void	phase5(xfs_mount_t *);
-extern void	phase6(xfs_mount_t *);
-extern void	phase7(xfs_mount_t *);
-
 #define		XR_MAX_SECT_SIZE	(64 * 1024)
 
 /*
