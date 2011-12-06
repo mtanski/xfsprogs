@@ -369,8 +369,14 @@ out:
 	return ret;
 }
 
-static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
+static void blkid_get_topology(
+	const char	*device,
+	int		*sunit,
+	int		*swidth,
+	int		*sectorsize,
+	int		force_overwrite)
 {
+
 	blkid_topology tp;
 	blkid_probe pr;
 	unsigned long val;
@@ -409,6 +415,15 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int 
 		fprintf(stderr,
 			_("warning: device is not properly aligned %s\n"),
 			device);
+
+		if (!force_overwrite) {
+			fprintf(stderr,
+				_("Use -f to force usage of a misaligned device\n"));
+
+			exit(EXIT_FAILURE);
+		}
+		/* force a 512b sector size if the device is misaligned */
+		*sectorsize = BBSIZE;
 	}
 
 	blkid_free_probe(pr);
@@ -421,19 +436,23 @@ out_free_probe:
 		device);
 }
 
-static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
+static void get_topology(
+	libxfs_init_t		*xi,
+	struct fs_topology	*ft,
+	int			force_overwrite)
 {
 	if (!xi->disfile) {
 		const char *dfile = xi->volname ? xi->volname : xi->dname;
 
 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-				   &ft->sectorsize);
+				   &ft->sectorsize, force_overwrite);
 	}
 
 	if (xi->rtname && !xi->risfile) {
 		int dummy;
 
-		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
+				   &dummy, force_overwrite);
 	}
 }
 #else /* ENABLE_BLKID */
@@ -460,8 +479,12 @@ check_overwrite(
 	return 0;
 }
 
-static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
+static void get_topology(
+	libxfs_init_t		*xi,
+	struct fs_topology	*ft,
+	int			force_overwrite)
 {
+
 	char *dfile = xi->volname ? xi->volname : xi->dname;
 	int bsz = BBSIZE;
 
@@ -1625,7 +1648,7 @@ main(
 	}
 
 	memset(&ft, 0, sizeof(ft));
-	get_topology(&xi, &ft);
+	get_topology(&xi, &ft, force_overwrite);
 
 	if (ft.sectoralign) {
 		/*
