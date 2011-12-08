@@ -311,7 +311,7 @@ _("inode 0x%" PRIx64 " bmap block 0x%" PRIx64 " claimed, state is %d\n"),
 		case XR_E_BAD_STATE:
 		default:
 			do_warn(
-_("bad state %d, inode 0x%" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+_("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
 				state, ino, bno);
 			break;
 		}
@@ -388,7 +388,7 @@ _("out-of-order bmap key (file offset) in inode %" PRIu64 ", %s fork, fsbno %" P
 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
 							mp->m_bmap_dmnr[1])) {
 		do_warn(
-_("inode 0x%" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
+_("inode %" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
 			ino, numrecs, mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
 		return(1);
 	}
