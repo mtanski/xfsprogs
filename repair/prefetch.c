@@ -641,7 +641,18 @@ pf_queuing_worker(
 		pftrace("queuing irec %p in AG %d, sem count = %d",
 			irec, args->agno, i);
 #endif
-		sem_wait(&args->ra_count);
+		err = sem_trywait(&args->ra_count);
+		if (err == EAGAIN) {
+			/*
+			 * Kick the queue once we have reached the limit;
+			 * without this the threads processing the inodes
+			 * might get stuck on a buffer that has been locked
+			 * and added to the I/O queue but is waiting for
+			 * the thread to be woken.
+			 */
+			pf_start_io_workers(args);
+			sem_wait(&args->ra_count);
+		}
 
 		num_inos = 0;
 		bno = XFS_AGINO_TO_AGBNO(mp, cur_irec->ino_startnum);
