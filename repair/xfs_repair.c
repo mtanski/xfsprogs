@@ -417,12 +417,16 @@ calc_mkfs(xfs_mount_t *mp)
 	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
 
 	/*
-	 * If we only have a single allocation group the log is also allocated
-	 * in the first allocation group and we need to add the number of
-	 * blocks used by the log to the above calculation.
-	 * All this of course doesn't apply if we have an external log.
+	 * If the log is allocated in the first allocation group we need to
+	 * add the number of blocks used by the log to the above calculation.
+	 *
+	 * This can happens with filesystems that only have a single
+	 * allocation group, or very odd geometries created by old mkfs
+	 * versions on very small filesystems.
 	 */
-	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
+	if (mp->m_sb.sb_logstart &&
+	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0) {
+
 		/*
 		 * XXX(hch): verify that sb_logstart makes sense?
 		 */
