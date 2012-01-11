@@ -342,6 +342,8 @@ libxfs_initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
 	list_head_init(&bp->b_lock_list);
 #endif
 	pthread_mutex_init(&bp->b_lock, NULL);
+	bp->b_holder = 0;
+	bp->b_recur = 0;
 }
 
 xfs_buf_t *
@@ -410,18 +412,26 @@ libxfs_getbuf_flags(dev_t device, xfs_daddr_t blkno, int len, unsigned int flags
 		return NULL;
 
 	if (use_xfs_buf_lock) {
-		if (flags & LIBXFS_GETBUF_TRYLOCK) {
-			int ret;
+		int ret;
 
-			ret = pthread_mutex_trylock(&bp->b_lock);
-			if (ret) {
-				ASSERT(ret == EAGAIN);
-				cache_node_put(libxfs_bcache, (struct cache_node *)bp);
-				return NULL;
+		ret = pthread_mutex_trylock(&bp->b_lock);
+		if (ret) {
+			ASSERT(ret == EAGAIN);
+			if (flags & LIBXFS_GETBUF_TRYLOCK)
+				goto out_put;
+
+			if (pthread_equal(bp->b_holder, pthread_self())) {
+				fprintf(stderr,
+	_("Warning: recursive buffer locking at block %" PRIu64 " detected\n"),
+					blkno);
+				bp->b_recur++;
+				return bp;
+			} else {
+				pthread_mutex_lock(&bp->b_lock);
 			}
-		} else {
-			pthread_mutex_lock(&bp->b_lock);
 		}
+
+		bp->b_holder = pthread_self();
 	}
 
 	cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
@@ -440,6 +450,9 @@ libxfs_getbuf_flags(dev_t device, xfs_daddr_t blkno, int len, unsigned int flags
 #endif
 
 	return bp;
+out_put:
+	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
+	return NULL;
 }
 
 struct xfs_buf *
@@ -458,8 +471,14 @@ libxfs_putbuf(xfs_buf_t *bp)
 	list_del_init(&bp->b_lock_list);
 	pthread_mutex_unlock(&libxfs_bcache->c_mutex);
 #endif
-	if (use_xfs_buf_lock)
-		pthread_mutex_unlock(&bp->b_lock);
+	if (use_xfs_buf_lock) {
+		if (bp->b_recur) {
+			bp->b_recur--;
+		} else {
+			bp->b_holder = 0;
+			pthread_mutex_unlock(&bp->b_lock);
+		}
+	}
 	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
 }
 

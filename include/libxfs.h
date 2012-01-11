@@ -226,6 +226,8 @@ typedef struct xfs_buf {
 	unsigned		b_bcount;
 	dev_t			b_dev;
 	pthread_mutex_t		b_lock;
+	pthread_t		b_holder;
+	unsigned int		b_recur;
 	void			*b_fsprivate;
 	void			*b_fsprivate2;
 	void			*b_fsprivate3;
