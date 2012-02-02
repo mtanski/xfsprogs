@@ -108,7 +108,7 @@ print_verbose(
 	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
 
 	(*cur_extent)++;
-	*last_logical = lstart + len;
+	*last_logical = extent->fe_logical + extent->fe_length;
 }
 
 static void
@@ -151,7 +151,7 @@ print_plain(
 	else
 		printf("\n");
 	(*cur_extent)++;
-	*last_logical = lstart + len;
+	*last_logical = extent->fe_logical + extent->fe_length;
 }
 
 int
@@ -252,7 +252,7 @@ fiemap_f(
 		memset(fiemap, 0, map_size);
 		fiemap->fm_flags = fiemap_flags;
 		fiemap->fm_start = last_logical;
-		fiemap->fm_length = -1;
+		fiemap->fm_length = -1LL;
 		fiemap->fm_extent_count = num_extents;
 
 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
