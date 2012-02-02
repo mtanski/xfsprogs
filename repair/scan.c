@@ -348,12 +348,12 @@ _("inode %" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
 		 * we'll bail out and presumably clear the inode.
 		 */
 		if (check_dups == 0)  {
-			err = process_bmbt_reclist(mp, rp, numrecs,
-					type, ino, tot, blkmapp,
-					&first_key, &last_key,
-					whichfork);
+			err = process_bmbt_reclist(mp, rp, &numrecs, type, ino,
+						   tot, blkmapp, &first_key,
+						   &last_key, whichfork);
 			if (err)
-				return(1);
+				return 1;
+
 			/*
 			 * check that key ordering is monotonically increasing.
 			 * if the last_key value in the cursor is set to
@@ -377,10 +377,11 @@ _("out-of-order bmap key (file offset) in inode %" PRIu64 ", %s fork, fsbno %" P
 			bm_cursor->level[level].first_key = first_key;
 			bm_cursor->level[level].last_key = last_key;
 
-			return(0);
-		} else
-			return(scan_bmbt_reclist(mp, rp, numrecs,
-						type, ino, tot, whichfork));
+			return 0;
+		} else {
+			return scan_bmbt_reclist(mp, rp, &numrecs, type, ino,
+						 tot, whichfork);
+		}
 	}
 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
 							mp->m_bmap_dmnr[1])) {
