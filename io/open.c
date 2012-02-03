@@ -163,16 +163,8 @@ openfile(
 		}
 	}
 
-	if (!geom)
+	if (!platform_test_xfs_fd(fd))
 		return fd;
-
-	if (!platform_test_xfs_fd(fd)) {
-		fprintf(stderr, _("%s: specified file "
-			"[\"%s\"] is not on an XFS filesystem\n"),
-			progname, path);
-		close(fd);
-		return -1;
-	}
 
 	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
 		perror("XFS_IOC_FSGEOMETRY");
@@ -282,10 +274,10 @@ open_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
+	while ((c = getopt(argc, argv, "Racdfm:nrstx")) != EOF) {
 		switch (c) {
 		case 'F':
-			flags |= IO_FOREIGN;
+			/* Ignored / deprecated now, handled automatically */
 			break;
 		case 'a':
 			flags |= IO_APPEND;
@@ -328,10 +320,12 @@ open_f(
 	if (optind != argc - 1)
 		return command_usage(&open_cmd);
 
-	fd = openfile(argv[optind], flags & IO_FOREIGN ?
-					NULL : &geometry, flags, mode);
+	fd = openfile(argv[optind], &geometry, flags, mode);
 	if (fd < 0)
 		return 0;
+
+	if (!platform_test_xfs_fd(fd))
+		flags |= IO_FOREIGN;
 
 	addfile(argv[optind], fd, &geometry, flags);
 	return 0;
