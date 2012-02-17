@@ -163,7 +163,7 @@ openfile(
 		}
 	}
 
-	if (!platform_test_xfs_fd(fd))
+	if (!geom || !platform_test_xfs_fd(fd))
 		return fd;
 
 	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
