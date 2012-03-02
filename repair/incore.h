@@ -268,11 +268,17 @@ typedef struct parent_list  {
 #endif
 } parent_list_t;
 
+union ino_nlink {
+	__uint8_t	*un8;
+	__uint16_t	*un16;
+	__uint32_t	*un32;
+};
+
 typedef struct ino_ex_data  {
 	__uint64_t		ino_reached;	/* bit == 1 if reached */
 	__uint64_t		ino_processed;	/* reference checked bit mask */
 	parent_list_t		*parents;
-	__uint8_t		*counted_nlinks;/* counted nlinks in P6 */
+	union ino_nlink		counted_nlinks;/* counted nlinks in P6 */
 } ino_ex_data_t;
 
 typedef struct ino_tree_node  {
@@ -281,8 +287,8 @@ typedef struct ino_tree_node  {
 	xfs_inofree_t		ir_free;	/* inode free bit mask */
 	__uint64_t		ino_confirmed;	/* confirmed bitmask */
 	__uint64_t		ino_isa_dir;	/* bit == 1 if a directory */
-	struct nlink_ops	*nlinkops;	/* pointer to current nlink ops */
-	__uint8_t		*disk_nlinks;	/* on-disk nlinks, set in P3 */
+	__uint8_t		nlink_size;
+	union ino_nlink		disk_nlinks;	/* on-disk nlinks, set in P3 */
 	union  {
 		ino_ex_data_t	*ex_data;	/* phases 6,7 */
 		parent_list_t	*plist;		/* phases 2-5 */
@@ -291,16 +297,6 @@ typedef struct ino_tree_node  {
 
 #define INOS_PER_IREC	(sizeof(__uint64_t) * NBBY)
 #define	IREC_MASK(i)	((__uint64_t)1 << (i))
-
-typedef struct nlink_ops {
-	const int	nlink_size;
-	void		(*disk_nlink_set)(ino_tree_node_t *, int, __uint32_t);
-	__uint32_t	(*disk_nlink_get)(ino_tree_node_t *, int);
-	__uint32_t	(*counted_nlink_get)(ino_tree_node_t *, int);
-	__uint32_t	(*counted_nlink_inc)(ino_tree_node_t *, int);
-	__uint32_t	(*counted_nlink_dec)(ino_tree_node_t *, int);
-} nlink_ops_t;
-
 
 void		add_ino_ex_data(xfs_mount_t *mp);
 
@@ -460,29 +456,12 @@ static inline int is_inode_free(struct ino_tree_node *irec, int offset)
  * detected and drop_inode_ref() is called every time a link to
  * an inode that we've counted is removed.
  */
+void add_inode_ref(struct ino_tree_node *irec, int offset);
+void drop_inode_ref(struct ino_tree_node *irec, int offset);
+__uint32_t num_inode_references(struct ino_tree_node *irec, int offset);
 
-static inline void add_inode_ref(struct ino_tree_node *irec, int offset)
-{
-	ASSERT(irec->ino_un.ex_data != NULL);
-
-	irec->nlinkops->counted_nlink_inc(irec, offset);
-}
-
-static inline void drop_inode_ref(struct ino_tree_node *irec, int offset)
-{
-	ASSERT(irec->ino_un.ex_data != NULL);
-
-	if (irec->nlinkops->counted_nlink_dec(irec, offset) == 0)
-		irec->ino_un.ex_data->ino_reached &= ~IREC_MASK(offset);
-}
-
-static inline __uint32_t num_inode_references(struct ino_tree_node *irec,
-		int offset)
-{
-	ASSERT(irec->ino_un.ex_data != NULL);
-
-	return irec->nlinkops->counted_nlink_get(irec, offset);
-}
+void set_inode_disk_nlinks(struct ino_tree_node *irec, int offset, __uint32_t nlinks);
+__uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int offset);
 
 static inline int is_inode_reached(struct ino_tree_node *irec, int offset)
 {
@@ -494,18 +473,6 @@ static inline void add_inode_reached(struct ino_tree_node *irec, int offset)
 {
 	add_inode_ref(irec, offset);
 	irec->ino_un.ex_data->ino_reached |= IREC_MASK(offset);
-}
-
-static inline void set_inode_disk_nlinks(struct ino_tree_node *irec, int offset,
-		__uint32_t nlinks)
-{
-	irec->nlinkops->disk_nlink_set(irec, offset, nlinks);
-}
-
-static inline __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec,
-		int offset)
-{
-	return irec->nlinkops->disk_nlink_get(irec, offset);
 }
 
 /*
