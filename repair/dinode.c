@@ -2552,16 +2552,22 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 		uint16_t flags = be16_to_cpu(dino->di_flags);
 
 		if (flags & ~XFS_DIFLAG_ANY) {
-			do_warn(_("Bad flags set in inode %" PRIu64), lino);
+			if (!uncertain) {
+				do_warn(
+	_("Bad flags set in inode %" PRIu64 "\n"),
+					lino);
+			}
 			flags &= ~XFS_DIFLAG_ANY;
 		}
 
 		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) {
 			/* need an rt-dev! */
 			if (!rt_name) {
-				do_warn(
-	_("inode %" PRIu64 " has RT flag set but there is no RT device"),
-					lino);
+				if (!uncertain) {
+					do_warn(
+	_("inode %" PRIu64 " has RT flag set but there is no RT device\n"),
+						lino);
+				}
 				flags &= ~(XFS_DIFLAG_REALTIME |
 						XFS_DIFLAG_RTINHERIT);
 			}
@@ -2569,8 +2575,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 		if (flags & XFS_DIFLAG_NEWRTBM) {
 			/* must be a rt bitmap inode */
 			if (lino != mp->m_sb.sb_rbmino) {
-				do_warn(_("inode %" PRIu64 " not rt bitmap"),
-					lino);
+				if (!uncertain) {
+					do_warn(
+	_("inode %" PRIu64 " not rt bitmap\n"),
+						lino);
+				}
 				flags &= ~XFS_DIFLAG_NEWRTBM;
 			}
 		}
@@ -2580,9 +2589,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 			     XFS_DIFLAG_NOSYMLINKS)) {
 			/* must be a directory */
 			if (di_mode && !S_ISDIR(di_mode)) {
-				do_warn(
-	_("directory flags set on non-directory inode %" PRIu64 ),
-					lino);
+				if (!uncertain) {
+					do_warn(
+	_("directory flags set on non-directory inode %" PRIu64 "\n" ),
+						lino);
+				}
 				flags &= ~(XFS_DIFLAG_RTINHERIT |
 						XFS_DIFLAG_EXTSZINHERIT |
 						XFS_DIFLAG_PROJINHERIT |
@@ -2592,9 +2603,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 		if (flags & (XFS_DIFLAG_REALTIME | XFS_XFLAG_EXTSIZE)) {
 			/* must be a file */
 			if (di_mode && !S_ISREG(di_mode)) {
-				do_warn(
-	_("file flags set on non-file inode %" PRIu64),
-					lino);
+				if (!uncertain) {
+					do_warn(
+	_("file flags set on non-file inode %" PRIu64 "\n"),
+						lino);
+				}
 				flags &= ~(XFS_DIFLAG_REALTIME |
 						XFS_XFLAG_EXTSIZE);
 			}
