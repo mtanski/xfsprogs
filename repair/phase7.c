@@ -40,19 +40,20 @@ set_nlinks(
 
 	if (!no_modify) {
 		*dirty = 1;
-		do_warn(_("resetting inode %" PRIu64 " nlinks from %d to %d\n"),
+		do_warn(_("resetting inode %" PRIu64 " nlinks from %u to %u\n"),
 			ino, dinoc->di_nlink, nrefs);
 
-		if (nrefs > XFS_MAXLINK_1)  {
+		if (dinoc->di_version == 1 && nrefs > XFS_MAXLINK_1)  {
 			ASSERT(fs_inode_nlink);
 			do_warn(
-_("nlinks %d will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
+_("nlinks %u will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
 				nrefs, ino);
 
 		}
 		dinoc->di_nlink = nrefs;
 	} else  {
-		do_warn(_("would have reset inode %" PRIu64 " nlinks from %d to %d\n"),
+		do_warn(
+_("would have reset inode %" PRIu64 " nlinks from %u to %u\n"),
 			ino, dinoc->di_nlink, nrefs);
 	}
 }
