@@ -362,12 +362,6 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 	return (clearit);
 }
 
-/*
- * freespace map for directory and attribute leaf blocks (1 bit per byte)
- * 1 == used, 0 == free
- */
-size_t ts_attr_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
-
 /* The block is read in. The magic number and forward / backward
  * links are checked by the caller process_leaf_attr.
  * If any problems occur the routine returns with non-zero. In
@@ -502,7 +496,7 @@ process_leaf_attr_block(
 {
 	xfs_attr_leaf_entry_t *entry;
 	int  i, start, stop, clearit, usedbs, firstb, thissize;
-	da_freemap_t *attr_freemap = ts_attr_freemap();
+	da_freemap_t *attr_freemap;
 
 	clearit = usedbs = 0;
 	*repair = 0;
@@ -518,7 +512,7 @@ process_leaf_attr_block(
 		return (1);
 	}
 
-	init_da_freemap(attr_freemap);
+	attr_freemap = alloc_da_freemap(mp);
 	(void) set_da_freemap(mp, attr_freemap, 0, stop);
 
 	/* go thru each entry checking for problems */
@@ -635,6 +629,8 @@ process_leaf_attr_block(
 		* we can add it then.
 		*/
 	}
+
+	free(attr_freemap);
 	return (clearit);  /* and repair */
 }
 

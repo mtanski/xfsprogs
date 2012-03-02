@@ -494,23 +494,19 @@ process_shortform_dir(
 }
 
 /*
- * freespace map for directory leaf blocks (1 bit per byte)
- * 1 == used, 0 == free
+ * Allocate a freespace map for directory or attr leaf blocks (1 bit per byte)
+ * 1 == used, 0 == free.
  */
-size_t ts_dir_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
-
-void
-init_da_freemap(da_freemap_t *dir_freemap)
+da_freemap_t *
+alloc_da_freemap(struct xfs_mount *mp)
 {
-	memset(dir_freemap, 0, sizeof(da_freemap_t) * DA_BMAP_SIZE);
+	return calloc(1, mp->m_sb.sb_blocksize / NBBY);
 }
 
 /*
- * sets directory freemap, returns 1 if there is a conflict
- * returns 0 if everything's good.  the range [start, stop) is set.
- * right now, we just use the static array since only one directory
- * block will be processed at once even though the interface allows
- * you to pass in arbitrary da_freemap_t array's.
+ * Set the he range [start, stop) in the directory freemap.
+ *
+ * Returns 1 if there is a conflict or 0 if everything's good.
  *
  * Within a char, the lowest bit of the char represents the byte with
  * the smallest address
@@ -725,28 +721,6 @@ _("- derived hole (base %d, size %d) in block %d, dir inode %" PRIu64 " not foun
 
 	return(res);
 }
-
-#if 0
-void
-test(xfs_mount_t *mp)
-{
-	int i = 0;
-	da_hole_map_t	holemap;
-
-	init_da_freemap(dir_freemap);
-	memset(&holemap, 0, sizeof(da_hole_map_t));
-
-	set_da_freemap(mp, dir_freemap, 0, 50);
-	set_da_freemap(mp, dir_freemap, 100, 126);
-	set_da_freemap(mp, dir_freemap, 126, 129);
-	set_da_freemap(mp, dir_freemap, 130, 131);
-	set_da_freemap(mp, dir_freemap, 150, 160);
-	process_da_freemap(mp, dir_freemap, &holemap);
-
-	return;
-}
-#endif
-
 
 /*
  * walk tree from root to the left-most leaf block reading in
@@ -1279,8 +1253,6 @@ verify_da_path(xfs_mount_t	*mp,
 	return(0);
 }
 
-size_t ts_dirbuf_size = 64*1024;
-
 /*
  * called by both node dir and leaf dir processing routines
  * validates all contents *but* the sibling pointers (forw/back)
@@ -1353,7 +1325,7 @@ process_leaf_dir_block(
 	char				fname[MAXNAMELEN + 1];
 	da_hole_map_t			holemap;
 	da_hole_map_t			bholemap;
-	unsigned char			*dir_freemap = ts_dir_freemap();
+	da_freemap_t			*dir_freemap;
 
 #ifdef XR_DIR_TRACE
 	fprintf(stderr, "\tprocess_leaf_dir_block - ino %" PRIu64 "\n", ino);
@@ -1362,7 +1334,7 @@ process_leaf_dir_block(
 	/*
 	 * clear static dir block freespace bitmap
 	 */
-	init_da_freemap(dir_freemap);
+	dir_freemap = alloc_da_freemap(mp);
 
 	*buf_dirty = 0;
 	first_used = mp->m_sb.sb_blocksize;
@@ -1374,7 +1346,8 @@ process_leaf_dir_block(
 		do_warn(
 _("directory block header conflicts with used space in directory inode %" PRIu64 "\n"),
 			ino);
-		return(1);
+		res = 1;
+		goto out;
 	}
 
 	/*
@@ -1690,8 +1663,8 @@ _("entry references free inode %" PRIu64 " in directory %" PRIu64 ", would clear
 			do_warn(
 _("bad size, entry #%d in dir inode %" PRIu64 ", block %u -- entry overflows block\n"),
 				i, ino, da_bno);
-
-			return(1);
+			res = 1;
+			goto out;
 		}
 
 		start = (__psint_t)&leaf->entries[i] - (__psint_t)leaf;;
@@ -1701,7 +1674,8 @@ _("bad size, entry #%d in dir inode %" PRIu64 ", block %u -- entry overflows blo
 			do_warn(
 _("dir entry slot %d in block %u conflicts with used space in dir inode %" PRIu64 "\n"),
 				i, da_bno, ino);
-			return(1);
+			res = 1;
+			goto out;
 		}
 
 		/*
@@ -2095,7 +2069,7 @@ _("- existing hole info for block %d, dir inode %" PRIu64 " (base, size) - \n"),
 			_("- compacting block %u in dir inode %" PRIu64 "\n"),
 					da_bno, ino);
 
-			new_leaf = (xfs_dir_leafblock_t *) ts_dirbuf();
+			new_leaf = malloc(mp->m_sb.sb_blocksize);
 
 			/*
 			 * copy leaf block header
@@ -2135,6 +2109,7 @@ _("- existing hole info for block %d, dir inode %" PRIu64 " (base, size) - \n"),
 					do_warn(
 	_("not enough space in block %u of dir inode %" PRIu64 " for all entries\n"),
 						da_bno, ino);
+					free(new_leaf);
 					break;
 				}
 
@@ -2196,6 +2171,7 @@ _("- existing hole info for block %d, dir inode %" PRIu64 " (base, size) - \n"),
 			 * final step, copy block back
 			 */
 			memmove(leaf, new_leaf, mp->m_sb.sb_blocksize);
+			free(new_leaf);
 
 			*buf_dirty = 1;
 		} else  {
@@ -2214,10 +2190,13 @@ _("- existing hole info for block %d, dir inode %" PRIu64 " (base, size) - \n"),
 		junk_zerolen_dir_leaf_entries(mp, leaf, ino, buf_dirty);
 	}
 #endif
+
+out:
+	free(dir_freemap);
 #ifdef XR_DIR_TRACE
 	fprintf(stderr, "process_leaf_dir_block returns %d\n", res);
 #endif
-	return((res > 0) ? 1 : 0);
+	return res > 0 ? 1 : 0;
 }
 
 /*

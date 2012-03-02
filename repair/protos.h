@@ -41,10 +41,6 @@ char	*alloc_ag_buf(int size);
 void	print_inode_list(xfs_agnumber_t i);
 char	*err_string(int err_code);
 
-void	*ts_attr_freemap(void);
-void	*ts_dir_freemap(void);
-void	*ts_dirbuf(void);
-void	ts_init(void);
 void	thread_init(void);
 
 void	phase1(struct xfs_mount *);

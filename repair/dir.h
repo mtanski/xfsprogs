@@ -21,9 +21,6 @@
 
 struct blkmap;
 
-/* 1 bit per byte, max XFS blocksize == 64K bits / NBBY */
-#define DA_BMAP_SIZE		8192
-
 typedef unsigned char	da_freemap_t;
 
 /*
@@ -75,9 +72,9 @@ err_release_da_cursor(
 	da_bt_cursor_t	*cursor,
 	int		prev_level);
 
-void
-init_da_freemap(
-	da_freemap_t *dir_freemap);
+da_freemap_t *
+alloc_da_freemap(
+	xfs_mount_t	*mp);
 
 int
 namecheck(
