@@ -508,7 +508,8 @@ static void get_topology(
 		}
 	}
 
-	ft->sectorsize = bsz;
+	ft->lsectorsize = bsz;
+	ft->psectorsize = bsz;
 
 	if (xi->rtname && !xi->risfile) {
 		int dummy1;
