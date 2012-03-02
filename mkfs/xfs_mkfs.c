@@ -33,7 +33,8 @@ struct fs_topology {
 	int	dsunit;		/* stripe unit - data subvolume */
 	int	dswidth;	/* stripe width - data subvolume */
 	int	rtswidth;	/* stripe width - rt subvolume */
-	int	sectorsize;
+	int	lsectorsize;	/* logical sector size &*/
+	int	psectorsize;	/* physical sector size */
 	int	sectoralign;
 };
 
@@ -373,7 +374,8 @@ static void blkid_get_topology(
 	const char	*device,
 	int		*sunit,
 	int		*swidth,
-	int		*sectorsize,
+	int		*lsectorsize,
+	int		*psectorsize,
 	int		force_overwrite)
 {
 
@@ -408,8 +410,11 @@ static void blkid_get_topology(
 	val = blkid_topology_get_optimal_io_size(tp) >> 9;
 	if (val > 1)
 		*swidth = val;
-	val = blkid_probe_get_sectorsize(pr);
-	*sectorsize = val;
+
+	val = blkid_topology_get_logical_sector_size(tp);
+	*lsectorsize = val;
+	val = blkid_topology_get_physical_sector_size(tp);
+	*psectorsize = val;
 
 	if (blkid_topology_get_alignment_offset(tp) != 0) {
 		fprintf(stderr,
@@ -422,8 +427,8 @@ static void blkid_get_topology(
 
 			exit(EXIT_FAILURE);
 		}
-		/* force a 512b sector size if the device is misaligned */
-		*sectorsize = BBSIZE;
+		/* Do not use physical sector size if the device is misaligned */
+		*psectorsize = *lsectorsize;
 	}
 
 	blkid_free_probe(pr);
@@ -445,14 +450,15 @@ static void get_topology(
 		const char *dfile = xi->volname ? xi->volname : xi->dname;
 
 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-				   &ft->sectorsize, force_overwrite);
+				   &ft->lsectorsize, &ft->psectorsize,
+				   force_overwrite);
 	}
 
 	if (xi->rtname && !xi->risfile) {
 		int dummy;
 
 		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
-				   &dummy, force_overwrite);
+				   &dummy, &dummy, force_overwrite);
 	}
 }
 #else /* ENABLE_BLKID */
@@ -1663,9 +1669,29 @@ main(
 	} else if (!ssflag) {
 		/*
 		 * Unless specified manually on the command line use the
-		 * advertised sector size of the device.
+		 * advertised sector size of the device.  We use the physical
+		 * sector size unless the requested block size is smaller
+		 * than that, then we can use logical, but warn about the
+		 * inefficiency.
 		 */
-		sectorsize = ft.sectorsize ? ft.sectorsize : XFS_MIN_SECTORSIZE;
+
+		/* Older kernels may not have physical/logical distinction */
+		if (!ft.psectorsize)
+			ft.psectorsize = ft.lsectorsize;
+
+		sectorsize = ft.psectorsize ? ft.psectorsize :
+					      XFS_MIN_SECTORSIZE;
+
+		if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
+			fprintf(stderr,
+_("specified blocksize %d is less than device physical sector size %d\n"),
+				blocksize, ft.psectorsize);
+			fprintf(stderr,
+_("switching to logical sector size %d\n"),
+				ft.lsectorsize);
+			sectorsize = ft.lsectorsize ? ft.lsectorsize :
+						      XFS_MIN_SECTORSIZE;
+		}
 	}
 
 	if (ft.sectoralign || !ssflag) {
@@ -1678,12 +1704,17 @@ main(
 
 	if (sectorsize < XFS_MIN_SECTORSIZE ||
 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
-		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+		if (ssflag)
+			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+		else
+			fprintf(stderr,
+_("block size %d cannot be smaller than logical sector size %d\n"),
+				blocksize, ft.lsectorsize);
 		usage();
 	}
-	if (sectorsize < ft.sectorsize) {
+	if (sectorsize < ft.lsectorsize) {
 		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
-			sectorsize, ft.sectorsize);
+			sectorsize, ft.lsectorsize);
 		usage();
 	}
 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
