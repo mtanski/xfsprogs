@@ -240,7 +240,6 @@ open_help(void)
 "\n"
 " Opens a file for subsequent use by all of the other xfs_io commands.\n"
 " With no arguments, open uses the stat command to show the current file.\n"
-" -F -- foreign filesystem file, disallow XFS-specific commands\n"
 " -a -- open with the O_APPEND flag (append-only mode)\n"
 " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
 " -f -- open with O_CREAT (create the file if it doesn't exist)\n"
@@ -274,7 +273,7 @@ open_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "Racdfm:nrstx")) != EOF) {
+	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
 		switch (c) {
 		case 'F':
 			/* Ignored / deprecated now, handled automatically */
