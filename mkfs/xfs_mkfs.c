@@ -707,7 +707,7 @@ validate_ag_geometry(
 {
 	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
 		fprintf(stderr,
-	_("agsize (%lldb) too small, need at least %lld blocks\n"),
+	_("agsize (%lld blocks) too small, need at least %lld blocks\n"),
 			(long long)agsize,
 			(long long)XFS_AG_MIN_BLOCKS(blocklog));
 		usage();
@@ -715,7 +715,7 @@ validate_ag_geometry(
 
 	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
 		fprintf(stderr,
-	_("agsize (%lldb) too big, maximum is %lld blocks\n"),
+	_("agsize (%lld blocks) too big, maximum is %lld blocks\n"),
 			(long long)agsize,
 			(long long)XFS_AG_MAX_BLOCKS(blocklog));
 		usage();
@@ -723,7 +723,7 @@ validate_ag_geometry(
 
 	if (agsize > dblocks) {
 		fprintf(stderr,
-	_("agsize (%lldb) too big, data area is %lld blocks\n"),
+	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
 			(long long)agsize, (long long)dblocks);
 			usage();
 	}
@@ -2174,9 +2174,12 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 				if (nodsflag) {
 					dsunit = dswidth = 0;
 				} else {
-					fprintf(stderr,
-_("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
-						(long long)agsize, dsunit);
+					/*
+					 * agsize is out of bounds, this will
+					 * print nice details & exit.
+					 */
+					validate_ag_geometry(blocklog, dblocks,
+							    agsize, agcount);
 					exit(1);
 				}
 			}
