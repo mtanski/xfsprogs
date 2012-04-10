@@ -956,6 +956,40 @@ obfuscate_sf_dir(
 }
 
 static void
+obfuscate_path_components(
+	char			*buf,
+	__uint64_t		len)
+{
+	uchar_t			*comp;
+	xfs_dahash_t		hash;
+
+	comp = (uchar_t *)buf;
+	while (comp < (uchar_t *)buf + len) {
+		char	*slash;
+		int	namelen;
+
+		/* find slash at end of this component */
+		slash = strchr((char *)comp, '/');
+		if (!slash) {
+			/* last (or single) component */
+			namelen = strlen((char *)comp);
+			hash = libxfs_da_hashname(comp, namelen);
+			obfuscate_name(hash, namelen, comp);
+			break;
+		}
+		namelen = slash - (char *)comp;
+		/* handle leading or consecutive slashes */
+		if (!namelen) {
+			comp++;
+			continue;
+		}
+		hash = libxfs_da_hashname(comp, namelen);
+		obfuscate_name(hash, namelen, comp);
+		comp += namelen + 1;
+	}
+}
+
+static void
 obfuscate_sf_symlink(
 	xfs_dinode_t		*dip)
 {
@@ -971,8 +1005,7 @@ obfuscate_sf_symlink(
 	}
 
 	buf = (char *)XFS_DFORK_DPTR(dip);
-	while (len > 0)
-		buf[--len] = random() % 127 + 1;
+	obfuscate_path_components(buf, len);
 }
 
 static void
@@ -1176,11 +1209,8 @@ obfuscate_symlink_blocks(
 	char			*block,
 	xfs_dfilblks_t		count)
 {
-	int 			i;
-
 	count <<= mp->m_sb.sb_blocklog;
-	for (i = 0; i < count; i++)
-		block[i] = random() % 127 + 1;
+	obfuscate_path_components(block, count);
 }
 
 #define MAX_REMOTE_VALS		4095
