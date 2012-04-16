@@ -1898,7 +1898,7 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
 			fprintf(stderr,
 	_("allowable inode size with %d byte blocks is between %d and %d\n"),
 				blocksize, XFS_DINODE_MIN_SIZE, maxsz);
-		usage();
+		exit(1);
 	}
 
 	/* if lsu or lsunit was specified, automatically use v2 logs */
