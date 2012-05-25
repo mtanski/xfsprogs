@@ -1,7 +1,8 @@
-AC_INIT(include/libxfs.h)
+AC_INIT([xfsprogs], [3.1.8])
 AC_PREREQ(2.50)
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([include/libxfs.h])
 AC_CONFIG_HEADER(include/platform_defs.h)
 AC_PREFIX_DEFAULT(/usr)
 
@@ -118,4 +119,5 @@ AC_TYPE_U32
 AC_SIZEOF_POINTERS_AND_LONG
 AC_MANUAL_FORMAT
 
-AC_OUTPUT(include/builddefs)
+AC_CONFIG_FILES([include/builddefs])
+AC_OUTPUT
