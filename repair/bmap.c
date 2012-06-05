@@ -168,7 +168,8 @@ blkmap_getn(
 		/*
 		 * rare case - multiple extents for a single dir block
 		 */
-		bmp = malloc(nb * sizeof(bmap_ext_t));
+		if (!bmp)
+			bmp = malloc(nb * sizeof(bmap_ext_t));
 		if (!bmp)
 			do_error(_("blkmap_getn malloc failed (%" PRIu64 " bytes)\n"),
 						nb * sizeof(bmap_ext_t));
