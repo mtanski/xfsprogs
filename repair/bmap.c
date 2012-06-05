@@ -206,8 +206,25 @@ blkmap_last_off(
 	return ext->startoff + ext->blockcount;
 }
 
-/*
- * Return the next offset in a block map.
+/**
+ * blkmap_next_off - Return next logical block offset in a block map.
+ * @blkmap:	blockmap to use
+ * @o:		current file logical block number
+ * @t:		current extent index into blockmap (in/out)
+ *
+ * Given a logical block offset in a file, return the next mapped logical offset
+ * The map index "t" tracks the current extent number in the block map, and
+ * is updated automatically if the returned offset resides within the next
+ * mapped extent.
+ *
+ * If the blockmap contains no extents, or no more logical offsets are mapped,
+ * or the extent index exceeds the number of extents in the map,
+ * return NULLDFILOFF.
+ *
+ * If offset o is beyond extent index t, the first offset in the next extent
+ * after extent t will be returned.
+ *
+ * Intended to be called starting with offset 0, index 0, and iterated.
  */
 xfs_dfiloff_t
 blkmap_next_off(
@@ -223,10 +240,12 @@ blkmap_next_off(
 		*t = 0;
 		return blkmap->exts[0].startoff;
 	}
+	if (*t >= blkmap->nexts)
+		return NULLDFILOFF;
 	ext = blkmap->exts + *t;
 	if (o < ext->startoff + ext->blockcount - 1)
 		return o + 1;
-	if (*t >= blkmap->nexts - 1)
+	if (*t == blkmap->nexts - 1)
 		return NULLDFILOFF;
 	(*t)++;
 	return ext[1].startoff;
