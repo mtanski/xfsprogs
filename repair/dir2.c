@@ -2003,7 +2003,11 @@ process_leaf_node_dir2(
 	ndbno = NULLDFILOFF;
 	while ((dbno = blkmap_next_off(blkmap, ndbno, &t)) < mp->m_dirleafblk) {
 		nex = blkmap_getn(blkmap, dbno, mp->m_dirblkfsbs, &bmp, &lbmp);
-		ndbno = dbno + mp->m_dirblkfsbs - 1;
+		/* Advance through map to last dfs block in this dir block */
+		ndbno = dbno;
+		while (ndbno < dbno + mp->m_dirblkfsbs - 1) {
+			ndbno = blkmap_next_off(blkmap, ndbno, &t);
+		}
 		if (nex == 0) {
 			do_warn(
 _("block %" PRIu64 " for directory inode %" PRIu64 " is missing\n"),
