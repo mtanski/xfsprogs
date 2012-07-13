@@ -250,22 +250,11 @@ const field_t	bmapbtd_key_flds[] = {
 };
 #undef KOFF
 
-#ifndef XFS_NATIVE_HOST
-
 #define BMBT_EXNTFLAG_BITOFF	0
 #define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF + BMBT_EXNTFLAG_BITLEN)
 #define BMBT_STARTBLOCK_BITOFF	(BMBT_STARTOFF_BITOFF + BMBT_STARTOFF_BITLEN)
 #define BMBT_BLOCKCOUNT_BITOFF	\
 	(BMBT_STARTBLOCK_BITOFF + BMBT_STARTBLOCK_BITLEN)
-
-#else
-
-#define BMBT_EXNTFLAG_BITOFF	63
-#define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF - BMBT_STARTOFF_BITLEN)
-#define BMBT_STARTBLOCK_BITOFF	85 /* 128 - 43 (other 9 is in first word) */
-#define BMBT_BLOCKCOUNT_BITOFF	64 /* Start of second 64 bit container */
-
-#endif /* XFS_NATIVE_HOST */
 
 const field_t	bmapbta_rec_flds[] = {
 	{ "startoff", FLDT_CFILEOFFA, OI(BMBT_STARTOFF_BITOFF), C1, 0,
