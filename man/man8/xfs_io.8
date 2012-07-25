@@ -172,7 +172,7 @@ See the
 .B pread
 command.
 .TP
-.BI "pwrite [ \-i " file " ] [ \-d ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] " "offset length"
+.BI "pwrite [ \-i " file " ] [ \-d ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-wW ] [ \-V " vectors " ] " "offset length"
 Writes a range of bytes in a specified blocksize from the given
 .IR offset .
 The bytes written can be either a set pattern or read in from another
@@ -203,6 +203,35 @@ requests will be split. The default blocksize is 4096 bytes.
 used to set the (repeated) fill pattern which
 is used when the data to write is not coming from a file.
 The default buffer fill pattern value is 0xcdcdcdcd.
+.TP
+.B \-F
+write the buffers in a forwards sequential direction.
+.TP
+.B \-B
+write the buffers in a reserve sequential direction.
+.TP
+.B \-R
+write the buffers in the give range in a random order.
+.TP
+.B \-Z seed
+specify the random number seed used for random write
+.TP
+.B \-w
+call
+.BR fdatasync (2)
+once all writes are complete (included in timing results)
+.TP
+.B \-W
+call
+.BR fsync (2)
+once all writes are complete (included in timing results)
+.TP
+.B \-V vectors
+Use the vectored IO write syscall
+.BR pwritev (2)
+with a number of blocksize length iovecs. The number of iovecs is set by the
+.I vectors
+parameter.
 .RE
 .PD
 .TP

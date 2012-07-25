@@ -82,6 +82,8 @@ extern unsigned int	recurse_dir;
 
 extern void		*buffer;
 extern size_t		buffersize;
+extern int		vectors;
+extern struct iovec	*iov;
 extern int		alloc_buffer(size_t, int, unsigned int);
 extern int		read_buffer(int, off64_t, long long, long long *,
 					int, int);
