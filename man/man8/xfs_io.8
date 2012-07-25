@@ -131,7 +131,7 @@ See the
 .B close
 command.
 .TP
-.BI "pread [ \-b " bsize " ] [ \-v ] " "offset length"
+.BI "pread [ \-b " bsize " ] [ \-v ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
 Reads a range of bytes in a specified blocksize from the given
 .IR offset .
 .RS 1.0i
@@ -145,6 +145,25 @@ requests will be split. The default blocksize is 4096 bytes.
 .B \-v
 dump the contents of the buffer after reading,
 by default only the count of bytes actually read is dumped.
+.TP
+.B \-F
+read the buffers in a forwards sequential direction.
+.TP
+.B \-B
+read the buffers in a reserve sequential direction.
+.TP
+.B \-R
+read the buffers in the give range in a random order.
+.TP
+.B \-Z seed
+specify the random number seed used for random reads.
+.TP
+.B \-V vectors
+Use the vectored IO read syscall
+.BR preadv (2)
+with a number of blocksize length iovecs. The number of iovecs is set by the
+.I vectors
+parameter.
 .PD
 .RE
 .TP
