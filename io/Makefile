@@ -58,6 +58,11 @@ CFILES += inject.c resblks.c
 LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
 endif
 
+ifeq ($(PKG_PLATFORM),linux)
+CFILES += sync_file_range.c
+LCFLAGS += -DHAVE_SYNC_FILE_RANGE
+endif
+
 ifeq ($(ENABLE_READLINE),yes)
 LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
 endif

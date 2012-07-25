@@ -78,6 +78,7 @@ init_commands(void)
 	sendfile_init();
 	shutdown_init();
 	truncate_init();
+	sync_range_init();
 }
 
 static int

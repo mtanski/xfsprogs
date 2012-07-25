@@ -141,3 +141,9 @@ extern void		fiemap_init(void);
 #else
 #define fiemap_init()	do { } while (0)
 #endif
+
+#ifdef HAVE_SYNC_FILE_RANGE
+extern void		sync_range_init(void);
+#else
+#define sync_range_init()	do { } while (0)
+#endif
