@@ -101,9 +101,9 @@ bmap(
 			block = (struct xfs_btree_block *)iocur_top->data;
 			if (be16_to_cpu(block->bb_level) == 0)
 				break;
-			pp = XFS_BMDR_PTR_ADDR(block, 1,
+			pp = XFS_BMBT_PTR_ADDR(mp, block, 1,
 				xfs_bmbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0));
-			kp = XFS_BMDR_KEY_ADDR(block, 1);
+			kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
 			bno = select_child(curoffset, kp, pp,
 					be16_to_cpu(block->bb_numrecs));
 		}
