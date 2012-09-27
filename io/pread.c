@@ -76,8 +76,7 @@ alloc_iovec(
 	buffersize = 0;
 	for (i = 0; i < vectors; i++) {
 		iov[i].iov_base = memalign(pagesize, bsize);
-		buffer = memalign(pagesize, bsize);
-		if (!buffer) {
+		if (!iov[i].iov_base) {
 			perror("memalign");
 			goto unwind;
 		}
@@ -130,7 +129,7 @@ __dump_buffer(
 	int		i, j;
 	char		*p;
 
-	for (i = 0, p = (char *)buffer; i < len; i += 16) {
+	for (i = 0, p = (char *)buf; i < len; i += 16) {
 		char	*s = p;
 
 		printf("%08llx:  ", (unsigned long long)offset + i);
