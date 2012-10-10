@@ -135,3 +135,38 @@ AC_DEFUN([AC_HAVE_FIEMAP],
        AC_MSG_RESULT(no))
     AC_SUBST(have_fiemap)
   ])
+
+#
+# Check if we have a preadv libc call (Linux)
+#
+AC_DEFUN([AC_HAVE_PREADV],
+  [ AC_MSG_CHECKING([for preadv])
+    AC_TRY_LINK([
+#define _FILE_OFFSET_BITS 64
+#define _BSD_SOURCE
+#include <sys/uio.h>
+    ], [
+         preadv(0, 0, 0, 0);
+    ], have_preadv=yes
+       AC_MSG_RESULT(yes),
+       AC_MSG_RESULT(no))
+    AC_SUBST(have_preadv)
+  ])
+
+#
+# Check if we have a sync_file_range libc call (Linux)
+#
+AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
+  [ AC_MSG_CHECKING([for sync_file_range])
+    AC_TRY_LINK([
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <fcntl.h>
+    ], [
+         sync_file_range(0, 0, 0, 0);
+    ], have_sync_file_range=yes
+       AC_MSG_RESULT(yes),
+       AC_MSG_RESULT(no))
+    AC_SUBST(have_sync_file_range)
+  ])
+

@@ -47,7 +47,9 @@ pread_help(void)
 " -R   -- read at random offsets in the range of bytes\n"
 " -Z N -- zeed the random number generator (used when reading randomly)\n"
 "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+#ifdef HAVE_PREADV
 " -V N -- use vectored IO with N iovecs of blocksize each (preadv)\n"
+#endif
 "\n"
 " When in \"random\" mode, the number of read operations will equal the\n"
 " number required to do a complete forward/backward scan of the range.\n"
@@ -168,8 +170,9 @@ dump_buffer(
 	}
 }
 
+#ifdef HAVE_PREADV
 static int
-do_pread(
+do_preadv(
 	int		fd,
 	off64_t		offset,
 	ssize_t		count,
@@ -178,10 +181,6 @@ do_pread(
 	int		vecs = 0;
 	ssize_t		oldlen = 0;
 	ssize_t		bytes = 0;
-
-
-	if (!vectors)
-		return pread64(fd, buffer, min(count, buffer_size), offset);
 
 	/* trim the iovec if necessary */
 	if (count < buffersize) {
@@ -203,6 +202,22 @@ do_pread(
 		iov[vecs - 1].iov_len = oldlen;
 
 	return bytes;
+}
+#else
+#define do_preadv(fd, offset, count, buffer_size) (0)
+#endif
+
+static int
+do_pread(
+	int		fd,
+	off64_t		offset,
+	ssize_t		count,
+	ssize_t		buffer_size)
+{
+	if (!vectors)
+		return pread64(fd, buffer, min(count, buffer_size), offset);
+
+	return do_preadv(fd, offset, count, buffer_size);
 }
 
 static int
@@ -406,14 +421,16 @@ pread_f(
 		case 'v':
 			vflag = 1;
 			break;
+#ifdef HAVE_PREADV
 		case 'V':
 			vectors = strtoul(optarg, &sp, 0);
 			if (!sp || sp == optarg) {
-				printf(_("non-numberic vector count == %s\n"),
+				printf(_("non-numeric vector count == %s\n"),
 					optarg);
 				return 0;
 			}
 			break;
+#endif
 		case 'Z':
 			zeed = strtoul(optarg, &sp, 0);
 			if (!sp || sp == optarg) {

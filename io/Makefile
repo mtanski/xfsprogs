@@ -58,7 +58,7 @@ CFILES += inject.c resblks.c
 LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
 endif
 
-ifeq ($(PKG_PLATFORM),linux)
+ifeq ($(HAVE_SYNC_FILE_RANGE),yes)
 CFILES += sync_file_range.c
 LCFLAGS += -DHAVE_SYNC_FILE_RANGE
 endif
@@ -73,6 +73,11 @@ endif
 
 ifeq ($(HAVE_FALLOCATE),yes)
 LCFLAGS += -DHAVE_FALLOCATE
+endif
+
+# Also implies PWRITEV
+ifeq ($(HAVE_PREADV),yes)
+LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
 endif
 
 default: depend $(LTCOMMAND)

@@ -51,24 +51,23 @@ pwrite_help(void)
 " -R   -- write at random offsets in the specified range of bytes\n"
 " -Z N -- zeed the random number generator (used when writing randomly)\n"
 "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
+#ifdef HAVE_PWRITEV
 " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
+#endif
 "\n"));
 }
 
+#ifdef HAVE_PWRITEV
 static int
-do_pwrite(
+do_pwritev(
 	int		fd,
 	off64_t		offset,
 	ssize_t		count,
 	ssize_t		buffer_size)
 {
-	int		vecs = 0;
-	ssize_t		oldlen = 0;
-	ssize_t		bytes = 0;
-
-
-	if (!vectors)
-		return pwrite64(fd, buffer, min(count, buffer_size), offset);
+	int vecs = 0;
+	ssize_t oldlen = 0;
+	ssize_t bytes = 0;
 
 	/* trim the iovec if necessary */
 	if (count < buffersize) {
@@ -91,6 +90,23 @@ do_pwrite(
 
 	return bytes;
 }
+#else
+#define do_pwritev(fd, offset, count, buffer_size) (0)
+#endif
+
+static int
+do_pwrite(
+	int		fd,
+	off64_t		offset,
+	ssize_t		count,
+	ssize_t		buffer_size)
+{
+	if (!vectors)
+		return pwrite64(fd, buffer, min(count, buffer_size), offset);
+
+	return do_pwritev(fd, offset, count, buffer_size);
+}
+
 static int
 write_random(
 	off64_t		offset,
@@ -297,7 +313,7 @@ pwrite_f(
 		case 'V':
 			vectors = strtoul(optarg, &sp, 0);
 			if (!sp || sp == optarg) {
-				printf(_("non-numberic vector count == %s\n"),
+				printf(_("non-numeric vector count == %s\n"),
 					optarg);
 				return 0;
 			}
