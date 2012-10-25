@@ -28,7 +28,7 @@ SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
 SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
-LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
+LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
 	conftest* built .census install.* install-dev.* *.gz \
