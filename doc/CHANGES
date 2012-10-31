@@ -1,3 +1,16 @@
+xfsprogs-3.1.9 (31 October 2012)
+	- Print nice details if agsize is out of bounds in mkfs.xfs.
+	- Various fixes for fragmented multi-block dir2 handling in
+	  xfs_repair.
+	- Fix extent record printing in xfs_db on big endian arches.
+	- Use the correct macros when dumping block maps in extent
+	  form in xfs_db, thanks to Peter Watkins.
+	- Add sync file range support to xfs_io.
+	- Implement preadv/pwritev in xfs_io.
+	- Link against libreadline for libxcmd, thanks to Mike Frysinger.
+	- Clean up mkfs.xfs output on invalid inode size.
+	- Various build fixes, thanks to Mike Frysinger and Jan Engelhardt.
+
 xfsprogs-3.1.8 (20 March 2012)
 	- Fix xfs_repair segfault on a corrupted filesystem by validating the
 	  acl count before reading it.
