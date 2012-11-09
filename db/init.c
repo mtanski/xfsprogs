@@ -170,7 +170,7 @@ main(
 	}
 	if (cmdline) {
 		xfree(cmdline);
-		return exitcode;
+		goto close_devices;
 	}
 
 	while (!done) {
@@ -181,5 +181,13 @@ main(
 			done = command(c, v);
 		doneline(input, v);
 	}
+
+close_devices:
+	if (x.ddev)
+		libxfs_device_close(x.ddev);
+	if (x.logdev && x.logdev != x.ddev)
+		libxfs_device_close(x.logdev);
+	if (x.rtdev)
+		libxfs_device_close(x.rtdev);
 	return exitcode;
 }
