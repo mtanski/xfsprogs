@@ -653,6 +653,7 @@ report_init(void)
 	report_cmd.cfunc = report_f;
 	report_cmd.argmin = 0;
 	report_cmd.argmax = -1;
+	report_cmd.flags = CMD_FLAG_GLOBAL;
 	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
 	report_cmd.oneline = _("report filesystem quota information");
 	report_cmd.help = report_help;
