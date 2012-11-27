@@ -27,6 +27,7 @@
 #include <xfs/path.h>
 #include <xfs/input.h>
 #include <xfs/project.h>
+#include <limits.h>
 
 extern char *progname;
 
@@ -273,6 +274,7 @@ fs_table_initialise_mounts(
 	FILE		*mtp;
 	char		*fslog, *fsrt;
 	int		error, found;
+	char		*rpath = NULL;
 
 	error = found = 0;
 	fslog = fsrt = NULL;
@@ -286,26 +288,32 @@ fs_table_initialise_mounts(
 	if ((mtp = setmntent(mtab_file, "r")) == NULL)
 		return ENOENT;
 
+	if (path)
+		if ((rpath = realpath(path, NULL)) == NULL)
+			return ENOENT;
+
 	while ((mnt = getmntent(mtp)) != NULL) {
 		if (strcmp(mnt->mnt_type, "xfs") != 0)
 			continue;
-		if (path &&
-		    ((strcmp(path, mnt->mnt_dir) != 0) &&
-		     (strcmp(path, mnt->mnt_fsname) != 0)))
+		if (rpath &&
+		    ((strcmp(rpath, mnt->mnt_dir) != 0) &&
+		     (strcmp(rpath, mnt->mnt_fsname) != 0)))
 			continue;
 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
 			continue;
 		(void) fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
 					mnt->mnt_fsname, fslog, fsrt);
-		if (path) {
+		if (rpath) {
 			found = 1;
 			break;
 		}
 	}
 	endmntent(mtp);
-	if (path && !found)
-		error = ENXIO;
-
+	if (rpath) {
+		free(rpath);
+		if (!found)
+			error = ENXIO;
+	}
 	return error;
 }
 
@@ -318,6 +326,7 @@ fs_table_initialise_mounts(
 {
 	struct statfs	*stats;
 	int		i, count, error, found;
+	char		*rpath = NULL;
 
 	error = found = 0;
 	if ((count = getmntinfo(&stats, 0)) < 0) {
@@ -326,24 +335,31 @@ fs_table_initialise_mounts(
 		return 0;
 	}
 
+	if (path)
+		if ((rpath = realpath(path, NULL)) == NULL)
+			return ENOENT;
+
 	for (i = 0; i < count; i++) {
 		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
 			continue;
-		if (path &&
-		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
-		     (strcmp(path, stats[i].f_mntfromname) != 0)))
+		if (rpath &&
+		    ((strcmp(rpath, stats[i].f_mntonname) != 0) &&
+		     (strcmp(rpath, stats[i].f_mntfromname) != 0)))
 			continue;
 		/* TODO: external log and realtime device? */
 		(void) fs_table_insert(stats[i].f_mntonname, 0,
 					FS_MOUNT_POINT, stats[i].f_mntfromname,
 					NULL, NULL);
-		if (path) {
+		if (rpath) {
 			found = 1;
 			break;
 		}
 	}
-	if (path && !found)
-		error = ENXIO;
+	if (rpath) {
+		free(rpath);
+		if (!found)
+			error = ENXIO;
+	}
 
 	return error;
 }
