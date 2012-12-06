@@ -2090,25 +2090,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		nbmblocks = 0;
 	}
 
-	if (dasize) {		/* User-specified AG size */
-		/*
-		 * Check specified agsize is a multiple of blocksize.
-		 */
-		if (agsize % blocksize) {
-			fprintf(stderr,
-		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
-				(long long)agsize, blocksize);
-			usage();
-		}
-		agsize /= blocksize;
-		agcount = dblocks / agsize + (dblocks % agsize != 0);
-
-	} else if (daflag)	/* User-specified AG count */
-		agsize = dblocks / agcount + (dblocks % agcount != 0);
-	else
-		calc_default_ag_geometry(blocklog, dblocks,
-				ft.dsunit | ft.dswidth, &agsize, &agcount);
-
 	if (!nodsflag) {
 		if (dsunit) {
 			if (ft.dsunit && ft.dsunit != dsunit) {
@@ -2131,6 +2112,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			nodsflag = 1;
 		}
 	} /* else dsunit & dswidth can't be set if nodsflag is set */
+
+	if (dasize) {		/* User-specified AG size */
+		/*
+		 * Check specified agsize is a multiple of blocksize.
+		 */
+		if (agsize % blocksize) {
+			fprintf(stderr,
+		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
+				(long long)agsize, blocksize);
+			usage();
+		}
+		agsize /= blocksize;
+		agcount = dblocks / agsize + (dblocks % agsize != 0);
+
+	} else if (daflag) {	/* User-specified AG count */
+		agsize = dblocks / agcount + (dblocks % agcount != 0);
+	} else {
+		calc_default_ag_geometry(blocklog, dblocks,
+				dsunit | dswidth, &agsize, &agcount);
+	}
 
 	/*
 	 * If dsunit is a multiple of fs blocksize, then check that is a
