@@ -245,6 +245,12 @@ Prints the block mapping for the current open file. Refer to the
 .BR xfs_bmap (8)
 manual page for complete documentation.
 .TP
+.BI "fiemap [ \-alv ] [ \-n " nx " ]"
+Prints the block mapping for the current open file using the fiemap
+ioctl.  Options behave as described in the
+.BR xfs_bmap (8)
+manual page.
+.TP
 .BI "extsize [ \-R | \-D ] [ " value " ]"
 Display and/or modify the preferred extent size used when allocating
 space for the currently open file. If the
@@ -355,16 +361,22 @@ manual page.
 .BI "falloc [ \-k ]" " offset length"
 Allocates reserved, unwritten space for part of a file using the
 fallocate routine as described in the
-.BR fallocate (3)
+.BR fallocate (2)
 manual page.
 .RS 1.0i
 .PD 0
 .TP 0.4i
 .B \-k
 will set the FALLOC_FL_KEEP_SIZE flag as described in
-.BR fallocate (3).
+.BR fallocate (2).
 .PD
 .RE
+.TP
+.BI fpunch " offset length"
+Punches (de-allocates) blocks in the file by calling fallocate with 
+the FALLOC_FL_PUNCH_HOLE flag as described in the
+.BR fallocate (2)
+manual page.
 .TP
 .BI truncate " offset"
 Truncates the current file at the given offset using
@@ -574,6 +586,24 @@ Selected statistics from
 .BR statfs (2)
 and the XFS_IOC_FSGEOMETRY
 system call on the filesystem where the current file resides.
+.TP
+.BR chproj " [ " \-R | \-D " ]"
+Modifies the project identifier associated with the current path. The 
+.B \-R
+option will recursively descend if the current path is a directory. The 
+.B \-D
+option will also recursively descend, only setting modifying projects 
+on subdirectories.  See the
+.BR xfs_quota (8)
+manual page for more information about project identifiers.
+.TP
+.BR lsproj " [ " \-R | \-D " ]"
+Displays the project identifier associated with the current path. The 
+.B \-R
+and
+.B \-D
+options behave as described above, in
+.B chproj.
 .TP
 .BR parent " [ " \-cpv " ]"
 By default this command prints out the parent inode numbers,
