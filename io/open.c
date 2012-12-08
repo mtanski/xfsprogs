@@ -25,7 +25,6 @@
 static cmdinfo_t open_cmd;
 static cmdinfo_t stat_cmd;
 static cmdinfo_t close_cmd;
-static cmdinfo_t setfl_cmd;
 static cmdinfo_t statfs_cmd;
 static cmdinfo_t chproj_cmd;
 static cmdinfo_t lsproj_cmd;
@@ -668,45 +667,6 @@ extsize_f(
 }
 
 static int
-setfl_f(
-	int			argc,
-	char			**argv)
-{
-	int			c, flags;
-
-	flags = fcntl(file->fd, F_GETFL, 0);
-	if (flags < 0) {
-		perror("fcntl(F_GETFL)");
-		return 0;
-	}
-
-	while ((c = getopt(argc, argv, "ad")) != EOF) {
-		switch (c) {
-		case 'a':
-			if (flags & O_APPEND)
-				flags |= O_APPEND;
-			else
-				flags &= ~O_APPEND;
-			break;
-		case 'd':
-			if (flags & O_DIRECT)
-				flags |= O_DIRECT;
-			else
-				flags &= ~O_DIRECT;
-			break;
-		default:
-			printf(_("invalid setfl argument -- '%c'\n"), c);
-			return 0;
-		}
-	}
-
-	if (fcntl(file->fd, F_SETFL, flags)  < 0)
-		perror("fcntl(F_SETFL)");
-
-	return 0;
-}
-
-static int
 statfs_f(
 	int			argc,
 	char			**argv)
@@ -791,13 +751,6 @@ open_init(void)
 	close_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	close_cmd.oneline = _("close the current open file");
 
-	setfl_cmd.name = "setfl";
-	setfl_cmd.cfunc = setfl_f;
-	setfl_cmd.args = _("[-adx]");
-	setfl_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-	setfl_cmd.oneline =
-		_("set/clear append/direct flags on the open file");
-
 	statfs_cmd.name = "statfs";
 	statfs_cmd.cfunc = statfs_f;
 	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
@@ -837,7 +790,6 @@ open_init(void)
 	add_command(&open_cmd);
 	add_command(&stat_cmd);
 	add_command(&close_cmd);
-	add_command(&setfl_cmd);
 	add_command(&statfs_cmd);
 	add_command(&chproj_cmd);
 	add_command(&lsproj_cmd);
