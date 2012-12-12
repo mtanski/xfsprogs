@@ -396,25 +396,25 @@ static void blkid_get_topology(
 	if (!tp)
 		goto out_free_probe;
 
-	/*
-	 * Blkid reports the information in terms of bytes, but we want it in
-	 * terms of 512 bytes blocks (just to convert it to bytes later..)
-	 *
-	 * If the reported values are just the normal 512 byte block size
-	 * do not bother to report anything.  It will just causes warnings
-	 * if people specifier larger stripe units or widths manually.
-	 */
-	val = blkid_topology_get_minimum_io_size(tp) >> 9;
-	if (val > 1)
-		*sunit = val;
-	val = blkid_topology_get_optimal_io_size(tp) >> 9;
-	if (val > 1)
-		*swidth = val;
-
 	val = blkid_topology_get_logical_sector_size(tp);
 	*lsectorsize = val;
 	val = blkid_topology_get_physical_sector_size(tp);
 	*psectorsize = val;
+
+	/*
+	 * Blkid reports the information in terms of bytes, but we want it in
+	 * terms of 512 bytes blocks (just to convert it to bytes later..)
+	 *
+	 * If the reported values are the same as the physical sector size
+	 * do not bother to report anything.  It will just cause warnings
+	 * if people specify larger stripe units or widths manually.
+	 */
+	val = blkid_topology_get_minimum_io_size(tp);
+	if (val > *psectorsize)
+		*sunit = val >> 9;
+	val = blkid_topology_get_optimal_io_size(tp);
+	if (val > *psectorsize)
+		*swidth = val >> 9;
 
 	if (blkid_topology_get_alignment_offset(tp) != 0) {
 		fprintf(stderr,
