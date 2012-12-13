@@ -1,3 +1,6 @@
+xfsprogs-3.1.10 (13 December 2012)
+	- Update release script to make a source tarball.
+
 xfsprogs-3.1.9 (31 October 2012)
 	- Print nice details if agsize is out of bounds in mkfs.xfs.
 	- Various fixes for fragmented multi-block dir2 handling in
