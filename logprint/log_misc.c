@@ -595,7 +595,11 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 }
 
 int
-xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+xlog_print_trans_inode(xfs_caddr_t *ptr,
+		       int len,
+		       int *i,
+		       int num_ops,
+		       boolean_t continued)
 {
     xfs_icdinode_t	   dino;
     xlog_op_header_t	   *op_head;
@@ -617,8 +621,9 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     memmove(&src_lbuf, *ptr, MIN(sizeof(xfs_inode_log_format_64_t), len));
     (*i)++;					/* bump index */
     *ptr += len;
-    if (len == sizeof(xfs_inode_log_format_32_t) ||
-	len == sizeof(xfs_inode_log_format_64_t)) {
+    if (!continued &&
+	(len == sizeof(xfs_inode_log_format_32_t) ||
+	 len == sizeof(xfs_inode_log_format_64_t))) {
 	f = xfs_inode_item_format_convert((char*)&src_lbuf, len, &dst_lbuf);
 	printf(_("INODE: "));
 	printf(_("#regs: %d   ino: 0x%llx  flags: 0x%x   dsize: %d\n"),
@@ -924,16 +929,18 @@ xlog_print_record(int			  fd,
 
     ptr = buf;
     for (i=0; i<num_ops; i++) {
+	int continued;
+
 	xlog_op_header_t *op_head = (xlog_op_header_t *)ptr;
 
 	print_xlog_op_line();
 	xlog_print_op_header(op_head, i, &ptr);
+	continued = (XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
+		     XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS));
 
 	/* print transaction data */
 	if (print_no_data ||
-	    ((XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
-	      XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) &&
-	     be32_to_cpu(op_head->oh_len) == 0)) {
+	    (continued && be32_to_cpu(op_head->oh_len) == 0)) {
 	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
 		printf("%c", *ptr);
 		ptr++;
@@ -962,7 +969,7 @@ xlog_print_record(int			  fd,
 		    case XFS_LI_INODE: {
 			skip = xlog_print_trans_inode(&ptr,
 					be32_to_cpu(op_head->oh_len),
-					&i, num_ops);
+					&i, num_ops, continued);
 			break;
 		    }
 		    case XFS_LI_DQUOT: {
