@@ -25,8 +25,6 @@
 #define BAD_HEADER	(-1)
 #define NO_ERROR	(0)
 
-#define XLOG_SET(f,b)	(((f) & (b)) == (b))
-
 static int logBBsize;
 char *trans_type[] = {
 	"",
@@ -646,7 +644,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
     op_head = (xlog_op_header_t *)*ptr;
     xlog_print_op_header(op_head, *i, ptr);
 
-    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)  {
 	return f->ilf_size-1;
     }
 
@@ -701,7 +699,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    }
 
 	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
 		return 1;
 	    op_head = (xlog_op_header_t *)*ptr;
     }
@@ -727,7 +725,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 		break;
 	    }
 	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
 		return 1;
 	    op_head = (xlog_op_header_t *)*ptr;
     }
@@ -935,8 +933,8 @@ xlog_print_record(int			  fd,
 
 	print_xlog_op_line();
 	xlog_print_op_header(op_head, i, &ptr);
-	continued = (XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
-		     XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS));
+	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
+		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
 
 	/* print transaction data */
 	if (print_no_data ||
