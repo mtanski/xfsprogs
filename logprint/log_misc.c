@@ -657,97 +657,76 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 
     /* does anything come next */
     op_head = (xlog_op_header_t *)*ptr;
-    switch (f->ilf_fields & XFS_ILOG_NONCORE) {
-	case XFS_ILOG_DEXT: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("EXTENTS inode data\n"));
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_DBROOT: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("BTREE inode data\n"));
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_DDATA: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("LOCAL inode data\n"));
-	    if (mode == S_IFDIR) {
-		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
-	    }
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_AEXT: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("EXTENTS inode attr\n"));
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_ABROOT: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("BTREE inode attr\n"));
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_ADATA: {
-	    ASSERT(f->ilf_size == 3);
-	    (*i)++;
-	    xlog_print_op_header(op_head, *i, ptr);
-	    printf(_("LOCAL inode attr\n"));
-	    if (mode == S_IFDIR) {
-		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
-	    }
-	    *ptr += be32_to_cpu(op_head->oh_len);
-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
-		return 1;
-	    }
-	    break;
-	}
-	case XFS_ILOG_DEV: {
-	    ASSERT(f->ilf_size == 2);
-	    printf(_("DEV inode: no extra region\n"));
-	    break;
-	}
-	case XFS_ILOG_UUID: {
-	    ASSERT(f->ilf_size == 2);
-	    printf(_("UUID inode: no extra region\n"));
-	    break;
-	}
-	case 0: {
-	    ASSERT(f->ilf_size == 2);
-	    break;
-	}
-	default: {
-	    xlog_panic(_("xlog_print_trans_inode: illegal inode type"));
-	}
+
+    switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
+    case XFS_ILOG_DEV:
+	printf(_("DEV inode: no extra region\n"));
+	break;
+    case XFS_ILOG_UUID:
+	printf(_("UUID inode: no extra region\n"));
+	break;
     }
+
+    /* Only the inode core is logged */
+    if (f->ilf_size == 2)
+	return 0;
+
+    ASSERT(f->ilf_size <= 4);
+    ASSERT((f->ilf_size == 3) || (f->ilf_fields & XFS_ILOG_AFORK));
+
+    if (f->ilf_fields & XFS_ILOG_DFORK) {
+	    (*i)++;
+	    xlog_print_op_header(op_head, *i, ptr);
+
+	    switch (f->ilf_fields & XFS_ILOG_DFORK) {
+	    case XFS_ILOG_DEXT:
+		printf(_("EXTENTS inode data\n"));
+		break;
+	    case XFS_ILOG_DBROOT:
+		printf(_("BTREE inode data\n"));
+		break;
+	    case XFS_ILOG_DDATA:
+		printf(_("LOCAL inode data\n"));
+		if (mode == S_IFDIR)
+		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+		break;
+	    default:
+		ASSERT((f->ilf_fields & XFS_ILOG_DFORK) == 0);
+		break;
+	    }
+
+	    *ptr += be32_to_cpu(op_head->oh_len);
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+		return 1;
+	    op_head = (xlog_op_header_t *)*ptr;
+    }
+
+    if (f->ilf_fields & XFS_ILOG_AFORK) {
+	    (*i)++;
+	    xlog_print_op_header(op_head, *i, ptr);
+
+	    switch (f->ilf_fields & XFS_ILOG_AFORK) {
+	    case XFS_ILOG_AEXT:
+		printf(_("EXTENTS attr data\n"));
+		break;
+	    case XFS_ILOG_ABROOT:
+		printf(_("BTREE attr data\n"));
+		break;
+	    case XFS_ILOG_ADATA:
+		printf(_("LOCAL attr data\n"));
+		if (mode == S_IFDIR)
+		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+		break;
+	    default:
+		ASSERT((f->ilf_fields & XFS_ILOG_AFORK) == 0);
+		break;
+	    }
+	    *ptr += be32_to_cpu(op_head->oh_len);
+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+		return 1;
+	    op_head = (xlog_op_header_t *)*ptr;
+    }
+
     return 0;
 }	/* xlog_print_trans_inode */
 
