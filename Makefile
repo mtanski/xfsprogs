@@ -29,6 +29,8 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
 LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+           m4/ltversion.m4 po/xfsprogs.pot $(CONFIGURE)
 
 LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
 	conftest* built .census install.* install-dev.* *.gz \
@@ -144,7 +146,9 @@ $(SRCDIR) : $(_FORCE)
 	rm -fr $@
 	mkdir -p $@
 
-$(SRCTAR) : default $(SRCDIR)
-	$(Q)$(MAKE) $(MAKEOPTS) source-link
-	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+$(SRCTAR) : default
+	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) > $(SRCDIR).tar 
+	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCDIR).tar \
+	   $(SRCTARINC) 
+	$(Q)$(ZIP) $(SRCDIR).tar
 	echo Wrote: $@
