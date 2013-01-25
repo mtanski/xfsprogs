@@ -90,6 +90,14 @@ print_verbose(
 	memset(lbuf, 0, sizeof(lbuf));
 	memset(bbuf, 0, sizeof(bbuf));
 
+	if (*cur_extent == 0) {
+		printf("%4s: %-*s %-*s %*s %*s\n", _("EXT"),
+			foff_w, _("FILE-OFFSET"),
+			boff_w, _("BLOCK-RANGE"),
+			tot_w, _("TOTAL"),
+			flg_w, _("FLAGS"));
+	}
+
 	if (lstart != llast) {
 		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
 			 lstart - 1ULL);
@@ -157,6 +165,47 @@ print_plain(
 	*last_logical = extent->fe_logical + extent->fe_length;
 }
 
+/*
+ * Calculate the proper extent table format based on first
+ * set of extents
+ */
+static void
+calc_print_format(
+	struct fiemap		*fiemap,
+	__u64			blocksize,
+	int			*foff_w,
+	int			*boff_w,
+	int			*tot_w,
+	int			*flg_w)
+{
+	int 			i;
+	char			lbuf[32];
+	char			bbuf[32];
+	__u64			logical;
+	__u64			block;
+	__u64			len;
+	struct fiemap_extent	*extent;
+
+	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+
+		extent = &fiemap->fm_extents[i];
+		logical = extent->fe_logical / blocksize;
+		len = extent->fe_length / blocksize;
+		block = extent->fe_physical / blocksize;
+
+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
+			 logical + len - 1);
+		snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
+			 block + len - 1);
+		*foff_w = max(*foff_w, strlen(lbuf));
+		*boff_w = max(*boff_w, strlen(bbuf));
+		*tot_w = max(*tot_w, numlen(len, 10));
+		*flg_w = max(*flg_w, numlen(extent->fe_flags, 16));
+		if (extent->fe_flags & FIEMAP_EXTENT_LAST)
+			break;
+	}
+}
+
 int
 fiemap_f(
 	int		argc,
@@ -215,38 +264,6 @@ fiemap_f(
 
 	printf("%s:\n", file->name);
 
-	if (vflag) {
-		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-			char			lbuf[32];
-			char			bbuf[32];
-			__u64			logical;
-			__u64			block;
-			__u64			len;
-			struct fiemap_extent	*extent;
-
-			extent = &fiemap->fm_extents[i];
-			logical = extent->fe_logical / blocksize;
-			len = extent->fe_length / blocksize;
-			block = extent->fe_physical / blocksize;
-
-			snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
-				 logical + len - 1);
-			snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
-				 block + len - 1);
-			foff_w = max(foff_w, strlen(lbuf));
-			boff_w = max(boff_w, strlen(bbuf));
-			tot_w = max(tot_w, numlen(len, 10));
-			flg_w = max(flg_w, numlen(extent->fe_flags, 16));
-			if (extent->fe_flags & FIEMAP_EXTENT_LAST)
-				break;
-		}
-		printf("%4s: %-*s %-*s %*s %*s\n", _("EXT"),
-		       foff_w, _("FILE-OFFSET"),
-		       boff_w, _("BLOCK-RANGE"),
-		       tot_w, _("TOTAL"),
-		       flg_w, _("FLAGS"));
-	}
-
 	while (!last && ((cur_extent + 1) != max_extents)) {
 		if (max_extents)
 			num_extents = min(num_extents,
@@ -275,12 +292,18 @@ fiemap_f(
 			struct fiemap_extent	*extent;
 
 			extent = &fiemap->fm_extents[i];
-			if (vflag)
+			if (vflag) {
+				if (cur_extent == 0) {
+					calc_print_format(fiemap, blocksize,
+							  &foff_w, &boff_w,
+							  &tot_w, &flg_w);
+				}
+					
 				print_verbose(extent, blocksize, foff_w,
 					      boff_w, tot_w, flg_w,
 					      max_extents, &cur_extent,
 					      &last_logical);
-			else
+			} else
 				print_plain(extent, lflag, blocksize,
 					    max_extents, &cur_extent,
 					    &last_logical);
