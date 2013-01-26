@@ -627,7 +627,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
 			break;
 		default:
 			wait(&error);
-			close(fd);
 			if (WIFEXITED(error) && WEXITSTATUS(error) == 1) {
 				/* child timed out & did fsrall_cleanup */
 				exit(0);
