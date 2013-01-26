@@ -1004,7 +1004,7 @@ process_attributes(
 static int
 xfs_acl_valid(xfs_acl_disk_t *daclp)
 {
-	xfs_acl_t	*aclp;
+	xfs_acl_t	*aclp = NULL;
 	xfs_acl_entry_t *entry, *e;
 	int user = 0, group = 0, other = 0, mask = 0, mask_required = 0;
 	int i, j;
