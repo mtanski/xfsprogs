@@ -1452,7 +1452,8 @@ gettmpname(char *fname)
 
 	sprintf(sbuf, "/.fsr%d", getpid());
 
-	strcpy(buf, fname);
+	strncpy(buf, fname, PATH_MAX);
+	buf[PATH_MAX] = '\0';
 	ptr = strrchr(buf, '/');
 	if (ptr) {
 		*ptr = '\0';
@@ -1476,7 +1477,8 @@ getparent(char *fname)
 	static char	buf[PATH_MAX+1];
 	char		*ptr;
 
-	strcpy(buf, fname);
+	strncpy(buf, fname, PATH_MAX);
+	buf[PATH_MAX] = '\0';
 	ptr = strrchr(buf, '/');
 	if (ptr) {
 		if (ptr == &buf[0])
