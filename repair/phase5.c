@@ -206,7 +206,7 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
 
 	ASSERT(big_extent_len > 0);
 
-	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t *)
+	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t)
 					* big_extent_len)) == NULL)
 		do_error(_("could not set up btree block array\n"));
 
