@@ -470,8 +470,12 @@ initallfs(char *mtab)
 		fs->dev = strdup(mp->mnt_fsname);
 		fs->mnt = strdup(mp->mnt_dir);
 
-		if (fs->mnt == NULL || fs->mnt == NULL) {
+		if (fs->dev == NULL) {
 			fsrprintf(_("strdup(%s) failed\n"), mp->mnt_fsname);
+			exit(1);
+		}
+		if (fs->mnt == NULL) {
+			fsrprintf(_("strdup(%s) failed\n"), mp->mnt_dir);
 			exit(1);
 		}
 		mi++;
