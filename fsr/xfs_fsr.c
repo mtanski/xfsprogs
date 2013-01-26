@@ -1099,8 +1099,8 @@ fsr_setup_attr_fork(
 		if (last_forkoff == tbstat.bs_forkoff) {
 			if (no_change_cnt++ > 10)
 				break;
-		}
-		no_change_cnt = 0;
+		} else /* progress! */
+			no_change_cnt = 0;
 		last_forkoff = tbstat.bs_forkoff;
 
 		/* work out which way to grow the fork */
