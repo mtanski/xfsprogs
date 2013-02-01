@@ -88,7 +88,7 @@ fetchline(void)
 
 	if (!line)
 		return NULL;
-	printf(get_prompt());
+	printf("%s", get_prompt());
 	fflush(stdout);
 	if (!fgets(line, MAXREADLINESZ, stdin)) {
 		free(line);
