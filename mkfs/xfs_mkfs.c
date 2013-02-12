@@ -1950,7 +1950,7 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
 		}
 	}
 
-	if (discard) {
+	if (discard && !Nflag) {
 		discard_blocks(xi.ddev, xi.dsize);
 		if (xi.rtdev)
 			discard_blocks(xi.rtdev, xi.rtsize);
