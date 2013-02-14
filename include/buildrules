@@ -23,17 +23,6 @@ $(SUBDIRS):
 	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
 endif
 
-source-link: 
-	@test -z "$$DIR" && DIR="."; \
-	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
-	    if test -d $$f ; then \
-		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
-		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
-	    else \
-		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
-	    fi; \
-	done
-
 #
 # Standard targets
 #
