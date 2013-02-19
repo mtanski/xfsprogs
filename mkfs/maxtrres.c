@@ -28,7 +28,7 @@
 #include "xfs_mkfs.h"
 
 static void
-max_attrset_trans_res_adjust(
+max_attrsetm_trans_res_adjust(
 	xfs_mount_t			*mp)
 {
 	int				local;
@@ -94,7 +94,7 @@ max_trans_res(
 			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0);
 
 	libxfs_mount(&mount, sbp, 0,0,0,0);
-	max_attrset_trans_res_adjust(&mount);
+	max_attrsetm_trans_res_adjust(&mount);
 	maxres = max_trans_res_by_mount(&mount);
 	maxfsb = XFS_B_TO_FSB(&mount, maxres);
 	libxfs_umount(&mount);
