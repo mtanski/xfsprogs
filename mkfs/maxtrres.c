@@ -46,13 +46,8 @@ max_attrset_trans_res_adjust(
 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
 	nblks += XFS_B_TO_FSB(mp, size);
 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
-	res = XFS_ATTRSET_LOG_RES(mp, nblks);
-
-#if 0
-	printf("size = %d nblks = %d res = %d\n", size, nblks, res);
-#endif
-
-	mp->m_reservations.tr_attrset = res;
+	res = XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks;
+	mp->m_reservations.tr_attrsetm = res;
 }
 
 static int
