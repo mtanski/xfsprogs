@@ -1066,6 +1066,18 @@ scan_freelist(
 		return;
 	}
 	agfl = XFS_BUF_TO_AGFL(agflbuf);
+
+	if (no_modify) {
+		/* agf values not fixed in verify_set_agf, so recheck */
+		if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp) ||
+		    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp)) {
+			do_warn(_("agf %d freelist blocks bad, skipping "
+				  "freelist scan\n"), i);
+			return;
+		}
+	} else /* should have been fixed in verify_set_agf() */
+		ASSERT(0);
+
 	i = be32_to_cpu(agf->agf_flfirst);
 	count = 0;
 	for (;;) {
