@@ -1066,6 +1066,7 @@ scan_freelist(
 		return;
 	}
 	agfl = XFS_BUF_TO_AGFL(agflbuf);
+	i = be32_to_cpu(agf->agf_flfirst);
 
 	if (no_modify) {
 		/* agf values not fixed in verify_set_agf, so recheck */
@@ -1078,7 +1079,6 @@ scan_freelist(
 	} else /* should have been fixed in verify_set_agf() */
 		ASSERT(0);
 
-	i = be32_to_cpu(agf->agf_flfirst);
 	count = 0;
 	for (;;) {
 		bno = be32_to_cpu(agfl->agfl_bno[i]);

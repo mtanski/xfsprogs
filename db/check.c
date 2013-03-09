@@ -4112,6 +4112,16 @@ scan_freelist(
 		return;
 	}
 	i = be32_to_cpu(agf->agf_flfirst);
+
+	/* verify agf values before proceeding */
+	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp) ||
+	    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp)) {
+		dbprintf(_("agf %d freelist blocks bad, skipping "
+			  "freelist scan\n"), i);
+		pop_cur();
+		return;
+	}
+
 	count = 0;
 	for (;;) {
 		bno = be32_to_cpu(agfl->agfl_bno[i]);
