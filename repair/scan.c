@@ -1076,8 +1076,7 @@ scan_freelist(
 				  "freelist scan\n"), i);
 			return;
 		}
-	} else /* should have been fixed in verify_set_agf() */
-		ASSERT(0);
+	}
 
 	count = 0;
 	for (;;) {
