@@ -2592,8 +2592,17 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			 */
 			be32_add_cpu(&arec->ar_startblock, logblocks);
 		}
+		/*
+		 * Calculate the record block count and check for the case where
+		 * the log might have consumed all available space in the AG. If
+		 * so, reset the record count to 0 to avoid exposure of an invalid
+		 * record start block.
+		 */
 		arec->ar_blockcount = cpu_to_be32(agsize - 
 					be32_to_cpu(arec->ar_startblock));
+		if (!arec->ar_blockcount)
+			block->bb_numrecs = 0;
+
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
@@ -2625,8 +2634,17 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 			}
 			be32_add_cpu(&arec->ar_startblock, logblocks);
 		}
+		/*
+		 * Calculate the record block count and check for the case where
+		 * the log might have consumed all available space in the AG. If
+		 * so, reset the record count to 0 to avoid exposure of an invalid
+		 * record start block.
+		 */
 		arec->ar_blockcount = cpu_to_be32(agsize - 
 					be32_to_cpu(arec->ar_startblock));
+		if (!arec->ar_blockcount)
+			block->bb_numrecs = 0;
+
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 
 		/*
