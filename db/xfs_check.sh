@@ -7,6 +7,9 @@ OPTS=" "
 DBOPTS=" "
 USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
 
+echo "xfs_check is deprecated and scheduled for removal in June 2014."
+echo "Please use xfs_repair -n <dev> instead."
+
 while getopts "b:fi:l:stvV" c
 do
 	case $c in
