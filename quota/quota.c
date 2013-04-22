@@ -224,7 +224,7 @@ quota_user_type(
 	uid_t		id;
 
 	if (name) {
-		if (isdigit(name[0])) {
+		if (isdigits_only(name)) {
 			id = atoi(name);
 			name = getusername(id, flags & NO_LOOKUP_FLAG);
 		} else if ((u = getpwnam(name))) {
@@ -273,7 +273,7 @@ quota_group_type(
 	int		i, ngroups, dofree = 0;
 
 	if (name) {
-		if (isdigit(name[0])) {
+		if (isdigits_only(name)) {
 			gid = atoi(name);
 			name = getgroupname(gid, flags & NO_LOOKUP_FLAG);
 		} else {
@@ -344,7 +344,7 @@ quota_proj_type(
 		return;
 	}
 
-	if (isdigit(name[0])) {
+	if (isdigits_only(name)) {
 		id = atoi(name);
 		name = getprojectname(id, flags & NO_LOOKUP_FLAG);
 	} else if ((p = getprnam(name))) {

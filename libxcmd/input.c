@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/input.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #if defined(ENABLE_READLINE)
 # include <readline/history.h>
@@ -396,6 +397,18 @@ gid_from_string(
 	if (grp)
 		return grp->gr_gid;
 	return -1;
+}
+
+bool isdigits_only(
+	const char *str)
+{
+	int i;
+
+	for (i = 0; i < strlen(str); i++) {
+		if (!isdigit(str[i]))
+			return false;
+	}
+	return true;
 }
 
 #define HAVE_FTW_H 1	/* TODO: configure me */

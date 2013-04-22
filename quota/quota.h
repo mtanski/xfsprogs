@@ -19,6 +19,7 @@
 #include <xfs/xqm.h>
 #include <xfs/path.h>
 #include <xfs/project.h>
+#include <stdbool.h>
 
 /*
  * Different forms of XFS quota
@@ -80,4 +81,5 @@ enum {
 extern char *uid_to_name(__uint32_t __uid);
 extern char *gid_to_name(__uint32_t __gid);
 extern char *prid_to_name(__uint32_t __prid);
+extern bool isdigits_only(const char *);
 
