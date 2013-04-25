@@ -64,7 +64,7 @@ and
 Allows execution on a mounted filesystem, provided it is mounted read-only.
 Useful for shell scripts such as
 .BR xfs_check (8),
-which must only operate on filesystems in a guarenteed consistent state
+which must only operate on filesystems in a guaranteed consistent state
 (either unmounted or mounted read-only). These semantics are slightly
 different to that of the
 .B -r
@@ -960,12 +960,12 @@ and
 (1 if the extent is unwritten).
 .TP
 .B keys
-[nonleaf blocks only] array of key records. These are the first key
+[non-leaf blocks only] array of key records. These are the first key
 value of each block in the level below this one. Each record contains
 .BR startoff .
 .TP
 .B ptrs
-[nonleaf blocks only] array of child block pointers.
+[non-leaf blocks only] array of child block pointers.
 Each pointer is a filesystem block number to the next level in the Btree.
 .PD
 .RE
@@ -975,7 +975,7 @@ There is one set of filesystem blocks forming the by-block-number
 allocation Btree for each allocation group. The root block of this
 Btree is designated by the
 .B bnoroot
-field in the coresponding AGF block.
+field in the corresponding AGF block.
 The blocks are linked to sibling left and right blocks at each level,
 as well as by pointers from parent to child blocks.
 Each block has the following fields:
@@ -1004,14 +1004,14 @@ and
 .BR blockcount .
 .TP
 .B keys
-[nonleaf blocks only] array of key records. These are the first value
+[non-leaf blocks only] array of key records. These are the first value
 of each block in the level below this one. Each record contains
 .B startblock
 and
 .BR blockcount .
 .TP
 .B ptrs
-[nonleaf blocks only] array of child block pointers. Each pointer is a
+[non-leaf blocks only] array of child block pointers. Each pointer is a
 block number within the allocation group to the next level in the Btree.
 .PD
 .RE
@@ -1021,7 +1021,7 @@ There is one set of filesystem blocks forming the by-block-count
 allocation Btree for each allocation group. The root block of this
 Btree is designated by the
 .B cntroot
-field in the coresponding AGF block. The blocks are linked to sibling
+field in the corresponding AGF block. The blocks are linked to sibling
 left and right blocks at each level, as well as by pointers from parent
 to child blocks. Each block has the following fields:
 .RS 1.4i
@@ -1049,14 +1049,14 @@ and
 .BR blockcount .
 .TP
 .B keys
-[nonleaf blocks only] array of key records. These are the first value
+[non-leaf blocks only] array of key records. These are the first value
 of each block in the level below this one. Each record contains
 .B blockcount
 and
 .BR startblock .
 .TP
 .B ptrs
-[nonleaf blocks only] array of child block pointers. Each pointer is a
+[non-leaf blocks only] array of child block pointers. Each pointer is a
 block number within the allocation group to the next level in the Btree.
 .PD
 .RE
@@ -1368,7 +1368,7 @@ number of warnings issued about realtime block limit violations.
 There is one set of filesystem blocks forming the inode allocation Btree for
 each allocation group. The root block of this Btree is designated by the
 .B root
-field in the coresponding AGI block.
+field in the corresponding AGI block.
 The blocks are linked to sibling left and right blocks at each level,
 as well as by pointers from parent to child blocks.
 Each block has the following fields:
@@ -1400,12 +1400,12 @@ count of free inodes in this chunk, and
 bitmap, LSB corresponds to inode 0.
 .TP
 .B keys
-[nonleaf blocks only] array of key records. These are the first value of each
+[non-leaf blocks only] array of key records. These are the first value of each
 block in the level below this one. Each record contains
 .BR startino .
 .TP
 .B ptrs
-[nonleaf blocks only] array of child block pointers. Each pointer is a
+[non-leaf blocks only] array of child block pointers. Each pointer is a
 block number within the allocation group to the next level in the Btree.
 .PD
 .RE

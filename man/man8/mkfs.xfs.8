@@ -279,7 +279,7 @@ with
 .BR log= ,
 or as the number fitting in a filesystem block with
 .BR perblock= .
-The mininum (and default)
+The minimum (and default)
 .I value
 is 256 bytes.
 The maximum
@@ -297,7 +297,7 @@ so if no inode size is given on the command line,
 .B mkfs.xfs
 will attempt to choose a size
 such that inode numbers will be < 32 bits.  If an inode size
-is specified, or if a filesystem is sufficently large,
+is specified, or if a filesystem is sufficiently large,
 .B mkfs.xfs
 will warn if this will create inode numbers > 32 significant
 bits.
@@ -450,7 +450,7 @@ suboption is specified.
 This changes the method of logging various persistent counters
 in the superblock.  Under metadata intensive workloads, these
 counters are updated and logged frequently enough that the superblock
-updates become a serialisation point in the filesystem. The
+updates become a serialization point in the filesystem. The
 .I value
 can be either 0 or 1.
 .IP

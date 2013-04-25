@@ -170,7 +170,7 @@ Verbose output.
 Repair dangerously. Allow
 .B xfs_repair
 to repair an XFS filesystem mounted read only. This is typically done
-on a root fileystem from single user mode, immediately followed by a reboot.
+on a root filesystem from single user mode, immediately followed by a reboot.
 .TP
 .B \-V
 Prints out the current version number and exits.
@@ -239,7 +239,7 @@ The name assigned is the inode number.
 aborts on most disk I/O errors. Therefore, if you are trying
 to repair a filesystem that was damaged due to a disk drive failure,
 steps should be taken to ensure that all blocks in the filesystem are
-readable and writeable before attempting to use
+readable and writable before attempting to use
 .B xfs_repair
 to repair the filesystem. A possible method is using
 .BR dd (8)
