@@ -43,7 +43,7 @@ static void
 usage(void)
 {
 	fprintf(stderr, _(
-		"Usage: %s [-fFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
+		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
 		), progname);
 	exit(1);
 }

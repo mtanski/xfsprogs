@@ -44,6 +44,7 @@ Options:\n\
     -c	            try to continue if error found in log\n\
     -C <filename>   copy the log from the filesystem to filename\n\
     -d	            dump the log in log-record format\n\
+    -e	            exit when an error is found in the log\n\
     -f	            specified device is actually a file\n\
     -l <device>     filename of external log\n\
     -n	            don't try and interpret log data\n\

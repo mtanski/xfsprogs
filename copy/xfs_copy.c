@@ -301,7 +301,7 @@ void
 usage(void)
 {
 	fprintf(stderr,
-		_("Usage: %s [-bd] [-L logfile] source target [target ...]\n"),
+		_("Usage: %s [-bdV] [-L logfile] source target [target ...]\n"),
 		progname);
 	exit(1);
 }

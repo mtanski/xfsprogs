@@ -386,20 +386,19 @@ void
 usage(int ret)
 {
 	fprintf(stderr, _(
-"Usage: %s [-d] [-v] [-n] [-s] [-g] [-t time] [-p passes] [-f leftf] [-m mtab]\n"
-"       %s [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...\n\n"
+"Usage: %s [-d] [-v] [-g] [-t time] [-p passes] [-f leftf] [-m mtab]\n"
+"       %s [-d] [-v] [-g] xfsdev | dir | file ...\n"
+"       %s -V\n\n"
 "Options:\n"
-"       -n              Do nothing, only interesting with -v. Not\n"
-"                       effective with in mtab mode.\n"
-"       -s		Print statistics only.\n"
 "       -g              Print to syslog (default if stdout not a tty).\n"
 "       -t time         How long to run in seconds.\n"
-"       -p passes	Number of passes before terminating global re-org.\n"
+"       -p passes       Number of passes before terminating global re-org.\n"
 "       -f leftoff      Use this instead of %s.\n"
 "       -m mtab         Use something other than /etc/mtab.\n"
 "       -d              Debug, print even more.\n"
-"       -v		Verbose, more -v's more verbose.\n"
-		), progname, progname, _PATH_FSRLAST);
+"       -v              Verbose, more -v's more verbose.\n"
+"       -V              Print version number and exit.\n"
+		), progname, progname, progname, _PATH_FSRLAST);
 	exit(ret);
 }
 

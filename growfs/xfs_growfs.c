@@ -19,14 +19,6 @@
 #include <xfs/libxfs.h>
 #include <xfs/path.h>
 
-/*
- * When growing a filesystem, this is the most significant
- * bits we'll accept in the resulting inode numbers
- * without warning the user.
- */
-
-#define XFS_MAX_INODE_SIG_BITS 32
-
 static void
 usage(void)
 {
@@ -37,7 +29,6 @@ Options:\n\
 	-l          grow log section\n\
 	-r          grow realtime section\n\
 	-n          don't change anything, just show geometry\n\
-	-I          allow inode numbers to exceed %d significant bits\n\
 	-i          convert log from external to internal format\n\
 	-t          alternate location for mount table (/etc/mtab)\n\
 	-x          convert log from internal to external format\n\
@@ -47,7 +38,7 @@ Options:\n\
 	-e size     set realtime extent size to size blks\n\
 	-m imaxpct  set inode max percent to imaxpct\n\
 	-V          print version information\n"),
-		progname, XFS_MAX_INODE_SIG_BITS);
+		progname);
 	exit(2);
 }
 

@@ -78,6 +78,7 @@ usage(char *progname)
 		"\t-i logsize (internal log size)\n"
 		"\t-e logsize (external log size)\n"
 		"\t-v prints more verbose messages\n"
+		"\t-V prints version and exits\n"
 		"\t-h prints this usage message\n\n"
 	"Note:\tblocksize may have 'k' appended to indicate x1024\n"
 	"\tlogsize may also have 'm' appended to indicate (1024 x 1024)\n"),

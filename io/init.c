@@ -32,7 +32,7 @@ void
 usage(void)
 {
 	fprintf(stderr,
-		_("Usage: %s [-adfmrRstx] [-p prog] [-c cmd]... file\n"),
+		_("Usage: %s [-adfmnrRstVx] [-p prog] [-c cmd]... file\n"),
 		progname);
 	exit(1);
 }

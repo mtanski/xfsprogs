@@ -178,7 +178,7 @@ perform_restore(
 static void
 usage(void)
 {
-	fprintf(stderr, "Usage: %s [-bg] source target\n", progname);
+	fprintf(stderr, "Usage: %s [-V] [-g] source target\n", progname);
 	exit(1);
 }
 

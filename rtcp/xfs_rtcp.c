@@ -27,7 +27,7 @@ char *progname;
 void
 usage()
 {
-	fprintf(stderr, _("%s [-e extsize] [-p] source target\n"), progname);
+	fprintf(stderr, _("%s [-e extsize] [-p] [-V] source target\n"), progname);
 	exit(2);
 }
 

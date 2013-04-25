@@ -45,7 +45,7 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-		_("Usage: %s [-p prog] [-c cmd]... [-d project]... [path]\n"),
+		_("Usage: %s [-V] [-x] [-p prog] [-c cmd]... [-d project]... [path]\n"),
 		progname);
 	exit(1);
 }
