@@ -40,6 +40,8 @@ mkfs.xfs \- construct an XFS filesystem
 .B \-K
 ]
 .I device
+.br
+.B mkfs.xfs \-V
 .SH DESCRIPTION
 .B mkfs.xfs
 constructs an XFS filesystem by writing on a special
@@ -728,6 +730,9 @@ creating the file system.
 .TP
 .B \-K
 Do not attempt to discard blocks at mkfs time.
+.TP
+.B \-V
+Prints the version number and exits.
 .SH SEE ALSO
 .BR xfs (5),
 .BR mkfs (8),

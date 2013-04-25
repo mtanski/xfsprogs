@@ -10,6 +10,8 @@ xfs_bmap \- print block mapping for an XFS file
 .I num_extents
 ]
 .I file
+.br
+.B xfs_bmap \-V
 .SH DESCRIPTION
 .B xfs_bmap
 prints the map of disk blocks used by files in an XFS filesystem.
@@ -91,6 +93,9 @@ A second
 option will print out the
 .I flags
 legend.
+.TP
+.B \-V
+Prints the version number and exits.
 .SH SEE ALSO
 .BR xfs_fsr (8),
 .BR xfs (5).

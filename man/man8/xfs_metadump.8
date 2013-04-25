@@ -6,11 +6,17 @@ xfs_metadump \- copy XFS filesystem metadata to a file
 [
 .B \-efgow
 ] [
+.B \-m
+.I max_extents
+]
+] [
 .B \-l
 .I logdev
 ]
 .I source
 .I target
+.br
+.B xfs_metadump \-V
 .SH DESCRIPTION
 .B xfs_metadump
 is a debugging tool that copies the metadata from an XFS filesystem to a file.
@@ -94,12 +100,20 @@ For filesystems which use an external log, this specifies the device where the
 external log resides. The external log is not copied, only internal logs are
 copied.
 .TP
+.B \-m
+Set the maximum size of an allowed metadata extent.  Extremely large metadata
+extents are likely to be corrupt, and will be skipped if they exceed
+this value.  The default size is 1000 blocks.
+.TP
 .B \-o
 Disables obfuscation of file names and extended attributes.
 .TP
 .B \-w
 Prints warnings of inconsistent metadata encountered to stderr. Bad metadata
 is still copied.
+.TP
+.B \-V
+Prints the version number and exits.
 .SH DIAGNOSTICS
 .B xfs_metadump
 returns an exit code of 0 if all readable metadata is successfully copied or

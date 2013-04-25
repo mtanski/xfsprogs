@@ -20,6 +20,8 @@ xfs_check \- check XFS filesystem consistency
 .I logdev
 ]
 .I device
+.br
+.B xfs_check \-V
 .SH DESCRIPTION
 .B xfs_check
 checks whether an XFS filesystem is consistent.
@@ -89,6 +91,9 @@ Conversion between disk addresses (i.e. addresses reported by
 and file system blocks may be accomplished using
 .BR xfs_db "(8)'s " convert
 command.
+.TP
+.B \-V
+Prints the version number and exits.
 .PP
 Any output that is produced when
 .B xfs_check

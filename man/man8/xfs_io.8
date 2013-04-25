@@ -13,6 +13,8 @@ xfs_io \- debug the I/O path of an XFS filesystem
 .I prog
 ]
 .I file
+.br
+.B xfs_io \-V
 .SH DESCRIPTION
 .B xfs_io
 is a debugging tool like
@@ -52,6 +54,9 @@ is immutable or append-only.
 .B \-x
 Expert mode. Dangerous commands are only available in this mode.
 These commands also tend to require additional privileges.
+.TP
+.B \-V
+Prints the version number and exits.
 .PP
 The other
 .BR open (2)
@@ -110,6 +115,9 @@ opens for synchronous I/O (O_SYNC).
 .TP
 .B \-t
 truncates on open (O_TRUNC).
+.TP
+.B \-n
+opens in non-blocking mode if possible (O_NONBLOCK).
 .TP
 .B \-R
 marks the file as a realtime XFS file after
