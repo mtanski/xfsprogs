@@ -1,3 +1,42 @@
+xfsprogs-3.1.11 (08 May 2013)
+	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
+	- mkfs.xfs will always go into multidisk mode when filesystem
+	  geometry is specified on the command line.
+	- Document all commands in xfs_io.
+	- Remove setfl command from xfs_io.
+	- xfs_metadump will obfuscate symlinks by path component.
+	- mkfs.xfs no longer accepts geometry settings smaller than the
+	  physical sector size.
+	- xfs_logprint now supports multiply-logged inode fields and
+	  handles continued inode transactions correctly.
+	- kill XLOG_SET
+	- Update release scripts to use git archive to address a
+	  missing source file reported by Arkadiusz Mi?kiewicz
+	- Fix a build error with -Werror=format-security, reported
+	  by Arkadiusz Mi?kiewicz
+	- mkfs.xfs no longer attempts to discard when -N option is used.
+	- Update 'make deb' to use tarball
+	- Sync up with log reservation changes in the kernel.
+	- Fix possible unallocated memory access in fiemap.
+	- Guard against string overflow in path_to_fspath.
+	- Fix setup_cursor array allocation.
+	- Fix free of unintialized pointer in xfs_acl_valid error path.
+	- Guard against path string overflows.
+	- Check strdup results properly in initallfs().
+	- Fix attribute no_change_count logic.
+	- Remove extraneous close() in fsrallfs().
+	- xfs_repair now skips the freelist scan of a corrupt agf
+	  when in no-modify mode.
+	- xfs_db now skips freelist scans of corrupt agfs.
+	- Remove unconditional ASSERT(0) in xfs_repair.
+	- Reduce bb_numrecs in bno/cnt btrees when log consumes all agf space.
+	- Add depraction message for xfs_check.
+	- xfs_quota allow user or group names beginning with digits reported by
+	  James Carter.
+	- Fix manpages and usage() spelling, errors and omissions.
+	- Validate the extent count is at least within the positive
+	  range of a signed 32 bit integer before using it.
+
 xfsprogs-3.1.10 (13 December 2012)
 	- Update release script to make a source tarball.
 
