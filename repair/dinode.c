@@ -1293,13 +1293,22 @@ process_exinode(
 	xfs_bmbt_rec_t		*rp;
 	xfs_dfiloff_t		first_key;
 	xfs_dfiloff_t		last_key;
-	int			numrecs;
+	int32_t			numrecs;
 	int			ret;
 
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
 	*tot = 0;
 	numrecs = XFS_DFORK_NEXTENTS(dip, whichfork);
+
+	/*
+	 * We've already decided on the maximum number of extents on the inode,
+	 * and numrecs may be corrupt. Hence make sure we only allow numrecs to
+	 * be in the range of valid on-disk numbers, which is:
+	 *	0 < numrecs < 2^31 - 1
+	 */
+	if (numrecs < 0)
+		numrecs = *nex;
 
 	/*
 	 * XXX - if we were going to fix up the btree record,
@@ -2038,10 +2047,22 @@ process_inode_data_fork(
 {
 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	int		err = 0;
+	int		nex;
 
-	*nextents = be32_to_cpu(dino->di_nextents);
+	/*
+	 * extent count on disk is only valid for positive values. The kernel
+	 * uses negative values in memory. hence if we see negative numbers
+	 * here, trash it!
+	 */
+	nex = be32_to_cpu(dino->di_nextents);
+	if (nex < 0)
+		*nextents = 1;
+	else
+		*nextents = nex;
+
 	if (*nextents > be64_to_cpu(dino->di_nblocks))
 		*nextents = 1;
+
 
 	if (dino->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
 		*dblkmap = blkmap_alloc(*nextents, XFS_DATA_FORK);
