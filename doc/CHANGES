@@ -1,4 +1,4 @@
-xfsprogs-3.1.11 (08 May 2013)
+xfsprogs-3.1.11 (8 May 2013)
 	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
 	- mkfs.xfs will always go into multidisk mode when filesystem
 	  geometry is specified on the command line.
