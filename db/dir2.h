@@ -31,5 +31,35 @@ extern const field_t	da_blkinfo_flds[];
 extern const field_t	da_node_entry_flds[];
 extern const field_t	da_node_hdr_flds[];
 
+/*
+ * generic dir2 structures used by xfs_db
+ */
+typedef union {
+	xfs_dir2_data_entry_t	entry;
+	xfs_dir2_data_unused_t	unused;
+} xfs_dir2_data_union_t;
+
+typedef struct xfs_dir2_data {
+	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_DATA_MAGIC */
+	xfs_dir2_data_union_t	u[1];
+} xfs_dir2_data_t;
+
+typedef struct xfs_dir2_block {
+	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_BLOCK_MAGIC */
+	xfs_dir2_data_union_t	u[1];
+	xfs_dir2_leaf_entry_t	leaf[1];
+	xfs_dir2_block_tail_t	tail;
+} xfs_dir2_block_t;
+
+typedef struct xfs_dir2_sf {
+	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
+	xfs_dir2_sf_entry_t	list[1];	/* shortform entries */
+} xfs_dir2_sf_t;
+
+static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+{
+	return (xfs_dir2_inou_t *)&(sfep)->name[(sfep)->namelen];
+}
+
 extern int	dir2_data_union_size(void *obj, int startoff, int idx);
 extern int	dir2_size(void *obj, int startoff, int idx);

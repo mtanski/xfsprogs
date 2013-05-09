@@ -558,16 +558,13 @@ xlog_print_trans_inode_core(xfs_icdinode_t *ip)
 }
 
 void
-xlog_print_dir2_sf(xfs_dir2_sf_t *sfp, int size)
+xlog_print_dir2_sf(xfs_dir2_sf_hdr_t *sfp, int size)
 {
 	xfs_ino_t	ino;
 	int		count;
 	int		i;
 	char		namebuf[257];
 	xfs_dir2_sf_entry_t	*sfep;
-
-	/* XXX need to determine whether this is v1 or v2, then
-	   print appropriate structure */
 
 	printf(_("SHORTFORM DIRECTORY size %d\n"),
 		size);
@@ -576,14 +573,14 @@ xlog_print_dir2_sf(xfs_dir2_sf_t *sfp, int size)
 	return;
 
 	printf(_("SHORTFORM DIRECTORY size %d count %d\n"),
-	       size, sfp->hdr.count);
-	memmove(&ino, &(sfp->hdr.parent), sizeof(ino));
-       printf(_(".. ino 0x%llx\n"), (unsigned long long) be64_to_cpu(ino));
+	       size, sfp->count);
+	memmove(&ino, &(sfp->parent), sizeof(ino));
+	printf(_(".. ino 0x%llx\n"), (unsigned long long) be64_to_cpu(ino));
 
-	count = (uint)(sfp->hdr.count);
-	sfep = &(sfp->list[0]);
+	count = sfp->count;
+	sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0; i < count; i++) {
-		memmove(&ino, &(sfep->inumber), sizeof(ino));
+		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
 		memmove(namebuf, (sfep->name), sfep->namelen);
 		namebuf[sfep->namelen] = '\0';
 		printf(_("%s ino 0x%llx namelen %d\n"),
@@ -691,7 +688,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_DDATA:
 		printf(_("LOCAL inode data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir2_sf((xfs_dir2_sf_t *)*ptr, size);
+		    xlog_print_dir2_sf((xfs_dir2_sf_hdr_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_DFORK) == 0);
@@ -718,7 +715,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_ADATA:
 		printf(_("LOCAL attr data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir2_sf((xfs_dir2_sf_t *)*ptr, size);
+		    xlog_print_dir2_sf((xfs_dir2_sf_hdr_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_AFORK) == 0);
@@ -1039,7 +1036,7 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
     }
 
     /* check for cleared blocks written by xlog_clear_stale_blocks() */
-    if (!head->h_len && !head->h_chksum && !head->h_prev_block &&
+    if (!head->h_len && !head->h_crc && !head->h_prev_block &&
 	!head->h_num_logops && !head->h_size)
 	return CLEARED_BLKS;
 

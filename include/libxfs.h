@@ -33,8 +33,8 @@
 #include <xfs/swab.h>
 #include <xfs/atomic.h>
 
-#include <xfs/xfs_fs.h>
 #include <xfs/xfs_types.h>
+#include <xfs/xfs_fs.h>
 #include <xfs/xfs_arch.h>
 #include <xfs/xfs_bit.h>
 #include <xfs/xfs_inum.h>
@@ -46,7 +46,6 @@
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_alloc_btree.h>
 #include <xfs/xfs_ialloc_btree.h>
-#include <xfs/xfs_dir2_sf.h>
 #include <xfs/xfs_attr_sf.h>
 #include <xfs/xfs_dinode.h>
 #include <xfs/xfs_inode.h>
@@ -135,7 +134,6 @@ extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *,
 extern int	libxfs_log_header (xfs_caddr_t, uuid_t *, int, int, int,
 				libxfs_get_block_t *, void *);
 
-
 /*
  * Define a user-level mount structure with all we need
  * in order to make use of the numerous XFS_* macros.
@@ -199,6 +197,7 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
 } xfs_mount_t;
 
+
 #define LIBXFS_MOUNT_ROOTINOS		0x0001
 #define LIBXFS_MOUNT_DEBUGGER		0x0002
 #define LIBXFS_MOUNT_32BITINODES	0x0004
@@ -218,11 +217,32 @@ extern void	libxfs_rtmount_destroy (xfs_mount_t *);
 /*
  * Simple I/O interface
  */
+typedef struct xfs_buftarg {
+	struct xfs_mount	*bt_mount;
+	dev_t			dev;
+} xfs_buftarg_t;
+
+#define XB_PAGES        2
+
+struct xfs_buf_map {
+	xfs_daddr_t		bm_bn;  /* block number for I/O */
+	int			bm_len; /* size of I/O */
+};
+
+#define DEFINE_SINGLE_BUF_MAP(map, blkno, numblk) \
+	struct xfs_buf_map (map) = { .bm_bn = (blkno), .bm_len = (numblk) };
+
+struct xfs_buf_ops {
+	void (*verify_read)(struct xfs_buf *);
+	void (*verify_write)(struct xfs_buf *);
+};
+
 typedef struct xfs_buf {
 	struct cache_node	b_node;
 	unsigned int		b_flags;
 	xfs_daddr_t		b_blkno;
 	unsigned		b_bcount;
+	unsigned int		b_length;
 	dev_t			b_dev;
 	pthread_mutex_t		b_lock;
 	pthread_t		b_holder;
@@ -230,8 +250,13 @@ typedef struct xfs_buf {
 	void			*b_fsprivate;
 	void			*b_fsprivate2;
 	void			*b_fsprivate3;
-	char			*b_addr;
+	void			*b_addr;
 	int			b_error;
+	const struct xfs_buf_ops *b_ops;
+	struct xfs_buftarg	*b_target;
+	struct xfs_perag	*b_pag;
+	struct xfs_buf_map	*b_map;
+	int			b_nmaps;
 #ifdef XFS_BUF_TRACING
 	struct list_head	b_lock_list;
 	const char		*b_func;
@@ -244,10 +269,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 	LIBXFS_B_EXIT		= 0x0001,	/* ==LIBXFS_EXIT_ON_FAILURE */
 	LIBXFS_B_DIRTY		= 0x0002,	/* buffer has been modified */
 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
-	LIBXFS_B_UPTODATE	= 0x0008	/* buffer is sync'd to disk */
+	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
 };
 
-#define XFS_BUF_PTR(bp)			((bp)->b_addr)
+#define XFS_BUF_PTR(bp)			((char *)(bp)->b_addr)
 #define xfs_buf_offset(bp, offset)	(XFS_BUF_PTR(bp) + (offset))
 #define XFS_BUF_ADDR(bp)		((bp)->b_blkno)
 #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
@@ -274,6 +300,8 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 						(pri))
 #define XFS_BUF_PRIORITY(bp)		(cache_node_get_priority( \
 						(struct cache_node *)(bp)))
+#define xfs_buf_set_ref(bp,ref)		((void) 0)
+#define xfs_buf_ioerror(bp,err)		(bp)->b_error = (err);
 
 /* Buffer Cache Interfaces */
 
@@ -287,23 +315,34 @@ extern struct cache_operations	libxfs_bcache_operations;
 #define libxfs_readbuf(dev, daddr, len, flags) \
 	libxfs_trace_readbuf(__FUNCTION__, __FILE__, __LINE__, \
 			    (dev), (daddr), (len), (flags))
+#define libxfs_readbuf_map(dev, map, nmaps, flags) \
+	libxfs_trace_readbuf_map(__FUNCTION__, __FILE__, __LINE__, \
+			    (dev), (map), (nmaps), (flags))
 #define libxfs_writebuf(buf, flags) \
 	libxfs_trace_writebuf(__FUNCTION__, __FILE__, __LINE__, \
 			      (buf), (flags))
 #define libxfs_getbuf(dev, daddr, len) \
 	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
 			    (dev), (daddr), (len))
+#define libxfs_getbuf_map(dev, map, nmaps) \
+	libxfs_trace_getbuf_map(__FUNCTION__, __FILE__, __LINE__, \
+			    (dev), (map), (nmaps))
 #define libxfs_getbuf_flags(dev, daddr, len, flags) \
-	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
+	libxfs_trace_getbuf_flags(__FUNCTION__, __FILE__, __LINE__, \
 			    (dev), (daddr), (len), (flags))
 #define libxfs_putbuf(buf) \
 	libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
 
 extern xfs_buf_t *libxfs_trace_readbuf(const char *, const char *, int,
 			dev_t, xfs_daddr_t, int, int);
+extern xfs_buf_t *libxfs_trace_readbuf_map(const char *, const char *, int,
+			dev_t, struct xfs_buf_map *, int, int);
 extern int	libxfs_trace_writebuf(const char *, const char *, int,
 			xfs_buf_t *, int);
-extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int, dev_t, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int,
+			dev_t, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
+			dev_t, struct xfs_buf_map *, int);
 extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
 			dev_t, xfs_daddr_t, int, unsigned int);
 extern void	libxfs_trace_putbuf (const char *, const char *, int,
@@ -312,8 +351,10 @@ extern void	libxfs_trace_putbuf (const char *, const char *, int,
 #else
 
 extern xfs_buf_t *libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
+extern xfs_buf_t *libxfs_readbuf_map(dev_t, struct xfs_buf_map *, int, int);
 extern int	libxfs_writebuf(xfs_buf_t *, int);
 extern xfs_buf_t *libxfs_getbuf(dev_t, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_getbuf_map(dev_t, struct xfs_buf_map *, int);
 extern xfs_buf_t *libxfs_getbuf_flags(dev_t, xfs_daddr_t, int, unsigned int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 
@@ -357,6 +398,7 @@ typedef struct xfs_inode_log_item {
 	xfs_log_item_t		ili_item;		/* common portion */
 	struct xfs_inode	*ili_inode;		/* inode pointer */
 	unsigned short		ili_flags;		/* misc flags */
+	unsigned int		ili_fields;		/* fields to be logged */
 	unsigned int		ili_last_fields;	/* fields when flushed*/
 	xfs_inode_log_format_t	ili_format;		/* logged structure */
 	int			ili_lock_flags;
@@ -408,11 +450,50 @@ extern void	libxfs_trans_bjoin (xfs_trans_t *, struct xfs_buf *);
 extern void	libxfs_trans_bhold (xfs_trans_t *, struct xfs_buf *);
 extern void	libxfs_trans_log_buf (xfs_trans_t *, struct xfs_buf *,
 				uint, uint);
+/*
 extern xfs_buf_t	*libxfs_trans_get_buf (xfs_trans_t *, dev_t,
 				xfs_daddr_t, int, uint);
 extern int	libxfs_trans_read_buf (xfs_mount_t *, xfs_trans_t *, dev_t,
 				xfs_daddr_t, int, uint, struct xfs_buf **);
+*/
 
+struct xfs_buf	*libxfs_trans_get_buf_map(struct xfs_trans *tp, dev_t dev,
+				       struct xfs_buf_map *map, int nmaps,
+				       uint flags);
+
+static inline struct xfs_buf *
+libxfs_trans_get_buf(
+	struct xfs_trans	*tp,
+	dev_t			dev,
+	xfs_daddr_t		blkno,
+	int			numblks,
+	uint			flags)
+{
+	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+	return libxfs_trans_get_buf_map(tp, dev, &map, 1, flags);
+}
+
+int		libxfs_trans_read_buf_map(struct xfs_mount *mp,
+				       struct xfs_trans *tp, dev_t dev,
+				       struct xfs_buf_map *map, int nmaps,
+				       uint flags, struct xfs_buf **bpp,
+				       const struct xfs_buf_ops *ops);
+
+static inline int
+libxfs_trans_read_buf(
+	struct xfs_mount	*mp,
+	struct xfs_trans	*tp,
+	dev_t			dev,
+	xfs_daddr_t		blkno,
+	int			numblks,
+	uint			flags,
+	struct xfs_buf		**bpp,
+	const struct xfs_buf_ops *ops)
+{
+	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+	return libxfs_trans_read_buf_map(mp, tp, dev, &map, 1,
+				      flags, bpp, ops);
+}
 
 /*
  * Inode interface
@@ -437,6 +518,27 @@ typedef struct xfs_inode {
 #define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
 #define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
 
+/*
+ * Project quota id helpers (previously projid was 16bit only and using two
+ * 16bit values to hold new 32bit projid was chosen to retain compatibility with
+ * "old" filesystems).
+ *
+ * Copied here from xfs_inode.h because it has to be defined after the struct
+ * xfs_inode...
+ */
+static inline prid_t
+xfs_get_projid(struct xfs_icdinode *id)
+{
+	return (prid_t)id->di_projid_hi << 16 | id->di_projid_lo;
+}
+
+static inline void
+xfs_set_projid(struct xfs_icdinode *id, prid_t projid)
+{
+	id->di_projid_hi = (__uint16_t) (projid >> 16);
+	id->di_projid_lo = (__uint16_t) (projid & 0xffff);
+}
+
 typedef struct cred {
 	uid_t	cr_uid;
 	gid_t	cr_gid;
@@ -450,8 +552,6 @@ extern void	libxfs_trans_inode_alloc_buf (xfs_trans_t *, xfs_buf_t *);
 extern void	libxfs_trans_ichgtime(struct xfs_trans *,
 					struct xfs_inode *, int);
 extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
-extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
-				xfs_inode_t *, xfs_daddr_t);
 
 /* Inode Cache Interfaces */
 extern struct cache	*libxfs_icache;
@@ -461,13 +561,7 @@ extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);
 
-extern int	xfs_imap_to_bp(xfs_mount_t *mp, xfs_trans_t *tp, struct xfs_imap *imap,
-			xfs_buf_t **bpp, uint buf_flags, uint iget_flags);
-
-#include <xfs/xfs_dir2_data.h>
-#include <xfs/xfs_dir2_leaf.h>
-#include <xfs/xfs_dir2_block.h>
-#include <xfs/xfs_dir2_node.h>
+#include <xfs/xfs_dir2_format.h>
 
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);
@@ -475,11 +569,6 @@ extern unsigned int	libxfs_log2_roundup(unsigned int i);
 extern int	libxfs_alloc_file_space (xfs_inode_t *, xfs_off_t,
 				xfs_off_t, int, int);
 extern int	libxfs_bmap_finish(xfs_trans_t **, xfs_bmap_free_t *, int *);
-
-extern void	libxfs_da_bjoin (xfs_trans_t *, xfs_dabuf_t *);
-extern void	libxfs_da_bhold (xfs_trans_t *, xfs_dabuf_t *);
-extern int	libxfs_da_read_bufr(xfs_trans_t *, xfs_inode_t *, xfs_dablk_t,
-				xfs_daddr_t, xfs_dabuf_t **, int);
 
 extern void 	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
 extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
@@ -534,7 +623,8 @@ void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 /* xfs_bmap.h */
 #define libxfs_bmap_cancel		xfs_bmap_cancel
 #define libxfs_bmap_last_offset		xfs_bmap_last_offset
-#define libxfs_bmapi			xfs_bmapi
+#define libxfs_bmapi_write		xfs_bmapi_write
+#define libxfs_bmapi_read		xfs_bmapi_read
 #define libxfs_bunmapi			xfs_bunmapi
 
 /* xfs_bmap_btree.h */
@@ -544,6 +634,7 @@ void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 #define libxfs_da_brelse		xfs_da_brelse
 #define libxfs_da_hashname		xfs_da_hashname
 #define libxfs_da_shrink_inode		xfs_da_shrink_inode
+#define libxfs_da_read_buf		xfs_da_read_buf
 
 /* xfs_dir2.h */
 #define libxfs_dir_createname		xfs_dir_createname
@@ -564,6 +655,8 @@ void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 /* xfs_inode.h */
 #define libxfs_dinode_from_disk		xfs_dinode_from_disk
 #define libxfs_dinode_to_disk		xfs_dinode_to_disk
+void	xfs_dinode_from_disk(struct xfs_icdinode *,
+			     struct xfs_dinode *);
 #define libxfs_idata_realloc		xfs_idata_realloc
 #define libxfs_idestroy_fork		xfs_idestroy_fork
 

@@ -243,7 +243,7 @@ newfile(
 	} else if (len > 0) {
 		nb = XFS_B_TO_FSB(mp, len);
 		nmap = 1;
-		error = libxfs_bmapi(tp, ip, 0, nb, XFS_BMAPI_WRITE, first, nb,
+		error = libxfs_bmapi_write(tp, ip, 0, nb, 0, first, nb,
 				&map, &nmap, flist);
 		if (error) {
 			fail(_("error allocating space for a file"), error);
@@ -667,9 +667,9 @@ rtinit(
 	xfs_bmap_init(&flist, &first);
 	while (bno < mp->m_sb.sb_rbmblocks) {
 		nmap = XFS_BMAP_MAX_NMAP;
-		error = libxfs_bmapi(tp, rbmip, bno,
+		error = libxfs_bmapi_write(tp, rbmip, bno,
 				(xfs_extlen_t)(mp->m_sb.sb_rbmblocks - bno),
-				XFS_BMAPI_WRITE, &first, mp->m_sb.sb_rbmblocks,
+				0, &first, mp->m_sb.sb_rbmblocks,
 				map, &nmap, &flist);
 		if (error) {
 			fail(_("Allocation of the realtime bitmap failed"),
@@ -704,9 +704,9 @@ rtinit(
 	xfs_bmap_init(&flist, &first);
 	while (bno < nsumblocks) {
 		nmap = XFS_BMAP_MAX_NMAP;
-		error = libxfs_bmapi(tp, rsumip, bno,
+		error = libxfs_bmapi_write(tp, rsumip, bno,
 				(xfs_extlen_t)(nsumblocks - bno),
-				XFS_BMAPI_WRITE, &first, nsumblocks,
+				0, &first, nsumblocks,
 				map, &nmap, &flist);
 		if (error) {
 			fail(_("Allocation of the realtime summary failed"),

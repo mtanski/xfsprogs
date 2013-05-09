@@ -22,6 +22,7 @@
 #include "fprint.h"
 #include "field.h"
 #include "bit.h"
+#include "dir2.h"
 #include "dir2sf.h"
 
 static int	dir2_inou_i4_count(void *obj, int startoff);
@@ -149,10 +150,10 @@ dir2_sf_entry_size(
 
 	ASSERT(bitoffs(startoff) == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(sf);
+	e = xfs_dir2_sf_firstentry(&sf->hdr);
 	for (i = 0; i < idx; i++)
-		e = xfs_dir2_sf_nextentry(sf, e);
-	return bitize((int)xfs_dir2_sf_entsize_byentry(sf, e));
+		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
+	return bitize((int)xfs_dir2_sf_entsize(&sf->hdr, e->namelen));
 }
 
 /*ARGSUSED*/
@@ -194,9 +195,9 @@ dir2_sf_list_offset(
 
 	ASSERT(bitoffs(startoff) == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(sf);
+	e = xfs_dir2_sf_firstentry(&sf->hdr);
 	for (i = 0; i < idx; i++)
-		e = xfs_dir2_sf_nextentry(sf, e);
+		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
 	return bitize((int)((char *)e - (char *)sf));
 }
 
@@ -214,8 +215,8 @@ dir2sf_size(
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
 	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(sf);
+	e = xfs_dir2_sf_firstentry(&sf->hdr);
 	for (i = 0; i < sf->hdr.count; i++)
-		e = xfs_dir2_sf_nextentry(sf, e);
+		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
 	return bitize((int)((char *)e - (char *)sf));
 }

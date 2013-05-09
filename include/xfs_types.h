@@ -33,7 +33,6 @@ typedef signed long long int	__int64_t;
 typedef unsigned long long int	__uint64_t;
 
 typedef enum { B_FALSE,B_TRUE }	boolean_t;
-typedef __uint32_t		prid_t;		/* project ID */
 typedef __uint32_t		inst_t;		/* an instruction */
 
 typedef __s64			xfs_off_t;	/* <file offset> type */
@@ -56,7 +55,10 @@ typedef __uint64_t __psunsigned_t;
 
 #endif	/* __KERNEL__ */
 
+typedef __uint32_t	prid_t;		/* project ID */
+
 typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+typedef	__uint32_t	xfs_agino_t;	/* inode # within allocation grp */
 typedef	__uint32_t	xfs_extlen_t;	/* extent length in blocks */
 typedef	__uint32_t	xfs_agnumber_t;	/* allocation group number */
 typedef __int32_t	xfs_extnum_t;	/* # of extents in a file */
@@ -72,8 +74,6 @@ typedef	__int32_t	xfs_tid_t;	/* transaction identifier */
 
 typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
 typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
-
-typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
 
 /*
  * These types are 64 bits on disk but are either 32 or 64 bits in memory.
@@ -103,6 +103,7 @@ typedef __uint64_t	xfs_fileoff_t;	/* block number in a file */
 typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
 typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
 
+
 /*
  * Null values for the types.
  */
@@ -122,12 +123,29 @@ typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
 
 #define NULLCOMMITLSN	((xfs_lsn_t)-1)
 
+#define	NULLFSINO	((xfs_ino_t)-1)
+#define	NULLAGINO	((xfs_agino_t)-1)
+
 /*
  * Max values for extlen, extnum, aextnum.
  */
 #define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
 #define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
 #define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
+
+/*
+ * Minimum and maximum blocksize and sectorsize.
+ * The blocksize upper limit is pretty much arbitrary.
+ * The sectorsize upper limit is due to sizeof(sb_sectsize).
+ */
+#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
+#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
+#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
+#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
+#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
+#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
+#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
+#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
 
 /*
  * Min numbers of data/attr fork btree root pointers.

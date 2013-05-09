@@ -31,6 +31,7 @@
 #include "output.h"
 #include "init.h"
 #include "malloc.h"
+#include "dir2.h"
 
 typedef enum {
 	IS_USER_QUOTA, IS_PROJECT_QUOTA, IS_GROUP_QUOTA,
@@ -2212,7 +2213,7 @@ process_data_dir_v2(
 	bf = data->hdr.bestfree;
 	ptr = (char *)data->u;
 	if (be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
-		btp = xfs_dir2_block_tail_p(mp, block);
+		btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 		lep = xfs_dir2_block_leaf_p(btp);
 		endptr = (char *)lep;
 		if (endptr <= ptr || endptr > (char *)btp) {
@@ -2792,7 +2793,7 @@ process_inode(
 			break;
 		}
 		if (ic) {
-			dqprid = xfs_get_projid(idic);	/* dquot ID is u32 */
+			dqprid = xfs_get_projid(&idic);	/* dquot ID is u32 */
 			quota_add(&dqprid, &idic.di_gid, &idic.di_uid,
 				  0, bc, ic, rc);
 		}
@@ -3003,7 +3004,7 @@ process_leaf_node_dir_v2_free(
 		error++;
 		return;
 	}
-	maxent = XFS_DIR2_MAX_FREE_BESTS(mp);
+	maxent = xfs_dir2_free_max_bests(mp);
 	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp, 
 					dabno - mp->m_dirfreeblk) * maxent) {
 		if (!sflag || v)
@@ -3415,10 +3416,10 @@ process_sf_dir_v2(
 	if (v)
 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
 	(*dot)++;
-	sfe = xfs_dir2_sf_firstentry(sf);
+	sfe = xfs_dir2_sf_firstentry(&sf->hdr);
 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
 	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
-		if ((__psint_t)sfe + xfs_dir2_sf_entsize_byentry(sf, sfe) -
+		if ((__psint_t)sfe + xfs_dir2_sf_entsize(&sf->hdr,sfe->namelen) -
 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
 			if (!sflag)
 				dbprintf(_("dir %llu bad size in entry at %d\n"),
@@ -3427,7 +3428,7 @@ process_sf_dir_v2(
 			error++;
 			break;
 		}
-		lino = xfs_dir2_sf_get_inumber(sf, xfs_dir2_sf_inumberp(sfe));
+		lino = xfs_dir2_sfe_get_ino(&sf->hdr, sfe);
 		if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
 		cid = find_inode(lino, 1);
@@ -3457,8 +3458,8 @@ process_sf_dir_v2(
 		}
 		offset =
 			xfs_dir2_sf_get_offset(sfe) +
-			xfs_dir2_data_entsize(sfe->namelen);
-		sfe = xfs_dir2_sf_nextentry(sf, sfe);
+			xfs_dir2_sf_entsize(&sf->hdr, sfe->namelen);
+		sfe = xfs_dir2_sf_nextentry(&sf->hdr, sfe);
 	}
 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
 					be64_to_cpu(dip->di_size)) {
@@ -3474,7 +3475,7 @@ process_sf_dir_v2(
 			dbprintf(_("dir %llu offsets too high\n"), id->ino);
 		error++;
 	}
-	lino = xfs_dir2_sf_get_inumber(sf, &sf->hdr.parent);
+	lino = xfs_dir2_sf_get_parent_ino(&sf->hdr);
 	if (lino > XFS_DIR2_MAX_SHORT_INUM)
 		i8++;
 	cid = find_inode(lino, 1);

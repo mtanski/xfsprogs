@@ -90,8 +90,8 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
 		ASSERT(atomic_read(&pag->pag_ref) >= 0);
 		ref = atomic_inc_return(&pag->pag_ref);
 	}
-	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
 	rcu_read_unlock();
+	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
 	return pag;
 }
 
@@ -103,6 +103,114 @@ xfs_perag_put(struct xfs_perag *pag)
 	ASSERT(atomic_read(&pag->pag_ref) > 0);
 	ref = atomic_dec_return(&pag->pag_ref);
 	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+}
+
+/*
+ * Check the validity of the SB found.
+ */
+STATIC int
+xfs_mount_validate_sb(
+	xfs_mount_t	*mp,
+	xfs_sb_t	*sbp,
+	bool		check_inprogress)
+{
+
+	/*
+	 * If the log device and data device have the
+	 * same device number, the log is internal.
+	 * Consequently, the sb_logstart should be non-zero.  If
+	 * we have a zero sb_logstart in this case, we may be trying to mount
+	 * a volume filesystem in a non-volume manner.
+	 */
+	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+		xfs_warn(mp, "bad magic number");
+		return XFS_ERROR(EWRONGFS);
+	}
+
+	if (!xfs_sb_good_version(sbp)) {
+		xfs_warn(mp, "bad version");
+		return XFS_ERROR(EWRONGFS);
+	}
+
+	if (unlikely(
+	    sbp->sb_logstart == 0 && mp->m_logdev == mp->m_dev)) {
+		xfs_warn(mp,
+		"filesystem is marked as having an external log; "
+		"specify logdev on the mount command line.");
+		return XFS_ERROR(EINVAL);
+	}
+
+	if (unlikely(
+	    sbp->sb_logstart != 0 && mp->m_logdev != mp->m_dev)) {
+		xfs_warn(mp,
+		"filesystem is marked as having an internal log; "
+		"do not specify logdev on the mount command line.");
+		return XFS_ERROR(EINVAL);
+	}
+
+	/*
+	 * More sanity checking.  Most of these were stolen directly from
+	 * xfs_repair.
+	 */
+	if (unlikely(
+	    sbp->sb_agcount <= 0					||
+	    sbp->sb_sectsize < XFS_MIN_SECTORSIZE			||
+	    sbp->sb_sectsize > XFS_MAX_SECTORSIZE			||
+	    sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG			||
+	    sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG			||
+	    sbp->sb_sectsize != (1 << sbp->sb_sectlog)			||
+	    sbp->sb_blocksize < XFS_MIN_BLOCKSIZE			||
+	    sbp->sb_blocksize > XFS_MAX_BLOCKSIZE			||
+	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
+	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
+	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
+	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
+	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
+	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
+	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
+	    sbp->sb_dblocks == 0					||
+	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
+	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
+		XFS_CORRUPTION_ERROR("SB sanity check failed",
+				XFS_ERRLEVEL_LOW, mp, sbp);
+		return XFS_ERROR(EFSCORRUPTED);
+	}
+
+	/*
+	 * Currently only very few inode sizes are supported.
+	 */
+	switch (sbp->sb_inodesize) {
+	case 256:
+	case 512:
+	case 1024:
+	case 2048:
+		break;
+	default:
+		xfs_warn(mp, "inode size of %d bytes not supported",
+				sbp->sb_inodesize);
+		return XFS_ERROR(ENOSYS);
+	}
+
+
+	if (check_inprogress && sbp->sb_inprogress) {
+		xfs_warn(mp, "Offline file system operation in progress!");
+		return XFS_ERROR(EFSCORRUPTED);
+	}
+
+	/*
+	 * Version 1 directory format has never worked on Linux.
+	 */
+	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
+		xfs_warn(mp, "file system using version 1 directory format");
+		return XFS_ERROR(ENOSYS);
+	}
+
+	return 0;
 }
 
 void
@@ -210,6 +318,72 @@ xfs_sb_to_disk(
 		fields &= ~(1LL << f);
 	}
 }
+
+static void
+xfs_sb_verify(
+	struct xfs_buf	*bp)
+{
+	struct xfs_mount *mp = bp->b_target->bt_mount;
+	struct xfs_sb	sb;
+	int		error;
+
+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+
+	/*
+	 * Only check the in progress field for the primary superblock as
+	 * mkfs.xfs doesn't clear it from secondary superblocks.
+	 */
+	error = xfs_mount_validate_sb(mp, &sb, bp->b_blkno == XFS_SB_DADDR);
+	if (error)
+		xfs_buf_ioerror(bp, error);
+}
+
+static void
+xfs_sb_read_verify(
+	struct xfs_buf	*bp)
+{
+	xfs_sb_verify(bp);
+}
+
+/*
+ * We may be probed for a filesystem match, so we may not want to emit
+ * messages when the superblock buffer is not actually an XFS superblock.
+ * If we find an XFS superblock, the run a normal, noisy mount because we are
+ * really going to mount it and want to know about errors.
+ */
+static void
+xfs_sb_quiet_read_verify(
+	struct xfs_buf	*bp)
+{
+	struct xfs_sb	sb;
+
+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+
+	if (sb.sb_magicnum == XFS_SB_MAGIC) {
+		/* XFS filesystem, verify noisily! */
+		xfs_sb_read_verify(bp);
+		return;
+	}
+	/* quietly fail */
+	xfs_buf_ioerror(bp, EFSCORRUPTED);
+}
+
+static void
+xfs_sb_write_verify(
+	struct xfs_buf	*bp)
+{
+	xfs_sb_verify(bp);
+}
+
+const struct xfs_buf_ops xfs_sb_buf_ops = {
+	.verify_read = xfs_sb_read_verify,
+	.verify_write = xfs_sb_write_verify,
+};
+
+static const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
+	.verify_read = xfs_sb_quiet_read_verify,
+	.verify_write = xfs_sb_write_verify,
+};
 
 /*
  * xfs_mount_common

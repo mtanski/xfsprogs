@@ -371,7 +371,6 @@ manage_zones(int release)
 	extern kmem_zone_t	*xfs_ili_zone;
 	extern kmem_zone_t	*xfs_inode_zone;
 	extern kmem_zone_t	*xfs_ifork_zone;
-	extern kmem_zone_t	*xfs_dabuf_zone;
 	extern kmem_zone_t	*xfs_buf_item_zone;
 	extern kmem_zone_t	*xfs_da_state_zone;
 	extern kmem_zone_t	*xfs_btree_cur_zone;
@@ -383,7 +382,6 @@ manage_zones(int release)
 		kmem_free(xfs_buf_zone);
 		kmem_free(xfs_inode_zone);
 		kmem_free(xfs_ifork_zone);
-		kmem_free(xfs_dabuf_zone);
 		kmem_free(xfs_buf_item_zone);
 		kmem_free(xfs_da_state_zone);
 		kmem_free(xfs_btree_cur_zone);
@@ -395,7 +393,6 @@ manage_zones(int release)
 	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
 	xfs_inode_zone = kmem_zone_init(sizeof(xfs_inode_t), "xfs_inode");
 	xfs_ifork_zone = kmem_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
-	xfs_dabuf_zone = kmem_zone_init(sizeof(xfs_dabuf_t), "xfs_dabuf");
 	xfs_ili_zone = kmem_zone_init(
 			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
 	xfs_buf_item_zone = kmem_zone_init(

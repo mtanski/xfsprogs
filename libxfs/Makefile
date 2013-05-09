@@ -10,7 +10,7 @@ LT_CURRENT = 0
 LT_REVISION = 0
 LT_AGE = 0
 
-HFILES = xfs.h init.h
+HFILES = xfs.h init.h xfs_dir2_priv.h
 CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
 	xfs_alloc.c xfs_ialloc.c xfs_inode.c xfs_btree.c xfs_alloc_btree.c \
 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \

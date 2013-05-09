@@ -16,48 +16,26 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef __XFS_DIR2_H__
-#define	__XFS_DIR2_H__
+#define __XFS_DIR2_H__
 
-struct uio;
-struct xfs_dabuf;
-struct xfs_da_args;
-struct xfs_dir2_put_args;
 struct xfs_bmap_free;
+struct xfs_da_args;
 struct xfs_inode;
 struct xfs_mount;
 struct xfs_trans;
+struct xfs_dir2_sf_hdr;
+struct xfs_dir2_sf_entry;
+struct xfs_dir2_data_hdr;
+struct xfs_dir2_data_entry;
+struct xfs_dir2_data_unused;
+struct xfs_dir2_data_free;
 
-/*
- * Directory version 2.
- * There are 4 possible formats:
- *	shortform
- *	single block - data with embedded leaf at the end
- *	multiple data blocks, single leaf+freeindex block
- *	data blocks, node&leaf blocks (btree), freeindex blocks
- *
- *	The shortform format is in xfs_dir2_sf.h.
- *	The single block format is in xfs_dir2_block.h.
- *	The data block format is in xfs_dir2_data.h.
- *	The leaf and freeindex block formats are in xfs_dir2_leaf.h.
- *	Node blocks are the same as the other version, in xfs_da_btree.h.
- */
-
-/*
- * Byte offset in data block and shortform entry.
- */
-typedef	__uint16_t	xfs_dir2_data_off_t;
-#define	NULLDATAOFF	0xffffU
 typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
 
 /*
  * Directory block number (logical dirblk in file)
  */
 typedef	__uint32_t	xfs_dir2_db_t;
-
-/*
- * Byte offset in a directory.
- */
-typedef	xfs_off_t	xfs_dir2_off_t;
 
 extern struct xfs_name	xfs_name_dotdot;
 
@@ -86,21 +64,44 @@ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
 				struct xfs_bmap_free *flist, xfs_extlen_t tot);
 extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
 				struct xfs_name *name, uint resblks);
-extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
 
 /*
- * Utility routines for v2 directories.
+ * Direct call from the bmap code, bypassing the generic directory layer.
  */
-extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
-				xfs_dir2_db_t *dbp);
-extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp,
-				int *vp);
-extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp,
-				int *vp);
-extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
-				struct xfs_dabuf *bp);
+extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
 
-extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
-				const unsigned char *name, int len);
+/*
+ * used by db
+ */
+extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
+extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
+		xfs_ino_t ino);
+extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf_hdr *sfp,
+		struct xfs_dir2_sf_entry *sfep);
+extern void xfs_dir2_sfe_put_ino( struct xfs_dir2_sf_hdr *,
+		struct xfs_dir2_sf_entry *sfep, xfs_ino_t ino);
+
+extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+				struct xfs_buf *bp);
+
+extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
+		struct xfs_dir2_data_hdr *hdr, int *loghead);
+extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
+		struct xfs_dir2_data_entry *dep);
+extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
+		struct xfs_buf *bp);
+extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
+		struct xfs_dir2_data_unused *dup);
+extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
+		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
+		int *needlogp, int *needscanp);
+extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
+		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+
+extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
+		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
 
 #endif	/* __XFS_DIR2_H__ */

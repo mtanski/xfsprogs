@@ -16,8 +16,8 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
 #include <libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/xfs_types.h>
 #include <xfs/jdm.h>
 #include <xfs/xfs_dfrag.h>

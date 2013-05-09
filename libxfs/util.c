@@ -50,130 +50,6 @@ libxfs_trans_ichgtime(
 }
 
 /*
- * Given a mount structure and an inode number, return a pointer
- * to a newly allocated in-core inode coresponding to the given
- * inode number.
- *
- * Initialize the inode's attributes and extent pointers if it
- * already has them (it will not if the inode has no links).
- *
- * NOTE: this has slightly different behaviour to the kernel in
- * that this version requires the already allocated *ip being 
- * passed in while the kernel version does the allocation and 
- * returns it in **ip.
- */
-int
-libxfs_iread(
-	xfs_mount_t     *mp,
-	xfs_trans_t	*tp,
-	xfs_ino_t	ino,
-	xfs_inode_t	*ip,
-	xfs_daddr_t	bno)
-{
-	xfs_buf_t	*bp;
-	xfs_dinode_t	*dip;
-	int		error;
-
-	ip->i_ino = ino;
-	ip->i_mount = mp;
-
-        /*
-         * Fill in the location information in the in-core inode.
-         */
-        error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, 0);
-        if (error)
-                return error;
-
-        /*
-         * Get pointers to the on-disk inode and the buffer containing it.
-         */
-        error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp, XBF_LOCK, 0);
-        if (error)
-                return error;
-        dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
-
-	/*
-	 * If we got something that isn't an inode it means someone
-	 * (nfs or dmi) has a stale handle.
-	 */
-	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC) {
-		xfs_trans_brelse(tp, bp);
-		return EINVAL;
-	}
-
-	/*
-	 * If the on-disk inode is already linked to a directory
-	 * entry, copy all of the inode into the in-core inode.
-	 * xfs_iformat() handles copying in the inode format
-	 * specific information.
-	 * Otherwise, just get the truly permanent information.
-	 */
-	if (dip->di_mode) {
-		xfs_dinode_from_disk(&ip->i_d, dip);
-		error = xfs_iformat(ip, dip);
-		if (error)  {
-			xfs_trans_brelse(tp, bp);
-			return error;
-		}
-	} else {
-		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
-		ip->i_d.di_version = dip->di_version;
-		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
-		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
-		/*
-		 * Make sure to pull in the mode here as well in
-		 * case the inode is released without being used.
-		 * This ensures that xfs_inactive() will see that
-		 * the inode is already free and not try to mess
-		 * with the uninitialized part of it.
-		 */
-		ip->i_d.di_mode = 0;
-		/*
-		 * Initialize the per-fork minima and maxima for a new
-		 * inode here.  xfs_iformat will do it for old inodes.
-		 */
-		ip->i_df.if_ext_max =
-			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
-	}
-
-	/*
-	 * The inode format changed when we moved the link count and
-	 * made it 32 bits long.  If this is an old format inode,
-	 * convert it in memory to look like a new one.  If it gets
-	 * flushed to disk we will convert back before flushing or
-	 * logging it.  We zero out the new projid_lo/hi field and the old link
-	 * count field.  We'll handle clearing the pad field (the remains
-	 * of the old uuid field) when we actually convert the inode to
-	 * the new format. We don't change the version number so that we
-	 * can distinguish this from a real new format inode.
-	 */
-	if (ip->i_d.di_version == 1) {
-		ip->i_d.di_nlink = ip->i_d.di_onlink;
-		ip->i_d.di_onlink = 0;
-		xfs_set_projid(&ip->i_d, 0);
-	}
-
-	ip->i_delayed_blks = 0;
-	ip->i_size = ip->i_d.di_size;
-
-	/*
-	 * Use xfs_trans_brelse() to release the buffer containing the
-	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
-	 * in xfs_itobp() above.  If tp is NULL, this is just a normal
-	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
-	 * will only release the buffer if it is not dirty within the
-	 * transaction.  It will be OK to release the buffer in this case,
-	 * because inodes on disk are never destroyed and we will be
-	 * locking the new in-core inode before putting it in the hash
-	 * table where other processes can find it.  Thus we don't have
-	 * to worry about the inode being changed just because we released
-	 * the buffer.
-	 */
-	xfs_trans_brelse(tp, bp);
-	return 0;
-}
-
-/*
  * Allocate an inode on disk and return a copy of its in-core version.
  * Set mode, nlink, and rdev appropriately within the inode.
  * The uid and gid for the inode are set according to the contents of
@@ -193,7 +69,6 @@ libxfs_ialloc(
 	struct fsxattr	*fsx,
 	int		okalloc,
 	xfs_buf_t	**ialloc_context,
-	boolean_t	*call_again,
 	xfs_inode_t	**ipp)
 {
 	xfs_ino_t	ino;
@@ -206,10 +81,10 @@ libxfs_ialloc(
 	 * the on-disk inode to be allocated.
 	 */
 	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, mode, okalloc,
-			    ialloc_context, call_again, &ino);
+			    ialloc_context, &ino);
 	if (error != 0)
 		return error;
-	if (*call_again || ino == NULLFSINO) {
+	if (*ialloc_context || ino == NULLFSINO) {
 		*ipp = NULL;
 		return 0;
 	}
@@ -455,7 +330,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
 			dip->di_onlink = 0;
 			memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
 			memset(&(dip->di_pad[0]), 0, sizeof(dip->di_pad));
-			ASSERT(xfs_get_projid(ip->i_d) == 0);
+			ASSERT(xfs_get_projid(&ip->i_d) == 0);
 		}
 	}
 
@@ -560,7 +435,7 @@ libxfs_alloc_file_space(
 	error = 0;
 	imapp = &imaps[0];
 	reccount = 1;
-	xfs_bmapi_flags = XFS_BMAPI_WRITE | (alloc_type ? XFS_BMAPI_PREALLOC : 0);
+	xfs_bmapi_flags = alloc_type ? XFS_BMAPI_PREALLOC : 0;
 	mp = ip->i_mount;
 	startoffset_fsb = XFS_B_TO_FSBT(mp, offset);
 	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
@@ -578,7 +453,7 @@ libxfs_alloc_file_space(
 		xfs_trans_ihold(tp, ip);
 
 		xfs_bmap_init(&free_list, &firstfsb);
-		error = xfs_bmapi(tp, ip, startoffset_fsb, allocatesize_fsb,
+		error = xfs_bmapi_write(tp, ip, startoffset_fsb, allocatesize_fsb,
 				xfs_bmapi_flags, &firstfsb, 0, imapp,
 				&reccount, &free_list);
 
@@ -617,56 +492,6 @@ libxfs_log2_roundup(unsigned int i)
 }
 
 /*
- * Get a buffer for the dir/attr block, fill in the contents.
- * Don't check magic number, the caller will (it's xfs_repair).
- *
- * Originally from xfs_da_btree.c in the kernel, but only used
- * in userspace so it now resides here.
- */
-int
-libxfs_da_read_bufr(
-	xfs_trans_t	*trans,
-	xfs_inode_t	*dp,
-	xfs_dablk_t	bno,
-	xfs_daddr_t	mappedbno,
-	xfs_dabuf_t	**bpp,
-	int		whichfork)
-{
-	return xfs_da_do_buf(trans, dp, bno, &mappedbno, bpp, whichfork, 2,
-		(inst_t *)__return_address);
-}
-
-/*
- * Hold dabuf at transaction commit.
- *
- * Originally from xfs_da_btree.c in the kernel, but only used
- * in userspace so it now resides here.
- */
-void
-libxfs_da_bhold(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
-{
-	int	i;
-
-	for (i = 0; i < dabuf->nbuf; i++)
-		xfs_trans_bhold(tp, dabuf->bps[i]);
-}
-
-/*
- * Join dabuf to transaction.
- *
- * Originally from xfs_da_btree.c in the kernel, but only used
- * in userspace so it now resides here.
- */
-void
-libxfs_da_bjoin(xfs_trans_t *tp, xfs_dabuf_t *dabuf)
-{
-	int	i;
-
-	for (i = 0; i < dabuf->nbuf; i++)
-		xfs_trans_bjoin(tp, dabuf->bps[i]);
-}
-
-/*
  * Wrapper around call to libxfs_ialloc. Takes care of committing and
  * allocating a new transaction as needed.
  *
@@ -684,21 +509,25 @@ libxfs_inode_alloc(
 	struct fsxattr	*fsx,
 	xfs_inode_t	**ipp)
 {
-	boolean_t	call_again;
 	int		i;
 	xfs_buf_t	*ialloc_context;
 	xfs_inode_t	*ip;
 	xfs_trans_t	*ntp;
 	int		error;
 
-	call_again = B_FALSE;
 	ialloc_context = (xfs_buf_t *)0;
 	error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr, fsx,
-			   1, &ialloc_context, &call_again, &ip);
-	if (error)
+			   1, &ialloc_context, &ip);
+	if (error) {
+		*ipp = NULL;
 		return error;
+	}
+	if (!ialloc_context && !ip) {
+		*ipp = NULL;
+		return XFS_ERROR(ENOSPC);
+	}
 
-	if (call_again) {
+	if (ialloc_context) {
 		xfs_trans_bhold(*tp, ialloc_context);
 		ntp = xfs_trans_dup(*tp);
 		xfs_trans_commit(*tp, 0);
@@ -710,8 +539,7 @@ libxfs_inode_alloc(
 		}
 		xfs_trans_bjoin(*tp, ialloc_context);
 		error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr,
-				   fsx, 1, &ialloc_context,
-				   &call_again, &ip);
+				   fsx, 1, &ialloc_context, &ip);
 		if (!ip)
 			error = ENOSPC;
 		if (error)

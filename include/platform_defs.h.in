@@ -34,6 +34,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <limits.h>
+#include <stdbool.h>
 
 #undef HAVE___U32
 #ifdef HAVE___U32
@@ -56,6 +57,10 @@ typedef signed long long int	__s64;
 #define __bitwise
 #define __force
 #endif
+
+typedef __u16	__bitwise	__le16;
+typedef __u32	__bitwise	__le32;
+typedef __u64	__bitwise	__le64;
 
 typedef __u16	__bitwise	__be16;
 typedef __u32	__bitwise	__be32;

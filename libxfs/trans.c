@@ -252,7 +252,7 @@ xfs_trans_log_inode(
 	 * this coordination mechanism.
 	 */
 	flags |= ip->i_itemp->ili_last_fields;
-	ip->i_itemp->ili_format.ilf_fields |= flags;
+	ip->i_itemp->ili_fields |= flags;
 }
 
 /*
@@ -338,7 +338,7 @@ libxfs_trans_binval(
 	if (bip->bli_flags & XFS_BLI_STALE)
 		return;
 	XFS_BUF_UNDELAYWRITE(bp);
-	XFS_BUF_STALE(bp);
+	xfs_buf_stale(bp);
 	bip->bli_flags |= XFS_BLI_STALE;
 	bip->bli_flags &= ~XFS_BLI_DIRTY;
 	bip->bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
@@ -383,22 +383,20 @@ libxfs_trans_bhold(
 }
 
 xfs_buf_t *
-libxfs_trans_get_buf(
+libxfs_trans_get_buf_map(
 	xfs_trans_t		*tp,
 	dev_t			dev,
-	xfs_daddr_t		d,
-	int			len,
+	struct xfs_buf_map	*map,
+	int			nmaps,
 	uint			f)
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
-	xfs_buftarg_t		bdev;
 
 	if (tp == NULL)
-		return libxfs_getbuf(dev, d, len);
+		return libxfs_getbuf_map(dev, map, nmaps);
 
-	bdev.dev = dev;
-	bp = xfs_trans_buf_item_match(tp, &bdev, d, len);
+	bp = xfs_trans_buf_item_match(tp, dev, map, nmaps);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
@@ -407,7 +405,7 @@ libxfs_trans_get_buf(
 		return bp;
 	}
 
-	bp = libxfs_getbuf(dev, d, len);
+	bp = libxfs_getbuf_map(dev, map, nmaps);
 	if (bp == NULL)
 		return NULL;
 #ifdef XACT_DEBUG
@@ -432,15 +430,13 @@ libxfs_trans_getsb(
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
-	xfs_buftarg_t		bdev;
-	int			len;
+	int			len = XFS_FSS_TO_BB(mp, 1);
+	DEFINE_SINGLE_BUF_MAP(map, XFS_SB_DADDR, len);
 
 	if (tp == NULL)
 		return libxfs_getsb(mp, flags);
 
-	bdev.dev = mp->m_dev;
-	len = XFS_FSS_TO_BB(mp, 1);
-	bp = xfs_trans_buf_item_match(tp, &bdev, XFS_SB_DADDR, len);
+	bp = xfs_trans_buf_item_match(tp, mp->m_dev, &map, 1);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
@@ -465,24 +461,24 @@ libxfs_trans_getsb(
 }
 
 int
-libxfs_trans_read_buf(
+libxfs_trans_read_buf_map(
 	xfs_mount_t		*mp,
 	xfs_trans_t		*tp,
 	dev_t			dev,
-	xfs_daddr_t		blkno,
-	int			len,
+	struct xfs_buf_map	*map,
+	int			nmaps,
 	uint			flags,
-	xfs_buf_t		**bpp)
+	xfs_buf_t		**bpp,
+	const struct xfs_buf_ops *ops)
 {
 	xfs_buf_t		*bp;
 	xfs_buf_log_item_t	*bip;
-	xfs_buftarg_t		bdev;
 	int			error;
 
 	*bpp = NULL;
 
 	if (tp == NULL) {
-		bp = libxfs_readbuf(dev, blkno, len, flags);
+		bp = libxfs_readbuf_map(dev, map, nmaps, flags);
 		if (!bp) {
 			return (flags & XBF_TRYLOCK) ?
 				EAGAIN : XFS_ERROR(ENOMEM);
@@ -492,8 +488,7 @@ libxfs_trans_read_buf(
 		goto done;
 	}
 
-	bdev.dev = dev;
-	bp = xfs_trans_buf_item_match(tp, &bdev, blkno, len);
+	bp = xfs_trans_buf_item_match(tp, dev, map, nmaps);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
@@ -502,7 +497,7 @@ libxfs_trans_read_buf(
 		goto done;
 	}
 
-	bp = libxfs_readbuf(dev, blkno, len, flags);
+	bp = libxfs_readbuf_map(dev, map, nmaps, flags);
 	if (!bp) {
 		return (flags & XBF_TRYLOCK) ?
 			EAGAIN : XFS_ERROR(ENOMEM);
@@ -588,7 +583,7 @@ inode_item_done(
 	mp = iip->ili_item.li_mountp;
 	ASSERT(ip != NULL);
 
-	if (!(iip->ili_format.ilf_fields & XFS_ILOG_ALL)) {
+	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
 		ip->i_transp = NULL;	/* disassociate from transaction */
 		iip->ili_flags = 0;	/* reset all flags */
 		goto ili_done;
@@ -597,9 +592,9 @@ inode_item_done(
 	/*
 	 * Get the buffer containing the on-disk inode.
 	 */
-	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0);
+	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, 0, 0);
 	if (error) {
-		fprintf(stderr, _("%s: warning - itobp failed (%d)\n"),
+		fprintf(stderr, _("%s: warning - imap_to_bp failed (%d)\n"),
 			progname, error);
 		goto ili_done;
 	}
@@ -674,6 +669,7 @@ trans_committed(
 		struct xfs_log_item *lip = lidp->lid_item;
 
                 xfs_trans_del_item(lip);
+
 		if (lip->li_type == XFS_LI_BUF)
 			buf_item_done((xfs_buf_log_item_t *)lip);
 		else if (lip->li_type == XFS_LI_INODE)

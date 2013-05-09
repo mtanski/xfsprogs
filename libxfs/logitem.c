@@ -32,21 +32,27 @@ kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
 xfs_buf_t *
 xfs_trans_buf_item_match(
 	xfs_trans_t		*tp,
-	xfs_buftarg_t		*target,
-	xfs_daddr_t		blkno,
-	int			len)
+	dev_t			dev,
+	struct xfs_buf_map	*map,
+	int			nmaps)
 {
         struct xfs_log_item_desc *lidp;
         struct xfs_buf_log_item *blip;
+	int			len = 0;
+	int			i;
 
-        len = BBTOB(len);
+	for (i = 0; i < nmaps; i++)
+		len += map[i].bm_len;
+
         list_for_each_entry(lidp, &tp->t_items, lid_trans) {
                 blip = (struct xfs_buf_log_item *)lidp->lid_item;
                 if (blip->bli_item.li_type == XFS_LI_BUF &&
-                    XFS_BUF_TARGET(blip->bli_buf) == target->dev &&
-                    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
-                    XFS_BUF_COUNT(blip->bli_buf) == len)
+		    blip->bli_buf->b_dev == dev &&
+		    XFS_BUF_ADDR(blip->bli_buf) == map[0].bm_bn &&
+		    blip->bli_buf->b_bcount == BBTOB(len)) {
+			ASSERT(blip->bli_buf->b_map_count == nmaps);
                         return blip->bli_buf;
+		}
         }
 
         return NULL;

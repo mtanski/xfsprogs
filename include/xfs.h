@@ -34,6 +34,7 @@
 #define __XFS_H__
 
 #include <xfs/platform_defs.h>
+#include <xfs/xfs_types.h>
 #include <xfs/xfs_fs.h>
 
 #endif	/* __XFS_H__ */

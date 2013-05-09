@@ -153,4 +153,42 @@ static __inline__ void __swab64s(__u64 *addr)
 	(__extension__ ({__arch__swab64s(addr);}));
 }
 
+static inline __uint16_t get_unaligned_be16(void *p)
+{
+	__uint8_t *__p = p;
+	return __p[0] << 8 | __p[1];
+}
+
+static inline __uint32_t get_unaligned_be32(void *p)
+{
+	__uint8_t *__p = p;
+        return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+}
+
+static inline __uint64_t get_unaligned_be64(void *p)
+{
+	return (__uint64_t)get_unaligned_be32(p) << 32 |
+			   get_unaligned_be32(p + 4);
+}
+
+static inline void put_unaligned_be16(__uint16_t val, void *p)
+{
+	__uint8_t *__p = p;
+	*__p++ = val >> 8;
+	*__p++ = val;
+}
+
+static inline void put_unaligned_be32(__uint32_t val, void *p)
+{
+	__uint8_t *__p = p;
+	put_unaligned_be16(val >> 16, __p);
+	put_unaligned_be16(val, __p + 2);
+}
+
+static inline void put_unaligned_be64(__uint64_t val, void *p)
+{
+	put_unaligned_be32(val >> 32, p);
+	put_unaligned_be32(val, p + 4);
+}
+
 #endif /* SWAB_H */

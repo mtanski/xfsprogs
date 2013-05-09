@@ -23,6 +23,32 @@ struct blkmap;
 struct bmap_ext;
 
 /*
+ * generic dir2 structures used by xfs_repair.
+ * XXX: shared with xfsdb
+ */
+typedef union {
+	xfs_dir2_data_entry_t	entry;
+	xfs_dir2_data_unused_t	unused;
+} xfs_dir2_data_union_t;
+
+typedef struct xfs_dir2_data {
+	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_DATA_MAGIC */
+	xfs_dir2_data_union_t	u[1];
+} xfs_dir2_data_t;
+
+typedef struct xfs_dir2_block {
+	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_BLOCK_MAGIC */
+	xfs_dir2_data_union_t	u[1];
+	xfs_dir2_leaf_entry_t	leaf[1];
+	xfs_dir2_block_tail_t	tail;
+} xfs_dir2_block_t;
+
+typedef struct xfs_dir2_sf {
+	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
+	xfs_dir2_sf_entry_t	list[1];	/* shortform entries */
+} xfs_dir2_sf_t;
+
+/*
  * the cursor gets passed up and down the da btree processing
  * routines.  The interior block processing routines use the
  * cursor to determine if the pointers to and from the preceding
@@ -42,7 +68,7 @@ struct bmap_ext;
  * Currently, we just trash it.
  */
 typedef struct dir2_level_state  {
-	xfs_dabuf_t	*bp;		/* block bp */
+	xfs_buf_t	*bp;		/* block bp */
 	xfs_dablk_t	bno;		/* file block number */
 	xfs_dahash_t	hashval;	/* last verified hashval */
 	int		index;		/* current index in block */

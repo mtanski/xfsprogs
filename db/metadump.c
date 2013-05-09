@@ -26,6 +26,10 @@
 #include "init.h"
 #include "sig.h"
 #include "xfs_metadump.h"
+#include "fprint.h"
+#include "faddr.h"
+#include "field.h"
+#include "dir2.h"
 
 #define DEFAULT_MAX_EXT_SIZE	1000
 
@@ -916,7 +920,7 @@ obfuscate_sf_dir(
 					(long long)cur_ino);
 	}
 
-	sfep = xfs_dir2_sf_firstentry(sfp);
+	sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
 	for (i = 0; (i < sfp->hdr.count) &&
 			((char *)sfep - (char *)sfp < ino_dir_size); i++) {
 
@@ -935,7 +939,7 @@ obfuscate_sf_dir(
 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
 					 (char *)sfp);
 		} else if ((char *)sfep - (char *)sfp +
-				xfs_dir2_sf_entsize_byentry(sfp, sfep) >
+				xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen) >
 				ino_dir_size) {
 			if (show_warnings)
 				print_warning("entry length in dir inode %llu "
@@ -946,12 +950,11 @@ obfuscate_sf_dir(
 					 (char *)sfp);
 		}
 
-		generate_obfuscated_name(xfs_dir2_sf_get_inumber(sfp,
-				xfs_dir2_sf_inumberp(sfep)), namelen,
-				&sfep->name[0]);
+		generate_obfuscated_name(xfs_dir2_sfe_get_ino(&sfp->hdr, sfep),
+					 namelen, &sfep->name[0]);
 
 		sfep = (xfs_dir2_sf_entry_t *)((char *)sfep +
-				xfs_dir2_sf_entsize_byname(sfp, namelen));
+				xfs_dir2_sf_entsize(&sfp->hdr, namelen));
 	}
 }
 
@@ -1107,9 +1110,10 @@ obfuscate_dir_data_blocks(
 			if (is_block_format) {
 				xfs_dir2_leaf_entry_t	*blp;
 				xfs_dir2_block_tail_t	*btp;
+				xfs_dir2_block_t	*blk;
 
-				btp = xfs_dir2_block_tail_p(mp,
-						(xfs_dir2_block_t *)block);
+				blk = (xfs_dir2_block_t *)block;
+				btp = xfs_dir2_block_tail_p(mp, &blk->hdr);
 				blp = xfs_dir2_block_leaf_p(btp);
 				if ((char *)blp > (char *)btp)
 					blp = (xfs_dir2_leaf_entry_t *)btp;

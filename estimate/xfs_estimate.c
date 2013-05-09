@@ -18,6 +18,8 @@
 
 /*
  * Estimate space of an XFS filesystem
+ *
+ * XXX: assumes dirv1 format.
  */
 #include <xfs/libxfs.h>
 #include <sys/stat.h>

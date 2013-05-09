@@ -215,7 +215,7 @@ dir2_block_leaf_count(
 	block = obj;
 	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
 		return 0;
-	btp = xfs_dir2_block_tail_p(mp, block);
+	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 	return be32_to_cpu(btp->count);
 }
 
@@ -233,7 +233,7 @@ dir2_block_leaf_offset(
 	ASSERT(startoff == 0);
 	block = obj;
 	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, block);
+	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 	lep = xfs_dir2_block_leaf_p(btp) + idx;
 	return bitize((int)((char *)lep - (char *)block));
 }
@@ -265,7 +265,7 @@ dir2_block_tail_offset(
 	ASSERT(idx == 0);
 	block = obj;
 	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, block);
+	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 	return bitize((int)((char *)btp - (char *)block));
 }
 
@@ -287,7 +287,7 @@ dir2_block_u_count(
 	block = obj;
 	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
 		return 0;
-	btp = xfs_dir2_block_tail_p(mp, block);
+	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 	ptr = (char *)block->u;
 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
 	for (i = 0; ptr < endptr; i++) {
@@ -320,7 +320,7 @@ dir2_block_u_offset(
 	ASSERT(startoff == 0);
 	block = obj;
 	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, block);
+	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
 	ptr = (char *)block->u;
 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
 	for (i = 0; i < idx; i++) {
