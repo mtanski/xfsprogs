@@ -23,8 +23,8 @@ QAHFILES = libxfs.h libxlog.h \
 	swab.h \
 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
-	xfs_btree_trace.h xfs_buf_item.h xfs_da_btree.h xfs_dinode.h \
-	xfs_dir2.h xfs_dir2_format.h \
+	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
+	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
 	xfs_inode.h xfs_inode_item.h xfs_inum.h \
 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \

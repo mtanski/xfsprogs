@@ -668,4 +668,14 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
 /* xfs_rtalloc.c */
 int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
 
+/* CRC wrappers */
+
+extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+
+#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
+#define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+
+#include <xfs/xfs_cksum.h>
+
 #endif	/* __LIBXFS_H__ */

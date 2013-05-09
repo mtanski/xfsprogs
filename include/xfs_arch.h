@@ -47,6 +47,14 @@
 #define be16_to_cpu(val)	((__force __u16)(__be16)(val))
 #define be32_to_cpu(val)	((__force __u32)(__be32)(val))
 #define be64_to_cpu(val)	((__force __u64)(__be64)(val))
+
+#define cpu_to_le32(val)	((__force __be32)__swab32((__u32)(val)))
+#define le32_to_cpu(val)	(__swab32((__force __u32)(__le32)(val)))
+
+#define __constant_cpu_to_le32(val)	\
+	((__force __le32)___constant_swab32((__u32)(val)))
+#define __constant_cpu_to_be32(val)	\
+	((__force __be32)(__u32)(val))
 #else
 #define cpu_to_be16(val)	((__force __be16)__swab16((__u16)(val)))
 #define cpu_to_be32(val)	((__force __be32)__swab32((__u32)(val)))
@@ -54,6 +62,14 @@
 #define be16_to_cpu(val)	(__swab16((__force __u16)(__be16)(val)))
 #define be32_to_cpu(val)	(__swab32((__force __u32)(__be32)(val)))
 #define be64_to_cpu(val)	(__swab64((__force __u64)(__be64)(val)))
+
+#define cpu_to_le32(val)	((__force __le32)(__u32)(val))
+#define le32_to_cpu(val)	((__force __u32)(__le32)(val))
+
+#define __constant_cpu_to_le32(val)	\
+	((__force __le32)(__u32)(val))
+#define __constant_cpu_to_be32(val)	\
+	((__force __be32)___constant_swab32((__u32)(val)))
 #endif
 
 static inline void be16_add_cpu(__be16 *a, __s16 b)
