@@ -732,7 +732,8 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 			     (p->bs_extents < 2))
 				continue;
 
-			if ((fd = jdm_open(fshandlep, p, O_RDWR)) < 0) {
+			fd = jdm_open(fshandlep, p, O_RDWR|O_DIRECT);
+			if (fd < 0) {
 				/* This probably means the file was
 				 * removed while in progress of handling
 				 * it.  Just quietly ignore this file.
@@ -836,7 +837,7 @@ fsrfile(char *fname, xfs_ino_t ino)
 		return -1;
 	}
 
-	fd = jdm_open( fshandlep, &statbuf, O_RDWR);
+	fd = jdm_open(fshandlep, &statbuf, O_RDWR|O_DIRECT);
 	if (fd < 0) {
 		fsrprintf(_("unable to open handle %s: %s\n"),
 			fname, strerror(errno));
