@@ -24,7 +24,7 @@
 
 void
 xfs_log_dump(
-	xlog_t			*log,
+	struct xlog		*log,
 	int			fd,
 	int			print_block_start)
 {

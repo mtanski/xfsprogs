@@ -94,6 +94,10 @@ logstat(xfs_mount_t *mp)
 
 		x.logBBsize = XFS_FSB_TO_BB(mp, sb->sb_logblocks);
 		x.logBBstart = XFS_FSB_TO_DADDR(mp, sb->sb_logstart);
+		x.lbsize = BBSIZE;
+		if (xfs_sb_version_hassector(sb))
+			x.lbsize <<= (sb->sb_logsectlog - BBSHIFT);
+
 		if (!x.logname && sb->sb_logstart == 0) {
 			fprintf(stderr, _("    external log device not specified\n\n"));
 			usage();
@@ -105,6 +109,7 @@ logstat(xfs_mount_t *mp)
 		stat(x.dname, &s);
 		x.logBBsize = s.st_size >> 9;
 		x.logBBstart = 0;
+		x.lbsize = BBSIZE;
 	}
 
 
@@ -129,7 +134,7 @@ main(int argc, char **argv)
 	int		c;
 	int             logfd;
 	char		*copy_file = NULL;
-	xlog_t	        log = {0};
+	struct xlog     log = {0};
 	xfs_mount_t	mount;
 
 	setlocale(LC_ALL, "");
@@ -235,6 +240,7 @@ main(int argc, char **argv)
 	log.l_logsize     = BBTOB(x.logBBsize);
 	log.l_logBBstart  = x.logBBstart;
 	log.l_logBBsize   = x.logBBsize;
+	log.l_sectBBsize  = BTOBB(x.lbsize);
 	log.l_mp          = &mount;
 
 	switch (print_operation) {

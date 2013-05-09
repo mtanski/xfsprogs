@@ -24,7 +24,7 @@
 
 void
 xfs_log_copy(
-	xlog_t		*log,
+	struct xlog	*log,
 	int		fd,
 	char		*filename)
 {

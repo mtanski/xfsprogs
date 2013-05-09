@@ -794,7 +794,7 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
  */
 
 void
-xlog_print_lseek(xlog_t *log, int fd, xfs_daddr_t blkno, int whence)
+xlog_print_lseek(struct xlog *log, int fd, xfs_daddr_t blkno, int whence)
 {
 #define BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
 	xfs_off_t offset;
@@ -1245,7 +1245,7 @@ xlog_print_extended_headers(
 /*
  * This code is gross and needs to be rewritten.
  */
-void xfs_log_print(xlog_t       *log,
+void xfs_log_print(struct xlog  *log,
 		   int          fd,
 		   int		print_block_start)
 {

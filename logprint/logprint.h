@@ -34,12 +34,12 @@ extern int	print_no_print;
 /* exports */
 extern char *trans_type[];
 
-extern void xlog_print_lseek(xlog_t *, int, xfs_daddr_t, int);
+extern void xlog_print_lseek(struct xlog *, int, xfs_daddr_t, int);
 
-extern void xfs_log_copy(xlog_t *, int, char *);
-extern void xfs_log_dump(xlog_t *, int, int);
-extern void xfs_log_print(xlog_t *, int, int);
-extern void xfs_log_print_trans(xlog_t *, int);
+extern void xfs_log_copy(struct xlog *, int, char *);
+extern void xfs_log_dump(struct xlog *, int, int);
+extern void xfs_log_print(struct xlog *, int, int);
+extern void xfs_log_print_trans(struct xlog *, int);
 
 extern void print_xlog_record_line(void);
 extern void print_xlog_op_line(void);

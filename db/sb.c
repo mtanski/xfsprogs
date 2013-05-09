@@ -205,12 +205,15 @@ get_sb(xfs_agnumber_t agno, xfs_sb_t *sb)
 }
 
 /* workaround craziness in the xlog routines */
-int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
+int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
+{
+	return 0;
+}
 
 int
 sb_logcheck(void)
 {
-	xlog_t		log;
+	struct xlog	log;
 	xfs_daddr_t	head_blk, tail_blk;
 
 	if (mp->m_sb.sb_logstart) {
@@ -232,10 +235,15 @@ sb_logcheck(void)
 		x.logdev = x.ddev;
 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
+	x.lbsize = BBSIZE;
+	if (xfs_sb_version_hassector(&mp->m_sb))
+		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
+
 	log.l_dev = (mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev;
 	log.l_logsize = BBTOB(log.l_logBBsize);
 	log.l_logBBsize = x.logBBsize;
 	log.l_logBBstart = x.logBBstart;
+	log.l_sectBBsize  = BTOBB(x.lbsize);
 	log.l_mp = mp;
 
 	if (xlog_find_tail(&log, &head_blk, &tail_blk)) {

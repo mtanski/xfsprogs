@@ -30,7 +30,7 @@ xlog_recover_print_trans_head(
 
 int
 xlog_recover_do_trans(
-	xlog_t		*log,
+	struct xlog	*log,
 	xlog_recover_t	*trans,
 	int		pass)
 {
@@ -40,7 +40,7 @@ xlog_recover_do_trans(
 
 void
 xfs_log_print_trans(
-	xlog_t		*log,
+	struct xlog	*log,
 	int		print_block_start)
 {
 	xfs_daddr_t	head_blk, tail_blk;

@@ -23,7 +23,7 @@
  */
 int
 xlog_print_find_oldest(
-	struct log	*log,
+	struct xlog	*log,
 	xfs_daddr_t	*last_blk)
 {
 	xfs_buf_t	*bp;

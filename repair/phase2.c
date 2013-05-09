@@ -29,13 +29,16 @@
 void	set_mp(xfs_mount_t *mpp);
 
 /* workaround craziness in the xlog routines */
-int xlog_recover_do_trans(xlog_t *log, xlog_recover_t *t, int p) { return 0; }
+int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
+{
+	return 0;
+}
 
 static void
 zero_log(xfs_mount_t *mp)
 {
 	int error;
-	xlog_t	log;
+	struct xlog	log;
 	xfs_daddr_t head_blk, tail_blk;
 	dev_t logdev = (mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev;
 
@@ -44,11 +47,15 @@ zero_log(xfs_mount_t *mp)
 		x.logdev = x.ddev;
 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
+	x.lbsize = BBSIZE;
+	if (xfs_sb_version_hassector(&mp->m_sb))
+		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
 
 	log.l_dev = logdev;
 	log.l_logsize = BBTOB(x.logBBsize);
 	log.l_logBBsize = x.logBBsize;
 	log.l_logBBstart = x.logBBstart;
+	log.l_sectBBsize  = BTOBB(x.lbsize);
 	log.l_mp = mp;
 	if (xfs_sb_version_hassector(&mp->m_sb)) {
 		log.l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
