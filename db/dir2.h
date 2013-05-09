@@ -27,5 +27,9 @@ extern const field_t	dir2_leaf_entry_flds[];
 extern const field_t	dir2_leaf_hdr_flds[];
 extern const field_t	dir2_leaf_tail_flds[];
 
+extern const field_t	da_blkinfo_flds[];
+extern const field_t	da_node_entry_flds[];
+extern const field_t	da_node_hdr_flds[];
+
 extern int	dir2_data_union_size(void *obj, int startoff, int idx);
 extern int	dir2_size(void *obj, int startoff, int idx);

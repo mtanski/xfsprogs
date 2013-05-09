@@ -24,7 +24,6 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "dinode.h"
-#include "dir.h"
 #include "bmap.h"
 #include "versions.h"
 #include "dir2.h"

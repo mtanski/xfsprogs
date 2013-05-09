@@ -23,7 +23,6 @@
 #include "incore.h"
 #include "protos.h"
 #include "err_protos.h"
-#include "dir.h"
 #include "dinode.h"
 #include "versions.h"
 #include "prefetch.h"

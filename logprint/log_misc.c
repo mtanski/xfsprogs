@@ -558,13 +558,13 @@ xlog_print_trans_inode_core(xfs_icdinode_t *ip)
 }
 
 void
-xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
+xlog_print_dir2_sf(xfs_dir2_sf_t *sfp, int size)
 {
 	xfs_ino_t	ino;
 	int		count;
 	int		i;
 	char		namebuf[257];
-	xfs_dir_sf_entry_t	*sfep;
+	xfs_dir2_sf_entry_t	*sfep;
 
 	/* XXX need to determine whether this is v1 or v2, then
 	   print appropriate structure */
@@ -588,7 +588,7 @@ xlog_print_dir_sf(xfs_dir_shortform_t *sfp, int size)
 		namebuf[sfep->namelen] = '\0';
 		printf(_("%s ino 0x%llx namelen %d\n"),
 		       namebuf, (unsigned long long)ino, sfep->namelen);
-		sfep = xfs_dir_sf_nextentry(sfep);
+		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
 	}
 }
 
@@ -691,7 +691,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_DDATA:
 		printf(_("LOCAL inode data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+		    xlog_print_dir2_sf((xfs_dir2_sf_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_DFORK) == 0);
@@ -718,7 +718,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_ADATA:
 		printf(_("LOCAL attr data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+		    xlog_print_dir2_sf((xfs_dir2_sf_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_AFORK) == 0);

@@ -79,4 +79,9 @@ int
 dir2_is_badino(
 	xfs_ino_t	ino);
 
+int
+namecheck(
+	char		*name,
+	int		length);
+
 #endif	/* _XR_DIR2_H */

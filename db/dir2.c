@@ -22,7 +22,6 @@
 #include "faddr.h"
 #include "fprint.h"
 #include "field.h"
-#include "dir.h"
 #include "dir2.h"
 #include "init.h"
 
@@ -85,9 +84,9 @@ const field_t	dir2_flds[] = {
 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
 	{ "ltail", FLDT_DIR2_LEAF_TAIL, dir2_leaf_tail_offset,
 	  dir2_leaf_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
-	{ "nhdr", FLDT_DIR_NODE_HDR, OI(NOFF(hdr)), dir2_node_hdr_count,
+	{ "nhdr", FLDT_DA_NODE_HDR, OI(NOFF(hdr)), dir2_node_hdr_count,
 	  FLD_COUNT, TYP_NONE },
-	{ "nbtree", FLDT_DIR_NODE_ENTRY, OI(NOFF(btree)), dir2_node_btree_count,
+	{ "nbtree", FLDT_DA_NODE_ENTRY, OI(NOFF(btree)), dir2_node_btree_count,
 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
 	{ "fhdr", FLDT_DIR2_FREE_HDR, OI(FOFF(hdr)), dir2_free_hdr_count,
 	  FLD_COUNT, TYP_NONE },
@@ -145,7 +144,7 @@ const field_t	dir2_leaf_entry_flds[] = {
 
 #define	LHOFF(f)	bitize(offsetof(xfs_dir2_leaf_hdr_t, f))
 const field_t	dir2_leaf_hdr_flds[] = {
-	{ "info", FLDT_DIR_BLKINFO, OI(LHOFF(info)), C1, 0, TYP_NONE },
+	{ "info", FLDT_DA_BLKINFO, OI(LHOFF(info)), C1, 0, TYP_NONE },
 	{ "count", FLDT_UINT16D, OI(LHOFF(count)), C1, 0, TYP_NONE },
 	{ "stale", FLDT_UINT16D, OI(LHOFF(stale)), C1, 0, TYP_NONE },
 	{ NULL }
@@ -163,6 +162,30 @@ const field_t	dir2_free_hdr_flds[] = {
 	{ "firstdb", FLDT_INT32D, OI(FHOFF(firstdb)), C1, 0, TYP_NONE },
 	{ "nvalid", FLDT_INT32D, OI(FHOFF(nvalid)), C1, 0, TYP_NONE },
 	{ "nused", FLDT_INT32D, OI(FHOFF(nused)), C1, 0, TYP_NONE },
+	{ NULL }
+};
+
+#define	DBOFF(f)	bitize(offsetof(xfs_da_blkinfo_t, f))
+const field_t	da_blkinfo_flds[] = {
+	{ "forw", FLDT_DIRBLOCK, OI(DBOFF(forw)), C1, 0, TYP_INODATA },
+	{ "back", FLDT_DIRBLOCK, OI(DBOFF(back)), C1, 0, TYP_INODATA },
+	{ "magic", FLDT_UINT16X, OI(DBOFF(magic)), C1, 0, TYP_NONE },
+	{ "pad", FLDT_UINT16X, OI(DBOFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
+	{ NULL }
+};
+
+#define	EOFF(f)	bitize(offsetof(xfs_da_node_entry_t, f))
+const field_t	da_node_entry_flds[] = {
+	{ "hashval", FLDT_UINT32X, OI(EOFF(hashval)), C1, 0, TYP_NONE },
+	{ "before", FLDT_DIRBLOCK, OI(EOFF(before)), C1, 0, TYP_INODATA },
+	{ NULL }
+};
+
+#define	HOFF(f)	bitize(offsetof(xfs_da_node_hdr_t, f))
+const field_t	da_node_hdr_flds[] = {
+	{ "info", FLDT_DA_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
+	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
+	{ "level", FLDT_UINT16D, OI(HOFF(level)), C1, 0, TYP_NONE },
 	{ NULL }
 };
 

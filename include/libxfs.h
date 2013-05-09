@@ -46,7 +46,6 @@
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_alloc_btree.h>
 #include <xfs/xfs_ialloc_btree.h>
-#include <xfs/xfs_dir_sf.h>
 #include <xfs/xfs_dir2_sf.h>
 #include <xfs/xfs_attr_sf.h>
 #include <xfs/xfs_dinode.h>
@@ -465,7 +464,6 @@ extern void	libxfs_iput (xfs_inode_t *, uint);
 extern int	xfs_imap_to_bp(xfs_mount_t *mp, xfs_trans_t *tp, struct xfs_imap *imap,
 			xfs_buf_t **bpp, uint buf_flags, uint iget_flags);
 
-#include <xfs/xfs_dir_leaf.h>	/* dirv1 support in db & repair */ 
 #include <xfs/xfs_dir2_data.h>
 #include <xfs/xfs_dir2_leaf.h>
 #include <xfs/xfs_dir2_block.h>

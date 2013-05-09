@@ -29,8 +29,6 @@
 #include "agfl.h"
 #include "agi.h"
 #include "sb.h"
-#include "dir.h"
-#include "dirshort.h"
 #include "attr.h"
 #include "attrshort.h"
 #include "dquot.h"
@@ -156,8 +154,6 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(__int8_t)), 0, NULL, NULL },
 	{ FLDT_DINODE_U, "dinode_u", NULL, (char *)inode_u_flds, inode_u_size,
 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
-	{ FLDT_DIR, "dir", NULL, (char *)dir_flds, dir_size, FTARG_SIZE, NULL,
-	  dir_flds },
 	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
 	  NULL, dir2_flds },
 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
@@ -199,33 +195,15 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(xfs_dir2_sf_off_t)), 0, NULL, NULL },
 	{ FLDT_DIR2SF, "dir2sf", NULL, (char *)dir2sf_flds, dir2sf_size,
 	  FTARG_SIZE, NULL, dir2sf_flds },
-	{ FLDT_DIR_BLKINFO, "dir_blkinfo", NULL, (char *)dir_blkinfo_flds,
-	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, dir_blkinfo_flds },
-	{ FLDT_DIR_INO, "dir_ino", fp_num, "%llu", SI(bitsz(xfs_dir_ino_t)), 0,
-	  fa_ino, NULL },
-	{ FLDT_DIR_LEAF_ENTRY, "dir_leaf_entry", fp_sarray,
-	  (char *)dir_leaf_entry_flds, SI(bitsz(struct xfs_dir_leaf_entry)), 0,
-	  NULL, dir_leaf_entry_flds },
-	{ FLDT_DIR_LEAF_HDR, "dir_leaf_hdr", NULL, (char *)dir_leaf_hdr_flds,
-	  SI(bitsz(struct xfs_dir_leaf_hdr)), 0, NULL, dir_leaf_hdr_flds },
-	{ FLDT_DIR_LEAF_MAP, "dir_leaf_map", fp_sarray,
-	  (char *)dir_leaf_map_flds, SI(bitsz(struct xfs_dir_leaf_map)), 0,
-	  NULL, dir_leaf_map_flds },
-	{ FLDT_DIR_LEAF_NAME, "dir_leaf_name", NULL, (char *)dir_leaf_name_flds,
-	  dir_leaf_name_size, FTARG_SIZE, NULL, dir_leaf_name_flds },
-	{ FLDT_DIR_NODE_ENTRY, "dir_node_entry", fp_sarray,
-	  (char *)dir_node_entry_flds, SI(bitsz(struct xfs_da_node_entry)), 0,
-	  NULL, dir_node_entry_flds },
-	{ FLDT_DIR_NODE_HDR, "dir_node_hdr", NULL, (char *)dir_node_hdr_flds,
-	  SI(bitsz(struct xfs_da_node_hdr)), 0, NULL, dir_node_hdr_flds },
-	{ FLDT_DIR_SF_ENTRY, "dir_sf_entry", NULL, (char *)dir_sf_entry_flds,
-	  dir_sf_entry_size, FTARG_SIZE, NULL, dir_sf_entry_flds },
-	{ FLDT_DIR_SF_HDR, "dir_sf_hdr", NULL, (char *)dir_sf_hdr_flds,
-	  SI(bitsz(struct xfs_dir_sf_hdr)), 0, NULL, dir_sf_hdr_flds },
+	{ FLDT_DA_BLKINFO, "dir_blkinfo", NULL, (char *)da_blkinfo_flds,
+	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, da_blkinfo_flds },
+	{ FLDT_DA_NODE_ENTRY, "dir_node_entry", fp_sarray,
+	  (char *)da_node_entry_flds, SI(bitsz(struct xfs_da_node_entry)), 0,
+	  NULL, da_node_entry_flds },
+	{ FLDT_DA_NODE_HDR, "dir_node_hdr", NULL, (char *)da_node_hdr_flds,
+	  SI(bitsz(struct xfs_da_node_hdr)), 0, NULL, da_node_hdr_flds },
 	{ FLDT_DIRBLOCK, "dirblock", fp_num, "%u", SI(bitsz(__uint32_t)), 0,
 	  fa_dirblock, NULL },
-	{ FLDT_DIRSHORT, "dirshort", NULL, (char *)dir_shortform_flds,
-	  dirshort_size, FTARG_SIZE, NULL, dir_shortform_flds },
 	{ FLDT_DISK_DQUOT, "disk_dquot", NULL, (char *)disk_dquot_flds,
 	  SI(bitsz(xfs_disk_dquot_t)), 0, NULL, disk_dquot_flds },
 	{ FLDT_DQBLK, "dqblk", NULL, (char *)dqblk_flds, SI(bitsz(xfs_dqblk_t)),

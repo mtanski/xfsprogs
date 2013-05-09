@@ -23,7 +23,6 @@
 #include "incore.h"
 #include "protos.h"
 #include "err_protos.h"
-#include "dir.h"
 #include "dir2.h"
 #include "dinode.h"
 #include "scan.h"
@@ -2771,10 +2770,7 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
 	 */
 	switch (type)  {
 	case XR_INO_DIR:
-		if (xfs_sb_version_hasdirv2(&mp->m_sb) ?
-				process_dir2(mp, lino, dino, ino_discovery,
-						dirty, "", parent, dblkmap) :
-				process_dir(mp, lino, dino, ino_discovery,
+		if (process_dir2(mp, lino, dino, ino_discovery,
 						dirty, "", parent, dblkmap)) {
 			do_warn(
 	_("problem with directory contents in inode %" PRIu64 "\n"),

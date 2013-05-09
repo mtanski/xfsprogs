@@ -46,7 +46,6 @@ static int	inode_u_bmx_count(void *obj, int startoff);
 static int	inode_u_c_count(void *obj, int startoff);
 static int	inode_u_dev_count(void *obj, int startoff);
 static int	inode_u_muuid_count(void *obj, int startoff);
-static int	inode_u_sfdir_count(void *obj, int startoff);
 static int	inode_u_sfdir2_count(void *obj, int startoff);
 static int	inode_u_symlink_count(void *obj, int startoff);
 
@@ -166,7 +165,6 @@ const field_t	inode_u_flds[] = {
 	{ "c", FLDT_CHARNS, NULL, inode_u_c_count, FLD_COUNT, TYP_NONE },
 	{ "dev", FLDT_DEV, NULL, inode_u_dev_count, FLD_COUNT, TYP_NONE },
 	{ "muuid", FLDT_UUID, NULL, inode_u_muuid_count, FLD_COUNT, TYP_NONE },
-	{ "sfdir", FLDT_DIRSHORT, NULL, inode_u_sfdir_count, FLD_COUNT, TYP_NONE },
 	{ "sfdir2", FLDT_DIR2SF, NULL, inode_u_sfdir2_count, FLD_COUNT, TYP_NONE },
 	{ "symlink", FLDT_CHARNS, NULL, inode_u_symlink_count, FLD_COUNT,
 	  TYP_NONE },
@@ -404,7 +402,7 @@ inode_next_type(void)
 {
 	switch (iocur_top->mode & S_IFMT) {
 	case S_IFDIR:
-		return xfs_sb_version_hasdirv2(&mp->m_sb) ? TYP_DIR2 : TYP_DIR;
+		return TYP_DIR2;
 	case S_IFLNK:
 		return TYP_SYMLINK;
 	case S_IFREG:
@@ -516,22 +514,6 @@ inode_u_muuid_count(
 	dip = obj;
 	ASSERT((char *)XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
 	return dip->di_format == XFS_DINODE_FMT_UUID;
-}
-
-static int
-inode_u_sfdir_count(
-	void		*obj,
-	int		startoff)
-{
-	xfs_dinode_t	*dip;
-
-	ASSERT(bitoffs(startoff) == 0);
-	ASSERT(obj == iocur_top->data);
-	dip = obj;
-	ASSERT((char *)XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
-	return dip->di_format == XFS_DINODE_FMT_LOCAL &&
-	       (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFDIR
-	       && !xfs_sb_version_hasdirv2(&mp->m_sb);
 }
 
 static int

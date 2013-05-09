@@ -22,7 +22,6 @@
 #include "incore.h"
 #include "err_protos.h"
 #include "dinode.h"
-#include "dir.h"
 #include "dir2.h"
 #include "bmap.h"
 #include "prefetch.h"
@@ -73,6 +72,27 @@ dir2_is_badino(
 		if (l->ino == ino)
 			return 1;
 	return 0;
+}
+
+/*
+ * takes a name and length (name need not be null-terminated)
+ * and returns 1 if the name contains a '/' or a \0, returns 0
+ * otherwise
+ */
+int
+namecheck(char *name, int length)
+{
+	char *c;
+	int i;
+
+	ASSERT(length < MAXNAMELEN);
+
+	for (c = name, i = 0; i < length; i++, c++)  {
+		if (*c == '/' || *c == '\0')
+			return(1);
+	}
+
+	return(0);
 }
 
 /*

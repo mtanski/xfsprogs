@@ -282,9 +282,6 @@ static xfs_dir2_data_free_t
 						   xfs_dir2_data_unused_t *dup);
 static void		process_dir(xfs_dinode_t *dip, blkmap_t *blkmap,
 				    inodata_t *id);
-static int		process_dir_v1(xfs_dinode_t *dip, blkmap_t *blkmap,
-				       int *dot, int *dotdot, inodata_t *id,
-				       xfs_ino_t *parent);
 static int		process_dir_v2(xfs_dinode_t *dip, blkmap_t *blkmap,
 				       int *dot, int *dotdot, inodata_t *id,
 				       xfs_ino_t *parent);
@@ -298,10 +295,6 @@ static void		process_lclinode(inodata_t *id, xfs_dinode_t *dip,
 					 dbm_t type, xfs_drfsbno_t *totd,
 					 xfs_drfsbno_t *toti, xfs_extnum_t *nex,
 					 blkmap_t **blkmapp, int whichfork);
-static xfs_ino_t	process_leaf_dir_v1(blkmap_t *blkmap, int *dot,
-					    int *dotdot, inodata_t *id);
-static xfs_ino_t	process_leaf_dir_v1_int(int *dot, int *dotdot,
-						inodata_t *id);
 static xfs_ino_t	process_leaf_node_dir_v2(blkmap_t *blkmap, int *dot,
 						 int *dotdot, inodata_t *id,
 						 xfs_fsize_t dirsize);
@@ -311,16 +304,12 @@ static void		process_leaf_node_dir_v2_free(inodata_t *id, int v,
 static void		process_leaf_node_dir_v2_int(inodata_t *id, int v,
 						     xfs_dablk_t dbno,
 						     freetab_t *freetab);
-static xfs_ino_t	process_node_dir_v1(blkmap_t *blkmap, int *dot,
-					    int *dotdot, inodata_t *id);
 static void		process_quota(qtype_t qtype, inodata_t *id,
 				      blkmap_t *blkmap);
 static void		process_rtbitmap(blkmap_t *blkmap);
 static void		process_rtsummary(blkmap_t *blkmap);
 static xfs_ino_t	process_sf_dir_v2(xfs_dinode_t *dip, int *dot,
 					  int *dotdot, inodata_t *id);
-static xfs_ino_t	process_shortform_dir_v1(xfs_dinode_t *dip, int *dot,
-						 int *dotdot, inodata_t *id);
 static void		quota_add(xfs_dqid_t *p, xfs_dqid_t *g, xfs_dqid_t *u,
 				  int dq, xfs_qcnt_t bc, xfs_qcnt_t ic,
 				  xfs_qcnt_t rc);
@@ -1983,7 +1972,7 @@ process_block_dir_v2(
 	push_cur();
 	if (nex > 1)
 		make_bbmap(&bbmap, nex, bmp);
-	set_cur(&typtab[TYP_DIR], XFS_FSB_TO_DADDR(mp, bmp->startblock),
+	set_cur(&typtab[TYP_DIR2], XFS_FSB_TO_DADDR(mp, bmp->startblock),
 		mp->m_dirblkfsbs * blkbb, DB_RING_IGN, nex > 1 ? &bbmap : NULL);
 	for (x = 0; !v && x < nex; x++) {
 		for (b = bmp[x].startblock;
@@ -2467,14 +2456,9 @@ process_dir(
 	xfs_ino_t	parent;
 
 	dot = dotdot = 0;
-	if (xfs_sb_version_hasdirv2(&mp->m_sb)) {
-		if (process_dir_v2(dip, blkmap, &dot, &dotdot, id, &parent))
-			return;
-	} else
-	{
-		if (process_dir_v1(dip, blkmap, &dot, &dotdot, id, &parent))
-			return;
-	}
+	if (process_dir_v2(dip, blkmap, &dot, &dotdot, id, &parent))
+		return;
+
 	bno = XFS_INO_TO_FSB(mp, id->ino);
 	if (dot == 0) {
 		if (!sflag || id->ilist || CHECK_BLIST(bno))
@@ -2497,38 +2481,6 @@ process_dir(
 		error++;
 	} else if (parent != NULLFSINO && id->ino != parent)
 		addparent_inode(id, parent);
-}
-
-static int
-process_dir_v1(
-	xfs_dinode_t	*dip,
-	blkmap_t	*blkmap,
-	int		*dot,
-	int		*dotdot,
-	inodata_t	*id,
-	xfs_ino_t	*parent)
-{
-	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
-
-	if (size <= XFS_DFORK_DSIZE(dip, mp) && 
-				dip->di_format == XFS_DINODE_FMT_LOCAL)
-		*parent = process_shortform_dir_v1(dip, dot, dotdot, id);
-	else if (size == XFS_LBSIZE(mp) &&
-			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_format == XFS_DINODE_FMT_BTREE))
-		*parent = process_leaf_dir_v1(blkmap, dot, dotdot, id);
-	else if (size >= XFS_LBSIZE(mp) &&
-			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
-			dip->di_format == XFS_DINODE_FMT_BTREE))
-		*parent = process_node_dir_v1(blkmap, dot, dotdot, id);
-	else  {
-		dbprintf(_("bad size (%lld) or format (%d) for directory inode "
-			 "%lld\n"),
-			size, dip->di_format, id->ino);
-		error++;
-		return 1;
-	}
-	return 0;
 }
 
 static int
@@ -2931,121 +2883,6 @@ process_lclinode(
 }
 
 static xfs_ino_t
-process_leaf_dir_v1(
-	blkmap_t	*blkmap,
-	int		*dot,
-	int		*dotdot,
-	inodata_t	*id)
-{
-	xfs_fsblock_t	bno;
-	xfs_ino_t	parent;
-
-	bno = blkmap_get(blkmap, 0);
-	if (bno == NULLFSBLOCK) {
-		if (!sflag || id->ilist)
-			dbprintf(_("block 0 for directory inode %lld is "
-				 "missing\n"),
-				id->ino);
-		error++;
-		return 0;
-	}
-	push_cur();
-	set_cur(&typtab[TYP_DIR], XFS_FSB_TO_DADDR(mp, bno), blkbb, DB_RING_IGN,
-		NULL);
-	if (iocur_top->data == NULL) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
-			dbprintf(_("can't read block 0 for directory inode "
-				 "%lld\n"),
-				id->ino);
-		error++;
-		pop_cur();
-		return 0;
-	}
-	parent = process_leaf_dir_v1_int(dot, dotdot, id);
-	pop_cur();
-	return parent;
-}
-
-static xfs_ino_t
-process_leaf_dir_v1_int(
-	int			*dot,
-	int			*dotdot,
-	inodata_t		*id)
-{
-	xfs_fsblock_t		bno;
-	inodata_t		*cid;
-	xfs_dir_leaf_entry_t	*entry;
-	int			i;
-	xfs_dir_leafblock_t	*leaf;
-	xfs_ino_t		lino;
-	xfs_dir_leaf_name_t	*namest;
-	xfs_ino_t		parent = 0;
-	int			v;
-
-	bno = XFS_DADDR_TO_FSB(mp, iocur_top->bb);
-	v = verbose || id->ilist || CHECK_BLIST(bno);
-	leaf = iocur_top->data;
-	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR_LEAF_MAGIC) {
-		if (!sflag || id->ilist || CHECK_BLIST(bno))
-			dbprintf(_("bad directory leaf magic # %#x for dir ino "
-				 "%lld\n"),
-				be16_to_cpu(leaf->hdr.info.magic), id->ino);
-		error++;
-		return NULLFSINO;
-	}
-	entry = &leaf->entries[0];
-	for (i = 0; i < be16_to_cpu(leaf->hdr.count); entry++, i++) {
-		namest = xfs_dir_leaf_namestruct(leaf, 
-						be16_to_cpu(entry->nameidx));
-		lino = XFS_GET_DIR_INO8(namest->inumber);
-		cid = find_inode(lino, 1);
-		if (v)
-			dbprintf(_("dir %lld entry %*.*s %lld\n"), id->ino,
-				entry->namelen, entry->namelen, namest->name,
-				lino);
-		if (cid)
-			addlink_inode(cid);
-		else {
-			if (!sflag)
-				dbprintf(_("dir %lld entry %*.*s bad inode "
-					 "number %lld\n"),
-					id->ino, entry->namelen, entry->namelen,
-					namest->name, lino);
-			error++;
-		}
-		if (entry->namelen == 2 && namest->name[0] == '.' &&
-		    namest->name[1] == '.') {
-			if (parent) {
-				if (!sflag || id->ilist || CHECK_BLIST(bno))
-					dbprintf(_("multiple .. entries in dir "
-						 "%lld (%lld, %lld)\n"),
-						id->ino, parent, lino);
-				error++;
-			} else
-				parent = cid ? lino : NULLFSINO;
-			(*dotdot)++;
-		} else if (entry->namelen != 1 || namest->name[0] != '.') {
-			if (cid != NULL) {
-				if (!cid->parent)
-					cid->parent = id;
-				addname_inode(cid, (char *)namest->name,
-					entry->namelen);
-			}
-		} else {
-			if (lino != id->ino) {
-				if (!sflag)
-					dbprintf(_("dir %lld entry . inode "
-						 "number mismatch (%lld)\n"),
-						id->ino, lino);
-				error++;
-			}
-			(*dot)++;
-		}
-	}
-	return parent;
-}
-
-static xfs_ino_t
 process_leaf_node_dir_v2(
 	blkmap_t		*blkmap,
 	int			*dot,
@@ -3092,7 +2929,7 @@ process_leaf_node_dir_v2(
 		push_cur();
 		if (nex > 1)
 			make_bbmap(&bbmap, nex, bmp);
-		set_cur(&typtab[TYP_DIR], XFS_FSB_TO_DADDR(mp, bmp->startblock),
+		set_cur(&typtab[TYP_DIR2], XFS_FSB_TO_DADDR(mp, bmp->startblock),
 			mp->m_dirblkfsbs * blkbb, DB_RING_IGN,
 			nex > 1 ? &bbmap : NULL);
 		free(bmp);
@@ -3323,71 +3160,6 @@ process_leaf_node_dir_v2_int(
 				 be16_to_cpu(leaf->hdr.stale));
 		error++;
 	}
-}
-
-static xfs_ino_t
-process_node_dir_v1(
-	blkmap_t		*blkmap,
-	int			*dot,
-	int			*dotdot,
-	inodata_t		*id)
-{
-	xfs_fsblock_t		bno;
-	xfs_fileoff_t		dbno;
-	xfs_ino_t		lino;
-	xfs_ino_t		parent;
-	int			t;
-	int			v;
-	int			v2;
-
-	v = verbose || id->ilist;
-	parent = 0;
-	dbno = NULLFILEOFF;
-	push_cur();
-	while ((dbno = blkmap_next_off(blkmap, dbno, &t)) != NULLFILEOFF) {
-		bno = blkmap_get(blkmap, dbno);
-		v2 = bno != NULLFSBLOCK && CHECK_BLIST(bno);
-		if (bno == NULLFSBLOCK && dbno == 0) {
-			if (!sflag || v)
-				dbprintf(_("can't read root block for directory "
-					 "inode %lld\n"),
-					id->ino);
-			error++;
-		}
-		if (v || v2)
-			dbprintf(_("dir inode %lld block %u=%llu\n"), id->ino,
-				(__uint32_t)dbno, (xfs_dfsbno_t)bno);
-		if (bno == NULLFSBLOCK)
-			continue;
-		pop_cur();
-		push_cur();
-		set_cur(&typtab[TYP_DIR], XFS_FSB_TO_DADDR(mp, bno), blkbb,
-			DB_RING_IGN, NULL);
-		if (iocur_top->data == NULL) {
-			if (!sflag || v || v2)
-				dbprintf(_("can't read block %u for directory "
-					 "inode %lld\n"),
-					(__uint32_t)dbno, id->ino);
-			error++;
-			continue;
-		}
-		if (be16_to_cpu(((xfs_da_intnode_t *)iocur_top->data)->
-					hdr.info.magic) == XFS_DA_NODE_MAGIC)
-			continue;
-		lino = process_leaf_dir_v1_int(dot, dotdot, id);
-		if (lino) {
-			if (parent) {
-				if (!sflag || v || v2)
-					dbprintf(_("multiple .. entries in dir "
-						 "%lld\n"),
-						id->ino);
-				error++;
-			} else
-				parent = lino;
-		}
-	}
-	pop_cur();
-	return parent;
 }
 
 static void
@@ -3727,67 +3499,6 @@ process_sf_dir_v2(
 	return cid ? lino : NULLFSINO;
 }
 
-static xfs_ino_t
-process_shortform_dir_v1(
-	xfs_dinode_t		*dip,
-	int			*dot,
-	int			*dotdot,
-	inodata_t		*id)
-{
-	inodata_t		*cid;
-	int			i;
-	xfs_ino_t		lino;
-	xfs_dir_shortform_t	*sf;
-	xfs_dir_sf_entry_t	*sfe;
-	int			v;
-
-	sf = (xfs_dir_shortform_t *)XFS_DFORK_DPTR(dip);
-	addlink_inode(id);
-	v = verbose || id->ilist;
-	if (v)
-		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
-	(*dot)++;
-	sfe = &sf->list[0];
-	for (i = sf->hdr.count - 1; i >= 0; i--) {
-		lino = XFS_GET_DIR_INO8(sfe->inumber);
-		cid = find_inode(lino, 1);
-		if (cid == NULL) {
-			if (!sflag)
-				dbprintf(_("dir %lld entry %*.*s bad inode "
-					 "number %lld\n"),
-					id->ino, sfe->namelen, sfe->namelen,
-					sfe->name, lino);
-			error++;
-		} else {
-			addlink_inode(cid);
-			if (!cid->parent)
-				cid->parent = id;
-			addname_inode(cid, (char *)sfe->name, sfe->namelen);
-		}
-		if (v)
-			dbprintf(_("dir %lld entry %*.*s %lld\n"), id->ino,
-				sfe->namelen, sfe->namelen, sfe->name, lino);
-		sfe = xfs_dir_sf_nextentry(sfe);
-	}
-	if ((__psint_t)sfe - (__psint_t)sf != be64_to_cpu(dip->di_size))
-		dbprintf(_("dir %llu size is %lld, should be %d\n"),
-			id->ino, be64_to_cpu(dip->di_size),
-			(int)((char *)sfe - (char *)sf));
-	lino = XFS_GET_DIR_INO8(sf->hdr.parent);
-	cid = find_inode(lino, 1);
-	if (cid)
-		addlink_inode(cid);
-	else {
-		if (!sflag)
-			dbprintf(_("dir %lld entry .. bad inode number %lld\n"),
-				id->ino, lino);
-		error++;
-	}
-	if (v)
-		dbprintf(_("dir %lld entry .. %lld\n"), id->ino, lino);
-	(*dotdot)++;
-	return cid ? lino : NULLFSINO;
-}
 
 static void
 quota_add(

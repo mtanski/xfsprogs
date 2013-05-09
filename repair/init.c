@@ -23,7 +23,6 @@
 #include "err_protos.h"
 #include "pthread.h"
 #include "avl.h"
-#include "dir.h"
 #include "bmap.h"
 #include "incore.h"
 #include "prefetch.h"

@@ -499,22 +499,6 @@ rtmount_init(
 	return 0;
 }
 
-
-/*
- * Core dir v1 mount code for allowing reading of these dirs.
- */
-static void
-libxfs_dirv1_mount(
-	xfs_mount_t	*mp)
-{
-	mp->m_dir_node_ents = mp->m_attr_node_ents =
-		(XFS_LBSIZE(mp) - (uint)sizeof(xfs_da_node_hdr_t)) /
-		(uint)sizeof(xfs_da_node_entry_t);
-	mp->m_dir_magicpct = (XFS_LBSIZE(mp) * 37) / 100;
-	mp->m_dirblksize = mp->m_sb.sb_blocksize;
-	mp->m_dirblkfsbs = 1;
-}
-
 static int
 libxfs_initialize_perag(
 	xfs_mount_t	*mp,
@@ -702,13 +686,14 @@ libxfs_mount(
 	}
 
 	/* Initialize the appropriate directory manager */
-	if (xfs_sb_version_hasdirv2(sbp))
-		xfs_dir_mount(mp);
-	else {
-		fprintf(stderr, _("%s: WARNING - filesystem uses v1 dirs,"
-				"limited functionality provided.\n"), progname);
-		libxfs_dirv1_mount(mp);
+	if (!xfs_sb_version_hasdirv2(sbp)) {
+
+		fprintf(stderr, _(
+	"%s: V1 directories unsupported. Please try an older xfsprogs.\n"),
+				 progname);
+		exit(1);
 	}
+	xfs_dir_mount(mp);
 
 	/* Initialize cached values for the attribute manager */
 	mp->m_attr_magicpct = (mp->m_sb.sb_blocksize * 37) / 100;

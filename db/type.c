@@ -31,8 +31,6 @@
 #include "agf.h"
 #include "agfl.h"
 #include "agi.h"
-#include "dir.h"
-#include "dirshort.h"
 #include "io.h"
 #include "output.h"
 #include "write.h"
@@ -60,7 +58,6 @@ const typ_t	typtab[] = {
 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld },
 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
 	{ TYP_DATA, "data", handle_block, NULL },
-	{ TYP_DIR, "dir", handle_struct, dir_hfld },
 	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
 	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },

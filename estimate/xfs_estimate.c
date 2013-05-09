@@ -48,7 +48,7 @@ int ffn(const char *, const struct stat64 *, int, struct FTW *);
 #define BLOCKSIZE	4096
 #define INODESIZE	256
 #define PERDIRENTRY	\
-	(sizeof(xfs_dir_leaf_entry_t) + sizeof(xfs_dir_leaf_name_t))
+	(sizeof(xfs_dir2_leaf_entry_t) + sizeof(xfs_dir2_data_entry_t))
 #define LOGSIZE		1000
 
 #define FBLOCKS(n)	((n)/blocksize)
