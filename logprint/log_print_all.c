@@ -122,6 +122,7 @@ xlog_recover_print_buffer(
 			       be32_to_cpu(*(__be32 *)(p+56)),
 			       be32_to_cpu(*(__be32 *)(p+60)));
 		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGI_MAGIC) {
+			int bucket, buckets;
 			agi = (xfs_agi_t *)p;
 			printf(_("	AGI Buffer: (XAGI)\n"));
 			if (!print_buffer) 
@@ -137,6 +138,24 @@ xlog_recover_print_buffer(
 				be32_to_cpu(agi->agi_level),
 				be32_to_cpu(agi->agi_freecount),
 				be32_to_cpu(agi->agi_newino));
+			if (len == 128) {
+				buckets = 17;
+			} else if (len == 256) {
+				buckets = 32 + 17;
+			} else {
+				buckets = XFS_AGI_UNLINKED_BUCKETS;
+			}
+			for (bucket = 0; bucket < buckets;) {
+				int col;
+				printf(_("bucket[%d - %d]: "), bucket, bucket+3);
+				for (col = 0; col < 4; col++, bucket++) {
+					if (bucket < buckets) {
+						printf("0x%x ",
+			be32_to_cpu(agi->agi_unlinked[bucket]));
+					}
+				}
+				printf("\n");
+			}
 		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGF_MAGIC) {
 			agf = (xfs_agf_t *)p;
 			printf(_("	AGF Buffer: (XAGF)\n"));
