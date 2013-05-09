@@ -268,7 +268,13 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
     blen = f->blf_len;
     map_size = f->blf_map_size;
     flags = f->blf_flags;
-    struct_size = sizeof(xfs_buf_log_format_t);
+
+    /*
+     * size of the format header is dependent on the size of the bitmap, not
+     * the size of the in-memory structure. Hence the slightly obtuse
+     * calculation.
+     */
+    struct_size = offsetof(struct xfs_buf_log_format, blf_map_size) + map_size;
 
     if (len >= struct_size) {
 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
@@ -933,22 +939,28 @@ xlog_print_record(int			  fd,
 	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
 		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
 
-	/* print transaction data */
-	if (print_no_data ||
-	    (continued && be32_to_cpu(op_head->oh_len) == 0)) {
+	if (continued && be32_to_cpu(op_head->oh_len) == 0)
+		continue;
+
+	if (print_no_data) {
 	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
-		printf("%c", *ptr);
+		printf("0x%02x ", (unsigned int)*ptr);
+		if (n % 16 == 15)
+			printf("\n");
 		ptr++;
 	    }
 	    printf("\n");
 	    continue;
 	}
+
+	/* print transaction data */
 	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
 				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
 	    printf(_("Left over region from split log item\n"));
 	    ptr += be32_to_cpu(op_head->oh_len);
 	    continue;
 	}
+
 	if (be32_to_cpu(op_head->oh_len) != 0) {
 	    if (*(uint *)ptr == XFS_TRANS_HEADER_MAGIC) {
 		skip = xlog_print_trans_header(&ptr,
