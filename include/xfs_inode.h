@@ -180,10 +180,11 @@ typedef struct xfs_icdinode {
 #define XFS_IFORK_DSIZE(ip) \
 	(XFS_IFORK_Q(ip) ? \
 		XFS_IFORK_BOFF(ip) : \
-		XFS_LITINO((ip)->i_mount))
+		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version))
 #define XFS_IFORK_ASIZE(ip) \
 	(XFS_IFORK_Q(ip) ? \
-		XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : \
+		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version) - \
+			XFS_IFORK_BOFF(ip) : \
 		0)
 #define XFS_IFORK_SIZE(ip,w) \
 	((w) == XFS_DATA_FORK ? \
@@ -419,6 +420,7 @@ static inline void xfs_iflock(struct xfs_inode *ip)
 static inline void xfs_ifunlock(struct xfs_inode *ip)
 {
 	xfs_iflags_clear(ip, XFS_IFLOCK);
+	smp_mb();
 	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
 }
 

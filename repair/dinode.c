@@ -249,7 +249,8 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 	/* and clear the forks */
 
 	if (dirty && !no_modify)
-		memset(XFS_DFORK_DPTR(dino), 0, XFS_LITINO(mp));
+		memset(XFS_DFORK_DPTR(dino), 0,
+		       XFS_LITINO(mp, dino->di_version));
 
 	return(dirty);
 }
@@ -1927,11 +1928,12 @@ _("bad attr fork offset %d in dev inode %" PRIu64 ", should be %d\n"),
 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
 	case XFS_DINODE_FMT_EXTENTS:	/* fall through ... */
 	case XFS_DINODE_FMT_BTREE:
-		if (dino->di_forkoff >= (XFS_LITINO(mp) >> 3)) {
+		if (dino->di_forkoff >=
+				(XFS_LITINO(mp, dino->di_version) >> 3)) {
 			do_warn(
 _("bad attr fork offset %d in inode %" PRIu64 ", max=%d\n"),
 				dino->di_forkoff, lino,
-				XFS_LITINO(mp) >> 3);
+				XFS_LITINO(mp, dino->di_version) >> 3);
 			return 1;
 		}
 		break;

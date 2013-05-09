@@ -610,7 +610,7 @@ int libxfs_attr_remove(struct xfs_inode *, const unsigned char *, int);
 /* xfs_bmap.c */
 xfs_bmbt_rec_host_t *xfs_bmap_search_extents(xfs_inode_t *, xfs_fileoff_t,
 				int, int *, xfs_extnum_t *, xfs_bmbt_irec_t *,
-				xfs_bmbt_irec_t	*);
+				xfs_bmbt_irec_t *);
 void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 
 /* xfs_attr_leaf.h */

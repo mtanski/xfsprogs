@@ -260,6 +260,8 @@ xfs_ialloc_ag_alloc(
 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
 		args.type = XFS_ALLOCTYPE_THIS_BNO;
+		args.mod = args.total = args.wasdel = args.isfl =
+			args.userdata = args.minalignslop = 0;
 		args.prod = 1;
 
 		/*
@@ -312,6 +314,8 @@ xfs_ialloc_ag_alloc(
 		 * Allocate a fixed-size extent of inodes.
 		 */
 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+		args.mod = args.total = args.wasdel = args.isfl =
+			args.userdata = args.minalignslop = 0;
 		args.prod = 1;
 		/*
 		 * Allow space for the inode btree to split.
@@ -350,7 +354,7 @@ xfs_ialloc_ag_alloc(
 	 * number from being easily guessable.
 	 */
 	error = xfs_ialloc_inode_init(args.mp, tp, agno, args.agbno,
-			args.len, random32());
+			args.len, prandom_u32());
 
 	if (error)
 		return error;

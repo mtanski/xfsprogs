@@ -275,6 +275,7 @@ xfs_attr_set_int(
 	if (rsvd)
 		args.trans->t_flags |= XFS_TRANS_RESERVE;
 
+
 	error = xfs_trans_reserve(args.trans, args.total,
 				  XFS_ATTRSETM_LOG_RES(mp) +
 				  XFS_ATTRSETRT_LOG_RES(mp) * args.total,

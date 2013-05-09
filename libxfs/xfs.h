@@ -107,10 +107,10 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define rcu_read_unlock()	((void) 0)
 
 /*
- * random32 is used for di_gen inode allocation, it must be zero for libxfs
+ * prandom_u32 is used for di_gen inode allocation, it must be zero for libxfs
  * or all sorts of badness can occur!
  */
-#define random32()		0	
+#define prandom_u32()		0
 
 #define PAGE_CACHE_SIZE 	getpagesize()
 
