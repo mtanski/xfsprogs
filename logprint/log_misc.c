@@ -833,7 +833,8 @@ xlog_print_record(int			  fd,
 		 int			  *read_type,
 		 xfs_caddr_t		  *partial_buf,
 		 xlog_rec_header_t	  *rhead,
-		 xlog_rec_ext_header_t	  *xhdrs)
+		 xlog_rec_ext_header_t	  *xhdrs,
+		 int			  bad_hdr_warn)
 {
     xfs_caddr_t		buf, ptr;
     int			read_len, skip;
@@ -1006,11 +1007,17 @@ xlog_print_record(int			  fd,
 			break;
 		    }
 		    default: {
-			fprintf(stderr, _("%s: unknown log operation type (%x)\n"),
-				progname, *(unsigned short *)ptr);
-			if (print_exit) {
-				free(buf);
-				return BAD_HEADER;
+			if (bad_hdr_warn) {
+				fprintf(stderr,
+			_("%s: unknown log operation type (%x)\n"),
+					progname, *(unsigned short *)ptr);
+				if (print_exit) {
+					free(buf);
+					return BAD_HEADER;
+				}
+			} else {
+				printf(
+			_("Left over region from split log item\n"));
 			}
 			skip = 0;
 			ptr += be32_to_cpu(op_head->oh_len);
@@ -1028,7 +1035,7 @@ xlog_print_record(int			  fd,
 
 
 int
-xlog_print_rec_head(xlog_rec_header_t *head, int *len)
+xlog_print_rec_head(xlog_rec_header_t *head, int *len, int bad_hdr_warn)
 {
     int i;
     char uub[64];
@@ -1041,9 +1048,10 @@ xlog_print_rec_head(xlog_rec_header_t *head, int *len)
 	return ZEROED_LOG;
 
     if (be32_to_cpu(head->h_magicno) != XLOG_HEADER_MAGIC_NUM) {
-	printf(_("Header 0x%x wanted 0x%x\n"),
-		be32_to_cpu(head->h_magicno),
-		XLOG_HEADER_MAGIC_NUM);
+	if (bad_hdr_warn)
+		printf(_("Header 0x%x wanted 0x%x\n"),
+			be32_to_cpu(head->h_magicno),
+			XLOG_HEADER_MAGIC_NUM);
 	return BAD_HEADER;
     }
 
@@ -1269,8 +1277,9 @@ void xfs_log_print(struct xlog  *log,
     xfs_daddr_t			zeroed_blkno = 0, cleared_blkno = 0;
     int				read_type = FULL_READ;
     xfs_caddr_t			partial_buf;
-    int         		zeroed = 0;
-    int         		cleared = 0;
+    int				zeroed = 0;
+    int				cleared = 0;
+    int				first_hdr_found = 0;
 
     logBBsize = log->l_logBBsize;
 
@@ -1302,7 +1311,7 @@ void xfs_log_print(struct xlog  *log,
 	    blkno++;
 	    goto loop;
 	}
-	num_ops = xlog_print_rec_head(hdr, &len);
+	num_ops = xlog_print_rec_head(hdr, &len, first_hdr_found);
 	blkno++;
 
 	if (zeroed && num_ops != ZEROED_LOG) {
@@ -1328,7 +1337,10 @@ void xfs_log_print(struct xlog  *log,
 		    cleared_blkno = blkno-1;
 		cleared++;
 	    } else {
-		print_xlog_bad_header(blkno-1, hbuf);
+		if (!first_hdr_found)
+			block_start = blkno;
+		else
+			print_xlog_bad_header(blkno-1, hbuf);
 	    }
 
 	    goto loop;
@@ -1339,7 +1351,9 @@ void xfs_log_print(struct xlog  *log,
 		break;
 	}
 
-	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf, hdr, xhdrs);
+	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf,
+				  hdr, xhdrs, first_hdr_found);
+	first_hdr_found++;
 	switch (error) {
 	    case 0: {
 		blkno += BTOBB(len);
@@ -1415,7 +1429,7 @@ loop:
 		blkno++;
 		goto loop2;
 	    }
-	    num_ops = xlog_print_rec_head(hdr, &len);
+	    num_ops = xlog_print_rec_head(hdr, &len, first_hdr_found);
 	    blkno++;
 
 	    if (num_ops == ZEROED_LOG ||
@@ -1444,7 +1458,8 @@ partial_log_read:
 				    &read_type,
 				    &partial_buf,
 				    (xlog_rec_header_t *)hbuf,
-				    xhdrs);
+				    xhdrs,
+				    first_hdr_found);
 	    if (read_type != FULL_READ)
 		len -= read_type;
 	    read_type = FULL_READ;
