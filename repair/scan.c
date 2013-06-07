@@ -1041,12 +1041,12 @@ scan_freelist(
 	xfs_agf_t	*agf,
 	struct aghdr_cnts *agcnts)
 {
-	xfs_agfl_t	*agfl;
 	xfs_buf_t	*agflbuf;
 	xfs_agnumber_t	agno;
 	xfs_agblock_t	bno;
 	int		count;
 	int		i;
+	__be32		*freelist;
 
 	agno = be32_to_cpu(agf->agf_seqno);
 
@@ -1065,7 +1065,7 @@ scan_freelist(
 		do_abort(_("can't read agfl block for ag %d\n"), agno);
 		return;
 	}
-	agfl = XFS_BUF_TO_AGFL(agflbuf);
+	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
 	i = be32_to_cpu(agf->agf_flfirst);
 
 	if (no_modify) {
@@ -1080,7 +1080,7 @@ scan_freelist(
 
 	count = 0;
 	for (;;) {
-		bno = be32_to_cpu(agfl->agfl_bno[i]);
+		bno = be32_to_cpu(freelist[i]);
 		if (verify_agbno(mp, agno, bno))
 			set_bmap(agno, bno, XR_E_FREE);
 		else

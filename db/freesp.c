@@ -231,6 +231,7 @@ scan_freelist(
 	xfs_agfl_t	*agfl;
 	xfs_agblock_t	bno;
 	int		i;
+	__be32		*agfl_bno;
 
 	if (be32_to_cpu(agf->agf_flcount) == 0)
 		return;
@@ -239,6 +240,10 @@ scan_freelist(
 				XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
 	agfl = iocur_top->data;
 	i = be32_to_cpu(agf->agf_flfirst);
+
+	/* open coded XFS_BUF_TO_AGFL_BNO */
+	agfl_bno = xfs_sb_version_hascrc(&mp->m_sb) ? &agfl->agfl_bno[0]
+						   : (__be32 *)agfl;
 
 	/* verify agf values before proceeding */
 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp) ||
@@ -250,7 +255,7 @@ scan_freelist(
 	}
 
 	for (;;) {
-		bno = be32_to_cpu(agfl->agfl_bno[i]);
+		bno = be32_to_cpu(agfl_bno[i]);
 		addtohist(seqno, bno, 1);
 		if (i == be32_to_cpu(agf->agf_fllast))
 			break;

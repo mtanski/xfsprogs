@@ -3806,6 +3806,7 @@ scan_freelist(
 	xfs_agblock_t	bno;
 	uint		count;
 	int		i;
+	__be32		*freelist;
 
 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
 	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
@@ -3835,9 +3836,12 @@ scan_freelist(
 		return;
 	}
 
+	/* open coded XFS_BUF_TO_AGFL_BNO */
+	freelist = xfs_sb_version_hascrc(&((mp)->m_sb)) ? &agfl->agfl_bno[0]
+							: (__be32 *)agfl;
 	count = 0;
 	for (;;) {
-		bno = be32_to_cpu(agfl->agfl_bno[i]);
+		bno = be32_to_cpu(freelist[i]);
 		set_dbmap(seqno, bno, 1, DBM_FREELIST, seqno,
 			XFS_AGFL_BLOCK(mp));
 		count++;

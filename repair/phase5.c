@@ -1208,6 +1208,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 	int			j;
 	xfs_agfl_t		*agfl;
 	xfs_agf_t		*agf;
+	__be32			*freelist;
 
 	agf_buf = libxfs_getbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
@@ -1277,19 +1278,20 @@ build_agf_agfl(xfs_mount_t	*mp,
 				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
 				mp->m_sb.sb_sectsize/BBSIZE);
 		agfl = XFS_BUF_TO_AGFL(agfl_buf);
+		freelist = XFS_BUF_TO_AGFL_BNO(mp, agfl_buf);
 		memset(agfl, 0, mp->m_sb.sb_sectsize);
 		/*
 		 * ok, now grab as many blocks as we can
 		 */
 		i = j = 0;
 		while (bno_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE(mp))  {
-			agfl->agfl_bno[i] = cpu_to_be32(
+			freelist[i] = cpu_to_be32(
 					get_next_blockaddr(agno, 0, bno_bt));
 			i++;
 		}
 
 		while (bcnt_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE(mp))  {
-			agfl->agfl_bno[i] = cpu_to_be32(
+			freelist[i] = cpu_to_be32(
 					get_next_blockaddr(agno, 0, bcnt_bt));
 			i++;
 		}
