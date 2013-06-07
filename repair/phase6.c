@@ -427,6 +427,8 @@ mk_rbmino(xfs_mount_t *mp)
 	xfs_bmap_free_t	flist;
 	xfs_dfiloff_t	bno;
 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+	int		vers;
+	int		times;
 
 	/*
 	 * first set up inode
@@ -443,15 +445,30 @@ mk_rbmino(xfs_mount_t *mp)
 			error);
 	}
 
-	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
+	ip->i_d.di_version = vers;
+	memset(&ip->i_d, 0, xfs_icdinode_size(&ip->i_d));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = S_IFREG;
-	ip->i_d.di_version = 1;
+	ip->i_d.di_version = vers;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
 
 	ip->i_d.di_nlink = 1;		/* account for sb ptr */
+
+	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+	if (ip->i_d.di_version == 3) {
+		ip->i_d.di_crc = 0;
+		ip->i_d.di_changecount = 1;
+		ip->i_d.di_lsn = 0;
+		ip->i_d.di_flags2 = 0;
+		ip->i_d.di_ino = mp->m_sb.sb_rbmino;
+		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+		times |= XFS_ICHGTIME_CREATE;
+	}
+	libxfs_trans_ichgtime(tp, ip, times);
 
 	/*
 	 * now the ifork
@@ -659,6 +676,8 @@ mk_rsumino(xfs_mount_t *mp)
 	xfs_bmap_free_t	flist;
 	xfs_dfiloff_t	bno;
 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+	int		vers;
+	int		times;
 
 	/*
 	 * first set up inode
@@ -676,15 +695,30 @@ mk_rsumino(xfs_mount_t *mp)
 			error);
 	}
 
-	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
+	ip->i_d.di_version = vers;
+	memset(&ip->i_d, 0, xfs_icdinode_size(&ip->i_d));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = S_IFREG;
-	ip->i_d.di_version = 1;
+	ip->i_d.di_version = vers;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
 
 	ip->i_d.di_nlink = 1;		/* account for sb ptr */
+
+	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+	if (ip->i_d.di_version == 3) {
+		ip->i_d.di_crc = 0;
+		ip->i_d.di_changecount = 1;
+		ip->i_d.di_lsn = 0;
+		ip->i_d.di_flags2 = 0;
+		ip->i_d.di_ino = mp->m_sb.sb_rsumino;
+		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+		times |= XFS_ICHGTIME_CREATE;
+	}
+	libxfs_trans_ichgtime(tp, ip, times);
 
 	/*
 	 * now the ifork
@@ -758,6 +792,8 @@ mk_root_dir(xfs_mount_t *mp)
 	int		error;
 	const mode_t	mode = 0755;
 	ino_tree_node_t	*irec;
+	int		vers;
+	int		times;
 
 	ASSERT(xfs_sb_version_hasdirv2(&mp->m_sb));
 
@@ -776,15 +812,30 @@ mk_root_dir(xfs_mount_t *mp)
 	/*
 	 * take care of the core -- initialization from xfs_ialloc()
 	 */
-	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
+	ip->i_d.di_version = vers;
+	memset(&ip->i_d, 0, xfs_icdinode_size(&ip->i_d));
 
 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
 	ip->i_d.di_mode = (__uint16_t) mode|S_IFDIR;
-	ip->i_d.di_version = 1;
+	ip->i_d.di_version = vers;
 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
 
 	ip->i_d.di_nlink = 1;		/* account for . */
+
+	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+	if (ip->i_d.di_version == 3) {
+		ip->i_d.di_crc = 0;
+		ip->i_d.di_changecount = 1;
+		ip->i_d.di_lsn = 0;
+		ip->i_d.di_flags2 = 0;
+		ip->i_d.di_ino = mp->m_sb.sb_rootino;
+		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
+		platform_uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+		times |= XFS_ICHGTIME_CREATE;
+	}
+	libxfs_trans_ichgtime(tp, ip, times);
 
 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 

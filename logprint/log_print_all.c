@@ -295,7 +295,8 @@ xlog_recover_print_inode(
 	       f->ilf_dsize);
 
 	/* core inode comes 2nd */
-	ASSERT(item->ri_buf[1].i_len == sizeof(xfs_icdinode_t));
+	ASSERT(item->ri_buf[1].i_len == xfs_icdinode_size((xfs_icdinode_t *)
+							item->ri_buf[1].i_addr));
 	xlog_recover_print_inode_core((xfs_icdinode_t *)
 				      item->ri_buf[1].i_addr);
 

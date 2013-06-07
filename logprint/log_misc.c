@@ -655,7 +655,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
     mode = dino.di_mode & S_IFMT;
     size = (int)dino.di_size;
     xlog_print_trans_inode_core(&dino);
-    *ptr += sizeof(xfs_icdinode_t);
+    *ptr += xfs_icdinode_size(&dino);
 
     if (*i == num_ops-1 && f->ilf_size == 3)  {
 	return 1;

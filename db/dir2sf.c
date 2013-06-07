@@ -74,10 +74,11 @@ dir2_inou_i4_count(
 	void		*obj,
 	int		startoff)
 {
+	struct xfs_dinode *dip = obj;
 	xfs_dir2_sf_t	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
 	return sf->hdr.i8count == 0;
 }
 
@@ -87,10 +88,11 @@ dir2_inou_i8_count(
 	void		*obj,
 	int		startoff)
 {
+	struct xfs_dinode *dip = obj;
 	xfs_dir2_sf_t	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
 	return sf->hdr.i8count != 0;
 }
 
@@ -101,11 +103,12 @@ dir2_inou_size(
 	int		startoff,
 	int		idx)
 {
+	struct xfs_dinode *dip = obj;
 	xfs_dir2_sf_t	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(obj);
+	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
 	return bitize(sf->hdr.i8count ?
 		      (uint)sizeof(xfs_dir2_ino8_t) :
 		      (uint)sizeof(xfs_dir2_ino4_t));
