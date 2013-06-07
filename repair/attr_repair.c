@@ -1023,7 +1023,7 @@ process_leaf_attr_local(
 {
 	xfs_attr_leaf_name_local_t *local;
 
-	local = xfs_attr_leaf_name_local(leaf, i);
+	local = xfs_attr3_leaf_name_local(leaf, i);
 	if (local->namelen == 0 || namecheck((char *)&local->nameval[0], 
 							local->namelen)) {
 		do_warn(
@@ -1077,7 +1077,7 @@ process_leaf_attr_remote(
 	xfs_attr_leaf_name_remote_t *remotep;
 	char*			value;
 
-	remotep = xfs_attr_leaf_name_remote(leaf, i);
+	remotep = xfs_attr3_leaf_name_remote(leaf, i);
 
 	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0], 
 						remotep->namelen) || 

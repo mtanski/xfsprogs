@@ -143,7 +143,7 @@ const field_t	attr_node_entry_flds[] = {
 #define	HOFF(f)	bitize(offsetof(xfs_da_node_hdr_t, f))
 const field_t	attr_node_hdr_flds[] = {
 	{ "info", FLDT_ATTR_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
-	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
+	{ "count", FLDT_UINT16D, OI(HOFF(__count)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(HOFF(__level)), C1, 0, TYP_NONE },
 	{ NULL }
 };
@@ -219,7 +219,7 @@ attr_leaf_name_local_name_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (e->flags & XFS_ATTR_LOCAL) {
-				l = xfs_attr_leaf_name_local(block, i);
+				l = xfs_attr3_leaf_name_local(block, i);
 				return l->namelen;
 			} else
 				return 0;
@@ -248,7 +248,7 @@ attr_leaf_name_local_value_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (e->flags & XFS_ATTR_LOCAL) {
-				l = xfs_attr_leaf_name_local(block, i);
+				l = xfs_attr3_leaf_name_local(block, i);
 				return be16_to_cpu(l->valuelen);
 			} else
 				return 0;
@@ -285,7 +285,7 @@ attr_leaf_name_local_value_offset(
 	if (i >= be16_to_cpu(block->hdr.count)) 
 		return 0;
 
-	l = xfs_attr_leaf_name_local(block, i);
+	l = xfs_attr3_leaf_name_local(block, i);
 	vp = (char *)&l->nameval[l->namelen];
 	return (int)bitize(vp - (char *)l);
 }
@@ -333,7 +333,7 @@ attr_leaf_name_remote_name_count(
 		e = &block->entries[i];
 		if (be16_to_cpu(e->nameidx) == off) {
 			if (!(e->flags & XFS_ATTR_LOCAL)) {
-				r = xfs_attr_leaf_name_remote(block, i);
+				r = xfs_attr3_leaf_name_remote(block, i);
 				return r->namelen;
 			} else
 				return 0;
@@ -360,11 +360,11 @@ attr_leaf_name_size(
 		return 0;
 	e = &block->entries[idx];
 	if (e->flags & XFS_ATTR_LOCAL) {
-		l = xfs_attr_leaf_name_local(block, idx);
+		l = xfs_attr3_leaf_name_local(block, idx);
 		return (int)bitize(xfs_attr_leaf_entsize_local(l->namelen,
 					be16_to_cpu(l->valuelen)));
 	} else {
-		r = xfs_attr_leaf_name_remote(block, idx);
+		r = xfs_attr3_leaf_name_remote(block, idx);
 		return (int)bitize(xfs_attr_leaf_entsize_remote(r->namelen));
 	}
 }
@@ -412,7 +412,7 @@ attr_node_btree_count(
 	block = obj;
 	if (be16_to_cpu(block->hdr.info.magic) != XFS_DA_NODE_MAGIC)
 		return 0;
-	return be16_to_cpu(block->hdr.count);
+	return be16_to_cpu(block->hdr.__count);
 }
 
 /*ARGSUSED*/

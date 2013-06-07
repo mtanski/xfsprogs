@@ -659,7 +659,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 	 */
 	dp = args->dp;
 	args->blkno = 0;
-	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
 	if (error)
 		return error;
 
@@ -667,14 +667,14 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 	 * Look up the given attribute in the leaf block.  Figure out if
 	 * the given flags produce an error or call for an atomic rename.
 	 */
-	retval = xfs_attr_leaf_lookup_int(bp, args);
+	retval = xfs_attr3_leaf_lookup_int(bp, args);
 	if ((args->flags & ATTR_REPLACE) && (retval == ENOATTR)) {
 		xfs_trans_brelse(args->trans, bp);
-		return(retval);
+		return retval;
 	} else if (retval == EEXIST) {
 		if (args->flags & ATTR_CREATE) {	/* pure create op */
 			xfs_trans_brelse(args->trans, bp);
-			return(retval);
+			return retval;
 		}
 
 		trace_xfs_attr_leaf_replace(args);
@@ -690,7 +690,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 	 * Add the attribute to the leaf block, transitioning to a Btree
 	 * if required.
 	 */
-	retval = xfs_attr_leaf_add(bp, args);
+	retval = xfs_attr3_leaf_add(bp, args);
 	if (retval == ENOSPC) {
 		/*
 		 * Promote the attribute list to the Btree format, then
@@ -698,7 +698,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 		 * can manage its own transactions.
 		 */
 		xfs_bmap_init(args->flist, args->firstblock);
-		error = xfs_attr_leaf_to_node(args);
+		error = xfs_attr3_leaf_to_node(args);
 		if (!error) {
 			error = xfs_bmap_finish(&args->trans, args->flist,
 						&committed);
@@ -763,7 +763,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 		 * In a separate transaction, set the incomplete flag on the
 		 * "old" attr and clear the incomplete flag on the "new" attr.
 		 */
-		error = xfs_attr_leaf_flipflags(args);
+		error = xfs_attr3_leaf_flipflags(args);
 		if (error)
 			return(error);
 
@@ -785,19 +785,19 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 		 * Read in the block containing the "old" attr, then
 		 * remove the "old" attr from that block (neat, huh!)
 		 */
-		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno,
+		error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
 					   -1, &bp);
 		if (error)
 			return error;
 
-		xfs_attr_leaf_remove(bp, args);
+		xfs_attr3_leaf_remove(bp, args);
 
 		/*
 		 * If the result is small enough, shrink it all into the inode.
 		 */
 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 			xfs_bmap_init(args->flist, args->firstblock);
-			error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
+			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
 			/* bp is gone due to xfs_da_shrink_inode */
 			if (!error) {
 				error = xfs_bmap_finish(&args->trans,
@@ -829,9 +829,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
 		/*
 		 * Added a "remote" value, just clear the incomplete flag.
 		 */
-		error = xfs_attr_leaf_clearflag(args);
+		error = xfs_attr3_leaf_clearflag(args);
 	}
-	return(error);
+	return error;
 }
 
 /*
@@ -854,24 +854,24 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 	 */
 	dp = args->dp;
 	args->blkno = 0;
-	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
 	if (error)
 		return error;
 
-	error = xfs_attr_leaf_lookup_int(bp, args);
+	error = xfs_attr3_leaf_lookup_int(bp, args);
 	if (error == ENOATTR) {
 		xfs_trans_brelse(args->trans, bp);
 		return(error);
 	}
 
-	xfs_attr_leaf_remove(bp, args);
+	xfs_attr3_leaf_remove(bp, args);
 
 	/*
 	 * If the result is small enough, shrink it all into the inode.
 	 */
 	if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 		xfs_bmap_init(args->flist, args->firstblock);
-		error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
+		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
 		/* bp is gone due to xfs_da_shrink_inode */
 		if (!error) {
 			error = xfs_bmap_finish(&args->trans, args->flist,
@@ -881,7 +881,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 			ASSERT(committed);
 			args->trans = NULL;
 			xfs_bmap_cancel(args->flist);
-			return(error);
+			return error;
 		}
 
 		/*
@@ -891,7 +891,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 		if (committed)
 			xfs_trans_ijoin(args->trans, dp, 0);
 	}
-	return(0);
+	return 0;
 }
 
 /*
@@ -909,21 +909,21 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
 	trace_xfs_attr_leaf_get(args);
 
 	args->blkno = 0;
-	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
 	if (error)
 		return error;
 
-	error = xfs_attr_leaf_lookup_int(bp, args);
+	error = xfs_attr3_leaf_lookup_int(bp, args);
 	if (error != EEXIST)  {
 		xfs_trans_brelse(args->trans, bp);
-		return(error);
+		return error;
 	}
-	error = xfs_attr_leaf_getvalue(bp, args);
+	error = xfs_attr3_leaf_getvalue(bp, args);
 	xfs_trans_brelse(args->trans, bp);
 	if (!error && (args->rmtblkno > 0) && !(args->flags & ATTR_KERNOVAL)) {
 		error = xfs_attr_rmtval_get(args);
 	}
-	return(error);
+	return error;
 }
 
 /*========================================================================
@@ -989,7 +989,7 @@ restart:
 		args->rmtblkcnt = 0;
 	}
 
-	retval = xfs_attr_leaf_add(blk->bp, state->args);
+	retval = xfs_attr3_leaf_add(blk->bp, state->args);
 	if (retval == ENOSPC) {
 		if (state->path.active == 1) {
 			/*
@@ -999,7 +999,7 @@ restart:
 			 */
 			xfs_da_state_free(state);
 			xfs_bmap_init(args->flist, args->firstblock);
-			error = xfs_attr_leaf_to_node(args);
+			error = xfs_attr3_leaf_to_node(args);
 			if (!error) {
 				error = xfs_bmap_finish(&args->trans,
 							args->flist,
@@ -1101,7 +1101,7 @@ restart:
 		 * In a separate transaction, set the incomplete flag on the
 		 * "old" attr and clear the incomplete flag on the "new" attr.
 		 */
-		error = xfs_attr_leaf_flipflags(args);
+		error = xfs_attr3_leaf_flipflags(args);
 		if (error)
 			goto out;
 
@@ -1140,7 +1140,7 @@ restart:
 		 */
 		blk = &state->path.blk[ state->path.active-1 ];
 		ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-		error = xfs_attr_leaf_remove(blk->bp, args);
+		error = xfs_attr3_leaf_remove(blk->bp, args);
 		xfs_da3_fixhashpath(state, &state->path);
 
 		/*
@@ -1181,7 +1181,7 @@ restart:
 		/*
 		 * Added a "remote" value, just clear the incomplete flag.
 		 */
-		error = xfs_attr_leaf_clearflag(args);
+		error = xfs_attr3_leaf_clearflag(args);
 		if (error)
 			goto out;
 	}
@@ -1255,7 +1255,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
 		 * Mark the attribute as INCOMPLETE, then bunmapi() the
 		 * remote value.
 		 */
-		error = xfs_attr_leaf_setflag(args);
+		error = xfs_attr3_leaf_setflag(args);
 		if (error)
 			goto out;
 		error = xfs_attr_rmtval_remove(args);
@@ -1276,7 +1276,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
 	 */
 	blk = &state->path.blk[ state->path.active-1 ];
 	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-	retval = xfs_attr_leaf_remove(blk->bp, args);
+	retval = xfs_attr3_leaf_remove(blk->bp, args);
 	xfs_da3_fixhashpath(state, &state->path);
 
 	/*
@@ -1322,13 +1322,13 @@ xfs_attr_node_removename(xfs_da_args_t *args)
 		ASSERT(state->path.blk[0].bp);
 		state->path.blk[0].bp = NULL;
 
-		error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp);
+		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, -1, &bp);
 		if (error)
 			goto out;
 
 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
 			xfs_bmap_init(args->flist, args->firstblock);
-			error = xfs_attr_leaf_to_shortform(bp, args, forkoff);
+			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
 			/* bp is gone due to xfs_da_shrink_inode */
 			if (!error) {
 				error = xfs_bmap_finish(&args->trans,
@@ -1500,7 +1500,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
 		/*
 		 * Get the value, local or "remote"
 		 */
-		retval = xfs_attr_leaf_getvalue(blk->bp, args);
+		retval = xfs_attr3_leaf_getvalue(blk->bp, args);
 		if (!retval && (args->rmtblkno > 0)
 		    && !(args->flags & ATTR_KERNOVAL)) {
 			retval = xfs_attr_rmtval_get(args);

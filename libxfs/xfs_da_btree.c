@@ -120,14 +120,14 @@ xfs_da3_node_hdr_from_disk(
 		to->forw = be32_to_cpu(hdr3->info.hdr.forw);
 		to->back = be32_to_cpu(hdr3->info.hdr.back);
 		to->magic = be16_to_cpu(hdr3->info.hdr.magic);
-		to->count = be16_to_cpu(hdr3->count);
+		to->count = be16_to_cpu(hdr3->__count);
 		to->level = be16_to_cpu(hdr3->__level);
 		return;
 	}
 	to->forw = be32_to_cpu(from->hdr.info.forw);
 	to->back = be32_to_cpu(from->hdr.info.back);
 	to->magic = be16_to_cpu(from->hdr.info.magic);
-	to->count = be16_to_cpu(from->hdr.count);
+	to->count = be16_to_cpu(from->hdr.__count);
 	to->level = be16_to_cpu(from->hdr.__level);
 }
 
@@ -145,14 +145,14 @@ xfs_da3_node_hdr_to_disk(
 		hdr3->info.hdr.forw = cpu_to_be32(from->forw);
 		hdr3->info.hdr.back = cpu_to_be32(from->back);
 		hdr3->info.hdr.magic = cpu_to_be16(from->magic);
-		hdr3->count = cpu_to_be16(from->count);
+		hdr3->__count = cpu_to_be16(from->count);
 		hdr3->__level = cpu_to_be16(from->level);
 		return;
 	}
 	to->hdr.info.forw = cpu_to_be32(from->forw);
 	to->hdr.info.back = cpu_to_be32(from->back);
 	to->hdr.info.magic = cpu_to_be16(from->magic);
-	to->hdr.count = cpu_to_be16(from->count);
+	to->hdr.__count = cpu_to_be16(from->count);
 	to->hdr.__level = cpu_to_be16(from->level);
 }
 
@@ -247,7 +247,8 @@ xfs_da3_node_read_verify(
 				break;
 			return;
 		case XFS_ATTR_LEAF_MAGIC:
-			bp->b_ops = &xfs_attr_leaf_buf_ops;
+		case XFS_ATTR3_LEAF_MAGIC:
+			bp->b_ops = &xfs_attr3_leaf_buf_ops;
 			bp->b_ops->verify_read(bp);
 			return;
 		case XFS_DIR2_LEAFN_MAGIC:
@@ -378,7 +379,7 @@ xfs_da3_split(
 		 */
 		switch (oldblk->magic) {
 		case XFS_ATTR_LEAF_MAGIC:
-			error = xfs_attr_leaf_split(state, oldblk, newblk);
+			error = xfs_attr3_leaf_split(state, oldblk, newblk);
 			if ((error != 0) && (error != ENOSPC)) {
 				return(error);	/* GROT: attr is inconsistent */
 			}
@@ -393,12 +394,12 @@ xfs_da3_split(
 			if (state->inleaf) {
 				state->extraafter = 0;	/* before newblk */
 				trace_xfs_attr_leaf_split_before(state->args);
-				error = xfs_attr_leaf_split(state, oldblk,
+				error = xfs_attr3_leaf_split(state, oldblk,
 							    &state->extrablk);
 			} else {
 				state->extraafter = 1;	/* after newblk */
 				trace_xfs_attr_leaf_split_after(state->args);
-				error = xfs_attr_leaf_split(state, newblk,
+				error = xfs_attr3_leaf_split(state, newblk,
 							    &state->extrablk);
 			}
 			if (error)
@@ -938,12 +939,12 @@ xfs_da3_join(
 		 */
 		switch (drop_blk->magic) {
 		case XFS_ATTR_LEAF_MAGIC:
-			error = xfs_attr_leaf_toosmall(state, &action);
+			error = xfs_attr3_leaf_toosmall(state, &action);
 			if (error)
 				return(error);
 			if (action == 0)
 				return(0);
-			xfs_attr_leaf_unbalance(state, drop_blk, save_blk);
+			xfs_attr3_leaf_unbalance(state, drop_blk, save_blk);
 			break;
 		case XFS_DIR2_LEAFN_MAGIC:
 			error = xfs_dir2_leafn_toosmall(state, &action);
@@ -999,7 +1000,8 @@ xfs_da_blkinfo_onlychild_validate(struct xfs_da_blkinfo *blkinfo, __u16 level)
 	if (level == 1) {
 		ASSERT(magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
 		       magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
-		       magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+		       magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC) ||
+		       magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC));
 	} else {
 		ASSERT(magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
 		       magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
@@ -1456,7 +1458,9 @@ xfs_da3_node_lookup_int(
 		curr = blk->bp->b_addr;
 		blk->magic = be16_to_cpu(curr->magic);
 
-		if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+		if (blk->magic == XFS_ATTR_LEAF_MAGIC ||
+		    blk->magic == XFS_ATTR3_LEAF_MAGIC) {
+			blk->magic = XFS_ATTR_LEAF_MAGIC;
 			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
 			break;
 		}
@@ -1536,7 +1540,7 @@ xfs_da3_node_lookup_int(
 			retval = xfs_dir2_leafn_lookup_int(blk->bp, args,
 							&blk->index, state);
 		} else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
-			retval = xfs_attr_leaf_lookup_int(blk->bp, args);
+			retval = xfs_attr3_leaf_lookup_int(blk->bp, args);
 			blk->index = args->index;
 			args->blkno = blk->blkno;
 		} else {
@@ -1848,7 +1852,8 @@ xfs_da3_path_shift(
 		       info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC) ||
 		       info->magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
 		       info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
-		       info->magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+		       info->magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC) ||
+		       info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC));
 
 
 		/*
@@ -1870,6 +1875,7 @@ xfs_da3_path_shift(
 			blkno = be32_to_cpu(btree[blk->index].before);
 			break;
 		case XFS_ATTR_LEAF_MAGIC:
+		case XFS_ATTR3_LEAF_MAGIC:
 			blk->magic = XFS_ATTR_LEAF_MAGIC;
 			ASSERT(level == path->active-1);
 			blk->index = 0;
@@ -2602,6 +2608,7 @@ xfs_da_read_buf(
 		    XFS_TEST_ERROR((magic != XFS_DA_NODE_MAGIC) &&
 				   (magic != XFS_DA3_NODE_MAGIC) &&
 				   (magic != XFS_ATTR_LEAF_MAGIC) &&
+				   (magic != XFS_ATTR3_LEAF_MAGIC) &&
 				   (magic != XFS_DIR2_LEAF1_MAGIC) &&
 				   (magic != XFS_DIR3_LEAF1_MAGIC) &&
 				   (magic != XFS_DIR2_LEAFN_MAGIC) &&

@@ -1282,7 +1282,7 @@ obfuscate_attr_blocks(
 				break;
 			}
 			if (entry->flags & XFS_ATTR_LOCAL) {
-				local = xfs_attr_leaf_name_local(leaf, i);
+				local = xfs_attr3_leaf_name_local(leaf, i);
 				if (local->namelen == 0) {
 					if (show_warnings)
 						print_warning("zero length for "
@@ -1295,7 +1295,7 @@ obfuscate_attr_blocks(
 				memset(&local->nameval[local->namelen], 0,
 					be16_to_cpu(local->valuelen));
 			} else {
-				remote = xfs_attr_leaf_name_remote(leaf, i);
+				remote = xfs_attr3_leaf_name_remote(leaf, i);
 				if (remote->namelen == 0 ||
 						remote->valueblk == 0) {
 					if (show_warnings)

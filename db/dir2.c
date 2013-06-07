@@ -184,7 +184,7 @@ const field_t	da_node_entry_flds[] = {
 #define	HOFF(f)	bitize(offsetof(xfs_da_node_hdr_t, f))
 const field_t	da_node_hdr_flds[] = {
 	{ "info", FLDT_DA_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
-	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
+	{ "count", FLDT_UINT16D, OI(HOFF(__count)), C1, 0, TYP_NONE },
 	{ "level", FLDT_UINT16D, OI(HOFF(__level)), C1, 0, TYP_NONE },
 	{ NULL }
 };
@@ -707,7 +707,7 @@ dir2_node_btree_count(
 	node = obj;
 	if (be16_to_cpu(node->hdr.info.magic) != XFS_DA_NODE_MAGIC)
 		return 0;
-	return be16_to_cpu(node->hdr.count);
+	return be16_to_cpu(node->hdr.__count);
 }
 
 /*ARGSUSED*/
