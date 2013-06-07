@@ -1849,7 +1849,7 @@ longform_dir2_check_leaf(
 	if (!(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
 	      leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) ||
 				leafhdr.forw || leafhdr.back ||
-				leafhdr.count < leaf->hdr.stale ||
+				leafhdr.count < leafhdr.stale ||
 				leafhdr.count >
 					xfs_dir3_max_leaf_ents(mp, leaf) ||
 				(char *)&ents[leafhdr.count] > (char *)bestsp) {
