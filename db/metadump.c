@@ -2050,6 +2050,11 @@ metadump_f(
 		return 0;
 	}
 
+	if (xfs_sb_version_hascrc(&mp->m_sb) && dont_obfuscate == 0) {
+		print_warning("Can't obfuscate CRC enabled filesystems yet.");
+		return 0;
+	}
+
 	metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
 	if (metablock == NULL) {
 		print_warning("memory allocation failure");

@@ -109,6 +109,9 @@ perform_restore(
 	if (sb.sb_magicnum != XFS_SB_MAGIC)
 		fatal("bad magic number for primary superblock\n");
 
+	if (xfs_sb_version_hascrc(&sb))
+		fatal("Can't restore CRC enabled filesystems yet.\n");
+
 	((xfs_dsb_t*)block_buffer)->sb_inprogress = 1;
 
 	if (is_target_file)  {
