@@ -132,6 +132,21 @@ init(
 			exit(EXIT_FAILURE);
 	}
 
+	/*
+	 * Don't allow modifications to CRC enabled filesystems until we support
+	 * CRC recalculation in the IO path. Unless, of course, the user is in
+	 * the process of hitting us with a big hammer.
+	 */
+	if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_5 &&
+	    !(x.isreadonly & LIBXFS_ISREADONLY)) {
+		fprintf(stderr, 
+	_("%s: modifications to %s are not supported in thi version.\n"
+	"Use \"-r\" to run %s in read-only mode on this filesystem .\n"),
+			progname, fsdevice, progname);
+		if (!force)
+			exit(EXIT_FAILURE);
+	}
+
 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
 				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
 	if (!mp) {
