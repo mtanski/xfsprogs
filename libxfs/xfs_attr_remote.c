@@ -29,15 +29,9 @@ xfs_attr3_rmt_blocks(
 	struct xfs_mount *mp,
 	int		attrlen)
 {
-	int		fsblocks = 0;
-	int		len = attrlen;
-
-	do {
-		fsblocks++;
-		len -= XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-	} while (len > 0);
-
-	return fsblocks;
+	int		buflen = XFS_ATTR3_RMT_BUF_SPACE(mp,
+							 mp->m_sb.sb_blocksize);
+	return (attrlen + buflen - 1) / buflen;
 }
 
 static bool
@@ -56,7 +50,7 @@ xfs_attr3_rmt_verify(
 	if (bp->b_bn != be64_to_cpu(rmt->rm_blkno))
 		return false;
 	if (be32_to_cpu(rmt->rm_offset) +
-				be32_to_cpu(rmt->rm_bytes) >= MAXPATHLEN)
+				be32_to_cpu(rmt->rm_bytes) >= XATTR_SIZE_MAX)
 		return false;
 	if (rmt->rm_owner == 0)
 		return false;
@@ -160,7 +154,6 @@ xfs_attr3_rmt_hdr_ok(
 
 	/* ok */
 	return true;
-
 }
 
 /*
@@ -344,7 +337,6 @@ xfs_attr_rmtval_set(
 		 * spill for another block every 9 headers we require in this
 		 * loop.
 		 */
-
 		if (crcs && blkcnt == 0) {
 			int total_len;
 
@@ -399,9 +391,8 @@ xfs_attr_rmtval_set(
 
 		byte_cnt = BBTOB(bp->b_length);
 		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
-		if (valuelen < byte_cnt) {
+		if (valuelen < byte_cnt)
 			byte_cnt = valuelen;
-		}
 
 		buf = bp->b_addr;
 		buf += xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
