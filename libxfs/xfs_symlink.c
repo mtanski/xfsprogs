@@ -14,16 +14,9 @@ xfs_symlink_blocks(
 	struct xfs_mount *mp,
 	int		pathlen)
 {
-	int		fsblocks = 0;
-	int		len = pathlen;
+	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
 
-	do {
-		fsblocks++;
-		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-	} while (len > 0);
-
-	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
-	return fsblocks;
+	return (pathlen + buflen - 1) / buflen;
 }
 
 /*

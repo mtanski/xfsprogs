@@ -1449,6 +1449,86 @@ null_check(char *name, int length)
 	return(0);
 }
 
+static int
+process_symlink_remote(
+	struct xfs_mount	*mp,
+	xfs_ino_t		lino,
+	struct xfs_dinode	*dino,
+	struct blkmap		*blkmap,
+	char			*dst)
+{
+	xfs_dfsbno_t		fsbno;
+	struct xfs_buf		*bp;
+	char			*src;
+	int			pathlen;
+	int			offset;
+	int			i;
+
+	offset = 0;
+	pathlen = be64_to_cpu(dino->di_size);
+	i = 0;
+
+	while (pathlen > 0) {
+		int	blk_cnt = 1;
+		int	byte_cnt;
+
+		fsbno = blkmap_get(blkmap, i);
+		if (fsbno == NULLDFSBNO) {
+			do_warn(
+_("cannot read inode %" PRIu64 ", file block %d, NULL disk block\n"),
+				lino, i);
+			return 1;
+		}
+
+		/*
+		 * There's a symlink header for each contiguous extent. If
+		 * there are contiguous blocks, read them in one go.
+		 */
+		while (blk_cnt <= max_symlink_blocks) {
+			if (blkmap_get(blkmap, i + 1) != fsbno + 1)
+				break;
+			blk_cnt++;
+			i++;
+		}
+
+		byte_cnt = XFS_FSB_TO_B(mp, blk_cnt);
+
+		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
+				    BTOBB(byte_cnt), 0, &xfs_symlink_buf_ops);
+		if (!bp) {
+			do_warn(
+_("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+				lino, i, fsbno);
+			return 1;
+		}
+
+		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+		byte_cnt = MIN(pathlen, byte_cnt);
+
+		src = bp->b_addr;
+		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+			if (!libxfs_symlink_hdr_ok(mp, lino, offset,
+						byte_cnt, bp)) {
+				do_warn(
+_("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+					lino, i, fsbno);
+				libxfs_putbuf(bp);
+				return 1;
+			}
+			src += sizeof(struct xfs_dsymlink_hdr);
+		}
+
+		memmove(dst + offset, src, byte_cnt);
+
+		pathlen -= byte_cnt;
+		offset += byte_cnt;
+		i++;
+
+		libxfs_putbuf(bp);
+	}
+	return 0;
+}
+
 /*
  * like usual, returns 0 if everything's ok and 1 if something's
  * bogus
@@ -1460,10 +1540,7 @@ process_symlink(
 	xfs_dinode_t	*dino,
 	blkmap_t 	*blkmap)
 {
-	xfs_dfsbno_t		fsbno;
-	xfs_buf_t		*bp = NULL;
-	char			*symlink, *cptr, *buf_data;
-	int			i, size, amountdone;
+	char			*symlink, *cptr;
 	char			data[MAXPATHLEN];
 
 	/*
@@ -1491,50 +1568,13 @@ process_symlink(
 		memmove(symlink, XFS_DFORK_DPTR(dino), 
 						be64_to_cpu(dino->di_size));
 	} else {
-		/*
-		 * stored in a meta-data file, have to bmap one block
-		 * at a time and copy the symlink into the data area
-		 */
-		i = size = amountdone = 0;
-		cptr = symlink;
+		int error;
 
-		while (amountdone < be64_to_cpu(dino->di_size)) {
-			fsbno = blkmap_get(blkmap, i);
-			if (fsbno != NULLDFSBNO)
-				bp = libxfs_readbuf(mp->m_dev,
-						XFS_FSB_TO_DADDR(mp, fsbno),
-						XFS_FSB_TO_BB(mp, 1), 0,
-						&xfs_symlink_buf_ops);
-			if (!bp || fsbno == NULLDFSBNO) {
-				do_warn(
-_("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
-					lino, i, fsbno);
-				return(1);
-			}
-
-
-			buf_data = (char *)XFS_BUF_PTR(bp);
-			size = MIN(be64_to_cpu(dino->di_size) - amountdone,
-					XFS_SYMLINK_BUF_SPACE(mp,
-							mp->m_sb.sb_blocksize));
-			if (xfs_sb_version_hascrc(&mp->m_sb)) {
-				if (!libxfs_symlink_hdr_ok(mp, lino, amountdone,
-							size, bp)) {
-					do_warn(
-_("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
-						lino, i, fsbno);
-					libxfs_putbuf(bp);
-					return(1);
-				}
-				buf_data += sizeof(struct xfs_dsymlink_hdr);
-			}
-			memmove(cptr, buf_data, size);
-			cptr += size;
-			amountdone += size;
-			i++;
-			libxfs_putbuf(bp);
-		}
+		error = process_symlink_remote(mp, lino, dino, blkmap, symlink);
+		if (error)
+			return error;
 	}
+
 	data[be64_to_cpu(dino->di_size)] = '\0';
 
 	/*
