@@ -56,6 +56,8 @@ const ftattr_t	ftattrtab[] = {
 	  FTARG_SKIPNULL, fa_agino, NULL },
 	{ FLDT_AGNUMBER, "agnumber", fp_num, "%u", SI(bitsz(xfs_agnumber_t)),
 	  FTARG_DONULL, NULL, NULL },
+
+/* attr fields */
 	{ FLDT_ATTR, "attr", NULL, (char *)attr_flds, attr_size, FTARG_SIZE,
 	  NULL, attr_flds },
 	{ FLDT_ATTR_BLKINFO, "attr_blkinfo", NULL, (char *)attr_blkinfo_flds,
@@ -84,6 +86,17 @@ const ftattr_t	ftattrtab[] = {
 	  fa_attrblock, NULL },
 	{ FLDT_ATTRSHORT, "attrshort", NULL, (char *)attr_shortform_flds,
 	  attrshort_size, FTARG_SIZE, NULL, attr_shortform_flds },
+
+/* attr3 specific fields */
+	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
+	  NULL, attr3_flds },
+	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
+	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
+	  0, NULL, attr3_leaf_hdr_flds },
+	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+	  0, NULL, da3_node_hdr_flds },
+
 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
 	  FTARG_SIZE, NULL, bmapbta_flds },
 	{ FLDT_BMAPBTA_CRC, "bmapbta", NULL, (char *)bmapbta_crc_flds,

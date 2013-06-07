@@ -76,7 +76,7 @@ static const typ_t	__typtab_crc[] = {
 	{ TYP_AGF, "agf", handle_struct, agf_hfld },
 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
 	{ TYP_AGI, "agi", handle_struct, agi_hfld },
-	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
+	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld },
 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },

@@ -27,6 +27,8 @@ typedef enum fldt	{
 	FLDT_AGINO,
 	FLDT_AGINONN,
 	FLDT_AGNUMBER,
+
+	/* attr fields */
 	FLDT_ATTR,
 	FLDT_ATTR_BLKINFO,
 	FLDT_ATTR_LEAF_ENTRY,
@@ -39,6 +41,12 @@ typedef enum fldt	{
 	FLDT_ATTR_SF_HDR,
 	FLDT_ATTRBLOCK,
 	FLDT_ATTRSHORT,
+
+	/* attr 3 specific fields */
+	FLDT_ATTR3,
+	FLDT_ATTR3_LEAF_HDR,
+	FLDT_ATTR3_NODE_HDR,
+
 	FLDT_BMAPBTA,
 	FLDT_BMAPBTA_CRC,
 	FLDT_BMAPBTAKEY,
