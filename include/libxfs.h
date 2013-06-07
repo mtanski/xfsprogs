@@ -589,6 +589,7 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 #include <xfs/xfs_rtalloc.h>
 
 #include <xfs/xfs_attr_leaf.h>
+#include <xfs/xfs_attr_remote.h>
 #include <xfs/xfs_quota.h>
 #include <xfs/xfs_trans_space.h>
 #include <xfs/xfs_log.h>

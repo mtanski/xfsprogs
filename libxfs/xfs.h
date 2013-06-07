@@ -180,14 +180,19 @@ roundup_pow_of_two(uint v)
 #define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
 #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
 
-#define xfs_incore(bt,blkno,len,lockit)	0
+/* avoid gcc warning */
+#define xfs_incore(bt,blkno,len,lockit)	({		\
+	typeof(blkno) __foo = (blkno);			\
+	(blkno) = __foo;				\
+	NULL;						\
+})
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
 #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
 					(*(bpp) = libxfs_readbuf((devp), \
 							(blkno), (len), 1), 0)
 #define xfs_buf_get(devp,blkno,len,f)	\
 					(libxfs_getbuf((devp), (blkno), (len)))
-#define xfs_bwrite(mp,bp)		libxfs_writebuf((bp), 0)
+#define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
 
 #define XBRW_READ			LIBXFS_BREAD
 #define XBRW_WRITE			LIBXFS_BWRITE
