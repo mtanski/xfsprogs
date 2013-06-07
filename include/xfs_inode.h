@@ -169,9 +169,9 @@ typedef struct xfs_icdinode {
 	/* structure must be padded to 64 bit alignment */
 } xfs_icdinode_t;
 
-static inline uint xfs_icdinode_size(struct xfs_icdinode *dicp)
+static inline uint xfs_icdinode_size(int version)
 {
-	if (dicp->di_version == 3)
+	if (version == 3)
 		return sizeof(struct xfs_icdinode);
 	return offsetof(struct xfs_icdinode, di_next_unlinked);
 }
