@@ -74,7 +74,6 @@ typedef union {
 #define XFS_CORRUPTION_ERROR(e,l,mp,m)	((void) 0)
 #define XFS_MOUNT_WAS_CLEAN		0x1
 #define unlikely(x)			(x)
-#define min(a,b)			((a) < (b) ? (a) : (b))
 
 #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
 #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)

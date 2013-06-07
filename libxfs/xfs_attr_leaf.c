@@ -1202,7 +1202,7 @@ xfs_attr3_leaf_add_work(
 		name_rmt->valuelen = 0;
 		name_rmt->valueblk = 0;
 		args->rmtblkno = 1;
-		args->rmtblkcnt = XFS_B_TO_FSB(mp, args->valuelen);
+		args->rmtblkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
 	}
 	xfs_trans_log_buf(args->trans, bp,
 	     XFS_DA_LOGRANGE(leaf, xfs_attr3_leaf_name(leaf, args->index),
@@ -2144,8 +2144,9 @@ xfs_attr3_leaf_lookup_int(
 			args->index = probe;
 			args->valuelen = be32_to_cpu(name_rmt->valuelen);
 			args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
-			args->rmtblkcnt = XFS_B_TO_FSB(args->dp->i_mount,
-						       args->valuelen);
+			args->rmtblkcnt = xfs_attr3_rmt_blocks(
+							args->dp->i_mount,
+							args->valuelen);
 			return XFS_ERROR(EEXIST);
 		}
 	}
@@ -2196,7 +2197,8 @@ xfs_attr3_leaf_getvalue(
 		ASSERT(memcmp(args->name, name_rmt->name, args->namelen) == 0);
 		valuelen = be32_to_cpu(name_rmt->valuelen);
 		args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
-		args->rmtblkcnt = XFS_B_TO_FSB(args->dp->i_mount, valuelen);
+		args->rmtblkcnt = xfs_attr3_rmt_blocks(args->dp->i_mount,
+						       valuelen);
 		if (args->flags & ATTR_KERNOVAL) {
 			args->valuelen = valuelen;
 			return 0;

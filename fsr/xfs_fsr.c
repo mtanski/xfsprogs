@@ -77,7 +77,6 @@ static __int64_t	minimumfree = 2048;
 #define	V_ALL		2
 #define BUFFER_SIZE	(1<<16)
 #define BUFFER_MAX	(1<<24)
-#define min(x, y) ((x) < (y) ? (x) : (y))
 
 static time_t howlong = 7200;		/* default seconds of reorganizing */
 static char *leftofffile = _PATH_FSRLAST; /* where we left off last */
