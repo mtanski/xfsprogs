@@ -26,65 +26,66 @@
 #include "bit.h"
 #include "init.h"
 
-
 /*
  * Definition of the possible btree block layouts.
  */
 struct xfs_db_btree {
+	uint32_t		magic;
 	size_t			block_len;
 	size_t			key_len;
 	size_t			rec_len;
 	size_t			ptr_len;
 } btrees[] = {
-	[/*0x424d415*/0] = { /* BMAP */
+	{	XFS_BMAP_MAGIC,
 		XFS_BTREE_LBLOCK_LEN,
 		sizeof(xfs_bmbt_key_t),
 		sizeof(xfs_bmbt_rec_t),
 		sizeof(__be64),
 	},
-	[/*0x4142544*/2] = { /* ABTB */
+	{	XFS_ABTB_MAGIC,
 		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
-	[/*0x4142544*/3] = { /* ABTC */
+	{	XFS_ABTC_MAGIC,
 		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
-	[/*0x4941425*/4] = { /* IABT */
+	{	XFS_IBT_MAGIC,
 		XFS_BTREE_SBLOCK_LEN,
 		sizeof(xfs_inobt_key_t),
 		sizeof(xfs_inobt_rec_t),
 		sizeof(__be32),
 	},
-	[/*0x424d415*/8] = { /* BMAP_CRC */
+	{	XFS_BMAP_CRC_MAGIC,
 		XFS_BTREE_LBLOCK_CRC_LEN,
 		sizeof(xfs_bmbt_key_t),
 		sizeof(xfs_bmbt_rec_t),
 		sizeof(__be64),
 	},
-	[/*0x4142544*/0xa] = { /* ABTB_CRC */
+	{	XFS_ABTB_CRC_MAGIC,
 		XFS_BTREE_SBLOCK_CRC_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
-	[/*0x414254*/0xb] = { /* ABTC_CRC */
+	{	XFS_ABTC_CRC_MAGIC,
 		XFS_BTREE_SBLOCK_CRC_LEN,
 		sizeof(xfs_alloc_key_t),
 		sizeof(xfs_alloc_rec_t),
 		sizeof(__be32),
 	},
-	[/*0x4941425*/0xc] = { /* IABT_CRC */
+	{	XFS_IBT_CRC_MAGIC,
 		XFS_BTREE_SBLOCK_CRC_LEN,
 		sizeof(xfs_inobt_key_t),
 		sizeof(xfs_inobt_rec_t),
 		sizeof(__be32),
 	},
-
+	{	0,
+	},
 };
 
 /*
@@ -93,8 +94,20 @@ struct xfs_db_btree {
  * We use the least significant bit of the magic number as index into
  * the array of block defintions.
  */
-#define block_to_bt(bb) \
-	(&btrees[be32_to_cpu((bb)->bb_magic) & 0xf])
+static struct xfs_db_btree *
+block_to_bt(
+	struct xfs_btree_block	*bb)
+{
+	struct xfs_db_btree *btp = &btrees[0];
+
+	do {
+		if (be32_to_cpu((bb)->bb_magic) == btp->magic)
+			return btp;
+		btp++;
+	} while (btp->magic != 0);
+
+	return NULL;
+}
 
 /* calculate max records.  Only for non-leaves. */
 static int
