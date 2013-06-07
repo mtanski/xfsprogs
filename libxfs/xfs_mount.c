@@ -369,7 +369,8 @@ xfs_sb_to_disk(
 
 static int
 xfs_sb_verify(
-	struct xfs_buf	*bp)
+	struct xfs_buf	*bp,
+	bool		verbose)
 {
 	struct xfs_mount *mp = bp->b_target->bt_mount;
 	struct xfs_sb	sb;
@@ -380,7 +381,8 @@ xfs_sb_verify(
 	 * Only check the in progress field for the primary superblock as
 	 * mkfs.xfs doesn't clear it from secondary superblocks.
 	 */
-	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
+	return xfs_mount_validate_sb(mp, &sb,
+				     verbose && bp->b_bn == XFS_SB_DADDR);
 }
 
 /*
@@ -413,7 +415,7 @@ xfs_sb_read_verify(
 			goto out_error;
 		}
 	}
-	error = xfs_sb_verify(bp);
+	error = xfs_sb_verify(bp, true);
 
 out_error:
 	if (error) {
@@ -452,7 +454,7 @@ xfs_sb_write_verify(
 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
 	int			error;
 
-	error = xfs_sb_verify(bp);
+	error = xfs_sb_verify(bp, false);
 	if (error) {
 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
 		xfs_buf_ioerror(bp, error);

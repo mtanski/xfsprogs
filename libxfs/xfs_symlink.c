@@ -27,9 +27,9 @@ xfs_symlink_blocks(
 }
 
 /*
- * XXX: this need to be used by mkfs/proto.c to create symlinks.
+ * This is used by mkfs/proto.c to create symlinks.
  */
-static int
+int
 xfs_symlink_hdr_set(
 	struct xfs_mount	*mp,
 	xfs_ino_t		ino,

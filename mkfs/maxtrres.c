@@ -67,6 +67,7 @@ max_trans_res_by_mount(
 
 int
 max_trans_res(
+	int		crcs_enabled,
 	int		dirversion,
 	int		sectorlog,
 	int		blocklog,
@@ -90,7 +91,8 @@ max_trans_res(
 	sbp->sb_inodesize = 1 << inodelog;
 	sbp->sb_inopblock = 1 << (blocklog - inodelog);
 	sbp->sb_dirblklog = dirblocklog - blocklog;
-	sbp->sb_versionnum = XFS_SB_VERSION_4 |
+	sbp->sb_versionnum =
+			(crcs_enabled ? XFS_SB_VERSION_5 : XFS_SB_VERSION_4) |
 			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0);
 
 	libxfs_mount(&mount, sbp, 0,0,0,0);
