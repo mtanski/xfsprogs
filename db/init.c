@@ -26,6 +26,7 @@
 #include "sig.h"
 #include "output.h"
 #include "malloc.h"
+#include "type.h"
 
 static char	**cmdline;
 static int	ncmdline;
@@ -159,6 +160,9 @@ init(
 		}
 	}
 	blkbb = 1 << mp->m_blkbb_log;
+
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		type_set_tab_crc();
 
 	push_cur();
 	init_commands();

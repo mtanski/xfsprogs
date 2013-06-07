@@ -48,7 +48,7 @@ static const cmdinfo_t	type_cmd =
 	{ "type", NULL, type_f, 0, 1, 1, N_("[newtype]"),
 	  N_("set/show current data type"), NULL };
 
-const typ_t	typtab[] = {
+static const typ_t	__typtab[] = {
 	{ TYP_AGF, "agf", handle_struct, agf_hfld },
 	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
 	{ TYP_AGI, "agi", handle_struct, agi_hfld },
@@ -71,6 +71,38 @@ const typ_t	typtab[] = {
 	{ TYP_TEXT, "text", handle_text, NULL },
 	{ TYP_NONE, NULL }
 };
+
+static const typ_t	__typtab_crc[] = {
+	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
+	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
+	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
+	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
+	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
+	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
+	{ TYP_DATA, "data", handle_block, NULL },
+	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
+	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
+	{ TYP_INODATA, "inodata", NULL, NULL },
+	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
+	{ TYP_LOG, "log", NULL, NULL },
+	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+	{ TYP_SB, "sb", handle_struct, sb_hfld },
+	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+	{ TYP_TEXT, "text", handle_text, NULL },
+	{ TYP_NONE, NULL }
+};
+
+const typ_t	*typtab = __typtab;
+
+void
+type_set_tab_crc(void)
+{
+	typtab = __typtab_crc;
+}
 
 static const typ_t *
 findtyp(

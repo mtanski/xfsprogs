@@ -301,7 +301,8 @@ scanfunc_bno(
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
 
-	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC)
+	if (!(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC ||
+	      be32_to_cpu(block->bb_magic) == XFS_ABTB_CRC_MAGIC))
 		return;
 
 	if (level == 0) {
@@ -328,7 +329,8 @@ scanfunc_cnt(
 	xfs_alloc_ptr_t		*pp;
 	xfs_alloc_rec_t		*rp;
 
-	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC)
+	if (!(be32_to_cpu(block->bb_magic) == XFS_ABTC_MAGIC ||
+	      be32_to_cpu(block->bb_magic) == XFS_ABTC_CRC_MAGIC))
 		return;
 
 	if (level == 0) {

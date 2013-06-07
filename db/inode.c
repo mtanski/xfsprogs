@@ -57,6 +57,10 @@ const field_t	inode_hfld[] = {
 	{ "", FLDT_INODE, OI(0), C1, 0, TYP_NONE },
 	{ NULL }
 };
+const field_t	inode_crc_hfld[] = {
+	{ "", FLDT_INODE_CRC, OI(0), C1, 0, TYP_NONE },
+	{ NULL }
+};
 
 /* XXX: fix this up! */
 #define	OFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
@@ -69,6 +73,17 @@ const field_t	inode_flds[] = {
 	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ NULL }
 };
+const field_t	inode_crc_flds[] = {
+	{ "core", FLDT_DINODE_CORE, OI(OFF(magic)), C1, 0, TYP_NONE },
+	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
+	  TYP_INODE },
+	{ "v3", FLDT_DINODE_V3, OI(OFF(magic)), C1, 0, TYP_NONE },
+	{ "u", FLDT_DINODE_U, inode_u_offset, C1, FLD_OFFSET, TYP_NONE },
+	{ "a", FLDT_DINODE_A, inode_a_offset, inode_a_count,
+	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
+	{ NULL }
+};
+
 
 #define	COFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
 const field_t	inode_core_flds[] = {
@@ -150,6 +165,18 @@ const field_t	inode_core_flds[] = {
 	{ "gen", FLDT_UINT32D, OI(COFF(gen)), C1, 0, TYP_NONE },
 	{ NULL }
 };
+
+const field_t	inode_v3_flds[] = {
+	{ "crc", FLDT_UINT32X, OI(COFF(crc)), C1, 0, TYP_NONE },
+	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
+	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
+	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
+	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
+	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
+	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
+	{ NULL }
+};
+
 
 #define	TOFF(f)	bitize(offsetof(xfs_timestamp_t, t_ ## f))
 const field_t	timestamp_flds[] = {

@@ -79,7 +79,6 @@ libxfs_ialloc(
 	xfs_inode_t	*ip;
 	uint		flags;
 	int		error;
-	int		times;
 
 	/*
 	 * Call the space management code to pick
