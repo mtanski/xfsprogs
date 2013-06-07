@@ -3005,7 +3005,7 @@ process_leaf_node_dir_v2_free(
 		error++;
 		return;
 	}
-	maxent = xfs_dir2_free_max_bests(mp);
+	maxent = xfs_dir3_free_max_bests(mp);
 	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp, 
 					dabno - mp->m_dirfreeblk) * maxent) {
 		if (!sflag || v)

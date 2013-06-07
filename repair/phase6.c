@@ -1960,7 +1960,7 @@ longform_dir2_check_node(
 		if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC ||
 				be32_to_cpu(free->hdr.firstdb) !=
 					(fdb - XFS_DIR2_FREE_FIRSTDB(mp)) *
-						xfs_dir2_free_max_bests(mp) ||
+						xfs_dir3_free_max_bests(mp) ||
 				be32_to_cpu(free->hdr.nvalid) <
 					be32_to_cpu(free->hdr.nused)) {
 			do_warn(
