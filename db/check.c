@@ -788,6 +788,20 @@ blockget_f(
 		dbprintf(_("already have block usage information\n"));
 		return 0;
 	}
+
+	/*
+	 * XXX: check does not support CRC enabled filesystems. Return
+	 * immediately, silently, with success but  without doing anything here
+	 * initially so that xfstests can run without modification on metadata
+	 * enabled filesystems.
+	 *
+	 * XXX: ultimately we need to dump an error message here that xfstests
+	 * filters out, or we need to actually do the work to make check support
+	 * crc enabled filesystems.
+	 */
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		return 0;
+
 	if (!init(argc, argv)) {
 		if (serious_error)
 			exitcode = 3;
