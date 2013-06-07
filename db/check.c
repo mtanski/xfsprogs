@@ -3418,7 +3418,7 @@ process_sf_dir_v2(
 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
 	(*dot)++;
 	sfe = xfs_dir2_sf_firstentry(&sf->hdr);
-	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
 		if ((__psint_t)sfe + xfs_dir2_sf_entsize(&sf->hdr,sfe->namelen) -
 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {

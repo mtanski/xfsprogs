@@ -682,6 +682,7 @@ process_sf_dir2_fixi8(
  */
 static void
 process_sf_dir2_fixoff(
+	xfs_mount_t	*mp,
 	xfs_dinode_t	*dip)
 {
 	int			i;
@@ -691,7 +692,7 @@ process_sf_dir2_fixoff(
 
 	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
 	sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
-	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 
 	for (i = 0; i < sfp->hdr.count; i++) {
 		xfs_dir2_sf_put_offset(sfep, offset);
@@ -745,7 +746,7 @@ process_sf_dir2(
 	max_size = XFS_DFORK_DSIZE(dip, mp);
 	num_entries = sfp->hdr.count;
 	ino_dir_size = be64_to_cpu(dip->di_size);
-	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 	bad_offset = *repair = 0;
 
 	ASSERT(ino_dir_size <= max_size);
@@ -1102,7 +1103,7 @@ _("would have corrected entry offsets in directory %" PRIu64 "\n"),
 			do_warn(
 _("corrected entry offsets in directory %" PRIu64 "\n"),
 				ino);
-			process_sf_dir2_fixoff(dip);
+			process_sf_dir2_fixoff(mp, dip);
 			*dino_dirty = 1;
 			*repair = 1;
 		}
