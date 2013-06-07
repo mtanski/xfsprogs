@@ -1826,6 +1826,7 @@ longform_dir2_check_leaf(
 	xfs_dir2_leaf_t		*leaf;
 	xfs_dir2_leaf_tail_t	*ltp;
 	int			seeval;
+	struct xfs_dir2_leaf_entry *ents;
 
 	da_bno = mp->m_dirleafblk;
 	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK, NULL)) {
@@ -1835,6 +1836,7 @@ longform_dir2_check_leaf(
 		/* NOTREACHED */
 	}
 	leaf = bp->b_addr;
+	ents = xfs_dir3_leaf_ents_p(leaf);
 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
 	bestsp = xfs_dir2_leaf_bests_p(ltp);
 	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAF1_MAGIC ||
@@ -1843,8 +1845,8 @@ longform_dir2_check_leaf(
 				be16_to_cpu(leaf->hdr.count) <
 					be16_to_cpu(leaf->hdr.stale) ||
 				be16_to_cpu(leaf->hdr.count) >
-					xfs_dir2_max_leaf_ents(mp) ||
-				(char *)&leaf->ents[be16_to_cpu(
+					xfs_dir3_max_leaf_ents(mp, leaf) ||
+				(char *)&ents[be16_to_cpu(
 					leaf->hdr.count)] > (char *)bestsp) {
 		do_warn(
 	_("leaf block %u for directory inode %" PRIu64 " bad header\n"),
@@ -1852,7 +1854,7 @@ longform_dir2_check_leaf(
 		libxfs_putbuf(bp);
 		return 1;
 	}
-	seeval = dir_hash_see_all(hashtab, leaf->ents,
+	seeval = dir_hash_see_all(hashtab, ents,
 				be16_to_cpu(leaf->hdr.count),
 				be16_to_cpu(leaf->hdr.stale));
 	if (dir_hash_check(hashtab, ip, seeval)) {
@@ -1895,6 +1897,7 @@ longform_dir2_check_node(
 	xfs_fileoff_t		next_da_bno;
 	int			seeval = 0;
 	int			used;
+	struct xfs_dir2_leaf_entry *ents;
 
 	for (da_bno = mp->m_dirleafblk, next_da_bno = 0;
 			next_da_bno != NULLFILEOFF && da_bno < mp->m_dirfreeblk;
@@ -1910,6 +1913,7 @@ longform_dir2_check_node(
 			return 1;
 		}
 		leaf = bp->b_addr;
+		ents = xfs_dir3_leaf_ents_p(leaf);
 		if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAFN_MAGIC) {
 			if (be16_to_cpu(leaf->hdr.info.magic) ==
 							XFS_DA_NODE_MAGIC) {
@@ -1923,7 +1927,7 @@ longform_dir2_check_node(
 			libxfs_putbuf(bp);
 			return 1;
 		}
-		if (be16_to_cpu(leaf->hdr.count) > xfs_dir2_max_leaf_ents(mp) ||
+		if (be16_to_cpu(leaf->hdr.count) > xfs_dir3_max_leaf_ents(mp, leaf) ||
 					be16_to_cpu(leaf->hdr.count) <
 						be16_to_cpu(leaf->hdr.stale)) {
 			do_warn(
@@ -1932,7 +1936,7 @@ longform_dir2_check_node(
 			libxfs_putbuf(bp);
 			return 1;
 		}
-		seeval = dir_hash_see_all(hashtab, leaf->ents,
+		seeval = dir_hash_see_all(hashtab, ents,
 					be16_to_cpu(leaf->hdr.count),
 					be16_to_cpu(leaf->hdr.stale));
 		libxfs_putbuf(bp);

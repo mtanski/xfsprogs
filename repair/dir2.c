@@ -1627,24 +1627,26 @@ process_leaf_block_dir2(
 {
 	int			i;
 	int			stale;
+	struct xfs_dir2_leaf_entry *ents;
+
+	ents = xfs_dir3_leaf_ents_p(leaf);
 
 	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
-		if ((char *)&leaf->ents[i] >= (char *)leaf + mp->m_dirblksize) {
+		if ((char *)&ents[i] >= (char *)leaf + mp->m_dirblksize) {
 			do_warn(
 _("bad entry count in block %u of directory inode %" PRIu64 "\n"),
 				da_bno, ino);
 			return 1;
 		}
-		if (be32_to_cpu(leaf->ents[i].address) == XFS_DIR2_NULL_DATAPTR)
+		if (be32_to_cpu(ents[i].address) == XFS_DIR2_NULL_DATAPTR)
 			stale++;
-		else if (be32_to_cpu(leaf->ents[i].hashval) < last_hashval) {
+		else if (be32_to_cpu(ents[i].hashval) < last_hashval) {
 			do_warn(
 _("bad hash ordering in block %u of directory inode %" PRIu64 "\n"),
 				da_bno, ino);
 			return 1;
 		}
-		*next_hashval = last_hashval =
-					be32_to_cpu(leaf->ents[i].hashval);
+		*next_hashval = last_hashval = be32_to_cpu(ents[i].hashval);
 	}
 	if (stale != be16_to_cpu(leaf->hdr.stale)) {
 		do_warn(

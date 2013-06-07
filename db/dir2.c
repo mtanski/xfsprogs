@@ -80,7 +80,7 @@ const field_t	dir2_flds[] = {
 	  FLD_COUNT, TYP_NONE },
 	{ "lbests", FLDT_DIR2_DATA_OFF, dir2_leaf_bests_offset,
 	  dir2_leaf_bests_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
-	{ "lents", FLDT_DIR2_LEAF_ENTRY, OI(LOFF(ents)), dir2_leaf_ents_count,
+	{ "lents", FLDT_DIR2_LEAF_ENTRY, OI(LOFF(__ents)), dir2_leaf_ents_count,
 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
 	{ "ltail", FLDT_DIR2_LEAF_TAIL, dir2_leaf_tail_offset,
 	  dir2_leaf_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },

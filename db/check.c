@@ -3140,7 +3140,7 @@ process_leaf_node_dir_v2_int(
 		error++;
 		return;
 	}
-	lep = leaf->ents;
+	lep = xfs_dir3_leaf_ents_p(leaf);
 	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
 		if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
 			stale++;
