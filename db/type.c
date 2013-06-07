@@ -82,7 +82,7 @@ static const typ_t	__typtab_crc[] = {
 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
 	{ TYP_DATA, "data", handle_block, NULL },
-	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
+	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld },
 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
 	{ TYP_INODATA, "inodata", NULL, NULL },
@@ -110,9 +110,9 @@ findtyp(
 {
 	const typ_t	*tt;
 
-	for (tt = typtab; tt->name != NULL; tt++) {
+	for (tt = typtab; tt->typnm != TYP_NONE; tt++) {
 		ASSERT(tt->typnm == (typnm_t)(tt - typtab));
-		if (strcmp(tt->name, name) == 0)
+		if (tt->name && strcmp(tt->name, name) == 0)
 			return tt;
 	}
 	return NULL;
@@ -133,12 +133,14 @@ type_f(
 			dbprintf(_("current type is \"%s\"\n"), cur_typ->name);
 
 		dbprintf(_("\n supported types are:\n "));
-		for (tt = typtab, count = 0; tt->name != NULL; tt++) {
+		for (tt = typtab, count = 0; tt->typnm != TYP_NONE; tt++) {
+			if (tt->name == NULL)
+				continue;
 			if ((tt+1)->name != NULL) {
 				dbprintf("%s, ", tt->name);
 				if ((++count % 8) == 0)
 					dbprintf("\n ");
-			} else {
+			} else if ((tt+1)->typnm == TYP_NONE) {
 				dbprintf("%s\n", tt->name);
 			}
 		}

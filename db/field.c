@@ -166,6 +166,8 @@ const ftattr_t	ftattrtab[] = {
 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
 	{ FLDT_DINODE_V3, "dinode_v3", NULL, (char *)inode_v3_flds,
 	  SI(bitsz(xfs_dinode_t)), 0, NULL, inode_v3_flds },
+
+/* dir v2 fields */
 	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
 	  NULL, dir2_flds },
 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
@@ -207,6 +209,20 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(xfs_dir2_sf_off_t)), 0, NULL, NULL },
 	{ FLDT_DIR2SF, "dir2sf", NULL, (char *)dir2sf_flds, dir2sf_size,
 	  FTARG_SIZE, NULL, dir2sf_flds },
+
+/* dir v3 fields */
+	{ FLDT_DIR3, "dir3", NULL, (char *)dir3_flds, dir2_size, FTARG_SIZE,
+	  NULL, dir3_flds },
+	{ FLDT_DIR3_BLKHDR, "dir3_blk_hdr", NULL, (char *)dir3_blkhdr_flds,
+	  SI(bitsz(struct xfs_dir3_blk_hdr)), 0, NULL, dir3_blkhdr_flds },
+	{ FLDT_DIR3_DATA_HDR, "dir3_data_hdr", NULL, (char *)dir3_data_hdr_flds,
+	  SI(bitsz(struct xfs_dir3_data_hdr)), 0, NULL, dir3_data_hdr_flds },
+	{ FLDT_DIR3_FREE_HDR, "dir3_free_hdr", NULL, (char *)dir3_free_hdr_flds,
+	  SI(bitsz(struct xfs_dir3_free_hdr)), 0, NULL, dir3_free_hdr_flds },
+	{ FLDT_DIR3_LEAF_HDR, "dir3_leaf_hdr", NULL, (char *)dir3_leaf_hdr_flds,
+	  SI(bitsz(struct xfs_dir3_leaf_hdr)), 0, NULL, dir3_leaf_hdr_flds },
+
+/* dir v2/3 node fields */
 	{ FLDT_DA_BLKINFO, "dir_blkinfo", NULL, (char *)da_blkinfo_flds,
 	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, da_blkinfo_flds },
 	{ FLDT_DA_NODE_ENTRY, "dir_node_entry", fp_sarray,
@@ -214,6 +230,11 @@ const ftattr_t	ftattrtab[] = {
 	  NULL, da_node_entry_flds },
 	{ FLDT_DA_NODE_HDR, "dir_node_hdr", NULL, (char *)da_node_hdr_flds,
 	  SI(bitsz(struct xfs_da_node_hdr)), 0, NULL, da_node_hdr_flds },
+	{ FLDT_DA3_BLKINFO, "dir_blkinfo", NULL, (char *)da3_blkinfo_flds,
+	  SI(bitsz(struct xfs_da3_blkinfo)), 0, NULL, da3_blkinfo_flds },
+	{ FLDT_DA3_NODE_HDR, "dir_node_hdr", NULL, (char *)da3_node_hdr_flds,
+	  SI(bitsz(struct xfs_da3_node_hdr)), 0, NULL, da3_node_hdr_flds },
+
 	{ FLDT_DIRBLOCK, "dirblock", fp_num, "%u", SI(bitsz(__uint32_t)), 0,
 	  fa_dirblock, NULL },
 	{ FLDT_DISK_DQUOT, "disk_dquot", NULL, (char *)disk_dquot_flds,
