@@ -1395,6 +1395,7 @@ longform_dir2_entry_check_data(
 	xfs_dir2_db_t		db;
 	xfs_dir2_data_entry_t	*dep;
 	xfs_dir2_data_unused_t	*dup;
+	struct xfs_dir2_data_free *bf;
 	char			*endptr;
 	int			error;
 	xfs_fsblock_t		firstblock;
@@ -1808,7 +1809,10 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
 		libxfs_dir2_data_log_header(tp, bp);
 	libxfs_bmap_finish(&tp, &flist, &committed);
 	libxfs_trans_commit(tp, 0);
-	freetab->ents[db].v = be16_to_cpu(d->bestfree[0].length);
+
+	/* record the largest free space in the freetab for later checking */
+	bf = xfs_dir3_data_bestfree_p(d);
+	freetab->ents[db].v = be16_to_cpu(bf[0].length);
 	freetab->ents[db].s = 0;
 }
 
