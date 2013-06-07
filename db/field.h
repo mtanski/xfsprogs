@@ -150,6 +150,10 @@ typedef enum fldt	{
 	FLDT_QCNT,
 	FLDT_QWARNCNT,
 	FLDT_SB,
+
+	/* CRC enabled symlink */
+	FLDT_SYMLINK_CRC,
+
 	FLDT_TIME,
 	FLDT_TIMESTAMP,
 	FLDT_UINT1,

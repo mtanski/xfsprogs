@@ -34,6 +34,7 @@
 #include "dquot.h"
 #include "dir2.h"
 #include "dir2sf.h"
+#include "symlink.h"
 
 const ftattr_t	ftattrtab[] = {
 	{ FLDT_AEXTNUM, "aextnum", fp_num, "%d", SI(bitsz(xfs_aextnum_t)),
@@ -300,6 +301,11 @@ const ftattr_t	ftattrtab[] = {
 	  NULL, NULL },
 	{ FLDT_SB, "sb", NULL, (char *)sb_flds, sb_size, FTARG_SIZE, NULL,
 	  sb_flds },
+
+/* CRC enabled symlink */
+	{ FLDT_SYMLINK_CRC, "symlink", NULL, (char *)symlink_crc_flds,
+	  symlink_size, FTARG_SIZE, NULL, symlink_crc_flds },
+
 	{ FLDT_TIME, "time", fp_time, NULL, SI(bitsz(__int32_t)), FTARG_SIGNED,
 	  NULL, NULL },
 	{ FLDT_TIMESTAMP, "timestamp", NULL, (char *)timestamp_flds,

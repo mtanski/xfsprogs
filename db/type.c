@@ -38,6 +38,7 @@
 #include "dquot.h"
 #include "dir2.h"
 #include "text.h"
+#include "symlink.h"
 
 static const typ_t	*findtyp(char *name);
 static int		type_f(int argc, char **argv);
@@ -91,7 +92,7 @@ static const typ_t	__typtab_crc[] = {
 	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
 	{ TYP_SB, "sb", handle_struct, sb_hfld },
-	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld },
 	{ TYP_TEXT, "text", handle_text, NULL },
 	{ TYP_NONE, NULL }
 };
