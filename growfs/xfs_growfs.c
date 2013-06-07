@@ -53,11 +53,14 @@ report_info(
 	int		dirversion,
 	int		logversion,
 	int		attrversion,
+	int		projid32bit,
+	int		crcs_enabled,
 	int		cimode)
 {
 	printf(_(
 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
-	    "         =%-22s sectsz=%-5u attr=%u\n"
+	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+	    "         =%-22s crc=%u\n"
 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
@@ -66,7 +69,8 @@ report_info(
 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
 
 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
-		"", geo.sectsize, attrversion,
+		"", geo.sectsize, attrversion, projid32bit,
+		"", crcs_enabled,
 		"", geo.blocksize, (unsigned long long)geo.datablocks,
 			geo.imaxpct,
 		"", geo.sunit, geo.swidth,
@@ -115,6 +119,8 @@ main(int argc, char **argv)
 	char			*rtdev;	/*   RT device name */
 	fs_path_t		*fs;	/* mount point information */
 	libxfs_init_t		xi;	/* libxfs structure */
+	int			projid32bit;
+	int			crcs_enabled;
 
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
@@ -234,10 +240,12 @@ main(int argc, char **argv)
 	attrversion = geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
 			(geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR ? 1 : 0);
 	ci = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI ? 1 : 0;
+	projid32bit = geo.flags & XFS_FSOP_GEOM_FLAGS_PROJID32 ? 1 : 0;
+	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
 	if (nflag) {
 		report_info(geo, datadev, isint, logdev, rtdev,
 				lazycount, dirversion, logversion,
-				attrversion, ci);
+				attrversion, projid32bit, crcs_enabled, ci);
 		exit(0);
 	}
 
@@ -274,7 +282,7 @@ main(int argc, char **argv)
 
 	report_info(geo, datadev, isint, logdev, rtdev,
 			lazycount, dirversion, logversion,
-			attrversion, ci);
+			attrversion, projid32bit, crcs_enabled, ci);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :
