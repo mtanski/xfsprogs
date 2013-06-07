@@ -33,13 +33,13 @@ typedef union {
 
 typedef struct xfs_dir2_data {
 	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_DATA_MAGIC */
-	xfs_dir2_data_union_t	u[1];
+	xfs_dir2_data_union_t	__u[1];
 } xfs_dir2_data_t;
 
 typedef struct xfs_dir2_block {
 	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_BLOCK_MAGIC */
-	xfs_dir2_data_union_t	u[1];
-	xfs_dir2_leaf_entry_t	leaf[1];
+	xfs_dir2_data_union_t	__u[1];
+	xfs_dir2_leaf_entry_t	__leaf[1];
 	xfs_dir2_block_tail_t	tail;
 } xfs_dir2_block_t;
 

@@ -186,7 +186,8 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
 		node = bp->b_addr;
 		xfs_da3_node_hdr_from_disk(&nodehdr, node);
 
-		if (nodehdr.magic == XFS_DIR2_LEAFN_MAGIC)  {
+		if (nodehdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+		    nodehdr.magic == XFS_DIR3_LEAFN_MAGIC)  {
 			if ( i != -1 ) {
 				do_warn(
 _("found non-root LEAFN node in inode %" PRIu64 " bno = %u\n"),
@@ -195,7 +196,8 @@ _("found non-root LEAFN node in inode %" PRIu64 " bno = %u\n"),
 			*rbno = 0;
 			libxfs_putbuf(bp);
 			return(1);
-		} else if (nodehdr.magic != XFS_DA_NODE_MAGIC)  {
+		} else if (!(nodehdr.magic == XFS_DA_NODE_MAGIC ||
+			     nodehdr.magic == XFS_DA3_NODE_MAGIC))  {
 			libxfs_putbuf(bp);
 			do_warn(
 _("bad dir magic number 0x%x in inode %" PRIu64 " bno = %u\n"),
@@ -556,7 +558,8 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
 		 * entry count, verify level
 		 */
 		bad = 0;
-		if (XFS_DA_NODE_MAGIC != nodehdr.magic) {
+		if (!(nodehdr.magic == XFS_DA_NODE_MAGIC ||
+		      nodehdr.magic == XFS_DA3_NODE_MAGIC)) {
 			do_warn(
 _("bad magic number %x in block %u for directory inode %" PRIu64 "\n"),
 				nodehdr.magic,
@@ -1219,8 +1222,8 @@ process_dir2_data(
 	xfs_ino_t		ent_ino;
 
 	d = bp->b_addr;
-	bf = d->hdr.bestfree;
-	ptr = (char *)d->u;
+	bf = xfs_dir3_data_bestfree_p(&d->hdr);
+	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
 	badbest = lastfree = freeseen = 0;
 	if (be16_to_cpu(bf[0].length) == 0) {
 		badbest |= be16_to_cpu(bf[0].offset) != 0;
@@ -1286,7 +1289,7 @@ process_dir2_data(
 			do_warn(_("\twould junk block\n"));
 		return 1;
 	}
-	ptr = (char *)d->u;
+	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
 	/*
 	 * Process the entries now.
 	 */
@@ -1595,7 +1598,8 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
 	 * Verify the block
 	 */
 	block = bp->b_addr;
-	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
+	if (!(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC ||
+	      be32_to_cpu(block->hdr.magic) == XFS_DIR3_BLOCK_MAGIC))
 		do_warn(
 _("bad directory block magic # %#x in block %u for directory inode %" PRIu64 "\n"),
 			be32_to_cpu(block->hdr.magic), mp->m_dirdatablk, ino);
@@ -1638,10 +1642,12 @@ process_leaf_block_dir2(
 	int			i;
 	int			stale;
 	struct xfs_dir2_leaf_entry *ents;
+	struct xfs_dir3_icleaf_hdr leafhdr;
 
+	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 	ents = xfs_dir3_leaf_ents_p(leaf);
 
-	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
+	for (i = stale = 0; i < leafhdr.count; i++) {
 		if ((char *)&ents[i] >= (char *)leaf + mp->m_dirblksize) {
 			do_warn(
 _("bad entry count in block %u of directory inode %" PRIu64 "\n"),
@@ -1658,7 +1664,7 @@ _("bad hash ordering in block %u of directory inode %" PRIu64 "\n"),
 		}
 		*next_hashval = last_hashval = be32_to_cpu(ents[i].hashval);
 	}
-	if (stale != be16_to_cpu(leaf->hdr.stale)) {
+	if (stale != leafhdr.stale) {
 		do_warn(
 _("bad stale count in block %u of directory inode %" PRIu64 "\n"),
 			da_bno, ino);
@@ -1687,6 +1693,7 @@ process_leaf_level_dir2(
 	int			nex;
 	xfs_dablk_t		prev_bno;
 	bmap_ext_t		lbmp;
+	struct xfs_dir3_icleaf_hdr leafhdr;
 
 	da_bno = da_cursor->level[0].bno;
 	ino = da_cursor->ino;
@@ -1723,15 +1730,15 @@ _("can't read file block %u for directory inode %" PRIu64 "\n"),
 			goto error_out;
 		}
 		leaf = bp->b_addr;
+		xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 		/*
 		 * Check magic number for leaf directory btree block.
 		 */
-		if (be16_to_cpu(leaf->hdr.info.magic) !=
-		   XFS_DIR2_LEAFN_MAGIC) {
+		if (!(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+		      leafhdr.magic == XFS_DIR3_LEAFN_MAGIC)) {
 			do_warn(
 _("bad directory leaf magic # %#x for directory inode %" PRIu64 " block %u\n"),
-				be16_to_cpu(leaf->hdr.info.magic),
-				ino, da_bno);
+				leafhdr.magic, ino, da_bno);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
@@ -1753,11 +1760,10 @@ _("bad directory leaf magic # %#x for directory inode %" PRIu64 " block %u\n"),
 		da_cursor->level[0].hashval = greatest_hashval;
 		da_cursor->level[0].bp = bp;
 		da_cursor->level[0].bno = da_bno;
-		da_cursor->level[0].index =
-			be16_to_cpu(leaf->hdr.count);
+		da_cursor->level[0].index = leafhdr.count;
 		da_cursor->level[0].dirty = buf_dirty;
 
-		if (be32_to_cpu(leaf->hdr.info.back) != prev_bno) {
+		if (leafhdr.back != prev_bno) {
 			do_warn(
 _("bad sibling back pointer for block %u in directory inode %" PRIu64 "\n"),
 				da_bno, ino);
@@ -1765,7 +1771,7 @@ _("bad sibling back pointer for block %u in directory inode %" PRIu64 "\n"),
 			goto error_out;
 		}
 		prev_bno = da_bno;
-		da_bno = be32_to_cpu(leaf->hdr.info.forw);
+		da_bno = leafhdr.forw;
 		if (da_bno != 0) {
 			if (verify_dir2_path(mp, da_cursor, 0)) {
 				libxfs_putbuf(bp);
@@ -1908,7 +1914,8 @@ _("can't read block %" PRIu64 " for directory inode %" PRIu64 "\n"),
 			continue;
 		}
 		data = bp->b_addr;
-		if (be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC)
+		if (!(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+		      be32_to_cpu(data->hdr.magic) == XFS_DIR3_DATA_MAGIC))
 			do_warn(
 _("bad directory block magic # %#x in block %" PRIu64 " for directory inode %" PRIu64 "\n"),
 				be32_to_cpu(data->hdr.magic), dbno, ino);

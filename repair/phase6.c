@@ -1421,7 +1421,7 @@ longform_dir2_entry_check_data(
 
 	bp = *bpp;
 	d = bp->b_addr;
-	ptr = (char *)d->u;
+	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
 	nbad = 0;
 	needscan = needlog = 0;
 	junkit = 0;
@@ -1432,10 +1432,16 @@ longform_dir2_entry_check_data(
 		endptr = (char *)blp;
 		if (endptr > (char *)btp)
 			endptr = (char *)btp;
-		wantmagic = XFS_DIR2_BLOCK_MAGIC;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			wantmagic = XFS_DIR3_BLOCK_MAGIC;
+		else
+			wantmagic = XFS_DIR2_BLOCK_MAGIC;
 	} else {
 		endptr = (char *)d + mp->m_dirblksize;
-		wantmagic = XFS_DIR2_DATA_MAGIC;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			wantmagic = XFS_DIR3_DATA_MAGIC;
+		else
+			wantmagic = XFS_DIR2_DATA_MAGIC;
 	}
 	db = xfs_dir2_da_to_db(mp, da_bno);
 
@@ -1476,8 +1482,8 @@ longform_dir2_entry_check_data(
 				break;
 
 			/* check for block with no data entries */
-			if ((ptr == (char *)d->u) && (ptr +
-					be16_to_cpu(dup->length) >= endptr)) {
+			if ((ptr == (char *)xfs_dir3_data_entry_p(&d->hdr)) &&
+			    (ptr + be16_to_cpu(dup->length) >= endptr)) {
 				junkit = 1;
 				*num_illegal += 1;
 				break;
@@ -1548,7 +1554,7 @@ longform_dir2_entry_check_data(
 			do_warn(_("would fix magic # to %#x\n"), wantmagic);
 	}
 	lastfree = 0;
-	ptr = (char *)d->u;
+	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
 	/*
 	 * look at each entry.  reference inode pointed to by each
 	 * entry in the incore inode tree.
@@ -1718,7 +1724,8 @@ longform_dir2_entry_check_data(
 		if (ip->i_ino == inum)  {
 			ASSERT(dep->name[0] == '.' && dep->namelen == 1);
 			add_inode_ref(current_irec, current_ino_offset);
-			if (da_bno != 0 || dep != (xfs_dir2_data_entry_t *)d->u) {
+			if (da_bno != 0 ||
+			    dep != xfs_dir3_data_entry_p(&d->hdr)) {
 				/* "." should be the first entry */
 				nbad++;
 				if (entry_junked(
@@ -1827,6 +1834,7 @@ longform_dir2_check_leaf(
 	xfs_dir2_leaf_tail_t	*ltp;
 	int			seeval;
 	struct xfs_dir2_leaf_entry *ents;
+	struct xfs_dir3_icleaf_hdr leafhdr;
 
 	da_bno = mp->m_dirleafblk;
 	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK,
@@ -1837,27 +1845,24 @@ longform_dir2_check_leaf(
 		/* NOTREACHED */
 	}
 	leaf = bp->b_addr;
+	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 	ents = xfs_dir3_leaf_ents_p(leaf);
 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
 	bestsp = xfs_dir2_leaf_bests_p(ltp);
-	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAF1_MAGIC ||
-				be32_to_cpu(leaf->hdr.info.forw) ||
-				be32_to_cpu(leaf->hdr.info.back) ||
-				be16_to_cpu(leaf->hdr.count) <
-					be16_to_cpu(leaf->hdr.stale) ||
-				be16_to_cpu(leaf->hdr.count) >
+	if (!(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+	      leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) ||
+				leafhdr.forw || leafhdr.back ||
+				leafhdr.count < leaf->hdr.stale ||
+				leafhdr.count >
 					xfs_dir3_max_leaf_ents(mp, leaf) ||
-				(char *)&ents[be16_to_cpu(
-					leaf->hdr.count)] > (char *)bestsp) {
+				(char *)&ents[leafhdr.count] > (char *)bestsp) {
 		do_warn(
 	_("leaf block %u for directory inode %" PRIu64 " bad header\n"),
 			da_bno, ip->i_ino);
 		libxfs_putbuf(bp);
 		return 1;
 	}
-	seeval = dir_hash_see_all(hashtab, ents,
-				be16_to_cpu(leaf->hdr.count),
-				be16_to_cpu(leaf->hdr.stale));
+	seeval = dir_hash_see_all(hashtab, ents, leafhdr.count, leafhdr.stale);
 	if (dir_hash_check(hashtab, ip, seeval)) {
 		libxfs_putbuf(bp);
 		return 1;
@@ -1899,6 +1904,9 @@ longform_dir2_check_node(
 	int			seeval = 0;
 	int			used;
 	struct xfs_dir2_leaf_entry *ents;
+	struct xfs_dir3_icleaf_hdr leafhdr;
+	struct xfs_dir3_icfree_hdr freehdr;
+	__be16			*bests;
 
 	for (da_bno = mp->m_dirleafblk, next_da_bno = 0;
 			next_da_bno != NULLFILEOFF && da_bno < mp->m_dirfreeblk;
@@ -1914,23 +1922,23 @@ longform_dir2_check_node(
 			return 1;
 		}
 		leaf = bp->b_addr;
+		xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 		ents = xfs_dir3_leaf_ents_p(leaf);
-		if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAFN_MAGIC) {
-			if (be16_to_cpu(leaf->hdr.info.magic) ==
-							XFS_DA_NODE_MAGIC) {
+		if (!(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+		      leafhdr.magic == XFS_DIR3_LEAFN_MAGIC)) {
+			if (leafhdr.magic == XFS_DA_NODE_MAGIC ||
+			    leafhdr.magic == XFS_DA3_NODE_MAGIC) {
 				libxfs_putbuf(bp);
 				continue;
 			}
 			do_warn(
 	_("unknown magic number %#x for block %u in directory inode %" PRIu64 "\n"),
-				be16_to_cpu(leaf->hdr.info.magic),
-				da_bno, ip->i_ino);
+				leafhdr.magic, da_bno, ip->i_ino);
 			libxfs_putbuf(bp);
 			return 1;
 		}
-		if (be16_to_cpu(leaf->hdr.count) > xfs_dir3_max_leaf_ents(mp, leaf) ||
-					be16_to_cpu(leaf->hdr.count) <
-						be16_to_cpu(leaf->hdr.stale)) {
+		if (leafhdr.count > xfs_dir3_max_leaf_ents(mp, leaf) ||
+		    leafhdr.count < leafhdr.stale) {
 			do_warn(
 	_("leaf block %u for directory inode %" PRIu64 " bad header\n"),
 				da_bno, ip->i_ino);
@@ -1938,8 +1946,7 @@ longform_dir2_check_node(
 			return 1;
 		}
 		seeval = dir_hash_see_all(hashtab, ents,
-					be16_to_cpu(leaf->hdr.count),
-					be16_to_cpu(leaf->hdr.stale));
+					leafhdr.count, leafhdr.stale);
 		libxfs_putbuf(bp);
 		if (seeval != DIR_HASH_CK_OK)
 			return 1;
@@ -1961,35 +1968,35 @@ longform_dir2_check_node(
 			return 1;
 		}
 		free = bp->b_addr;
+		xfs_dir3_free_hdr_from_disk(&freehdr, free);
+		bests = xfs_dir3_free_bests_p(mp, free);
 		fdb = xfs_dir2_da_to_db(mp, da_bno);
-		if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC ||
-				be32_to_cpu(free->hdr.firstdb) !=
+		if (!(freehdr.magic == XFS_DIR2_FREE_MAGIC ||
+		      freehdr.magic == XFS_DIR3_FREE_MAGIC) ||
+				freehdr.firstdb !=
 					(fdb - XFS_DIR2_FREE_FIRSTDB(mp)) *
 						xfs_dir3_free_max_bests(mp) ||
-				be32_to_cpu(free->hdr.nvalid) <
-					be32_to_cpu(free->hdr.nused)) {
+				freehdr.nvalid < freehdr.nused) {
 			do_warn(
 	_("free block %u for directory inode %" PRIu64 " bad header\n"),
 				da_bno, ip->i_ino);
 			libxfs_putbuf(bp);
 			return 1;
 		}
-		for (i = used = 0; i < be32_to_cpu(free->hdr.nvalid); i++) {
-			if (i + be32_to_cpu(free->hdr.firstdb) >=
-							freetab->nents ||
-					freetab->ents[i + be32_to_cpu(
-						free->hdr.firstdb)].v !=
-						be16_to_cpu(free->bests[i])) {
+		for (i = used = 0; i < freehdr.nvalid; i++) {
+			if (i + freehdr.firstdb >= freetab->nents ||
+					freetab->ents[i + freehdr.firstdb].v !=
+						be16_to_cpu(bests[i])) {
 				do_warn(
 	_("free block %u entry %i for directory ino %" PRIu64 " bad\n"),
 					da_bno, i, ip->i_ino);
 				libxfs_putbuf(bp);
 				return 1;
 			}
-			used += be16_to_cpu(free->bests[i]) != NULLDATAOFF;
-			freetab->ents[i + be32_to_cpu(free->hdr.firstdb)].s = 1;
+			used += be16_to_cpu(bests[i]) != NULLDATAOFF;
+			freetab->ents[i + freehdr.firstdb].s = 1;
 		}
-		if (used != be32_to_cpu(free->hdr.nused)) {
+		if (used != freehdr.nused) {
 			do_warn(
 	_("free block %u for directory inode %" PRIu64 " bad nused\n"),
 				da_bno, ip->i_ino);

@@ -187,7 +187,8 @@ traverse_int_dablock(xfs_mount_t	*mp,
 		btree = xfs_da3_node_tree_p(node);
 		xfs_da3_node_hdr_from_disk(&nodehdr, node);
 
-		if (nodehdr.magic != XFS_DA_NODE_MAGIC)  {
+		if (nodehdr.magic != XFS_DA_NODE_MAGIC &&
+		    nodehdr.magic != XFS_DA3_NODE_MAGIC)  {
 			do_warn(_("bad dir/attr magic number in inode %" PRIu64 ", "
 				  "file bno = %u, fsbno = %" PRIu64 "\n"),
 				da_cursor->ino, bno, fsbno);
@@ -568,7 +569,8 @@ verify_da_path(xfs_mount_t	*mp,
 		 * entry count, verify level
 		 */
 		bad = 0;
-		if (XFS_DA_NODE_MAGIC != nodehdr.magic) {
+		if (nodehdr.magic != XFS_DA_NODE_MAGIC ||
+		    nodehdr.magic != XFS_DA3_NODE_MAGIC)  {
 			do_warn(
 	_("bad magic number %x in block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
 				nodehdr.magic,
@@ -1139,27 +1141,29 @@ process_leaf_attr_block(
 	xfs_attr_leaf_entry_t *entry;
 	int  i, start, stop, clearit, usedbs, firstb, thissize;
 	da_freemap_t *attr_freemap;
+	struct xfs_attr3_icleaf_hdr leafhdr;
 
+	xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
 	clearit = usedbs = 0;
 	*repair = 0;
 	firstb = mp->m_sb.sb_blocksize;
-	stop = sizeof(xfs_attr_leaf_hdr_t);
+	stop = xfs_attr3_leaf_hdr_size(leaf);
 
 	/* does the count look sorta valid? */
-	if (be16_to_cpu(leaf->hdr.count) * sizeof(xfs_attr_leaf_entry_t)
-			+ sizeof(xfs_attr_leaf_hdr_t) > XFS_LBSIZE(mp)) {
+	if (leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
+							XFS_LBSIZE(mp)) {
 		do_warn(
 	_("bad attribute count %d in attr block %u, inode %" PRIu64 "\n"),
-			be16_to_cpu(leaf->hdr.count), da_bno, ino);
-		return (1);
+			leafhdr.count, da_bno, ino);
+		return 1;
 	}
 
 	attr_freemap = alloc_da_freemap(mp);
 	(void) set_da_freemap(mp, attr_freemap, 0, stop);
 
 	/* go thru each entry checking for problems */
-	for (i = 0, entry = &leaf->entries[0]; 
-			i < be16_to_cpu(leaf->hdr.count); i++, entry++) {
+	for (i = 0, entry = xfs_attr3_leaf_entryp(leaf);
+			i < leafhdr.count; i++, entry++) {
 
 		/* check if index is within some boundary. */
 		if (be16_to_cpu(entry->nameidx) > XFS_LBSIZE(mp)) {
@@ -1180,7 +1184,7 @@ process_leaf_attr_block(
 		}
 
 		/* mark the entry used */
-		start = (__psint_t)&leaf->entries[i] - (__psint_t)leaf;
+		start = (__psint_t)entry - (__psint_t)leaf;
 		stop = start + sizeof(xfs_attr_leaf_entry_t);
 		if (set_da_freemap(mp, attr_freemap, start, stop))  {
 			do_warn(
@@ -1226,40 +1230,40 @@ process_leaf_attr_block(
 		 * since the block will get compacted anyhow by the kernel.
 		 */
 
-		if ((leaf->hdr.holes == 0 && 
-				firstb != be16_to_cpu(leaf->hdr.firstused)) ||
-		    		be16_to_cpu(leaf->hdr.firstused) > firstb)  {
+		if ((leafhdr.holes == 0 && 
+				firstb != leafhdr.firstused) ||
+		    		leafhdr.firstused > firstb)  {
 			if (!no_modify)  {
 				do_warn(
 	_("- resetting first used heap value from %d to %d in "
 	  "block %u of attribute fork of inode %" PRIu64 "\n"),
-					be16_to_cpu(leaf->hdr.firstused), 
+					leafhdr.firstused, 
 					firstb, da_bno, ino);
-				leaf->hdr.firstused = cpu_to_be16(firstb);
+				leafhdr.firstused = firstb;
 				*repair = 1;
 			} else  {
 				do_warn(
 	_("- would reset first used value from %d to %d in "
 	  "block %u of attribute fork of inode %" PRIu64 "\n"),
-					be16_to_cpu(leaf->hdr.firstused), 
+					leafhdr.firstused, 
 					firstb, da_bno, ino);
 			}
 		}
 
-		if (usedbs != be16_to_cpu(leaf->hdr.usedbytes))  {
+		if (usedbs != leafhdr.usedbytes)  {
 			if (!no_modify)  {
 				do_warn(
 	_("- resetting usedbytes cnt from %d to %d in "
 	  "block %u of attribute fork of inode %" PRIu64 "\n"),
-					be16_to_cpu(leaf->hdr.usedbytes), 
+					leafhdr.usedbytes, 
 					usedbs, da_bno, ino);
-				leaf->hdr.usedbytes = cpu_to_be16(usedbs);
+				leafhdr.usedbytes = usedbs;
 				*repair = 1;
 			} else  {
 				do_warn(
 	_("- would reset usedbytes cnt from %d to %d in "
 	  "block %u of attribute fork of %" PRIu64 "\n"),
-					be16_to_cpu(leaf->hdr.usedbytes), 
+					leafhdr.usedbytes, 
 					usedbs, da_bno, ino);
 			}
 		}
@@ -1271,6 +1275,8 @@ process_leaf_attr_block(
 		* we can add it then.
 		*/
 	}
+	if (*repair)
+		xfs_attr3_leaf_hdr_to_disk(leaf, &leafhdr);
 
 	free(attr_freemap);
 	return (clearit);  /* and repair */
@@ -1293,6 +1299,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 	xfs_dablk_t		prev_bno;
 	xfs_dahash_t		current_hashval = 0;
 	xfs_dahash_t		greatest_hashval;
+	struct xfs_attr3_icleaf_hdr leafhdr;
 
 	da_bno = da_cursor->level[0].bno;
 	ino = da_cursor->ino;
@@ -1323,13 +1330,15 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 			goto error_out;
 		}
 
-		leaf = (xfs_attr_leafblock_t *)XFS_BUF_PTR(bp);
+		leaf = bp->b_addr;
+		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
 
 		/* check magic number for leaf directory btree block */
-		if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
+		if (!(leafhdr.magic == XFS_ATTR_LEAF_MAGIC ||
+		      leafhdr.magic == XFS_ATTR3_LEAF_MAGIC)) {
 			do_warn(
 	_("bad attribute leaf magic %#x for inode %" PRIu64 "\n"),
-				 leaf->hdr.info.magic, ino);
+				 leafhdr.magic, ino);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
@@ -1354,10 +1363,10 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		da_cursor->level[0].hashval = greatest_hashval;
 		da_cursor->level[0].bp = bp;
 		da_cursor->level[0].bno = da_bno;
-		da_cursor->level[0].index = be16_to_cpu(leaf->hdr.count);
+		da_cursor->level[0].index = leafhdr.count;
 		da_cursor->level[0].dirty = repair;
 
-		if (be32_to_cpu(leaf->hdr.info.back) != prev_bno)  {
+		if (leafhdr.back != prev_bno)  {
 			do_warn(
 	_("bad sibling back pointer for block %u in attribute fork for inode %" PRIu64 "\n"),
 				da_bno, ino);
@@ -1366,7 +1375,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		}
 
 		prev_bno = da_bno;
-		da_bno = be32_to_cpu(leaf->hdr.info.forw);
+		da_bno = leafhdr.forw;
 
 		if (da_bno != 0 && verify_da_path(mp, da_cursor, 0))  {
 			libxfs_putbuf(bp);
@@ -1475,6 +1484,7 @@ process_longform_attr(
 	xfs_buf_t	*bp;
 	xfs_dahash_t	next_hashval;
 	int		repairlinks = 0;
+	struct xfs_attr3_icleaf_hdr leafhdr;
 
 	*repair = 0;
 
@@ -1497,7 +1507,7 @@ process_longform_attr(
 	}
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
-				XFS_FSB_TO_BB(mp, 1), 0, NULL);
+				XFS_FSB_TO_BB(mp, 1), 0, &xfs_da3_node_buf_ops);
 	if (!bp) {
 		do_warn(
 	_("can't read block 0 of inode %" PRIu64 " attribute fork\n"),
@@ -1507,19 +1517,20 @@ process_longform_attr(
 
 	/* verify leaf block */
 	leaf = (xfs_attr_leafblock_t *)XFS_BUF_PTR(bp);
+	xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
 
 	/* check sibling pointers in leaf block or root block 0 before
 	* we have to release the btree block
 	*/
-	if (be32_to_cpu(leaf->hdr.info.forw) != 0 || 
-				be32_to_cpu(leaf->hdr.info.back) != 0)  {
+	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
 		if (!no_modify)  {
 			do_warn(
 	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
 				ino);
 			repairlinks = 1;
-			leaf->hdr.info.forw = cpu_to_be32(0);
-			leaf->hdr.info.back = cpu_to_be32(0);
+			leafhdr.forw = 0;
+			leafhdr.back = 0;
+			xfs_attr3_leaf_hdr_to_disk(leaf, &leafhdr);
 		} else  {
 			do_warn(
 	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
@@ -1531,8 +1542,9 @@ process_longform_attr(
 	 * it's possible to have a node or leaf attribute in either an
 	 * extent format or btree format attribute fork.
 	 */
-	switch (be16_to_cpu(leaf->hdr.info.magic)) {
+	switch (leafhdr.magic) {
 	case XFS_ATTR_LEAF_MAGIC:	/* leaf-form attribute */
+	case XFS_ATTR3_LEAF_MAGIC:
 		if (process_leaf_attr_block(mp, leaf, 0, ino, blkmap,
 				0, &next_hashval, repair)) {
 			/* the block is bad.  lose the attribute fork. */
@@ -1543,6 +1555,7 @@ process_longform_attr(
 		break;
 
 	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
+	case XFS_DA3_NODE_MAGIC:
 		/* must do this now, to release block 0 before the traversal */
 		if (repairlinks) {
 			*repair = 1;
