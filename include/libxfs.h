@@ -682,6 +682,7 @@ void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
 #define libxfs_dinode_to_disk		xfs_dinode_to_disk
 void	xfs_dinode_from_disk(struct xfs_icdinode *,
 			     struct xfs_dinode *);
+#define libxfs_dinode_calc_crc		xfs_dinode_calc_crc
 #define libxfs_idata_realloc		xfs_idata_realloc
 #define libxfs_idestroy_fork		xfs_idestroy_fork
 
@@ -689,6 +690,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
 #define libxfs_mod_sb			xfs_mod_sb
 #define libxfs_sb_from_disk		xfs_sb_from_disk
 #define libxfs_sb_to_disk		xfs_sb_to_disk
+
+/* xfs_symlink.h */
+#define libxfs_symlink_blocks		xfs_symlink_blocks
+#define libxfs_symlink_hdr_ok		xfs_symlink_hdr_ok
 
 /* xfs_rtalloc.c */
 int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);

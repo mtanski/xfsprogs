@@ -165,7 +165,7 @@ _("This filesystem contains features not understood by this program.\n"));
 		return(1);
 	}
 
-	if (XFS_SB_VERSION_NUM(sb) == XFS_SB_VERSION_4)  {
+	if (XFS_SB_VERSION_NUM(sb) >= XFS_SB_VERSION_4)  {
 		if (!fs_sb_feature_bits_allowed)  {
 			if (!no_modify)  {
 				do_warn(

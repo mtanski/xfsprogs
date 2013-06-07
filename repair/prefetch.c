@@ -221,7 +221,7 @@ pf_scan_lbtree(
 	int			rc;
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dbno),
-			XFS_FSB_TO_BB(mp, 1), 0, NULL);
+			XFS_FSB_TO_BB(mp, 1), 0, &xfs_bmbt_buf_ops);
 	if (!bp)
 		return 0;
 
@@ -336,6 +336,11 @@ pf_read_inode_dirs(
 	int			icnt = 0;
 	int			hasdir = 0;
 	int			isadir;
+
+	bp->b_ops = &xfs_inode_buf_ops;
+	bp->b_ops->verify_read(bp);
+	if (bp->b_error)
+		return;
 
 	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
 		dino = xfs_make_iptr(mp, bp, icnt);

@@ -85,139 +85,127 @@ _("would have cleared inode %" PRIu64 " attributes\n"), ino_num);
 }
 
 static int
-clear_dinode_core(xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
 {
 	int dirty = 0;
+	int i;
+
+#define __dirty_no_modify_ret(dirty) \
+	({ (dirty) = 1; if (no_modify) return 1; })
 
 	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
 	}
 
 	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
 	    (!fs_inode_nlink && dinoc->di_version > 1))  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
-		dinoc->di_version = (fs_inode_nlink) ? 2 : 1;
+		__dirty_no_modify_ret(dirty);
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			dinoc->di_version = 3;
+		else
+			dinoc->di_version = (fs_inode_nlink) ? 2 : 1;
 	}
 
 	if (be16_to_cpu(dinoc->di_mode) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_mode = 0;
 	}
 
 	if (be16_to_cpu(dinoc->di_flags) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_flags = 0;
 	}
 
 	if (be32_to_cpu(dinoc->di_dmevmask) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_dmevmask = 0;
 	}
 
 	if (dinoc->di_forkoff != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_forkoff = 0;
 	}
 
 	if (dinoc->di_format != XFS_DINODE_FMT_EXTENTS)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_format = XFS_DINODE_FMT_EXTENTS;
 	}
 
 	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
 	}
 
 	if (be64_to_cpu(dinoc->di_size) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_size = 0;
 	}
 
 	if (be64_to_cpu(dinoc->di_nblocks) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_nblocks = 0;
 	}
 
 	if (be16_to_cpu(dinoc->di_onlink) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_onlink = 0;
 	}
 
 	if (be32_to_cpu(dinoc->di_nextents) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_nextents = 0;
 	}
 
 	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_anextents = 0;
 	}
 
 	if (dinoc->di_version > 1 &&
 			be32_to_cpu(dinoc->di_nlink) != 0)  {
-		dirty = 1;
-
-		if (no_modify)
-			return(1);
-
+		__dirty_no_modify_ret(dirty);
 		dinoc->di_nlink = 0;
 	}
 
-	return(dirty);
+	/* we are done for version 1/2 inodes */
+	if (dinoc->di_version < 3)
+		return dirty;
+
+	if (be64_to_cpu(dinoc->di_ino) != ino_num) {
+		__dirty_no_modify_ret(dirty);
+		dinoc->di_ino = cpu_to_be64(ino_num);
+	}
+
+	if (platform_uuid_compare(&dinoc->di_uuid, &mp->m_sb.sb_uuid)) {
+		__dirty_no_modify_ret(dirty);
+		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
+	}
+
+	for (i = 0; i < 16; i++) {
+		if (dinoc->di_pad[i] != 0) {
+			__dirty_no_modify_ret(dirty);
+			memset(dinoc->di_pad, 0, 16);
+			break;
+		}
+	}
+
+	if (be64_to_cpu(dinoc->di_flags2) != 0)  {
+		__dirty_no_modify_ret(dirty);
+		dinoc->di_flags2 = 0;
+	}
+
+	if (be64_to_cpu(dinoc->di_lsn) != 0)  {
+		__dirty_no_modify_ret(dirty);
+		dinoc->di_lsn = 0;
+	}
+
+	if (be64_to_cpu(dinoc->di_changecount) != 0)  {
+		__dirty_no_modify_ret(dirty);
+		dinoc->di_changecount = 0;
+	}
+
+	return dirty;
 }
 
 static int
@@ -243,7 +231,7 @@ clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
 {
 	int dirty;
 
-	dirty = clear_dinode_core(dino, ino_num);
+	dirty = clear_dinode_core(mp, dino, ino_num);
 	dirty += clear_dinode_unlinked(mp, dino);
 
 	/* and clear the forks */
@@ -1126,6 +1114,7 @@ process_btinode(
 	int			level;
 	int			numrecs;
 	bmap_cursor_t		cursor;
+	__uint64_t		magic;
 
 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
@@ -1136,6 +1125,9 @@ process_btinode(
 		forkname = _("data");
 	else
 		forkname = _("attr");
+
+	magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_BMAP_CRC_MAGIC
+						 : XFS_BMAP_MAGIC;
 
 	level = be16_to_cpu(dib->bb_level);
 	numrecs = be16_to_cpu(dib->bb_numrecs);
@@ -1190,9 +1182,9 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
 			return(1);
 		}
 
-		if (scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, type, 
+		if (scan_lbtree(be64_to_cpu(pp[i]), level, scan_bmapbt, type,
 				whichfork, lino, tot, nex, blkmapp, &cursor,
-				1, check_dups))
+				1, check_dups, magic, &xfs_bmbt_buf_ops))
 			return(1);
 		/*
 		 * fix key (offset) mismatches between the keys in root
@@ -1520,9 +1512,21 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
 				return(1);
 			}
 
+
 			buf_data = (char *)XFS_BUF_PTR(bp);
-			size = MIN(be64_to_cpu(dino->di_size) - amountdone, 
-						XFS_FSB_TO_BB(mp, 1) * BBSIZE);
+			size = MIN(be64_to_cpu(dino->di_size) - amountdone,
+					XFS_SYMLINK_BUF_SPACE(mp,
+							mp->m_sb.sb_blocksize));
+			if (xfs_sb_version_hascrc(&mp->m_sb)) {
+				if (!libxfs_symlink_hdr_ok(mp, lino, amountdone,
+							size, bp)) {
+					do_warn(
+_("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+						lino, i, fsbno);
+					return(1);
+				}
+				buf_data += sizeof(struct xfs_dsymlink_hdr);
+			}
 			memmove(cptr, buf_data, size);
 			cptr += size;
 			amountdone += size;
@@ -2484,7 +2488,8 @@ process_dinode_int(xfs_mount_t *mp,
 	}
 
 	if (!XFS_DINODE_GOOD_VERSION(dino->di_version) ||
-	    (!fs_inode_nlink && dino->di_version > 1))  {
+	    (!fs_inode_nlink && dino->di_version > 1) ||
+	    (xfs_sb_version_hascrc(&mp->m_sb) && dino->di_version < 3) )  {
 		retval = 1;
 		if (!uncertain)
 			do_warn(_("bad version number 0x%x on inode %" PRIu64 "%c"),
@@ -2493,10 +2498,37 @@ process_dinode_int(xfs_mount_t *mp,
 		if (!verify_mode) {
 			if (!no_modify) {
 				do_warn(_(" resetting version number\n"));
-				dino->di_version = (fs_inode_nlink) ?  2 : 1;
+				dino->di_version =
+					xfs_sb_version_hascrc(&mp->m_sb) ? 3 :
+					(fs_inode_nlink) ?  2 : 1;
 				*dirty = 1;
 			} else
 				do_warn(_(" would reset version number\n"));
+		}
+	}
+
+	/*
+	 * We don't bother checking the CRC here - we cannot guarantee that when
+	 * we are called here that the inode has not already been modified in
+	 * memory and hence invalidated the CRC.
+	 */
+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+		if (be64_to_cpu(dino->di_ino) != lino) {
+			if (!uncertain)
+				do_warn(
+_("inode identifier %llu mismatch on inode %" PRIu64 "\n"),
+					be64_to_cpu(dino->di_ino), lino);
+			if (verify_mode)
+				return 1;
+			goto clear_bad_out;
+		}
+		if (platform_uuid_compare(&dino->di_uuid, &mp->m_sb.sb_uuid)) {
+			if (!uncertain)
+				do_warn(
+			_("UUID mismatch on inode %" PRIu64 "\n"), lino);
+			if (verify_mode)
+				return 1;
+			goto clear_bad_out;
 		}
 	}
 

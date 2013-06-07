@@ -391,17 +391,15 @@ xfs_btree_dup_cursor(
  */
 static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
 {
-	size_t len;
-
-	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-		len = XFS_BTREE_LBLOCK_LEN;
-	else
-		len = XFS_BTREE_SBLOCK_LEN;
+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+		if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
+			return XFS_BTREE_LBLOCK_CRC_LEN;
+		return XFS_BTREE_LBLOCK_LEN;
+	}
 
 	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
-		len += XFS_BTREE_CRCBLOCK_ADD;
-
-	return len;
+		return XFS_BTREE_SBLOCK_CRC_LEN;
+	return XFS_BTREE_SBLOCK_LEN;
 }
 
 /*
@@ -1311,7 +1309,7 @@ xfs_btree_log_block(
 		offsetof(struct xfs_btree_block, bb_u.s.bb_uuid),
 		offsetof(struct xfs_btree_block, bb_u.s.bb_owner),
 		offsetof(struct xfs_btree_block, bb_u.s.bb_crc),
-		XFS_BTREE_SBLOCK_LEN + XFS_BTREE_CRCBLOCK_ADD
+		XFS_BTREE_SBLOCK_CRC_LEN
 	};
 	static const short	loffsets[] = {	/* table of offsets (long) */
 		offsetof(struct xfs_btree_block, bb_magic),
@@ -1325,7 +1323,7 @@ xfs_btree_log_block(
 		offsetof(struct xfs_btree_block, bb_u.l.bb_owner),
 		offsetof(struct xfs_btree_block, bb_u.l.bb_crc),
 		offsetof(struct xfs_btree_block, bb_u.l.bb_pad),
-		XFS_BTREE_LBLOCK_LEN + XFS_BTREE_CRCBLOCK_ADD
+		XFS_BTREE_LBLOCK_CRC_LEN
 	};
 
 	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);

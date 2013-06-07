@@ -628,7 +628,7 @@ process_inode_chunk(
 		bplist[bp_index] = libxfs_readbuf(mp->m_dev,
 					XFS_AGB_TO_DADDR(mp, agno, agbno),
 					XFS_FSB_TO_BB(mp, blks_per_cluster), 0,
-					NULL);
+					&xfs_inode_buf_ops);
 		if (!bplist[bp_index]) {
 			do_warn(_("cannot read inode %" PRIu64 ", disk block %" PRId64 ", cnt %d\n"),
 				XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
@@ -775,8 +775,11 @@ process_inode_chunk(
 				extra_attr_check, &isa_dir, &parent);
 
 		ASSERT(is_used != 3);
-		if (ino_dirty)
+		if (ino_dirty) {
 			dirty = 1;
+			libxfs_dinode_calc_crc(mp, dino);
+		}
+
 		/*
 		 * XXX - if we want to try and keep
 		 * track of whether we need to bang on

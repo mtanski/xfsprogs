@@ -22,6 +22,11 @@
 #include "protos.h"
 #include "err_protos.h"
 
+/*
+ * XXX (dgc): What is the point of all the check and repair here when phase 5
+ * recreates the AGF/AGI/AGFL completely from scratch?
+ */
+
 static int
 verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 {
@@ -104,7 +109,20 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
 
 	/* don't check freespace btrees -- will be checked by caller */
 
-	return(retval);
+	if (!xfs_sb_version_hascrc(&mp->m_sb))
+		return retval;
+
+	if (platform_uuid_compare(&agf->agf_uuid, &mp->m_sb.sb_uuid)) {
+		char uu[64];
+
+		retval = XR_AG_AGF;
+		platform_uuid_unparse(&agf->agf_uuid, uu);
+		do_warn(_("bad uuid %s for agf %d\n"), uu, i);
+
+		if (!no_modify)
+			platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
+	}
+	return retval;
 }
 
 static int
@@ -169,7 +187,21 @@ verify_set_agi(xfs_mount_t *mp, xfs_agi_t *agi, xfs_agnumber_t agno)
 
 	/* don't check inode btree -- will be checked by caller */
 
-	return(retval);
+	if (!xfs_sb_version_hascrc(&mp->m_sb))
+		return retval;
+
+	if (platform_uuid_compare(&agi->agi_uuid, &mp->m_sb.sb_uuid)) {
+		char uu[64];
+
+		retval = XR_AG_AGI;
+		platform_uuid_unparse(&agi->agi_uuid, uu);
+		do_warn(_("bad uuid %s for agi %d\n"), uu, agno);
+
+		if (!no_modify)
+			platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
+	}
+
+	return retval;
 }
 
 /*

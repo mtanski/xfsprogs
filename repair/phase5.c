@@ -602,6 +602,12 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	xfs_alloc_ptr_t		*bt_ptr;
 	xfs_agblock_t		agbno;
 	bt_stat_level_t		*lptr;
+	__uint32_t		crc_magic;
+
+	if (magic == XFS_ABTB_MAGIC)
+		crc_magic = XFS_ABTB_CRC_MAGIC;
+	else
+		crc_magic = XFS_ABTC_CRC_MAGIC;
 
 	level++;
 
@@ -650,14 +656,17 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 		/*
 		 * initialize block header
 		 */
+		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, level,
+						0, agno, XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, magic, level,
+						0, agno, 0);
 
-		bt_hdr->bb_magic = cpu_to_be32(magic);
-		bt_hdr->bb_level = cpu_to_be16(level);
 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_numrecs = 0;
 
 		/*
 		 * propagate extent record for first extent in new block up
@@ -699,6 +708,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 	extent_tree_node_t	*ext_ptr;
 	bt_stat_level_t		*lptr;
 	xfs_extlen_t		freeblks;
+	__uint32_t		crc_magic;
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "in build_freespace_tree, agno = %d\n", agno);
@@ -707,6 +717,10 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 	freeblks = 0;
 
 	ASSERT(level > 0);
+	if (magic == XFS_ABTB_MAGIC)
+		crc_magic = XFS_ABTB_CRC_MAGIC;
+	else
+		crc_magic = XFS_ABTC_CRC_MAGIC;
 
 	/*
 	 * initialize the first block on each btree level
@@ -728,14 +742,15 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		/*
 		 * initialize block header
 		 */
+		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-
-		bt_hdr->bb_magic = cpu_to_be32(magic);
-		bt_hdr->bb_level = cpu_to_be16(i);
-		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_numrecs = 0;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, i,
+						0, agno, XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, magic, i,
+						0, agno, 0);
 	}
 	/*
 	 * run along leaf, setting up records.  as we have to switch
@@ -759,13 +774,17 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		/*
 		 * block initialization, lay in block header
 		 */
+		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, 0,
+						0, agno, XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, magic, 0,
+						0, agno, 0);
 
-		bt_hdr->bb_magic = cpu_to_be32(magic);
-		bt_hdr->bb_level = 0;
 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
 		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
 							(lptr->modulo > 0));
 #ifdef XR_BLD_FREE_TRACE
@@ -996,14 +1015,19 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 		/*
 		 * initialize block header
 		 */
+		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+						level, 0, agno,
+						XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+						level, 0, agno, 0);
 
-		bt_hdr->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
-		bt_hdr->bb_level = cpu_to_be16(level);
 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_numrecs = 0;
+
 		/*
 		 * propagate extent record for first extent in new block up
 		 */
@@ -1024,6 +1048,9 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
 }
 
+/*
+ * XXX: yet more code that can be shared with mkfs, growfs.
+ */
 static void
 build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 		bt_status_t *btree_curs, xfs_agino_t first_agino,
@@ -1036,6 +1063,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 	agi_buf = libxfs_getbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE);
+	agi_buf->b_ops = &xfs_agi_buf_ops;
 	agi = XFS_BUF_TO_AGI(agi_buf);
 	memset(agi, 0, mp->m_sb.sb_sectsize);
 
@@ -1056,6 +1084,9 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  
 		agi->agi_unlinked[i] = cpu_to_be32(NULLAGINO);
+
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
 
 	libxfs_writebuf(agi_buf, 0);
 }
@@ -1099,15 +1130,19 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		/*
 		 * initialize block header
 		 */
+
+		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-
-		bt_hdr->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
-		bt_hdr->bb_level = cpu_to_be16(i);
-		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-		bt_hdr->bb_numrecs = 0;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+						i, 0, agno,
+						XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+						i, 0, agno, 0);
 	}
+
 	/*
 	 * run along leaf, setting up records.  as we have to switch
 	 * blocks, call the prop_ino_cursor routine to set up the new
@@ -1127,13 +1162,18 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		/*
 		 * block initialization, lay in block header
 		 */
+		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+						0, 0, agno,
+						XFS_BTREE_CRC_BLOCKS);
+		else
+			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+						0, 0, agno, 0);
 
-		bt_hdr->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
-		bt_hdr->bb_level = 0;
 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
 		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
 							(lptr->modulo > 0));
 
@@ -1192,7 +1232,9 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 
 /*
  * build both the agf and the agfl for an agno given both
- * btree cursors
+ * btree cursors.
+ *
+ * XXX: yet more common code that can be shared with mkfs/growfs.
  */
 static void
 build_agf_agfl(xfs_mount_t	*mp,
@@ -1213,6 +1255,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 	agf_buf = libxfs_getbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 			mp->m_sb.sb_sectsize/BBSIZE);
+	agf_buf->b_ops = &xfs_agf_buf_ops;
 	agf = XFS_BUF_TO_AGF(agf_buf);
 	memset(agf, 0, mp->m_sb.sb_sectsize);
 
@@ -1266,22 +1309,34 @@ build_agf_agfl(xfs_mount_t	*mp,
 			XFS_BTNUM_CNT);
 #endif
 
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
+
+	/* initialise the AGFL, then fill it if there are blocks left over. */
+	agfl_buf = libxfs_getbuf(mp->m_dev,
+			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+			mp->m_sb.sb_sectsize/BBSIZE);
+	agfl_buf->b_ops = &xfs_agfl_buf_ops;
+	agfl = XFS_BUF_TO_AGFL(agfl_buf);
+
+	/* setting to 0xff results in initialisation to NULLAGBLOCK */
+	memset(agfl, 0xff, mp->m_sb.sb_sectsize);
+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+		agfl->agfl_seqno = cpu_to_be32(agno);
+		platform_uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
+		for (i = 0; i < XFS_AGFL_SIZE(mp); i++)
+			agfl->agfl_bno[i] = cpu_to_be32(NULLAGBLOCK);
+	}
+	freelist = XFS_BUF_TO_AGFL_BNO(mp, agfl_buf);
+
 	/*
 	 * do we have left-over blocks in the btree cursors that should
 	 * be used to fill the AGFL?
 	 */
 	if (bno_bt->num_free_blocks > 0 || bcnt_bt->num_free_blocks > 0)  {
 		/*
-		 * yes - grab the AGFL buffer
-		 */
-		agfl_buf = libxfs_getbuf(mp->m_dev,
-				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
-				mp->m_sb.sb_sectsize/BBSIZE);
-		agfl = XFS_BUF_TO_AGFL(agfl_buf);
-		freelist = XFS_BUF_TO_AGFL_BNO(mp, agfl_buf);
-		memset(agfl, 0, mp->m_sb.sb_sectsize);
-		/*
-		 * ok, now grab as many blocks as we can
+		 * yes, now grab as many blocks as we can
 		 */
 		i = j = 0;
 		while (bno_bt->num_free_blocks > 0 && i < XFS_AGFL_SIZE(mp))  {
@@ -1326,12 +1381,13 @@ build_agf_agfl(xfs_mount_t	*mp,
 		fprintf(stderr, "writing agfl for ag %u\n", agno);
 #endif
 
-		libxfs_writebuf(agfl_buf, 0);
 	} else  {
 		agf->agf_flfirst = 0;
 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
 		agf->agf_flcount = 0;
 	}
+
+	libxfs_writebuf(agfl_buf, 0);
 
 	ext_ptr = findbiggest_bcnt_extent(agno);
 	agf->agf_longest = cpu_to_be32((ext_ptr != NULL) ?
@@ -1341,6 +1397,26 @@ build_agf_agfl(xfs_mount_t	*mp,
 		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]));
 
 	libxfs_writebuf(agf_buf, 0);
+
+	/*
+	 * now fix up the free list appropriately
+	 * XXX: code lifted from mkfs, should be shared.
+	 */
+	{
+		xfs_alloc_arg_t	args;
+		xfs_trans_t	*tp;
+
+		memset(&args, 0, sizeof(args));
+		args.tp = tp = libxfs_trans_alloc(mp, 0);
+		args.mp = mp;
+		args.agno = agno;
+		args.alignment = 1;
+		args.pag = xfs_perag_get(mp,agno);
+		libxfs_trans_reserve(tp, XFS_MIN_FREELIST(agf, mp), 0, 0, 0, 0);
+		libxfs_alloc_fix_freelist(&args, 0);
+		xfs_perag_put(args.pag);
+		libxfs_trans_commit(tp, 0);
+	}
 
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "wrote agf for ag %u, error = %d\n", agno, error);

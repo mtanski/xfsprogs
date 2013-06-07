@@ -69,8 +69,16 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define IHOLD(ip)			((void) 0)
 
 /* stop unused var warnings by assigning mp to itself */
-#define XFS_CORRUPTION_ERROR(e,l,mp,m)	do { (mp) = (mp); } while (0)
-#define XFS_ERROR_REPORT(e,l,mp)	do { (mp) = (mp); } while (0)
+#define XFS_CORRUPTION_ERROR(e,l,mp,m)	do { \
+	(mp) = (mp); \
+	cmn_err(CE_ALERT, "%s: XFS_CORRUPTION_ERROR", (e));  \
+} while (0)
+
+#define XFS_ERROR_REPORT(e,l,mp)	do { \
+	(mp) = (mp); \
+	cmn_err(CE_ALERT, "%s: XFS_ERROR_REPORT", (e));  \
+} while (0)
+
 #define XFS_QM_DQATTACH(mp,ip,flags)	0
 #define XFS_ERROR(e)			(e)
 #define XFS_ERRLEVEL_LOW		1

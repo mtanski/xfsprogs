@@ -140,7 +140,7 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
  */
 #define XFS_BMBT_BLOCK_LEN(mp) \
 	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-	 XFS_BTREE_LBLOCK_LEN + XFS_BTREE_CRCBLOCK_ADD : \
+	 XFS_BTREE_LBLOCK_CRC_LEN : \
 	 XFS_BTREE_LBLOCK_LEN)
 
 #define XFS_BMBT_REC_ADDR(mp, block, index) \

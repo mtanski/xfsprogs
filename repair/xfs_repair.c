@@ -611,7 +611,7 @@ main(int argc, char **argv)
 	glob_agcount = mp->m_sb.sb_agcount;
 
 	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
-	max_symlink_blocks = howmany(MAXPATHLEN - 1, mp->m_sb.sb_blocksize);
+	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
 			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
 

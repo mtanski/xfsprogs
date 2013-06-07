@@ -64,7 +64,7 @@ typedef __be32 xfs_alloc_ptr_t;
  */
 #define XFS_ALLOC_BLOCK_LEN(mp) \
 	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-	 XFS_BTREE_SBLOCK_LEN + XFS_BTREE_CRCBLOCK_ADD : \
+	 XFS_BTREE_SBLOCK_CRC_LEN : \
 	 XFS_BTREE_SBLOCK_LEN)
 
 /*

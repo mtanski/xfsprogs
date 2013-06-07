@@ -445,6 +445,7 @@ __libxfs_getbufr(int blen)
 	} else
 		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
 	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+	bp->b_ops = NULL;
 
 	return bp;
 }
@@ -833,10 +834,20 @@ libxfs_writebufr(xfs_buf_t *bp)
 		}
 	}
 
+	/*
+	 * clear any pre-existing error status on the buffer. This can occur if
+	 * the buffer is corrupt on disk and the repair process doesn't clear
+	 * the error before fixing and writing it back.
+	 */
+	bp->b_error = 0;
 	if (bp->b_ops) {
 		bp->b_ops->verify_write(bp);
-		if (bp->b_error)
+		if (bp->b_error) {
+			fprintf(stderr,
+	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+				__func__, (long long)bp->b_bn, bp->b_bcount);
 			return bp->b_error;
+		}
 	}
 
 	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
@@ -883,6 +894,12 @@ libxfs_writebuf_int(xfs_buf_t *bp, int flags)
 int
 libxfs_writebuf(xfs_buf_t *bp, int flags)
 {
+#ifdef IO_DEBUG
+	printf("%lx: %s: dirty blkno=%llu(%llu)\n",
+			pthread_self(), __FUNCTION__,
+			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
+			(long long)bp->b_bn);
+#endif
 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
 	libxfs_putbuf(bp);
 	return 0;
