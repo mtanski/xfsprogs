@@ -1391,7 +1391,7 @@ longform_dir2_entry_check_data(
 	struct xfs_buf		*bp;
 	xfs_dir2_block_tail_t	*btp;
 	int			committed;
-	xfs_dir2_data_t		*d;
+	struct xfs_dir2_data_hdr *d;
 	xfs_dir2_db_t		db;
 	xfs_dir2_data_entry_t	*dep;
 	xfs_dir2_data_unused_t	*dup;
@@ -1418,7 +1418,7 @@ longform_dir2_entry_check_data(
 
 	bp = *bpp;
 	d = bp->b_addr;
-	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
+	ptr = (char *)xfs_dir3_data_entry_p(d);
 	nbad = 0;
 	needscan = needlog = 0;
 	junkit = 0;
@@ -1479,7 +1479,7 @@ longform_dir2_entry_check_data(
 				break;
 
 			/* check for block with no data entries */
-			if ((ptr == (char *)xfs_dir3_data_entry_p(&d->hdr)) &&
+			if ((ptr == (char *)xfs_dir3_data_entry_p(d)) &&
 			    (ptr + be16_to_cpu(dup->length) >= endptr)) {
 				junkit = 1;
 				*num_illegal += 1;
@@ -1539,19 +1539,19 @@ longform_dir2_entry_check_data(
 	libxfs_trans_bjoin(tp, bp);
 	libxfs_trans_bhold(tp, bp);
 	xfs_bmap_init(&flist, &firstblock);
-	if (be32_to_cpu(d->hdr.magic) != wantmagic) {
+	if (be32_to_cpu(d->magic) != wantmagic) {
 		do_warn(
 	_("bad directory block magic # %#x for directory inode %" PRIu64 " block %d: "),
-			be32_to_cpu(d->hdr.magic), ip->i_ino, da_bno);
+			be32_to_cpu(d->magic), ip->i_ino, da_bno);
 		if (!no_modify) {
 			do_warn(_("fixing magic # to %#x\n"), wantmagic);
-			d->hdr.magic = cpu_to_be32(wantmagic);
+			d->magic = cpu_to_be32(wantmagic);
 			needlog = 1;
 		} else
 			do_warn(_("would fix magic # to %#x\n"), wantmagic);
 	}
 	lastfree = 0;
-	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
+	ptr = (char *)xfs_dir3_data_entry_p(d);
 	/*
 	 * look at each entry.  reference inode pointed to by each
 	 * entry in the incore inode tree.
@@ -1722,7 +1722,7 @@ longform_dir2_entry_check_data(
 			ASSERT(dep->name[0] == '.' && dep->namelen == 1);
 			add_inode_ref(current_irec, current_ino_offset);
 			if (da_bno != 0 ||
-			    dep != xfs_dir3_data_entry_p(&d->hdr)) {
+			    dep != xfs_dir3_data_entry_p(d)) {
 				/* "." should be the first entry */
 				nbad++;
 				if (entry_junked(
@@ -1803,12 +1803,12 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
 	}
 	*num_illegal += nbad;
 	if (needscan)
-		libxfs_dir2_data_freescan(mp, &d->hdr, &needlog);
+		libxfs_dir2_data_freescan(mp, d, &needlog);
 	if (needlog)
 		libxfs_dir2_data_log_header(tp, bp);
 	libxfs_bmap_finish(&tp, &flist, &committed);
 	libxfs_trans_commit(tp, 0);
-	freetab->ents[db].v = be16_to_cpu(d->hdr.bestfree[0].length);
+	freetab->ents[db].v = be16_to_cpu(d->bestfree[0].length);
 	freetab->ents[db].s = 0;
 }
 
@@ -2029,7 +2029,6 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 			int		ino_offset,
 			dir_hash_tab_t	*hashtab)
 {
-	xfs_dir2_block_t	*block;
 	struct xfs_buf		**bplist;
 	xfs_dablk_t		da_bno;
 	freetab_t		*freetab;
@@ -2096,11 +2095,12 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	if (!dotdot_update) {
 		/* check btree and freespace */
 		if (isblock) {
+			struct xfs_dir2_data_hdr *block;
 			xfs_dir2_block_tail_t	*btp;
 			xfs_dir2_leaf_entry_t	*blp;
 
 			block = bplist[0]->b_addr;
-			btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+			btp = xfs_dir2_block_tail_p(mp, block);
 			blp = xfs_dir2_block_leaf_p(btp);
 			seeval = dir_hash_see_all(hashtab, blp,
 						be32_to_cpu(btp->count),
@@ -2148,7 +2148,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 {
 	xfs_ino_t		lino;
 	xfs_ino_t		parent;
-	xfs_dir2_sf_t		*sfp;
+	struct xfs_dir2_sf_hdr	*sfp;
 	xfs_dir2_sf_entry_t	*sfep, *next_sfep, *tmp_sfep;
 	xfs_ifork_t		*ifp;
 	ino_tree_node_t		*irec;
@@ -2165,7 +2165,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	int			i8;
 
 	ifp = &ip->i_df;
-	sfp = (xfs_dir2_sf_t *) ifp->if_u1.if_data;
+	sfp = (struct xfs_dir2_sf_hdr *) ifp->if_u1.if_data;
 	*ino_dirty = 0;
 	bytes_deleted = 0;
 
@@ -2185,7 +2185,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			do_warn(
 	_("setting .. in sf dir inode %" PRIu64 " to %" PRIu64 "\n"),
 				ino, parent);
-			xfs_dir2_sf_put_parent_ino(&sfp->hdr, parent);
+			xfs_dir2_sf_put_parent_ino(sfp, parent);
 			*ino_dirty = 1;
 		}
 		return;
@@ -2202,23 +2202,23 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	/*
 	 * Initialise i8 counter -- the parent inode number counts as well.
 	 */
-	i8 = xfs_dir2_sf_get_parent_ino(&sfp->hdr) > XFS_DIR2_MAX_SHORT_INUM;
+	i8 = xfs_dir2_sf_get_parent_ino(sfp) > XFS_DIR2_MAX_SHORT_INUM;
 
 	/*
 	 * now run through entries, stop at first bad entry, don't need
 	 * to skip over '..' since that's encoded in its own field and
 	 * no need to worry about '.' since it doesn't exist.
 	 */
-	sfep = next_sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
+	sfep = next_sfep = xfs_dir2_sf_firstentry(sfp);
 
-	for (i = 0; i < sfp->hdr.count && max_size >
+	for (i = 0; i < sfp->count && max_size >
 					(__psint_t)next_sfep - (__psint_t)sfp;
 			sfep = next_sfep, i++)  {
 		junkit = 0;
 		bad_sfnamelen = 0;
 		tmp_sfep = NULL;
 
-		lino = xfs_dir2_sfe_get_ino(&sfp->hdr, sfep);
+		lino = xfs_dir2_sfe_get_ino(sfp, sfep);
 
 		namelen = sfep->namelen;
 
@@ -2235,7 +2235,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			 */
 			bad_sfnamelen = 1;
 
-			if (i == sfp->hdr.count - 1)  {
+			if (i == sfp->count - 1)  {
 				namelen = ip->i_d.di_size -
 					((__psint_t) &sfep->name[0] -
 					 (__psint_t) sfp);
@@ -2247,11 +2247,11 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				break;
 			}
 		} else if (no_modify && (__psint_t) sfep - (__psint_t) sfp +
-				+ xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen)
+				+ xfs_dir2_sf_entsize(sfp, sfep->namelen)
 				> ip->i_d.di_size)  {
 			bad_sfnamelen = 1;
 
-			if (i == sfp->hdr.count - 1)  {
+			if (i == sfp->count - 1)  {
 				namelen = ip->i_d.di_size -
 					((__psint_t) &sfep->name[0] -
 					 (__psint_t) sfp);
@@ -2277,7 +2277,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 
 		if (no_modify && verify_inum(mp, lino))  {
 			next_sfep = (xfs_dir2_sf_entry_t *)((__psint_t)sfep +
-				xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen));
+				xfs_dir2_sf_entsize(sfp, sfep->namelen));
 			continue;
 		}
 
@@ -2328,7 +2328,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		 * check for duplicate names in directory.
 		 */
 		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
-				(sfep - xfs_dir2_sf_firstentry(&sfp->hdr)),
+				(sfep - xfs_dir2_sf_firstentry(sfp)),
 				lino, sfep->namelen, sfep->name)) {
 			do_warn(
 _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
@@ -2385,7 +2385,7 @@ do_junkit:
 			if (lino == orphanage_ino)
 				orphanage_ino = 0;
 			if (!no_modify)  {
-				tmp_elen = xfs_dir2_sf_entsize(&sfp->hdr,
+				tmp_elen = xfs_dir2_sf_entsize(sfp,
 								sfep->namelen);
 				tmp_sfep = (xfs_dir2_sf_entry_t *)
 					((__psint_t) sfep + tmp_elen);
@@ -2396,7 +2396,7 @@ do_junkit:
 
 				memmove(sfep, tmp_sfep, tmp_len);
 
-				sfp->hdr.count -= 1;
+				sfp->count -= 1;
 				memset((void *)((__psint_t)sfep + tmp_len), 0,
 						tmp_elen);
 
@@ -2438,12 +2438,12 @@ do_junkit:
 		next_sfep = (tmp_sfep == NULL)
 			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
 							+ ((!bad_sfnamelen)
-				? xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen)
-				: xfs_dir2_sf_entsize(&sfp->hdr, namelen)))
+				? xfs_dir2_sf_entsize(sfp, sfep->namelen)
+				: xfs_dir2_sf_entsize(sfp, namelen)))
 			: tmp_sfep;
 	}
 
-	if (sfp->hdr.i8count != i8) {
+	if (sfp->i8count != i8) {
 		if (no_modify) {
 			do_warn(_("would fix i8count in inode %" PRIu64 "\n"),
 				ino);
@@ -2456,7 +2456,7 @@ do_junkit:
 					(__psint_t)tmp_sfep;
 				next_sfep = tmp_sfep;
 			} else
-				sfp->hdr.i8count = i8;
+				sfp->i8count = i8;
 			*ino_dirty = 1;
 			do_warn(_("fixing i8count in inode %" PRIu64 "\n"),
 				ino);

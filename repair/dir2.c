@@ -651,13 +651,13 @@ _("would correct bad hashval in interior dir block\n"
  */
 void
 process_sf_dir2_fixi8(
-	xfs_dir2_sf_t		*sfp,
+	struct xfs_dir2_sf_hdr	*sfp,
 	xfs_dir2_sf_entry_t	**next_sfep)
 {
 	xfs_ino_t		ino;
-	xfs_dir2_sf_t		*newsfp;
+	struct xfs_dir2_sf_hdr	*newsfp;
 	xfs_dir2_sf_entry_t	*newsfep;
-	xfs_dir2_sf_t		*oldsfp;
+	struct xfs_dir2_sf_hdr	*oldsfp;
 	xfs_dir2_sf_entry_t	*oldsfep;
 	int			oldsize;
 
@@ -669,21 +669,21 @@ process_sf_dir2_fixi8(
 		exit(1);
 	}
 	memmove(oldsfp, newsfp, oldsize);
-	newsfp->hdr.count = oldsfp->hdr.count;
-	newsfp->hdr.i8count = 0;
-	ino = xfs_dir2_sf_get_parent_ino(&sfp->hdr);
-	xfs_dir2_sf_put_parent_ino(&newsfp->hdr, ino);
-	oldsfep = xfs_dir2_sf_firstentry(&oldsfp->hdr);
-	newsfep = xfs_dir2_sf_firstentry(&newsfp->hdr);
+	newsfp->count = oldsfp->count;
+	newsfp->i8count = 0;
+	ino = xfs_dir2_sf_get_parent_ino(sfp);
+	xfs_dir2_sf_put_parent_ino(newsfp, ino);
+	oldsfep = xfs_dir2_sf_firstentry(oldsfp);
+	newsfep = xfs_dir2_sf_firstentry(newsfp);
 	while ((int)((char *)oldsfep - (char *)oldsfp) < oldsize) {
 		newsfep->namelen = oldsfep->namelen;
 		xfs_dir2_sf_put_offset(newsfep,
 			xfs_dir2_sf_get_offset(oldsfep));
 		memmove(newsfep->name, oldsfep->name, newsfep->namelen);
-		ino = xfs_dir2_sfe_get_ino(&oldsfp->hdr, oldsfep);
-		xfs_dir2_sfe_put_ino(&newsfp->hdr, newsfep, ino);
-		oldsfep = xfs_dir2_sf_nextentry(&oldsfp->hdr, oldsfep);
-		newsfep = xfs_dir2_sf_nextentry(&newsfp->hdr, newsfep);
+		ino = xfs_dir2_sfe_get_ino(oldsfp, oldsfep);
+		xfs_dir2_sfe_put_ino(newsfp, newsfep, ino);
+		oldsfep = xfs_dir2_sf_nextentry(oldsfp, oldsfep);
+		newsfep = xfs_dir2_sf_nextentry(newsfp, newsfep);
 	}
 	*next_sfep = newsfep;
 	free(oldsfp);
@@ -700,16 +700,16 @@ process_sf_dir2_fixoff(
 	int			i;
 	int			offset;
 	xfs_dir2_sf_entry_t	*sfep;
-	xfs_dir2_sf_t		*sfp;
+	struct xfs_dir2_sf_hdr	*sfp;
 
-	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-	sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
+	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
+	sfep = xfs_dir2_sf_firstentry(sfp);
 	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 
-	for (i = 0; i < sfp->hdr.count; i++) {
+	for (i = 0; i < sfp->count; i++) {
 		xfs_dir2_sf_put_offset(sfep, offset);
 		offset += xfs_dir2_data_entsize(sfep->namelen);
-		sfep = xfs_dir2_sf_nextentry(&sfp->hdr, sfep);
+		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
 	}
 }
 
@@ -747,16 +747,16 @@ process_sf_dir2(
 	xfs_dir2_sf_entry_t	*next_sfep;
 	int			num_entries;
 	int			offset;
-	xfs_dir2_sf_t		*sfp;
+	struct xfs_dir2_sf_hdr	*sfp;
 	xfs_dir2_sf_entry_t	*sfep;
 	int			tmp_elen;
 	int			tmp_len;
 	xfs_dir2_sf_entry_t	*tmp_sfep;
 	xfs_ino_t		zero = 0;
 
-	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
 	max_size = XFS_DFORK_DSIZE(dip, mp);
-	num_entries = sfp->hdr.count;
+	num_entries = sfp->count;
 	ino_dir_size = be64_to_cpu(dip->di_size);
 	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 	bad_offset = *repair = 0;
@@ -766,12 +766,12 @@ process_sf_dir2(
 	/*
 	 * Initialize i8 based on size of parent inode number.
 	 */
-	i8 = (xfs_dir2_sf_get_parent_ino(&sfp->hdr) > XFS_DIR2_MAX_SHORT_INUM);
+	i8 = (xfs_dir2_sf_get_parent_ino(sfp) > XFS_DIR2_MAX_SHORT_INUM);
 
 	/*
 	 * check for bad entry count
 	 */
-	if (num_entries * xfs_dir2_sf_entsize(&sfp->hdr, 1) +
+	if (num_entries * xfs_dir2_sf_entsize(sfp, 1) +
 		    xfs_dir2_sf_hdr_size(0) > max_size || num_entries == 0)
 		num_entries = 0xFF;
 
@@ -779,7 +779,7 @@ process_sf_dir2(
 	 * run through entries, stop at first bad entry, don't need
 	 * to check for .. since that's encoded in its own field
 	 */
-	sfep = next_sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
+	sfep = next_sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0;
 	     i < num_entries && ino_dir_size > (char *)next_sfep - (char *)sfp;
 	     i++) {
@@ -787,7 +787,7 @@ process_sf_dir2(
 		sfep = next_sfep;
 		junkit = 0;
 		bad_sfnamelen = 0;
-		lino = xfs_dir2_sfe_get_ino(&sfp->hdr, sfep);
+		lino = xfs_dir2_sfe_get_ino(sfp, sfep);
 		/*
 		 * if entry points to self, junk it since only '.' or '..'
 		 * should do that and shortform dirs don't contain either
@@ -901,7 +901,7 @@ _("zero length entry in shortform dir %" PRIu64 ""),
 				break;
 			}
 		} else if ((__psint_t) sfep - (__psint_t) sfp +
-				xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen)
+				xfs_dir2_sf_entsize(sfp, sfep->namelen)
 							> ino_dir_size)  {
 			bad_sfnamelen = 1;
 
@@ -989,7 +989,7 @@ _("entry contains offset out of order in shortform dir %" PRIu64 "\n"),
 			name[namelen] = '\0';
 
 			if (!no_modify)  {
-				tmp_elen = xfs_dir2_sf_entsize(&sfp->hdr,
+				tmp_elen = xfs_dir2_sf_entsize(sfp,
 								sfep->namelen);
 				be64_add_cpu(&dip->di_size, -tmp_elen);
 				ino_dir_size -= tmp_elen;
@@ -1001,7 +1001,7 @@ _("entry contains offset out of order in shortform dir %" PRIu64 "\n"),
 
 				memmove(sfep, tmp_sfep, tmp_len);
 
-				sfp->hdr.count -= 1;
+				sfp->count -= 1;
 				num_entries--;
 				memset((void *) ((__psint_t) sfep + tmp_len), 0,
 					tmp_elen);
@@ -1043,41 +1043,41 @@ _("would have junked entry \"%s\" in directory inode %" PRIu64 "\n"),
 		next_sfep = (tmp_sfep == NULL)
 			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
 							+ ((!bad_sfnamelen)
-				? xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen)
-				: xfs_dir2_sf_entsize(&sfp->hdr, namelen)))
+				? xfs_dir2_sf_entsize(sfp, sfep->namelen)
+				: xfs_dir2_sf_entsize(sfp, namelen)))
 			: tmp_sfep;
 	}
 
 	/* sync up sizes and entry counts */
 
-	if (sfp->hdr.count != i) {
+	if (sfp->count != i) {
 		if (no_modify) {
 			do_warn(
 _("would have corrected entry count in directory %" PRIu64 " from %d to %d\n"),
-				ino, sfp->hdr.count, i);
+				ino, sfp->count, i);
 		} else {
 			do_warn(
 _("corrected entry count in directory %" PRIu64 ", was %d, now %d\n"),
-				ino, sfp->hdr.count, i);
-			sfp->hdr.count = i;
+				ino, sfp->count, i);
+			sfp->count = i;
 			*dino_dirty = 1;
 			*repair = 1;
 		}
 	}
 
-	if (sfp->hdr.i8count != i8)  {
+	if (sfp->i8count != i8)  {
 		if (no_modify)  {
 			do_warn(
 _("would have corrected i8 count in directory %" PRIu64 " from %d to %d\n"),
-				ino, sfp->hdr.i8count, i8);
+				ino, sfp->i8count, i8);
 		} else {
 			do_warn(
 _("corrected i8 count in directory %" PRIu64 ", was %d, now %d\n"),
-				ino, sfp->hdr.i8count, i8);
+				ino, sfp->i8count, i8);
 			if (i8 == 0)
 				process_sf_dir2_fixi8(sfp, &next_sfep);
 			else
-				sfp->hdr.i8count = i8;
+				sfp->i8count = i8;
 			*dino_dirty = 1;
 			*repair = 1;
 		}
@@ -1101,7 +1101,7 @@ _("corrected directory %" PRIu64 " size, was %" PRId64 ", now %" PRIdPTR "\n"),
 			*repair = 1;
 		}
 	}
-	if (offset + (sfp->hdr.count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
+	if (offset + (sfp->count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
 			sizeof(xfs_dir2_block_tail_t) > mp->m_dirblksize) {
 		do_warn(_("directory %" PRIu64 " offsets too high\n"), ino);
 		bad_offset = 1;
@@ -1124,7 +1124,7 @@ _("corrected entry offsets in directory %" PRIu64 "\n"),
 	/*
 	 * check parent (..) entry
 	 */
-	*parent = xfs_dir2_sf_get_parent_ino(&sfp->hdr);
+	*parent = xfs_dir2_sf_get_parent_ino(sfp);
 
 	/*
 	 * if parent entry is bogus, null it out.  we'll fix it later .
@@ -1138,7 +1138,7 @@ _("bogus .. inode number (%" PRIu64 ") in directory inode %" PRIu64 ", "),
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			xfs_dir2_sf_put_parent_ino(&sfp->hdr, zero);
+			xfs_dir2_sf_put_parent_ino(sfp, zero);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1153,7 +1153,7 @@ _("bogus .. inode number (%" PRIu64 ") in directory inode %" PRIu64 ", "),
 _("corrected root directory %" PRIu64 " .. entry, was %" PRIu64 ", now %" PRIu64 "\n"),
 				ino, *parent, ino);
 			*parent = ino;
-			xfs_dir2_sf_put_parent_ino(&sfp->hdr, ino);
+			xfs_dir2_sf_put_parent_ino(sfp, ino);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1173,7 +1173,7 @@ _("bad .. entry in directory inode %" PRIu64 ", points to self, "),
 		if (!no_modify)  {
 			do_warn(_("clearing inode number\n"));
 
-			xfs_dir2_sf_put_parent_ino(&sfp->hdr, zero);
+			xfs_dir2_sf_put_parent_ino(sfp, zero);
 			*dino_dirty = 1;
 			*repair = 1;
 		} else  {
@@ -1207,7 +1207,7 @@ process_dir2_data(
 	xfs_dir2_data_free_t	*bf;
 	int			clearino;
 	char			*clearreason = NULL;
-	xfs_dir2_data_t		*d;
+	struct xfs_dir2_data_hdr *d;
 	xfs_dir2_data_entry_t	*dep;
 	xfs_dir2_data_free_t	*dfp;
 	xfs_dir2_data_unused_t	*dup;
@@ -1222,8 +1222,8 @@ process_dir2_data(
 	xfs_ino_t		ent_ino;
 
 	d = bp->b_addr;
-	bf = xfs_dir3_data_bestfree_p(&d->hdr);
-	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
+	bf = xfs_dir3_data_bestfree_p(d);
+	ptr = (char *)xfs_dir3_data_entry_p(d);
 	badbest = lastfree = freeseen = 0;
 	if (be16_to_cpu(bf[0].length) == 0) {
 		badbest |= be16_to_cpu(bf[0].offset) != 0;
@@ -1255,7 +1255,7 @@ process_dir2_data(
 							(char *)dup - (char *)d)
 				break;
 			badbest |= lastfree != 0;
-			dfp = xfs_dir2_data_freefind(&d->hdr, dup);
+			dfp = xfs_dir2_data_freefind(d, dup);
 			if (dfp) {
 				i = dfp - bf;
 				badbest |= (freeseen & (1 << i)) != 0;
@@ -1289,7 +1289,7 @@ process_dir2_data(
 			do_warn(_("\twould junk block\n"));
 		return 1;
 	}
-	ptr = (char *)xfs_dir3_data_entry_p(&d->hdr);
+	ptr = (char *)xfs_dir3_data_entry_p(d);
 	/*
 	 * Process the entries now.
 	 */
@@ -1539,7 +1539,7 @@ _("bad bestfree table in block %u in directory inode %" PRIu64 ": "),
 			da_bno, ino);
 		if (!no_modify) {
 			do_warn(_("repairing table\n"));
-			libxfs_dir2_data_freescan(mp, &d->hdr, &i);
+			libxfs_dir2_data_freescan(mp, d, &i);
 			*dirty = 1;
 		} else {
 			do_warn(_("would repair table\n"));
@@ -1566,7 +1566,7 @@ process_block_dir2(
 	int		*dotdot,	/* out - 1 if there's a dotdot, else 0 */
 	int		*repair)	/* out - 1 if something was fixed */
 {
-	xfs_dir2_block_t	*block;
+	struct xfs_dir2_data_hdr *block;
 	xfs_dir2_leaf_entry_t	*blp;
 	bmap_ext_t		*bmp;
 	struct xfs_buf		*bp;
@@ -1598,16 +1598,16 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
 	 * Verify the block
 	 */
 	block = bp->b_addr;
-	if (!(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC ||
-	      be32_to_cpu(block->hdr.magic) == XFS_DIR3_BLOCK_MAGIC))
+	if (!(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
+	      be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC))
 		do_warn(
 _("bad directory block magic # %#x in block %u for directory inode %" PRIu64 "\n"),
-			be32_to_cpu(block->hdr.magic), mp->m_dirdatablk, ino);
+			be32_to_cpu(block->magic), mp->m_dirdatablk, ino);
 	/*
 	 * process the data area
 	 * this also checks & fixes the bestfree
 	 */
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+	btp = xfs_dir2_block_tail_p(mp, block);
 	blp = xfs_dir2_block_leaf_p(btp);
 	/*
 	 * Don't let this go past the end of the block.
@@ -1878,7 +1878,7 @@ process_leaf_node_dir2(
 {
 	bmap_ext_t		*bmp;
 	struct xfs_buf		*bp;
-	xfs_dir2_data_t		*data;
+	struct xfs_dir2_data_hdr *data;
 	xfs_dfiloff_t		dbno;
 	int			good;
 	int			i;
@@ -1914,11 +1914,11 @@ _("can't read block %" PRIu64 " for directory inode %" PRIu64 "\n"),
 			continue;
 		}
 		data = bp->b_addr;
-		if (!(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
-		      be32_to_cpu(data->hdr.magic) == XFS_DIR3_DATA_MAGIC))
+		if (!(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC ||
+		      be32_to_cpu(data->magic) == XFS_DIR3_DATA_MAGIC))
 			do_warn(
 _("bad directory block magic # %#x in block %" PRIu64 " for directory inode %" PRIu64 "\n"),
-				be32_to_cpu(data->hdr.magic), dbno, ino);
+				be32_to_cpu(data->magic), dbno, ino);
 		i = process_dir2_data(mp, ino, dip, ino_discovery, dirname,
 			parent, bp, dot, dotdot, (xfs_dablk_t)dbno,
 			(char *)data + mp->m_dirblksize, &dirty);
