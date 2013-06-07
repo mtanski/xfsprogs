@@ -255,6 +255,7 @@ roundup_pow_of_two(uint v)
 #define	xfs_trans_agflist_delta(tp, d)
 #define	xfs_trans_agbtree_delta(tp, d)
 #define xfs_trans_buf_set_type(tp, bp, t)
+#define xfs_trans_buf_copy_type(dbp, sbp)
 
 #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
 #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
