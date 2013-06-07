@@ -290,15 +290,15 @@ xfs_da3_node_read(
 		switch (be16_to_cpu(info->magic)) {
 		case XFS_DA3_NODE_MAGIC:
 		case XFS_DA_NODE_MAGIC:
-			type = XFS_BLF_DA_NODE_BUF;
+			type = XFS_BLFT_DA_NODE_BUF;
 			break;
 		case XFS_ATTR_LEAF_MAGIC:
 		case XFS_ATTR3_LEAF_MAGIC:
-			type = XFS_BLF_ATTR_LEAF_BUF;
+			type = XFS_BLFT_ATTR_LEAF_BUF;
 			break;
 		case XFS_DIR2_LEAFN_MAGIC:
 		case XFS_DIR3_LEAFN_MAGIC:
-			type = XFS_BLF_DIR_LEAFN_BUF;
+			type = XFS_BLFT_DIR_LEAFN_BUF;
 			break;
 		default:
 			type = 0;
@@ -339,7 +339,7 @@ xfs_da3_node_create(
 	if (error)
 		return(error);
 	bp->b_ops = &xfs_da3_node_buf_ops;
-	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
 	node = bp->b_addr;
 
 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
@@ -573,7 +573,7 @@ xfs_da3_root_split(
 		 * we are about to copy oldroot to bp, so set up the type
 		 * of bp while we know exactly what it will be.
 		 */
-		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
 	} else {
 		struct xfs_dir3_icleaf_hdr leafhdr;
 		struct xfs_dir2_leaf_entry *ents;
@@ -591,7 +591,7 @@ xfs_da3_root_split(
 		 * we are about to copy oldroot to bp, so set up the type
 		 * of bp while we know exactly what it will be.
 		 */
-		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAFN_BUF);
+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAFN_BUF);
 	}
 
 	/*

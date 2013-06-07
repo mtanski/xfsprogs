@@ -218,7 +218,7 @@ libxfs_trans_inode_alloc_buf(
 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
-	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DINO_BUF);
+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
 }
 
 /*
