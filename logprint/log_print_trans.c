@@ -68,6 +68,24 @@ xfs_log_print_trans(
 
 	if (head_blk == tail_blk)
 		return;
+
+	/*
+	 * Version 5 superblock log feature mask validation. We know the
+	 * log is dirty so check if there are any unknown log features
+	 * in what we need to recover. If there are unknown features
+	 * (e.g. unsupported transactions) then warn about it.
+	 */
+	if (XFS_SB_VERSION_NUM(&log->l_mp->m_sb) == XFS_SB_VERSION_5 &&
+	    xfs_sb_has_incompat_log_feature(&log->l_mp->m_sb,
+				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
+		printf(_(
+"Superblock has unknown incompatible log features (0x%x) enabled.\n"
+"Output may be incomplete or inaccurate. It is recommended that you\n"
+"upgrade your xfsprogs installation to match the filesystem features.\n"),
+			(log->l_mp->m_sb.sb_features_log_incompat &
+				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
+	}
+
 	if ((error = xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))) {
 		fprintf(stderr, _("%s: failed in xfs_do_recovery_pass, error: %d\n"),
 			progname, error);

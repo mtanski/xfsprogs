@@ -73,7 +73,9 @@ static const struct {
     { offsetof(xfs_sb_t, sb_features_compat), 0 },
     { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
     { offsetof(xfs_sb_t, sb_features_incompat), 0 },
+    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
     { offsetof(xfs_sb_t, sb_crc),	 0 },
+    { offsetof(xfs_sb_t, sb_pad),	 0 },
     { offsetof(xfs_sb_t, sb_pquotino),	 0 },
     { offsetof(xfs_sb_t, sb_lsn),	 0 },
     { sizeof(xfs_sb_t),			 0 }
@@ -140,18 +142,44 @@ xfs_mount_validate_sb(
 	}
 
 	/*
-	 * Do not allow Version 5 superblocks to mount right now, even though
-	 * support is in place. We need to implement the proper feature masks
-	 * first.
+	 * Version 5 superblock feature mask validation. Reject combinations the
+	 * kernel cannot support up front before checking anything else.
 	 */
-	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+	if (check_inprogress && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
 		xfs_alert(mp,
-	"Version 5 superblock detected. Experimental support not yet enabled!");
-		return XFS_ERROR(EINVAL);
+"Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!\n"
+"Use of these features is at your own risk!");
+
+		if (xfs_sb_has_compat_feature(sbp,
+					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+			xfs_warn(mp,
+"Superblock has unknown compatible features (0x%x) enabled.\n"
+"Using a more recent xfsprogs is recommended.",
+				(sbp->sb_features_compat &
+						XFS_SB_FEAT_COMPAT_UNKNOWN));
+		}
+
+		if (xfs_sb_has_ro_compat_feature(sbp,
+					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+			xfs_warn(mp,
+"Superblock has unknown read-only compatible features (0x%x) enabled.\n"
+"Using a more recent xfsprogs is recommended.",
+				(sbp->sb_features_ro_compat &
+						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+		}
+		if (xfs_sb_has_incompat_feature(sbp,
+					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
+			xfs_warn(mp,
+"Superblock has unknown incompatible features (0x%x) enabled.\n"
+"Filesystem can not be safely operated on by this xfsprogs installation",
+				(sbp->sb_features_incompat &
+						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
+			return XFS_ERROR(EINVAL);
+		}
 	}
 
 	if (unlikely(
-	    sbp->sb_logstart == 0 && mp->m_logdev == mp->m_dev)) {
+	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
 		xfs_warn(mp,
 		"filesystem is marked as having an external log; "
 		"specify logdev on the mount command line.");
@@ -159,7 +187,7 @@ xfs_mount_validate_sb(
 	}
 
 	if (unlikely(
-	    sbp->sb_logstart != 0 && mp->m_logdev != mp->m_dev)) {
+	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
 		xfs_warn(mp,
 		"filesystem is marked as having an internal log; "
 		"do not specify logdev on the mount command line.");
@@ -212,12 +240,6 @@ xfs_mount_validate_sb(
 		xfs_warn(mp, "inode size of %d bytes not supported",
 				sbp->sb_inodesize);
 		return XFS_ERROR(ENOSYS);
-	}
-
-
-	if (check_inprogress && sbp->sb_inprogress) {
-		xfs_warn(mp, "Offline file system operation in progress!");
-		return XFS_ERROR(EFSCORRUPTED);
 	}
 
 	/*
@@ -285,6 +307,9 @@ xfs_sb_from_disk(
 	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
 	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
 	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
+	to->sb_features_log_incompat =
+				be32_to_cpu(from->sb_features_log_incompat);
+	to->sb_pad = 0;
 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
 }
