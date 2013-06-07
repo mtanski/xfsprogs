@@ -278,9 +278,9 @@ static xfs_ino_t	process_data_dir_v2(int *dot, int *dotdot,
 					    inodata_t *id, int v,
 					    xfs_dablk_t dabno,
 					    freetab_t **freetabp);
-static xfs_dir2_data_free_t
-			*process_data_dir_v2_freefind(xfs_dir2_data_t *data,
-						   xfs_dir2_data_unused_t *dup);
+static xfs_dir2_data_free_t *process_data_dir_v2_freefind(
+					struct xfs_dir2_data_hdr *data,
+					struct xfs_dir2_data_unused *dup);
 static void		process_dir(xfs_dinode_t *dip, blkmap_t *blkmap,
 				    inodata_t *id);
 static int		process_dir_v2(xfs_dinode_t *dip, blkmap_t *blkmap,
@@ -2188,11 +2188,11 @@ process_data_dir_v2(
 	xfs_dir2_dataptr_t	addr;
 	xfs_dir2_data_free_t	*bf;
 	int			bf_err;
-	xfs_dir2_block_t	*block;
+	struct xfs_dir2_data_hdr *block;
 	xfs_dir2_block_tail_t	*btp = NULL;
 	inodata_t		*cid;
 	int			count;
-	xfs_dir2_data_t		*data;
+	struct xfs_dir2_data_hdr *data;
 	xfs_dir2_db_t		db;
 	xfs_dir2_data_entry_t	*dep;
 	xfs_dir2_data_free_t	*dfp;
@@ -2214,20 +2214,20 @@ process_data_dir_v2(
 
 	data = iocur_top->data;
 	block = iocur_top->data;
-	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC &&
-			be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC) {
+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
+			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
 		if (!sflag || v)
 			dbprintf(_("bad directory data magic # %#x for dir ino "
 				 "%lld block %d\n"),
-				be32_to_cpu(data->hdr.magic), id->ino, dabno);
+				be32_to_cpu(data->magic), id->ino, dabno);
 		error++;
 		return NULLFSINO;
 	}
 	db = xfs_dir2_da_to_db(mp, dabno);
-	bf = data->hdr.bestfree;
-	ptr = (char *)data->u;
-	if (be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
-		btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+	bf = xfs_dir3_data_bestfree_p(data);
+	ptr = (char *)xfs_dir3_data_unused_p(data);
+	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
+		btp = xfs_dir2_block_tail_p(mp, block);
 		lep = xfs_dir2_block_leaf_p(btp);
 		endptr = (char *)lep;
 		if (endptr <= ptr || endptr > (char *)btp) {
@@ -2372,7 +2372,7 @@ process_data_dir_v2(
 			(*dot)++;
 		}
 	}
-	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
 		endptr = (char *)data + mp->m_dirblksize;
 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
 			if ((char *)&lep[i] >= endptr) {
@@ -2404,9 +2404,8 @@ process_data_dir_v2(
 				id->ino, dabno);
 		error++;
 	}
-	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC &&
-				count != be32_to_cpu(btp->count) - 
-						be32_to_cpu(btp->stale)) {
+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
+	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
 		if (!sflag || v)
 			dbprintf(_("dir %lld block %d bad block tail count %d "
 				 "(stale %d)\n"), 
@@ -2414,7 +2413,7 @@ process_data_dir_v2(
 				be32_to_cpu(btp->stale));
 		error++;
 	}
-	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC && 
+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
 					stale != be32_to_cpu(btp->stale)) {
 		if (!sflag || v)
 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
@@ -2439,18 +2438,19 @@ process_data_dir_v2(
 
 static xfs_dir2_data_free_t *
 process_data_dir_v2_freefind(
-	xfs_dir2_data_t		*data,
+	struct xfs_dir2_data_hdr *data,
 	xfs_dir2_data_unused_t	*dup)
 {
-	xfs_dir2_data_free_t	*dfp;
+	struct xfs_dir2_data_free *bf;
+	struct xfs_dir2_data_free *dfp;
 	xfs_dir2_data_aoff_t	off;
 
 	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)data);
-	if (be16_to_cpu(dup->length) < be16_to_cpu(data->hdr.
-				bestfree[XFS_DIR2_DATA_FD_COUNT - 1].length))
+	bf = xfs_dir3_data_bestfree_p(data);
+	if (be16_to_cpu(dup->length) <
+			be16_to_cpu(bf[XFS_DIR2_DATA_FD_COUNT - 1].length))
 		return NULL;
-	for (dfp = &data->hdr.bestfree[0]; dfp < &data->hdr.
-				bestfree[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+	for (dfp = bf; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
 		if (be16_to_cpu(dfp->offset) == 0)
 			return NULL;
 		if (be16_to_cpu(dfp->offset) == off)
@@ -3421,20 +3421,20 @@ process_sf_dir_v2(
 	int			i8;
 	xfs_ino_t		lino;
 	int			offset;
-	xfs_dir2_sf_t		*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 	xfs_dir2_sf_entry_t	*sfe;
 	int			v;
 
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
 	addlink_inode(id);
 	v = verbose || id->ilist;
 	if (v)
 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
 	(*dot)++;
-	sfe = xfs_dir2_sf_firstentry(&sf->hdr);
+	sfe = xfs_dir2_sf_firstentry(sf);
 	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
-		if ((__psint_t)sfe + xfs_dir2_sf_entsize(&sf->hdr,sfe->namelen) -
+	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
+		if ((__psint_t)sfe + xfs_dir2_sf_entsize(sf, sfe->namelen) -
 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
 			if (!sflag)
 				dbprintf(_("dir %llu bad size in entry at %d\n"),
@@ -3443,7 +3443,7 @@ process_sf_dir_v2(
 			error++;
 			break;
 		}
-		lino = xfs_dir2_sfe_get_ino(&sf->hdr, sfe);
+		lino = xfs_dir2_sfe_get_ino(sf, sfe);
 		if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
 		cid = find_inode(lino, 1);
@@ -3473,8 +3473,8 @@ process_sf_dir_v2(
 		}
 		offset =
 			xfs_dir2_sf_get_offset(sfe) +
-			xfs_dir2_sf_entsize(&sf->hdr, sfe->namelen);
-		sfe = xfs_dir2_sf_nextentry(&sf->hdr, sfe);
+			xfs_dir2_sf_entsize(sf, sfe->namelen);
+		sfe = xfs_dir2_sf_nextentry(sf, sfe);
 	}
 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
 					be64_to_cpu(dip->di_size)) {
@@ -3484,13 +3484,13 @@ process_sf_dir_v2(
 				(uint)((char *)sfe - (char *)sf));
 		error++;
 	}
-	if (offset + (sf->hdr.count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
+	if (offset + (sf->count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
 	    sizeof(xfs_dir2_block_tail_t) > mp->m_dirblksize) {
 		if (!sflag)
 			dbprintf(_("dir %llu offsets too high\n"), id->ino);
 		error++;
 	}
-	lino = xfs_dir2_sf_get_parent_ino(&sf->hdr);
+	lino = xfs_dir2_sf_get_parent_ino(sf);
 	if (lino > XFS_DIR2_MAX_SHORT_INUM)
 		i8++;
 	cid = find_inode(lino, 1);
@@ -3504,11 +3504,11 @@ process_sf_dir_v2(
 	}
 	if (v)
 		dbprintf(_("dir %lld entry .. %lld\n"), id->ino, lino);
-	if (i8 != sf->hdr.i8count) {
+	if (i8 != sf->i8count) {
 		if (!sflag)
 			dbprintf(_("dir %lld i8count mismatch is %d should be "
 				 "%d\n"),
-				id->ino, sf->hdr.i8count, i8);
+				id->ino, sf->i8count, i8);
 		error++;
 	}
 	(*dotdot)++;

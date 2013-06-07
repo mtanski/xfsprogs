@@ -906,12 +906,12 @@ static void
 obfuscate_sf_dir(
 	xfs_dinode_t		*dip)
 {
-	xfs_dir2_sf_t		*sfp;
+	struct xfs_dir2_sf_hdr	*sfp;
 	xfs_dir2_sf_entry_t	*sfep;
 	__uint64_t		ino_dir_size;
 	int			i;
 
-	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
 	ino_dir_size = be64_to_cpu(dip->di_size);
 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
@@ -920,8 +920,8 @@ obfuscate_sf_dir(
 					(long long)cur_ino);
 	}
 
-	sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
-	for (i = 0; (i < sfp->hdr.count) &&
+	sfep = xfs_dir2_sf_firstentry(sfp);
+	for (i = 0; (i < sfp->count) &&
 			((char *)sfep - (char *)sfp < ino_dir_size); i++) {
 
 		/*
@@ -934,27 +934,27 @@ obfuscate_sf_dir(
 			if (show_warnings)
 				print_warning("zero length entry in dir inode "
 						"%llu", (long long)cur_ino);
-			if (i != sfp->hdr.count - 1)
+			if (i != sfp->count - 1)
 				break;
 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
 					 (char *)sfp);
 		} else if ((char *)sfep - (char *)sfp +
-				xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen) >
+				xfs_dir2_sf_entsize(sfp, sfep->namelen) >
 				ino_dir_size) {
 			if (show_warnings)
 				print_warning("entry length in dir inode %llu "
 					"overflows space", (long long)cur_ino);
-			if (i != sfp->hdr.count - 1)
+			if (i != sfp->count - 1)
 				break;
 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
 					 (char *)sfp);
 		}
 
-		generate_obfuscated_name(xfs_dir2_sfe_get_ino(&sfp->hdr, sfep),
+		generate_obfuscated_name(xfs_dir2_sfe_get_ino(sfp, sfep),
 					 namelen, &sfep->name[0]);
 
 		sfep = (xfs_dir2_sf_entry_t *)((char *)sfep +
-				xfs_dir2_sf_entsize(&sfp->hdr, namelen));
+				xfs_dir2_sf_entsize(sfp, namelen));
 	}
 }
 
@@ -1101,6 +1101,9 @@ obfuscate_dir_data_blocks(
 
 		if (dir_data.block_index == 0) {
 			int		wantmagic;
+			struct xfs_dir2_data_hdr *datahdr;
+
+			datahdr = (struct xfs_dir2_data_hdr *)block;
 
 			if (offset % mp->m_dirblkfsbs != 0)
 				return;	/* corrupted, leave it alone */
@@ -1110,10 +1113,8 @@ obfuscate_dir_data_blocks(
 			if (is_block_format) {
 				xfs_dir2_leaf_entry_t	*blp;
 				xfs_dir2_block_tail_t	*btp;
-				xfs_dir2_block_t	*blk;
 
-				blk = (xfs_dir2_block_t *)block;
-				btp = xfs_dir2_block_tail_p(mp, &blk->hdr);
+				btp = xfs_dir2_block_tail_p(mp, datahdr);
 				blp = xfs_dir2_block_leaf_p(btp);
 				if ((char *)blp > (char *)btp)
 					blp = (xfs_dir2_leaf_entry_t *)btp;
@@ -1125,10 +1126,10 @@ obfuscate_dir_data_blocks(
 						mp->m_sb.sb_blocklog;
 				wantmagic = XFS_DIR2_DATA_MAGIC;
 			}
-			dir_data.offset_to_entry = offsetof(xfs_dir2_data_t, u);
+			dir_data.offset_to_entry =
+					xfs_dir3_data_entry_offset(datahdr);
 
-			if (be32_to_cpu(((xfs_dir2_data_hdr_t*)block)->magic) !=
-					wantmagic) {
+			if (be32_to_cpu(datahdr->magic) != wantmagic) {
 				if (show_warnings)
 					print_warning("invalid magic in dir "
 						"inode %llu block %ld",

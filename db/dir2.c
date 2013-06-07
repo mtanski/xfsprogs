@@ -58,13 +58,13 @@ const field_t	dir2_hfld[] = {
 	{ NULL }
 };
 
-#define	BOFF(f)	bitize(offsetof(xfs_dir2_block_t, f))
-#define	DOFF(f)	bitize(offsetof(xfs_dir2_data_t, f))
-#define	FOFF(f)	bitize(offsetof(xfs_dir2_free_t, f))
-#define	LOFF(f)	bitize(offsetof(xfs_dir2_leaf_t, f))
-#define	NOFF(f)	bitize(offsetof(xfs_da_intnode_t, f))
+#define	BOFF(f)	bitize(offsetof(struct xfs_dir2_data_hdr, f))
+#define	DOFF(f)	bitize(offsetof(struct xfs_dir2_data_hdr, f))
+#define	FOFF(f)	bitize(offsetof(struct xfs_dir2_free, f))
+#define	LOFF(f)	bitize(offsetof(struct xfs_dir2_leaf, f))
+#define	NOFF(f)	bitize(offsetof(struct xfs_da_intnode, f))
 const field_t	dir2_flds[] = {
-	{ "bhdr", FLDT_DIR2_DATA_HDR, OI(BOFF(hdr)), dir2_block_hdr_count,
+	{ "bhdr", FLDT_DIR2_DATA_HDR, OI(BOFF(magic)), dir2_block_hdr_count,
 	  FLD_COUNT, TYP_NONE },
 	{ "bu", FLDT_DIR2_DATA_UNION, dir2_block_u_offset, dir2_block_u_count,
 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
@@ -72,7 +72,7 @@ const field_t	dir2_flds[] = {
 	  dir2_block_leaf_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ "btail", FLDT_DIR2_BLOCK_TAIL, dir2_block_tail_offset,
 	  dir2_block_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
-	{ "dhdr", FLDT_DIR2_DATA_HDR, OI(DOFF(hdr)), dir2_data_hdr_count,
+	{ "dhdr", FLDT_DIR2_DATA_HDR, OI(DOFF(magic)), dir2_data_hdr_count,
 	  FLD_COUNT, TYP_NONE },
 	{ "du", FLDT_DIR2_DATA_UNION, dir2_data_u_offset, dir2_data_u_count,
 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
@@ -189,66 +189,62 @@ const field_t	da_node_hdr_flds[] = {
 	{ NULL }
 };
 
-/*ARGSUSED*/
 static int
 dir2_block_hdr_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_block_t	*block;
+	struct xfs_dir2_data_hdr *block;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	return be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC;
+	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
 }
 
-/*ARGSUSED*/
 static int
 dir2_block_leaf_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_block_t	*block;
-	xfs_dir2_block_tail_t	*btp;
+	struct xfs_dir2_data_hdr *block;
+	struct xfs_dir2_block_tail *btp;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
 		return 0;
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+	btp = xfs_dir2_block_tail_p(mp, block);
 	return be32_to_cpu(btp->count);
 }
 
-/*ARGSUSED*/
 static int
 dir2_block_leaf_offset(
 	void			*obj,
 	int			startoff,
 	int			idx)
 {
-	xfs_dir2_block_t	*block;
-	xfs_dir2_block_tail_t	*btp;
-	xfs_dir2_leaf_entry_t	*lep;
+	struct xfs_dir2_data_hdr *block;
+	struct xfs_dir2_block_tail *btp;
+	struct xfs_dir2_leaf_entry *lep;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
+	btp = xfs_dir2_block_tail_p(mp, block);
 	lep = xfs_dir2_block_leaf_p(btp) + idx;
 	return bitize((int)((char *)lep - (char *)block));
 }
 
-/*ARGSUSED*/
 static int
 dir2_block_tail_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_block_t	*block;
+	struct xfs_dir2_data_hdr *block;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	return be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC;
+	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
 }
 
 /*ARGSUSED*/
@@ -258,14 +254,14 @@ dir2_block_tail_offset(
 	int			startoff,
 	int			idx)
 {
-	xfs_dir2_block_t	*block;
-	xfs_dir2_block_tail_t	*btp;
+	struct xfs_dir2_data_hdr *block;
+	struct xfs_dir2_block_tail *btp;
 
 	ASSERT(startoff == 0);
 	ASSERT(idx == 0);
 	block = obj;
-	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
+	btp = xfs_dir2_block_tail_p(mp, block);
 	return bitize((int)((char *)btp - (char *)block));
 }
 
@@ -275,22 +271,23 @@ dir2_block_u_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_block_t	*block;
-	xfs_dir2_block_tail_t	*btp;
-	xfs_dir2_data_entry_t	*dep;
-	xfs_dir2_data_unused_t	*dup;
+	struct xfs_dir2_data_hdr *block;
+	struct xfs_dir2_block_tail *btp;
 	char			*endptr;
 	int			i;
 	char			*ptr;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
 		return 0;
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-	ptr = (char *)block->u;
+	btp = xfs_dir2_block_tail_p(mp, block);
+	ptr = (char *)xfs_dir3_data_unused_p(block);
 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
 	for (i = 0; ptr < endptr; i++) {
+		struct xfs_dir2_data_entry *dep;
+		struct xfs_dir2_data_unused *dup;
+
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
 			ptr += be16_to_cpu(dup->length);
@@ -309,21 +306,22 @@ dir2_block_u_offset(
 	int			startoff,
 	int			idx)
 {
-	xfs_dir2_block_t	*block;
-	xfs_dir2_block_tail_t	*btp;
-	xfs_dir2_data_entry_t	*dep;
-	xfs_dir2_data_unused_t	*dup;
+	struct xfs_dir2_data_hdr *block;
+	struct xfs_dir2_block_tail *btp;
 	char			*endptr;
 	int			i;
 	char			*ptr;
 
 	ASSERT(startoff == 0);
 	block = obj;
-	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-	ptr = (char *)block->u;
+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
+	btp = xfs_dir2_block_tail_p(mp, block);
+	ptr = (char *)xfs_dir3_data_unused_p(block);
 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
 	for (i = 0; i < idx; i++) {
+		struct xfs_dir2_data_entry *dep;
+		struct xfs_dir2_data_unused *dup;
+
 		ASSERT(ptr < endptr);
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
@@ -478,11 +476,11 @@ dir2_data_hdr_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_data_t		*data;
+	struct xfs_dir2_data_hdr *data;
 
 	ASSERT(startoff == 0);
 	data = obj;
-	return be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC;
+	return be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC;
 }
 
 /*ARGSUSED*/
@@ -491,20 +489,21 @@ dir2_data_u_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_data_t		*data;
-	xfs_dir2_data_entry_t	*dep;
-	xfs_dir2_data_unused_t	*dup;
+	struct xfs_dir2_data_hdr *data;
 	char			*endptr;
 	int			i;
 	char			*ptr;
 
 	ASSERT(startoff == 0);
 	data = obj;
-	if (be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC)
+	if (be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC)
 		return 0;
-	ptr = (char *)data->u;
+	ptr = (char *)xfs_dir3_data_unused_p(data);
 	endptr = (char *)data + mp->m_dirblksize;
 	for (i = 0; ptr < endptr; i++) {
+		struct xfs_dir2_data_entry *dep;
+		struct xfs_dir2_data_unused *dup;
+
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
 			ptr += be16_to_cpu(dup->length);
@@ -523,20 +522,20 @@ dir2_data_u_offset(
 	int			startoff,
 	int			idx)
 {
-	xfs_dir2_data_t		*data;
-	xfs_dir2_data_entry_t	*dep;
-	xfs_dir2_data_unused_t	*dup;
-				/*REFERENCED*/
+	struct xfs_dir2_data_hdr *data;
 	char			*endptr;
 	int			i;
 	char			*ptr;
 
 	ASSERT(startoff == 0);
 	data = obj;
-	ASSERT(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC);
-	ptr = (char *)data->u;
+	ASSERT(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC);
+	ptr = (char *)xfs_dir3_data_unused_p(data);
 	endptr = (char *)data + mp->m_dirblksize;
 	for (i = 0; i < idx; i++) {
+		struct xfs_dir2_data_entry *dep;
+		struct xfs_dir2_data_unused *dup;
+
 		ASSERT(ptr < endptr);
 		dup = (xfs_dir2_data_unused_t *)ptr;
 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
@@ -576,7 +575,7 @@ dir2_free_bests_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_free_t		*free;
+	struct xfs_dir2_free	*free;
 
 	ASSERT(startoff == 0);
 	free = obj;
@@ -591,7 +590,7 @@ dir2_free_hdr_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_free_t		*free;
+	struct xfs_dir2_free	*free;
 
 	ASSERT(startoff == 0);
 	free = obj;
@@ -604,8 +603,8 @@ dir2_leaf_bests_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_leaf_t		*leaf;
-	xfs_dir2_leaf_tail_t	*ltp;
+	struct xfs_dir2_leaf	*leaf;
+	struct xfs_dir2_leaf_tail *ltp;
 
 	ASSERT(startoff == 0);
 	leaf = obj;
@@ -622,9 +621,9 @@ dir2_leaf_bests_offset(
 	int			startoff,
 	int			idx)
 {
+	struct xfs_dir2_leaf	*leaf;
+	struct xfs_dir2_leaf_tail *ltp;
 	__be16			*lbp;
-	xfs_dir2_leaf_t		*leaf;
-	xfs_dir2_leaf_tail_t	*ltp;
 
 	ASSERT(startoff == 0);
 	leaf = obj;
@@ -640,7 +639,7 @@ dir2_leaf_ents_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_leaf_t		*leaf;
+	struct xfs_dir2_leaf	*leaf;
 
 	ASSERT(startoff == 0);
 	leaf = obj;
@@ -656,7 +655,7 @@ dir2_leaf_hdr_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_leaf_t		*leaf;
+	struct xfs_dir2_leaf	*leaf;
 
 	ASSERT(startoff == 0);
 	leaf = obj;
@@ -670,7 +669,7 @@ dir2_leaf_tail_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_leaf_t		*leaf;
+	struct xfs_dir2_leaf	*leaf;
 
 	ASSERT(startoff == 0);
 	leaf = obj;
@@ -684,8 +683,8 @@ dir2_leaf_tail_offset(
 	int			startoff,
 	int			idx)
 {
-	xfs_dir2_leaf_t		*leaf;
-	xfs_dir2_leaf_tail_t	*ltp;
+	struct xfs_dir2_leaf	*leaf;
+	struct xfs_dir2_leaf_tail *ltp;
 
 	ASSERT(startoff == 0);
 	ASSERT(idx == 0);
@@ -716,7 +715,7 @@ dir2_node_hdr_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_da_intnode_t	*node;
+	struct xfs_da_intnode	*node;
 
 	ASSERT(startoff == 0);
 	node = obj;

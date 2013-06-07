@@ -32,9 +32,9 @@ static int	dir2_sf_entry_name_count(void *obj, int startoff);
 static int	dir2_sf_list_count(void *obj, int startoff);
 static int	dir2_sf_list_offset(void *obj, int startoff, int idx);
 
-#define	OFF(f)	bitize(offsetof(xfs_dir2_sf_t, f))
+#define	OFF(f)	bitize(offsetof(struct xfs_dir2_sf_hdr, f))
 const field_t	dir2sf_flds[] = {
-	{ "hdr", FLDT_DIR2_SF_HDR, OI(OFF(hdr)), C1, 0, TYP_NONE },
+	{ "hdr", FLDT_DIR2_SF_HDR, OI(OFF(count)), C1, 0, TYP_NONE },
 	{ "list", FLDT_DIR2_SF_ENTRY, dir2_sf_list_offset, dir2_sf_list_count,
 	  FLD_ARRAY|FLD_COUNT|FLD_OFFSET, TYP_NONE },
 	{ NULL }
@@ -75,11 +75,11 @@ dir2_inou_i4_count(
 	int		startoff)
 {
 	struct xfs_dinode *dip = obj;
-	xfs_dir2_sf_t	*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-	return sf->hdr.i8count == 0;
+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
+	return sf->i8count == 0;
 }
 
 /*ARGSUSED*/
@@ -89,11 +89,11 @@ dir2_inou_i8_count(
 	int		startoff)
 {
 	struct xfs_dinode *dip = obj;
-	xfs_dir2_sf_t	*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-	return sf->hdr.i8count != 0;
+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
+	return sf->i8count != 0;
 }
 
 /*ARGSUSED*/
@@ -104,12 +104,12 @@ dir2_inou_size(
 	int		idx)
 {
 	struct xfs_dinode *dip = obj;
-	xfs_dir2_sf_t	*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
-	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-	return bitize(sf->hdr.i8count ?
+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
+	return bitize(sf->i8count ?
 		      (uint)sizeof(xfs_dir2_ino8_t) :
 		      (uint)sizeof(xfs_dir2_ino4_t));
 }
@@ -149,14 +149,14 @@ dir2_sf_entry_size(
 {
 	xfs_dir2_sf_entry_t	*e;
 	int			i;
-	xfs_dir2_sf_t		*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(&sf->hdr);
+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
+	e = xfs_dir2_sf_firstentry(sf);
 	for (i = 0; i < idx; i++)
-		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
-	return bitize((int)xfs_dir2_sf_entsize(&sf->hdr, e->namelen));
+		e = xfs_dir2_sf_nextentry(sf, e);
+	return bitize((int)xfs_dir2_sf_entsize(sf, e->namelen));
 }
 
 /*ARGSUSED*/
@@ -166,12 +166,12 @@ dir2_sf_hdr_size(
 	int		startoff,
 	int		idx)
 {
-	xfs_dir2_sf_t	*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
-	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	return bitize(xfs_dir2_sf_hdr_size(sf->hdr.i8count));
+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
+	return bitize(xfs_dir2_sf_hdr_size(sf->i8count));
 }
 
 static int
@@ -179,11 +179,11 @@ dir2_sf_list_count(
 	void			*obj,
 	int			startoff)
 {
-	xfs_dir2_sf_t		*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	return sf->hdr.count;
+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
+	return sf->count;
 }
 
 static int
@@ -194,13 +194,13 @@ dir2_sf_list_offset(
 {
 	xfs_dir2_sf_entry_t	*e;
 	int			i;
-	xfs_dir2_sf_t		*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
-	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(&sf->hdr);
+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
+	e = xfs_dir2_sf_firstentry(sf);
 	for (i = 0; i < idx; i++)
-		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
+		e = xfs_dir2_sf_nextentry(sf, e);
 	return bitize((int)((char *)e - (char *)sf));
 }
 
@@ -213,13 +213,13 @@ dir2sf_size(
 {
 	xfs_dir2_sf_entry_t	*e;
 	int			i;
-	xfs_dir2_sf_t		*sf;
+	struct xfs_dir2_sf_hdr	*sf;
 
 	ASSERT(bitoffs(startoff) == 0);
 	ASSERT(idx == 0);
-	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
-	e = xfs_dir2_sf_firstentry(&sf->hdr);
-	for (i = 0; i < sf->hdr.count; i++)
-		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
+	e = xfs_dir2_sf_firstentry(sf);
+	for (i = 0; i < sf->count; i++)
+		e = xfs_dir2_sf_nextentry(sf, e);
 	return bitize((int)((char *)e - (char *)sf));
 }
