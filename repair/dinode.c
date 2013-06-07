@@ -1523,6 +1523,7 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
 					do_warn(
 _("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
 						lino, i, fsbno);
+					libxfs_putbuf(bp);
 					return(1);
 				}
 				buf_data += sizeof(struct xfs_dsymlink_hdr);
