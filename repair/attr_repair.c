@@ -147,6 +147,8 @@ traverse_int_dablock(xfs_mount_t	*mp,
 	xfs_da_intnode_t	*node;
 	xfs_dfsbno_t		fsbno;
 	xfs_buf_t		*bp;
+	struct xfs_da_node_entry *btree;
+	struct xfs_da3_icnode_hdr nodehdr;
 
 	/*
 	 * traverse down left-side of tree until we hit the
@@ -182,20 +184,22 @@ traverse_int_dablock(xfs_mount_t	*mp,
 		}
 
 		node = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
+		btree = xfs_da3_node_tree_p(node);
+		xfs_da3_node_hdr_from_disk(&nodehdr, node);
 
-		if (be16_to_cpu(node->hdr.info.magic) != XFS_DA_NODE_MAGIC)  {
+		if (nodehdr.magic != XFS_DA_NODE_MAGIC)  {
 			do_warn(_("bad dir/attr magic number in inode %" PRIu64 ", "
 				  "file bno = %u, fsbno = %" PRIu64 "\n"),
 				da_cursor->ino, bno, fsbno);
 			libxfs_putbuf(bp);
 			goto error_out;
 		}
-		if (be16_to_cpu(node->hdr.count) >
-						mp->m_dir_node_ents)  {
+
+		if (nodehdr.count > mp->m_dir_node_ents)  {
 			do_warn(_("bad record count in inode %" PRIu64 ", "
 				  "count = %d, max = %d\n"),
 				da_cursor->ino,
-				be16_to_cpu(node->hdr.count),
+				nodehdr.count,
 				mp->m_dir_node_ents);
 			libxfs_putbuf(bp);
 			goto error_out;
@@ -205,9 +209,9 @@ traverse_int_dablock(xfs_mount_t	*mp,
 		 * maintain level counter
 		 */
 		if (i == -1)
-			i = da_cursor->active = be16_to_cpu(node->hdr.level);
+			i = da_cursor->active = nodehdr.level;
 		else  {
-			if (be16_to_cpu(node->hdr.level) == i - 1)  {
+			if (nodehdr.level == i - 1)  {
 				i--;
 			} else  {
 				if (whichfork == XFS_DATA_FORK)
@@ -223,8 +227,7 @@ traverse_int_dablock(xfs_mount_t	*mp,
 			}
 		}
 
-		da_cursor->level[i].hashval = be32_to_cpu(
-							node->btree[0].hashval);
+		da_cursor->level[i].hashval = be32_to_cpu(btree[0].hashval);
 		da_cursor->level[i].bp = bp;
 		da_cursor->level[i].bno = bno;
 		da_cursor->level[i].index = 0;
@@ -235,7 +238,7 @@ traverse_int_dablock(xfs_mount_t	*mp,
 		/*
 		 * set up new bno for next level down
 		 */
-		bno = be32_to_cpu(node->btree[0].before);
+		bno = be32_to_cpu(btree[0].before);
 	} while (node != NULL && i > 1);
 
 	/*
@@ -319,6 +322,8 @@ verify_final_da_path(xfs_mount_t	*mp,
 	int			bad = 0;
 	int			entry;
 	int			this_level = p_level + 1;
+	struct xfs_da_node_entry *btree;
+	struct xfs_da3_icnode_hdr nodehdr;
 
 #ifdef XR_DIR_TRACE
 	fprintf(stderr, "in verify_final_da_path, this_level = %d\n",
@@ -330,32 +335,35 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 */
 	entry = cursor->level[this_level].index;
 	node = (xfs_da_intnode_t *)XFS_BUF_PTR(cursor->level[this_level].bp);
+	btree = xfs_da3_node_tree_p(node);
+	xfs_da3_node_hdr_from_disk(&nodehdr, node);
+
 	/*
 	 * check internal block consistency on this level -- ensure
 	 * that all entries are used, encountered and expected hashvals
 	 * match, etc.
 	 */
-	if (entry != be16_to_cpu(node->hdr.count) - 1)  {
+	if (entry != nodehdr.count - 1)  {
 		do_warn(_("directory/attribute block used/count "
 			  "inconsistency - %d/%hu\n"),
-			entry, be16_to_cpu(node->hdr.count));
+			entry, nodehdr.count);
 		bad++;
 	}
 	/*
 	 * hash values monotonically increasing ???
 	 */
 	if (cursor->level[this_level].hashval >= 
-				be32_to_cpu(node->btree[entry].hashval)) {
+				be32_to_cpu(btree[entry].hashval)) {
 		do_warn(_("directory/attribute block hashvalue inconsistency, "
 			  "expected > %u / saw %u\n"),
 			cursor->level[this_level].hashval,
-			be32_to_cpu(node->btree[entry].hashval));
+			be32_to_cpu(btree[entry].hashval));
 		bad++;
 	}
-	if (be32_to_cpu(node->hdr.info.forw) != 0)  {
+	if (nodehdr.forw != 0)  {
 		do_warn(_("bad directory/attribute forward block pointer, "
 			  "expected 0, saw %u\n"),
-			be32_to_cpu(node->hdr.info.forw));
+			nodehdr.forw);
 		bad++;
 	}
 	if (bad) {
@@ -373,12 +381,11 @@ verify_final_da_path(xfs_mount_t	*mp,
 	/*
 	 * ok, now check descendant block number against this level
 	 */
-	if (cursor->level[p_level].bno != be32_to_cpu(
-						node->btree[entry].before)) {
+	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before)) {
 #ifdef XR_DIR_TRACE
 		fprintf(stderr, "bad directory btree pointer, child bno should "
 				"be %d, block bno is %d, hashval is %u\n",
-			be16_to_cpu(node->btree[entry].before),
+			be16_to_cpu(btree[entry].before),
 			cursor->level[p_level].bno,
 			cursor->level[p_level].hashval);
 		fprintf(stderr, "verify_final_da_path returns 1 (bad) #1a\n");
@@ -386,14 +393,13 @@ verify_final_da_path(xfs_mount_t	*mp,
 		return(1);
 	}
 
-	if (cursor->level[p_level].hashval != be32_to_cpu(
-						node->btree[entry].hashval)) {
+	if (cursor->level[p_level].hashval != be32_to_cpu(btree[entry].hashval)) {
 		if (!no_modify)  {
 			do_warn(_("correcting bad hashval in non-leaf "
 				  "dir/attr block\n\tin (level %d) in "
 				  "inode %" PRIu64 ".\n"),
 				this_level, cursor->ino);
-			node->btree[entry].hashval = cpu_to_be32(
+			btree[entry].hashval = cpu_to_be32(
 						cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {
@@ -408,7 +414,7 @@ verify_final_da_path(xfs_mount_t	*mp,
 	 * Note: squirrel hashval away _before_ releasing the
 	 * buffer, preventing a use-after-free problem.
 	 */
-	hashval = be32_to_cpu(node->btree[entry].hashval);
+	hashval = be32_to_cpu(btree[entry].hashval);
 
 	/*
 	 * release/write buffer
@@ -492,6 +498,8 @@ verify_da_path(xfs_mount_t	*mp,
 	int			bad;
 	int			entry;
 	int			this_level = p_level + 1;
+	struct xfs_da_node_entry *btree;
+	struct xfs_da3_icnode_hdr nodehdr;
 
 	/*
 	 * index is currently set to point to the entry that
@@ -499,20 +507,22 @@ verify_da_path(xfs_mount_t	*mp,
 	 */
 	entry = cursor->level[this_level].index;
 	node = (xfs_da_intnode_t *)XFS_BUF_PTR(cursor->level[this_level].bp);
+	btree = xfs_da3_node_tree_p(node);
+	xfs_da3_node_hdr_from_disk(&nodehdr, node);
 
 	/*
 	 * if this block is out of entries, validate this
 	 * block and move on to the next block.
 	 * and update cursor value for said level
 	 */
-	if (entry >= be16_to_cpu(node->hdr.count))  {
+	if (entry >= nodehdr.count)  {
 		/*
 		 * update the hash value for this level before
 		 * validating it.  bno value should be ok since
 		 * it was set when the block was first read in.
 		 */
 		cursor->level[this_level].hashval =
-				be32_to_cpu(node->btree[entry - 1].hashval);
+				be32_to_cpu(btree[entry - 1].hashval);
 
 		/*
 		 * keep track of greatest block # -- that gets
@@ -530,7 +540,7 @@ verify_da_path(xfs_mount_t	*mp,
 		/*
 		 * ok, now get the next buffer and check sibling pointers
 		 */
-		dabno = be32_to_cpu(node->hdr.info.forw);
+		dabno = nodehdr.forw;
 		ASSERT(dabno != 0);
 		fsbno = blkmap_get(cursor->blkmap, dabno);
 
@@ -551,36 +561,37 @@ verify_da_path(xfs_mount_t	*mp,
 		}
 
 		newnode = (xfs_da_intnode_t *)XFS_BUF_PTR(bp);
+		btree = xfs_da3_node_tree_p(node);
+		xfs_da3_node_hdr_from_disk(&nodehdr, newnode);
 		/*
 		 * verify magic number and back pointer, sanity-check
 		 * entry count, verify level
 		 */
 		bad = 0;
-		if (XFS_DA_NODE_MAGIC != be16_to_cpu(newnode->hdr.info.magic)) {
+		if (XFS_DA_NODE_MAGIC != nodehdr.magic) {
 			do_warn(
 	_("bad magic number %x in block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
-				be16_to_cpu(newnode->hdr.info.magic),
+				nodehdr.magic,
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
-		if (be32_to_cpu(newnode->hdr.info.back) != 
-						cursor->level[this_level].bno) {
+		if (nodehdr.back != cursor->level[this_level].bno) {
 			do_warn(
 	_("bad back pointer in block %u (%"PRIu64 ") for directory inode %" PRIu64 "\n"),
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
-		if (be16_to_cpu(newnode->hdr.count) > mp->m_dir_node_ents) {
+		if (nodehdr.count > mp->m_dir_node_ents) {
 			do_warn(
 	_("entry count %d too large in block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
-				be16_to_cpu(newnode->hdr.count),
+				nodehdr.count,
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
-		if (be16_to_cpu(newnode->hdr.level) != this_level) {
+		if (nodehdr.level != this_level) {
 			do_warn(
 	_("bad level %d in block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
-				be16_to_cpu(newnode->hdr.level),
+				nodehdr.level,
 				dabno, fsbno, cursor->ino);
 			bad++;
 		}
@@ -606,7 +617,7 @@ verify_da_path(xfs_mount_t	*mp,
 		cursor->level[this_level].dirty = 0;
 		cursor->level[this_level].bno = dabno;
 		cursor->level[this_level].hashval =
-					be32_to_cpu(newnode->btree[0].hashval);
+					be32_to_cpu(btree[0].hashval);
 #ifdef XR_DIR_TRACE
 		cursor->level[this_level].n = newnode;
 #endif
@@ -617,12 +628,11 @@ verify_da_path(xfs_mount_t	*mp,
 	/*
 	 * ditto for block numbers
 	 */
-	if (cursor->level[p_level].bno !=
-				be32_to_cpu(node->btree[entry].before))  {
+	if (cursor->level[p_level].bno != be32_to_cpu(btree[entry].before))  {
 #ifdef XR_DIR_TRACE
 		fprintf(stderr, "bad directory btree pointer, child bno "
 			"should be %d, block bno is %d, hashval is %u\n",
-			be32_to_cpu(node->btree[entry].before),
+			be32_to_cpu(btree[entry].before),
 			cursor->level[p_level].bno,
 			cursor->level[p_level].hashval);
 		fprintf(stderr, "verify_da_path returns 1 (bad) #1a\n");
@@ -634,13 +644,13 @@ verify_da_path(xfs_mount_t	*mp,
 	 * block against the hashval in the current entry
 	 */
 	if (cursor->level[p_level].hashval !=
-				be32_to_cpu(node->btree[entry].hashval))  {
+				be32_to_cpu(btree[entry].hashval))  {
 		if (!no_modify)  {
 			do_warn(_("correcting bad hashval in interior "
 				  "dir/attr block\n\tin (level %d) in "
 				  "inode %" PRIu64 ".\n"),
 				this_level, cursor->ino);
-			node->btree[entry].hashval = cpu_to_be32(
+			btree[entry].hashval = cpu_to_be32(
 						cursor->level[p_level].hashval);
 			cursor->level[this_level].dirty++;
 		} else  {

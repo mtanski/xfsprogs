@@ -3072,6 +3072,7 @@ process_leaf_node_dir_v2_int(
 	xfs_dir2_leaf_tail_t	*ltp;
 	xfs_da_intnode_t	*node;
 	int			stale;
+	struct xfs_da3_icnode_hdr nodehdr;
 
 	leaf = iocur_top->data;
 	switch (be16_to_cpu(leaf->hdr.info.magic)) {
@@ -3120,13 +3121,12 @@ process_leaf_node_dir_v2_int(
 		break;
 	case XFS_DA_NODE_MAGIC:
 		node = iocur_top->data;
-		if (be16_to_cpu(node->hdr.level) < 1 ||
-					be16_to_cpu(node->hdr.level) > 
-							XFS_DA_NODE_MAXDEPTH) {
+		xfs_da3_node_hdr_from_disk(&nodehdr, node);
+		if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
 			if (!sflag || v)
 				dbprintf(_("bad node block level %d for dir ino "
 					 "%lld block %d\n"),
-					be16_to_cpu(node->hdr.level), id->ino, 
+					nodehdr.level, id->ino, 
 					dabno);
 			error++;
 		}

@@ -86,7 +86,7 @@ const field_t	dir2_flds[] = {
 	  dir2_leaf_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ "nhdr", FLDT_DA_NODE_HDR, OI(NOFF(hdr)), dir2_node_hdr_count,
 	  FLD_COUNT, TYP_NONE },
-	{ "nbtree", FLDT_DA_NODE_ENTRY, OI(NOFF(btree)), dir2_node_btree_count,
+	{ "nbtree", FLDT_DA_NODE_ENTRY, OI(NOFF(__btree)), dir2_node_btree_count,
 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
 	{ "fhdr", FLDT_DIR2_FREE_HDR, OI(FOFF(hdr)), dir2_free_hdr_count,
 	  FLD_COUNT, TYP_NONE },
@@ -185,7 +185,7 @@ const field_t	da_node_entry_flds[] = {
 const field_t	da_node_hdr_flds[] = {
 	{ "info", FLDT_DA_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
 	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
-	{ "level", FLDT_UINT16D, OI(HOFF(level)), C1, 0, TYP_NONE },
+	{ "level", FLDT_UINT16D, OI(HOFF(__level)), C1, 0, TYP_NONE },
 	{ NULL }
 };
 

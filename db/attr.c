@@ -54,7 +54,7 @@ const field_t	attr_flds[] = {
 	  FLD_COUNT, TYP_NONE },
 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
-	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(btree)), attr_node_btree_count,
+	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
 	{ "nvlist", FLDT_ATTR_LEAF_NAME, attr_leaf_nvlist_offset,
 	  attr_leaf_nvlist_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
@@ -144,7 +144,7 @@ const field_t	attr_node_entry_flds[] = {
 const field_t	attr_node_hdr_flds[] = {
 	{ "info", FLDT_ATTR_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
 	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
-	{ "level", FLDT_UINT16D, OI(HOFF(level)), C1, 0, TYP_NONE },
+	{ "level", FLDT_UINT16D, OI(HOFF(__level)), C1, 0, TYP_NONE },
 	{ NULL }
 };
 

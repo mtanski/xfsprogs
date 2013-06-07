@@ -703,6 +703,7 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
 	struct xfs_buf *bp1, *bp2;
 	xfs_dablk_t blkno;
 	int error;
+	struct xfs_da_node_entry *btree;
 
 	trace_xfs_attr_leaf_to_node(args);
 
@@ -728,16 +729,16 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
 	/*
 	 * Set up the new root node.
 	 */
-	error = xfs_da_node_create(args, 0, 1, &bp1, XFS_ATTR_FORK);
+	error = xfs_da3_node_create(args, 0, 1, &bp1, XFS_ATTR_FORK);
 	if (error)
 		goto out;
 	node = bp1->b_addr;
 	leaf = bp2->b_addr;
 	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
 	/* both on-disk, don't endian-flip twice */
-	node->btree[0].hashval =
-		leaf->entries[be16_to_cpu(leaf->hdr.count)-1 ].hashval;
-	node->btree[0].before = cpu_to_be32(blkno);
+	btree = xfs_da3_node_tree_p(node);
+	btree[0].hashval = leaf->entries[be16_to_cpu(leaf->hdr.count)-1 ].hashval;
+	btree[0].before = cpu_to_be32(blkno);
 	node->hdr.count = cpu_to_be16(1);
 	xfs_trans_log_buf(args->trans, bp1, 0, XFS_LBSIZE(dp->i_mount) - 1);
 	error = 0;
@@ -825,7 +826,7 @@ xfs_attr_leaf_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
 	 * NOTE: rebalance() currently depends on the 2nd block being empty.
 	 */
 	xfs_attr_leaf_rebalance(state, oldblk, newblk);
-	error = xfs_da_blk_link(state, oldblk, newblk);
+	error = xfs_da3_blk_link(state, oldblk, newblk);
 	if (error)
 		return(error);
 
@@ -1453,7 +1454,7 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
 		 */
 		forward = (info->forw != 0);
 		memcpy(&state->altpath, &state->path, sizeof(state->path));
-		error = xfs_da_path_shift(state, &state->altpath, forward,
+		error = xfs_da3_path_shift(state, &state->altpath, forward,
 						 0, &retval);
 		if (error)
 			return(error);
@@ -1510,10 +1511,10 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
 	 */
 	memcpy(&state->altpath, &state->path, sizeof(state->path));
 	if (blkno < blk->blkno) {
-		error = xfs_da_path_shift(state, &state->altpath, forward,
+		error = xfs_da3_path_shift(state, &state->altpath, forward,
 						 0, &retval);
 	} else {
-		error = xfs_da_path_shift(state, &state->path, forward,
+		error = xfs_da3_path_shift(state, &state->path, forward,
 						 0, &retval);
 	}
 	if (error)
