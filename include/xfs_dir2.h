@@ -104,4 +104,11 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
 extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
 		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
 
+extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
+extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
+extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
+extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
+extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
+
+
 #endif	/* __XFS_DIR2_H__ */

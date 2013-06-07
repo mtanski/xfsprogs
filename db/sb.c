@@ -231,15 +231,14 @@ sb_logcheck(void)
 	}
 
 	memset(&log, 0, sizeof(log));
-	if (!x.logdev)
-		x.logdev = x.ddev;
+	libxfs_buftarg_init(mp, x.ddev, x.logdev, x.rtdev);
 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
 	x.lbsize = BBSIZE;
 	if (xfs_sb_version_hassector(&mp->m_sb))
 		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
 
-	log.l_dev = (mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev;
+	log.l_dev = mp->m_logdev_targp;
 	log.l_logsize = BBTOB(log.l_logBBsize);
 	log.l_logBBsize = x.logBBsize;
 	log.l_logBBstart = x.logBBstart;
@@ -271,8 +270,7 @@ sb_logzero(uuid_t *uuidp)
 
 	dbprintf(_("Clearing log and setting UUID\n"));
 
-	if (libxfs_log_clear(
-			(mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev,
+	if (libxfs_log_clear(mp->m_logdev_targp,
 			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 			(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
 			uuidp,

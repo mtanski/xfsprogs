@@ -457,7 +457,7 @@ rtmount_init(
 	sbp = &mp->m_sb;
 	if (sbp->sb_rblocks == 0)
 		return 0;
-	if (mp->m_rtdev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
+	if (mp->m_rtdev_targp->dev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
 			progname);
 		return -1;
@@ -486,7 +486,7 @@ rtmount_init(
 		return -1;
 	}
 	bp = libxfs_readbuf(mp->m_rtdev,
-			d - XFS_FSB_TO_BB(mp, 1), XFS_FSB_TO_BB(mp, 1), 0);
+			d - XFS_FSB_TO_BB(mp, 1), XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (bp == NULL) {
 		fprintf(stderr, _("%s: realtime size check failed\n"),
 			progname);
@@ -599,6 +599,72 @@ out_unwind:
 	return error;
 }
 
+static struct xfs_buftarg *
+libxfs_buftarg_alloc(
+	struct xfs_mount	*mp,
+	dev_t			dev)
+{
+	struct xfs_buftarg	*btp;
+
+	btp = malloc(sizeof(*btp));
+	if (!btp) {
+		fprintf(stderr, _("%s: buftarg init failed\n"),
+			progname);
+		exit(1);
+	}
+	btp->bt_mount = mp;
+	btp->dev = dev;
+	return btp;
+}
+
+void
+libxfs_buftarg_init(
+	struct xfs_mount	*mp,
+	dev_t			dev,
+	dev_t			logdev,
+	dev_t			rtdev)
+{
+	if (mp->m_ddev_targp) {
+		/* should already have all buftargs initialised */
+		if (mp->m_ddev_targp->dev != dev ||
+		    mp->m_ddev_targp->bt_mount != mp) {
+			fprintf(stderr,
+				_("%s: bad buftarg reinit, ddev\n"),
+				progname);
+			exit(1);
+		}
+		if (!logdev || logdev == dev) {
+			if (mp->m_logdev_targp != mp->m_ddev_targp) {
+				fprintf(stderr,
+				_("%s: bad buftarg reinit, ldev mismatch\n"),
+					progname);
+				exit(1);
+			}
+		} else if (mp->m_logdev_targp->dev != logdev ||
+			   mp->m_logdev_targp->bt_mount != mp) {
+			fprintf(stderr,
+				_("%s: bad buftarg reinit, logdev\n"),
+				progname);
+			exit(1);
+		}
+		if (rtdev && (mp->m_rtdev_targp->dev != rtdev ||
+			      mp->m_rtdev_targp->bt_mount != mp)) {
+			fprintf(stderr,
+				_("%s: bad buftarg reinit, rtdev\n"),
+				progname);
+			exit(1);
+		}
+		return;
+	}
+
+	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev);
+	if (!logdev || logdev == dev)
+		mp->m_logdev_targp = mp->m_ddev_targp;
+	else
+		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev);
+	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
+}
+
 /*
  * Mount structure initialization, provides a filled-in xfs_mount_t
  * such that the numerous XFS_* macros can be used.  If dev is zero,
@@ -618,9 +684,8 @@ libxfs_mount(
 	xfs_sb_t	*sbp;
 	int		error;
 
-	mp->m_dev = dev;
-	mp->m_rtdev = rtdev;
-	mp->m_logdev = logdev;
+	libxfs_buftarg_init(mp, dev, logdev, rtdev);
+
 	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
 	mp->m_sb = *sb;
 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
@@ -705,7 +770,7 @@ libxfs_mount(
 
 	bp = libxfs_readbuf(mp->m_dev,
 			d - XFS_FSS_TO_BB(mp, 1), XFS_FSS_TO_BB(mp, 1),
-			!(flags & LIBXFS_MOUNT_DEBUGGER));
+			!(flags & LIBXFS_MOUNT_DEBUGGER), NULL);
 	if (!bp) {
 		fprintf(stderr, _("%s: data size check failed\n"), progname);
 		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
@@ -713,13 +778,14 @@ libxfs_mount(
 	} else
 		libxfs_putbuf(bp);
 
-	if (mp->m_logdev && mp->m_logdev != mp->m_dev) {
+	if (mp->m_logdev_targp->dev &&
+	    mp->m_logdev_targp->dev != mp->m_ddev_targp->dev) {
 		d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 		if ( (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) ||
-		     (!(bp = libxfs_readbuf(mp->m_logdev,
+		     (!(bp = libxfs_readbuf(mp->m_logdev_targp,
 					d - XFS_FSB_TO_BB(mp, 1),
 					XFS_FSB_TO_BB(mp, 1),
-					!(flags & LIBXFS_MOUNT_DEBUGGER)))) ) {
+					!(flags & LIBXFS_MOUNT_DEBUGGER), NULL))) ) {
 			fprintf(stderr, _("%s: log size checks failed\n"),
 					progname);
 			if (!(flags & LIBXFS_MOUNT_DEBUGGER))

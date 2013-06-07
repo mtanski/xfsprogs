@@ -676,7 +676,7 @@ rtinit(
 				error);
 		}
 		for (i = 0, ep = map; i < nmap; i++, ep++) {
-			libxfs_device_zero(mp->m_dev,
+			libxfs_device_zero(mp->m_ddev_targp,
 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 				XFS_FSB_TO_BB(mp, ep->br_blockcount));
 			bno += ep->br_blockcount;
@@ -713,7 +713,7 @@ rtinit(
 				error);
 		}
 		for (i = 0, ep = map; i < nmap; i++, ep++) {
-			libxfs_device_zero(mp->m_dev,
+			libxfs_device_zero(mp->m_ddev_targp,
 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 				XFS_FSB_TO_BB(mp, ep->br_blockcount));
 			bno += ep->br_blockcount;

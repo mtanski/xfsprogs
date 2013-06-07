@@ -116,12 +116,25 @@ typedef struct {
 #define LIBXFS_EXCLUSIVELY	0x0010	/* disallow other accesses (O_EXCL) */
 #define LIBXFS_DIRECT		0x0020	/* can use direct I/O, not buffered */
 
+/*
+ * IO verifier callbacks need the xfs_mount pointer, so we have to behave
+ * somewhat like the kernel now for userspace IO in terms of having buftarg
+ * based devices...
+ */
+struct xfs_buftarg {
+	struct xfs_mount	*bt_mount;
+	dev_t			dev;
+};
+
+extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
+				    dev_t logdev, dev_t rtdev);
+
 extern char	*progname;
 extern int	libxfs_init (libxfs_init_t *);
 extern void	libxfs_destroy (void);
 extern int	libxfs_device_to_fd (dev_t);
 extern dev_t	libxfs_device_open (char *, int, int, int);
-extern void	libxfs_device_zero (dev_t, xfs_daddr_t, uint);
+extern void	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
 extern void	libxfs_device_close (dev_t);
 extern int	libxfs_device_alignment (void);
 extern void	libxfs_report(FILE *);
@@ -130,10 +143,11 @@ extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
 /* check or write log footer: specify device, log size in blocks & uuid */
 typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
 
-extern int	libxfs_log_clear (dev_t, xfs_daddr_t, uint, uuid_t *,
-				int, int, int);
+extern int	libxfs_log_clear (struct xfs_buftarg *, xfs_daddr_t, uint,
+				uuid_t *, int, int, int);
 extern int	libxfs_log_header (xfs_caddr_t, uuid_t *, int, int, int,
 				libxfs_get_block_t *, void *);
+
 
 /*
  * Define a user-level mount structure with all we need
@@ -151,9 +165,12 @@ typedef struct xfs_mount {
 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
-	dev_t			m_dev;
-	dev_t			m_logdev;
-	dev_t			m_rtdev;
+	struct xfs_buftarg	*m_ddev_targp;
+	struct xfs_buftarg	*m_logdev_targp;
+	struct xfs_buftarg	*m_rtdev_targp;
+#define m_dev		m_ddev_targp
+#define m_logdev	m_logdev_targp
+#define m_rtdev		m_rtdev_targp
 	__uint8_t		m_dircook_elog;	/* log d-cookie entry bits */
 	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
 	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
@@ -218,11 +235,6 @@ extern void	libxfs_rtmount_destroy (xfs_mount_t *);
 /*
  * Simple I/O interface
  */
-typedef struct xfs_buftarg {
-	struct xfs_mount	*bt_mount;
-	dev_t			dev;
-} xfs_buftarg_t;
-
 #define XB_PAGES        2
 
 struct xfs_buf_map {
@@ -244,7 +256,8 @@ typedef struct xfs_buf {
 	xfs_daddr_t		b_bn;
 	unsigned		b_bcount;
 	unsigned int		b_length;
-	dev_t			b_dev;
+	struct xfs_buftarg	*b_target;
+#define b_dev		b_target->dev
 	pthread_mutex_t		b_lock;
 	pthread_t		b_holder;
 	unsigned int		b_recur;
@@ -254,7 +267,6 @@ typedef struct xfs_buf {
 	void			*b_addr;
 	int			b_error;
 	const struct xfs_buf_ops *b_ops;
-	struct xfs_buftarg	*b_target;
 	struct xfs_perag	*b_pag;
 	struct xfs_buf_map	*b_map;
 	int			b_nmaps;
@@ -315,12 +327,12 @@ extern struct cache_operations	libxfs_bcache_operations;
 
 #ifdef XFS_BUF_TRACING
 
-#define libxfs_readbuf(dev, daddr, len, flags) \
+#define libxfs_readbuf(dev, daddr, len, flags, ops) \
 	libxfs_trace_readbuf(__FUNCTION__, __FILE__, __LINE__, \
-			    (dev), (daddr), (len), (flags))
-#define libxfs_readbuf_map(dev, map, nmaps, flags) \
+			    (dev), (daddr), (len), (flags), (ops))
+#define libxfs_readbuf_map(dev, map, nmaps, flags, ops) \
 	libxfs_trace_readbuf_map(__FUNCTION__, __FILE__, __LINE__, \
-			    (dev), (map), (nmaps), (flags))
+			    (dev), (map), (nmaps), (flags), (ops))
 #define libxfs_writebuf(buf, flags) \
 	libxfs_trace_writebuf(__FUNCTION__, __FILE__, __LINE__, \
 			      (buf), (flags))
@@ -337,28 +349,34 @@ extern struct cache_operations	libxfs_bcache_operations;
 	libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
 
 extern xfs_buf_t *libxfs_trace_readbuf(const char *, const char *, int,
-			dev_t, xfs_daddr_t, int, int);
+			struct xfs_buftarg *, xfs_daddr_t, int, int,
+			const struct xfs_buf_ops *);
 extern xfs_buf_t *libxfs_trace_readbuf_map(const char *, const char *, int,
-			dev_t, struct xfs_buf_map *, int, int);
+			struct xfs_buftarg *, struct xfs_buf_map *, int, int,
+			const struct xfs_buf_ops *);
 extern int	libxfs_trace_writebuf(const char *, const char *, int,
 			xfs_buf_t *, int);
 extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int,
-			dev_t, xfs_daddr_t, int);
+			struct xfs_buftarg *, xfs_daddr_t, int);
 extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
-			dev_t, struct xfs_buf_map *, int);
+			struct xfs_buftarg *, struct xfs_buf_map *, int);
 extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
-			dev_t, xfs_daddr_t, int, unsigned int);
+			struct xfs_buftarg *, xfs_daddr_t, int, unsigned int);
 extern void	libxfs_trace_putbuf (const char *, const char *, int,
 			xfs_buf_t *);
 
 #else
 
-extern xfs_buf_t *libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
-extern xfs_buf_t *libxfs_readbuf_map(dev_t, struct xfs_buf_map *, int, int);
+extern xfs_buf_t *libxfs_readbuf(struct xfs_buftarg *, xfs_daddr_t, int, int,
+			const struct xfs_buf_ops *);
+extern xfs_buf_t *libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+			int, int, const struct xfs_buf_ops *);
 extern int	libxfs_writebuf(xfs_buf_t *, int);
-extern xfs_buf_t *libxfs_getbuf(dev_t, xfs_daddr_t, int);
-extern xfs_buf_t *libxfs_getbuf_map(dev_t, struct xfs_buf_map *, int);
-extern xfs_buf_t *libxfs_getbuf_flags(dev_t, xfs_daddr_t, int, unsigned int);
+extern xfs_buf_t *libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_getbuf_map(struct xfs_buftarg *,
+			struct xfs_buf_map *, int);
+extern xfs_buf_t *libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t,
+			int, unsigned int);
 extern void	libxfs_putbuf (xfs_buf_t *);
 
 #endif
@@ -371,11 +389,11 @@ extern int	libxfs_bcache_overflowed(void);
 extern int	libxfs_bcache_usage(void);
 
 /* Buffer (Raw) Interfaces */
-extern xfs_buf_t *libxfs_getbufr(dev_t, xfs_daddr_t, int);
+extern xfs_buf_t *libxfs_getbufr(struct xfs_buftarg *, xfs_daddr_t, int);
 extern void	libxfs_putbufr(xfs_buf_t *);
 
 extern int	libxfs_writebuf_int(xfs_buf_t *, int);
-extern int	libxfs_readbufr(dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
+extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
 
 extern int libxfs_bhash_size;
 extern int libxfs_ihash_size;
@@ -461,24 +479,26 @@ extern int	libxfs_trans_read_buf (xfs_mount_t *, xfs_trans_t *, dev_t,
 				xfs_daddr_t, int, uint, struct xfs_buf **);
 */
 
-struct xfs_buf	*libxfs_trans_get_buf_map(struct xfs_trans *tp, dev_t dev,
-				       struct xfs_buf_map *map, int nmaps,
-				       uint flags);
+struct xfs_buf	*libxfs_trans_get_buf_map(struct xfs_trans *tp,
+					struct xfs_buftarg *btp,
+					struct xfs_buf_map *map, int nmaps,
+					uint flags);
 
 static inline struct xfs_buf *
 libxfs_trans_get_buf(
 	struct xfs_trans	*tp,
-	dev_t			dev,
+	struct xfs_buftarg	*btp,
 	xfs_daddr_t		blkno,
 	int			numblks,
 	uint			flags)
 {
 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
-	return libxfs_trans_get_buf_map(tp, dev, &map, 1, flags);
+	return libxfs_trans_get_buf_map(tp, btp, &map, 1, flags);
 }
 
 int		libxfs_trans_read_buf_map(struct xfs_mount *mp,
-				       struct xfs_trans *tp, dev_t dev,
+				       struct xfs_trans *tp,
+				       struct xfs_buftarg *btp,
 				       struct xfs_buf_map *map, int nmaps,
 				       uint flags, struct xfs_buf **bpp,
 				       const struct xfs_buf_ops *ops);
@@ -487,7 +507,7 @@ static inline int
 libxfs_trans_read_buf(
 	struct xfs_mount	*mp,
 	struct xfs_trans	*tp,
-	dev_t			dev,
+	struct xfs_buftarg	*btp,
 	xfs_daddr_t		blkno,
 	int			numblks,
 	uint			flags,
@@ -495,7 +515,7 @@ libxfs_trans_read_buf(
 	const struct xfs_buf_ops *ops)
 {
 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
-	return libxfs_trans_read_buf_map(mp, tp, dev, &map, 1,
+	return libxfs_trans_read_buf_map(mp, tp, btp, &map, 1,
 				      flags, bpp, ops);
 }
 
@@ -507,7 +527,7 @@ typedef struct xfs_inode {
 	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
 	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
 	struct xfs_imap		i_imap;		/* location for xfs_imap() */
-	dev_t			i_dev;		/* dev for this inode */
+	struct xfs_buftarg			i_dev;		/* dev for this inode */
 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
 	xfs_ifork_t		i_df;		/* data fork */
 	xfs_trans_t		*i_transp;	/* ptr to owning transaction */

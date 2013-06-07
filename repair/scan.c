@@ -85,7 +85,7 @@ scan_sbtree(
 	xfs_buf_t	*bp;
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno, root),
-			XFS_FSB_TO_BB(mp, 1), 0);
+			XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp) {
 		do_error(_("can't read btree block %d/%d\n"), agno, root);
 		return;
@@ -130,7 +130,7 @@ scan_lbtree(
 	int		dirty = 0;
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
-		      XFS_FSB_TO_BB(mp, 1), 0);
+		      XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp)  {
 		do_error(_("can't read btree block %d/%d\n"),
 			XFS_FSB_TO_AGNO(mp, root),
@@ -1060,7 +1060,7 @@ scan_freelist(
 
 	agflbuf = libxfs_readbuf(mp->m_dev,
 				 XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
-				 XFS_FSS_TO_BB(mp, 1), 0);
+				 XFS_FSS_TO_BB(mp, 1), 0, &xfs_agfl_buf_ops);
 	if (!agflbuf)  {
 		do_abort(_("can't read agfl block for ag %d\n"), agno);
 		return;
@@ -1207,7 +1207,7 @@ scan_ag(
 	int		status;
 
 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-				XFS_FSS_TO_BB(mp, 1), 0);
+				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
 	if (!sbbuf)  {
 		do_error(_("can't get root superblock for ag %d\n"), agno);
 		return;
@@ -1223,7 +1223,7 @@ scan_ag(
 
 	agfbuf = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
-			XFS_FSS_TO_BB(mp, 1), 0);
+			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
 	if (!agfbuf)  {
 		do_error(_("can't read agf block for ag %d\n"), agno);
 		libxfs_putbuf(sbbuf);
@@ -1234,7 +1234,7 @@ scan_ag(
 
 	agibuf = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
-			XFS_FSS_TO_BB(mp, 1), 0);
+			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
 	if (!agibuf)  {
 		do_error(_("can't read agi block for ag %d\n"), agno);
 		libxfs_putbuf(agfbuf);
@@ -1353,7 +1353,8 @@ scan_ags(
 	}
 	memset(agcnts, 0, mp->m_sb.sb_agcount * sizeof(*agcnts));
 
-	create_work_queue(&wq, mp, scan_threads);
+	create_work_queue(&wq, mp, 1);
+	//create_work_queue(&wq, mp, scan_threads);
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
 		queue_work(&wq, scan_ag, i, &agcnts[i]);

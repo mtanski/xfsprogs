@@ -558,9 +558,11 @@ main(int argc, char **argv)
 	}
 
 	/* prepare the mount structure */
-	sbp = libxfs_readbuf(x.ddev, XFS_SB_DADDR,
-				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0);
 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
+	libxfs_buftarg_init(&xfs_m, x.ddev, x.logdev, x.rtdev);
+	sbp = libxfs_readbuf(xfs_m.m_ddev_targp, XFS_SB_DADDR,
+				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0,
+				&xfs_sb_buf_ops);
 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
 
 	/*

@@ -55,9 +55,6 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define EWRONGFS	EINVAL
 #endif
 
-#define m_ddev_targp			m_dev
-#define m_logdev_targp			m_logdev
-#define m_rtdev_targp			m_rtdev
 #define xfs_error_level			0
 
 #define STATIC				static
@@ -187,11 +184,7 @@ roundup_pow_of_two(uint v)
 	NULL;						\
 })
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
-#define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
-					(*(bpp) = libxfs_readbuf((devp), \
-							(blkno), (len), 1), 0)
-#define xfs_buf_get(devp,blkno,len,f)	\
-					(libxfs_getbuf((devp), (blkno), (len)))
+#define xfs_buf_get(devp,blkno,len,f)	(libxfs_getbuf((devp), (blkno), (len)))
 #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
 
 #define XBRW_READ			LIBXFS_BREAD
@@ -372,7 +365,7 @@ void xfs_buf_item_init (xfs_buf_t *, xfs_mount_t *);
 void xfs_buf_item_log (xfs_buf_log_item_t *, uint, uint);
 
 /* xfs_trans_buf.c */
-xfs_buf_t *xfs_trans_buf_item_match(xfs_trans_t *, dev_t,
+xfs_buf_t *xfs_trans_buf_item_match(xfs_trans_t *, struct xfs_buftarg *,
 			struct xfs_buf_map *, int);
 
 /* local source files */

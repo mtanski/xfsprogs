@@ -103,7 +103,8 @@ static struct xfs_buf *
 da_read_buf(
 	xfs_mount_t	*mp,
 	int		nex,
-	bmap_ext_t	*bmp)
+	bmap_ext_t	*bmp,
+	const struct xfs_buf_ops *ops)
 {
 #define MAP_ARRAY_SZ 4
 	struct xfs_buf_map map_array[MAP_ARRAY_SZ];
@@ -125,7 +126,7 @@ da_read_buf(
 		map[i].bm_bn = XFS_FSB_TO_DADDR(mp, bmp[i].startblock);
 		map[i].bm_len = XFS_FSB_TO_BB(mp, bmp[i].blockcount);
 	}
-	bp = libxfs_readbuf_map(mp->m_dev, map, nex, 0);
+	bp = libxfs_readbuf_map(mp->m_dev, map, nex, 0, ops);
 	if (map != map_array)
 		free(map);
 	return bp;
@@ -172,7 +173,7 @@ traverse_int_dir2block(xfs_mount_t	*mp,
 		if (nex == 0)
 			goto error_out;
 
-		bp = da_read_buf(mp, nex, bmp);
+		bp = da_read_buf(mp, nex, bmp, &xfs_da3_node_buf_ops);
 		if (bmp != &lbmp)
 			free(bmp);
 		if (bp == NULL) {
@@ -536,7 +537,7 @@ _("can't get map info for block %u of directory inode %" PRIu64 "\n"),
 			return(1);
 		}
 
-		bp = da_read_buf(mp, nex, bmp);
+		bp = da_read_buf(mp, nex, bmp, &xfs_da3_node_buf_ops);
 		if (bmp != &lbmp)
 			free(bmp);
 
@@ -1581,7 +1582,7 @@ _("block %u for directory inode %" PRIu64 " is missing\n"),
 			mp->m_dirdatablk, ino);
 		return 1;
 	}
-	bp = da_read_buf(mp, nex, bmp);
+	bp = da_read_buf(mp, nex, bmp, &xfs_dir3_block_buf_ops);
 	if (bmp != &lbmp)
 		free(bmp);
 	if (bp == NULL) {
@@ -1711,7 +1712,7 @@ _("can't map block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ino);
 			goto error_out;
 		}
-		bp = da_read_buf(mp, nex, bmp);
+		bp = da_read_buf(mp, nex, bmp, &xfs_dir3_leafn_buf_ops);
 		if (bmp != &lbmp)
 			free(bmp);
 		bmp = NULL;
@@ -1897,7 +1898,7 @@ _("block %" PRIu64 " for directory inode %" PRIu64 " is missing\n"),
 				dbno, ino);
 			continue;
 		}
-		bp = da_read_buf(mp, nex, bmp);
+		bp = da_read_buf(mp, nex, bmp, &xfs_dir3_data_buf_ops);
 		if (bmp != &lbmp)
 			free(bmp);
 		if (bp == NULL) {

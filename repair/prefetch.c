@@ -221,7 +221,7 @@ pf_scan_lbtree(
 	int			rc;
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dbno),
-			XFS_FSB_TO_BB(mp, 1), 0);
+			XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp)
 		return 0;
 
@@ -720,7 +720,7 @@ init_prefetch(
 	xfs_mount_t		*pmp)
 {
 	mp = pmp;
-	mp_fd = libxfs_device_to_fd(mp->m_dev);
+	mp_fd = libxfs_device_to_fd(mp->m_ddev_targp->dev);
 	pf_max_bytes = sysconf(_SC_PAGE_SIZE) << 7;
 	pf_max_bbs = pf_max_bytes >> BBSHIFT;
 	pf_max_fsbs = pf_max_bytes >> mp->m_sb.sb_blocklog;

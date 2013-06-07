@@ -40,7 +40,7 @@ process_agi_unlinked(
 
 	bp = libxfs_readbuf(mp->m_dev,
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
-			mp->m_sb.sb_sectsize/BBSIZE, 0);
+			mp->m_sb.sb_sectsize/BBSIZE, 0, &xfs_agi_buf_ops);
 	if (!bp)
 		do_error(_("cannot read agi block %" PRId64 " for ag %u\n"),
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)), agno);

@@ -40,18 +40,15 @@ zero_log(xfs_mount_t *mp)
 	int error;
 	struct xlog	log;
 	xfs_daddr_t head_blk, tail_blk;
-	dev_t logdev = (mp->m_sb.sb_logstart == 0) ? x.logdev : x.ddev;
 
 	memset(&log, 0, sizeof(log));
-	if (!x.logdev)
-		x.logdev = x.ddev;
 	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
 	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
 	x.lbsize = BBSIZE;
 	if (xfs_sb_version_hassector(&mp->m_sb))
 		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
 
-	log.l_dev = logdev;
+	log.l_dev = mp->m_logdev_targp;
 	log.l_logsize = BBTOB(x.logBBsize);
 	log.l_logBBsize = x.logBBsize;
 	log.l_logBBstart = x.logBBstart;
@@ -96,7 +93,7 @@ zero_log(xfs_mount_t *mp)
 		}
 	}
 
-	libxfs_log_clear(logdev,
+	libxfs_log_clear(log.l_dev,
 		XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
 		&mp->m_sb.sb_uuid,

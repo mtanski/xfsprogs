@@ -386,7 +386,7 @@ libxfs_trans_bhold(
 xfs_buf_t *
 libxfs_trans_get_buf_map(
 	xfs_trans_t		*tp,
-	dev_t			dev,
+	struct xfs_buftarg	*btp,
 	struct xfs_buf_map	*map,
 	int			nmaps,
 	uint			f)
@@ -395,9 +395,9 @@ libxfs_trans_get_buf_map(
 	xfs_buf_log_item_t	*bip;
 
 	if (tp == NULL)
-		return libxfs_getbuf_map(dev, map, nmaps);
+		return libxfs_getbuf_map(btp, map, nmaps);
 
-	bp = xfs_trans_buf_item_match(tp, dev, map, nmaps);
+	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
@@ -406,7 +406,7 @@ libxfs_trans_get_buf_map(
 		return bp;
 	}
 
-	bp = libxfs_getbuf_map(dev, map, nmaps);
+	bp = libxfs_getbuf_map(btp, map, nmaps);
 	if (bp == NULL)
 		return NULL;
 #ifdef XACT_DEBUG
@@ -465,7 +465,7 @@ int
 libxfs_trans_read_buf_map(
 	xfs_mount_t		*mp,
 	xfs_trans_t		*tp,
-	dev_t			dev,
+	struct xfs_buftarg	*btp,
 	struct xfs_buf_map	*map,
 	int			nmaps,
 	uint			flags,
@@ -479,7 +479,7 @@ libxfs_trans_read_buf_map(
 	*bpp = NULL;
 
 	if (tp == NULL) {
-		bp = libxfs_readbuf_map(dev, map, nmaps, flags);
+		bp = libxfs_readbuf_map(btp, map, nmaps, flags, ops);
 		if (!bp) {
 			return (flags & XBF_TRYLOCK) ?
 				EAGAIN : XFS_ERROR(ENOMEM);
@@ -489,7 +489,7 @@ libxfs_trans_read_buf_map(
 		goto done;
 	}
 
-	bp = xfs_trans_buf_item_match(tp, dev, map, nmaps);
+	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
 	if (bp != NULL) {
 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
 		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
@@ -498,7 +498,7 @@ libxfs_trans_read_buf_map(
 		goto done;
 	}
 
-	bp = libxfs_readbuf_map(dev, map, nmaps, flags);
+	bp = libxfs_readbuf_map(btp, map, nmaps, flags, ops);
 	if (!bp) {
 		return (flags & XBF_TRYLOCK) ?
 			EAGAIN : XFS_ERROR(ENOMEM);

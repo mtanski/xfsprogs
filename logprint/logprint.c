@@ -140,6 +140,7 @@ main(int argc, char **argv)
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
+	memset(&mount, 0, sizeof(mount));
 
 	progname = basename(argv[0]);
 	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
@@ -220,6 +221,7 @@ main(int argc, char **argv)
 		exit(1);
 
 	logstat(&mount);
+	libxfs_buftarg_init(&mount, x.ddev, x.logdev, x.rtdev);
 
 	logfd = (x.logfd < 0) ? x.dfd : x.logfd;
 
@@ -236,7 +238,7 @@ main(int argc, char **argv)
 
 	ASSERT(x.logBBsize <= INT_MAX);
 
-	log.l_dev         = x.logdev;
+	log.l_dev = mount.m_logdev_targp;
 	log.l_logsize     = BBTOB(x.logBBsize);
 	log.l_logBBstart  = x.logBBstart;
 	log.l_logBBsize   = x.logBBsize;

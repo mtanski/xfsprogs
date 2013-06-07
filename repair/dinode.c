@@ -836,7 +836,8 @@ get_agino_buf(xfs_mount_t	 *mp,
 
 	size = XFS_FSB_TO_BB(mp, MAX(1, XFS_INODES_PER_CHUNK/inodes_per_block));
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno,
-		XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)), size, 0);
+		XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)), size, 0,
+		&xfs_inode_buf_ops);
 	if (!bp) {
 		do_warn(_("cannot read inode (%u/%u), disk block %" PRIu64 "\n"),
 			agno, irec->ino_startnum,
@@ -947,7 +948,7 @@ getfunc_btree(xfs_mount_t		*mp,
 	ASSERT(verify_dfsbno(mp, fsbno));
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-				XFS_FSB_TO_BB(mp, 1), 0);
+				XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp) {
 		do_error(_("cannot read bmap block %" PRIu64 "\n"), fsbno);
 		return(NULLDFSBNO);
@@ -1004,7 +1005,7 @@ _("- # of bmap records in inode %" PRIu64 " less than minimum (%u, min - %u), pr
 		 */
 		libxfs_putbuf(bp);
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-					XFS_FSB_TO_BB(mp, 1), 0);
+					XFS_FSB_TO_BB(mp, 1), 0, NULL);
 		if (!bp) {
 			do_error(_("cannot read bmap block %" PRIu64 "\n"),
 				fsbno);
@@ -1510,7 +1511,8 @@ process_symlink(
 			if (fsbno != NULLDFSBNO)
 				bp = libxfs_readbuf(mp->m_dev,
 						XFS_FSB_TO_DADDR(mp, fsbno),
-						XFS_FSB_TO_BB(mp, 1), 0);
+						XFS_FSB_TO_BB(mp, 1), 0,
+						&xfs_symlink_buf_ops);
 			if (!bp || fsbno == NULLDFSBNO) {
 				do_warn(
 _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),

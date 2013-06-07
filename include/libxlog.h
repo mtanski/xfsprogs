@@ -28,7 +28,7 @@ struct xlog {
 	xfs_lsn_t	l_tail_lsn;     /* lsn of 1st LR w/ unflush buffers */
 	xfs_lsn_t	l_last_sync_lsn;/* lsn of last LR on disk */
 	xfs_mount_t	*l_mp;	        /* mount point */
-	dev_t		l_dev;	        /* dev_t of log */
+	struct xfs_buftarg *l_dev;	        /* dev_t of log */
 	xfs_daddr_t	l_logBBstart;   /* start block of log */
 	int		l_logsize;      /* size of log in bytes */
 	int		l_logBBsize;    /* size of log in 512 byte chunks */

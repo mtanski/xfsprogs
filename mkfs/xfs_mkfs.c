@@ -2435,13 +2435,15 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	 * swap (somewhere around the page size), jfs (32k),
 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
 	 */
-	buf = libxfs_getbuf(xi.ddev, 0, BTOBB(WHACK_SIZE));
+	libxfs_buftarg_init(mp, xi.ddev, xi.logdev, xi.rtdev);
+	buf = libxfs_getbuf(mp->m_ddev_targp, 0, BTOBB(WHACK_SIZE));
 	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 	libxfs_purgebuf(buf);
 
 	/* OK, now write the superblock */
-	buf = libxfs_getbuf(xi.ddev, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
+	buf = libxfs_getbuf(mp->m_ddev_targp, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
+	buf->b_ops = &xfs_sb_buf_ops;
 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2460,10 +2462,11 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	/*
 	 * Zero out the end of the device, to obliterate any
 	 * old MD RAID (or other) metadata at the end of the device.
- 	 * (MD sb is ~64k from the end, take out a wider swath to be sure)
+	 * (MD sb is ~64k from the end, take out a wider swath to be sure)
 	 */
 	if (!xi.disfile) {
-		buf = libxfs_getbuf(xi.ddev, (xi.dsize - BTOBB(WHACK_SIZE)),
+		buf = libxfs_getbuf(mp->m_ddev_targp,
+				    (xi.dsize - BTOBB(WHACK_SIZE)),
 				    BTOBB(WHACK_SIZE));
 		memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2471,14 +2474,12 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	}
 
 	/*
-	 * Zero the log if there is one.
+	 * Zero the log....
 	 */
-	if (loginternal)
-		xi.logdev = xi.ddev;
-	if (xi.logdev)
-		libxfs_log_clear(xi.logdev, XFS_FSB_TO_DADDR(mp, logstart),
-			(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
-			&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
+	libxfs_log_clear(mp->m_logdev_targp,
+		XFS_FSB_TO_DADDR(mp, logstart),
+		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
 
 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
 	if (mp == NULL) {
@@ -2487,13 +2488,19 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		exit(1);
 	}
 
+	/*
+	 * XXX: this code is effectively shared with the kernel growfs code.
+	 * These initialisations should be pulled into libxfs to keep the
+	 * kernel/userspace header initialisation code the same.
+	 */
 	for (agno = 0; agno < agcount; agno++) {
 		/*
 		 * Superblock.
 		 */
-		buf = libxfs_getbuf(xi.ddev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1));
+		buf->b_ops = &xfs_sb_buf_ops;
 		memset(XFS_BUF_PTR(buf), 0, sectorsize);
 		libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2501,9 +2508,10 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * AG header block: freespace
 		 */
-		buf = libxfs_getbuf(mp->m_dev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 				XFS_FSS_TO_BB(mp, 1));
+		buf->b_ops = &xfs_agf_buf_ops;
 		agf = XFS_BUF_TO_AGF(buf);
 		memset(agf, 0, sectorsize);
 		if (agno == agcount - 1)
@@ -2534,10 +2542,11 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * AG header block: inodes
 		 */
-		buf = libxfs_getbuf(mp->m_dev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 				XFS_FSS_TO_BB(mp, 1));
 		agi = XFS_BUF_TO_AGI(buf);
+		buf->b_ops = &xfs_agi_buf_ops;
 		memset(agi, 0, sectorsize);
 		agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
 		agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
@@ -2556,9 +2565,10 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * BNO btree root block
 		 */
-		buf = libxfs_getbuf(mp->m_dev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
 				bsize);
+		buf->b_ops = &xfs_allocbt_buf_ops;
 		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_ABTB_MAGIC);
@@ -2608,9 +2618,10 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * CNT btree root block
 		 */
-		buf = libxfs_getbuf(mp->m_dev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
 				bsize);
+		buf->b_ops = &xfs_allocbt_buf_ops;
 		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_ABTC_MAGIC);
@@ -2650,9 +2661,10 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		/*
 		 * INO btree root block
 		 */
-		buf = libxfs_getbuf(mp->m_dev,
+		buf = libxfs_getbuf(mp->m_ddev_targp,
 				XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
 				bsize);
+		buf->b_ops = &xfs_inobt_buf_ops;
 		block = XFS_BUF_TO_BLOCK(buf);
 		memset(block, 0, blocksize);
 		block->bb_magic = cpu_to_be32(XFS_IBT_MAGIC);
@@ -2666,7 +2678,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	/*
 	 * Touch last block, make fs the right size if it's a file.
 	 */
-	buf = libxfs_getbuf(mp->m_dev,
+	buf = libxfs_getbuf(mp->m_ddev_targp,
 		(xfs_daddr_t)XFS_FSB_TO_BB(mp, dblocks - 1LL), bsize);
 	memset(XFS_BUF_PTR(buf), 0, blocksize);
 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2674,8 +2686,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	/*
 	 * Make sure we can write the last block in the realtime area.
 	 */
-	if (mp->m_rtdev && rtblocks > 0) {
-		buf = libxfs_getbuf(mp->m_rtdev,
+	if (mp->m_rtdev_targp->dev && rtblocks > 0) {
+		buf = libxfs_getbuf(mp->m_rtdev_targp,
 				XFS_FSB_TO_BB(mp, rtblocks - 1LL), bsize);
 		memset(XFS_BUF_PTR(buf), 0, blocksize);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2728,7 +2740,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AGB_TO_DADDR(mp, mp->m_sb.sb_agcount-1,
 					XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1),
-				LIBXFS_EXIT_ON_FAILURE);
+				LIBXFS_EXIT_ON_FAILURE, &xfs_sb_buf_ops);
 		XFS_BUF_TO_SBP(buf)->sb_rootino = cpu_to_be64(
 							mp->m_sb.sb_rootino);
 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
@@ -2740,7 +2752,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				XFS_AGB_TO_DADDR(mp, (mp->m_sb.sb_agcount-1)/2,
 					XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1),
-				LIBXFS_EXIT_ON_FAILURE);
+				LIBXFS_EXIT_ON_FAILURE, &xfs_sb_buf_ops);
 			XFS_BUF_TO_SBP(buf)->sb_rootino = cpu_to_be64(
 							mp->m_sb.sb_rootino);
 			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);

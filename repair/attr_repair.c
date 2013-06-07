@@ -170,7 +170,7 @@ traverse_int_dablock(xfs_mount_t	*mp,
 			goto error_out;
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-				XFS_FSB_TO_BB(mp, 1), 0);
+				XFS_FSB_TO_BB(mp, 1), 0, &xfs_da3_node_buf_ops);
 		if (!bp) {
 			if (whichfork == XFS_DATA_FORK)
 				do_warn(
@@ -552,7 +552,7 @@ verify_da_path(xfs_mount_t	*mp,
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-				XFS_FSB_TO_BB(mp, 1), 0);
+				XFS_FSB_TO_BB(mp, 1), 0, &xfs_da3_node_buf_ops);
 		if (!bp) {
 			do_warn(
 	_("can't read block %u (%" PRIu64 ") for directory inode %" PRIu64 "\n"),
@@ -986,7 +986,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 			break;
 		}
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
-				XFS_FSB_TO_BB(mp, 1), 0);
+				XFS_FSB_TO_BB(mp, 1), 0, NULL);
 		if (!bp) {
 			do_warn(
 	_("can't read remote block for attributes of inode %" PRIu64 "\n"), ino);
@@ -1315,7 +1315,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
 		}
 
 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
-					XFS_FSB_TO_BB(mp, 1), 0);
+					XFS_FSB_TO_BB(mp, 1), 0, NULL);
 		if (!bp) {
 			do_warn(
 	_("can't read file block %u (fsbno %" PRIu64 ") for attribute fork of inode %" PRIu64 "\n"),
@@ -1497,7 +1497,7 @@ process_longform_attr(
 	}
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
-				XFS_FSB_TO_BB(mp, 1), 0);
+				XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp) {
 		do_warn(
 	_("can't read block 0 of inode %" PRIu64 " attribute fork\n"),

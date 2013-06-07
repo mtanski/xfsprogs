@@ -30,8 +30,6 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
 				const unsigned char *name, int len);
 
 /* xfs_dir2_block.c */
-extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
-
 extern int xfs_dir2_block_addname(struct xfs_da_args *args);
 extern int xfs_dir2_block_getdents(struct xfs_inode *dp, void *dirent,
 		xfs_off_t *offset, filldir_t filldir);
@@ -47,9 +45,6 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
 #else
 #define	xfs_dir3_data_check(dp,bp)
 #endif
-
-extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
-extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
 
 extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
 extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
@@ -78,9 +73,6 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
 
 /* xfs_dir2_leaf.c */
-extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
-extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
-
 extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
 extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,

@@ -32,7 +32,7 @@ kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
 xfs_buf_t *
 xfs_trans_buf_item_match(
 	xfs_trans_t		*tp,
-	dev_t			dev,
+	struct xfs_buftarg	*btp,
 	struct xfs_buf_map	*map,
 	int			nmaps)
 {
@@ -47,7 +47,7 @@ xfs_trans_buf_item_match(
         list_for_each_entry(lidp, &tp->t_items, lid_trans) {
                 blip = (struct xfs_buf_log_item *)lidp->lid_item;
                 if (blip->bli_item.li_type == XFS_LI_BUF &&
-		    blip->bli_buf->b_dev == dev &&
+		    blip->bli_buf->b_target->dev == btp->dev &&
 		    XFS_BUF_ADDR(blip->bli_buf) == map[0].bm_bn &&
 		    blip->bli_buf->b_bcount == BBTOB(len)) {
 			ASSERT(blip->bli_buf->b_map_count == nmaps);

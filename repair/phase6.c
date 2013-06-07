@@ -510,7 +510,7 @@ mk_rbmino(xfs_mount_t *mp)
 				error);
 		}
 		for (i = 0, ep = map; i < nmap; i++, ep++) {
-			libxfs_device_zero(mp->m_dev,
+			libxfs_device_zero(mp->m_ddev_targp,
 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 				XFS_FSB_TO_BB(mp, ep->br_blockcount));
 			bno += ep->br_blockcount;
@@ -765,7 +765,7 @@ mk_rsumino(xfs_mount_t *mp)
 				error);
 		}
 		for (i = 0, ep = map; i < nmap; i++, ep++) {
-			libxfs_device_zero(mp->m_dev,
+			libxfs_device_zero(mp->m_ddev_targp,
 				      XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 				      XFS_FSB_TO_BB(mp, ep->br_blockcount));
 			bno += ep->br_blockcount;
@@ -1829,7 +1829,8 @@ longform_dir2_check_leaf(
 	struct xfs_dir2_leaf_entry *ents;
 
 	da_bno = mp->m_dirleafblk;
-	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK, NULL)) {
+	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK,
+				&xfs_dir3_leaf1_buf_ops)) {
 		do_error(
 	_("can't read block %u for directory inode %" PRIu64 "\n"),
 			da_bno, ip->i_ino);
@@ -1906,7 +1907,7 @@ longform_dir2_check_node(
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK, NULL)) {
+				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops)) {
 			do_warn(
 	_("can't read leaf block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ip->i_ino);
@@ -1953,7 +1954,7 @@ longform_dir2_check_node(
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK, NULL)) {
+				XFS_DATA_FORK, &xfs_dir3_free_buf_ops)) {
 			do_warn(
 	_("can't read freespace block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ip->i_ino);
@@ -2075,7 +2076,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 					num_bps * sizeof(struct xfs_buf*));
 		}
 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bplist[db],
-				XFS_DATA_FORK, NULL)) {
+				XFS_DATA_FORK, &xfs_dir3_data_buf_ops)) {
 			do_warn(
 	_("can't read data block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ino);

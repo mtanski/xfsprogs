@@ -52,7 +52,7 @@ check_aginode_block(xfs_mount_t	*mp,
 	 * so no one else will overlap them.
 	 */
 	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno, agbno),
-			XFS_FSB_TO_BB(mp, 1), 0);
+			XFS_FSB_TO_BB(mp, 1), 0, NULL);
 	if (!bp) {
 		do_warn(_("cannot read agbno (%u/%u), disk block %" PRId64 "\n"),
 			agno, agbno, XFS_AGB_TO_DADDR(mp, agno, agbno));
@@ -65,6 +65,8 @@ check_aginode_block(xfs_mount_t	*mp,
 				XFS_OFFBNO_TO_AGINO(mp, agbno, i)))
 			cnt++;
 	}
+	if (cnt)
+		bp->b_ops = &xfs_inode_buf_ops;
 
 	libxfs_putbuf(bp);
 	return(cnt);
@@ -625,7 +627,8 @@ process_inode_chunk(
 
 		bplist[bp_index] = libxfs_readbuf(mp->m_dev,
 					XFS_AGB_TO_DADDR(mp, agno, agbno),
-					XFS_FSB_TO_BB(mp, blks_per_cluster), 0);
+					XFS_FSB_TO_BB(mp, blks_per_cluster), 0,
+					NULL);
 		if (!bplist[bp_index]) {
 			do_warn(_("cannot read inode %" PRIu64 ", disk block %" PRId64 ", cnt %d\n"),
 				XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
@@ -639,6 +642,7 @@ process_inode_chunk(
 			return(1);
 		}
 		agbno += blks_per_cluster;
+		bplist[bp_index]->b_ops = &xfs_inode_buf_ops;
 
 		pftrace("readbuf %p (%llu, %d) in AG %d", bplist[bp_index],
 			(long long)XFS_BUF_ADDR(bplist[bp_index]),
