@@ -870,7 +870,7 @@ main(
 	__uint64_t		agsize;
 	xfs_alloc_rec_t		*arec;
 	int			attrversion;
-	int			projid32bit;
+	int			projid16bit;
 	struct xfs_btree_block	*block;
 	int			blflag;
 	int			blocklog;
@@ -966,7 +966,7 @@ main(
 	textdomain(PACKAGE);
 
 	attrversion = 2;
-	projid32bit = 0;
+	projid16bit = 0;
 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
 	blocklog = blocksize = 0;
 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
@@ -1310,7 +1310,7 @@ main(
 					c = atoi(value);
 					if (c < 0 || c > 1)
 						illegal(value, "i projid32bit");
-					projid32bit = c;
+					projid16bit = c ? 0 : 1;
 					break;
 				default:
 					unknown('i', value);
@@ -1752,6 +1752,57 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
 	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
 		lsu = blocksize;
 		logversion = 2;
+	}
+
+	/*
+	 * Now we have blocks and sector sizes set up, check parameters that are
+	 * no longer optional for CRC enabled filesystems.  Catch them up front
+	 * here before doing anything else.
+	 */
+	if (crcs_enabled) {
+		/* minimum inode size is 512 bytes, ipflag checked later */
+		if ((isflag || ilflag) && inodelog < XFS_DINODE_DFL_CRC_LOG) {
+			fprintf(stderr,
+_("Minimum inode size for CRCs is %d bytes\n"),
+				1 << XFS_DINODE_DFL_CRC_LOG);
+			usage();
+		}
+
+		/* inodes always aligned */
+		if (iaflag != 1) {
+			fprintf(stderr,
+_("Inodes always aligned for CRC enabled filesytems\n"));
+			usage();
+		}
+
+		/* lazy sb counters always on */
+		if (lazy_sb_counters != 1) {
+			fprintf(stderr,
+_("Lazy superblock counted always enabled for CRC enabled filesytems\n"));
+			usage();
+		}
+
+		/* version 2 logs always on */
+		if (logversion != 2) {
+			fprintf(stderr,
+_("V2 logs always enabled for CRC enabled filesytems\n"));
+			usage();
+		}
+
+		/* attr2 always on */
+		if (attrversion != 2) {
+			fprintf(stderr,
+_("V2 attribute format always enabled on CRC enabled filesytems\n"));
+			usage();
+		}
+
+		/* 32 bit project quota always on */
+		/* attr2 always on */
+		if (projid16bit == 1) {
+			fprintf(stderr,
+_("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+			usage();
+		}
 	}
 
 	if (nsflag || nlflag) {
@@ -2381,7 +2432,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
 			dfile, isize, (long long)agcount, (long long)agsize,
-			"", sectorsize, attrversion, projid32bit,
+			"", sectorsize, attrversion, !projid16bit,
 			"", crcs_enabled,
 			"", blocksize, (long long)dblocks, imaxpct,
 			"", dsunit, dswidth,
@@ -2449,7 +2500,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		sbp->sb_logsectsize = 0;
 	}
 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
-					attrversion == 2, projid32bit == 1, 0);
+					attrversion == 2, !projid16bit, 0);
 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
 					dsunit != 0,
 					logversion == 2, attrversion == 1,
