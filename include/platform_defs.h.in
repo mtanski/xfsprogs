@@ -123,6 +123,11 @@ typedef unsigned long long __psunsigned_t;
 # endif
 #endif
 
+/* Check whether to define umode_t ourselves. */
+#ifndef HAVE_UMODE_T
+typedef unsigned short umode_t;
+#endif
+
 /* Define if you want gettext (I18N) support */
 #undef ENABLE_GETTEXT
 #ifdef ENABLE_GETTEXT

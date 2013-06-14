@@ -109,6 +109,9 @@ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
 
 ifeq ($(PKG_PLATFORM),linux)
 PCFLAGS = -D_GNU_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
+ifeq ($(HAVE_UMODE_T),yes)
+PCFLAGS += -DHAVE_UMODE_T
+endif
 DEPENDFLAGS = -D__linux__
 endif
 ifeq ($(PKG_PLATFORM),gnukfreebsd)
