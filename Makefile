@@ -135,6 +135,8 @@ deb: include/builddefs include/platform_defs.h
 ifeq ($(HAVE_BUILDDEFS), no)
 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
 else
+	# need to build translations before the source tarball
+	$(Q)$(MAKE) $(MAKEOPTS) -C po
 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
 	$(Q)cd $(SRCDIR) && dpkg-buildpackage
 endif
