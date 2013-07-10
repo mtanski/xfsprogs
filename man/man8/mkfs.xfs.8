@@ -244,6 +244,11 @@ will automatically query the logical volume for appropriate
 and
 .B swidth
 values.
+.TP
+.BI noalign
+This option disables automatic geometry detection and creates the filesystem
+without stripe geometry alignment even if the underlying storage device provides
+this information.
 .RE
 .TP
 .B \-f
@@ -695,6 +700,10 @@ This is used to specify the size of the real-time section.
 This suboption is only needed if the real-time section of the
 filesystem should occupy less space than the size of the partition
 or logical volume containing the section.
+.TP
+.BI noalign
+This option disables stripe size detection, enforcing a realtime device with no
+stripe geometry.
 .RE
 .TP
 .BI \-s " sector_size"
