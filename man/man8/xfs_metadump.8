@@ -32,10 +32,8 @@ is \-, then the output is sent to stdout. This allows the output to be
 redirected to another program such as a compression application.
 .PP
 .B xfs_metadump
-should only be used to copy unmounted filesystems, read-only mounted
-filesystems, or frozen filesystems (see
-.BR xfs_freeze (8)).
-Otherwise, the generated dump could be inconsistent or corrupt.
+may only be used to copy unmounted filesystems, or read-only mounted
+filesystems.
 .PP
 .B xfs_metadump
 does not alter the source filesystem in any way. The
