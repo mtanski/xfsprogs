@@ -552,6 +552,7 @@ fill_rbmino(xfs_mount_t *mp)
 			error);
 	}
 
+	first = NULLFSBLOCK;
 	while (bno < mp->m_sb.sb_rbmblocks)  {
 		/*
 		 * fill the file one block at a time
@@ -621,6 +622,7 @@ fill_rsumino(xfs_mount_t *mp)
 			error);
 	}
 
+	first = NULLFSBLOCK;
 	while (bno < end_bno)  {
 		/*
 		 * fill the file one block at a time
