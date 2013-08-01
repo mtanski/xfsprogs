@@ -326,6 +326,13 @@ xfs_sb_from_disk(
 static void
 xfs_sb_quota_from_disk(struct xfs_sb *sbp)
 {
+	/*
+	 * We need to do these manipilations only if we are working
+	 * with an older version of on-disk superblock.
+	 */
+	if (xfs_sb_version_has_pquotino(sbp))
+		return;
+
 	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
 		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
 					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
@@ -333,6 +340,18 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
 		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
 					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
 	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
+
+	if (sbp->sb_qflags & XFS_PQUOTA_ACCT)  {
+		/*
+		 * In older version of superblock, on-disk superblock only
+		 * has sb_gquotino, and in-core superblock has both sb_gquotino
+		 * and sb_pquotino. But, only one of them is supported at any
+		 * point of time. So, if PQUOTA is set in disk superblock,
+		 * copy over sb_gquotino to sb_pquotino.
+		 */
+		sbp->sb_pquotino = sbp->sb_gquotino;
+		sbp->sb_gquotino = NULLFSINO;
+	}
 }
 
 static inline void
@@ -342,6 +361,13 @@ xfs_sb_quota_to_disk(
 	__int64_t	*fields)
 {
 	__uint16_t	qflags = from->sb_qflags;
+
+	/*
+	 * We need to do these manipilations only if we are working
+	 * with an older version of on-disk superblock.
+	 */
+	if (xfs_sb_version_has_pquotino(from))
+		return;
 
 	if (*fields & XFS_SB_QFLAGS) {
 		/*
@@ -362,6 +388,21 @@ xfs_sb_quota_to_disk(
 		to->sb_qflags = cpu_to_be16(qflags);
 		*fields &= ~XFS_SB_QFLAGS;
 	}
+
+	/*
+	 * GQUOTINO and PQUOTINO cannot be used together in versions
+	 * of superblock that do not have pquotino. from->sb_flags
+	 * tells us which quota is active and should be copied to
+	 * disk.
+	 */
+	if ((*fields & XFS_SB_GQUOTINO) &&
+				(from->sb_qflags & XFS_GQUOTA_ACCT))
+		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
+	else if ((*fields & XFS_SB_PQUOTINO) &&
+				(from->sb_qflags & XFS_PQUOTA_ACCT))
+		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
+
+	*fields &= ~(XFS_SB_PQUOTINO | XFS_SB_GQUOTINO);
 }
 
 /*
@@ -386,6 +427,7 @@ xfs_sb_to_disk(
 		return;
 
 	xfs_sb_quota_to_disk(to, from, &fields);
+
 	while (fields) {
 		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
 		first = xfs_sb_info[f].offset;

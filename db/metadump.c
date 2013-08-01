@@ -1976,7 +1976,10 @@ copy_sb_inodes(void)
 	if (!copy_ino(mp->m_sb.sb_uquotino, TYP_DQBLK))
 		return 0;
 
-	return copy_ino(mp->m_sb.sb_gquotino, TYP_DQBLK);
+	if (!copy_ino(mp->m_sb.sb_gquotino, TYP_DQBLK))
+		return 0;
+
+	return copy_ino(mp->m_sb.sb_pquotino, TYP_DQBLK);
 }
 
 static int

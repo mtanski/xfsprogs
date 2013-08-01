@@ -326,7 +326,8 @@ process_inode(
 			skipd = 1;
 		else if (!qflag &&
 			 (ino == mp->m_sb.sb_uquotino ||
-			  ino == mp->m_sb.sb_gquotino))
+			  ino == mp->m_sb.sb_gquotino ||
+			  ino == mp->m_sb.sb_pquotino))
 			skipd = 1;
 		else
 			skipd = !fflag;

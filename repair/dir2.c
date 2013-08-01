@@ -817,6 +817,9 @@ process_sf_dir2(
 		} else if (lino == mp->m_sb.sb_gquotino)  {
 			junkit = 1;
 			junkreason = _("group quota");
+		} else if (lino == mp->m_sb.sb_pquotino)  {
+			junkit = 1;
+			junkreason = _("project quota");
 		} else if ((irec_p = find_inode_rec(mp,
 					XFS_INO_TO_AGNO(mp, lino),
 					XFS_INO_TO_AGINO(mp, lino))) != NULL) {
@@ -1332,6 +1335,8 @@ process_dir2_data(
 			clearreason = _("user quota");
 		} else if (ent_ino == mp->m_sb.sb_gquotino) {
 			clearreason = _("group quota");
+		} else if (ent_ino == mp->m_sb.sb_pquotino) {
+			clearreason = _("project quota");
 		} else {
 			irec_p = find_inode_rec(mp,
 						XFS_INO_TO_AGNO(mp, ent_ino),

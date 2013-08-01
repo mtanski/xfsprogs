@@ -775,7 +775,7 @@ main(int argc, char **argv)
 _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
 	}
 
-	if (lost_quotas && !have_uquotino && !have_gquotino)  {
+	if (lost_quotas && !have_uquotino && !have_gquotino && !have_pquotino) {
 		if (!no_modify)  {
 			do_warn(
 _("Warning:  no quota inodes were found.  Quotas disabled.\n"));

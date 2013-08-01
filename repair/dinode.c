@@ -1812,6 +1812,15 @@ process_check_sb_inodes(
 		}
 		return 0;
 	}
+	if (lino == mp->m_sb.sb_pquotino)  {
+		if (*type != XR_INO_DATA)  {
+			do_warn(_("project quota inode %" PRIu64 " has bad type 0x%x\n"),
+				lino, dinode_fmt(dinoc));
+			mp->m_sb.sb_pquotino = NULLFSINO;
+			return 1;
+		}
+		return 0;
+	}
 	if (lino == mp->m_sb.sb_rsumino) {
 		if (*type != XR_INO_RTSUM) {
 			do_warn(

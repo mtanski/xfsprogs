@@ -133,10 +133,13 @@ dquot_f(
 		dbprintf(_("dquot command requires one %s id argument\n"), s);
 		return 0;
 	}
-	ino = (dogrp || doprj) ? mp->m_sb.sb_gquotino : mp->m_sb.sb_uquotino;
-	if (ino == 0 || ino == NULLFSINO ||
-	    (dogrp && (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT)) ||
-	    (doprj && (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))) {
+	ino = mp->m_sb.sb_uquotino;
+	if (doprj)
+		ino = mp->m_sb.sb_pquotino;
+	else if (dogrp)
+		ino = mp->m_sb.sb_gquotino;
+
+	if (ino == 0 || ino == NULLFSINO) {
 		dbprintf(_("no %s quota inode present\n"), s);
 		return 0;
 	}

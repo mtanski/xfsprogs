@@ -1835,7 +1835,8 @@ init(
 	if (mp->m_sb.sb_inoalignmt)
 		sbversion |= XFS_SB_VERSION_ALIGNBIT;
 	if ((mp->m_sb.sb_uquotino && mp->m_sb.sb_uquotino != NULLFSINO) ||
-	    (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO))
+	    (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO) ||
+	    (mp->m_sb.sb_pquotino && mp->m_sb.sb_pquotino != NULLFSINO))
 		sbversion |= XFS_SB_VERSION_QUOTABIT;
 	quota_init();
 	return 1;
@@ -2732,7 +2733,8 @@ process_inode(
 			addlink_inode(id);
 		}
 		else if (id->ino == mp->m_sb.sb_uquotino ||
-			 id->ino == mp->m_sb.sb_gquotino) {
+			 id->ino == mp->m_sb.sb_gquotino ||
+			 id->ino == mp->m_sb.sb_pquotino) {
 			type = DBM_QUOTA;
 			blkmap = blkmap_alloc(idic.di_nextents);
 			addlink_inode(id);
@@ -2853,7 +2855,7 @@ process_inode(
 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
 			process_quota(IS_GROUP_QUOTA, id, blkmap);
-		else if (id->ino == mp->m_sb.sb_gquotino &&
+		else if (id->ino == mp->m_sb.sb_pquotino &&
 			 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
 			 (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD))
 			process_quota(IS_PROJECT_QUOTA, id, blkmap);
@@ -3624,8 +3626,8 @@ quota_init(void)
 	       mp->m_sb.sb_gquotino != NULLFSINO &&
 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
-	qpdo = mp->m_sb.sb_gquotino != 0 &&
-	       mp->m_sb.sb_gquotino != NULLFSINO &&
+	qpdo = mp->m_sb.sb_pquotino != 0 &&
+	       mp->m_sb.sb_pquotino != NULLFSINO &&
 	       (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
 	       (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD);
 	if (qudo)

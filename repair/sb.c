@@ -40,6 +40,7 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 	xfs_ino_t	rsumino;
 	xfs_ino_t	uquotino;
 	xfs_ino_t	gquotino;
+	xfs_ino_t	pquotino;
 	__uint16_t	versionnum;
 
 	rootino = dest->sb_rootino;
@@ -47,6 +48,7 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 	rsumino = dest->sb_rsumino;
 	uquotino = dest->sb_uquotino;
 	gquotino = dest->sb_gquotino;
+	pquotino = dest->sb_pquotino;
 
 	versionnum = dest->sb_versionnum;
 
@@ -57,6 +59,7 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
 	dest->sb_rsumino = rsumino;
 	dest->sb_uquotino = uquotino;
 	dest->sb_gquotino = gquotino;
+	dest->sb_pquotino = pquotino;
 
 	dest->sb_versionnum = versionnum;
 

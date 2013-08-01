@@ -117,6 +117,7 @@ parse_sb_version(xfs_sb_t *sb)
 	fs_has_extflgbit = 0;
 	have_uquotino = 0;
 	have_gquotino = 0;
+	have_pquotino = 0;
 	issue_warning = 0;
 
 	/*
@@ -253,6 +254,10 @@ _("WARNING:  you have disallowed quotas but this filesystem\n"
 			if (sb->sb_gquotino != 0 &&
 					sb->sb_gquotino != NULLFSINO)
 				have_gquotino = 1;
+
+			if (sb->sb_pquotino != 0 &&
+					sb->sb_pquotino != NULLFSINO)
+				have_pquotino = 1;
 		}
 	}
 

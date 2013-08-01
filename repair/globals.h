@@ -137,6 +137,7 @@ EXTERN int		need_rsumino;
 EXTERN int		lost_quotas;
 EXTERN int		have_uquotino;
 EXTERN int		have_gquotino;
+EXTERN int		have_pquotino;
 EXTERN int		lost_uquotino;
 EXTERN int		lost_gquotino;
 EXTERN int		lost_pquotino;
