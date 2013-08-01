@@ -1384,6 +1384,8 @@ scan_ags(
 		ifreecount += agcnts[i].ifreecount;
 	}
 
+	free(agcnts);
+
 	/*
 	 * Validate that our manual counts match the superblock.
 	 */
