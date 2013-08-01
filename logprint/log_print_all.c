@@ -29,7 +29,7 @@ xlog_print_find_oldest(
 	xfs_buf_t	*bp;
 	xfs_daddr_t	first_blk;
 	uint		first_half_cycle, last_half_cycle;
-	int		error;
+	int		error = 0;
 
 	if (xlog_find_zeroed(log, &first_blk))
 		return 0;
@@ -43,17 +43,14 @@ xlog_print_find_oldest(
 	last_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
 	ASSERT(last_half_cycle != 0);
 
-	if (first_half_cycle == last_half_cycle) { /* all cycle nos are same */
+	if (first_half_cycle == last_half_cycle) /* all cycle nos are same */
 		*last_blk = 0;
-	} else {		/* have 1st and last; look for middle cycle */
+	else		/* have 1st and last; look for middle cycle */
 		error = xlog_find_cycle_start(log, bp, first_blk,
 					      last_blk, last_half_cycle);
-		if (error)
-			return error;
-	}
 
 	xlog_put_bp(bp);
-	return 0;
+	return error;
 }
 
 void
