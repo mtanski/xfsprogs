@@ -407,11 +407,15 @@ xfs_bmap_sanity_check(
 {
 	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
 
-	if (block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC) ||
-	    be16_to_cpu(block->bb_level) != level ||
+	if (block->bb_magic != cpu_to_be32(XFS_BMAP_CRC_MAGIC) &&
+	    block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC))
+		return 0;
+
+	if (be16_to_cpu(block->bb_level) != level ||
 	    be16_to_cpu(block->bb_numrecs) == 0 ||
 	    be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
 		return 0;
+
 	return 1;
 }
 
@@ -914,6 +918,7 @@ xfs_bmap_extents_to_btree(
 	xfs_extnum_t		nextents;	/* number of file extents */
 	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
 
+	mp = ip->i_mount;
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
 
@@ -927,16 +932,18 @@ xfs_bmap_extents_to_btree(
 	 * Fill in the root.
 	 */
 	block = ifp->if_broot;
-	block->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
-	block->bb_level = cpu_to_be16(1);
-	block->bb_numrecs = cpu_to_be16(1);
-	block->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
-	block->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+				 XFS_BMAP_CRC_MAGIC, 1, 1, ip->i_ino,
+				 XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
+	else
+		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+				 XFS_BMAP_MAGIC, 1, 1, ip->i_ino,
+				 XFS_BTREE_LONG_PTRS);
 
 	/*
 	 * Need a cursor.  Can't allocate until bb_level is filled in.
 	 */
-	mp = ip->i_mount;
 	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
 	cur->bc_private.b.firstblock = *firstblock;
 	cur->bc_private.b.flist = flist;
@@ -985,10 +992,15 @@ xfs_bmap_extents_to_btree(
 	 */
 	abp->b_ops = &xfs_bmbt_buf_ops;
 	ablock = XFS_BUF_TO_BLOCK(abp);
-	ablock->bb_magic = cpu_to_be32(XFS_BMAP_MAGIC);
-	ablock->bb_level = 0;
-	ablock->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
-	ablock->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+				XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
+				XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
+	else
+		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+				XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
+				XFS_BTREE_LONG_PTRS);
+
 	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
 	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
 	for (cnt = i = 0; i < nextents; i++) {
@@ -1016,8 +1028,8 @@ xfs_bmap_extents_to_btree(
 	 * Do all this logging at the end so that
 	 * the root is at the right level.
 	 */
-	xfs_btree_log_block(cur, abp, XFS_BB_ALL_BITS);
 	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
+	xfs_btree_log_block(cur, abp, XFS_BB_ALL_BITS);
 	ASSERT(*curp == NULL);
 	*curp = cur;
 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
@@ -1038,7 +1050,8 @@ xfs_bmap_local_to_extents(
 	xfs_extlen_t	total,		/* total blocks needed by transaction */
 	int		*logflagsp,	/* inode logging flags */
 	int		whichfork,
-	void		(*init_fn)(struct xfs_buf *bp,
+	void		(*init_fn)(struct xfs_trans *tp,
+				   struct xfs_buf *bp,
 				   struct xfs_inode *ip,
 				   struct xfs_ifork *ifp))
 {
@@ -1090,7 +1103,7 @@ xfs_bmap_local_to_extents(
 		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
 
 		/* initialise the block and copy the data */
-		init_fn(bp, ip, ifp);
+		init_fn(tp, bp, ip, ifp);
 
 		/* account for the change in fork size and log everything */
 		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
@@ -1197,16 +1210,19 @@ xfs_bmap_add_attrfork_extents(
  */
 STATIC void
 xfs_bmap_local_to_extents_init_fn(
+	struct xfs_trans	*tp,
 	struct xfs_buf		*bp,
 	struct xfs_inode	*ip,
 	struct xfs_ifork	*ifp)
 {
 	bp->b_ops = &xfs_bmbt_buf_ops;
 	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+	xfs_trans_buf_set_type(tp, bp, XFS_BLF_BTREE_BUF);
 }
 
 STATIC void
 xfs_symlink_local_to_remote(
+	struct xfs_trans	*tp,
 	struct xfs_buf		*bp,
 	struct xfs_inode	*ip,
 	struct xfs_ifork	*ifp)
@@ -1225,8 +1241,7 @@ xfs_symlink_local_to_remote(
  *
  * XXX (dgc): investigate whether directory conversion can use the generic
  * formatting callout. It should be possible - it's just a very complex
- * formatter. it would also require passing the transaction through to the init
- * function.
+ * formatter.
  */
 STATIC int					/* error */
 xfs_bmap_add_attrfork_local(

@@ -333,7 +333,7 @@ xfs_sb_verify(
 	 * Only check the in progress field for the primary superblock as
 	 * mkfs.xfs doesn't clear it from secondary superblocks.
 	 */
-	error = xfs_mount_validate_sb(mp, &sb, bp->b_blkno == XFS_SB_DADDR);
+	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
 	if (error)
 		xfs_buf_ioerror(bp, error);
 }

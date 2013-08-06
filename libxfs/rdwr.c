@@ -323,17 +323,17 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
 
 #ifdef IO_BCOMPARE_CHECK
 	if (bp->b_dev == bkey->device &&
-	    bp->b_blkno == bkey->blkno &&
+	    bp->b_bn == bkey->blkno &&
 	    bp->b_bcount != BBTOB(bkey->bblen))
 		fprintf(stderr, "%lx: Badness in key lookup (length)\n"
 			"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
 			pthread_self(),
-			(unsigned long long)bp->b_blkno, (int)bp->b_bcount,
+			(unsigned long long)bp->b_bn, (int)bp->b_bcount,
 			(unsigned long long)bkey->blkno, BBTOB(bkey->bblen));
 #endif
 
 	return (bp->b_dev == bkey->device &&
-		bp->b_blkno == bkey->blkno &&
+		bp->b_bn == bkey->blkno &&
 		bp->b_bcount == BBTOB(bkey->bblen));
 }
 
@@ -341,7 +341,7 @@ void
 libxfs_bprint(xfs_buf_t *bp)
 {
 	fprintf(stderr, "Buffer 0x%p blkno=%llu bytes=%u flags=0x%x count=%u\n",
-		bp, (unsigned long long)bp->b_blkno, (unsigned)bp->b_bcount,
+		bp, (unsigned long long)bp->b_bn, (unsigned)bp->b_bcount,
 		bp->b_flags, bp->b_node.cn_count);
 }
 
@@ -349,7 +349,7 @@ static void
 __initbuf(xfs_buf_t *bp, dev_t device, xfs_daddr_t bno, unsigned int bytes)
 {
 	bp->b_flags = 0;
-	bp->b_blkno = bno;
+	bp->b_bn = bno;
 	bp->b_bcount = bytes;
 	bp->b_length = BTOBB(bytes);
 	bp->b_dev = device;
@@ -613,7 +613,7 @@ libxfs_purgebuf(xfs_buf_t *bp)
 	struct xfs_bufkey key = {0};
 
 	key.device = bp->b_dev;
-	key.blkno = bp->b_blkno;
+	key.blkno = bp->b_bn;
 	key.bblen = bp->b_bcount >> BBSHIFT;
 
 	cache_node_purge(libxfs_bcache, &key, (struct cache_node *)bp);
@@ -669,7 +669,7 @@ libxfs_readbufr(dev_t dev, xfs_daddr_t blkno, xfs_buf_t *bp, int len, int flags)
 	error = __read_buf(fd, bp->b_addr, bytes, LIBXFS_BBTOOFF64(blkno), flags);
 	if (!error &&
 	    bp->b_dev == dev &&
-	    bp->b_blkno == blkno &&
+	    bp->b_bn == blkno &&
 	    bp->b_bcount == bytes)
 		bp->b_flags |= LIBXFS_B_UPTODATE;
 #ifdef IO_DEBUG
@@ -736,7 +736,7 @@ libxfs_readbuf_map(dev_t dev, struct xfs_buf_map *map, int nmaps, int flags)
 #ifdef IO_DEBUG
 	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
 		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
-		(long long)LIBXFS_BBTOOFF64(bp->b_blkno), (long long)bp->b_blkno, bp);
+		(long long)LIBXFS_BBTOOFF64(bp->b_bn), (long long)bp->b_bn, bp);
 #endif
 	return bp;
 }
@@ -772,7 +772,7 @@ libxfs_writebufr(xfs_buf_t *bp)
 
 	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
 		error = __write_buf(fd, bp->b_addr, bp->b_bcount,
-				    LIBXFS_BBTOOFF64(bp->b_blkno), bp->b_flags);
+				    LIBXFS_BBTOOFF64(bp->b_bn), bp->b_flags);
 	} else {
 		int	i;
 		char	*buf = bp->b_addr;
@@ -794,8 +794,8 @@ libxfs_writebufr(xfs_buf_t *bp)
 #ifdef IO_DEBUG
 	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p\n",
 			pthread_self(), __FUNCTION__, bp->b_bcount,
-			(long long)LIBXFS_BBTOOFF64(bp->b_blkno),
-			(long long)bp->b_blkno, bp);
+			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
+			(long long)bp->b_bn, bp);
 #endif
 	if (!error) {
 		bp->b_flags |= LIBXFS_B_UPTODATE;
@@ -826,7 +826,7 @@ libxfs_iomove(xfs_buf_t *bp, uint boff, int len, void *data, int flags)
 	if (boff + len > bp->b_bcount) {
 		printf("Badness, iomove out of range!\n"
 			"bp=(bno 0x%llx, bytes %u) range=(boff %u, bytes %u)\n",
-			(long long)bp->b_blkno, bp->b_bcount, boff, len);
+			(long long)bp->b_bn, bp->b_bcount, boff, len);
 		abort();
 	}
 #endif

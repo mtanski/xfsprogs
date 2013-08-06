@@ -249,6 +249,7 @@ roundup_pow_of_two(uint v)
 #define	xfs_trans_agblocks_delta(tp, d)
 #define	xfs_trans_agflist_delta(tp, d)
 #define	xfs_trans_agbtree_delta(tp, d)
+#define xfs_trans_buf_set_type(tp, bp, t)
 
 #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
 #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
@@ -313,6 +314,9 @@ do { \
 #define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
 #define xfs_trans_unreserve_quota_nblks(t,i,b,n,f)	((void) 0)
 #define xfs_qm_dqattach(i,f)				(0)
+
+#define uuid_copy(s,d)		platform_uuid_copy((s),(d))
+#define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
 
 /*
  * Prototypes for kernel static functions that are aren't in their

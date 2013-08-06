@@ -240,14 +240,14 @@ struct xfs_buf_ops {
 typedef struct xfs_buf {
 	struct cache_node	b_node;
 	unsigned int		b_flags;
-	xfs_daddr_t		b_blkno;
+	xfs_daddr_t		b_bn;
 	unsigned		b_bcount;
 	unsigned int		b_length;
 	dev_t			b_dev;
 	pthread_mutex_t		b_lock;
 	pthread_t		b_holder;
 	unsigned int		b_recur;
-	void			*b_fsprivate;
+	void			*b_fspriv;
 	void			*b_fsprivate2;
 	void			*b_fsprivate3;
 	void			*b_addr;
@@ -273,9 +273,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
 };
 
+#define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
+
 #define XFS_BUF_PTR(bp)			((char *)(bp)->b_addr)
 #define xfs_buf_offset(bp, offset)	(XFS_BUF_PTR(bp) + (offset))
-#define XFS_BUF_ADDR(bp)		((bp)->b_blkno)
+#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
 #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
 #define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
 #define XFS_BUF_TARGET(bp)		((bp)->b_dev)
@@ -284,11 +286,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 	XFS_BUF_SET_COUNT(bp,cnt);		\
 })
 
-#define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_blkno = (blk))
+#define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
 #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
 
-#define XFS_BUF_FSPRIVATE(bp,type)	((type)(bp)->b_fsprivate)
-#define XFS_BUF_SET_FSPRIVATE(bp,val)	(bp)->b_fsprivate = (void *)(val)
+#define XFS_BUF_FSPRIVATE(bp,type)	((type)(bp)->b_fspriv)
+#define XFS_BUF_SET_FSPRIVATE(bp,val)	(bp)->b_fspriv = (void *)(val)
 #define XFS_BUF_FSPRIVATE2(bp,type)	((type)(bp)->b_fsprivate2)
 #define XFS_BUF_SET_FSPRIVATE2(bp,val)	(bp)->b_fsprivate2 = (void *)(val)
 #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
@@ -392,6 +394,7 @@ typedef struct xfs_log_item {
 	struct xfs_log_item_desc	*li_desc;	/* ptr to current desc*/
 	struct xfs_mount		*li_mountp;	/* ptr to fs mount */
 	uint				li_type;	/* item type */
+	xfs_lsn_t			li_lsn;
 } xfs_log_item_t;
 
 typedef struct xfs_inode_log_item {
