@@ -149,3 +149,9 @@ extern void		sync_range_init(void);
 #else
 #define sync_range_init()	do { } while (0)
 #endif
+
+#ifdef HAVE_READDIR
+extern void		readdir_init(void);
+#else
+#define readdir_init()		do { } while (0)
+#endif

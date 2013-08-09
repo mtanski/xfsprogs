@@ -170,3 +170,18 @@ AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
     AC_SUBST(have_sync_file_range)
   ])
 
+#
+# Check if we have a readdir libc call
+#
+AC_DEFUN([AC_HAVE_READDIR],
+  [ AC_MSG_CHECKING([for readdir])
+    AC_TRY_LINK([
+#include <dirent.h>
+    ], [
+         readdir(0);
+    ], have_readdir=yes
+       AC_MSG_RESULT(yes),
+       AC_MSG_RESULT(no))
+    AC_SUBST(have_readdir)
+  ])
+

@@ -397,6 +397,27 @@ must be specified as another open file
 .RB ( \-f )
 or by path
 .RB ( \-i ).
+.TP
+.BI "readdir [ -v ] [ -o " offset " ] [ -l " length " ] "
+Read a range of directory entries from a given offset of a directory.
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.B \-v
+verbose mode - dump dirent content as defined in
+.BR readdir (3)
+.TP
+.B \-o
+specify starting
+.I offset
+.TP
+.B \-l
+specify total
+.I length
+to read (in bytes)
+.RE
+.PD
+.TP
 
 .SH MEMORY MAPPED I/O COMMANDS
 .TP
@@ -649,4 +670,5 @@ verbose output will be printed.
 .BR msync (2),
 .BR open (2),
 .BR pread (2),
-.BR pwrite (2).
+.BR pwrite (2),
+.BR readdir (3).

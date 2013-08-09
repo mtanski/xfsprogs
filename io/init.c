@@ -74,6 +74,7 @@ init_commands(void)
 	fiemap_init();
 	pwrite_init();
 	quit_init();
+	readdir_init();
 	resblks_init();
 	sendfile_init();
 	shutdown_init();
