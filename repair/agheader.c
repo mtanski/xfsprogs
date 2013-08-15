@@ -256,59 +256,62 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	rval = do_bzero = 0;
 
 	/*
-	 * mkfs's that stamped a feature bit besides the ones in the mask
-	 * (e.g. were pre-6.5 beta) could leave garbage in the secondary
-	 * superblock sectors.  Anything stamping the shared fs bit or better
-	 * into the secondaries is ok and should generate clean secondary
-	 * superblock sectors.  so only run the zero check on the
-	 * potentially garbaged secondaries.
+	 * Check for garbage beyond the last valid field.
+	 * Use field addresses instead so this code will still
+	 * work against older filesystems when the superblock
+	 * gets rev'ed again with new fields appended.
+	 *
+	 * size is the size of data which is valid for this sb.
 	 */
-	if (pre_65_beta ||
-	    (sb->sb_versionnum & XR_GOOD_SECSB_VNMASK) == 0 ||
-	    sb->sb_versionnum < XFS_SB_VERSION_4)  {
-		/*
-		 * Check for garbage beyond the last field.
-		 * Use field addresses instead so this code will still
-		 * work against older filesystems when the superblock
-		 * gets rev'ed again with new fields appended.
-		 */
-		if (xfs_sb_version_hasmorebits(sb))
-			size = (__psint_t)&sb->sb_features2
-				+ sizeof(sb->sb_features2) - (__psint_t)sb;
-		else if (xfs_sb_version_haslogv2(sb))
-			size = (__psint_t)&sb->sb_logsunit
-				+ sizeof(sb->sb_logsunit) - (__psint_t)sb;
-		else if (xfs_sb_version_hassector(sb))
-			size = (__psint_t)&sb->sb_logsectsize
-				+ sizeof(sb->sb_logsectsize) - (__psint_t)sb;
-		else if (xfs_sb_version_hasdirv2(sb))
-			size = (__psint_t)&sb->sb_dirblklog
-				+ sizeof(sb->sb_dirblklog) - (__psint_t)sb;
-		else
-			size = (__psint_t)&sb->sb_width
-				+ sizeof(sb->sb_width) - (__psint_t)sb;
-		for (ip = (char *)((__psint_t)sb + size);
-		     ip < (char *)((__psint_t)sb + mp->m_sb.sb_sectsize);
-		     ip++)  {
-			if (*ip)  {
-				do_bzero = 1;
-				break;
-			}
-		}
+	if (xfs_sb_version_hascrc(sb))
+		size = offsetof(xfs_sb_t, sb_lsn)
+			+ sizeof(sb->sb_lsn);
+	else if (xfs_sb_version_hasmorebits(sb))
+		size = offsetof(xfs_sb_t, sb_bad_features2)
+			+ sizeof(sb->sb_bad_features2);
+	else if (xfs_sb_version_haslogv2(sb))
+		size = offsetof(xfs_sb_t, sb_logsunit)
+			+ sizeof(sb->sb_logsunit);
+	else if (xfs_sb_version_hassector(sb))
+		size = offsetof(xfs_sb_t, sb_logsectsize)
+			+ sizeof(sb->sb_logsectsize);
+	else if (xfs_sb_version_hasdirv2(sb))
+		size = offsetof(xfs_sb_t, sb_dirblklog)
+			+ sizeof(sb->sb_dirblklog);
+	else
+		size = offsetof(xfs_sb_t, sb_width)
+			+ sizeof(sb->sb_width);
 
-		if (do_bzero)  {
-			rval |= XR_AG_SB_SEC;
-			if (!no_modify)  {
-				do_warn(
-		_("zeroing unused portion of %s superblock (AG #%u)\n"),
-					!i ? _("primary") : _("secondary"), i);
-				memset((void *)((__psint_t)sb + size), 0,
-					mp->m_sb.sb_sectsize - size);
-			} else
-				do_warn(
-		_("would zero unused portion of %s superblock (AG #%u)\n"),
-					!i ? _("primary") : _("secondary"), i);
+	/* Check the buffer we read from disk for garbage outside size */
+	for (ip = XFS_BUF_PTR(sbuf) + size;
+	     ip < XFS_BUF_PTR(sbuf) + mp->m_sb.sb_sectsize;
+	     ip++)  {
+		if (*ip)  {
+			do_bzero = 1;
+			break;
 		}
+	}
+	if (do_bzero)  {
+		rval |= XR_AG_SB_SEC;
+		if (!no_modify)  {
+			do_warn(
+	_("zeroing unused portion of %s superblock (AG #%u)\n"),
+				!i ? _("primary") : _("secondary"), i);
+			/*
+			 * zero both the in-memory sb and the disk buffer,
+			 * because the former was read from disk and
+			 * may contain newer version fields that shouldn't
+			 * be set, and the latter is never updated past
+			 * the last field - just zap them both.
+			 */
+			memset((void *)((__psint_t)sb + size), 0,
+				mp->m_sb.sb_sectsize - size);
+			memset(XFS_BUF_PTR(sbuf) + size, 0,
+				mp->m_sb.sb_sectsize - size);
+		} else
+			do_warn(
+	_("would zero unused portion of %s superblock (AG #%u)\n"),
+				!i ? _("primary") : _("secondary"), i);
 	}
 
 	/*
