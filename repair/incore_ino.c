@@ -700,7 +700,7 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
 	return(0LL);
 }
 
-static void
+void
 alloc_ex_data(ino_tree_node_t *irec)
 {
 	parent_list_t 	*ptbl;

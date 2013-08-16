@@ -930,6 +930,22 @@ mk_orphanage(xfs_mount_t *mp)
 	irec = find_inode_rec(mp,
 			XFS_INO_TO_AGNO(mp, ino),
 			XFS_INO_TO_AGINO(mp, ino));
+
+	if (irec == NULL) {
+		/*
+		 * This inode is allocated from a newly created inode
+		 * chunk and therefore did not exist when inode chunks
+		 * were processed in phase3. Add this group of inodes to
+		 * the entry avl tree as if they were discovered in phase3.
+		 */
+		irec = set_inode_free_alloc(mp, XFS_INO_TO_AGNO(mp, ino),
+					    XFS_INO_TO_AGINO(mp, ino));
+		alloc_ex_data(irec);
+
+		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
+			set_inode_free(irec, i);
+	}
+
 	ino_offset = get_inode_offset(mp, ino, irec);
 
 	/*
