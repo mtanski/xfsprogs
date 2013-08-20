@@ -483,6 +483,11 @@ void		set_inode_parent(ino_tree_node_t *irec, int ino_offset,
 xfs_ino_t	get_inode_parent(ino_tree_node_t *irec, int ino_offset);
 
 /*
+ * Allocate extra inode data
+ */
+void		alloc_ex_data(ino_tree_node_t *irec);
+
+/*
  * bmap cursor for tracking and fixing bmap btrees.  All xfs btrees number
  * the levels with 0 being the leaf and every level up being 1 greater.
  */
