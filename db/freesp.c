@@ -96,6 +96,10 @@ freesp_f(
 
 	if (!init(argc, argv))
 		return 0;
+
+	if (dumpflag)
+		dbprintf("%8s %8s %8s\n", "agno", "agbno", "len");
+
 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
 		if (inaglist(agno))
 			scan_ag(agno);
