@@ -418,6 +418,45 @@ to read (in bytes)
 .RE
 .PD
 .TP
+.TP
+.BI "seek  \-a | \-d | \-h [ \-r ] [ \-s ] offset"
+On platforms that support the
+.BR lseek (2)
+.B SEEK_DATA
+and
+.B SEEK_HOLE
+options, display the offsets of the specified segments.
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.B \-a
+Display both
+.B data
+and
+.B hole
+segments starting at the specified
+.B offset.
+.TP
+.B \-d
+Display the
+.B data
+segment starting at the specified
+.B offset.
+.TP
+.B \-h
+Display the
+.B hole
+segment starting at the specified
+.B offset.
+.TP
+.B \-r
+Recursively display all the specified segments starting at the specified
+.B offset.
+.TP
+.B \-s
+Display the starting lseek(2) offset. This offset will be a calculated value when
+both data and holes are displayed together or performing a recusively display.
+.TP
 
 .SH MEMORY MAPPED I/O COMMANDS
 .TP

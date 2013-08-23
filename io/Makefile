@@ -10,7 +10,8 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
 HFILES = init.h io.h
 CFILES = init.c \
 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c mmap.c \
-	open.c parent.c pread.c prealloc.c pwrite.c shutdown.c truncate.c
+	open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+	truncate.c
 
 LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
 LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)

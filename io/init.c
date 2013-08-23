@@ -64,6 +64,7 @@ init_commands(void)
 	help_init();
 	imap_init();
 	inject_init();
+	seek_init();
 	madvise_init();
 	mincore_init();
 	mmap_init();
