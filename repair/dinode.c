@@ -182,10 +182,10 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
 		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
 	}
 
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < sizeof(dinoc->di_pad2)/sizeof(dinoc->di_pad2[0]); i++) {
 		if (dinoc->di_pad2[i] != 0) {
 			__dirty_no_modify_ret(dirty);
-			memset(dinoc->di_pad2, 0, 16);
+			memset(dinoc->di_pad2, 0, sizeof(dinoc->di_pad2));
 			break;
 		}
 	}
