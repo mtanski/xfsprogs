@@ -3055,7 +3055,7 @@ usage( void )
 /* blocksize */		[-b log=n|size=num]\n\
 /* metadata */		[-m crc=[0|1]\n\
 /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
-			    (sunit=value,swidth=value|su=num,sw=num),\n\
+			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
 			    sectlog=n|sectsize=num\n\
 /* force overwrite */	[-f]\n\
 /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
