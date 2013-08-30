@@ -429,6 +429,8 @@ pf_batch_read(
 			if (which != PF_META_ONLY ||
 			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
 				num++;
+			if (num == MAX_BUFS)
+				break;
 			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
 		}
 		if (!num)
