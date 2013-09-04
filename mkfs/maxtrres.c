@@ -46,8 +46,9 @@ max_attrsetm_trans_res_adjust(
 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
 	nblks += XFS_B_TO_FSB(mp, size);
 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
-	res = XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks;
-	mp->m_resv.tr_attrsetm.tr_logres = res;
+	res = M_RES(mp)->tr_attrsetm.tr_logres +
+	      M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
+	M_RES(mp)->tr_attrsetm.tr_logres = res;
 }
 
 static int
