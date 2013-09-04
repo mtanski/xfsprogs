@@ -203,7 +203,7 @@ typedef struct xfs_mount {
 	int			m_ialloc_blks;	/* blocks in inode allocation */
 	int			m_litino;	/* size of inode union area */
 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
-	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
+	struct xfs_trans_resv	m_resv;		/* precomputed res values */
 	__uint64_t		m_maxicount;	/* maximum inode count */
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */

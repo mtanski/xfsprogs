@@ -47,22 +47,23 @@ max_attrsetm_trans_res_adjust(
 	nblks += XFS_B_TO_FSB(mp, size);
 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
 	res = XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks;
-	mp->m_reservations.tr_attrsetm = res;
+	mp->m_resv.tr_attrsetm.tr_logres = res;
 }
 
 static int
 max_trans_res_by_mount(
 	struct xfs_mount	*mp)
 {
-	uint			*p;
-	int			rval;
-	struct xfs_trans_resv	*tr = &mp->m_reservations;
+	struct xfs_trans_resv	*tr = &mp->m_resv;
+	struct xfs_trans_res	*p;
+	struct xfs_trans_res	rval = {0};
 
-	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
-		if ((int)*p > rval)
-			rval = (int)*p;
+	for (p = (struct xfs_trans_res *)tr;
+	     p < (struct xfs_trans_res *)(tr + 1); p++) {
+		if (p->tr_logres > rval.tr_logres)
+			rval = *p;
 	}
-	return rval;
+	return rval.tr_logres;
 }
 
 int
