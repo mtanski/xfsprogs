@@ -54,6 +54,7 @@
 #include <xfs/xfs_ialloc_btree.h>
 #include <xfs/xfs_attr_sf.h>
 #include <xfs/xfs_dinode.h>
+#include <xfs/xfs_inode_fork.h>
 #include <xfs/xfs_inode.h>
 #include <xfs/xfs_alloc.h>
 #include <xfs/xfs_btree.h>

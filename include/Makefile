@@ -31,6 +31,7 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_ialloc.h \
 	xfs_ialloc_btree.h \
 	xfs_inode.h \
+	xfs_inode_fork.h \
 	xfs_inum.h \
 	xfs_log_format.h \
 	xfs_log_recover.h \

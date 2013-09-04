@@ -68,6 +68,9 @@ typedef __uint32_t		inst_t;		/* an instruction */
 
 #define IHOLD(ip)			((void) 0)
 
+#define XFS_IGET_CREATE			0x1
+#define XFS_IGET_UNTRUSTED		0x2
+
 /* stop unused var warnings by assigning mp to itself */
 #define XFS_CORRUPTION_ERROR(e,l,mp,m)	do { \
 	(mp) = (mp); \
