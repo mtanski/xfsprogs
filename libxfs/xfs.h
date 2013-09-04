@@ -189,7 +189,9 @@ roundup_pow_of_two(uint v)
 /* avoid gcc warning */
 #define xfs_incore(bt,blkno,len,lockit)	({		\
 	typeof(blkno) __foo = (blkno);			\
+	typeof(len) __bar = (len);			\
 	(blkno) = __foo;				\
+	(len) = __bar; /* no set-but-unused warning */	\
 	NULL;						\
 })
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
@@ -259,7 +261,11 @@ roundup_pow_of_two(uint v)
 #define	xfs_trans_agblocks_delta(tp, d)
 #define	xfs_trans_agflist_delta(tp, d)
 #define	xfs_trans_agbtree_delta(tp, d)
-#define xfs_trans_buf_set_type(tp, bp, t)
+#define xfs_trans_buf_set_type(tp, bp, t)	({	\
+	int __t = (t);					\
+	__t = __t; /* no set-but-unused warning */	\
+})
+
 #define xfs_trans_buf_copy_type(dbp, sbp)
 
 #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */

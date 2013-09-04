@@ -4437,11 +4437,8 @@ xfs_bmapi_allocate(
 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
 	int			tmp_logflags = 0;
 	int			error;
-	int			rt;
 
 	ASSERT(bma->length > 0);
-
-	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
 
 	/*
 	 * For the wasdelay case, we could also just allocate the stuff asked

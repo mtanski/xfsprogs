@@ -167,6 +167,7 @@ __uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
 	default:
 		ASSERT(0);
 	}
+	return 0;
 }
 
 void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
@@ -207,6 +208,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
 	default:
 		ASSERT(0);
 	}
+	return 0;
 }
 
 /*

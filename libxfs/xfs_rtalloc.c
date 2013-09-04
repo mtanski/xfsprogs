@@ -431,8 +431,8 @@ xfs_rtfree_range(
 {
 	xfs_rtblock_t	end;		/* end of the freed extent */
 	int		error;		/* error value */
-	xfs_rtblock_t	postblock;	/* first block freed > end */
-	xfs_rtblock_t	preblock;	/* first block freed < start */
+	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
+	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
 
 	end = start + len - 1;
 	/*

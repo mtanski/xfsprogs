@@ -1631,9 +1631,11 @@ process_attributes(
 {
 	int		err;
 	__u8		aformat = dip->di_aformat;
+#ifdef DEBUG
 	xfs_attr_shortform_t *asf;
 
 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
+#endif
 
 	if (aformat == XFS_DINODE_FMT_LOCAL) {
 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=

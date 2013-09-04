@@ -520,6 +520,7 @@ scan_allocbt(
 		name = "cnt";
 		break;
 	default:
+		name = "(unknown)";
 		assert(0);
 		break;
 	}

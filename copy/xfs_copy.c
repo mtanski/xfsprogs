@@ -434,6 +434,10 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
 	length = buf->length = first_agbno * blocksize;
+	if (length == 0) {
+		do_log(_("ag header buffer invalid!\n"));
+		exit(1);
+	}
 
 	/* handle alignment stuff */
 
@@ -449,7 +453,6 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 	if (buf->length % buf->min_io_size != 0)
 		buf->length = roundup(buf->length, buf->min_io_size);
 
-	ASSERT(length != 0);
 	read_wbuf(fd, buf, mp);
 	ASSERT(buf->length >= length);
 
@@ -936,7 +939,12 @@ main(int argc, char **argv)
 		for (;;) {
 			/* none of this touches the w_buf buffer */
 
-			ASSERT(current_level < btree_levels);
+			if (current_level >= btree_levels) {
+				do_log(
+			_("Error: current level %d >= btree levels %d\n"),
+					current_level, btree_levels);
+				exit(1);
+			}
 
 			current_level++;
 
