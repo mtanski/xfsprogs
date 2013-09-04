@@ -614,7 +614,6 @@ extern int		libxfs_nproc(void);
 extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 
 #include <xfs/xfs_ialloc.h>
-#include <xfs/xfs_rtalloc.h>
 
 #include <xfs/xfs_attr_leaf.h>
 #include <xfs/xfs_attr_remote.h>
