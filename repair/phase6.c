@@ -2064,7 +2064,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	int			isleaf;
 	xfs_fileoff_t		next_da_bno;
 	int			seeval;
-	int			fixit;
+	int			fixit = 0;
 	xfs_dir2_db_t		db;
 
 	*need_dot = 1;
@@ -2091,6 +2091,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	for (da_bno = 0, next_da_bno = 0;
 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
+		const struct xfs_buf_ops *ops;
+
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
@@ -2104,13 +2106,28 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		_("realloc failed in longform_dir2_entry_check (%zu bytes)\n"),
 					num_bps * sizeof(struct xfs_buf*));
 		}
+
+		if (isblock)
+			ops = &xfs_dir3_block_buf_ops;
+		else
+			ops = &xfs_dir3_data_buf_ops;
 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bplist[db],
-				XFS_DATA_FORK, &xfs_dir3_data_buf_ops)) {
+				       XFS_DATA_FORK, ops)) {
 			do_warn(
 	_("can't read data block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ino);
 			*num_illegal += 1;
-			continue;	/* try and read all "data" blocks */
+
+			/*
+			 * we try to read all "data" blocks, but if we are in
+			 * block form and we fail, there isn't anything else to
+			 * read, and nothing we can do but trash it.
+			 */
+			if (isblock) {
+				fixit++;
+				goto out_fix;
+			}
+			continue;
 		}
 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
 				irec, ino_offset, &bplist[db], hashtab,
@@ -2141,6 +2158,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 								freetab);
 		}
 	}
+out_fix:
 	if (!no_modify && (fixit || dotdot_update)) {
 		dir_hash_dup_names(hashtab);
 		for (i = 0; i < freetab->naents; i++)
