@@ -51,7 +51,6 @@ STATIC int xfs_attr3_leaf_figure_balance(xfs_da_state_t *state,
 			int *number_entries_in_blk1,
 			int *number_usedbytes_in_blk1);
 
-
 /*
  * Utility routines.
  */
@@ -1120,7 +1119,6 @@ xfs_attr3_leaf_add_work(
 	struct xfs_attr_leaf_entry *entry;
 	struct xfs_attr_leaf_name_local *name_loc;
 	struct xfs_attr_leaf_name_remote *name_rmt;
-	struct xfs_attr_leaf_map *map;
 	struct xfs_mount	*mp;
 	int			tmp;
 	int			i;
@@ -1219,7 +1217,7 @@ xfs_attr3_leaf_add_work(
 	tmp = (ichdr->count - 1) * sizeof(xfs_attr_leaf_entry_t)
 					+ xfs_attr3_leaf_hdr_size(leaf);
 
-	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; map++, i++) {
+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
 		if (ichdr->freemap[i].base == tmp) {
 			ichdr->freemap[i].base += sizeof(xfs_attr_leaf_entry_t);
 			ichdr->freemap[i].size -= sizeof(xfs_attr_leaf_entry_t);
@@ -2337,7 +2335,7 @@ xfs_attr3_leaf_moveents(
 		 * Move the remaining entries down to fill the hole,
 		 * then zero the entries at the top.
 		 */
-		tmp  = (ichdr_s->count - count) - sizeof(xfs_attr_leaf_entry_t);
+		tmp  = (ichdr_s->count - count) * sizeof(xfs_attr_leaf_entry_t);
 		entry_s = &xfs_attr3_leaf_entryp(leaf_s)[start_s + count];
 		entry_d = &xfs_attr3_leaf_entryp(leaf_s)[start_s];
 		memmove(entry_d, entry_s, tmp);
@@ -2430,6 +2428,7 @@ xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize, int *local)
 	}
 	return size;
 }
+
 
 /*========================================================================
  * Manage the INCOMPLETE flag in a leaf entry

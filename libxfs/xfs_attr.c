@@ -65,7 +65,7 @@ xfs_attr_name_to_xname(
 	return 0;
 }
 
-STATIC int
+int
 xfs_inode_hasattr(
 	struct xfs_inode	*ip)
 {
@@ -267,7 +267,6 @@ xfs_attr_set_int(
 
 	if (rsvd)
 		args.trans->t_flags |= XFS_TRANS_RESERVE;
-
 
 	error = xfs_trans_reserve(args.trans, args.total,
 				  XFS_ATTRSETM_LOG_RES(mp) +
@@ -587,6 +586,7 @@ xfs_attr_remove(
 	return xfs_attr_remove_int(dp, &xname, flags);
 }
 
+
 /*========================================================================
  * External routines when attribute list is inside the inode
  *========================================================================*/
@@ -854,7 +854,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
 	error = xfs_attr3_leaf_lookup_int(bp, args);
 	if (error == ENOATTR) {
 		xfs_trans_brelse(args->trans, bp);
-		return(error);
+		return error;
 	}
 
 	xfs_attr3_leaf_remove(bp, args);
