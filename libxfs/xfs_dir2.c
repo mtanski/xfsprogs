@@ -392,6 +392,51 @@ xfs_dir_replace(
 }
 
 /*
+ * See if this entry can be added to the directory without allocating space.
+ * First checks that the caller couldn't reserve enough space (resblks = 0).
+ */
+int
+xfs_dir_canenter(
+	xfs_trans_t	*tp,
+	xfs_inode_t	*dp,
+	struct xfs_name	*name,		/* name of entry to add */
+	uint		resblks)
+{
+	xfs_da_args_t	args;
+	int		rval;
+	int		v;		/* type-checking value */
+
+	if (resblks)
+		return 0;
+
+	ASSERT(S_ISDIR(dp->i_d.di_mode));
+
+	memset(&args, 0, sizeof(xfs_da_args_t));
+	args.name = name->name;
+	args.namelen = name->len;
+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
+	args.dp = dp;
+	args.whichfork = XFS_DATA_FORK;
+	args.trans = tp;
+	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
+							XFS_DA_OP_OKNOENT;
+
+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+		rval = xfs_dir2_sf_addname(&args);
+	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+		return rval;
+	else if (v)
+		rval = xfs_dir2_block_addname(&args);
+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+		return rval;
+	else if (v)
+		rval = xfs_dir2_leaf_addname(&args);
+	else
+		rval = xfs_dir2_node_addname(&args);
+	return rval;
+}
+
+/*
  * Utility routines.
  */
 

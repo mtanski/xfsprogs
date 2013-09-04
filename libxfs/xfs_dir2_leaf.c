@@ -247,14 +247,14 @@ xfs_dir3_leaf1_write_verify(
 	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
 }
 
-void
+static void
 xfs_dir3_leafn_read_verify(
 	struct xfs_buf	*bp)
 {
 	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
 }
 
-void
+static void
 xfs_dir3_leafn_write_verify(
 	struct xfs_buf	*bp)
 {

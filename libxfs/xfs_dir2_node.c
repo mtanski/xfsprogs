@@ -257,7 +257,6 @@ xfs_dir3_free_get_buf(
 		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
 		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
-
 	} else
 		hdr.magic = XFS_DIR2_FREE_MAGIC;
 	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
@@ -978,7 +977,7 @@ xfs_dir2_leafn_rebalance(
 	xfs_dir2_leaf_t		*leaf1;		/* first leaf structure */
 	xfs_dir2_leaf_t		*leaf2;		/* second leaf structure */
 	int			mid;		/* midpoint leaf index */
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 	int			oldstale;	/* old count of stale leaves */
 #endif
 	int			oldsum;		/* old total leaf count */
@@ -1007,7 +1006,7 @@ xfs_dir2_leafn_rebalance(
 	ents2 = xfs_dir3_leaf_ents_p(leaf2);
 
 	oldsum = hdr1.count + hdr2.count;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 	oldstale = hdr1.stale + hdr2.stale;
 #endif
 	mid = oldsum >> 1;
@@ -1101,7 +1100,6 @@ xfs_dir3_data_block_free(
 	__be16			*bests;
 	struct xfs_dir3_icfree_hdr freehdr;
 
-
 	xfs_dir3_free_hdr_from_disk(&freehdr, free);
 
 	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
@@ -1115,12 +1113,14 @@ xfs_dir3_data_block_free(
 		return 0;
 	}
 
-	/*
-	 * One less used entry in the free table. Unused is not converted
-	 * because we only need to know if it zero
-	 */
+	/* One less used entry in the free table. */
 	freehdr.nused--;
 
+	/*
+	 * If this was the last entry in the table, we can trim the table size
+	 * back.  There might be other entries at the end referring to
+	 * non-existent data blocks, get those too.
+	 */
 	if (findex == freehdr.nvalid - 1) {
 		int	i;		/* free entry index */
 
@@ -1158,7 +1158,6 @@ xfs_dir3_data_block_free(
 		 * else will eventually get rid of this block.
 		 */
 	}
-
 
 	/* Log the free entry that changed, unless we got rid of it.  */
 	if (logfree)
@@ -1275,9 +1274,8 @@ xfs_dir2_leafn_remove(
 	{
 		struct xfs_dir3_icfree_hdr freehdr;
 		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-		ASSERT(freehdr.firstdb ==
-				       xfs_dir3_free_max_bests(mp) *
-				       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
+		ASSERT(freehdr.firstdb == xfs_dir3_free_max_bests(mp) *
+					  (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
 	}
 #endif
 		/*
@@ -1425,7 +1423,7 @@ xfs_dir2_leafn_toosmall(
 	leaf = blk->bp->b_addr;
 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 	ents = xfs_dir3_leaf_ents_p(leaf);
-	xfs_dir3_leaf_check(mp, blk->bp);
+	xfs_dir3_leaf_check(state->args->dp->i_mount, blk->bp);
 
 	count = leafhdr.count - leafhdr.stale;
 	bytes = xfs_dir3_leaf_hdr_size(leaf) + count * sizeof(ents[0]);
@@ -1863,7 +1861,7 @@ xfs_dir2_node_addname_int(
 		 * If there wasn't a freespace block, the read will
 		 * return a NULL fbp.  Allocate and initialize a new one.
 		 */
-		if(!fbp) {
+		if (!fbp) {
 			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
 						    &fbno);
 			if (error)

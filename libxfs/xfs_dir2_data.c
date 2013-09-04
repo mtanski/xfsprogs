@@ -53,15 +53,15 @@ __xfs_dir3_data_check(
 	bf = xfs_dir3_data_bestfree_p(hdr);
 	p = (char *)xfs_dir3_data_entry_p(hdr);
 
-	switch (be32_to_cpu(hdr->magic)) {
-	case XFS_DIR2_BLOCK_MAGIC:
-	case XFS_DIR3_BLOCK_MAGIC:
+	switch (hdr->magic) {
+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
 		btp = xfs_dir2_block_tail_p(mp, hdr);
 		lep = xfs_dir2_block_leaf_p(btp);
 		endp = (char *)lep;
 		break;
-	case XFS_DIR2_DATA_MAGIC:
-	case XFS_DIR3_DATA_MAGIC:
+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
 		endp = (char *)hdr + mp->m_dirblksize;
 		break;
 	default:
@@ -209,14 +209,14 @@ xfs_dir3_data_reada_verify(
 	struct xfs_mount	*mp = bp->b_target->bt_mount;
 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
 
-	switch (be32_to_cpu(hdr->magic)) {
-	case XFS_DIR2_BLOCK_MAGIC:
-	case XFS_DIR3_BLOCK_MAGIC:
+	switch (hdr->magic) {
+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
 		bp->b_ops = &xfs_dir3_block_buf_ops;
 		bp->b_ops->verify_read(bp);
 		return;
-	case XFS_DIR2_DATA_MAGIC:
-	case XFS_DIR3_DATA_MAGIC:
+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
 		xfs_dir3_data_verify(bp);
 		return;
 	default:
