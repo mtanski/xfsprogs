@@ -48,7 +48,6 @@ struct xlog {
 };
 
 #include <xfs/xfs_log_recover.h>
-#include <xfs/xfs_icreate_item.h>
 
 /*
  * macros mapping kernel code to user code
