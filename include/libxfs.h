@@ -61,7 +61,6 @@
 #include <xfs/xfs_btree_trace.h>
 #include <xfs/xfs_bmap.h>
 #include <xfs/xfs_trace.h>
-#include <xfs/xfs_symlink.h>
 
 
 #ifndef ARRAY_SIZE
