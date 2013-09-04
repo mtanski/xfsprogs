@@ -922,7 +922,6 @@ main(
 	int			lssflag;
 	int			lsu;
 	int			lsunit;
-	int			max_tr_res;
 	int			min_logblocks;
 	xfs_mount_t		*mp;
 	xfs_mount_t		mbuf;
@@ -2111,50 +2110,6 @@ reported by the device (%u).\n"),
 			sectorsize, xi.rtbsize);
 	}
 
-	max_tr_res = max_trans_res(crcs_enabled, dirversion,
-				   sectorlog, blocklog, inodelog, dirblocklog);
-	ASSERT(max_tr_res);
-	min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
-	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
-	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
-	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-		fprintf(stderr,
-_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-			logsize, (long long)DTOBT(xi.logBBsize));
-		usage();
-	} else if (!logsize && xi.logBBsize > 0) {
-		logblocks = DTOBT(xi.logBBsize);
-	} else if (logsize && !xi.logdev && !loginternal) {
-		fprintf(stderr,
-			_("size specified for non-existent log subvolume\n"));
-		usage();
-	} else if (loginternal && logsize && logblocks >= dblocks) {
-		fprintf(stderr, _("size %lld too large for internal log\n"),
-			(long long)logblocks);
-		usage();
-	} else if (!loginternal && !xi.logdev) {
-		logblocks = 0;
-	} else if (loginternal && !logsize) {
-		/*
-		 * With a 2GB max log size, default to maximum size
-		 * at 4TB. This keeps the same ratio from the older
-		 * max log size of 128M at 256GB fs size. IOWs,
-		 * the ratio of fs size to log size is 2048:1.
-		 */
-		logblocks = (dblocks << blocklog) / 2048;
-		logblocks = logblocks >> blocklog;
-		logblocks = MAX(min_logblocks, logblocks);
-		logblocks = MAX(logblocks,
-				MAX(XFS_DFL_LOG_SIZE,
-					max_tr_res * XFS_DFL_LOG_FACTOR));
-		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
-		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
-			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
-		}
-	}
-	validate_log_size(logblocks, blocklog, min_logblocks);
-
 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
 		fprintf(stderr,
 			_("size %s specified for rt subvolume is too large, "
@@ -2363,6 +2318,60 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
 	}
 
+	min_logblocks = max_trans_res(crcs_enabled, dirversion,
+				   sectorlog, blocklog, inodelog, dirblocklog,
+				   logversion, lsunit);
+	ASSERT(min_logblocks);
+	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
+	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+		fprintf(stderr,
+_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+			logsize, (long long)DTOBT(xi.logBBsize));
+		usage();
+	} else if (!logsize && xi.logBBsize > 0) {
+		logblocks = DTOBT(xi.logBBsize);
+	} else if (logsize && !xi.logdev && !loginternal) {
+		fprintf(stderr,
+			_("size specified for non-existent log subvolume\n"));
+		usage();
+	} else if (loginternal && logsize && logblocks >= dblocks) {
+		fprintf(stderr, _("size %lld too large for internal log\n"),
+			(long long)logblocks);
+		usage();
+	} else if (!loginternal && !xi.logdev) {
+		logblocks = 0;
+	} else if (loginternal && !logsize) {
+		/*
+		 * With a 2GB max log size, default to maximum size
+		 * at 4TB. This keeps the same ratio from the older
+		 * max log size of 128M at 256GB fs size. IOWs,
+		 * the ratio of fs size to log size is 2048:1.
+		 */
+		logblocks = (dblocks << blocklog) / 2048;
+		logblocks = logblocks >> blocklog;
+		logblocks = MAX(min_logblocks, logblocks);
+
+		/*
+		 * If the default log size doesn't fit in the AG size, use the
+		 * minimum log size instead. This ensures small filesystems
+		 * don't use excessive amounts of space for the log.
+		 */
+		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
+			logblocks = min_logblocks;
+		} else {
+			logblocks = MAX(logblocks,
+				MAX(XFS_DFL_LOG_SIZE,
+					min_logblocks * XFS_DFL_LOG_FACTOR));
+		}
+		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
+		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
+			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
+		}
+	}
+	validate_log_size(logblocks, blocklog, min_logblocks);
+
 	protostring = setup_proto(protofile);
 	bsize = 1 << (blocklog - BBSHIFT);
 	mp = &mbuf;
@@ -2371,6 +2380,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_blocklog = (__uint8_t)blocklog;
 	sbp->sb_sectlog = (__uint8_t)sectorlog;
 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
+	sbp->sb_agblocks = (xfs_agblock_t)agsize;
 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
 
@@ -2382,6 +2392,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 		if (!logsize) {
 			logblocks = MIN(logblocks,
 					XFS_ALLOC_AG_MAX_USABLE(mp));
+
+			/* revalidate the log size is valid if we changed it */
+			validate_log_size(logblocks, blocklog, min_logblocks);
 		}
 		if (logblocks > agsize - XFS_PREALLOC_BLOCKS(mp)) {
 			fprintf(stderr,
@@ -2389,6 +2402,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 				(long long)logblocks);
 			usage();
 		}
+
 		if (laflag) {
 			if (logagno >= agcount) {
 				fprintf(stderr,
@@ -2457,7 +2471,6 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	sbp->sb_logstart = logstart;
 	sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
 	sbp->sb_rextsize = rtextblocks;
-	sbp->sb_agblocks = (xfs_agblock_t)agsize;
 	sbp->sb_agcount = (xfs_agnumber_t)agcount;
 	sbp->sb_rbmblocks = nbmblocks;
 	sbp->sb_logblocks = (xfs_extlen_t)logblocks;

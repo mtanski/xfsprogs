@@ -54,8 +54,7 @@
 #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
 #define	XFS_DFL_DIR_VERSION	2		/* default directory version */
 #define	XFS_DFL_LOG_SIZE	1000		/* default log size, blocks */
-#define	XFS_MIN_LOG_FACTOR	3		/* min log size factor */
-#define	XFS_DFL_LOG_FACTOR	16		/* default log size, factor */
+#define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
 						/* with max trans reservation */
 #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
 						 * inode number that we'll
@@ -82,6 +81,7 @@ extern void res_failed (int err);
 
 /* maxtrres.c */
 extern int max_trans_res (int crcs_enabled, int dirversion,
-		int sectorlog, int blocklog, int inodelog, int dirblocklog);
+		int sectorlog, int blocklog, int inodelog, int dirblocklog,
+		int logversion, int log_sunit);
 
 #endif	/* __XFS_MKFS_H__ */

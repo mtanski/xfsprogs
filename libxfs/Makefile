@@ -17,14 +17,23 @@ CFILES = cache.c \
 	xfs_alloc.c \
 	xfs_alloc_btree.c \
 	xfs_attr.c \
+	xfs_attr_leaf.c \
 	xfs_attr_remote.c \
+	xfs_bmap.c \
+	xfs_bmap_btree.c \
 	xfs_btree.c \
+	xfs_da_btree.c \
+	xfs_dir2.c \
+	xfs_dir2_block.c \
+	xfs_dir2_data.c \
+	xfs_dir2_leaf.c \
+	xfs_dir2_node.c \
+	xfs_dir2_sf.c \
 	xfs_ialloc.c \
 	xfs_inode_buf.c \
 	xfs_inode_fork.c \
-	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
-	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
-	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
+	xfs_ialloc_btree.c \
+	xfs_log_rlimit.c \
 	xfs_rtalloc.c \
 	xfs_sb.c \
 	xfs_symlink_remote.c \

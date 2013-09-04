@@ -208,6 +208,14 @@ roundup_pow_of_two(uint v)
 	return 0;
 }
 
+static inline __uint64_t
+roundup_64(__uint64_t x, __uint32_t y)
+{
+	x += y - 1;
+	do_div(x, y);
+	return x * y;
+}
+
 /* buffer management */
 #define XFS_BUF_LOCK			0
 #define XFS_BUF_TRYLOCK			0
