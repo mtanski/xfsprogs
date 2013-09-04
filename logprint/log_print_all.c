@@ -432,6 +432,21 @@ xlog_recover_print_efi(
 	free(f);
 }
 
+STATIC void
+xlog_recover_print_icreate(
+	struct xlog_recover_item	*item)
+{
+	struct xfs_icreate_log	*icl;
+
+	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
+
+	printf(_("	ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
+		 "	      cnt: %d  isize: %d    gen: 0x%x\n"),
+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
+}
+
 void
 xlog_recover_print_logitem(
 	xlog_recover_item_t	*item)
@@ -439,6 +454,9 @@ xlog_recover_print_logitem(
 	switch (ITEM_TYPE(item)) {
 	case XFS_LI_BUF:
 		xlog_recover_print_buffer(item);
+		break;
+	case XFS_LI_ICREATE:
+		xlog_recover_print_icreate(item);
 		break;
 	case XFS_LI_INODE:
 		xlog_recover_print_inode(item);
@@ -470,6 +488,9 @@ xlog_recover_print_item(
 	switch (ITEM_TYPE(item)) {
 	case XFS_LI_BUF:
 		printf("BUF");
+		break;
+	case XFS_LI_ICREATE:
+		printf("ICR");
 		break;
 	case XFS_LI_INODE:
 		printf("INO");

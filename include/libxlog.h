@@ -51,6 +51,7 @@ struct xlog {
 #include <xfs/xfs_buf_item.h>
 #include <xfs/xfs_inode_item.h>
 #include <xfs/xfs_extfree_item.h>
+#include <xfs/xfs_icreate_item.h>
 
 typedef union {
 	xlog_rec_header_t       hic_header;

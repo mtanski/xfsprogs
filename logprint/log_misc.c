@@ -70,6 +70,7 @@ char *trans_type[] = {
 	"SWAPEXT",
 	"SB_COUNT",
 	"CHECKPOINT",
+	"ICREATE",
 };
 
 typedef struct xlog_split_item {
@@ -792,6 +793,35 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 }	/* xlog_print_trans_dquot */
 
 
+STATIC int
+xlog_print_trans_icreate(
+	xfs_caddr_t	*ptr,
+	int		len,
+	int		*i,
+	int		num_ops)
+{
+	struct xfs_icreate_log	icl_buf = {0};
+	struct xfs_icreate_log	*icl;
+
+	memmove(&icl_buf, *ptr, MIN(sizeof(struct xfs_icreate_log), len));
+	icl = &icl_buf;
+	(*i)++;
+	*ptr += len;
+
+	/* handle complete header only */
+	if (len != sizeof(struct xfs_icreate_log)) {
+		printf(_("ICR: split header, not printing\n"));
+		return 1; /* to skip leftover in next region */
+	}
+
+	printf(_("ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
+		 "      cnt: %d  isize: %d    gen: 0x%x\n"),
+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
+	return 0;
+}
+
 /******************************************************************************
  *
  *		Log print routines
@@ -970,6 +1000,12 @@ xlog_print_record(int			  fd,
 		switch (*(unsigned short *)ptr) {
 		    case XFS_LI_BUF: {
 			skip = xlog_print_trans_buffer(&ptr,
+					be32_to_cpu(op_head->oh_len),
+					&i, num_ops);
+			break;
+		    }
+		    case XFS_LI_ICREATE: {
+			skip = xlog_print_trans_icreate(&ptr,
 					be32_to_cpu(op_head->oh_len),
 					&i, num_ops);
 			break;
