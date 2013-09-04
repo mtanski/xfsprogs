@@ -40,6 +40,7 @@
 #include <xfs/xfs_format.h>
 #include <xfs/xfs_log_format.h>
 #include <xfs/xfs_quota_defs.h>
+#include <xfs/xfs_trans_resv.h>
 
 #include <xfs/xfs_bit.h>
 #include <xfs/xfs_inum.h>
@@ -204,7 +205,7 @@ typedef struct xfs_mount {
 	int			m_ialloc_blks;	/* blocks in inode allocation */
 	int			m_litino;	/* size of inode union area */
 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
-	xfs_trans_reservations_t m_reservations;/* precomputed res values */
+	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
 	__uint64_t		m_maxicount;	/* maximum inode count */
 	int			m_dalign;	/* stripe unit */
 	int			m_swidth;	/* stripe width */
@@ -408,7 +409,6 @@ extern int libxfs_ihash_size;
 
 extern void	libxfs_iomove (xfs_buf_t *, uint, int, void *, int);
 
-
 /*
  * Transaction interface
  */
@@ -443,7 +443,18 @@ typedef struct xfs_buf_log_item {
 #define XFS_BLI_STALE			(1<<2)
 #define XFS_BLI_INODE_ALLOC_BUF		(1<<3)
 
-#include <xfs/xfs_trans.h>
+typedef struct xfs_dq_logitem {
+	xfs_log_item_t		qli_item;	/* common portion */
+	struct xfs_dquot	*qli_dquot;	/* dquot ptr */
+	xfs_lsn_t		qli_flush_lsn;	/* lsn at last flush */
+	xfs_dq_logformat_t	qli_format;	/* logged structure */
+} xfs_dq_logitem_t;
+
+typedef struct xfs_qoff_logitem {
+	xfs_log_item_t		qql_item;	/* common portion */
+	struct xfs_qoff_logitem	*qql_start_lip;	/* qoff-start logitem, if any */
+	xfs_qoff_logformat_t	qql_format;	/* logged structure */
+} xfs_qoff_logitem_t;
 
 typedef struct xfs_trans {
 	unsigned int	t_type;			/* transaction type */
@@ -457,6 +468,9 @@ typedef struct xfs_trans {
 	long		t_frextents_delta;	/* superblock freextents chg */
 	struct list_head	t_items;	/* first log item desc chunk */
 } xfs_trans_t;
+
+extern void	xfs_trans_init(struct xfs_mount *);
+extern int	xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
 
 extern xfs_trans_t	*libxfs_trans_alloc (xfs_mount_t *, int);
 extern xfs_trans_t	*libxfs_trans_dup (xfs_trans_t *);
@@ -699,6 +713,9 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
 /* xfs_symlink.h */
 #define libxfs_symlink_blocks		xfs_symlink_blocks
 #define libxfs_symlink_hdr_ok		xfs_symlink_hdr_ok
+
+/* xfs_trans_resv.h */
+#define libxfs_trans_resv_calc		xfs_trans_resv_calc
 
 /* xfs_rtalloc.c */
 int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);

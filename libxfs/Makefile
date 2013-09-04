@@ -16,8 +16,11 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
-	xfs_mount.c xfs_rtalloc.c xfs_trans.c xfs_attr.c xfs_attr_remote.c \
-	crc32.c xfs_symlink.c
+	xfs_mount.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
+	crc32.c \
+	xfs_symlink.c \
+	xfs_trans.c \
+	xfs_trans_resv.c
 
 CFILES += $(PKG_PLATFORM).c
 PCFILES = darwin.c freebsd.c irix.c linux.c

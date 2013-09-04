@@ -52,11 +52,11 @@ max_attrsetm_trans_res_adjust(
 
 static int
 max_trans_res_by_mount(
-	xfs_mount_t			*mp)
+	struct xfs_mount	*mp)
 {
-	uint				*p;
-	int				rval;
-	xfs_trans_reservations_t	*tr = &mp->m_reservations;
+	uint			*p;
+	int			rval;
+	struct xfs_trans_resv	*tr = &mp->m_reservations;
 
 	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
 		if ((int)*p > rval)

@@ -100,6 +100,8 @@ typedef __uint32_t		inst_t;		/* an instruction */
 #define __return_address	__builtin_return_address(0)
 #endif
 
+#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
+
 /* miscellaneous kernel routines not in user space */
 #define down_read(a)		((void) 0)
 #define up_read(a)		((void) 0)
