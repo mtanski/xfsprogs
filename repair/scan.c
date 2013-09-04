@@ -1370,8 +1370,7 @@ scan_ags(
 	}
 	memset(agcnts, 0, mp->m_sb.sb_agcount * sizeof(*agcnts));
 
-	create_work_queue(&wq, mp, 1);
-	//create_work_queue(&wq, mp, scan_threads);
+	create_work_queue(&wq, mp, scan_threads);
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
 		queue_work(&wq, scan_ag, i, &agcnts[i]);

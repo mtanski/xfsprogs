@@ -198,9 +198,9 @@ libxfs_log_header(
 #undef libxfs_putbuf
 
 xfs_buf_t	*libxfs_readbuf(struct xfs_buftarg *, xfs_daddr_t, int, int,
-				const struct xfs_buf_map *);
+				const struct xfs_buf_ops *);
 xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
-				int, int, const struct xfs_buf_map *);
+				int, int, const struct xfs_buf_ops *);
 int		libxfs_writebuf(xfs_buf_t *, int);
 xfs_buf_t	*libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
 xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *, int);
@@ -813,22 +813,6 @@ libxfs_writebufr(xfs_buf_t *bp)
 	if (bp->b_flags & LIBXFS_B_STALE) {
 		bp->b_error = ESTALE;
 		return bp->b_error;
-	}
-
-	/*
-	 * clear any pre-existing error status on the buffer. This can occur if
-	 * the buffer is corrupt on disk and the repair process doesn't clear
-	 * the error before fixing and writing it back.
-	 */
-	bp->b_error = 0;
-	if (bp->b_ops) {
-		bp->b_ops->verify_write(bp);
-		if (bp->b_error) {
-			fprintf(stderr,
-	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
-				__func__, (long long)bp->b_bn, bp->b_bcount);
-			return bp->b_error;
-		}
 	}
 
 	/*
