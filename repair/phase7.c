@@ -68,13 +68,12 @@ update_inode_nlinks(
 	xfs_inode_t		*ip;
 	int			error;
 	int			dirty;
+	int			nres;
 
 	tp = libxfs_trans_alloc(mp, XFS_TRANS_REMOVE);
 
-	error = libxfs_trans_reserve(tp, (no_modify ? 0 : 10),
-			XFS_REMOVE_LOG_RES(mp), 0, XFS_TRANS_PERM_LOG_RES,
-			XFS_REMOVE_LOG_COUNT);
-
+	nres = no_modify ? 0 : 10;
+	error = libxfs_trans_reserve(tp, &M_RES(mp)->tr_remove, nres, 0);
 	ASSERT(error == 0);
 
 	error = libxfs_trans_iget(mp, tp, ino, 0, 0, &ip);

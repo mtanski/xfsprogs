@@ -513,7 +513,8 @@ extern int	xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
 
 extern xfs_trans_t	*libxfs_trans_alloc (xfs_mount_t *, int);
 extern xfs_trans_t	*libxfs_trans_dup (xfs_trans_t *);
-extern int	libxfs_trans_reserve (xfs_trans_t *, uint,uint,uint,uint,uint);
+extern int	libxfs_trans_reserve(struct xfs_trans *, struct xfs_trans_res *,
+				     uint, uint);
 extern int	libxfs_trans_commit (xfs_trans_t *, uint);
 extern void	libxfs_trans_cancel (xfs_trans_t *, int);
 extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);

@@ -119,7 +119,9 @@ getres(
 
 	mp = tp->t_mountp;
 	for (i = 0, r = MKFS_BLOCKRES(blocks); r >= blocks; r--) {
-		i = libxfs_trans_reserve(tp, r, 0, 0, 0, 0);
+		struct xfs_trans_res    tres = {0};
+
+		i = libxfs_trans_reserve(tp, &tres, r, 0);
 		if (i == 0)
 			return;
 	}
@@ -617,13 +619,16 @@ rtinit(
 	xfs_trans_t	*tp;
 	struct cred	creds;
 	struct fsxattr	fsxattrs;
+	struct xfs_trans_res tres = {0};
 
 	/*
 	 * First, allocate the inodes.
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
-	if ((i = libxfs_trans_reserve(tp, MKFS_BLOCKRES_INODE, 0, 0, 0, 0)))
+	i = libxfs_trans_reserve(tp, &tres, MKFS_BLOCKRES_INODE, 0);
+	if (i)
 		res_failed(i);
+
 	memset(&creds, 0, sizeof(creds));
 	memset(&fsxattrs, 0, sizeof(fsxattrs));
 	error = libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
@@ -660,9 +665,11 @@ rtinit(
 	 * Next, give the bitmap file some zero-filled blocks.
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
-	if ((i = libxfs_trans_reserve(tp, mp->m_sb.sb_rbmblocks +
-			(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0, 0, 0, 0)))
+	i = libxfs_trans_reserve(tp, &tres, mp->m_sb.sb_rbmblocks +
+				 (XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0);
+	if (i)
 		res_failed(i);
+
 	libxfs_trans_ijoin(tp, rbmip, 0);
 	libxfs_trans_ihold(tp, rbmip);
 	bno = 0;
@@ -696,9 +703,9 @@ rtinit(
 	 */
 	tp = libxfs_trans_alloc(mp, 0);
 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
-	if ((i = libxfs_trans_reserve(tp,
-			nsumblocks + (XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1),
-			0, 0, 0, 0)))
+	i = libxfs_trans_reserve(tp, &tres, nsumblocks +
+				 (XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1), 0);
+	if (i)
 		res_failed(i);
 	libxfs_trans_ijoin(tp, rsumip, 0);
 	libxfs_trans_ihold(tp, rsumip);
@@ -733,7 +740,8 @@ rtinit(
 	 */
 	for (bno = 0; bno < mp->m_sb.sb_rextents; bno = ebno) {
 		tp = libxfs_trans_alloc(mp, 0);
-		if ((i = libxfs_trans_reserve(tp, 0, 0, 0, 0, 0)))
+		i = libxfs_trans_reserve(tp, &tres, 0, 0);
+		if (i)
 			res_failed(i);
 		libxfs_trans_ijoin(tp, rbmip, 0);
 		libxfs_trans_ihold(tp, rbmip);
