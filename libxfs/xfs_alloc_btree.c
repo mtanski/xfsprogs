@@ -268,10 +268,15 @@ xfs_allocbt_verify(
 	 * During growfs operations, we can't verify the exact level or owner as
 	 * the perag is not fully initialised and hence not attached to the
 	 * buffer.  In this case, check against the maximum tree depth.
+	 *
+	 * Similarly, during log recovery we will have a perag structure
+	 * attached, but the agf information will not yet have been initialised
+	 * from the on disk AGF. Again, we can only check against maximum limits
+	 * in this case.
 	 */
 	level = be16_to_cpu(block->bb_level);
-	switch (cpu_to_be32(block->bb_magic)) {
-	case XFS_ABTB_CRC_MAGIC:
+	switch (block->bb_magic) {
+	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
 		if (!xfs_sb_version_hascrc(&mp->m_sb))
 			return false;
 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
@@ -282,14 +287,14 @@ xfs_allocbt_verify(
 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
 			return false;
 		/* fall through */
-	case XFS_ABTB_MAGIC:
-		if (pag) {
+	case cpu_to_be32(XFS_ABTB_MAGIC):
+		if (pag && pag->pagf_init) {
 			if (level >= pag->pagf_levels[XFS_BTNUM_BNOi])
 				return false;
 		} else if (level >= mp->m_ag_maxlevels)
 			return false;
 		break;
-	case XFS_ABTC_CRC_MAGIC:
+	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
 		if (!xfs_sb_version_hascrc(&mp->m_sb))
 			return false;
 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
@@ -300,8 +305,8 @@ xfs_allocbt_verify(
 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
 			return false;
 		/* fall through */
-	case XFS_ABTC_MAGIC:
-		if (pag) {
+	case cpu_to_be32(XFS_ABTC_MAGIC):
+		if (pag && pag->pagf_init) {
 			if (level >= pag->pagf_levels[XFS_BTNUM_CNTi])
 				return false;
 		} else if (level >= mp->m_ag_maxlevels)
@@ -361,7 +366,7 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
 };
 
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 STATIC int
 xfs_allocbt_keys_inorder(
 	struct xfs_btree_cur	*cur,
@@ -483,7 +488,7 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
 	.key_diff		= xfs_allocbt_key_diff,
 	.buf_ops		= &xfs_allocbt_buf_ops,
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 	.keys_inorder		= xfs_allocbt_keys_inorder,
 	.recs_inorder		= xfs_allocbt_recs_inorder,
 #endif

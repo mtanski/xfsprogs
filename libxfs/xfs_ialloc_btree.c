@@ -175,9 +175,15 @@ xfs_inobt_verify(
 	/*
 	 * During growfs operations, we can't verify the exact owner as the
 	 * perag is not fully initialised and hence not attached to the buffer.
+	 *
+	 * Similarly, during log recovery we will have a perag structure
+	 * attached, but the agi information will not yet have been initialised
+	 * from the on disk AGI. We don't currently use any of this information,
+	 * but beware of the landmine (i.e. need to check pag->pagi_init) if we
+	 * ever do.
 	 */
-	switch (be32_to_cpu(block->bb_magic)) {
-	case XFS_IBT_CRC_MAGIC:
+	switch (block->bb_magic) {
+	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
 		if (!xfs_sb_version_hascrc(&mp->m_sb))
 			return false;
 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
@@ -188,7 +194,7 @@ xfs_inobt_verify(
 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
 			return false;
 		/* fall through */
-	case XFS_IBT_MAGIC:
+	case cpu_to_be32(XFS_IBT_MAGIC):
 		break;
 	default:
 		return 0;
@@ -246,7 +252,7 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
 	.verify_write = xfs_inobt_write_verify,
 };
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 STATIC int
 xfs_inobt_keys_inorder(
 	struct xfs_btree_cur	*cur,
@@ -350,7 +356,7 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
 	.key_diff		= xfs_inobt_key_diff,
 	.buf_ops		= &xfs_inobt_buf_ops,
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 	.keys_inorder		= xfs_inobt_keys_inorder,
 	.recs_inorder		= xfs_inobt_recs_inorder,
 #endif

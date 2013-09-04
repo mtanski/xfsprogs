@@ -96,15 +96,15 @@
  */
 #  define __swab16(x) \
 (__builtin_constant_p((__u16)(x)) ? \
- ___swab16((x)) : \
+ ___constant_swab16((x)) : \
  __fswab16((x)))
 #  define __swab32(x) \
 (__builtin_constant_p((__u32)(x)) ? \
- ___swab32((x)) : \
+ ___constant_swab32((x)) : \
  __fswab32((x)))
 #  define __swab64(x) \
 (__builtin_constant_p((__u64)(x)) ? \
- ___swab64((x)) : \
+ ___constant_swab64((x)) : \
  __fswab64((x)))
 
 

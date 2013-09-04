@@ -708,13 +708,13 @@ xfs_bmbt_verify(
 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
 	unsigned int		level;
 
-	switch (be32_to_cpu(block->bb_magic)) {
-	case XFS_BMAP_CRC_MAGIC:
+	switch (block->bb_magic) {
+	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
 		if (!xfs_sb_version_hascrc(&mp->m_sb))
 			return false;
 		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_uuid))
 			return false;
-		if (block->bb_u.l.bb_blkno != cpu_to_be64(bp->b_bn))
+		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
 			return false;
 		/*
 		 * XXX: need a better way of verifying the owner here. Right now
@@ -723,7 +723,7 @@ xfs_bmbt_verify(
 		if (be64_to_cpu(block->bb_u.l.bb_owner) == 0)
 			return false;
 		/* fall through */
-	case XFS_BMAP_MAGIC:
+	case cpu_to_be32(XFS_BMAP_MAGIC):
 		break;
 	default:
 		return false;
@@ -759,7 +759,6 @@ static void
 xfs_bmbt_read_verify(
 	struct xfs_buf	*bp)
 {
-	xfs_bmbt_verify(bp);
 	if (!(xfs_btree_lblock_verify_crc(bp) &&
 	      xfs_bmbt_verify(bp))) {
 		trace_xfs_btree_corrupt(bp, _RET_IP_);
@@ -767,7 +766,6 @@ xfs_bmbt_read_verify(
 				     bp->b_target->bt_mount, bp->b_addr);
 		xfs_buf_ioerror(bp, EFSCORRUPTED);
 	}
-
 }
 
 static void
@@ -791,7 +789,7 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
 };
 
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 STATIC int
 xfs_bmbt_keys_inorder(
 	struct xfs_btree_cur	*cur,
@@ -920,7 +918,7 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
 	.key_diff		= xfs_bmbt_key_diff,
 	.buf_ops		= &xfs_bmbt_buf_ops,
-#ifdef DEBUG
+#if defined(DEBUG) || defined(XFS_WARN)
 	.keys_inorder		= xfs_bmbt_keys_inorder,
 	.recs_inorder		= xfs_bmbt_recs_inorder,
 #endif
