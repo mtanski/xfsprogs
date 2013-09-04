@@ -2521,6 +2521,13 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 							lsectorsize != BBSIZE),
 					nci, sbp->sb_features2 != 0);
 	/*
+	 * dirent filetype field always enabled on v5 superblocks
+	 */
+	if (crcs_enabled) {
+		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
+	}
+
+	/*
 	 * Due to a structure alignment issue, sb_features2 ended up in one
 	 * of two locations, the second "incorrect" location represented by
 	 * the sb_bad_features2 field. To avoid older kernels mounting

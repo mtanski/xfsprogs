@@ -48,6 +48,7 @@ extern const field_t	dir3_blkhdr_flds[];
 extern const field_t	dir3_data_hdr_flds[];
 extern const field_t	dir3_free_hdr_flds[];
 extern const field_t	dir3_leaf_hdr_flds[];
+extern const field_t	dir3_data_union_flds[];
 
 extern const field_t	da3_blkinfo_flds[];
 extern const field_t	da3_node_hdr_flds[];

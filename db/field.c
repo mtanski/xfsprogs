@@ -235,6 +235,13 @@ const ftattr_t	ftattrtab[] = {
 	  SI(bitsz(struct xfs_dir3_free_hdr)), 0, NULL, dir3_free_hdr_flds },
 	{ FLDT_DIR3_LEAF_HDR, "dir3_leaf_hdr", NULL, (char *)dir3_leaf_hdr_flds,
 	  SI(bitsz(struct xfs_dir3_leaf_hdr)), 0, NULL, dir3_leaf_hdr_flds },
+	{ FLDT_DIR3_DATA_UNION, "dir3_data_union", NULL,
+	  (char *)dir3_data_union_flds, dir2_data_union_size, FTARG_SIZE, NULL,
+	  dir3_data_union_flds },
+	{ FLDT_DIR3_SF_ENTRY, "dir3_sf_entry", NULL, (char *)dir3_sf_entry_flds,
+	  dir2_sf_entry_size, FTARG_SIZE, NULL, dir3_sf_entry_flds },
+	{ FLDT_DIR3SF, "dir3sf", NULL, (char *)dir3sf_flds, dir2sf_size,
+	  FTARG_SIZE, NULL, dir3sf_flds },
 
 /* dir v2/3 node fields */
 	{ FLDT_DA_BLKINFO, "dir_blkinfo", NULL, (char *)da_blkinfo_flds,

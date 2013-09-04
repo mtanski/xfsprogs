@@ -596,6 +596,25 @@ dir2_data_union_size(
 	}
 }
 
+static int
+dir3_data_union_ftype_offset(
+	void			*obj,
+	int			startoff,
+	int			idx)
+{
+	xfs_dir2_data_entry_t	*dep;
+	xfs_dir2_data_unused_t	*dup;
+
+	ASSERT(bitoffs(startoff) == 0);
+	ASSERT(idx == 0);
+	dup = (xfs_dir2_data_unused_t *)((char *)obj + byteize(startoff));
+	if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
+		return bitize((int)((char *)xfs_dir2_data_unused_tag_p(dup) -
+				    (char *)dup));
+	dep = (xfs_dir2_data_entry_t *)dup;
+	return bitize((int)((char *)&dep->name[dep->namelen] - (char *)dep));
+}
+
 /*
  * Free block functions
  */
@@ -851,7 +870,7 @@ const field_t	dir3_hfld[] = {
 const field_t	dir3_flds[] = {
 	{ "bhdr", FLDT_DIR3_DATA_HDR, OI(B3OFF(hdr)), dir3_block_hdr_count,
 	  FLD_COUNT, TYP_NONE },
-	{ "bu", FLDT_DIR2_DATA_UNION, dir2_block_u_offset, dir2_block_u_count,
+	{ "bu", FLDT_DIR3_DATA_UNION, dir2_block_u_offset, dir2_block_u_count,
 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ "bleaf", FLDT_DIR2_LEAF_ENTRY, dir2_block_leaf_offset,
 	  dir2_block_leaf_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
@@ -859,7 +878,7 @@ const field_t	dir3_flds[] = {
 	  dir3_block_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ "dhdr", FLDT_DIR3_DATA_HDR, OI(D3OFF(hdr)), dir3_data_hdr_count,
 	  FLD_COUNT, TYP_NONE },
-	{ "du", FLDT_DIR2_DATA_UNION, dir2_data_u_offset, dir2_data_u_count,
+	{ "du", FLDT_DIR3_DATA_UNION, dir2_data_u_offset, dir2_data_u_count,
 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ "lhdr", FLDT_DIR3_LEAF_HDR, OI(L3OFF(hdr)), dir3_leaf_hdr_count,
 	  FLD_COUNT, TYP_NONE },
@@ -877,6 +896,26 @@ const field_t	dir3_flds[] = {
 	  FLD_COUNT, TYP_NONE },
 	{ "fbests", FLDT_DIR2_DATA_OFFNZ, OI(F3OFF(bests)),
 	  dir3_free_bests_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+	{ NULL }
+};
+
+#define	D3EOFF(f)	bitize(offsetof(xfs_dir2_data_entry_t, f))
+#define	D3UOFF(f)	bitize(offsetof(xfs_dir2_data_unused_t, f))
+const field_t	dir3_data_union_flds[] = {
+	{ "freetag", FLDT_UINT16X, OI(D3UOFF(freetag)),
+	  dir2_data_union_freetag_count, FLD_COUNT, TYP_NONE },
+	{ "inumber", FLDT_INO, OI(D3EOFF(inumber)),
+	  dir2_data_union_inumber_count, FLD_COUNT, TYP_INODE },
+	{ "length", FLDT_DIR2_DATA_OFF, OI(D3UOFF(length)),
+	  dir2_data_union_length_count, FLD_COUNT, TYP_NONE },
+	{ "namelen", FLDT_UINT8D, OI(D3EOFF(namelen)),
+	  dir2_data_union_namelen_count, FLD_COUNT, TYP_NONE },
+	{ "name", FLDT_CHARNS, OI(D3EOFF(name)), dir2_data_union_name_count,
+	  FLD_COUNT, TYP_NONE },
+	{ "filetype", FLDT_UINT8D, dir3_data_union_ftype_offset, C1,
+	  FLD_OFFSET, TYP_NONE },
+	{ "tag", FLDT_DIR2_DATA_OFF, dir2_data_union_tag_offset,
+	  dir2_data_union_tag_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
 	{ NULL }
 };
 

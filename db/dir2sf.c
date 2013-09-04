@@ -127,7 +127,6 @@ dir2_sf_entry_name_count(
 	return e->namelen;
 }
 
-/*ARGSUSED*/
 static int
 dir2_sf_entry_inumber_offset(
 	void			*obj,
@@ -140,6 +139,35 @@ dir2_sf_entry_inumber_offset(
 	ASSERT(idx == 0);
 	e = (xfs_dir2_sf_entry_t *)((char *)obj + byteize(startoff));
 	return bitize((int)((char *)xfs_dir2_sf_inumberp(e) - (char *)e));
+}
+
+static int
+dir3_sf_entry_inumber_offset(
+	void			*obj,
+	int			startoff,
+	int			idx)
+{
+	xfs_dir2_sf_entry_t	*e;
+
+	ASSERT(bitoffs(startoff) == 0);
+	ASSERT(idx == 0);
+	e = (xfs_dir2_sf_entry_t *)((char *)obj + byteize(startoff));
+	/* plus 1 to skip the ftype entry */
+	return bitize((int)((char *)xfs_dir2_sf_inumberp(e) + 1 - (char *)e));
+}
+
+static int
+dir3_sf_entry_ftype_offset(
+	void			*obj,
+	int			startoff,
+	int			idx)
+{
+	xfs_dir2_sf_entry_t	*e;
+
+	ASSERT(bitoffs(startoff) == 0);
+	ASSERT(idx == 0);
+	e = (xfs_dir2_sf_entry_t *)((char *)obj + byteize(startoff));
+	return bitize((int)((char *)&e->name[e->namelen] - (char *)e));
 }
 
 int
@@ -224,3 +252,25 @@ dir2sf_size(
 		e = xfs_dir3_sf_nextentry(mp, sf, e);
 	return bitize((int)((char *)e - (char *)sf));
 }
+
+#define	OFF(f)	bitize(offsetof(struct xfs_dir2_sf_hdr, f))
+const field_t	dir3sf_flds[] = {
+	{ "hdr", FLDT_DIR2_SF_HDR, OI(OFF(count)), C1, 0, TYP_NONE },
+	{ "list", FLDT_DIR3_SF_ENTRY, dir2_sf_list_offset, dir2_sf_list_count,
+	  FLD_ARRAY|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+	{ NULL }
+};
+
+#define	E3OFF(f)	bitize(offsetof(xfs_dir2_sf_entry_t, f))
+const field_t	dir3_sf_entry_flds[] = {
+	{ "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
+	{ "offset", FLDT_DIR2_SF_OFF, OI(EOFF(offset)), C1, 0, TYP_NONE },
+	{ "name", FLDT_CHARNS, OI(EOFF(name)), dir2_sf_entry_name_count,
+	  FLD_COUNT, TYP_NONE },
+	{ "inumber", FLDT_DIR2_INOU, dir3_sf_entry_inumber_offset, C1,
+	  FLD_OFFSET, TYP_NONE },
+	{ "filetype", FLDT_UINT8D, dir3_sf_entry_ftype_offset, C1,
+	  FLD_OFFSET, TYP_NONE },
+	{ NULL }
+};
+
