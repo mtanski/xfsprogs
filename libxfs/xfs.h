@@ -437,3 +437,5 @@ xfs_buf_t *xfs_trans_buf_item_match(xfs_trans_t *, struct xfs_buftarg *,
 /* local source files */
 int  xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
 void xfs_trans_mod_sb(xfs_trans_t *, uint, long);
+void xfs_trans_init(struct xfs_mount *);
+int  xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);

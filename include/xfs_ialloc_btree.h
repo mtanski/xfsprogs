@@ -80,8 +80,7 @@ typedef __be32 xfs_inobt_ptr_t;
  */
 #define XFS_INOBT_BLOCK_LEN(mp) \
 	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-	 XFS_BTREE_SBLOCK_CRC_LEN : \
-	 XFS_BTREE_SBLOCK_LEN)
+		XFS_BTREE_SBLOCK_CRC_LEN : XFS_BTREE_SBLOCK_LEN)
 
 /*
  * Record, key, and pointer address macros for btree blocks.

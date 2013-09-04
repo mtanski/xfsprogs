@@ -28,14 +28,6 @@ struct xfs_dir2_sf_entry;
 struct xfs_dir2_data_hdr;
 struct xfs_dir2_data_entry;
 struct xfs_dir2_data_unused;
-struct xfs_dir2_data_free;
-
-typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
-
-/*
- * Directory block number (logical dirblk in file)
- */
-typedef	__uint32_t	xfs_dir2_db_t;
 
 extern struct xfs_name	xfs_name_dotdot;
 
@@ -71,7 +63,7 @@ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
 extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
 
 /*
- * used by db
+ * Interface routines used by userspace utilities
  */
 extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
 extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
@@ -109,6 +101,5 @@ extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
 extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
 extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
 extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
-
 
 #endif	/* __XFS_DIR2_H__ */

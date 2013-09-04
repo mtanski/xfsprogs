@@ -73,6 +73,7 @@
  */
 typedef	__uint16_t	xfs_dir2_data_off_t;
 #define	NULLDATAOFF	0xffffU
+typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
 
 /*
  * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
@@ -91,6 +92,11 @@ typedef	__uint32_t	xfs_dir2_dataptr_t;
  * Byte offset in a directory.
  */
 typedef	xfs_off_t	xfs_dir2_off_t;
+
+/*
+ * Directory block number (logical dirblk in file)
+ */
+typedef	__uint32_t	xfs_dir2_db_t;
 
 /*
  * Inode number stored as 8 8-bit values.
@@ -144,19 +150,19 @@ static inline int xfs_dir2_sf_hdr_size(int i8count)
 		(sizeof(xfs_dir2_ino8_t) - sizeof(xfs_dir2_ino4_t));
 }
 
-	static inline xfs_dir2_data_aoff_t
+static inline xfs_dir2_data_aoff_t
 xfs_dir2_sf_get_offset(xfs_dir2_sf_entry_t *sfep)
 {
 	return get_unaligned_be16(&sfep->offset.i);
 }
 
-	static inline void
+static inline void
 xfs_dir2_sf_put_offset(xfs_dir2_sf_entry_t *sfep, xfs_dir2_data_aoff_t off)
 {
 	put_unaligned_be16(off, &sfep->offset.i);
 }
 
-	static inline int
+static inline int
 xfs_dir2_sf_entsize(struct xfs_dir2_sf_hdr *hdr, int len)
 {
 	return sizeof(struct xfs_dir2_sf_entry) +	/* namelen + offset */
@@ -166,14 +172,14 @@ xfs_dir2_sf_entsize(struct xfs_dir2_sf_hdr *hdr, int len)
 		 sizeof(xfs_dir2_ino4_t));
 }
 
-	static inline struct xfs_dir2_sf_entry *
+static inline struct xfs_dir2_sf_entry *
 xfs_dir2_sf_firstentry(struct xfs_dir2_sf_hdr *hdr)
 {
 	return (struct xfs_dir2_sf_entry *)
 		((char *)hdr + xfs_dir2_sf_hdr_size(hdr->i8count));
 }
 
-	static inline struct xfs_dir2_sf_entry *
+static inline struct xfs_dir2_sf_entry *
 xfs_dir2_sf_nextentry(struct xfs_dir2_sf_hdr *hdr,
 		struct xfs_dir2_sf_entry *sfep)
 {
@@ -238,7 +244,7 @@ typedef struct xfs_dir2_data_free {
  */
 typedef struct xfs_dir2_data_hdr {
 	__be32			magic;		/* XFS_DIR2_DATA_MAGIC or */
-	/* XFS_DIR2_BLOCK_MAGIC */
+						/* XFS_DIR2_BLOCK_MAGIC */
 	xfs_dir2_data_free_t	bestfree[XFS_DIR2_DATA_FD_COUNT];
 } xfs_dir2_data_hdr_t;
 
@@ -265,7 +271,7 @@ struct xfs_dir3_data_hdr {
 
 #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
 
-	static inline struct xfs_dir2_data_free *
+static inline struct xfs_dir2_data_free *
 xfs_dir3_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
 {
 	if (hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
@@ -514,7 +520,7 @@ struct xfs_dir3_leaf {
 #define XFS_DIR3_LEAF_CRC_OFF  offsetof(struct xfs_dir3_leaf_hdr, info.crc)
 
 extern void xfs_dir3_leaf_hdr_from_disk(struct xfs_dir3_icleaf_hdr *to,
-		struct xfs_dir2_leaf *from);
+					struct xfs_dir2_leaf *from);
 
 static inline int
 xfs_dir3_leaf_hdr_size(struct xfs_dir2_leaf *lp)

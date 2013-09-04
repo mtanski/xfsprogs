@@ -46,7 +46,6 @@
 #include <xfs/xfs_inum.h>
 #include <xfs/xfs_sb.h>
 #include <xfs/xfs_ag.h>
-#include <xfs/xfs_dir2.h>
 #include <xfs/xfs_da_btree.h>
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_alloc_btree.h>
@@ -235,6 +234,11 @@ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
 extern void	libxfs_umount (xfs_mount_t *);
 extern void	libxfs_rtmount_destroy (xfs_mount_t *);
 
+/*
+ * xfs/xfs_dir2_format.h needs struct xfs_mount to be defined
+ */
+#include <xfs/xfs_dir2_format.h>
+#include <xfs/xfs_dir2.h>
 
 /*
  * Simple I/O interface
@@ -610,8 +614,6 @@ extern void	libxfs_icache_purge (void);
 extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);
-
-#include <xfs/xfs_dir2_format.h>
 
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);
