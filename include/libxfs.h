@@ -52,7 +52,6 @@
 #include <xfs/xfs_attr_sf.h>
 #include <xfs/xfs_dinode.h>
 #include <xfs/xfs_inode.h>
-#include <xfs/xfs_buf_item.h>
 #include <xfs/xfs_alloc.h>
 #include <xfs/xfs_btree.h>
 #include <xfs/xfs_btree_trace.h>
@@ -437,6 +436,11 @@ typedef struct xfs_buf_log_item {
 	unsigned int		bli_recur;	/* recursion count */
 	xfs_buf_log_format_t	bli_format;	/* in-log header */
 } xfs_buf_log_item_t;
+
+#define XFS_BLI_DIRTY			(1<<0)
+#define XFS_BLI_HOLD			(1<<1)
+#define XFS_BLI_STALE			(1<<2)
+#define XFS_BLI_INODE_ALLOC_BUF		(1<<3)
 
 #include <xfs/xfs_trans.h>
 
