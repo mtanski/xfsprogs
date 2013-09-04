@@ -49,7 +49,6 @@ struct xlog {
 
 #include <xfs/xfs_log_recover.h>
 #include <xfs/xfs_buf_item.h>
-#include <xfs/xfs_inode_item.h>
 #include <xfs/xfs_extfree_item.h>
 #include <xfs/xfs_icreate_item.h>
 

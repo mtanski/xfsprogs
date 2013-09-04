@@ -226,7 +226,7 @@ libxfs_trans_inode_alloc_buf(
  * to be logged when the transaction is committed.  The inode must
  * already be associated with the given transaction.
  *
- * The values for fieldmask are defined in xfs_inode_item.h.  We always
+ * The values for fieldmask are defined in xfs_log_format.h.  We always
  * log all of the core inode if any of it has changed, and we always log
  * all of the inline data/extents/b-tree root if any of them has changed.
  */
