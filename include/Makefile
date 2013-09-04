@@ -40,8 +40,7 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_sb.h \
 	xfs_trace.h \
 	xfs_trans_resv.h \
-	xfs_trans_space.h \
-	xfs_dfrag.h
+	xfs_trans_space.h
 
 HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
 HFILES += $(PKG_PLATFORM).h

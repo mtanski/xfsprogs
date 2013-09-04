@@ -20,7 +20,6 @@
 #include <xfs/xfs.h>
 #include <xfs/xfs_types.h>
 #include <xfs/jdm.h>
-#include <xfs/xfs_dfrag.h>
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_dinode.h>
 #include <xfs/xfs_attr_sf.h>
