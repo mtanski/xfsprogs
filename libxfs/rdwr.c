@@ -22,7 +22,6 @@
 #include "init.h"
 
 #define BDSTRAT_SIZE	(256 * 1024)
-#define min(x, y)	((x) < (y) ? (x) : (y))
 
 #define IO_BCOMPARE_CHECK
 

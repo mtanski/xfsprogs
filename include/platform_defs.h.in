@@ -173,4 +173,9 @@ typedef unsigned short umode_t;
 #define __arch_pack
 #endif
 
+#ifndef min
+#define min(a,b)	(((a)<(b))?(a):(b))
+#define max(a,b)	(((a)>(b))?(a):(b))
+#endif
+
 #endif	/* __XFS_PLATFORM_DEFS_H__ */

@@ -26,7 +26,4 @@ extern int	expert;
 extern size_t	pagesize;
 extern struct timeval stopwatch;
 
-#define min(a,b)	(((a)<(b))?(a):(b))
-#define max(a,b)	(((a)>(b))?(a):(b))
-
 extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
