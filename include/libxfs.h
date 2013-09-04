@@ -39,6 +39,7 @@
 
 #include <xfs/xfs_format.h>
 #include <xfs/xfs_log_format.h>
+#include <xfs/xfs_quota_defs.h>
 
 #include <xfs/xfs_bit.h>
 #include <xfs/xfs_inum.h>
@@ -617,7 +618,6 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 
 #include <xfs/xfs_attr_leaf.h>
 #include <xfs/xfs_attr_remote.h>
-#include <xfs/xfs_quota.h>
 #include <xfs/xfs_trans_space.h>
 
 #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
