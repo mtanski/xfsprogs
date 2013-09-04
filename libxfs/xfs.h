@@ -176,6 +176,7 @@ roundup_pow_of_two(uint v)
 #define XBF_TRYLOCK			XFS_BUF_TRYLOCK
 #define XBF_DONT_BLOCK			0
 #define XBF_UNMAPPED			0
+#define XBF_DONE			0
 #define XFS_BUF_GETERROR(bp)		0
 #define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
 #define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
@@ -194,6 +195,7 @@ roundup_pow_of_two(uint v)
 #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
 #define xfs_buf_get(devp,blkno,len,f)	(libxfs_getbuf((devp), (blkno), (len)))
 #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+#define xfs_buf_delwri_queue(bp, bl)	libxfs_writebuf((bp), 0)
 
 #define XBRW_READ			LIBXFS_BREAD
 #define XBRW_WRITE			LIBXFS_BWRITE
@@ -252,6 +254,7 @@ roundup_pow_of_two(uint v)
 
 #define xfs_trans_get_block_res(tp)	1
 #define xfs_trans_set_sync(tp)		((void) 0)
+#define xfs_trans_ordered_buf(tp, bp)	((void) 0)
 #define	xfs_trans_agblocks_delta(tp, d)
 #define	xfs_trans_agflist_delta(tp, d)
 #define	xfs_trans_agbtree_delta(tp, d)
@@ -324,6 +327,8 @@ do { \
 
 #define uuid_copy(s,d)		platform_uuid_copy((s),(d))
 #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
+
+#define xfs_icreate_log(tp, agno, agbno, cnt, isize, len, gen) ((void) 0)
 
 /*
  * Prototypes for kernel static functions that are aren't in their

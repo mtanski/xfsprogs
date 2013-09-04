@@ -36,6 +36,8 @@ struct xfs_icreate_log {
 	__be32		icl_gen;	/* inode generation number to use */
 };
 
+#ifdef __KERNEL__
+
 /* in memory log item structure */
 struct xfs_icreate_item {
 	struct xfs_log_item	ic_item;
@@ -48,5 +50,6 @@ void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
 			xfs_agblock_t agbno, unsigned int count,
 			unsigned int inode_size, xfs_agblock_t length,
 			unsigned int generation);
+#endif /* __KERNEL__ */
 
 #endif	/* XFS_ICREATE_ITEM_H */
