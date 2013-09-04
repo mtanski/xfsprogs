@@ -208,6 +208,7 @@ roundup_pow_of_two(uint v)
 #define XFS_MOUNT_SMALL_INUMS		0	/* ignored in userspace */
 #define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
 #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
+#define XFS_MOUNT_IKEEP			0	/* ignored in userspace */
 
 #define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
 	xfs_mod_incore_sb(mp, field, delta, rsvd)
