@@ -235,12 +235,14 @@ roundup_pow_of_two(uint v)
 #define xfs_mod_incore_sb		libxfs_mod_incore_sb
 
 #define xfs_trans_alloc			libxfs_trans_alloc
+#define xfs_trans_add_item		libxfs_trans_add_item
 #define xfs_trans_bhold			libxfs_trans_bhold
 #define xfs_trans_binval		libxfs_trans_binval
 #define xfs_trans_bjoin			libxfs_trans_bjoin
 #define xfs_trans_brelse		libxfs_trans_brelse
 #define xfs_trans_commit		libxfs_trans_commit
 #define xfs_trans_cancel		libxfs_trans_cancel
+#define xfs_trans_del_item		libxfs_trans_del_item
 #define xfs_trans_dup			libxfs_trans_dup
 #define xfs_trans_get_buf		libxfs_trans_get_buf
 #define xfs_trans_getsb			libxfs_trans_getsb
@@ -248,12 +250,14 @@ roundup_pow_of_two(uint v)
 #define xfs_trans_ihold			libxfs_trans_ihold
 #define xfs_trans_ijoin			libxfs_trans_ijoin
 #define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
+#define xfs_trans_init			libxfs_trans_init
 #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
 #define xfs_trans_log_buf		libxfs_trans_log_buf
 #define xfs_trans_log_inode		libxfs_trans_log_inode
 #define xfs_trans_mod_sb		libxfs_trans_mod_sb
 #define xfs_trans_read_buf		libxfs_trans_read_buf
 #define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
+#define xfs_trans_roll			libxfs_trans_roll
 #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
 #define xfs_trans_reserve		libxfs_trans_reserve
 
@@ -373,6 +377,8 @@ void xfs_mount_common(xfs_mount_t *, xfs_sb_t *);
 /*
  * logitem.c and trans.c prototypes
  */
+void xfs_trans_init(struct xfs_mount *);
+int xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
 
 /* xfs_trans_item.c */
 void xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
