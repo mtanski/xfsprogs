@@ -26,6 +26,7 @@
 	(0); \
 })
 
+#define BLK_AVG(blk1, blk2)    ((blk1+blk2) >> 1)
 
 /*
  * Verify the given count of basic blocks is valid number of blocks
@@ -1033,6 +1034,8 @@ xlog_recover_add_item(
 	INIT_LIST_HEAD(&item->ri_list);
 	list_add_tail(&item->ri_list, head);
 }
+
+#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
 
 STATIC int
 xlog_recover_add_to_cont_trans(

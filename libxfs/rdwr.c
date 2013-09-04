@@ -17,8 +17,6 @@
  */
 
 #include <xfs/libxfs.h>
-#include <xfs/xfs_log.h>
-#include <xfs/xfs_log_priv.h>
 #include "init.h"
 
 #define BDSTRAT_SIZE	(256 * 1024)

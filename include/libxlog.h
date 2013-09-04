@@ -53,12 +53,6 @@ struct xlog {
 #include <xfs/xfs_extfree_item.h>
 #include <xfs/xfs_icreate_item.h>
 
-typedef union {
-	xlog_rec_header_t       hic_header;
-	xlog_rec_ext_header_t   hic_xheader;
-	char                    hic_sector[XLOG_HEADER_SIZE];
-} xlog_in_core_2_t;
-
 /*
  * macros mapping kernel code to user code
  */

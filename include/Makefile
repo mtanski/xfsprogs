@@ -27,7 +27,9 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
 	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
-	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
+	xfs_log_format.h \
+	xfs_log_recover.h \
+	xfs_metadump.h \
 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
 

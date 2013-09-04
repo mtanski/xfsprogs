@@ -59,6 +59,8 @@
 #include <xfs/xfs_symlink.h>
 #include <xfs/xfs_icreate_item.h>
 
+#include <xfs/xfs_log_format.h>
+
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
@@ -613,8 +615,6 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
 #include <xfs/xfs_attr_remote.h>
 #include <xfs/xfs_quota.h>
 #include <xfs/xfs_trans_space.h>
-#include <xfs/xfs_log.h>
-#include <xfs/xfs_log_priv.h>
 
 #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
 			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
