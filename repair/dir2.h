@@ -72,6 +72,7 @@ process_dir2(
 
 void
 process_sf_dir2_fixi8(
+	struct xfs_mount	*mp,
 	struct xfs_dir2_sf_hdr	*sfp,
 	xfs_dir2_sf_entry_t	**next_sfep);
 

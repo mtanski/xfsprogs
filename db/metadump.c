@@ -939,7 +939,7 @@ obfuscate_sf_dir(
 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
 					 (char *)sfp);
 		} else if ((char *)sfep - (char *)sfp +
-				xfs_dir2_sf_entsize(sfp, sfep->namelen) >
+				xfs_dir3_sf_entsize(mp, sfp, sfep->namelen) >
 				ino_dir_size) {
 			if (show_warnings)
 				print_warning("entry length in dir inode %llu "
@@ -950,11 +950,11 @@ obfuscate_sf_dir(
 					 (char *)sfp);
 		}
 
-		generate_obfuscated_name(xfs_dir2_sfe_get_ino(sfp, sfep),
+		generate_obfuscated_name(xfs_dir3_sfe_get_ino(mp, sfp, sfep),
 					 namelen, &sfep->name[0]);
 
 		sfep = (xfs_dir2_sf_entry_t *)((char *)sfep +
-				xfs_dir2_sf_entsize(sfp, namelen));
+				xfs_dir3_sf_entsize(mp, sfp, namelen));
 	}
 }
 
@@ -1184,7 +1184,7 @@ obfuscate_dir_data_blocks(
 			}
 
 			dep = (xfs_dir2_data_entry_t *)ptr;
-			length = xfs_dir2_data_entsize(dep->namelen);
+			length = xfs_dir3_data_entsize(mp, dep->namelen);
 
 			if (dir_offset + length > dir_data.end_of_data ||
 					ptr + length > endptr) {
@@ -1194,7 +1194,7 @@ obfuscate_dir_data_blocks(
 						(long long)cur_ino);
 				break;
 			}
-			if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) !=
+			if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
 					dir_offset) {
 				dir_data.bad_block = 1;
 				break;

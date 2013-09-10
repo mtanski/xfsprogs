@@ -2310,7 +2310,7 @@ process_data_dir_v2(
 					(int)((char *)dep - (char *)data));
 			error++;
 		}
-		tagp = xfs_dir2_data_entry_tag_p(dep);
+		tagp = xfs_dir3_data_entry_tag_p(mp, dep);
 		if ((char *)tagp >= endptr) {
 			if (!sflag || v)
 				dbprintf(_("dir %lld block %d bad entry at %d\n"),
@@ -2325,7 +2325,7 @@ process_data_dir_v2(
 		xname.name = dep->name;
 		xname.len = dep->namelen;
 		dir_hash_add(mp->m_dirnameops->hashname(&xname), addr);
-		ptr += xfs_dir2_data_entsize(dep->namelen);
+		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 		count++;
 		lastfree = 0;
 		lino = be64_to_cpu(dep->inumber);
@@ -3436,7 +3436,7 @@ process_sf_dir_v2(
 	sfe = xfs_dir2_sf_firstentry(sf);
 	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
 	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
-		if ((__psint_t)sfe + xfs_dir2_sf_entsize(sf, sfe->namelen) -
+		if ((__psint_t)sfe + xfs_dir3_sf_entsize(mp, sf, sfe->namelen) -
 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
 			if (!sflag)
 				dbprintf(_("dir %llu bad size in entry at %d\n"),
@@ -3445,7 +3445,7 @@ process_sf_dir_v2(
 			error++;
 			break;
 		}
-		lino = xfs_dir2_sfe_get_ino(sf, sfe);
+		lino = xfs_dir3_sfe_get_ino(mp, sf, sfe);
 		if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
 		cid = find_inode(lino, 1);
@@ -3475,8 +3475,8 @@ process_sf_dir_v2(
 		}
 		offset =
 			xfs_dir2_sf_get_offset(sfe) +
-			xfs_dir2_sf_entsize(sf, sfe->namelen);
-		sfe = xfs_dir2_sf_nextentry(sf, sfe);
+			xfs_dir3_sf_entsize(mp, sf, sfe->namelen);
+		sfe = xfs_dir3_sf_nextentry(mp, sf, sfe);
 	}
 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
 					be64_to_cpu(dip->di_size)) {

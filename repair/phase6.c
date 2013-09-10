@@ -1518,12 +1518,12 @@ longform_dir2_entry_check_data(
 
 		/* validate data entry size */
 		dep = (xfs_dir2_data_entry_t *)ptr;
-		if (ptr + xfs_dir2_data_entsize(dep->namelen) > endptr)
+		if (ptr + xfs_dir3_data_entsize(mp, dep->namelen) > endptr)
 			break;
-		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) !=
+		if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
 						(char *)dep - (char *)d)
 			break;
-		ptr += xfs_dir2_data_entsize(dep->namelen);
+		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 	}
 
 	/* did we find an empty or corrupt block? */
@@ -1612,7 +1612,7 @@ longform_dir2_entry_check_data(
 		}
 		addr = xfs_dir2_db_off_to_dataptr(mp, db, ptr - (char *)d);
 		dep = (xfs_dir2_data_entry_t *)ptr;
-		ptr += xfs_dir2_data_entsize(dep->namelen);
+		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 		inum = be64_to_cpu(dep->inumber);
 		lastfree = 0;
 		/*
@@ -2244,7 +2244,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		bad_sfnamelen = 0;
 		tmp_sfep = NULL;
 
-		lino = xfs_dir2_sfe_get_ino(sfp, sfep);
+		lino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
 
 		namelen = sfep->namelen;
 
@@ -2273,7 +2273,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				break;
 			}
 		} else if (no_modify && (__psint_t) sfep - (__psint_t) sfp +
-				+ xfs_dir2_sf_entsize(sfp, sfep->namelen)
+				+ xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
 				> ip->i_d.di_size)  {
 			bad_sfnamelen = 1;
 
@@ -2303,7 +2303,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 
 		if (no_modify && verify_inum(mp, lino))  {
 			next_sfep = (xfs_dir2_sf_entry_t *)((__psint_t)sfep +
-				xfs_dir2_sf_entsize(sfp, sfep->namelen));
+				xfs_dir3_sf_entsize(mp, sfp, sfep->namelen));
 			continue;
 		}
 
@@ -2411,7 +2411,7 @@ do_junkit:
 			if (lino == orphanage_ino)
 				orphanage_ino = 0;
 			if (!no_modify)  {
-				tmp_elen = xfs_dir2_sf_entsize(sfp,
+				tmp_elen = xfs_dir3_sf_entsize(mp, sfp,
 								sfep->namelen);
 				tmp_sfep = (xfs_dir2_sf_entry_t *)
 					((__psint_t) sfep + tmp_elen);
@@ -2464,8 +2464,8 @@ do_junkit:
 		next_sfep = (tmp_sfep == NULL)
 			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
 							+ ((!bad_sfnamelen)
-				? xfs_dir2_sf_entsize(sfp, sfep->namelen)
-				: xfs_dir2_sf_entsize(sfp, namelen)))
+				? xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
+				: xfs_dir3_sf_entsize(mp, sfp, namelen)))
 			: tmp_sfep;
 	}
 
@@ -2476,7 +2476,7 @@ do_junkit:
 		} else {
 			if (i8 == 0) {
 				tmp_sfep = next_sfep;
-				process_sf_dir2_fixi8(sfp, &tmp_sfep);
+				process_sf_dir2_fixi8(mp, sfp, &tmp_sfep);
 				bytes_deleted +=
 					(__psint_t)next_sfep -
 					(__psint_t)tmp_sfep;

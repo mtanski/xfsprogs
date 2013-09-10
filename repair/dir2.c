@@ -651,6 +651,7 @@ _("would correct bad hashval in interior dir block\n"
  */
 void
 process_sf_dir2_fixi8(
+	struct xfs_mount	*mp,
 	struct xfs_dir2_sf_hdr	*sfp,
 	xfs_dir2_sf_entry_t	**next_sfep)
 {
@@ -680,10 +681,10 @@ process_sf_dir2_fixi8(
 		xfs_dir2_sf_put_offset(newsfep,
 			xfs_dir2_sf_get_offset(oldsfep));
 		memmove(newsfep->name, oldsfep->name, newsfep->namelen);
-		ino = xfs_dir2_sfe_get_ino(oldsfp, oldsfep);
-		xfs_dir2_sfe_put_ino(newsfp, newsfep, ino);
-		oldsfep = xfs_dir2_sf_nextentry(oldsfp, oldsfep);
-		newsfep = xfs_dir2_sf_nextentry(newsfp, newsfep);
+		ino = xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep);
+		xfs_dir3_sfe_put_ino(mp, newsfp, newsfep, ino);
+		oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep);
+		newsfep = xfs_dir3_sf_nextentry(mp, newsfp, newsfep);
 	}
 	*next_sfep = newsfep;
 	free(oldsfp);
@@ -708,8 +709,8 @@ process_sf_dir2_fixoff(
 
 	for (i = 0; i < sfp->count; i++) {
 		xfs_dir2_sf_put_offset(sfep, offset);
-		offset += xfs_dir2_data_entsize(sfep->namelen);
-		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
+		offset += xfs_dir3_data_entsize(mp, sfep->namelen);
+		sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
 	}
 }
 
@@ -771,7 +772,7 @@ process_sf_dir2(
 	/*
 	 * check for bad entry count
 	 */
-	if (num_entries * xfs_dir2_sf_entsize(sfp, 1) +
+	if (num_entries * xfs_dir3_sf_entsize(mp, sfp, 1) +
 		    xfs_dir2_sf_hdr_size(0) > max_size || num_entries == 0)
 		num_entries = 0xFF;
 
@@ -787,7 +788,7 @@ process_sf_dir2(
 		sfep = next_sfep;
 		junkit = 0;
 		bad_sfnamelen = 0;
-		lino = xfs_dir2_sfe_get_ino(sfp, sfep);
+		lino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
 		/*
 		 * if entry points to self, junk it since only '.' or '..'
 		 * should do that and shortform dirs don't contain either
@@ -904,7 +905,7 @@ _("zero length entry in shortform dir %" PRIu64 ""),
 				break;
 			}
 		} else if ((__psint_t) sfep - (__psint_t) sfp +
-				xfs_dir2_sf_entsize(sfp, sfep->namelen)
+				xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
 							> ino_dir_size)  {
 			bad_sfnamelen = 1;
 
@@ -975,7 +976,7 @@ _("entry contains offset out of order in shortform dir %" PRIu64 "\n"),
 			bad_offset = 1;
 		}
 		offset = xfs_dir2_sf_get_offset(sfep) +
-						xfs_dir2_data_entsize(namelen);
+					xfs_dir3_data_entsize(mp, namelen);
 
 		/*
 		 * junk the entry by copying up the rest of the
@@ -992,7 +993,7 @@ _("entry contains offset out of order in shortform dir %" PRIu64 "\n"),
 			name[namelen] = '\0';
 
 			if (!no_modify)  {
-				tmp_elen = xfs_dir2_sf_entsize(sfp,
+				tmp_elen = xfs_dir3_sf_entsize(mp, sfp,
 								sfep->namelen);
 				be64_add_cpu(&dip->di_size, -tmp_elen);
 				ino_dir_size -= tmp_elen;
@@ -1046,8 +1047,8 @@ _("would have junked entry \"%s\" in directory inode %" PRIu64 "\n"),
 		next_sfep = (tmp_sfep == NULL)
 			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
 							+ ((!bad_sfnamelen)
-				? xfs_dir2_sf_entsize(sfp, sfep->namelen)
-				: xfs_dir2_sf_entsize(sfp, namelen)))
+				? xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
+				: xfs_dir3_sf_entsize(mp, sfp, namelen)))
 			: tmp_sfep;
 	}
 
@@ -1078,7 +1079,7 @@ _("would have corrected i8 count in directory %" PRIu64 " from %d to %d\n"),
 _("corrected i8 count in directory %" PRIu64 ", was %d, now %d\n"),
 				ino, sfp->i8count, i8);
 			if (i8 == 0)
-				process_sf_dir2_fixi8(sfp, &next_sfep);
+				process_sf_dir2_fixi8(mp, sfp, &next_sfep);
 			else
 				sfp->i8count = i8;
 			*dino_dirty = 1;
@@ -1271,12 +1272,12 @@ process_dir2_data(
 			continue;
 		}
 		dep = (xfs_dir2_data_entry_t *)ptr;
-		if (ptr + xfs_dir2_data_entsize(dep->namelen) > endptr)
+		if (ptr + xfs_dir3_data_entsize(mp, dep->namelen) > endptr)
 			break;
-		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) !=
+		if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
 		    				(char *)dep - (char *)d)
 			break;
-		ptr += xfs_dir2_data_entsize(dep->namelen);
+		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 		lastfree = 0;
 	}
 	/*
@@ -1533,7 +1534,7 @@ _("entry \"%*.*s\" in directory inode %" PRIu64 " points to self: "),
 		/*
 		 * Advance to the next entry.
 		 */
-		ptr += xfs_dir2_data_entsize(dep->namelen);
+		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 	}
 	/*
 	 * Check the bestfree table.

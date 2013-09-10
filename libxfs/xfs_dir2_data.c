@@ -131,7 +131,7 @@ __xfs_dir3_data_check(
 		XFS_WANT_CORRUPTED_RETURN(
 			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
 		XFS_WANT_CORRUPTED_RETURN(
-			be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
+			be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) ==
 					       (char *)dep - (char *)hdr);
 		count++;
 		lastfree = 0;
@@ -150,7 +150,7 @@ __xfs_dir3_data_check(
 			}
 			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
 		}
-		p += xfs_dir2_data_entsize(dep->namelen);
+		p += xfs_dir3_data_entsize(mp, dep->namelen);
 	}
 	/*
 	 * Need to have seen all the entries and all the bestfree slots.
@@ -520,8 +520,8 @@ xfs_dir2_data_freescan(
 		else {
 			dep = (xfs_dir2_data_entry_t *)p;
 			ASSERT((char *)dep - (char *)hdr ==
-			       be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)));
-			p += xfs_dir2_data_entsize(dep->namelen);
+			       be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)));
+			p += xfs_dir3_data_entsize(mp, dep->namelen);
 		}
 	}
 }
@@ -611,7 +611,8 @@ xfs_dir2_data_log_entry(
 	struct xfs_buf		*bp,
 	xfs_dir2_data_entry_t	*dep)		/* data entry pointer */
 {
-	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
+	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+	struct xfs_mount	*mp = tp->t_mountp;
 
 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
 	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
@@ -619,7 +620,7 @@ xfs_dir2_data_log_entry(
 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
 
 	xfs_trans_log_buf(tp, bp, (uint)((char *)dep - (char *)hdr),
-		(uint)((char *)(xfs_dir2_data_entry_tag_p(dep) + 1) -
+		(uint)((char *)(xfs_dir3_data_entry_tag_p(mp, dep) + 1) -
 		       (char *)hdr - 1));
 }
 

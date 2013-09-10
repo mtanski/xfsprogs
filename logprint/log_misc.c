@@ -565,7 +565,10 @@ xlog_print_trans_inode_core(xfs_icdinode_t *ip)
 }
 
 void
-xlog_print_dir2_sf(xfs_dir2_sf_hdr_t *sfp, int size)
+xlog_print_dir2_sf(
+	struct xlog	*log,
+	xfs_dir2_sf_hdr_t *sfp,
+	int		size)
 {
 	xfs_ino_t	ino;
 	int		count;
@@ -587,21 +590,23 @@ xlog_print_dir2_sf(xfs_dir2_sf_hdr_t *sfp, int size)
 	count = sfp->count;
 	sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0; i < count; i++) {
-		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
+		ino = xfs_dir3_sfe_get_ino(log->l_mp, sfp, sfep);
 		memmove(namebuf, (sfep->name), sfep->namelen);
 		namebuf[sfep->namelen] = '\0';
 		printf(_("%s ino 0x%llx namelen %d\n"),
 		       namebuf, (unsigned long long)ino, sfep->namelen);
-		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
+		sfep = xfs_dir3_sf_nextentry(log->l_mp, sfp, sfep);
 	}
 }
 
 int
-xlog_print_trans_inode(xfs_caddr_t *ptr,
-		       int len,
-		       int *i,
-		       int num_ops,
-		       boolean_t continued)
+xlog_print_trans_inode(
+	struct xlog	*log,
+	xfs_caddr_t	*ptr,
+	int		len,
+	int		*i,
+	int		num_ops,
+	boolean_t	continued)
 {
     xfs_icdinode_t	   dino;
     xlog_op_header_t	   *op_head;
@@ -695,7 +700,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_DDATA:
 		printf(_("LOCAL inode data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir2_sf((xfs_dir2_sf_hdr_t *)*ptr, size);
+		    xlog_print_dir2_sf(log, (xfs_dir2_sf_hdr_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_DFORK) == 0);
@@ -722,7 +727,7 @@ xlog_print_trans_inode(xfs_caddr_t *ptr,
 	    case XFS_ILOG_ADATA:
 		printf(_("LOCAL attr data\n"));
 		if (mode == S_IFDIR)
-		    xlog_print_dir2_sf((xfs_dir2_sf_hdr_t *)*ptr, size);
+		    xlog_print_dir2_sf(log, (xfs_dir2_sf_hdr_t *)*ptr, size);
 		break;
 	    default:
 		ASSERT((f->ilf_fields & XFS_ILOG_AFORK) == 0);
@@ -857,14 +862,16 @@ print_lsn(xfs_caddr_t	string,
 
 
 int
-xlog_print_record(int			  fd,
-		 int			  num_ops,
-		 int			  len,
-		 int			  *read_type,
-		 xfs_caddr_t		  *partial_buf,
-		 xlog_rec_header_t	  *rhead,
-		 xlog_rec_ext_header_t	  *xhdrs,
-		 int			  bad_hdr_warn)
+xlog_print_record(
+	struct xlog		*log,
+	int			fd,
+	int			num_ops,
+	int			len,
+	int			*read_type,
+	xfs_caddr_t		*partial_buf,
+	xlog_rec_header_t	*rhead,
+	xlog_rec_ext_header_t	*xhdrs,
+	int			bad_hdr_warn)
 {
     xfs_caddr_t		buf, ptr;
     int			read_len, skip;
@@ -1011,7 +1018,7 @@ xlog_print_record(int			  fd,
 			break;
 		    }
 		    case XFS_LI_INODE: {
-			skip = xlog_print_trans_inode(&ptr,
+			skip = xlog_print_trans_inode(log, &ptr,
 					be32_to_cpu(op_head->oh_len),
 					&i, num_ops, continued);
 			break;
@@ -1387,7 +1394,7 @@ void xfs_log_print(struct xlog  *log,
 		break;
 	}
 
-	error =	xlog_print_record(fd, num_ops, len, &read_type, &partial_buf,
+	error =	xlog_print_record(log, fd, num_ops, len, &read_type, &partial_buf,
 				  hdr, xhdrs, first_hdr_found);
 	first_hdr_found++;
 	switch (error) {
@@ -1488,14 +1495,9 @@ loop:
 	    }
 
 partial_log_read:
-	    error= xlog_print_record(fd,
-				    num_ops,
-				    len,
-				    &read_type,
-				    &partial_buf,
-				    (xlog_rec_header_t *)hbuf,
-				    xhdrs,
-				    first_hdr_found);
+	    error= xlog_print_record(log, fd, num_ops, len, &read_type,
+				    &partial_buf, (xlog_rec_header_t *)hbuf,
+				    xhdrs, first_hdr_found);
 	    if (read_type != FULL_READ)
 		len -= read_type;
 	    read_type = FULL_READ;

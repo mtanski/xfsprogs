@@ -222,7 +222,7 @@ __dir2_data_entries_count(
 			ptr += be16_to_cpu(dup->length);
 		else {
 			dep = (xfs_dir2_data_entry_t *)ptr;
-			ptr += xfs_dir2_data_entsize(dep->namelen);
+			ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 		}
 	}
 	return i;
@@ -246,7 +246,7 @@ __dir2_data_entry_offset(
 			ptr += be16_to_cpu(dup->length);
 		else {
 			dep = (xfs_dir2_data_entry_t *)ptr;
-			ptr += xfs_dir2_data_entsize(dep->namelen);
+			ptr += xfs_dir3_data_entsize(mp, dep->namelen);
 		}
 	}
 	return ptr;
@@ -495,7 +495,7 @@ dir2_data_union_tag_count(
 		end = (char *)&dep->namelen + sizeof(dep->namelen);
 		if (end > (char *)obj + mp->m_dirblksize)
 			return 0;
-		tagp = xfs_dir2_data_entry_tag_p(dep);
+		tagp = xfs_dir3_data_entry_tag_p(mp, dep);
 	}
 	end = (char *)tagp + sizeof(*tagp);
 	return end <= (char *)obj + mp->m_dirblksize;
@@ -517,7 +517,7 @@ dir2_data_union_tag_offset(
 		return bitize((int)((char *)xfs_dir2_data_unused_tag_p(dup) -
 				    (char *)dup));
 	dep = (xfs_dir2_data_entry_t *)dup;
-	return bitize((int)((char *)xfs_dir2_data_entry_tag_p(dep) -
+	return bitize((int)((char *)xfs_dir3_data_entry_tag_p(mp, dep) -
 			    (char *)dep));
 }
 
@@ -592,7 +592,7 @@ dir2_data_union_size(
 		return bitize(be16_to_cpu(dup->length));
 	else {
 		dep = (xfs_dir2_data_entry_t *)dup;
-		return bitize(xfs_dir2_data_entsize(dep->namelen));
+		return bitize(xfs_dir3_data_entsize(mp, dep->namelen));
 	}
 }
 
