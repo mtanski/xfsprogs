@@ -36,7 +36,6 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_log_format.h \
 	xfs_log_recover.h \
 	xfs_metadump.h \
-	xfs_mount.h \
 	xfs_quota_defs.h \
 	xfs_sb.h \
 	xfs_trace.h \

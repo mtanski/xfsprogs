@@ -66,10 +66,6 @@ struct xlog {
 #define XFS_MOUNT_WAS_CLEAN		0x1
 #define unlikely(x)			(x)
 
-#define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
-#define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
-#define xfs_hex_dump(d,n)		((void) 0)
-
 extern void xlog_warn(char *fmt,...);
 extern void xlog_exit(char *fmt,...);
 extern void xlog_panic(char *fmt,...);

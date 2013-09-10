@@ -26,6 +26,7 @@
 
 struct xfs_buf;
 struct xfs_mount;
+struct xfs_trans;
 
 #define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
 #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
@@ -634,6 +635,15 @@ static inline int xfs_sb_version_has_pquotino(xfs_sb_t *sbp)
  * end of superblock version macros
  */
 
+static inline bool
+xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+{
+	return (ino == sbp->sb_uquotino ||
+		ino == sbp->sb_gquotino ||
+		ino == sbp->sb_pquotino);
+}
+
+
 #define XFS_SB_DADDR		((xfs_daddr_t)0) /* daddr in filesystem/ag */
 #define	XFS_SB_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_SB_DADDR)
 #define XFS_BUF_TO_SBP(bp)	((xfs_dsb_t *)((bp)->b_addr))
@@ -665,5 +675,24 @@ static inline int xfs_sb_version_has_pquotino(xfs_sb_t *sbp)
 	((((__uint64_t)(b)) + (mp)->m_blockmask) >> (mp)->m_sb.sb_blocklog)
 #define XFS_B_TO_FSBT(mp,b)	(((__uint64_t)(b)) >> (mp)->m_sb.sb_blocklog)
 #define XFS_B_FSB_OFFSET(mp,b)	((b) & (mp)->m_blockmask)
+
+/*
+ * perag get/put wrappers for ref counting
+ */
+extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
+extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
+					   int tag);
+extern void	xfs_perag_put(struct xfs_perag *pag);
+extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
+
+extern void	xfs_sb_calc_crc(struct xfs_buf	*);
+extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
+extern void	xfs_sb_mount_common(struct xfs_mount *, struct xfs_sb *);
+extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
+extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
+extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
+
+extern const struct xfs_buf_ops xfs_sb_buf_ops;
+extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
 
 #endif	/* __XFS_SB_H__ */

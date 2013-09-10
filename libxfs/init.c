@@ -692,7 +692,7 @@ libxfs_mount(
 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
 	sbp = &(mp->m_sb);
 
-	xfs_mount_common(mp, sb);
+	xfs_sb_mount_common(mp, sb);
 
 	xfs_alloc_compute_maxlevels(mp);
 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);

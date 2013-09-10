@@ -47,7 +47,6 @@
 #include <xfs/xfs_sb.h>
 #include <xfs/xfs_ag.h>
 #include <xfs/xfs_dir2.h>
-#include <xfs/xfs_mount.h>
 #include <xfs/xfs_da_btree.h>
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_alloc_btree.h>
@@ -323,6 +322,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define xfs_buf_set_ref(bp,ref)		((void) 0)
 #define xfs_buf_ioerror(bp,err)		(bp)->b_error = (err);
 
+#define xfs_daddr_to_agno(mp,d) \
+	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
+#define xfs_daddr_to_agbno(mp,d) \
+	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
+
 /* Buffer Cache Interfaces */
 
 extern struct cache	*libxfs_bcache;
@@ -477,7 +481,6 @@ extern xfs_trans_t	*libxfs_trans_dup (xfs_trans_t *);
 extern int	libxfs_trans_reserve (xfs_trans_t *, uint,uint,uint,uint,uint);
 extern int	libxfs_trans_commit (xfs_trans_t *, uint);
 extern void	libxfs_trans_cancel (xfs_trans_t *, int);
-extern void	libxfs_mod_sb (xfs_trans_t *, __int64_t);
 extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
 
 extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
@@ -705,7 +708,7 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
 #define libxfs_idata_realloc		xfs_idata_realloc
 #define libxfs_idestroy_fork		xfs_idestroy_fork
 
-/* xfs_mount.h */
+/* xfs_sb.h */
 #define libxfs_mod_sb			xfs_mod_sb
 #define libxfs_sb_from_disk		xfs_sb_from_disk
 #define libxfs_sb_to_disk		xfs_sb_to_disk
@@ -729,5 +732,10 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
 #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
 
 #include <xfs/xfs_cksum.h>
+
+#define xfs_notice(mp,fmt,args...)		cmn_err(CE_NOTE,fmt, ## args)
+#define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+#define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+#define xfs_hex_dump(d,n)		((void) 0)
 
 #endif	/* __LIBXFS_H__ */

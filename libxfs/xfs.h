@@ -345,6 +345,7 @@ do { \
 #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
 
 #define xfs_icreate_log(tp, agno, agbno, cnt, isize, len, gen) ((void) 0)
+#define xfs_sb_validate_fsb_count(sbp, nblks)		(0)
 
 /*
  * Prototypes for kernel static functions that are aren't in their
