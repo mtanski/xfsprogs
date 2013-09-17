@@ -34,7 +34,9 @@ static struct cred		zerocr;
 static struct fsxattr 		zerofsx;
 static xfs_ino_t		orphanage_ino;
 
-static struct xfs_name		xfs_name_dot = {(unsigned char *)".", 1};
+static struct xfs_name		xfs_name_dot = {(unsigned char *)".",
+						1,
+						XFS_DIR3_FT_DIR};
 
 /*
  * Data structures used to keep track of directories where the ".."
