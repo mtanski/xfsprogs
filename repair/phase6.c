@@ -906,6 +906,8 @@ mk_orphanage(xfs_mount_t *mp)
 
 	xname.name = (unsigned char *)ORPHANAGE;
 	xname.len = strlen(ORPHANAGE);
+	xname.type = XFS_DIR3_FT_DIR;
+
 	if (libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL) == 0)
 		return ino;
 
