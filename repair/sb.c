@@ -502,6 +502,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 		do_warn(
 	_("error reading superblock %u -- seek to offset %" PRId64 " failed\n"),
 			agno, off);
+		free(buf);
 		return(XR_EOF);
 	}
 
