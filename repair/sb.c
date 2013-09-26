@@ -733,7 +733,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 
 			if (get_sb(sb, off, size, agno) == XR_EOF)  {
 				retval = 1;
-				goto out;
+				goto out_free_list;
 			}
 
 			if (verify_sb(sb, 0) == XR_OK)  {
@@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	/*
 	 * see if we have enough superblocks to bother with
 	 */
-	if (num_ok < num_sbs / 2)
-		return(XR_INSUFF_SEC_SB);
+	if (num_ok < num_sbs / 2) {
+		retval = XR_INSUFF_SEC_SB;
+		goto out_free_list;
+	}
 
 	current = get_best_geo(list);
 
@@ -841,7 +843,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 
 out_free_list:
 	free_geo(list);
-out:
 	free(sb);
 	free(checked);
 	return(retval);
