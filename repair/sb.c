@@ -665,7 +665,7 @@ get_sb_geometry(fs_geometry_t *geo, xfs_sb_t *sbp)
  * primary and compare the geometries in the secondaries against
  * the geometry indicated by the primary.
  *
- * returns 1 if bad, 0 if ok
+ * returns 0 if ok, else error code (XR_EOF, XR_INSUFF_SEC_SB, etc).
  */
 int
 verify_set_primary_sb(xfs_sb_t		*rsb,
@@ -732,7 +732,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 			checked[agno] = 1;
 
 			if (get_sb(sb, off, size, agno) == XR_EOF)  {
-				retval = 1;
+				retval = XR_EOF;
 				goto out_free_list;
 			}
 
