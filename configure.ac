@@ -1,4 +1,4 @@
-AC_INIT([xfsprogs], [3.1.11])
+AC_INIT([xfsprogs], [3.2.0-alpha1])
 AC_PREREQ(2.50)
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
