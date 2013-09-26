@@ -1,4 +1,4 @@
-xfsprogs-3.2.0-alpha1 (16 Sep 2013)
+xfsprogs-3.2.0-alpha1 (26 September 2013)
 	- Alpha release for the purpose of testing the CRC feature during the
 	  v3.12 kernel -rc series.
 
