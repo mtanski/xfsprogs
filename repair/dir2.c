@@ -705,7 +705,7 @@ process_sf_dir2_fixoff(
 
 	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
 	sfep = xfs_dir2_sf_firstentry(sfp);
-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
+	offset = xfs_dir3_data_first_offset(mp);
 
 	for (i = 0; i < sfp->count; i++) {
 		xfs_dir2_sf_put_offset(sfep, offset);
@@ -759,7 +759,7 @@ process_sf_dir2(
 	max_size = XFS_DFORK_DSIZE(dip, mp);
 	num_entries = sfp->count;
 	ino_dir_size = be64_to_cpu(dip->di_size);
-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
+	offset = xfs_dir3_data_first_offset(mp);
 	bad_offset = *repair = 0;
 
 	ASSERT(ino_dir_size <= max_size);
