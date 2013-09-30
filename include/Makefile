@@ -26,7 +26,9 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_btree_trace.h \
 	xfs_cksum.h \
 	xfs_da_btree.h \
-	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+	xfs_da_format.h \
+	xfs_dinode.h \
+	xfs_dir2.h \
 	xfs_format.h \
 	xfs_ialloc.h \
 	xfs_ialloc_btree.h \

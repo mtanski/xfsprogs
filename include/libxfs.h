@@ -47,7 +47,6 @@
 #include <xfs/xfs_inum.h>
 #include <xfs/xfs_sb.h>
 #include <xfs/xfs_ag.h>
-#include <xfs/xfs_da_btree.h>
 #include <xfs/xfs_bmap_btree.h>
 #include <xfs/xfs_alloc_btree.h>
 #include <xfs/xfs_ialloc_btree.h>
@@ -267,9 +266,10 @@ extern void	libxfs_umount (xfs_mount_t *);
 extern void	libxfs_rtmount_destroy (xfs_mount_t *);
 
 /*
- * xfs/xfs_dir2_format.h needs struct xfs_mount to be defined
+ * xfs/xfs_da_format.h needs struct xfs_mount to be defined
  */
-#include <xfs/xfs_dir2_format.h>
+#include <xfs/xfs_da_format.h>
+#include <xfs/xfs_da_btree.h>
 #include <xfs/xfs_dir2.h>
 
 /*
