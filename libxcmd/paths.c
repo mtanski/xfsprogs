@@ -266,6 +266,10 @@ out_nomem:
 	return ENOMEM;
 }
 
+/*
+ * If *path is NULL, initialize the fs table with all xfs mount points in mtab
+ * If *path is specified, search for that path in mtab
+ */
 static int
 fs_table_initialise_mounts(
 	char		*path)
@@ -288,6 +292,7 @@ fs_table_initialise_mounts(
 	if ((mtp = setmntent(mtab_file, "r")) == NULL)
 		return ENOENT;
 
+	/* Use realpath to resolve symlinks, relative paths, etc */
 	if (path)
 		if ((rpath = realpath(path, NULL)) == NULL)
 			return ENOENT;
@@ -295,31 +300,37 @@ fs_table_initialise_mounts(
 	while ((mnt = getmntent(mtp)) != NULL) {
 		if (strcmp(mnt->mnt_type, "xfs") != 0)
 			continue;
-		if (rpath &&
-		    ((strcmp(rpath, mnt->mnt_dir) != 0) &&
+		if (path &&
+		    ((strcmp(path, mnt->mnt_dir) != 0) &&
+		     (strcmp(path, mnt->mnt_fsname) != 0) &&
+		     (strcmp(rpath, mnt->mnt_dir) != 0) &&
 		     (strcmp(rpath, mnt->mnt_fsname) != 0)))
 			continue;
 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
 			continue;
 		(void) fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
 					mnt->mnt_fsname, fslog, fsrt);
-		if (rpath) {
+		if (path) {
 			found = 1;
 			break;
 		}
 	}
 	endmntent(mtp);
-	if (rpath) {
-		free(rpath);
-		if (!found)
-			error = ENXIO;
-	}
+	free(rpath);
+
+	if (path && !found)
+		error = ENXIO;
+
 	return error;
 }
 
 #elif defined(HAVE_GETMNTINFO)
 #include <sys/mount.h>
 
+/*
+ * If *path is NULL, initialize the fs table with all xfs mount points in mtab
+ * If *path is specified, search for that path in mtab
+ */
 static int
 fs_table_initialise_mounts(
 	char		*path)
@@ -335,6 +346,7 @@ fs_table_initialise_mounts(
 		return 0;
 	}
 
+	/* Use realpath to resolve symlinks, relative paths, etc */
 	if (path)
 		if ((rpath = realpath(path, NULL)) == NULL)
 			return ENOENT;
@@ -342,24 +354,24 @@ fs_table_initialise_mounts(
 	for (i = 0; i < count; i++) {
 		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
 			continue;
-		if (rpath &&
-		    ((strcmp(rpath, stats[i].f_mntonname) != 0) &&
+		if (path &&
+		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
+		     (strcmp(path, stats[i].f_mntfromname) != 0) &&
+		     (strcmp(rpath, stats[i].f_mntonname) != 0) &&
 		     (strcmp(rpath, stats[i].f_mntfromname) != 0)))
 			continue;
 		/* TODO: external log and realtime device? */
 		(void) fs_table_insert(stats[i].f_mntonname, 0,
 					FS_MOUNT_POINT, stats[i].f_mntfromname,
 					NULL, NULL);
-		if (rpath) {
+		if (path) {
 			found = 1;
 			break;
 		}
 	}
-	if (rpath) {
-		free(rpath);
-		if (!found)
-			error = ENXIO;
-	}
+	free(rpath);
+	if (path && !found)
+		error = ENXIO;
 
 	return error;
 }
