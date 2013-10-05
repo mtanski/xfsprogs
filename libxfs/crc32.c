@@ -63,18 +63,20 @@ typedef __u32	u64;
 static inline u32
 crc32_body(u32 crc, unsigned char const *buf, size_t len, const u32 (*tab)[256])
 {
-# ifdef __LITTLE_ENDIAN
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 #  define DO_CRC(x) crc = t0[(crc ^ (x)) & 255] ^ (crc >> 8)
 #  define DO_CRC4 (t3[(q) & 255] ^ t2[(q >> 8) & 255] ^ \
 		   t1[(q >> 16) & 255] ^ t0[(q >> 24) & 255])
 #  define DO_CRC8 (t7[(q) & 255] ^ t6[(q >> 8) & 255] ^ \
 		   t5[(q >> 16) & 255] ^ t4[(q >> 24) & 255])
-# else
+# elif __BYTE_ORDER == __BIG_ENDIAN
 #  define DO_CRC(x) crc = t0[((crc >> 24) ^ (x)) & 255] ^ (crc << 8)
 #  define DO_CRC4 (t0[(q) & 255] ^ t1[(q >> 8) & 255] ^ \
 		   t2[(q >> 16) & 255] ^ t3[(q >> 24) & 255])
 #  define DO_CRC8 (t4[(q) & 255] ^ t5[(q >> 8) & 255] ^ \
 		   t6[(q >> 16) & 255] ^ t7[(q >> 24) & 255])
+# else
+#  error What endian are you?
 # endif
 	const u32 *b;
 	size_t    rem_len;
