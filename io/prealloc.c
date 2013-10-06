@@ -29,6 +29,10 @@
 #define FALLOC_FL_PUNCH_HOLE	0x02
 #endif
 
+#ifndef FALLOC_FL_COLLAPSE_RANGE
+#define FALLOC_FL_COLLAPSE_RANGE 0x08
+#endif
+
 static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
 static cmdinfo_t resvsp_cmd;
@@ -37,6 +41,7 @@ static cmdinfo_t zero_cmd;
 #if defined(HAVE_FALLOCATE)
 static cmdinfo_t falloc_cmd;
 static cmdinfo_t fpunch_cmd;
+static cmdinfo_t fcollapse_cmd;
 #endif
 
 static int
@@ -159,8 +164,11 @@ fallocate_f(
 	int		mode = 0;
 	int		c;
 
-	while ((c = getopt(argc, argv, "kp")) != EOF) {
+	while ((c = getopt(argc, argv, "ckp")) != EOF) {
 		switch (c) {
+		case 'c':
+			mode = FALLOC_FL_COLLAPSE_RANGE;
+			break;
 		case 'k':
 			mode = FALLOC_FL_KEEP_SIZE;
 			break;
@@ -192,6 +200,25 @@ fpunch_f(
 {
 	xfs_flock64_t	segment;
 	int		mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
+
+	if (!offset_length(argv[1], argv[2], &segment))
+		return 0;
+
+	if (fallocate(file->fd, mode,
+			segment.l_start, segment.l_len)) {
+		perror("fallocate");
+		return 0;
+	}
+	return 0;
+}
+
+static int
+fcollapse_f(
+	int		argc,
+	char		**argv)
+{
+	xfs_flock64_t	segment;
+	int		mode = FALLOC_FL_COLLAPSE_RANGE;
 
 	if (!offset_length(argv[1], argv[2], &segment))
 		return 0;
@@ -277,5 +304,15 @@ prealloc_init(void)
 	fpunch_cmd.oneline =
 		_("de-allocates space assocated with part of a file via fallocate");
 	add_command(&fpunch_cmd);
+
+	fcollapse_cmd.name = "fcollapse";
+	fcollapse_cmd.cfunc = fcollapse_f;
+	fcollapse_cmd.argmin = 2;
+	fcollapse_cmd.argmax = 2;
+	fcollapse_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+	fcollapse_cmd.args = _("off len");
+	fcollapse_cmd.oneline =
+	_("de-allocates space and eliminates the hole by shifting extents");
+	add_command(&fcollapse_cmd);
 #endif	/* HAVE_FALLOCATE */
 }
