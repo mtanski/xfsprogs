@@ -64,7 +64,6 @@ zero_log(xfs_mount_t *mp)
 		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
 	}
 	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
-	log.l_sectBBsize = 1 << mp->m_sb.sb_logsectlog;
 
 	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
 		do_warn(_("zero_log: cannot find log head/tail "
