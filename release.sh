@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 #
-# Automate generation a new release
+# Automate generation of a new release
 #
 
 . ./VERSION

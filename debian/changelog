@@ -2,7 +2,7 @@ xfsprogs (3.1.11) unstable; urgency=low
 
   * New upstream release
 
- -- Nathan Scott <nathans@debian.org> Wed, 08 May 2013 12:59:56 -0500
+ -- Nathan Scott <nathans@debian.org>  Wed, 08 May 2013 12:59:56 -0500
 
 xfsprogs (3.1.9) unstable; urgency=low
 
