@@ -1286,9 +1286,7 @@ longform_dir2_rebuild(
 				&firstblock, &flist, &done);
 	if (error) {
 		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
-		libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
-					XFS_TRANS_ABORT);
-		return;
+		goto out_bmap_cancel;
 	}
 
 	ASSERT(done);
@@ -1312,12 +1310,8 @@ longform_dir2_rebuild(
 		nres = XFS_CREATE_SPACE_RES(mp, p->name.len);
 		error = libxfs_trans_reserve(tp, &M_RES(mp)->tr_create,
 					     nres, 0);
-		if (error) {
-			do_warn(
-	_("space reservation failed (%d), filesystem may be out of space\n"),
-				error);
-			break;
-		}
+		if (error)
+			res_failed(error);
 
 		libxfs_trans_ijoin(tp, ip, 0);
 		libxfs_trans_ihold(tp, ip);
@@ -1329,9 +1323,7 @@ longform_dir2_rebuild(
 			do_warn(
 _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"),
 				ino, error);
-			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
-						XFS_TRANS_ABORT);
-			break;
+			goto out_bmap_cancel;
 		}
 
 		error = libxfs_bmap_finish(&tp, &flist, &committed);
@@ -1339,15 +1331,19 @@ _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"
 			do_warn(
 	_("bmap finish failed (%d), filesystem may be out of space\n"),
 				error);
-			libxfs_bmap_cancel(&flist);
-			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
-						XFS_TRANS_ABORT);
-			break;
+			goto out_bmap_cancel;
 		}
 
 		libxfs_trans_commit(tp,
 				XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 	}
+
+	return;
+
+out_bmap_cancel:
+	libxfs_bmap_cancel(&flist);
+	libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+	return;
 }
 
 
