@@ -124,6 +124,7 @@ init_progress_rpt (void)
 	 */
 
 	pthread_mutex_init(&global_msgs.mutex, NULL);
+	global_msgs.format = NULL;
 	global_msgs.count = glob_agcount;
 	global_msgs.interval = report_interval;
 	global_msgs.done   = prog_rpt_done;
@@ -168,6 +169,10 @@ progress_rpt_thread (void *p)
 	__uint64_t sum;
 	msg_block_t *msgp = (msg_block_t *)p;
 	__uint64_t percent;
+
+	/* It's possible to get here very early w/ no progress msg set */
+	if (!msgp->format)
+		return NULL;
 
 	if ((msgbuf = (char *)malloc(DURATION_BUF_SIZE)) == NULL)
 		do_error (_("progress_rpt: cannot malloc progress msg buffer\n"));
