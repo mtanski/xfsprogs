@@ -644,6 +644,8 @@ version_string(
 		strcat(s, ",PROJID32BIT");
 	if (xfs_sb_version_hascrc(sbp))
 		strcat(s, ",CRC");
+	if (xfs_sb_version_hasftype(sbp))
+		strcat(s, ",FTYPE");
 	return s;
 }
 
