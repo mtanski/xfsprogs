@@ -518,6 +518,25 @@ option enables ASCII only case-insensitive filename lookup and version
 are stored in directories using the case they were created with.
 .IP
 Note: Version 1 directories are not supported.
+.TP
+.BI ftype= value
+This feature allows the inode type to be stored in the directory
+structure so that the
+.BR readdir (3)
+and
+.BR getdents (2)
+do not need to look up the inode to determine the inode type.
+
+The
+.I value
+is either 0 or 1, with 1 signifiying that filetype information
+will be stored in the directory structure. The default value is 0.
+
+When CRCs are enabled via
+.B \-m crc=1,
+the ftype functionality is always enabled. This feature can not be turned
+off for such filesystem configurations.
+.IP
 .RE
 .TP
 .BI \-p " protofile"

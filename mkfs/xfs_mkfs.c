@@ -147,6 +147,8 @@ char	*nopts[] = {
 	"size",
 #define	N_VERSION	2
 	"version",
+#define	N_FTYPE		3
+	"ftype",
 	NULL,
 };
 
@@ -885,6 +887,7 @@ main(
 	char			*dfile;
 	int			dirblocklog;
 	int			dirblocksize;
+	int			dirftype;
 	int			dirversion;
 	char			*dsize;
 	int			dsu;
@@ -930,6 +933,7 @@ main(
 	int			nodsflag;
 	int			norsflag;
 	xfs_alloc_rec_t		*nrec;
+	int			nftype;
 	int			nsflag;
 	int			nvflag;
 	int			nci;
@@ -977,6 +981,7 @@ main(
 	logversion = 2;
 	logagno = logblocks = rtblocks = rtextblocks = 0;
 	Nflag = nlflag = nsflag = nvflag = nci = 0;
+	nftype = dirftype = 0;		/* inode type information in the dir */
 	dirblocklog = dirblocksize = 0;
 	dirversion = XFS_DFL_DIR_VERSION;
 	qflag = 0;
@@ -1475,6 +1480,11 @@ main(
 					if (c < 0 || c > 1)
 						illegal(value, "m crc");
 					crcs_enabled = c;
+					if (nftype && crcs_enabled) {
+						fprintf(stderr,
+_("cannot specify both crc and ftype\n"));
+						usage();
+					}
 					break;
 				default:
 					unknown('m', value);
@@ -1532,6 +1542,19 @@ main(
 								"n version");
 					}
 					nvflag = 1;
+					break;
+				case N_FTYPE:
+					if (!value || *value == '\0')
+						reqval('n', nopts, N_FTYPE);
+					if (nftype)
+						respec('n', nopts, N_FTYPE);
+					dirftype = atoi(value);
+					if (crcs_enabled) {
+						fprintf(stderr,
+_("cannot specify both crc and ftype\n"));
+						usage();
+					}
+					nftype = 1;
 					break;
 				default:
 					unknown('n', value);
@@ -2434,6 +2457,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	}
 	validate_log_size(logblocks, blocklog, min_logblocks);
 
+	/*
+	 * dirent filetype field always enabled on v5 superblocks
+	 */
+	if (crcs_enabled) {
+		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
+		dirftype = 1;
+	}
+
 	if (!qflag || Nflag) {
 		printf(_(
 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
@@ -2441,7 +2472,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		   "         =%-22s crc=%u\n"
 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
-		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
+		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
@@ -2450,7 +2481,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			"", crcs_enabled,
 			"", blocksize, (long long)dblocks, imaxpct,
 			"", dsunit, dswidth,
-			dirversion, dirblocksize, nci,
+			dirversion, dirblocksize, nci, dirftype,
 			logfile, 1 << blocklog, (long long)logblocks,
 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
 			rtfile, rtextblocks << blocklog,
@@ -2512,21 +2543,16 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 		sbp->sb_logsectlog = 0;
 		sbp->sb_logsectsize = 0;
 	}
+
 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
-					attrversion == 2, !projid16bit, 0);
+				   attrversion == 2, !projid16bit, 0,
+				   (!crcs_enabled && dirftype));
 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
 					dsunit != 0,
 					logversion == 2, attrversion == 1,
 					(sectorsize != BBSIZE ||
 							lsectorsize != BBSIZE),
 					nci, sbp->sb_features2 != 0);
-	/*
-	 * dirent filetype field always enabled on v5 superblocks
-	 */
-	if (crcs_enabled) {
-		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
-	}
-
 	/*
 	 * Due to a structure alignment issue, sb_features2 ended up in one
 	 * of two locations, the second "incorrect" location represented by
@@ -3065,7 +3091,7 @@ usage( void )
 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
 			    lazy-count=0|1]\n\
 /* label */		[-L label (maximum 12 characters)]\n\
-/* naming */		[-n log=n|size=num,version=2|ci]\n\
+/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1]\n\
 /* no-op info only */	[-N]\n\
 /* prototype file */	[-p fname]\n\
 /* quiet */		[-q]\n\
