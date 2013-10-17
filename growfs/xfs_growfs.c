@@ -55,7 +55,8 @@ report_info(
 	int		attrversion,
 	int		projid32bit,
 	int		crcs_enabled,
-	int		cimode)
+	int		cimode,
+	int		ftype_enabled)
 {
 	printf(_(
 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
@@ -63,7 +64,7 @@ report_info(
 	    "         =%-22s crc=%u\n"
 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
-	    "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
+	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
 	    "log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
 	    "         =%-22s sectsz=%-5u sunit=%u blks, lazy-count=%u\n"
 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
@@ -74,7 +75,7 @@ report_info(
 		"", geo.blocksize, (unsigned long long)geo.datablocks,
 			geo.imaxpct,
 		"", geo.sunit, geo.swidth,
-  		dirversion, geo.dirblocksize, cimode,
+  		dirversion, geo.dirblocksize, cimode, ftype_enabled,
 		isint ? _("internal") : logname ? logname : _("external"),
 			geo.blocksize, geo.logblocks, logversion,
 		"", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
@@ -121,6 +122,7 @@ main(int argc, char **argv)
 	libxfs_init_t		xi;	/* libxfs structure */
 	int			projid32bit;
 	int			crcs_enabled;
+	int			ftype_enabled = 0;
 
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
@@ -242,10 +244,12 @@ main(int argc, char **argv)
 	ci = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI ? 1 : 0;
 	projid32bit = geo.flags & XFS_FSOP_GEOM_FLAGS_PROJID32 ? 1 : 0;
 	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
+	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
 	if (nflag) {
 		report_info(geo, datadev, isint, logdev, rtdev,
 				lazycount, dirversion, logversion,
-				attrversion, projid32bit, crcs_enabled, ci);
+				attrversion, projid32bit, crcs_enabled, ci,
+				ftype_enabled);
 		exit(0);
 	}
 
@@ -282,7 +286,7 @@ main(int argc, char **argv)
 
 	report_info(geo, datadev, isint, logdev, rtdev,
 			lazycount, dirversion, logversion,
-			attrversion, projid32bit, crcs_enabled, ci);
+			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled);
 
 	ddsize = xi.dsize;
 	dlsize = ( xi.logBBsize? xi.logBBsize :
