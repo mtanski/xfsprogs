@@ -1041,6 +1041,8 @@ mv_orphanage(
 	xname.name = fname;
 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
 				(unsigned long long)ino);
+	/* XXX use xfs_mode_to_ftype[] when userspace gains it */
+	xname.type = XFS_DIR3_FT_UNKNOWN;
 
 	err = libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip, 0);
 	if (err)
