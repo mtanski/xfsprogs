@@ -1060,7 +1060,7 @@ fsr_setup_attr_fork(
 		char		name[64];
 
 		/*
-		 * bulkstat the temp inode  to see what the forkoff is. Use
+		 * bulkstat the temp inode to see what the forkoff is.  Use
 		 * this to compare against the target and determine what we
 		 * need to do.
 		 */
@@ -1073,6 +1073,11 @@ fsr_setup_attr_fork(
 		if (dflag)
 			fsrprintf(_("orig forkoff %d, temp forkoff %d\n"),
 					bstatp->bs_forkoff, tbstat.bs_forkoff);
+		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
+
+		/* if they are equal, we are done */
+		if (!diff)
+			goto out;
 
 		snprintf(name, sizeof(name), "user.%d", i);
 
@@ -1081,12 +1086,62 @@ fsr_setup_attr_fork(
 		 * an attribute fork at the default location.
 		 */
 		if (!tbstat.bs_forkoff) {
+			ASSERT(i == 0);
 			ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
 			if (ret) {
 				fsrprintf(_("could not set ATTR\n"));
 				return -1;
 			}
 			continue;
+		} else if (i == 0) {
+			struct fsxattr	fsx;
+			/*
+			 * First pass, and temp file already has an inline
+			 * xattr, probably due to selinux.
+			 *
+			 * It's *possible* that the temp file attr area
+			 * is larger than the target file's, if the 
+			 * target file's attrs are not inline:
+			 *
+			 *  Target		 Temp
+			 * +-------+ 0		+-------+ 0
+			 * |	   |		|       |
+			 * |	   |		| Data  |
+			 * | Data  |		|       |
+			 * |	   |		v-------v forkoff
+			 * |	   |		|       |
+			 * v-------v forkoff	| Attr  | local
+			 * | Attr  | ext/btree	|       |
+			 * +-------+		+-------+
+			 *
+			 * FSGETXATTRA will tell us nr of attr extents in
+			 * target, if any.  If none, it's local:
+			 */
+
+			memset(&fsx, 0, sizeof(fsx));
+			if (ioctl(fd, XFS_IOC_FSGETXATTRA, &fsx)) {
+				fsrprintf(_("FSGETXATTRA failed on target\n"));
+				return -1;
+			}
+
+			/*
+			 * If target attr area is less than the temp's (diff < 0)
+			 * and the target is not local, write a big attr to
+			 * the temp file to knock the attr out of local format,
+			 * to match the target.  (This should actually *increase*
+			 * the temp file's forkoffset when the attr moves out
+			 * of the inode)
+			 */
+ 			if (diff < 0 && fsx.fsx_nextents > 0) {
+				char val[2048];
+				memset(val, 'X', 2048);
+				if (fsetxattr(tfd, name, val, 2048, 0)) {
+					fsrprintf(_("big ATTR set failed\n"));
+					return -1;
+				}
+				/* Go back & see where we're at now */
+				continue;
+			}
 		}
 
 		/*
@@ -1101,19 +1156,14 @@ fsr_setup_attr_fork(
 		last_forkoff = tbstat.bs_forkoff;
 
 		/* work out which way to grow the fork */
-		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
 		if (abs(diff) > fsgeom.inodesize - sizeof(struct xfs_dinode)) {
 			fsrprintf(_("forkoff diff %d too large!\n"), diff);
 			return -1;
 		}
 
-		/* if they are equal, we are done */
-		if (!diff)
-			goto out;
-
 		/*
-		 * if the temp inode fork offset is smaller then we have to
-		 * grow the data fork
+		 * if the temp inode fork offset is still smaller then we have
+		 * to grow the data fork
 		 */
 		if (diff < 0) {
 			/*
