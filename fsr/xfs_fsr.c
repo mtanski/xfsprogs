@@ -1022,6 +1022,7 @@ fsr_setup_attr_fork(
 {
 	struct stat64	tstatbuf;
 	int		i;
+	int		diff = 0;
 	int		last_forkoff = 0;
 	int		no_change_cnt = 0;
 	int		ret;
@@ -1057,7 +1058,6 @@ fsr_setup_attr_fork(
 		xfs_bstat_t	tbstat;
 		xfs_ino_t	ino;
 		char		name[64];
-		int		diff;
 
 		/*
 		 * bulkstat the temp inode  to see what the forkoff is. Use
@@ -1123,6 +1123,8 @@ fsr_setup_attr_fork(
 			 * non-contiguous offsets.
 			 */
 			/* XXX: unimplemented! */
+			if (dflag)
+				printf(_("data fork growth unimplemented\n"));
 			goto out;
 		}
 
@@ -1138,6 +1140,10 @@ fsr_setup_attr_fork(
 out:
 	if (dflag)
 		fsrprintf(_("set temp attr\n"));
+	/* We failed to resolve the fork difference */
+	if (dflag && diff)
+		fsrprintf(_("failed to match fork offset\n"));;
+
 	return 0;
 }
 
