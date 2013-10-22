@@ -380,12 +380,6 @@ will set the FALLOC_FL_KEEP_SIZE flag as described in
 .PD
 .RE
 .TP
-.BI fcollapse " offset length"
-Call fallocate with FALLOC_FL_COLLAPSE_RANGE flag as described in the
-.BR fallocate (2)
-manual page to de-allocates blocks and eliminates the hole created in this process
-by shifting data blocks into the hole.
-.TP
 .BI fpunch " offset length"
 Punches (de-allocates) blocks in the file by calling fallocate with 
 the FALLOC_FL_PUNCH_HOLE flag as described in the
