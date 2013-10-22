@@ -40,7 +40,6 @@ QAHFILES = libxfs.h libxlog.h \
 	xfs_metadump.h \
 	xfs_quota_defs.h \
 	xfs_sb.h \
-	xfs_shared.h \
 	xfs_trace.h \
 	xfs_trans_resv.h \
 	xfs_trans_space.h
