@@ -895,6 +895,11 @@ _("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
 	if (verbose)
 		summary_report();
 	do_log(_("done\n"));
+
+	if (dangerously && !no_modify)
+		do_warn(
+_("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
+
 	pftrace_done();
 
 	return (0);
