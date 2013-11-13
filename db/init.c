@@ -55,7 +55,7 @@ init(
 	char		**argv)
 {
 	xfs_sb_t	*sbp;
-	void		*bufp = NULL;
+	char		bufp[BBSIZE];
 	int		c;
 
 	setlocale(LC_ALL, "");
@@ -115,15 +115,14 @@ init(
 		exit(1);
 	}
 
-	if (read_bbs(XFS_SB_DADDR, 1, &bufp, NULL)) {
+	if (read_buf(XFS_SB_DADDR, 1, bufp)) {
 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
 			"bytes)\n"), progname, fsdevice);
 		exit(1);
 	}
 
 	/* copy SB from buffer to in-core, converting architecture as we go */
-	libxfs_sb_from_disk(&xmount.m_sb, bufp);
-	xfree(bufp);
+	libxfs_sb_from_disk(&xmount.m_sb, (struct xfs_dsb *)bufp);
 
 	sbp = &xmount.m_sb;
 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {

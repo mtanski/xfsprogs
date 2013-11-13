@@ -417,8 +417,61 @@ ring_add(void)
 	}
 }
 
-
 int
+read_buf(
+	xfs_daddr_t	bbno,
+	int		count,
+	void		*bufp)
+{
+	int		err;
+
+	err = pread64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
+	if (err < 0)
+		err = errno;
+	else if (err < count)
+		err = -1;
+	return err;
+}
+
+static int
+write_buf(
+	xfs_daddr_t	bbno,
+	int		count,
+	void		*bufp)
+{
+	int		err;
+
+	err = pwrite64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
+	if (err < 0)
+		err = errno;
+	else if (err < count)
+		err = -1;
+	return err;
+}
+
+static void
+write_cur_buf(void)
+{
+	int ret;
+
+	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
+
+	if (ret == -1)
+		dbprintf(_("incomplete write, block: %lld\n"),
+			 (iocur_base + iocur_sp)->bb);
+	else if (ret != 0)
+		dbprintf(_("write error: %s\n"), strerror(ret));
+
+	/* re-read buffer from disk */
+	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
+	if (ret == -1)
+		dbprintf(_("incomplete read, block: %lld\n"),
+			 (iocur_base + iocur_sp)->bb);
+	else if (ret != 0)
+		dbprintf(_("read error: %s\n"), strerror(ret));
+}
+
+static int
 write_bbs(
 	__int64_t       bbno,
 	int             count,
@@ -430,15 +483,14 @@ write_bbs(
 	int		j;
 	int		rval = EINVAL;	/* initialize for zero `count' case */
 
-	for (j = 0; j < count; j += bbmap ? 1 : count) {
-		if (bbmap)
-			bbno = bbmap->b[j];
+	for (j = 0; j < count; j++) {
+		bbno = bbmap->b[j];
 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
 			return rval;
 		}
-		c = BBTOB(bbmap ? 1 : count);
+		c = BBTOB(1);
 		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
 		if (i < 0) {
 			rval = errno;
@@ -452,7 +504,7 @@ write_bbs(
 	return rval;
 }
 
-int
+static int
 read_bbs(
 	__int64_t	bbno,
 	int		count,
@@ -473,9 +525,8 @@ read_bbs(
 		buf = xmalloc(c);
 	else
 		buf = *bufp;
-	for (j = 0; j < count; j += bbmap ? 1 : count) {
-		if (bbmap)
-			bbno = bbmap->b[j];
+	for (j = 0; j < count; j++) {
+		bbno = bbmap->b[j];
 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
 			rval = errno;
 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
@@ -483,7 +534,7 @@ read_bbs(
 				xfree(buf);
 			buf = NULL;
 		} else {
-			c = BBTOB(bbmap ? 1 : count);
+			c = BBTOB(1);
 			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
 			if (i < 0) {
 				rval = errno;
@@ -506,22 +557,19 @@ read_bbs(
 	return rval;
 }
 
-void
-write_cur(void)
+static void
+write_cur_bbs(void)
 {
 	int ret;
 
-	if (iocur_sp < 0) {
-		dbprintf(_("nothing to write\n"));
-		return;
-	}
 	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
-		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
+			&iocur_top->bbmap);
 	if (ret == -1)
 		dbprintf(_("incomplete write, block: %lld\n"),
 			 (iocur_base + iocur_sp)->bb);
 	else if (ret != 0)
 		dbprintf(_("write error: %s\n"), strerror(ret));
+
 	/* re-read buffer from disk */
 	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
@@ -530,6 +578,20 @@ write_cur(void)
 			 (iocur_base + iocur_sp)->bb);
 	else if (ret != 0)
 		dbprintf(_("read error: %s\n"), strerror(ret));
+}
+
+void
+write_cur(void)
+{
+	if (iocur_sp < 0) {
+		dbprintf(_("nothing to write\n"));
+		return;
+	}
+
+	if (iocur_top->use_bbmap)
+		write_cur_bbs();
+	else
+		write_cur_buf();
 }
 
 void
@@ -549,17 +611,32 @@ set_cur(
 		return;
 	}
 
-#ifdef DEBUG
-	if (bbmap)
-		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-#endif
 	ino = iocur_top->ino;
 	dirino = iocur_top->dirino;
 	mode = iocur_top->mode;
 	pop_cur();
 	push_cur();
-	if (read_bbs(d, c, &iocur_top->buf, bbmap))
-		return;
+
+	if (bbmap) {
+#ifdef DEBUG
+		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
+#endif
+
+		if (read_bbs(d, c, &iocur_top->buf, bbmap))
+			return;
+		iocur_top->bbmap = *bbmap;
+		iocur_top->use_bbmap = 1;
+	} else {
+		if (!iocur_top->buf) {
+			iocur_top->buf = malloc(BBTOB(c));
+			if (!iocur_top->buf)
+				return;
+		}
+		if (read_buf(d, c, iocur_top->buf))
+			return;
+		iocur_top->use_bbmap = 0;
+	}
+
 	iocur_top->bb = d;
 	iocur_top->blen = c;
 	iocur_top->boff = 0;
@@ -570,8 +647,6 @@ set_cur(
 	iocur_top->ino = ino;
 	iocur_top->dirino = dirino;
 	iocur_top->mode = mode;
-	if ((iocur_top->use_bbmap = (bbmap != NULL)))
-		iocur_top->bbmap = *bbmap;
 
 	/* store location in ring */
 	if (ring_flag)
