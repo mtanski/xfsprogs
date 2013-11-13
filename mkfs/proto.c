@@ -543,7 +543,6 @@ parseproto(
 			pip = ip;
 			mp->m_sb.sb_rootino = ip->i_ino;
 			libxfs_mod_sb(tp, XFS_SB_ROOTINO);
-			mp->m_rootip = ip;
 			isroot = 1;
 		} else {
 			libxfs_trans_ijoin(tp, pip, 0);

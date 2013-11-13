@@ -410,40 +410,6 @@ manage_zones(int release)
 }
 
 /*
- * Get the bitmap and summary inodes into the mount structure
- * at mount time.
- */
-static int
-rtmount_inodes(xfs_mount_t *mp)
-{
-	int		error;
-	xfs_sb_t	*sbp;
-
-	sbp = &mp->m_sb;
-	if (sbp->sb_rbmino == NULLFSINO)
-		return 0;
-	error = libxfs_iget(mp, NULL, sbp->sb_rbmino, 0, &mp->m_rbmip, 0);
-	if (error) {
-		fprintf(stderr,
-			_("%s: cannot read realtime bitmap inode (%d)\n"),
-			progname, error);
-		return error;
-	}
-	ASSERT(mp->m_rbmip != NULL);
-	ASSERT(sbp->sb_rsumino != NULLFSINO);
-	error = libxfs_iget(mp, NULL, sbp->sb_rsumino, 0, &mp->m_rsumip, 0);
-	if (error) {
-		libxfs_iput(mp->m_rbmip, 0);
-		fprintf(stderr,
-			_("%s: cannot read realtime summary inode (%d)\n"),
-			progname, error);
-		return error;
-	}
-	ASSERT(mp->m_rsumip != NULL);
-	return 0;
-}
-
-/*
  * Initialize realtime fields in the mount structure.
  */
 static int
@@ -808,39 +774,6 @@ libxfs_mount(
 		fprintf(stderr, _("%s: perag init failed\n"),
 			progname);
 		exit(1);
-	}
-
-	/*
-	 * mkfs calls mount before the root inode is allocated.
-	 */
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO) {
-		error = libxfs_iget(mp, NULL, sbp->sb_rootino, 0,
-				&mp->m_rootip, 0);
-		if (error) {
-			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
-				progname, error);
-			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-				return NULL;
-		}
-		ASSERT(mp->m_rootip != NULL);
-	}
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
-		if (mp->m_rootip)
-			libxfs_iput(mp->m_rootip, 0);
-		return NULL;
-	}
-
-	/*
-	 * mkfs calls mount before the AGF/AGI structures are written.
-	 */
-	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO &&
-	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
-		if (error) {
-			fprintf(stderr, _("%s: cannot init perag data (%d)\n"),
-				progname, error);
-			return NULL;
-		}
 	}
 
 	return mp;

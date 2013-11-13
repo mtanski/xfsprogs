@@ -149,17 +149,27 @@ init(
 	}
 
 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
-				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
+			  LIBXFS_MOUNT_DEBUGGER);
 	if (!mp) {
-		mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
-				LIBXFS_MOUNT_DEBUGGER);
-		if (!mp) {
-			fprintf(stderr, _("%s: device %s unusable (not an XFS "
-				"filesystem?)\n"), progname, fsdevice);
-			exit(1);
-		}
+		fprintf(stderr,
+			_("%s: device %s unusable (not an XFS filesystem?)\n"),
+			progname, fsdevice);
+		exit(1);
 	}
 	blkbb = 1 << mp->m_blkbb_log;
+
+	/*
+	 * xfs_check needs corrected incore superblock values
+	 */
+	if (sbp->sb_rootino != NULLFSINO &&
+	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+		int error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
+		if (error) {
+			fprintf(stderr,
+	_("%s: cannot init perag data (%d). Continuing anyway.\n"),
+				progname, error);
+		}
+	}
 
 	if (xfs_sb_version_hascrc(&mp->m_sb))
 		type_set_tab_crc();
