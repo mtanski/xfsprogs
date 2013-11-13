@@ -614,6 +614,23 @@ main(int argc, char **argv)
 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
 			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
 
+	/*
+	 * Automatic striding for high agcount filesystems.
+	 *
+	 * More AGs indicates that the filesystem is either large or can handle
+	 * more IO parallelism. Either way, we should try to process multiple
+	 * AGs at a time in such a configuration to try to saturate the
+	 * underlying storage and speed the repair process. Only do this if
+	 * prefetching is enabled.
+	 *
+	 * Given mkfs defaults for 16AGs for "multidisk" configurations, we want
+	 * to target these for an increase in thread count. Hence a stride value
+	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
+	 * on such filesystems.
+	 */
+	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
+		ag_stride = 15;
+
 	if (ag_stride) {
 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
 		thread_init();
