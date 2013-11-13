@@ -25,6 +25,7 @@
 #include "attr.h"
 #include "io.h"
 #include "init.h"
+#include "output.h"
 
 static int	attr_leaf_entries_count(void *obj, int startoff);
 static int	attr_leaf_hdr_count(void *obj, int startoff);
@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
 	{ NULL }
 };
 
+/*
+ * Special read verifier for attribute buffers. Detect the magic number
+ * appropriately and set the correct verifier and call it.
+ */
+static void
+xfs_attr3_db_read_verify(
+	struct xfs_buf		*bp)
+{
+	__be32			magic32;
+	__be16			magic16;
+
+	magic32 = *(__be32 *)bp->b_addr;
+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
+
+	switch (magic16) {
+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+		bp->b_ops = &xfs_attr3_leaf_buf_ops;
+		goto verify;
+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+		bp->b_ops = &xfs_da3_node_buf_ops;
+		goto verify;
+	default:
+		break;
+	}
+
+	switch (magic32) {
+	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
+		bp->b_ops = &xfs_attr3_rmt_buf_ops;
+		break;
+	default:
+		dbprintf(_("Unknown attribute buffer type!\n"));
+		xfs_buf_ioerror(bp, EFSCORRUPTED);
+		return;
+	}
+verify:
+	bp->b_ops->verify_read(bp);
+}
+
+static void
+xfs_attr3_db_write_verify(
+	struct xfs_buf		*bp)
+{
+	dbprintf(_("Writing unknown attribute buffer type!\n"));
+	xfs_buf_ioerror(bp, EFSCORRUPTED);
+}
+
+const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
+	.verify_read = xfs_attr3_db_read_verify,
+	.verify_write = xfs_attr3_db_write_verify,
+};
