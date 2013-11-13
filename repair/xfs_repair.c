@@ -674,33 +674,35 @@ main(int argc, char **argv)
 				mp->m_sb.sb_dblocks >> (10 + 1));
 
 		if (max_mem <= mem_used) {
-			/*
-			 * Turn off prefetch and minimise libxfs cache if
-			 * physical memory is deemed insufficient
-			 */
 			if (max_mem_specified) {
 				do_abort(
 	_("Required memory for repair is greater that the maximum specified\n"
 	  "with the -m option. Please increase it to at least %lu.\n"),
 					mem_used / 1024);
-			} else {
-				do_warn(
-	_("Not enough RAM available for repair to enable prefetching.\n"
-	  "This will be _slow_.\n"
-	  "You need at least %luMB RAM to run with prefetching enabled.\n"),
-					mem_used * 1280 / (1024 * 1024));
 			}
-			do_prefetch = 0;
-			libxfs_bhash_size = 64;
-		} else {
-			max_mem -= mem_used;
-			if (max_mem >= (1 << 30))
-				max_mem = 1 << 30;
-			libxfs_bhash_size = max_mem / (HASH_CACHE_RATIO *
-					(mp->m_inode_cluster_size >> 10));
-			if (libxfs_bhash_size < 512)
-				libxfs_bhash_size = 512;
+			do_warn(
+	_("Memory available for repair (%luMB) may not be sufficient.\n"
+	  "At least %luMB is needed to repair this filesystem efficiently\n"
+	  "If repair fails due to lack of memory, please\n"),
+				max_mem / 1024, mem_used / 1024);
+			if (do_prefetch)
+				do_warn(
+	_("turn prefetching off (-P) to reduce the memory footprint.\n"));
+			else
+				do_warn(
+	_("increase system RAM and/or swap space to at least %luMB.\n"),
+			mem_used * 2 / 1024);
+
+			max_mem = mem_used;
 		}
+
+		max_mem -= mem_used;
+		if (max_mem >= (1 << 30))
+			max_mem = 1 << 30;
+		libxfs_bhash_size = max_mem / (HASH_CACHE_RATIO *
+				(mp->m_inode_cluster_size >> 10));
+		if (libxfs_bhash_size < 512)
+			libxfs_bhash_size = 512;
 
 		if (verbose)
 			do_log(_("        - block cache size set to %d entries\n"),
