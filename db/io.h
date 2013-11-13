@@ -20,7 +20,8 @@ struct typ;
 
 #define	BBMAP_SIZE		(XFS_MAX_BLOCKSIZE / BBSIZE)
 typedef struct bbmap {
-	__int64_t		b[BBMAP_SIZE];
+	int			nmaps;
+	struct xfs_buf_map	b[BBMAP_SIZE];
 } bbmap_t;
 
 typedef struct iocur {

@@ -478,28 +478,16 @@ write_bbs(
 	void            *bufp,
 	bbmap_t		*bbmap)
 {
-	int		c;
-	int		i;
 	int		j;
 	int		rval = EINVAL;	/* initialize for zero `count' case */
 
-	for (j = 0; j < count; j++) {
-		bbno = bbmap->b[j];
-		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
-			rval = errno;
-			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
-			return rval;
-		}
-		c = BBTOB(1);
-		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
-		if (i < 0) {
-			rval = errno;
-		} else if (i < c) {
-			rval = -1;
-		} else
-			rval = 0;
+	for (j = 0; j < count;) {
+		rval = write_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
+			     (char *)bufp + BBTOB(j));
 		if (rval)
 			break;
+
+		j += bbmap->b[j].bm_len;
 	}
 	return rval;
 }
@@ -512,45 +500,23 @@ read_bbs(
 	bbmap_t		*bbmap)
 {
 	void		*buf;
-	int		c;
-	int		i;
 	int		j;
 	int		rval = EINVAL;
 
 	if (count <= 0)
 		count = 1;
 
-	c = BBTOB(count);
 	if (*bufp == NULL)
-		buf = xmalloc(c);
+		buf = xmalloc(BBTOB(count));
 	else
 		buf = *bufp;
-	for (j = 0; j < count; j++) {
-		bbno = bbmap->b[j];
-		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
-			rval = errno;
-			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
-			if (*bufp == NULL)
-				xfree(buf);
-			buf = NULL;
-		} else {
-			c = BBTOB(1);
-			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
-			if (i < 0) {
-				rval = errno;
-				if (*bufp == NULL)
-					xfree(buf);
-				buf = NULL;
-			} else if (i < c) {
-				rval = -1;
-				if (*bufp == NULL)
-					xfree(buf);
-				buf = NULL;
-			} else
-				rval = 0;
-		}
-		if (buf == NULL)
+	for (j = 0; j < count;) {
+		rval = read_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
+			     (char *)buf + BBTOB(j));
+		if (rval)
 			break;
+
+		j += bbmap->b[j].bm_len;
 	}
 	if (*bufp == NULL)
 		*bufp = buf;

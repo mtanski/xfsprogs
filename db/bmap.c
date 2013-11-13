@@ -293,20 +293,13 @@ make_bbmap(
 	int		nex,
 	bmap_ext_t	*bmp)
 {
-	int		d;
-	xfs_dfsbno_t	dfsbno;
 	int		i;
-	int		j;
-	int		k;
 
-	for (i = 0, d = 0; i < nex; i++) {
-		dfsbno = bmp[i].startblock;
-		for (j = 0; j < bmp[i].blockcount; j++, dfsbno++) {
-			for (k = 0; k < blkbb; k++)
-				bbmap->b[d++] =
-					XFS_FSB_TO_DADDR(mp, dfsbno) + k;
-		}
+	for (i = 0; i < nex; i++) {
+		bbmap->b[i].bm_bn = XFS_FSB_TO_DADDR(mp, bmp[i].startblock);
+		bbmap->b[i].bm_len = XFS_FSB_TO_BB(mp, bmp[i].blockcount);
 	}
+	bbmap->nmaps = nex;
 }
 
 static xfs_fsblock_t
