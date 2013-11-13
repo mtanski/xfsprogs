@@ -737,7 +737,7 @@ xfs_bmbt_verify(
 	 * precise.
 	 */
 	level = be16_to_cpu(block->bb_level);
-	if (level > MAX(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
+	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
 		return false;
 	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
 		return false;

@@ -1072,7 +1072,6 @@ xfs_dir3_leaf_compact_x1(
 	*highstalep = highstale;
 }
 
-
 /*
  * Log the bests entries indicated from a leaf1 block.
  */

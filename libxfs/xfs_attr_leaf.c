@@ -599,7 +599,7 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
 	xfs_attr_sf_entry_t *sfe;
 	int i;
 
-	ASSERT(args->dp->i_d.di_aformat == XFS_IFINLINE);
+	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
 	sf = (xfs_attr_shortform_t *)args->dp->i_afp->if_u1.if_data;
 	sfe = &sf->list[0];
 	for (i = 0; i < sf->hdr.count;
@@ -908,7 +908,6 @@ xfs_attr3_leaf_to_node(
 out:
 	return error;
 }
-
 
 /*========================================================================
  * Routines used for growing the Btree.
@@ -1269,7 +1268,6 @@ xfs_attr3_leaf_compact(
 	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
 	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
 						ichdr_dst->freemap[0].base;
-
 
 	/* write the header back to initialise the underlying buffer */
 	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);

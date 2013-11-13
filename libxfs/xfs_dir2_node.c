@@ -1796,7 +1796,7 @@ xfs_dir2_node_addname_int(
 		/*
 		 * Look at the current free entry.  Is it good enough?
 		 *
-		 * The bests initialisation should be where the buffer is read in
+		 * The bests initialisation should be where the bufer is read in
 		 * the above branch. But gcc is too stupid to realise that bests
 		 * and the freehdr are actually initialised if they are placed
 		 * there, so we have to do it here to avoid warnings. Blech.

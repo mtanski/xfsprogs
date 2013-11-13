@@ -510,8 +510,8 @@ xfs_bmap_trace_exlist(
 
 /*
  * Validate that the bmbt_irecs being returned from bmapi are valid
- * given the callers original parameters.  Specifically check the
- * ranges of the returned irecs to ensure that they only extent beyond
+ * given the caller's original parameters.  Specifically check the
+ * ranges of the returned irecs to ensure that they only extend beyond
  * the given parameters if the XFS_BMAPI_ENTIRE flag was set.
  */
 STATIC void
@@ -1515,7 +1515,7 @@ xfs_bmap_first_unused(
 }
 
 /*
- * Returns the file-relative block number of the last block + 1 before
+ * Returns the file-relative block number of the last block - 1 before
  * last_block (input value) in the file.
  * This is not based on i_size, it is based on the extent records.
  * Returns 0 for local files, as they do not have extent records.

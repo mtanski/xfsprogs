@@ -101,6 +101,7 @@ xfs_inode_buf_verify(
 	xfs_inobp_check(mp, bp);
 }
 
+
 static void
 xfs_inode_buf_read_verify(
 	struct xfs_buf	*bp)
@@ -299,6 +300,7 @@ xfs_dinode_verify(
 		return false;
 	return true;
 }
+
 void
 xfs_dinode_calc_crc(
 	struct xfs_mount	*mp,

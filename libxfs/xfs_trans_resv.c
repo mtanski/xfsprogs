@@ -49,7 +49,7 @@ xfs_calc_buf_res(
 
 /*
  * Logging inodes is really tricksy. They are logged in memory format,
- * which means that what we write into the log doesn't directory translate into
+ * which means that what we write into the log doesn't directly translate into
  * the amount of space they use on disk.
  *
  * Case in point - btree format forks in memory format use more space than the
