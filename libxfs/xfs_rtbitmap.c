@@ -15,32 +15,17 @@
  * along with this program; if not, write the Free Software Foundation,
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <xfs.h>
-
-/*
- * Prototypes for internal functions.
- */
-
-
-STATIC int xfs_rtfind_back(xfs_mount_t *, xfs_trans_t *, xfs_rtblock_t,
-		xfs_rtblock_t, xfs_rtblock_t *);
-STATIC int xfs_rtfind_forw(xfs_mount_t *, xfs_trans_t *, xfs_rtblock_t,
-		xfs_rtblock_t, xfs_rtblock_t *);
-STATIC int xfs_rtmodify_range(xfs_mount_t *, xfs_trans_t *, xfs_rtblock_t,
-		xfs_extlen_t, int);
-STATIC int xfs_rtmodify_summary(xfs_mount_t *, xfs_trans_t *, int,
-		xfs_rtblock_t, int, xfs_buf_t **, xfs_fsblock_t *);
+#include "xfs.h"
 
 /*
- * Internal functions.
+ * Realtime allocator bitmap functions shared with userspace.
  */
 
 /*
  * Get a buffer for the bitmap or summary file block specified.
  * The buffer is returned read and locked.
  */
-STATIC int				/* error */
+int
 xfs_rtbuf_get(
 	xfs_mount_t	*mp,		/* file system mount structure */
 	xfs_trans_t	*tp,		/* transaction pointer */
@@ -75,7 +60,7 @@ xfs_rtbuf_get(
  * Searching backward from start to limit, find the first block whose
  * allocated/free state is different from start's.
  */
-STATIC int				/* error */
+int
 xfs_rtfind_back(
 	xfs_mount_t	*mp,		/* file system mount point */
 	xfs_trans_t	*tp,		/* transaction pointer */
@@ -250,7 +235,7 @@ xfs_rtfind_back(
  * Searching forward from start to limit, find the first block whose
  * allocated/free state is different from start's.
  */
-STATIC int				/* error */
+int
 xfs_rtfind_forw(
 	xfs_mount_t	*mp,		/* file system mount point */
 	xfs_trans_t	*tp,		/* transaction pointer */
@@ -417,86 +402,76 @@ xfs_rtfind_forw(
 }
 
 /*
- * Mark an extent specified by start and len freed.
- * Updates all the summary information as well as the bitmap.
+ * Read and modify the summary information for a given extent size,
+ * bitmap block combination.
+ * Keeps track of a current summary block, so we don't keep reading
+ * it from the buffer cache.
  */
-STATIC int				/* error */
-xfs_rtfree_range(
+int
+xfs_rtmodify_summary(
 	xfs_mount_t	*mp,		/* file system mount point */
 	xfs_trans_t	*tp,		/* transaction pointer */
-	xfs_rtblock_t	start,		/* starting block to free */
-	xfs_extlen_t	len,		/* length to free */
+	int		log,		/* log2 of extent size */
+	xfs_rtblock_t	bbno,		/* bitmap block number */
+	int		delta,		/* change to make to summary info */
 	xfs_buf_t	**rbpp,		/* in/out: summary block buffer */
 	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
 {
-	xfs_rtblock_t	end;		/* end of the freed extent */
+	xfs_buf_t	*bp;		/* buffer for the summary block */
 	int		error;		/* error value */
-	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
-	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
+	xfs_fsblock_t	sb;		/* summary fsblock */
+	int		so;		/* index into the summary file */
+	xfs_suminfo_t	*sp;		/* pointer to returned data */
 
-	end = start + len - 1;
 	/*
-	 * Modify the bitmap to mark this extent freed.
+	 * Compute entry number in the summary file.
 	 */
-	error = xfs_rtmodify_range(mp, tp, start, len, 1);
-	if (error) {
-		return error;
-	}
+	so = XFS_SUMOFFS(mp, log, bbno);
 	/*
-	 * Assume we're freeing out of the middle of an allocated extent.
-	 * We need to find the beginning and end of the extent so we can
-	 * properly update the summary.
+	 * Compute the block number in the summary file.
 	 */
-	error = xfs_rtfind_back(mp, tp, start, 0, &preblock);
-	if (error) {
-		return error;
-	}
+	sb = XFS_SUMOFFSTOBLOCK(mp, so);
 	/*
-	 * Find the next allocated block (end of allocated extent).
+	 * If we have an old buffer, and the block number matches, use that.
 	 */
-	error = xfs_rtfind_forw(mp, tp, end, mp->m_sb.sb_rextents - 1,
-		&postblock);
-	if (error)
-		return error;
+	if (rbpp && *rbpp && *rsb == sb)
+		bp = *rbpp;
 	/*
-	 * If there are blocks not being freed at the front of the
-	 * old extent, add summary data for them to be allocated.
+	 * Otherwise we have to get the buffer.
 	 */
-	if (preblock < start) {
-		error = xfs_rtmodify_summary(mp, tp,
-			XFS_RTBLOCKLOG(start - preblock),
-			XFS_BITTOBLOCK(mp, preblock), -1, rbpp, rsb);
+	else {
+		/*
+		 * If there was an old one, get rid of it first.
+		 */
+		if (rbpp && *rbpp)
+			xfs_trans_brelse(tp, *rbpp);
+		error = xfs_rtbuf_get(mp, tp, sb, 1, &bp);
 		if (error) {
 			return error;
 		}
-	}
-	/*
-	 * If there are blocks not being freed at the end of the
-	 * old extent, add summary data for them to be allocated.
-	 */
-	if (postblock > end) {
-		error = xfs_rtmodify_summary(mp, tp,
-			XFS_RTBLOCKLOG(postblock - end),
-			XFS_BITTOBLOCK(mp, end + 1), -1, rbpp, rsb);
-		if (error) {
-			return error;
+		/*
+		 * Remember this buffer and block for the next call.
+		 */
+		if (rbpp) {
+			*rbpp = bp;
+			*rsb = sb;
 		}
 	}
 	/*
-	 * Increment the summary information corresponding to the entire
-	 * (new) free extent.
+	 * Point to the summary information, modify and log it.
 	 */
-	error = xfs_rtmodify_summary(mp, tp,
-		XFS_RTBLOCKLOG(postblock + 1 - preblock),
-		XFS_BITTOBLOCK(mp, preblock), 1, rbpp, rsb);
-	return error;
+	sp = XFS_SUMPTR(mp, bp, so);
+	*sp += delta;
+	xfs_trans_log_buf(tp, bp, (uint)((char *)sp - (char *)bp->b_addr),
+		(uint)((char *)sp - (char *)bp->b_addr + sizeof(*sp) - 1));
+	return 0;
 }
 
 /*
  * Set the given range of bitmap bits to the given value.
  * Do whatever I/O and logging is required.
  */
-STATIC int				/* error */
+int
 xfs_rtmodify_range(
 	xfs_mount_t	*mp,		/* file system mount point */
 	xfs_trans_t	*tp,		/* transaction pointer */
@@ -513,7 +488,7 @@ xfs_rtmodify_range(
 	xfs_rtword_t	*first;		/* first used word in the buffer */
 	int		i;		/* current bit number rel. to start */
 	int		lastbit;	/* last useful bit in word */
-	xfs_rtword_t	mask;		/* mask o frelevant bits for value */
+	xfs_rtword_t	mask;		/* mask of relevant bits for value */
 	int		word;		/* word number in the buffer */
 
 	/*
@@ -650,71 +625,281 @@ xfs_rtmodify_range(
 }
 
 /*
- * Read and modify the summary information for a given extent size,
- * bitmap block combination.
- * Keeps track of a current summary block, so we don't keep reading
- * it from the buffer cache.
+ * Mark an extent specified by start and len freed.
+ * Updates all the summary information as well as the bitmap.
  */
-STATIC int				/* error */
-xfs_rtmodify_summary(
+int
+xfs_rtfree_range(
 	xfs_mount_t	*mp,		/* file system mount point */
 	xfs_trans_t	*tp,		/* transaction pointer */
-	int		log,		/* log2 of extent size */
-	xfs_rtblock_t	bbno,		/* bitmap block number */
-	int		delta,		/* change to make to summary info */
+	xfs_rtblock_t	start,		/* starting block to free */
+	xfs_extlen_t	len,		/* length to free */
 	xfs_buf_t	**rbpp,		/* in/out: summary block buffer */
 	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
 {
-	xfs_buf_t	*bp;		/* buffer for the summary block */
+	xfs_rtblock_t	end;		/* end of the freed extent */
 	int		error;		/* error value */
-	xfs_fsblock_t	sb;		/* summary fsblock */
-	int		so;		/* index into the summary file */
-	xfs_suminfo_t	*sp;		/* pointer to returned data */
+	xfs_rtblock_t	postblock;	/* first block freed > end */
+	xfs_rtblock_t	preblock;	/* first block freed < start */
 
+	end = start + len - 1;
 	/*
-	 * Compute entry number in the summary file.
+	 * Modify the bitmap to mark this extent freed.
 	 */
-	so = XFS_SUMOFFS(mp, log, bbno);
+	error = xfs_rtmodify_range(mp, tp, start, len, 1);
+	if (error) {
+		return error;
+	}
 	/*
-	 * Compute the block number in the summary file.
+	 * Assume we're freeing out of the middle of an allocated extent.
+	 * We need to find the beginning and end of the extent so we can
+	 * properly update the summary.
 	 */
-	sb = XFS_SUMOFFSTOBLOCK(mp, so);
+	error = xfs_rtfind_back(mp, tp, start, 0, &preblock);
+	if (error) {
+		return error;
+	}
 	/*
-	 * If we have an old buffer, and the block number matches, use that.
+	 * Find the next allocated block (end of allocated extent).
 	 */
-	if (rbpp && *rbpp && *rsb == sb)
-		bp = *rbpp;
+	error = xfs_rtfind_forw(mp, tp, end, mp->m_sb.sb_rextents - 1,
+		&postblock);
+	if (error)
+		return error;
 	/*
-	 * Otherwise we have to get the buffer.
+	 * If there are blocks not being freed at the front of the
+	 * old extent, add summary data for them to be allocated.
 	 */
-	else {
-		/*
-		 * If there was an old one, get rid of it first.
-		 */
-		if (rbpp && *rbpp)
-			xfs_trans_brelse(tp, *rbpp);
-		error = xfs_rtbuf_get(mp, tp, sb, 1, &bp);
+	if (preblock < start) {
+		error = xfs_rtmodify_summary(mp, tp,
+			XFS_RTBLOCKLOG(start - preblock),
+			XFS_BITTOBLOCK(mp, preblock), -1, rbpp, rsb);
 		if (error) {
 			return error;
 		}
-		/*
-		 * Remember this buffer and block for the next call.
-		 */
-		if (rbpp) {
-			*rbpp = bp;
-			*rsb = sb;
+	}
+	/*
+	 * If there are blocks not being freed at the end of the
+	 * old extent, add summary data for them to be allocated.
+	 */
+	if (postblock > end) {
+		error = xfs_rtmodify_summary(mp, tp,
+			XFS_RTBLOCKLOG(postblock - end),
+			XFS_BITTOBLOCK(mp, end + 1), -1, rbpp, rsb);
+		if (error) {
+			return error;
 		}
 	}
 	/*
-	 * Point to the summary information, modify and log it.
+	 * Increment the summary information corresponding to the entire
+	 * (new) free extent.
 	 */
-	sp = XFS_SUMPTR(mp, bp, so);
-	*sp += delta;
-	xfs_trans_log_buf(tp, bp, (uint)((char *)sp - (char *)bp->b_addr),
-		(uint)((char *)sp - (char *)bp->b_addr + sizeof(*sp) - 1));
+	error = xfs_rtmodify_summary(mp, tp,
+		XFS_RTBLOCKLOG(postblock + 1 - preblock),
+		XFS_BITTOBLOCK(mp, preblock), 1, rbpp, rsb);
+	return error;
+}
+
+/*
+ * Check that the given range is either all allocated (val = 0) or
+ * all free (val = 1).
+ */
+int
+xfs_rtcheck_range(
+	xfs_mount_t	*mp,		/* file system mount point */
+	xfs_trans_t	*tp,		/* transaction pointer */
+	xfs_rtblock_t	start,		/* starting block number of extent */
+	xfs_extlen_t	len,		/* length of extent */
+	int		val,		/* 1 for free, 0 for allocated */
+	xfs_rtblock_t	*new,		/* out: first block not matching */
+	int		*stat)		/* out: 1 for matches, 0 for not */
+{
+	xfs_rtword_t	*b;		/* current word in buffer */
+	int		bit;		/* bit number in the word */
+	xfs_rtblock_t	block;		/* bitmap block number */
+	xfs_buf_t	*bp;		/* buf for the block */
+	xfs_rtword_t	*bufp;		/* starting word in buffer */
+	int		error;		/* error value */
+	xfs_rtblock_t	i;		/* current bit number rel. to start */
+	xfs_rtblock_t	lastbit;	/* last useful bit in word */
+	xfs_rtword_t	mask;		/* mask of relevant bits for value */
+	xfs_rtword_t	wdiff;		/* difference from wanted value */
+	int		word;		/* word number in the buffer */
+
+	/*
+	 * Compute starting bitmap block number
+	 */
+	block = XFS_BITTOBLOCK(mp, start);
+	/*
+	 * Read the bitmap block.
+	 */
+	error = xfs_rtbuf_get(mp, tp, block, 0, &bp);
+	if (error) {
+		return error;
+	}
+	bufp = bp->b_addr;
+	/*
+	 * Compute the starting word's address, and starting bit.
+	 */
+	word = XFS_BITTOWORD(mp, start);
+	b = &bufp[word];
+	bit = (int)(start & (XFS_NBWORD - 1));
+	/*
+	 * 0 (allocated) => all zero's; 1 (free) => all one's.
+	 */
+	val = -val;
+	/*
+	 * If not starting on a word boundary, deal with the first
+	 * (partial) word.
+	 */
+	if (bit) {
+		/*
+		 * Compute first bit not examined.
+		 */
+		lastbit = XFS_RTMIN(bit + len, XFS_NBWORD);
+		/*
+		 * Mask of relevant bits.
+		 */
+		mask = (((xfs_rtword_t)1 << (lastbit - bit)) - 1) << bit;
+		/*
+		 * Compute difference between actual and desired value.
+		 */
+		if ((wdiff = (*b ^ val) & mask)) {
+			/*
+			 * Different, compute first wrong bit and return.
+			 */
+			xfs_trans_brelse(tp, bp);
+			i = XFS_RTLOBIT(wdiff) - bit;
+			*new = start + i;
+			*stat = 0;
+			return 0;
+		}
+		i = lastbit - bit;
+		/*
+		 * Go on to next block if that's where the next word is
+		 * and we need the next word.
+		 */
+		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
+			/*
+			 * If done with this block, get the next one.
+			 */
+			xfs_trans_brelse(tp, bp);
+			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+			if (error) {
+				return error;
+			}
+			b = bufp = bp->b_addr;
+			word = 0;
+		} else {
+			/*
+			 * Go on to the next word in the buffer.
+			 */
+			b++;
+		}
+	} else {
+		/*
+		 * Starting on a word boundary, no partial word.
+		 */
+		i = 0;
+	}
+	/*
+	 * Loop over whole words in buffers.  When we use up one buffer
+	 * we move on to the next one.
+	 */
+	while (len - i >= XFS_NBWORD) {
+		/*
+		 * Compute difference between actual and desired value.
+		 */
+		if ((wdiff = *b ^ val)) {
+			/*
+			 * Different, compute first wrong bit and return.
+			 */
+			xfs_trans_brelse(tp, bp);
+			i += XFS_RTLOBIT(wdiff);
+			*new = start + i;
+			*stat = 0;
+			return 0;
+		}
+		i += XFS_NBWORD;
+		/*
+		 * Go on to next block if that's where the next word is
+		 * and we need the next word.
+		 */
+		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
+			/*
+			 * If done with this block, get the next one.
+			 */
+			xfs_trans_brelse(tp, bp);
+			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+			if (error) {
+				return error;
+			}
+			b = bufp = bp->b_addr;
+			word = 0;
+		} else {
+			/*
+			 * Go on to the next word in the buffer.
+			 */
+			b++;
+		}
+	}
+	/*
+	 * If not ending on a word boundary, deal with the last
+	 * (partial) word.
+	 */
+	if ((lastbit = len - i)) {
+		/*
+		 * Mask of relevant bits.
+		 */
+		mask = ((xfs_rtword_t)1 << lastbit) - 1;
+		/*
+		 * Compute difference between actual and desired value.
+		 */
+		if ((wdiff = (*b ^ val) & mask)) {
+			/*
+			 * Different, compute first wrong bit and return.
+			 */
+			xfs_trans_brelse(tp, bp);
+			i += XFS_RTLOBIT(wdiff);
+			*new = start + i;
+			*stat = 0;
+			return 0;
+		} else
+			i = len;
+	}
+	/*
+	 * Successful, return.
+	 */
+	xfs_trans_brelse(tp, bp);
+	*new = start + i;
+	*stat = 1;
 	return 0;
 }
 
+#ifdef DEBUG
+/*
+ * Check that the given extent (block range) is allocated already.
+ */
+STATIC int				/* error */
+xfs_rtcheck_alloc_range(
+	xfs_mount_t	*mp,		/* file system mount point */
+	xfs_trans_t	*tp,		/* transaction pointer */
+	xfs_rtblock_t	bno,		/* starting block number of extent */
+	xfs_extlen_t	len)		/* length of extent */
+{
+	xfs_rtblock_t	new;		/* dummy for xfs_rtcheck_range */
+	int		stat;
+	int		error;
+
+	error = xfs_rtcheck_range(mp, tp, bno, len, 0, &new, &stat);
+	if (error)
+		return error;
+	ASSERT(stat);
+	return 0;
+}
+#else
+#define xfs_rtcheck_alloc_range(m,t,b,l)	(0)
+#endif
 /*
  * Free an extent in the realtime subvolume.  Length is expressed in
  * realtime extents, as is the block number.
@@ -728,28 +913,17 @@ xfs_rtfree_extent(
 	int		error;		/* error value */
 	xfs_mount_t	*mp;		/* file system mount structure */
 	xfs_fsblock_t	sb;		/* summary file block number */
-	xfs_buf_t	*sumbp;		/* summary file block buffer */
+	xfs_buf_t	*sumbp = NULL;	/* summary file block buffer */
 
 	mp = tp->t_mountp;
 
 	ASSERT(mp->m_rbmip->i_itemp != NULL);
 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
 
-#ifdef DEBUG
-	/*
-	 * Check to see that this whole range is currently allocated.
-	 */
-	{
-		int	stat;		/* result from checking range */
+	error = xfs_rtcheck_alloc_range(mp, tp, bno, len);
+	if (error)
+		return error;
 
-		error = xfs_rtcheck_alloc_range(mp, tp, bno, len, &stat);
-		if (error) {
-			return error;
-		}
-		ASSERT(stat);
-	}
-#endif
-	sumbp = NULL;
 	/*
 	 * Free the range of realtime blocks.
 	 */
@@ -774,3 +948,4 @@ xfs_rtfree_extent(
 	}
 	return 0;
 }
+
