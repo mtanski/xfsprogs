@@ -37,6 +37,7 @@
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_arch.h>
 
+#include <xfs/xfs_shared.h>
 #include <xfs/xfs_format.h>
 #include <xfs/xfs_log_format.h>
 #include <xfs/xfs_quota_defs.h>
