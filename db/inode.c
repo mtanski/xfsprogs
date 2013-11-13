@@ -623,6 +623,14 @@ inode_u_symlink_count(
 		(int)be64_to_cpu(dip->di_size) : 0;
 }
 
+/*
+ * We are now using libxfs for our IO backend, so we should always try to use
+ * inode cluster buffers rather than filesystem block sized buffers for reading
+ * inodes. This means that we always use the same buffers as libxfs operations
+ * does, and that avoids buffer cache issues caused by overlapping buffers. This
+ * can be seen clearly when trying to read the root inode. Much of this logic is
+ * similar to libxfs_imap().
+ */
 void
 set_cur_inode(
 	xfs_ino_t	ino)
@@ -632,6 +640,9 @@ set_cur_inode(
 	xfs_agnumber_t	agno;
 	xfs_dinode_t	*dip;
 	int		offset;
+	int		numblks = blkbb;
+	xfs_agblock_t	cluster_agbno;
+
 
 	agno = XFS_INO_TO_AGNO(mp, ino);
 	agino = XFS_INO_TO_AGINO(mp, ino);
@@ -644,6 +655,24 @@ set_cur_inode(
 		return;
 	}
 	cur_agno = agno;
+
+	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize &&
+	    mp->m_inoalign_mask) {
+		xfs_agblock_t	chunk_agbno;
+		xfs_agblock_t	offset_agbno;
+		int		blks_per_cluster;
+
+		blks_per_cluster = mp->m_inode_cluster_size >>
+							mp->m_sb.sb_blocklog;
+		offset_agbno = agbno & mp->m_inoalign_mask;
+		chunk_agbno = agbno - offset_agbno;
+		cluster_agbno = chunk_agbno +
+			((offset_agbno / blks_per_cluster) * blks_per_cluster);
+		offset += ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock);
+		numblks = XFS_FSB_TO_BB(mp, blks_per_cluster);
+	} else
+		cluster_agbno = agbno;
+
 	/*
 	 * First set_cur to the block with the inode
 	 * then use off_cur to get the right part of the buffer.
@@ -651,8 +680,8 @@ set_cur_inode(
 	ASSERT(typtab[TYP_INODE].typnm == TYP_INODE);
 
 	/* ingore ring update here, do it explicitly below */
-	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
-		blkbb, DB_RING_IGN, NULL);
+	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, cluster_agbno),
+		numblks, DB_RING_IGN, NULL);
 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
 	dip = iocur_top->data;
 	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
