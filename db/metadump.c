@@ -172,6 +172,22 @@ write_buf(
 	__int64_t	off;
 	int		i;
 
+	/*
+	 * Run the write verifier to recalculate the buffer CRCs and check
+	 * we are writing something valid to disk
+	 */
+	if (buf->bp && buf->bp->b_ops) {
+		buf->bp->b_error = 0;
+		buf->bp->b_ops->verify_write(buf->bp);
+		if (buf->bp->b_error) {
+			fprintf(stderr,
+	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+				__func__, (long long)buf->bp->b_bn,
+				buf->bp->b_bcount);
+			return buf->bp->b_error;
+		}
+	}
+
 	for (i = 0, off = buf->bb, data = buf->data;
 			i < buf->blen;
 			i++, off++, data += BBSIZE) {
@@ -1727,6 +1743,9 @@ copy_inode_chunk(
 
 		if (!process_inode(agno, agino + i, dip))
 			goto pop_out;
+
+		/* calculate the new CRC for the inode */
+		xfs_dinode_calc_crc(mp, dip);
 	}
 skip_processing:
 	if (!write_buf(iocur_top))
@@ -2050,11 +2069,6 @@ metadump_f(
 
 	if (optind != argc - 1) {
 		print_warning("too few options for metadump (no filename given)");
-		return 0;
-	}
-
-	if (xfs_sb_version_hascrc(&mp->m_sb) && dont_obfuscate == 0) {
-		print_warning("Can't obfuscate CRC enabled filesystems yet.");
 		return 0;
 	}
 
