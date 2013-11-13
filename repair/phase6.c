@@ -1937,8 +1937,16 @@ longform_dir2_check_node(
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
+
+		/*
+		 * we need to use the da3 node verifier here as it handles the
+		 * fact that reading the leaf hash tree blocks can return either
+		 * leaf or node blocks and calls the correct verifier. If we get
+		 * a node block, then we'll skip it below based on a magic
+		 * number check.
+		 */
 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops)) {
+				XFS_DATA_FORK, &xfs_da3_node_buf_ops)) {
 			do_warn(
 	_("can't read leaf block %u for directory inode %" PRIu64 "\n"),
 				da_bno, ip->i_ino);
