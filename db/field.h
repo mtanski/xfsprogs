@@ -80,6 +80,10 @@ typedef enum fldt	{
 	FLDT_CNTBTKEY,
 	FLDT_CNTBTPTR,
 	FLDT_CNTBTREC,
+
+	/* CRC field type */
+	FLDT_CRC,
+
 	FLDT_DEV,
 	FLDT_DFILOFFA,
 	FLDT_DFILOFFD,

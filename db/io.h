@@ -58,3 +58,9 @@ extern void     write_cur(void);
 extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
 			bbmap_t *bbmap);
 extern void     ring_add(void);
+
+static inline bool
+iocur_crc_valid()
+{
+	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
+}

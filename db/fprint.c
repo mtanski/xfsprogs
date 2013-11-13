@@ -30,6 +30,7 @@
 #include "output.h"
 #include "sig.h"
 #include "malloc.h"
+#include "io.h"
 
 int
 fp_charns(
@@ -179,6 +180,44 @@ fp_uuid(
 			dbprintf("%d:", i + base);
 		platform_uuid_unparse(p, bp);
 		dbprintf("%s", bp);
+		if (i < count - 1)
+			dbprintf(" ");
+	}
+	return 1;
+}
+
+/*
+ * CRC is correct is the current buffer it is being pulled out
+ * of is not marked with a EFSCORRUPTED error.
+ */
+int
+fp_crc(
+	void	*obj,
+	int	bit,
+	int	count,
+	char	*fmtstr,
+	int	size,
+	int	arg,
+	int	base,
+	int	array)
+{
+	int		bitpos;
+	int		i;
+	__int64_t	val;
+	char		*ok;
+
+	ok = iocur_crc_valid() ? "correct" : "bad";
+
+	for (i = 0, bitpos = bit;
+	     i < count && !seenint();
+	     i++, bitpos += size) {
+		if (array)
+			dbprintf("%d:", i + base);
+		val = getbitval(obj, bitpos, size, BVUNSIGNED);
+		if (size > 32)
+			dbprintf(fmtstr, val, ok);
+		else
+			dbprintf(fmtstr, (__int32_t)val, ok);
 		if (i < count - 1)
 			dbprintf(" ");
 	}

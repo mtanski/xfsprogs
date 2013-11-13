@@ -168,7 +168,7 @@ const field_t	inode_core_flds[] = {
 };
 
 const field_t	inode_v3_flds[] = {
-	{ "crc", FLDT_UINT32X, OI(COFF(crc)), C1, 0, TYP_NONE },
+	{ "crc", FLDT_CRC, OI(COFF(crc)), C1, 0, TYP_NONE },
 	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },

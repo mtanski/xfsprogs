@@ -118,7 +118,7 @@ const field_t	sb_flds[] = {
 		C1, 0, TYP_NONE },
 	{ "features_log_incompat", FLDT_UINT32X, OI(OFF(features_log_incompat)),
 		C1, 0, TYP_NONE },
-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
 	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
 	{ NULL }
