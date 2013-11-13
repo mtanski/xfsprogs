@@ -38,6 +38,7 @@ static unsigned int cache_generic_bulkrelse(struct cache *, struct list_head *);
 
 struct cache *
 cache_init(
+	int			flags,
 	unsigned int		hashsize,
 	struct cache_operations	*cache_operations)
 {
@@ -53,6 +54,7 @@ cache_init(
 		return NULL;
 	}
 
+	cache->c_flags = flags;
 	cache->c_count = 0;
 	cache->c_max = 0;
 	cache->c_hits = 0;
@@ -289,6 +291,34 @@ cache_overflowed(
 	return (cache->c_maxcount == cache->c_max);
 }
 
+
+static int
+__cache_node_purge(
+	struct cache *		cache,
+	struct cache_node *	node)
+{
+	int			count;
+	struct cache_mru *	mru;
+
+	pthread_mutex_lock(&node->cn_mutex);
+	count = node->cn_count;
+	if (count != 0) {
+		pthread_mutex_unlock(&node->cn_mutex);
+		return count;
+	}
+	mru = &cache->c_mrus[node->cn_priority];
+	pthread_mutex_lock(&mru->cm_mutex);
+	list_del_init(&node->cn_mru);
+	mru->cm_count--;
+	pthread_mutex_unlock(&mru->cm_mutex);
+
+	pthread_mutex_unlock(&node->cn_mutex);
+	pthread_mutex_destroy(&node->cn_mutex);
+	list_del_init(&node->cn_hash);
+	cache->relse(node);
+	return count;
+}
+
 /*
  * Lookup in the cache hash table.  With any luck we'll get a cache
  * hit, in which case this will all be over quickly and painlessly.
@@ -308,8 +338,10 @@ cache_node_get(
 	struct cache_mru *	mru;
 	struct list_head *	head;
 	struct list_head *	pos;
+	struct list_head *	n;
 	unsigned int		hashidx;
 	int			priority = 0;
+	int			purged = 0;
 
 	hashidx = cache->hash(key, cache->c_hashsize);
 	hash = cache->c_hash + hashidx;
@@ -317,10 +349,26 @@ cache_node_get(
 
 	for (;;) {
 		pthread_mutex_lock(&hash->ch_mutex);
-		for (pos = head->next; pos != head; pos = pos->next) {
+		for (pos = head->next, n = pos->next; pos != head;
+						pos = n, n = pos->next) {
+			int result;
+
 			node = list_entry(pos, struct cache_node, cn_hash);
-			if (!cache->compare(node, key))
-				continue;
+			result = cache->compare(node, key);
+			switch (result) {
+			case CACHE_HIT:
+				break;
+			case CACHE_PURGE:
+				if ((cache->c_flags & CACHE_MISCOMPARE_PURGE) &&
+				    !__cache_node_purge(cache, node)) {
+					purged++;
+					hash->ch_count--;
+				}
+				/* FALL THROUGH */
+			case CACHE_MISS:
+				goto next_object;
+			}
+
 			/*
 			 * node found, bump node's reference count, remove it
 			 * from its MRU list, and update stats.
@@ -347,6 +395,8 @@ cache_node_get(
 
 			*nodep = node;
 			return 0;
+next_object:
+			continue;	/* what the hell, gcc? */
 		}
 		pthread_mutex_unlock(&hash->ch_mutex);
 		/*
@@ -374,6 +424,12 @@ cache_node_get(
 	hash->ch_count++;
 	list_add(&node->cn_hash, &hash->ch_list);
 	pthread_mutex_unlock(&hash->ch_mutex);
+
+	if (purged) {
+		pthread_mutex_lock(&cache->c_mutex);
+		cache->c_count -= purged;
+		pthread_mutex_unlock(&cache->c_mutex);
+	}
 
 	*nodep = node;
 	return 1;
@@ -457,7 +513,6 @@ cache_node_purge(
 	struct list_head *	pos;
 	struct list_head *	n;
 	struct cache_hash *	hash;
-	struct cache_mru *	mru;
 	int			count = -1;
 
 	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
@@ -468,23 +523,9 @@ cache_node_purge(
 		if ((struct cache_node *)pos != node)
 			continue;
 
-		pthread_mutex_lock(&node->cn_mutex);
-		count = node->cn_count;
-		if (count != 0) {
-			pthread_mutex_unlock(&node->cn_mutex);
-			break;
-		}
-		mru = &cache->c_mrus[node->cn_priority];
-		pthread_mutex_lock(&mru->cm_mutex);
-		list_del_init(&node->cn_mru);
-		mru->cm_count--;
-		pthread_mutex_unlock(&mru->cm_mutex);
-
-		pthread_mutex_unlock(&node->cn_mutex);
-		pthread_mutex_destroy(&node->cn_mutex);
-		list_del_init(&node->cn_hash);
-		hash->ch_count--;
-		cache->relse(node);
+		count = __cache_node_purge(cache, node);
+		if (!count)
+			hash->ch_count--;
 		break;
 	}
 	pthread_mutex_unlock(&hash->ch_mutex);

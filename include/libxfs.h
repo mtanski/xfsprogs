@@ -110,6 +110,8 @@ typedef struct {
 	int             dfd;            /* data subvolume file descriptor */
 	int             logfd;          /* log subvolume file descriptor */
 	int             rtfd;           /* realtime subvolume file descriptor */
+	int		icache_flags;	/* cache init flags */
+	int		bcache_flags;	/* cache init flags */
 } libxfs_init_t;
 
 #define LIBXFS_EXIT_ON_FAILURE	0x0001	/* exit the program if a call fails */

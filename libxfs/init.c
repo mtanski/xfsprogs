@@ -334,7 +334,8 @@ libxfs_init(libxfs_init_t *a)
 		chdir(curdir);
 	if (!libxfs_bhash_size)
 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
-	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
+	libxfs_bcache = cache_init(a->bcache_flags, libxfs_bhash_size,
+				   &libxfs_bcache_operations);
 	use_xfs_buf_lock = a->usebuflock;
 	manage_zones(0);
 	rval = 1;

@@ -323,20 +323,24 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
 	struct xfs_buf	*bp = (struct xfs_buf *)node;
 	struct xfs_bufkey *bkey = (struct xfs_bufkey *)key;
 
-#ifdef IO_BCOMPARE_CHECK
 	if (bp->b_target->dev == bkey->buftarg->dev &&
-	    bp->b_bn == bkey->blkno &&
-	    bp->b_bcount != BBTOB(bkey->bblen))
-		fprintf(stderr, "%lx: Badness in key lookup (length)\n"
-			"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
-			pthread_self(),
-			(unsigned long long)bp->b_bn, (int)bp->b_bcount,
-			(unsigned long long)bkey->blkno, BBTOB(bkey->bblen));
+	    bp->b_bn == bkey->blkno) {
+		if (bp->b_bcount == BBTOB(bkey->bblen))
+			return CACHE_HIT;
+#ifdef IO_BCOMPARE_CHECK
+		if (!(libxfs_bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
+			fprintf(stderr,
+	"%lx: Badness in key lookup (length)\n"
+	"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
+				pthread_self(),
+				(unsigned long long)bp->b_bn, (int)bp->b_bcount,
+				(unsigned long long)bkey->blkno,
+				BBTOB(bkey->bblen));
+		}
 #endif
-
-	return (bp->b_target->dev == bkey->buftarg->dev &&
-		bp->b_bn == bkey->blkno &&
-		bp->b_bcount == BBTOB(bkey->bblen));
+		return CACHE_PURGE;
+	}
+	return CACHE_MISS;
 }
 
 void

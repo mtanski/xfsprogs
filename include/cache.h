@@ -18,6 +18,25 @@
 #ifndef __CACHE_H__
 #define __CACHE_H__
 
+/*
+ * initialisation flags
+ */
+/*
+ * xfs_db always writes changes immediately, and so we need to purge buffers
+ * when we get a buffer lookup mismatch due to reading the same block with a
+ * different buffer configuration.
+ */
+#define CACHE_MISCOMPARE_PURGE	(1 << 0)
+
+/*
+ * cache object campare return values
+ */
+enum {
+	CACHE_HIT,
+	CACHE_MISS,
+	CACHE_PURGE,
+};
+
 #define	HASH_CACHE_RATIO	8
 
 /*
@@ -82,6 +101,7 @@ struct cache_node {
 };
 
 struct cache {
+	int			c_flags;	/* behavioural flags */
 	unsigned int		c_maxcount;	/* max cache nodes */
 	unsigned int		c_count;	/* count of nodes */
 	pthread_mutex_t		c_mutex;	/* node count mutex */
@@ -99,7 +119,7 @@ struct cache {
 	unsigned int 		c_max;		/* max nodes ever used */
 };
 
-struct cache *cache_init(unsigned int, struct cache_operations *);
+struct cache *cache_init(int, unsigned int, struct cache_operations *);
 void cache_destroy(struct cache *);
 void cache_walk(struct cache *, cache_walk_t);
 void cache_purge(struct cache *);

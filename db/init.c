@@ -109,6 +109,7 @@ init(
 	else
 		x.dname = fsdevice;
 
+	x.bcache_flags = CACHE_MISCOMPARE_PURGE;
 	if (!libxfs_init(&x)) {
 		fputs(_("\nfatal error -- couldn't initialize XFS library\n"),
 			stderr);
