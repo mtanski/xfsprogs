@@ -79,18 +79,30 @@ endif # _BUILDRULES_INCLUDED_
 $(_FORCE):
 
 # dependency build is automatic, relies on gcc -MM to generate.
+#
+# This is a bit messy. It regenerates the dependencies on each build so
+# that we catch files being added and removed. There are other ways of doing
+# this (e.g. per-file dependency files) but that requires more in-depth changes
+# to the build system. Compile time is not an issue for us, so the
+# rebuild on every make invocation isn't a problem we need to care about. Just
+# do it silently so it doesn't make the build unnecessarily noisy.
+
 .PHONY : depend ltdepend install-qa
 
 MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
 
-ltdepend: .ltdep
+ltdepend: rmltdep .ltdep
+
+rmltdep:
+	@rm -f .ltdep
 
 .ltdep: $(CFILES) $(HFILES)
-	@echo "    [LTDEP]"
 	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
 
-depend: .dep
+depend: rmdep .dep
+
+rmdep:
+	@rm -f .dep
 
 .dep: $(CFILES) $(HFILES)
-	@echo "    [DEP]"
 	$(Q)$(MAKEDEP) $(CFILES) > .dep
