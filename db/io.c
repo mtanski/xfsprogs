@@ -482,11 +482,13 @@ set_cur(
 	xfs_ino_t	dirino;
 	xfs_ino_t	ino;
 	__uint16_t	mode;
+	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
 
 	if (iocur_sp < 0) {
 		dbprintf(_("set_cur no stack element to set\n"));
 		return;
 	}
+
 
 	ino = iocur_top->ino;
 	dirino = iocur_top->dirino;
@@ -509,12 +511,17 @@ set_cur(
 			return;
 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
-					bbmap->nmaps, 0, NULL);
+					bbmap->nmaps, 0, ops);
 	} else {
-		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
+		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
 		iocur_top->bbmap = NULL;
 	}
-	if (!bp || bp->b_error)
+
+	/*
+	 * keep the buffer even if the verifier says it is corrupted.
+	 * We're a diagnostic tool, after all.
+	 */
+	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
 		return;
 	iocur_top->buf = bp->b_addr;
 	iocur_top->bp = bp;

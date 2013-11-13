@@ -42,6 +42,7 @@ typedef struct typ
 	char			*name;
 	pfunc_t			pfunc;
 	const struct field	*fields;
+	const struct xfs_buf_ops *bops;
 } typ_t;
 extern const typ_t	*typtab, *cur_typ;
 
