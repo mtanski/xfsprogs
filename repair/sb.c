@@ -169,17 +169,37 @@ find_secondary_sb(xfs_sb_t *rsb)
 }
 
 /*
- * calculate what inode alignment field ought to be
- * based on internal superblock info
+ * Calculate what inode alignment field ought to be
+ * based on internal superblock info and determine if it is valid.
+ *
+ * For v5 superblocks, the inode alignment will either match that of the
+ * standard XFS_INODE_BIG_CLUSTER_SIZE, or it will be scaled based on the inode
+ * size. Either value is valid in this case.
+ *
+ * Return true if the alignment is valid, false otherwise.
  */
-static int
-calc_ino_align(xfs_sb_t *sb)
+static bool
+sb_validate_ino_align(struct xfs_sb *sb)
 {
-	xfs_extlen_t align;
+	xfs_extlen_t	align;
 
+	if (!xfs_sb_version_hasalign(sb))
+		return true;
+
+	/* standard cluster size alignment is always valid */
 	align = XFS_INODE_BIG_CLUSTER_SIZE >> sb->sb_blocklog;
+	if (align == sb->sb_inoalignmt)
+		return true;
 
-	return(align);
+	/* alignment scaled by inode size is v5 only for now */
+	if (!xfs_sb_version_hascrc(sb))
+		return false;
+
+	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
+	if (align == sb->sb_inoalignmt)
+		return true;
+
+	return false;
 }
 
 /*
@@ -228,7 +248,6 @@ int
 verify_sb(xfs_sb_t *sb, int is_primary_sb)
 {
 	__uint32_t	bsize;
-	xfs_extlen_t	align;
 	int		i;
 
 	/* check magic number and version number */
@@ -364,12 +383,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	/*
 	 * verify correctness of inode alignment if it's there
 	 */
-	if (xfs_sb_version_hasalign(sb))  {
-		align = calc_ino_align(sb);
-
-		if (align != sb->sb_inoalignmt)
-			return(XR_BAD_INO_ALIGN);
-	}
+	if (!sb_validate_ino_align(sb))
+		return(XR_BAD_INO_ALIGN);
 
 	/*
 	 * verify max. % of inodes (sb_imax_pct)
