@@ -319,10 +319,12 @@ roundup_64(__uint64_t x, __uint32_t y)
 
 #define xfs_trans_buf_copy_type(dbp, sbp)
 
-#define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
+/* no readahead, need to avoid set-but-unused var warnings. */
+#define xfs_buf_readahead(a,d,c,ops)		({	\
+	xfs_daddr_t __d = d;				\
+	__d = __d; /* no set-but-unused warning */	\
+})
 #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
-#define xfs_btree_reada_bufl(m,fsb,c,ops)	((void) 0)
-#define xfs_btree_reada_bufs(m,fsb,c,x,ops)	((void) 0)
 #define xfs_buftrace(x,y)			((void) 0)	/* debug only */
 
 #define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)

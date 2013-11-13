@@ -396,7 +396,6 @@ static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
 			return XFS_BTREE_LBLOCK_CRC_LEN;
 		return XFS_BTREE_LBLOCK_LEN;
 	}
-
 	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
 		return XFS_BTREE_SBLOCK_CRC_LEN;
 	return XFS_BTREE_SBLOCK_LEN;
@@ -493,7 +492,7 @@ xfs_btree_ptr_addr(
 }
 
 /*
- * Get a the root block which is stored in the inode.
+ * Get the root block which is stored in the inode.
  *
  * For now this btree implementation assumes the btree root is always
  * stored in the if_broot field of an inode fork.
@@ -714,6 +713,46 @@ xfs_btree_read_bufl(
 		xfs_buf_set_ref(bp, refval);
 	*bpp = bp;
 	return 0;
+}
+
+/*
+ * Read-ahead the block, don't wait for it, don't return a buffer.
+ * Long-form addressing.
+ */
+/* ARGSUSED */
+void
+xfs_btree_reada_bufl(
+	struct xfs_mount	*mp,		/* file system mount point */
+	xfs_fsblock_t		fsbno,		/* file system block number */
+	xfs_extlen_t		count,		/* count of filesystem blocks */
+	const struct xfs_buf_ops *ops)
+{
+	xfs_daddr_t		d;
+
+	ASSERT(fsbno != NULLFSBLOCK);
+	d = XFS_FSB_TO_DADDR(mp, fsbno);
+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
+}
+
+/*
+ * Read-ahead the block, don't wait for it, don't return a buffer.
+ * Short-form addressing.
+ */
+/* ARGSUSED */
+void
+xfs_btree_reada_bufs(
+	struct xfs_mount	*mp,		/* file system mount point */
+	xfs_agnumber_t		agno,		/* allocation group number */
+	xfs_agblock_t		agbno,		/* allocation group block number */
+	xfs_extlen_t		count,		/* count of filesystem blocks */
+	const struct xfs_buf_ops *ops)
+{
+	xfs_daddr_t		d;
+
+	ASSERT(agno != NULLAGNUMBER);
+	ASSERT(agbno != NULLAGBLOCK);
+	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
 }
 
 STATIC int
@@ -1339,7 +1378,7 @@ xfs_btree_log_block(
 			 * We don't log the CRC when updating a btree
 			 * block but instead recreate it during log
 			 * recovery.  As the log buffers have checksums
-			 * of their this is safe and avoids logging a crc
+			 * of their own this is safe and avoids logging a crc
 			 * update in a lot of places.
 			 */
 			if (fields == XFS_BB_ALL_BITS)
@@ -1629,7 +1668,7 @@ xfs_lookup_get_search_key(
 
 /*
  * Lookup the record.  The cursor is made to point to it, based on dir.
- * Return 0 if can't find any such record, 1 for success.
+ * stat is set to 0 if can't find any such record, 1 for success.
  */
 int					/* error */
 xfs_btree_lookup(
@@ -2701,7 +2740,6 @@ xfs_btree_make_block_unfull(
 
 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
 			/* A root block that can be made bigger. */
-
 			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
 		} else {
 			/* A root block that needs replacing */
