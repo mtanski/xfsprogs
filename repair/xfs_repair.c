@@ -69,7 +69,6 @@ static char *c_opts[] = {
 };
 
 
-static int	ihash_option_used;
 static int	bhash_option_used;
 static long	max_mem_specified;	/* in megabytes */
 static int	phase2_threads = 32;
@@ -239,13 +238,13 @@ process_args(int argc, char **argv)
 					pre_65_beta = 1;
 					break;
 				case IHASH_SIZE:
-					libxfs_ihash_size = (int)strtol(val, NULL, 0);
-					ihash_option_used = 1;
+					do_warn(
+		_("-o ihash option has been removed and will be ignored\n"));
 					break;
 				case BHASH_SIZE:
 					if (max_mem_specified)
 						do_abort(
-			_("-o bhash option cannot be used with -m option\n"));
+		_("-o bhash option cannot be used with -m option\n"));
 					libxfs_bhash_size = (int)strtol(val, NULL, 0);
 					bhash_option_used = 1;
 					break;
@@ -648,9 +647,7 @@ main(int argc, char **argv)
 		unsigned long	max_mem;
 		struct rlimit	rlim;
 
-		libxfs_icache_purge();
 		libxfs_bcache_purge();
-		cache_destroy(libxfs_icache);
 		cache_destroy(libxfs_bcache);
 
 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
@@ -709,11 +706,6 @@ main(int argc, char **argv)
 			do_log(_("        - block cache size set to %d entries\n"),
 				libxfs_bhash_size * HASH_CACHE_RATIO);
 
-		if (!ihash_option_used)
-			libxfs_ihash_size = libxfs_bhash_size;
-
-		libxfs_icache = cache_init(libxfs_ihash_size,
-						&libxfs_icache_operations);
 		libxfs_bcache = cache_init(libxfs_bhash_size,
 						&libxfs_bcache_operations);
 	}

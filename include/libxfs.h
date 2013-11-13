@@ -264,7 +264,6 @@ typedef struct xfs_perag {
 #define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
 #define LIBXFS_MOUNT_ATTR2		0x0010
 
-#define LIBXFS_IHASHSIZE(sbp)		(1<<10)
 #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
 
 extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
@@ -448,7 +447,6 @@ extern int	libxfs_writebuf_int(xfs_buf_t *, int);
 extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
 
 extern int libxfs_bhash_size;
-extern int libxfs_ihash_size;
 
 #define LIBXFS_BREAD	0x1
 #define LIBXFS_BWRITE	0x2
@@ -648,9 +646,6 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
 extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 
 /* Inode Cache Interfaces */
-extern struct cache	*libxfs_icache;
-extern struct cache_operations	libxfs_icache_operations;
-extern void	libxfs_icache_purge (void);
 extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
 extern void	libxfs_iput (xfs_inode_t *, uint);

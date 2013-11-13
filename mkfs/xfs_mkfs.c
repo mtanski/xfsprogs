@@ -2935,7 +2935,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	 * Need to drop references to inodes we still hold, first.
 	 */
 	libxfs_rtmount_destroy(mp);
-	libxfs_icache_purge();
 	libxfs_bcache_purge();
 
 	/*

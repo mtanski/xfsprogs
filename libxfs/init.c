@@ -22,9 +22,6 @@
 
 char *progname = "libxfs";	/* default, changed by each tool */
 
-struct cache *libxfs_icache;	/* global inode cache */
-int libxfs_ihash_size;		/* #buckets in icache */
-
 struct cache *libxfs_bcache;	/* global buffer cache */
 int libxfs_bhash_size;		/* #buckets in bcache */
 
@@ -335,9 +332,6 @@ libxfs_init(libxfs_init_t *a)
 	}
 	if (needcd)
 		chdir(curdir);
-	if (!libxfs_ihash_size)
-		libxfs_ihash_size = LIBXFS_IHASHSIZE(sbp);
-	libxfs_icache = cache_init(libxfs_ihash_size, &libxfs_icache_operations);
 	if (!libxfs_bhash_size)
 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
@@ -799,7 +793,6 @@ libxfs_umount(xfs_mount_t *mp)
 	int			agno;
 
 	libxfs_rtmount_destroy(mp);
-	libxfs_icache_purge();
 	libxfs_bcache_purge();
 
 	for (agno = 0; agno < mp->m_maxagi; agno++) {
@@ -815,7 +808,6 @@ void
 libxfs_destroy(void)
 {
 	manage_zones(1);
-	cache_destroy(libxfs_icache);
 	cache_destroy(libxfs_bcache);
 }
 
@@ -831,7 +823,6 @@ libxfs_report(FILE *fp)
 	time_t t;
 	char *c;
 
-	cache_report(fp, "libxfs_icache", libxfs_icache);
 	cache_report(fp, "libxfs_bcache", libxfs_bcache);
 
 	t = time(NULL);

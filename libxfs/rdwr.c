@@ -993,25 +993,11 @@ struct cache_operations libxfs_bcache_operations = {
 
 
 /*
- * Inode cache interfaces
+ * Inode cache stubs.
  */
 
 extern kmem_zone_t	*xfs_ili_zone;
 extern kmem_zone_t	*xfs_inode_zone;
-
-static unsigned int
-libxfs_ihash(cache_key_t key, unsigned int hashsize)
-{
-	return ((unsigned int)*(xfs_ino_t *)key) % hashsize;
-}
-
-static int
-libxfs_icompare(struct cache_node *node, cache_key_t key)
-{
-	xfs_inode_t	*ip = (xfs_inode_t *)node;
-
-	return (ip->i_ino == *(xfs_ino_t *)key);
-}
 
 int
 libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
@@ -1020,34 +1006,21 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
 	xfs_inode_t	*ip;
 	int		error = 0;
 
-	if (cache_node_get(libxfs_icache, &ino, (struct cache_node **)&ip)) {
-#ifdef INO_DEBUG
-		fprintf(stderr, "%s: allocated inode, ino=%llu(%llu), %p\n",
-			__FUNCTION__, (unsigned long long)ino, bno, ip);
-#endif
-		ip->i_ino = ino;
-		ip->i_mount = mp;
-		error = xfs_iread(mp, tp, ip, bno);
-		if (error) {
-			cache_node_purge(libxfs_icache, &ino,
-					(struct cache_node *)ip);
-			ip = NULL;
-		}
+	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
+	if (!ip)
+		return ENOMEM;
+
+	ip->i_ino = ino;
+	ip->i_mount = mp;
+	error = xfs_iread(mp, tp, ip, bno);
+	if (error) {
+		kmem_zone_free(xfs_inode_zone, ip);
+		*ipp = NULL;
+		return error;
 	}
+
 	*ipp = ip;
-	return error;
-}
-
-void
-libxfs_iput(xfs_inode_t *ip, uint lock_flags)
-{
-	cache_node_put(libxfs_icache, (struct cache_node *)ip);
-}
-
-static struct cache_node *
-libxfs_ialloc(cache_key_t key)
-{
-	return kmem_zone_zalloc(xfs_inode_zone, 0);
+	return 0;
 }
 
 static void
@@ -1064,32 +1037,12 @@ libxfs_idestroy(xfs_inode_t *ip)
 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
 }
 
-static void
-libxfs_irelse(struct cache_node *node)
-{
-	xfs_inode_t	*ip = (xfs_inode_t *)node;
-
-	if (ip != NULL) {
-		if (ip->i_itemp)
-			kmem_zone_free(xfs_ili_zone, ip->i_itemp);
-		ip->i_itemp = NULL;
-		libxfs_idestroy(ip);
-		kmem_zone_free(xfs_inode_zone, ip);
-		ip = NULL;
-	}
-}
-
 void
-libxfs_icache_purge(void)
+libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 {
-	cache_purge(libxfs_icache);
+	if (ip->i_itemp)
+		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
+	ip->i_itemp = NULL;
+	libxfs_idestroy(ip);
+	kmem_zone_free(xfs_inode_zone, ip);
 }
-
-struct cache_operations libxfs_icache_operations = {
-	/* .hash */	libxfs_ihash,
-	/* .alloc */	libxfs_ialloc,
-	/* .flush */	NULL,
-	/* .relse */	libxfs_irelse,
-	/* .compare */	libxfs_icompare,
-	/* .bulkrelse */ NULL
-};
