@@ -46,9 +46,22 @@ xfs_inobp_check(
 }
 #endif
 
+/*
+ * If we are doing readahead on an inode buffer, we might be in log recovery
+ * reading an inode allocation buffer that hasn't yet been replayed, and hence
+ * has not had the inode cores stamped into it. Hence for readahead, the buffer
+ * may be potentially invalid.
+ *
+ * If the readahead buffer is invalid, we don't want to mark it with an error,
+ * but we do want to clear the DONE status of the buffer so that a followup read
+ * will re-read it from disk. This will ensure that we don't get an unnecessary
+ * warnings during log recovery and we don't get unnecessary panics on debug
+ * kernels.
+ */
 static void
 xfs_inode_buf_verify(
-	struct xfs_buf	*bp)
+	struct xfs_buf	*bp,
+	bool		readahead)
 {
 	struct xfs_mount *mp = bp->b_target->bt_mount;
 	int		i;
@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
 						XFS_ERRTAG_ITOBP_INOTOBP,
 						XFS_RANDOM_ITOBP_INOTOBP))) {
+			if (readahead) {
+				bp->b_flags &= ~XBF_DONE;
+				return;
+			}
+
 			xfs_buf_ioerror(bp, EFSCORRUPTED);
 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
 					     mp, dip);
@@ -87,20 +105,33 @@ static void
 xfs_inode_buf_read_verify(
 	struct xfs_buf	*bp)
 {
-	xfs_inode_buf_verify(bp);
+	xfs_inode_buf_verify(bp, false);
+}
+
+static void
+xfs_inode_buf_readahead_verify(
+	struct xfs_buf	*bp)
+{
+	xfs_inode_buf_verify(bp, true);
 }
 
 static void
 xfs_inode_buf_write_verify(
 	struct xfs_buf	*bp)
 {
-	xfs_inode_buf_verify(bp);
+	xfs_inode_buf_verify(bp, false);
 }
 
 const struct xfs_buf_ops xfs_inode_buf_ops = {
 	.verify_read = xfs_inode_buf_read_verify,
 	.verify_write = xfs_inode_buf_write_verify,
 };
+
+const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
+	.verify_read = xfs_inode_buf_readahead_verify,
+	.verify_write = xfs_inode_buf_write_verify,
+};
+
 
 /*
  * This routine is called to map an inode to the buffer containing the on-disk
@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
 		to->di_ino = be64_to_cpu(from->di_ino);
 		to->di_lsn = be64_to_cpu(from->di_lsn);
 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
+		uuid_copy(&to->di_uuid, &from->di_uuid);
 	}
 }
 
@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
 		to->di_ino = cpu_to_be64(from->di_ino);
 		to->di_lsn = cpu_to_be64(from->di_lsn);
 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
+		uuid_copy(&to->di_uuid, &from->di_uuid);
 		to->di_flushiter = 0;
 	} else {
 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
