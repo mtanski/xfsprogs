@@ -104,8 +104,14 @@ pop_cur(void)
 		dbprintf(_("can't pop anything from I/O stack\n"));
 		return;
 	}
-	if (iocur_top->buf)
-		xfree(iocur_top->buf);
+	if (iocur_top->bp) {
+		libxfs_putbuf(iocur_top->bp);
+		iocur_top->bp = NULL;
+	}
+	if (iocur_top->bbmap) {
+		free(iocur_top->bbmap);
+		iocur_top->bbmap = NULL;
+	}
 	if (--iocur_sp >= 0) {
 		iocur_top = iocur_base + iocur_sp;
 		cur_typ = iocur_top->typ;
@@ -147,10 +153,11 @@ print_iocur(
 	dbprintf(_("\tbuffer block %lld (fsbno %lld), %d bb%s\n"), ioc->bb,
 		(xfs_dfsbno_t)XFS_DADDR_TO_FSB(mp, ioc->bb), ioc->blen,
 		ioc->blen == 1 ? "" : "s");
-	if (ioc->use_bbmap) {
+	if (ioc->bbmap) {
 		dbprintf(_("\tblock map"));
-		for (i = 0; i < ioc->blen; i++)
-			dbprintf(" %d:%lld", i, ioc->bbmap.b[i]);
+		for (i = 0; i < ioc->bbmap->nmaps; i++)
+			dbprintf(" %lld:%d", ioc->bbmap->b[i].bm_bn,
+					     ioc->bbmap->b[i].bm_len);
 		dbprintf("\n");
 	}
 	dbprintf(_("\tinode %lld, dir inode %lld, type %s\n"), ioc->ino,
@@ -238,7 +245,7 @@ push_f(
 	else
 		set_cur(iocur_top[-1].typ, iocur_top[-1].bb,
 			iocur_top[-1].blen, DB_RING_IGN,
-			iocur_top[-1].use_bbmap ? &iocur_top[-1].bbmap : NULL);
+			iocur_top[-1].bbmap);
 
 	/* run requested command */
 	if (argc>1)
@@ -280,8 +287,7 @@ forward_f(
 		iocur_ring[ring_current].bb,
 		iocur_ring[ring_current].blen,
 		DB_RING_IGN,
-		iocur_ring[ring_current].use_bbmap ?
-			&iocur_ring[ring_current].bbmap : NULL);
+		iocur_ring[ring_current].bbmap);
 
 	return 0;
 }
@@ -321,8 +327,7 @@ back_f(
 		iocur_ring[ring_current].bb,
 		iocur_ring[ring_current].blen,
 		DB_RING_IGN,
-		iocur_ring[ring_current].use_bbmap ?
-			&iocur_ring[ring_current].bbmap : NULL);
+		iocur_ring[ring_current].bbmap);
 
 	return 0;
 }
@@ -362,7 +367,7 @@ ring_f(
 		iocur_ring[index].bb,
 		iocur_ring[index].blen,
 		DB_RING_IGN,
-		iocur_ring[index].use_bbmap ? &iocur_ring[index].bbmap : NULL);
+		iocur_ring[index].bbmap);
 
 	return 0;
 }
@@ -417,110 +422,20 @@ ring_add(void)
 	}
 }
 
-int
-read_buf(
-	xfs_daddr_t	bbno,
-	int		count,
-	void		*bufp)
-{
-	int		err;
-
-	err = pread64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-	if (err < 0)
-		err = errno;
-	else if (err < count)
-		err = -1;
-	return err;
-}
-
-static int
-write_buf(
-	xfs_daddr_t	bbno,
-	int		count,
-	void		*bufp)
-{
-	int		err;
-
-	err = pwrite64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-	if (err < 0)
-		err = errno;
-	else if (err < count)
-		err = -1;
-	return err;
-}
-
 static void
 write_cur_buf(void)
 {
 	int ret;
 
-	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-
-	if (ret == -1)
-		dbprintf(_("incomplete write, block: %lld\n"),
-			 (iocur_base + iocur_sp)->bb);
-	else if (ret != 0)
+	ret = libxfs_writebufr(iocur_top->bp);
+	if (ret != 0)
 		dbprintf(_("write error: %s\n"), strerror(ret));
 
 	/* re-read buffer from disk */
-	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-	if (ret == -1)
-		dbprintf(_("incomplete read, block: %lld\n"),
-			 (iocur_base + iocur_sp)->bb);
-	else if (ret != 0)
+	ret = libxfs_readbufr(mp->m_ddev_targp, iocur_top->bb, iocur_top->bp,
+			      iocur_top->blen, 0);
+	if (ret != 0)
 		dbprintf(_("read error: %s\n"), strerror(ret));
-}
-
-static int
-write_bbs(
-	__int64_t       bbno,
-	int             count,
-	void            *bufp,
-	bbmap_t		*bbmap)
-{
-	int		j;
-	int		rval = EINVAL;	/* initialize for zero `count' case */
-
-	for (j = 0; j < count;) {
-		rval = write_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
-			     (char *)bufp + BBTOB(j));
-		if (rval)
-			break;
-
-		j += bbmap->b[j].bm_len;
-	}
-	return rval;
-}
-
-static int
-read_bbs(
-	__int64_t	bbno,
-	int		count,
-	void		**bufp,
-	bbmap_t		*bbmap)
-{
-	void		*buf;
-	int		j;
-	int		rval = EINVAL;
-
-	if (count <= 0)
-		count = 1;
-
-	if (*bufp == NULL)
-		buf = xmalloc(BBTOB(count));
-	else
-		buf = *bufp;
-	for (j = 0; j < count;) {
-		rval = read_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
-			     (char *)buf + BBTOB(j));
-		if (rval)
-			break;
-
-		j += bbmap->b[j].bm_len;
-	}
-	if (*bufp == NULL)
-		*bufp = buf;
-	return rval;
 }
 
 static void
@@ -528,21 +443,16 @@ write_cur_bbs(void)
 {
 	int ret;
 
-	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
-			&iocur_top->bbmap);
-	if (ret == -1)
-		dbprintf(_("incomplete write, block: %lld\n"),
-			 (iocur_base + iocur_sp)->bb);
-	else if (ret != 0)
+	ret = libxfs_writebufr(iocur_top->bp);
+	if (ret != 0)
 		dbprintf(_("write error: %s\n"), strerror(ret));
 
+
 	/* re-read buffer from disk */
-	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
-		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
-	if (ret == -1)
-		dbprintf(_("incomplete read, block: %lld\n"),
-			 (iocur_base + iocur_sp)->bb);
-	else if (ret != 0)
+	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp,
+				  iocur_top->bbmap->b, iocur_top->bbmap->nmaps,
+				  0);
+	if (ret != 0)
 		dbprintf(_("read error: %s\n"), strerror(ret));
 }
 
@@ -554,7 +464,7 @@ write_cur(void)
 		return;
 	}
 
-	if (iocur_top->use_bbmap)
+	if (iocur_top->bbmap)
 		write_cur_bbs();
 	else
 		write_cur_buf();
@@ -568,6 +478,7 @@ set_cur(
 	int             ring_flag,
 	bbmap_t		*bbmap)
 {
+	struct xfs_buf	*bp;
 	xfs_ino_t	dirino;
 	xfs_ino_t	ino;
 	__uint16_t	mode;
@@ -585,23 +496,28 @@ set_cur(
 
 	if (bbmap) {
 #ifdef DEBUG
+		int i;
 		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
+		printf(_("\tblock map"));
+		for (i = 0; i < bbmap->nmaps; i++)
+			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
+					   bbmap->b[i].bm_len);
+		printf("\n");
 #endif
-
-		if (read_bbs(d, c, &iocur_top->buf, bbmap))
+		iocur_top->bbmap = malloc(sizeof(struct bbmap));
+		if (!iocur_top->bbmap)
 			return;
-		iocur_top->bbmap = *bbmap;
-		iocur_top->use_bbmap = 1;
+		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
+		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+					bbmap->nmaps, 0, NULL);
 	} else {
-		if (!iocur_top->buf) {
-			iocur_top->buf = malloc(BBTOB(c));
-			if (!iocur_top->buf)
-				return;
-		}
-		if (read_buf(d, c, iocur_top->buf))
-			return;
-		iocur_top->use_bbmap = 0;
+		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
+		iocur_top->bbmap = NULL;
 	}
+	if (!bp || bp->b_error)
+		return;
+	iocur_top->buf = bp->b_addr;
+	iocur_top->bp = bp;
 
 	iocur_top->bb = d;
 	iocur_top->blen = c;

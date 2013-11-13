@@ -36,8 +36,8 @@ typedef struct iocur {
 	__uint16_t		mode;	/* current inode's mode */
 	xfs_off_t		off;	/* fs offset of "data" in bytes */
 	const struct typ	*typ;	/* type of "data" */
-	int			use_bbmap; /* set if bbmap is valid */
-	bbmap_t			bbmap;	/* map daddr if fragmented */
+	bbmap_t			*bbmap;	/* map daddr if fragmented */
+	struct xfs_buf		*bp;	/* underlying buffer */
 } iocur_t;
 
 #define DB_RING_ADD 1                   /* add to ring on set_cur */
