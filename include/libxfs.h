@@ -748,6 +748,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
 #define libxfs_idata_realloc		xfs_idata_realloc
 #define libxfs_idestroy_fork		xfs_idestroy_fork
 
+#define libxfs_dinode_verify		xfs_dinode_verify
+bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+		       struct xfs_dinode *dip);
+
 /* xfs_sb.h */
 #define libxfs_mod_sb			xfs_mod_sb
 #define libxfs_sb_from_disk		xfs_sb_from_disk

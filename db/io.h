@@ -38,6 +38,8 @@ typedef struct iocur {
 	const struct typ	*typ;	/* type of "data" */
 	bbmap_t			*bbmap;	/* map daddr if fragmented */
 	struct xfs_buf		*bp;	/* underlying buffer */
+	int			ino_crc_ok:1;
+	int			ino_buf:1;
 } iocur_t;
 
 #define DB_RING_ADD 1                   /* add to ring on set_cur */
@@ -62,5 +64,7 @@ extern void     ring_add(void);
 static inline bool
 iocur_crc_valid()
 {
-	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
+	return (iocur_top->bp &&
+		iocur_top->bp->b_error != EFSCORRUPTED &&
+		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
 }
