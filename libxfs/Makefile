@@ -29,6 +29,7 @@ CFILES = cache.c \
 	xfs_dir2_leaf.c \
 	xfs_dir2_node.c \
 	xfs_dir2_sf.c \
+	xfs_dquot_buf.c \
 	xfs_ialloc.c \
 	xfs_inode_buf.c \
 	xfs_inode_fork.c \

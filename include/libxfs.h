@@ -216,6 +216,15 @@ typedef struct xfs_mount {
 	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
+
+	/*
+	 * anonymous struct to allow xfs_dquot_buf.c to compile.
+	 * Pointer is always null in userspace, so code does not use it at all
+	 */
+	struct {
+		int	qi_dqperchunk;
+	}			*m_quotainfo;
+
 } xfs_mount_t;
 
 /*
