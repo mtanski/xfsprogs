@@ -466,7 +466,9 @@ write_cur(void)
 
 	if (iocur_top->ino_buf)
 		libxfs_dinode_calc_crc(mp, iocur_top->data);
-
+	if (iocur_top->dquot_buf)
+		xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
+				 XFS_DQUOT_CRC_OFF);
 	if (iocur_top->bbmap)
 		write_cur_bbs();
 	else
@@ -540,6 +542,7 @@ set_cur(
 	iocur_top->dirino = dirino;
 	iocur_top->mode = mode;
 	iocur_top->ino_buf = 0;
+	iocur_top->dquot_buf = 0;
 
 	/* store location in ring */
 	if (ring_flag)

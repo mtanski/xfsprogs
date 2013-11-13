@@ -40,6 +40,7 @@ typedef struct iocur {
 	struct xfs_buf		*bp;	/* underlying buffer */
 	int			ino_crc_ok:1;
 	int			ino_buf:1;
+	int			dquot_buf:1;
 } iocur_t;
 
 #define DB_RING_ADD 1                   /* add to ring on set_cur */
