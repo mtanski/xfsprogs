@@ -60,3 +60,5 @@ static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
 
 extern int	dir2_data_union_size(void *obj, int startoff, int idx);
 extern int	dir2_size(void *obj, int startoff, int idx);
+
+extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;

@@ -24,6 +24,7 @@
 #include "field.h"
 #include "dir2.h"
 #include "init.h"
+#include "output.h"
 
 static int	dir2_block_hdr_count(void *obj, int startoff);
 static int	dir2_block_leaf_count(void *obj, int startoff);
@@ -974,4 +975,64 @@ const field_t	da3_node_hdr_flds[] = {
 	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
 	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
 	{ NULL }
+};
+
+/*
+ * Special read verifier for directory buffers. Detect the magic number
+ * appropriately and set the correct verifier and call it.
+ */
+static void
+xfs_dir3_db_read_verify(
+	struct xfs_buf		*bp)
+{
+	__be32			magic32;
+	__be16			magic16;
+
+	magic32 = *(__be32 *)bp->b_addr;
+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
+
+	switch (magic32) {
+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+		bp->b_ops = &xfs_dir3_block_buf_ops;
+		goto verify;
+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+		bp->b_ops = &xfs_dir3_data_buf_ops;
+		goto verify;
+	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
+		bp->b_ops = &xfs_dir3_free_buf_ops;
+		goto verify;
+	default:
+		break;
+	}
+
+	switch (magic16) {
+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
+		break;
+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
+		break;
+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+		bp->b_ops = &xfs_da3_node_buf_ops;
+		break;
+	default:
+		dbprintf(_("Unknown directory buffer type!\n"));
+		xfs_buf_ioerror(bp, EFSCORRUPTED);
+		return;
+	}
+verify:
+	bp->b_ops->verify_read(bp);
+}
+
+static void
+xfs_dir3_db_write_verify(
+	struct xfs_buf		*bp)
+{
+	dbprintf(_("Writing unknown directory buffer type!\n"));
+	xfs_buf_ioerror(bp, EFSCORRUPTED);
+}
+
+const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
+	.verify_read = xfs_dir3_db_read_verify,
+	.verify_write = xfs_dir3_db_write_verify,
 };
