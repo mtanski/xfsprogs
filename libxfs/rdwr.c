@@ -754,7 +754,7 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
 		offset += len;
 	}
 
-	if (!error);
+	if (!error)
 		bp->b_flags |= LIBXFS_B_UPTODATE;
 #ifdef IO_DEBUG
 	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
