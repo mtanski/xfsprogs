@@ -90,7 +90,7 @@ usage(void)
 "  -v           Verbose output.\n"
 "  -c subopts   Change filesystem parameters - use xfs_admin.\n"
 "  -o subopts   Override default behaviour, refer to man page.\n"
-"  -t interval  Reporting interval in minutes.\n"
+"  -t interval  Reporting interval in seconds.\n"
 "  -d           Repair dangerously.\n"
 "  -V           Reports version and exits.\n"), progname);
 	exit(1);
