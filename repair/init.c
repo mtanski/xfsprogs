@@ -97,8 +97,17 @@ xfs_init(libxfs_init_t *args)
 	else
 		args->isreadonly = LIBXFS_EXCLUSIVELY;
 
-	if (!libxfs_init(args))
+	if (!libxfs_init(args)) {
+		/* would -d be an option? */
+		if (!no_modify && !dangerously) {
+			args->isreadonly = (LIBXFS_ISINACTIVE |
+					    LIBXFS_DANGEROUSLY);
+			if (libxfs_init(args))
+				fprintf(stderr,
+_("Unmount or use the dangerous (-d) option to repair a read-only mounted filesystem\n"));
+		}
 		do_error(_("couldn't initialize XFS library\n"));
+	}
 
 	ts_create();
 	increase_rlimit();
