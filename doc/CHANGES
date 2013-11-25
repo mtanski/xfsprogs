@@ -1,4 +1,4 @@
-xfsprogs-3.2.0-alpha2 (19 November 2013)
+xfsprogs-3.2.0-alpha2 (25 November 2013)
 	- Alpha release for the purpose of testing the CRC feature in
 	  kernels 3.10 and newer.
 	- Enable xfs_db write support and xfs_metadump support for CRC
