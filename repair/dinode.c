@@ -651,9 +651,10 @@ _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
 		}
 
 		if (blkmapp && *blkmapp) {
-			error = blkmap_set_ext(blkmapp, irec.br_startoff,
+			int	error2;
+			error2 = blkmap_set_ext(blkmapp, irec.br_startoff,
 					irec.br_startblock, irec.br_blockcount);
-			if (error) {
+			if (error2) {
 				/*
 				 * we don't want to clear the inode due to an
 				 * internal bmap tracking error, but if we've
@@ -665,7 +666,7 @@ _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
 				do_abort(
 _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
   "\t%s fork, off - %" PRIu64 ", start - %" PRIu64 ", cnt %" PRIu64 "\n"),
-					ino, strerror(error), forkname,
+					ino, strerror(error2), forkname,
 					irec.br_startoff, irec.br_startblock,
 					irec.br_blockcount);
 			}
