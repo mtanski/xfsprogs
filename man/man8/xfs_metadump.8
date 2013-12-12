@@ -4,7 +4,7 @@ xfs_metadump \- copy XFS filesystem metadata to a file
 .SH SYNOPSIS
 .B xfs_metadump
 [
-.B \-efgow
+.B \-efFgow
 ] [
 .B \-m
 .I max_extents
@@ -85,6 +85,11 @@ Specifies that the filesystem image to be processed is stored in a regular file
 file option). This can also happen if an image copy of a filesystem has
 been made into an ordinary file with
 .BR xfs_copy (8).
+.TP
+.B \-F
+Specifies that we want to continue even if the superblock magic is not correct.
+If the source is truly not an XFS filesystem, the resulting image will be useless,
+and xfs_metadump may crash.
 .TP
 .B \-g
 Shows dump progress. This is sent to stdout if the
