@@ -449,9 +449,7 @@ write_cur_bbs(void)
 
 
 	/* re-read buffer from disk */
-	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp,
-				  iocur_top->bbmap->b, iocur_top->bbmap->nmaps,
-				  0);
+	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp, 0);
 	if (ret != 0)
 		dbprintf(_("read error: %s\n"), strerror(ret));
 }

@@ -727,26 +727,18 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
 }
 
 int
-libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
-		    struct xfs_buf_map *map, int nmaps, int flags)
+libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
 {
 	int	fd = libxfs_device_to_fd(btp->dev);
 	int	error = 0;
 	char	*buf;
 	int	i;
 
-	ASSERT(BBTOB(len) <= bp->b_bcount);
-
-	ASSERT(bp->b_nmaps == nmaps);
-
 	fd = libxfs_device_to_fd(btp->dev);
 	buf = bp->b_addr;
 	for (i = 0; i < bp->b_nmaps; i++) {
 		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
 		int len = BBTOB(bp->b_map[i].bm_len);
-
-		ASSERT(bp->b_map[i].bm_bn == map[i].bm_bn);
-		ASSERT(bp->b_map[i].bm_len == map[i].bm_len);
 
 		error = __read_buf(fd, buf, len, offset, flags);
 		if (error) {
@@ -787,7 +779,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
 	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
 		return bp;
 
-	error = libxfs_readbufr_map(btp, bp, map, nmaps, flags);
+	error = libxfs_readbufr_map(btp, bp, flags);
 	if (!error) {
 		bp->b_flags |= LIBXFS_B_UPTODATE;
 		if (bp->b_ops)
