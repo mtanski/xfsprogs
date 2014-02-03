@@ -1111,24 +1111,11 @@ obfuscate_sf_attr(
 	}
 }
 
-/*
- * dir_data structure is used to track multi-fsblock dir2 blocks between extent
- * processing calls.
- */
-
-static struct dir_data_s {
-	int			end_of_data;
-	int			block_index;
-	int			offset_to_entry;
-	int			bad_block;
-} dir_data;
-
 static void
-obfuscate_dir_data_blocks(
-	char			*block,
-	xfs_dfiloff_t		offset,
-	xfs_dfilblks_t		count,
-	int			is_block_format)
+obfuscate_dir_data_block(
+	char		*block,
+	xfs_dfiloff_t	offset,
+	int		is_block_format)
 {
 	/*
 	 * we have to rely on the fileoffset and signature of the block to
@@ -1136,123 +1123,96 @@ obfuscate_dir_data_blocks(
 	 * for multi-fsblock dir blocks, if a name crosses an extent boundary,
 	 * ignore it and continue.
 	 */
-	int			c;
-	int			dir_offset;
-	char			*ptr;
-	char			*endptr;
+	int		dir_offset;
+	char		*ptr;
+	char		*endptr;
+	int		end_of_data;
+	int		wantmagic;
+	struct xfs_dir2_data_hdr *datahdr;
 
-	if (is_block_format && count != mp->m_dirblkfsbs)
-		return; /* too complex to handle this rare case */
+	datahdr = (struct xfs_dir2_data_hdr *)block;
 
-	for (c = 0, endptr = block; c < count; c++) {
+	if (offset % mp->m_dirblkfsbs != 0)
+		return;	/* corrupted, leave it alone */
 
-		if (dir_data.block_index == 0) {
-			int		wantmagic;
-			struct xfs_dir2_data_hdr *datahdr;
+	if (is_block_format) {
+		xfs_dir2_leaf_entry_t	*blp;
+		xfs_dir2_block_tail_t	*btp;
 
-			datahdr = (struct xfs_dir2_data_hdr *)block;
+		btp = xfs_dir2_block_tail_p(mp, datahdr);
+		blp = xfs_dir2_block_leaf_p(btp);
+		if ((char *)blp > (char *)btp)
+			blp = (xfs_dir2_leaf_entry_t *)btp;
 
-			if (offset % mp->m_dirblkfsbs != 0)
-				return;	/* corrupted, leave it alone */
+		end_of_data = (char *)blp - block;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			wantmagic = XFS_DIR3_BLOCK_MAGIC;
+		else
+			wantmagic = XFS_DIR2_BLOCK_MAGIC;
+	} else { /* leaf/node format */
+		end_of_data = mp->m_dirblkfsbs << mp->m_sb.sb_blocklog;
+		if (xfs_sb_version_hascrc(&mp->m_sb))
+			wantmagic = XFS_DIR3_DATA_MAGIC;
+		else
+			wantmagic = XFS_DIR2_DATA_MAGIC;
+	}
 
-			dir_data.bad_block = 0;
+	if (be32_to_cpu(datahdr->magic) != wantmagic) {
+		if (show_warnings)
+			print_warning(
+		"invalid magic in dir inode %llu block %ld",
+					(long long)cur_ino, (long)offset);
+		return;
+	}
 
-			if (is_block_format) {
-				xfs_dir2_leaf_entry_t	*blp;
-				xfs_dir2_block_tail_t	*btp;
+	dir_offset = xfs_dir3_data_entry_offset(datahdr);
+	ptr = block + dir_offset;
+	endptr = block + mp->m_sb.sb_blocksize;
 
-				btp = xfs_dir2_block_tail_p(mp, datahdr);
-				blp = xfs_dir2_block_leaf_p(btp);
-				if ((char *)blp > (char *)btp)
-					blp = (xfs_dir2_leaf_entry_t *)btp;
+	while (ptr < endptr && dir_offset < end_of_data) {
+		xfs_dir2_data_entry_t	*dep;
+		xfs_dir2_data_unused_t	*dup;
+		int			length;
 
-				dir_data.end_of_data = (char *)blp - block;
-				wantmagic = XFS_DIR2_BLOCK_MAGIC;
-			} else { /* leaf/node format */
-				dir_data.end_of_data = mp->m_dirblkfsbs <<
-						mp->m_sb.sb_blocklog;
-				wantmagic = XFS_DIR2_DATA_MAGIC;
-			}
-			dir_data.offset_to_entry =
-					xfs_dir3_data_entry_offset(datahdr);
+		dup = (xfs_dir2_data_unused_t *)ptr;
 
-			if (be32_to_cpu(datahdr->magic) != wantmagic) {
+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+			int	length = be16_to_cpu(dup->length);
+			if (dir_offset + length > end_of_data ||
+			    !length || (length & (XFS_DIR2_DATA_ALIGN - 1))) {
 				if (show_warnings)
-					print_warning("invalid magic in dir "
-						"inode %llu block %ld",
-						(long long)cur_ino,
-						(long)offset);
-				dir_data.bad_block = 1;
-			}
-		}
-		dir_data.block_index++;
-		if (dir_data.block_index == mp->m_dirblkfsbs)
-			dir_data.block_index = 0;
-
-		if (dir_data.bad_block)
-			continue;
-
-		dir_offset = (dir_data.block_index << mp->m_sb.sb_blocklog) +
-				dir_data.offset_to_entry;
-
-		ptr = endptr + dir_data.offset_to_entry;
-		endptr += mp->m_sb.sb_blocksize;
-
-		while (ptr < endptr && dir_offset < dir_data.end_of_data) {
-			xfs_dir2_data_entry_t	*dep;
-			xfs_dir2_data_unused_t	*dup;
-			int			length;
-
-			dup = (xfs_dir2_data_unused_t *)ptr;
-
-			if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-				int	length = be16_to_cpu(dup->length);
-				if (dir_offset + length > dir_data.end_of_data ||
-						length == 0 || (length &
-						 (XFS_DIR2_DATA_ALIGN - 1))) {
-					if (show_warnings)
-						print_warning("invalid length "
-							"for dir free space in "
-							"inode %llu",
-							(long long)cur_ino);
-					dir_data.bad_block = 1;
-					break;
-				}
-				if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
-						dir_offset) {
-					dir_data.bad_block = 1;
-					break;
-				}
-				dir_offset += length;
-				ptr += length;
-				if (dir_offset >= dir_data.end_of_data ||
-						ptr >= endptr)
-					break;
-			}
-
-			dep = (xfs_dir2_data_entry_t *)ptr;
-			length = xfs_dir3_data_entsize(mp, dep->namelen);
-
-			if (dir_offset + length > dir_data.end_of_data ||
-					ptr + length > endptr) {
-				if (show_warnings)
-					print_warning("invalid length for "
-						"dir entry name in inode %llu",
+					print_warning(
+			"invalid length for dir free space in inode %llu",
 						(long long)cur_ino);
-				break;
+				return;
 			}
-			if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
-					dir_offset) {
-				dir_data.bad_block = 1;
-				break;
-			}
-			generate_obfuscated_name(be64_to_cpu(dep->inumber),
-					dep->namelen, &dep->name[0]);
+			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+					dir_offset)
+				return;
 			dir_offset += length;
 			ptr += length;
+			if (dir_offset >= end_of_data || ptr >= endptr)
+				return;
 		}
-		dir_data.offset_to_entry = dir_offset &
-						(mp->m_sb.sb_blocksize - 1);
+
+		dep = (xfs_dir2_data_entry_t *)ptr;
+		length = xfs_dir3_data_entsize(mp, dep->namelen);
+
+		if (dir_offset + length > end_of_data ||
+		    ptr + length > endptr) {
+			if (show_warnings)
+				print_warning(
+			"invalid length for dir entry name in inode %llu",
+					(long long)cur_ino);
+			return;
+		}
+		if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
+				dir_offset)
+			return;
+		generate_obfuscated_name(be64_to_cpu(dep->inumber),
+					 dep->namelen, &dep->name[0]);
+		dir_offset += length;
+		ptr += length;
 	}
 }
 
@@ -1399,8 +1359,8 @@ process_single_fsb_objects(
 			if (o >= mp->m_dirleafblk)
 				break;
 
-			obfuscate_dir_data_blocks(dp, o, 1,
-						  last == mp->m_dirblkfsbs);
+			obfuscate_dir_data_block(dp, o,
+						 last == mp->m_dirblkfsbs);
 			break;
 		case TYP_SYMLINK:
 			obfuscate_symlink_block(dp);
@@ -1421,6 +1381,12 @@ out_pop:
 	return ret;
 }
 
+/*
+ * Static map to aggregate multiple extents into a single directory block.
+ */
+static struct bbmap mfsb_map;
+static int mfsb_length;
+
 static int
 process_multi_fsb_objects(
 	xfs_dfiloff_t	o,
@@ -1439,33 +1405,54 @@ process_multi_fsb_objects(
 		return -EINVAL;
 	}
 
-	push_cur();
-	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-			DB_RING_IGN, NULL);
+	while (c > 0) {
+		unsigned int	bm_len;
 
-	if (!iocur_top->data) {
-		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
+		if (mfsb_length + c >= mp->m_dirblkfsbs) {
+			bm_len = mp->m_dirblkfsbs - mfsb_length;
+			mfsb_length = 0;
+		} else {
+			mfsb_length += c;
+			bm_len = c;
+		}
 
-		print_warning("cannot read %s block %u/%u (%llu)",
-				typtab[btype].name, agno, agbno, s);
-		if (stop_on_read_error)
-			ret = -EIO;
-		goto out_pop;
+		mfsb_map.b[mfsb_map.nmaps].bm_bn = XFS_FSB_TO_DADDR(mp, s);
+		mfsb_map.b[mfsb_map.nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
+		mfsb_map.nmaps++;
 
-	}
+		if (mfsb_length == 0) {
+			push_cur();
+			set_cur(&typtab[btype], 0, 0, DB_RING_IGN, &mfsb_map);
+			if (!iocur_top->data) {
+				xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
+				xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
 
-	if (dont_obfuscate || o >= mp->m_dirleafblk) {
-		ret = write_buf(iocur_top);
-		goto out_pop;
-	}
+				print_warning("cannot read %s block %u/%u (%llu)",
+						typtab[btype].name, agno, agbno, s);
+				if (stop_on_read_error)
+					ret = -1;
+				goto out_pop;
 
-	obfuscate_dir_data_blocks(iocur_top->data, o, c,
-				 last == mp->m_dirblkfsbs);
-	ret = write_buf(iocur_top);
+			}
 
+			if (dont_obfuscate || o >= mp->m_dirleafblk) {
+				ret = write_buf(iocur_top);
+				goto out_pop;
+			}
+
+			obfuscate_dir_data_block(iocur_top->data, o,
+						  last == mp->m_dirblkfsbs);
+			ret = write_buf(iocur_top);
 out_pop:
-	pop_cur();
+			pop_cur();
+			mfsb_map.nmaps = 0;
+			if (ret)
+				break;
+		}
+		c -= bm_len;
+		s += bm_len;
+	}
+
 	return ret;
 }
 
@@ -1749,7 +1736,6 @@ process_inode(
 	/* copy appropriate data fork metadata */
 	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
 		case S_IFDIR:
-			memset(&dir_data, 0, sizeof(dir_data));
 			success = process_inode_data(dip, TYP_DIR2);
 			break;
 		case S_IFLNK:
