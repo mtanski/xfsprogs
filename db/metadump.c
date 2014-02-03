@@ -1361,8 +1361,81 @@ obfuscate_attr_blocks(
 	}
 }
 
-/* inode copy routines */
+static int
+process_single_fsb_objects(
+	xfs_dfiloff_t	o,
+	xfs_dfsbno_t	s,
+	xfs_dfilblks_t	c,
+	typnm_t		btype,
+	xfs_dfiloff_t	last)
+{
+	int		ret = 0;
 
+	push_cur();
+	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
+			DB_RING_IGN, NULL);
+
+	if (!iocur_top->data) {
+		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
+		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
+
+		print_warning("cannot read %s block %u/%u (%llu)",
+				typtab[btype].name, agno, agbno, s);
+		if (stop_on_read_error)
+			ret = -EIO;
+		goto out_pop;
+
+	}
+
+	if (dont_obfuscate) {
+		ret = write_buf(iocur_top);
+		goto out_pop;
+	}
+
+	switch (btype) {
+	case TYP_DIR2:
+		if (o >= mp->m_dirleafblk)
+			break;
+
+		obfuscate_dir_data_blocks(iocur_top->data, o, c,
+					 last == mp->m_dirblkfsbs);
+		break;
+	case TYP_SYMLINK:
+		obfuscate_symlink_blocks(iocur_top->data, c);
+		break;
+	case TYP_ATTR:
+		obfuscate_attr_blocks(iocur_top->data, o, c);
+		break;
+	default:
+		break;
+	}
+	ret = write_buf(iocur_top);
+
+out_pop:
+	pop_cur();
+	return ret;
+}
+
+static int
+process_multi_fsb_objects(
+	xfs_dfiloff_t	o,
+	xfs_dfsbno_t	s,
+	xfs_dfilblks_t	c,
+	typnm_t		btype,
+	xfs_dfiloff_t	last)
+{
+	switch (btype) {
+	case TYP_DIR2:
+		break;
+	default:
+		print_warning("bad type for multi-fsb object %d", btype);
+		return -EINVAL;
+	}
+
+	return process_single_fsb_objects(o, s, c, btype, last);
+}
+
+/* inode copy routines */
 static int
 process_bmbt_reclist(
 	xfs_bmbt_rec_t 		*rp,
@@ -1377,6 +1450,7 @@ process_bmbt_reclist(
 	xfs_dfiloff_t		last;
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
+	int			error;
 
 	if (btype == TYP_DATA)
 		return 1;
@@ -1438,44 +1512,14 @@ process_bmbt_reclist(
 			break;
 		}
 
-		push_cur();
-		set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-				DB_RING_IGN, NULL);
-		if (iocur_top->data == NULL) {
-			print_warning("cannot read %s block %u/%u (%llu)",
-					typtab[btype].name, agno, agbno, s);
-			if (stop_on_read_error) {
-				pop_cur();
-				return 0;
-			}
+		/* multi-extent blocks require special handling */
+		if (btype != TYP_DIR2 || mp->m_dirblkfsbs == 1) {
+			error = process_single_fsb_objects(o, s, c, btype, last);
 		} else {
-			if (!dont_obfuscate)
-			    switch (btype) {
-				case TYP_DIR2:
-					if (o < mp->m_dirleafblk)
-						obfuscate_dir_data_blocks(
-							iocur_top->data, o, c,
-							last == mp->m_dirblkfsbs);
-					break;
-
-				case TYP_SYMLINK:
-					obfuscate_symlink_blocks(
-						iocur_top->data, c);
-					break;
-
-				case TYP_ATTR:
-					obfuscate_attr_blocks(iocur_top->data,
-						o, c);
-					break;
-
-				default: ;
-			    }
-			if (write_buf(iocur_top)) {
-				pop_cur();
-				return 0;
-			}
+			error = process_multi_fsb_objects(o, s, c, btype, last);
 		}
-		pop_cur();
+		if (error)
+			return 0;
 	}
 
 	return 1;
