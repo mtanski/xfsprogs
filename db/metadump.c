@@ -166,12 +166,34 @@ write_index(void)
 	return 0;
 }
 
+/*
+ * Return 0 for success, -errno for failure.
+ */
+static int
+write_buf_segment(
+	char		*data,
+	__int64_t	off,
+	int		len)
+{
+	int		i;
+	int		ret;
+
+	for (i = 0; i < len; i++, off++, data += BBSIZE) {
+		block_index[cur_index] = cpu_to_be64(off);
+		memcpy(&block_buffer[cur_index << BBSHIFT], data, BBSIZE);
+		if (++cur_index == num_indicies) {
+			ret = write_index();
+			if (ret)
+				return -EIO;
+		}
+	}
+	return 0;
+}
+
 static int
 write_buf(
 	iocur_t		*buf)
 {
-	char		*data;
-	__int64_t	off;
 	int		i;
 	int		ret;
 
@@ -191,15 +213,20 @@ write_buf(
 		}
 	}
 
-	for (i = 0, off = buf->bb, data = buf->data;
-			i < buf->blen;
-			i++, off++, data += BBSIZE) {
-		block_index[cur_index] = cpu_to_be64(off);
-		memcpy(&block_buffer[cur_index << BBSHIFT], data, BBSIZE);
-		if (++cur_index == num_indicies) {
-			ret = write_index();
+	/* handle discontiguous buffers */
+	if (!buf->bbmap) {
+		ret = write_buf_segment(buf->data, buf->bb, buf->blen);
+		if (ret)
+			return ret;
+	} else {
+		int	len = 0;
+		for (i = 0; i < buf->bbmap->nmaps; i++) {
+			ret = write_buf_segment(buf->data + BBTOB(len),
+						buf->bbmap->b[i].bm_bn,
+						buf->bbmap->b[i].bm_len);
 			if (ret)
 				return ret;
+			len += buf->bbmap->b[i].bm_len;
 		}
 	}
 	return seenint() ? -EINTR : 0;
