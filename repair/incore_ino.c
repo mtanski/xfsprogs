@@ -211,6 +211,21 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
 	return 0;
 }
 
+static __uint8_t *
+alloc_ftypes_array(
+	struct xfs_mount *mp)
+{
+	__uint8_t	*ptr;
+
+	if (!xfs_sb_version_hasftype(&mp->m_sb))
+		return NULL;
+
+	ptr = calloc(XFS_INODES_PER_CHUNK, sizeof(*ptr));
+	if (!ptr)
+		do_error(_("could not allocate ftypes array\n"));
+	return ptr;
+}
+
 /*
  * Next is the uncertain inode list -- a sorted (in ascending order)
  * list of inode records sorted on the starting inode number.  There
@@ -226,6 +241,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
  */
 static struct ino_tree_node *
 alloc_ino_node(
+	struct xfs_mount	*mp,
 	xfs_agino_t		starting_ino)
 {
 	struct ino_tree_node 	*irec;
@@ -245,6 +261,7 @@ alloc_ino_node(
 	irec->ino_un.ex_data = NULL;
 	irec->nlink_size = sizeof(__uint8_t);
 	irec->disk_nlinks.un8 = alloc_nlink_array(irec->nlink_size);
+	irec->ftypes = alloc_ftypes_array(mp);
 	return irec;
 }
 
@@ -285,6 +302,7 @@ free_ino_tree_node(
 
 	}
 
+	free(irec->ftypes);
 	free(irec);
 }
 
@@ -303,7 +321,11 @@ static ino_tree_node_t **last_rec;
  * free is set to 1 if the inode is thought to be free, 0 if used
  */
 void
-add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
+add_aginode_uncertain(
+	struct xfs_mount	*mp,
+	xfs_agnumber_t		agno,
+	xfs_agino_t		ino,
+	int			free)
 {
 	ino_tree_node_t		*ino_rec;
 	xfs_agino_t		s_ino;
@@ -334,7 +356,7 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 	ino_rec = (ino_tree_node_t *)
 		avl_findrange(inode_uncertain_tree_ptrs[agno], s_ino);
 	if (!ino_rec) {
-		ino_rec = alloc_ino_node(s_ino);
+		ino_rec = alloc_ino_node(mp, s_ino);
 
 		if (!avl_insert(inode_uncertain_tree_ptrs[agno],
 				&ino_rec->avl_node))
@@ -360,7 +382,7 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
 void
 add_inode_uncertain(xfs_mount_t *mp, xfs_ino_t ino, int free)
 {
-	add_aginode_uncertain(XFS_INO_TO_AGNO(mp, ino),
+	add_aginode_uncertain(mp, XFS_INO_TO_AGNO(mp, ino),
 				XFS_INO_TO_AGINO(mp, ino), free);
 }
 
@@ -432,7 +454,7 @@ add_inode(
 {
 	struct ino_tree_node	*irec;
 
-	irec = alloc_ino_node(agino);
+	irec = alloc_ino_node(mp, agino);
 	if (!avl_insert(inode_tree_ptrs[agno],	&irec->avl_node))
 		do_warn(_("add_inode - duplicate inode range\n"));
 	return irec;

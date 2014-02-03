@@ -134,7 +134,8 @@ dir_hash_add(
 	__uint32_t		addr,
 	xfs_ino_t		inum,
 	int			namelen,
-	unsigned char		*name)
+	unsigned char		*name,
+	__uint8_t		ftype)
 {
 	xfs_dahash_t		hash = 0;
 	int			byaddr;
@@ -148,6 +149,7 @@ dir_hash_add(
 
 	xname.name = name;
 	xname.len = namelen;
+	xname.type = ftype;
 
 	junk = name[0] == '/';
 	byaddr = DIR_HASH_FUNC(hashtab, addr);
@@ -310,6 +312,23 @@ dir_hash_see(
 		return DIR_HASH_CK_OK;
 	}
 	return DIR_HASH_CK_NODATA;
+}
+
+static void
+dir_hash_update_ftype(
+	dir_hash_tab_t		*hashtab,
+	xfs_dir2_dataptr_t	addr,
+	__uint8_t		ftype)
+{
+	int			i;
+	dir_hash_ent_t		*p;
+
+	i = DIR_HASH_FUNC(hashtab, addr);
+	for (p = hashtab->byaddr[i]; p; p = p->nextbyaddr) {
+		if (p->address != addr)
+			continue;
+		p->name.type = ftype;
+	}
 }
 
 /*
@@ -1685,11 +1704,12 @@ longform_dir2_entry_check_data(
 			if (!orphanage_ino)
 				orphanage_ino = inum;
 		}
+
 		/*
 		 * check for duplicate names in directory.
 		 */
 		if (!dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
-							dep->name)) {
+				dep->name, xfs_dir3_dirent_get_ftype(mp, dep))) {
 			nbad++;
 			if (entry_junked(
 	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
@@ -1763,6 +1783,35 @@ longform_dir2_entry_check_data(
 		 */
 		if (no_modify && verify_inum(mp, inum))
 			continue;
+
+		/* validate ftype field if supported */
+		if (xfs_sb_version_hasftype(&mp->m_sb)) {
+			__uint8_t dir_ftype;
+			__uint8_t ino_ftype;
+
+			dir_ftype = xfs_dir3_dirent_get_ftype(mp, dep);
+			ino_ftype = get_inode_ftype(irec, ino_offset);
+
+			if (dir_ftype != ino_ftype) {
+				if (no_modify) {
+					do_warn(
+	_("would fix ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
+						dir_ftype, ino_ftype,
+						ip->i_ino, inum);
+				} else {
+					do_warn(
+	_("fixing ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
+						dir_ftype, ino_ftype,
+						ip->i_ino, inum);
+					xfs_dir3_dirent_put_ftype(mp, dep,
+								ino_ftype);
+					libxfs_dir2_data_log_entry(tp, bp, dep);
+					dir_hash_update_ftype(hashtab, addr,
+							      ino_ftype);
+				}
+			}
+		}
+
 		/*
 		 * check easy case first, regular inode, just bump
 		 * the link count and continue
@@ -2189,6 +2238,62 @@ out_fix:
  * shortform directory v2 processing routines -- entry verification and
  * bad entry deletion (pruning).
  */
+static struct xfs_dir2_sf_entry *
+shortform_dir2_junk(
+	struct xfs_mount	*mp,
+	struct xfs_dir2_sf_hdr	*sfp,
+	struct xfs_dir2_sf_entry *sfep,
+	xfs_ino_t		lino,
+	int			*max_size,
+	int			*index,
+	int			*bytes_deleted,
+	int			*ino_dirty)
+{
+	struct xfs_dir2_sf_entry *next_sfep;
+	int			next_len;
+	int			next_elen;
+
+	if (lino == orphanage_ino)
+		orphanage_ino = 0;
+
+	next_elen = xfs_dir3_sf_entsize(mp, sfp, sfep->namelen);
+	next_sfep = (xfs_dir2_sf_entry_t *)((__psint_t)sfep + next_elen);
+
+	/*
+	 * if we are just checking, simply return the pointer to the next entry
+	 * here so that the checking loop can continue.
+	 */
+	if (no_modify) {
+		do_warn(_("would junk entry\n"));
+		return next_sfep;
+	}
+
+	/*
+	 * now move all the remaining entries down over the junked entry and
+	 * clear the newly unused bytes at the tail of the directory region.
+	 */
+	next_len = *max_size - ((__psint_t)next_sfep - (__psint_t)sfp);
+	*max_size -= next_elen;
+	*bytes_deleted += next_elen;
+
+	memmove(sfep, next_sfep, next_len);
+	memset((void *)((__psint_t)sfep + next_len), 0, next_elen);
+	sfp->count -= 1;
+	*ino_dirty = 1;
+
+	/*
+	 * WARNING:  drop the index i by one so it matches the decremented count
+	 * for accurate comparisons in the loop test
+	 */
+	(*index)--;
+
+	if (verbose)
+		do_warn(_("junking entry\n"));
+	else
+		do_warn("\n");
+	return sfep;
+}
+
 static void
 shortform_dir2_entry_check(xfs_mount_t	*mp,
 			xfs_ino_t	ino,
@@ -2201,15 +2306,13 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	xfs_ino_t		lino;
 	xfs_ino_t		parent;
 	struct xfs_dir2_sf_hdr	*sfp;
-	xfs_dir2_sf_entry_t	*sfep, *next_sfep, *tmp_sfep;
-	xfs_ifork_t		*ifp;
-	ino_tree_node_t		*irec;
+	struct xfs_dir2_sf_entry *sfep;
+	struct xfs_dir2_sf_entry *next_sfep;
+	struct xfs_ifork	*ifp;
+	struct ino_tree_node	*irec;
 	int			max_size;
 	int			ino_offset;
 	int			i;
-	int			junkit;
-	int			tmp_len;
-	int			tmp_elen;
 	int			bad_sfnamelen;
 	int			namelen;
 	int			bytes_deleted;
@@ -2266,9 +2369,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 	for (i = 0; i < sfp->count && max_size >
 					(__psint_t)next_sfep - (__psint_t)sfp;
 			sfep = next_sfep, i++)  {
-		junkit = 0;
 		bad_sfnamelen = 0;
-		tmp_sfep = NULL;
 
 		lino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
 
@@ -2340,7 +2441,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			do_warn(
 	_("entry \"%s\" in shortform directory %" PRIu64 " references non-existent inode %" PRIu64 "\n"),
 				fname, ino, lino);
-			goto do_junkit;
+			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
+						&max_size, &i, &bytes_deleted,
+						ino_dirty);
+			continue;
 		}
 
 		ino_offset = XFS_INO_TO_AGINO(mp, lino) - irec->ino_startnum;
@@ -2354,7 +2458,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 			do_warn(
 	_("entry \"%s\" in shortform directory inode %" PRIu64 " points to free inode %" PRIu64 "\n"),
 				fname, ino, lino);
-			goto do_junkit;
+			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
+						&max_size, &i, &bytes_deleted,
+						ino_dirty);
+			continue;
 		}
 		/*
 		 * check if this inode is lost+found dir in the root
@@ -2367,7 +2474,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 				do_warn(
 	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory"),
 					ORPHANAGE, lino, ino);
-				goto do_junkit;
+				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+						lino, &max_size, &i,
+						&bytes_deleted, ino_dirty);
+				continue;
 			}
 			/*
 			 * if this is a dup, it will be picked up below,
@@ -2381,11 +2491,15 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
 		 */
 		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
 				(sfep - xfs_dir2_sf_firstentry(sfp)),
-				lino, sfep->namelen, sfep->name)) {
+				lino, sfep->namelen, sfep->name,
+				xfs_dir3_sfe_get_ftype(mp, sfp, sfep))) {
 			do_warn(
 _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
 				fname, lino, ino);
-			goto do_junkit;
+			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
+						&max_size, &i, &bytes_deleted,
+						ino_dirty);
+			continue;
 		}
 
 		if (!inode_isadir(irec, ino_offset))  {
@@ -2403,11 +2517,14 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
 			 * the .. in the child, blow out the entry
 			 */
 			if (is_inode_reached(irec, ino_offset))  {
-				junkit = 1;
 				do_warn(
 	_("entry \"%s\" in directory inode %" PRIu64
 	  " references already connected inode %" PRIu64 ".\n"),
 					fname, ino, lino);
+				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+						lino, &max_size, &i,
+						&bytes_deleted, ino_dirty);
+				continue;
 			} else if (parent == ino)  {
 				add_inode_reached(irec, ino_offset);
 				add_inode_ref(current_irec, current_ino_offset);
@@ -2423,76 +2540,60 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
 				add_dotdot_update(XFS_INO_TO_AGNO(mp, lino),
 							irec, ino_offset);
 			} else  {
-				junkit = 1;
 				do_warn(
 	_("entry \"%s\" in directory inode %" PRIu64
 	  " not consistent with .. value (%" PRIu64
 	  ") in inode %" PRIu64 ",\n"),
 					fname, ino, parent, lino);
+				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+						lino, &max_size, &i,
+						&bytes_deleted, ino_dirty);
+				continue;
 			}
 		}
 
-		if (junkit)  {
-do_junkit:
-			if (lino == orphanage_ino)
-				orphanage_ino = 0;
-			if (!no_modify)  {
-				tmp_elen = xfs_dir3_sf_entsize(mp, sfp,
-								sfep->namelen);
-				tmp_sfep = (xfs_dir2_sf_entry_t *)
-					((__psint_t) sfep + tmp_elen);
-				tmp_len = max_size - ((__psint_t) tmp_sfep
-							- (__psint_t) sfp);
-				max_size -= tmp_elen;
-				bytes_deleted += tmp_elen;
+		/* validate ftype field if supported */
+		if (xfs_sb_version_hasftype(&mp->m_sb)) {
+			__uint8_t dir_ftype;
+			__uint8_t ino_ftype;
 
-				memmove(sfep, tmp_sfep, tmp_len);
+			dir_ftype = xfs_dir3_sfe_get_ftype(mp, sfp, sfep);
+			ino_ftype = get_inode_ftype(irec, ino_offset);
 
-				sfp->count -= 1;
-				memset((void *)((__psint_t)sfep + tmp_len), 0,
-						tmp_elen);
-
-				/*
-				 * set the tmp value to the current
-				 * pointer so we'll process the entry
-				 * we just moved up
-				 */
-				tmp_sfep = sfep;
-
-				/*
-				 * WARNING:  drop the index i by one
-				 * so it matches the decremented count for
-				 * accurate comparisons in the loop test
-				 */
-				i--;
-
-				*ino_dirty = 1;
-
-				if (verbose)
-					do_warn(_("junking entry\n"));
-				else
-					do_warn("\n");
-			} else  {
-				do_warn(_("would junk entry\n"));
+			if (dir_ftype != ino_ftype) {
+				if (no_modify) {
+					do_warn(
+	_("would fix ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
+						dir_ftype, ino_ftype,
+						ino, lino);
+				} else {
+					do_warn(
+	_("fixing ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
+						dir_ftype, ino_ftype,
+						ino, lino);
+					xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
+								ino_ftype);
+					dir_hash_update_ftype(hashtab,
+			(xfs_dir2_dataptr_t)(sfep - xfs_dir2_sf_firstentry(sfp)),
+							      ino_ftype);
+					*ino_dirty = 1;
+				}
 			}
-		} else if (lino > XFS_DIR2_MAX_SHORT_INUM)
+		}
+
+		if (lino > XFS_DIR2_MAX_SHORT_INUM)
 			i8++;
 
 		/*
-		 * go onto next entry unless we've just junked an
-		 * entry in which the current entry pointer points
-		 * to an unprocessed entry.  have to take into entries
-		 * with bad namelen into account in no modify mode since we
-		 * calculate size based on next_sfep.
+		 * go onto next entry - we have to take entries with bad namelen
+		 * into account in no modify mode since we calculate size based
+		 * on next_sfep.
 		 */
 		ASSERT(no_modify || bad_sfnamelen == 0);
-
-		next_sfep = (tmp_sfep == NULL)
-			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
-							+ ((!bad_sfnamelen)
-				? xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
-				: xfs_dir3_sf_entsize(mp, sfp, namelen)))
-			: tmp_sfep;
+		next_sfep = (struct xfs_dir2_sf_entry *)((__psint_t)sfep +
+			      (bad_sfnamelen
+				? xfs_dir3_sf_entsize(mp, sfp, namelen)
+				: xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)));
 	}
 
 	if (sfp->i8count != i8) {
@@ -2501,6 +2602,8 @@ do_junkit:
 				ino);
 		} else {
 			if (i8 == 0) {
+				struct xfs_dir2_sf_entry *tmp_sfep;
+
 				tmp_sfep = next_sfep;
 				process_sf_dir2_fixi8(mp, sfp, &tmp_sfep);
 				bytes_deleted +=
@@ -2518,8 +2621,7 @@ do_junkit:
 	/*
 	 * sync up sizes if required
 	 */
-	if (*ino_dirty)  {
-		ASSERT(bytes_deleted > 0);
+	if (*ino_dirty && bytes_deleted > 0)  {
 		ASSERT(!no_modify);
 		libxfs_idata_realloc(ip, -bytes_deleted, XFS_DATA_FORK);
 		ip->i_d.di_size -= bytes_deleted;

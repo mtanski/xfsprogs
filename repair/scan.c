@@ -866,9 +866,9 @@ _("inode rec for ino %" PRIu64 " (%d/%d) overlaps existing rec (start %d/%d)\n")
 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
 			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
 				nfree++;
-				add_aginode_uncertain(agno, ino + j, 1);
+				add_aginode_uncertain(mp, agno, ino + j, 1);
 			} else  {
-				add_aginode_uncertain(agno, ino + j, 0);
+				add_aginode_uncertain(mp, agno, ino + j, 0);
 			}
 		}
 	}

@@ -57,6 +57,9 @@ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
 extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
 				struct xfs_name *name, uint resblks);
 
+#define S_SHIFT 12
+extern const unsigned char xfs_mode_to_ftype[];
+
 /*
  * Direct call from the bmap code, bypassing the generic directory layer.
  */

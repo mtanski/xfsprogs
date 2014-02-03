@@ -293,6 +293,7 @@ typedef struct ino_tree_node  {
 		ino_ex_data_t	*ex_data;	/* phases 6,7 */
 		parent_list_t	*plist;		/* phases 2-5 */
 	} ino_un;
+	__uint8_t		*ftypes;	/* phases 3,6 */
 } ino_tree_node_t;
 
 #define INOS_PER_IREC	(sizeof(__uint64_t) * NBBY)
@@ -359,7 +360,8 @@ ino_tree_node_t		*find_uncertain_inode_rec(xfs_agnumber_t agno,
 						xfs_agino_t ino);
 void			add_inode_uncertain(xfs_mount_t *mp,
 						xfs_ino_t ino, int free);
-void			add_aginode_uncertain(xfs_agnumber_t agno,
+void			add_aginode_uncertain(struct xfs_mount *mp,
+						xfs_agnumber_t agno,
 						xfs_agino_t agino, int free);
 void			get_uncertain_inode_rec(struct xfs_mount *mp,
 						xfs_agnumber_t agno,
@@ -473,6 +475,29 @@ static inline void add_inode_reached(struct ino_tree_node *irec, int offset)
 {
 	add_inode_ref(irec, offset);
 	irec->ino_un.ex_data->ino_reached |= IREC_MASK(offset);
+}
+
+/*
+ * get/set inode filetype. Only used if the superblock feature bit is set
+ * which allocates irec->ftypes.
+ */
+static inline void
+set_inode_ftype(struct ino_tree_node *irec,
+	int		ino_offset,
+	__uint8_t	ftype)
+{
+	if (irec->ftypes)
+		irec->ftypes[ino_offset] = ftype;
+}
+
+static inline __uint8_t
+get_inode_ftype(
+	struct ino_tree_node *irec,
+	int		ino_offset)
+{
+	if (!irec->ftypes)
+		return XFS_DIR3_FT_UNKNOWN;
+	return irec->ftypes[ino_offset];
 }
 
 /*
