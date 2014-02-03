@@ -511,7 +511,7 @@ libxfs_trans_get_buf_map(
 	xfs_buf_log_item_t	*bip;
 
 	if (tp == NULL)
-		return libxfs_getbuf_map(btp, map, nmaps);
+		return libxfs_getbuf_map(btp, map, nmaps, 0);
 
 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
 	if (bp != NULL) {
@@ -522,7 +522,7 @@ libxfs_trans_get_buf_map(
 		return bp;
 	}
 
-	bp = libxfs_getbuf_map(btp, map, nmaps);
+	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
 	if (bp == NULL)
 		return NULL;
 #ifdef XACT_DEBUG

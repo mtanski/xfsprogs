@@ -203,7 +203,8 @@ xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
 				int, int, const struct xfs_buf_ops *);
 int		libxfs_writebuf(xfs_buf_t *, int);
 xfs_buf_t	*libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
-xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *, int);
+xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+				int, int);
 xfs_buf_t	*libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t, int,
 				unsigned int);
 void		libxfs_putbuf (xfs_buf_t *);
@@ -255,9 +256,10 @@ libxfs_trace_getbuf(const char *func, const char *file, int line,
 
 xfs_buf_t *
 libxfs_trace_getbuf_map(const char *func, const char *file, int line,
-		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+		int flags)
 {
-	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps);
+	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps, flags);
 	__add_trace(bp, func, file, line);
 	return bp;
 }
@@ -582,7 +584,8 @@ libxfs_getbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len)
 }
 
 struct xfs_buf *
-libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
+		  int nmaps, int flags)
 {
 	struct xfs_bufkey key = {0};
 	int i;
@@ -595,7 +598,7 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
 	key.map = map;
 	key.nmaps = nmaps;
 
-	return __cache_lookup(&key, 0);
+	return __cache_lookup(&key, flags);
 }
 
 void
@@ -775,7 +778,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
 		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
 					flags, ops);
 
-	bp = libxfs_getbuf_map(btp, map, nmaps);
+	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
 	if (!bp)
 		return NULL;
 

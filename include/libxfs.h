@@ -392,9 +392,9 @@ extern struct cache_operations	libxfs_bcache_operations;
 #define libxfs_getbuf(dev, daddr, len) \
 	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
 			    (dev), (daddr), (len))
-#define libxfs_getbuf_map(dev, map, nmaps) \
+#define libxfs_getbuf_map(dev, map, nmaps, flags) \
 	libxfs_trace_getbuf_map(__FUNCTION__, __FILE__, __LINE__, \
-			    (dev), (map), (nmaps))
+			    (dev), (map), (nmaps), (flags))
 #define libxfs_getbuf_flags(dev, daddr, len, flags) \
 	libxfs_trace_getbuf_flags(__FUNCTION__, __FILE__, __LINE__, \
 			    (dev), (daddr), (len), (flags))
@@ -412,7 +412,7 @@ extern int	libxfs_trace_writebuf(const char *, const char *, int,
 extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int,
 			struct xfs_buftarg *, xfs_daddr_t, int);
 extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
-			struct xfs_buftarg *, struct xfs_buf_map *, int);
+			struct xfs_buftarg *, struct xfs_buf_map *, int, int);
 extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
 			struct xfs_buftarg *, xfs_daddr_t, int, unsigned int);
 extern void	libxfs_trace_putbuf (const char *, const char *, int,
@@ -427,7 +427,7 @@ extern xfs_buf_t *libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
 extern int	libxfs_writebuf(xfs_buf_t *, int);
 extern xfs_buf_t *libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
 extern xfs_buf_t *libxfs_getbuf_map(struct xfs_buftarg *,
-			struct xfs_buf_map *, int);
+			struct xfs_buf_map *, int, int);
 extern xfs_buf_t *libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t,
 			int, unsigned int);
 extern void	libxfs_putbuf (xfs_buf_t *);
