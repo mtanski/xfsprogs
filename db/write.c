@@ -439,55 +439,78 @@ convert_oct(
 
 #define NYBBLE(x) (isdigit(x)?(x-'0'):(tolower(x)-'a'+0xa))
 
+/*
+ * convert_arg allows input in the following forms:
+ *
+ *	- A string ("ABTB") whose ASCII value is placed in an array in the order
+ *	matching the input.
+ *
+ *	- An even number of hex numbers. If the length is greater than 64 bits,
+ *	then the output is an array of bytes whose top nibble is the first hex
+ *	digit in the input, the lower nibble is the second hex digit in the
+ *	input. UUID entries are entered in this manner.
+ *
+ *	- A decimal or hexadecimal integer to be used with setbitval().
+ *
+ * Numbers that are passed to setbitval() need to be in big endian format and
+ * are adjusted in the buffer so that the first input bit is to be be written to
+ * the first bit in the output.
+ */
 static char *
 convert_arg(
-	char *arg,
-	int  bit_length)
+	char		*arg,
+	int		bit_length)
 {
-	int i;
-	static char *buf = NULL;
-	char *rbuf;
-	long long *value;
-	int alloc_size;
-	char *ostr;
-	int octval, ret;
+	int		i;
+	int		alloc_size;
+	int		octval;
+	int		offset;
+	int		ret;
+	static char	*buf = NULL;
+	char		*endp;
+	char		*rbuf;
+	char		*ostr;
+	__u64		*value;
+	__u64		val = 0;
 
 	if (bit_length <= 64)
 		alloc_size = 8;
 	else
-		alloc_size = (bit_length+7)/8;
+		alloc_size = (bit_length + 7) / 8;
 
 	buf = xrealloc(buf, alloc_size);
 	memset(buf, 0, alloc_size);
-	value = (long long *)buf;
+	value = (__u64 *)buf;
 	rbuf = buf;
 
 	if (*arg == '\"') {
-		/* handle strings */
+		/* input a string and output ASCII array of characters */
 
 		/* zap closing quote if there is one */
-		if ((ostr = strrchr(arg+1, '\"')) != NULL)
+		ostr = strrchr(arg + 1, '\"');
+		if (ostr)
 			*ostr = '\0';
 
-		ostr = arg+1;
+		ostr = arg + 1;
 		for (i = 0; i < alloc_size; i++) {
 			if (!*ostr)
 				break;
 
-			/* do octal */
+			/* do octal conversion */
 			if (*ostr == '\\') {
-				if (*(ostr+1) >= '0' || *(ostr+1) <= '7') {
-					ret = convert_oct(ostr+1, &octval);
+				if (*(ostr + 1) >= '0' || *(ostr + 1) <= '7') {
+					ret = convert_oct(ostr + 1, &octval);
 					*rbuf++ = octval;
-					ostr += ret+1;
+					ostr += ret + 1;
 					continue;
 				}
 			}
 			*rbuf++ = *ostr++;
 		}
-
 		return buf;
-	} else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
+	}
+
+	if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
 		/*
 		 * handle hex blocks ie
 		 *    #00112233445566778899aabbccddeeff
@@ -496,48 +519,79 @@ convert_arg(
 		 *
 		 * (but if it starts with "-" assume it's just an integer)
 		 */
-		int bytes=bit_length/8;
+		int bytes = bit_length / NBBY;
+
+		/* is this an array of hec numbers? */
+		if (bit_length % NBBY)
+			return NULL;
 
 		/* skip leading hash */
-		if (*arg=='#') arg++;
+		if (*arg == '#')
+			arg++;
 
 		while (*arg && bytes--) {
-		    /* skip hypens */
-		    while (*arg=='-') arg++;
+			/* skip hypens */
+			while (*arg == '-')
+				arg++;
 
-		    /* get first nybble */
-		    if (!isxdigit((int)*arg)) return NULL;
-		    *rbuf=NYBBLE((int)*arg)<<4;
-		    arg++;
+			/* get first nybble */
+			if (!isxdigit((int)*arg))
+				return NULL;
+			*rbuf = NYBBLE((int)*arg) << 4;
+			arg++;
 
-		    /* skip more hyphens */
-		    while (*arg=='-') arg++;
+			/* skip more hyphens */
+			while (*arg == '-')
+				arg++;
 
-		    /* get second nybble */
-		    if (!isxdigit((int)*arg)) return NULL;
-		    *rbuf++|=NYBBLE((int)*arg);
-		    arg++;
+			/* get second nybble */
+			if (!isxdigit((int)*arg))
+				return NULL;
+			*rbuf++ |= NYBBLE((int)*arg);
+			arg++;
 		}
-		if (bytes<0&&*arg) return NULL;
+		if (bytes < 0 && *arg)
+			return NULL;
+
 		return buf;
-	} else {
-		/*
-		 * handle integers
-		 */
-		*value = strtoll(arg, NULL, 0);
-
-#if __BYTE_ORDER == BIG_ENDIAN
-		/* hackery for big endian */
-		if (bit_length <= 8) {
-			rbuf += 7;
-		} else if (bit_length <= 16) {
-			rbuf += 6;
-		} else if (bit_length <= 32) {
-			rbuf += 4;
-		}
-#endif
-		return rbuf;
 	}
+
+	/* handle decimal / hexadecimal integers */
+	val = strtoll(arg, &endp, 0);
+	/* return if not a clean number */
+	if (*endp != '\0')
+		return NULL;
+
+	/* Does the value fit into the range of the destination bitfield? */
+	if ((val >> bit_length) > 0)
+		return NULL;
+	/*
+	 * If the length of the field is not a multiple of a byte, push
+	 * the bits up in the field, so the most signicant field bit is
+	 * the most significant bit in the byte:
+	 *
+	 * before:
+	 * val  |----|----|----|----|----|--MM|mmmm|llll|
+	 * after
+	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
+	 */
+	offset = bit_length % NBBY;
+	if (offset)
+		val <<= (NBBY - offset);
+
+	/*
+	 * convert to big endian and copy into the array
+	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
+	 */
+	*value = cpu_to_be64(val);
+
+	/*
+	 * Align the array to point to the field in the array.
+	 *  rbuf  = |MMmm|mmll|ll00|
+	 */
+	offset = sizeof(__be64) - 1 - ((bit_length - 1) / sizeof(__be64));
+	rbuf += offset;
+	return rbuf;
 }
 
 
@@ -550,9 +604,9 @@ write_struct(
 {
 	const ftattr_t	*fa;
 	flist_t		*fl;
-	flist_t         *sfl;
-	int             bit_length;
-	char            *buf;
+	flist_t		*sfl;
+	int		bit_length;
+	char		*buf;
 	int		parentoffset;
 
 	if (argc != 2) {
