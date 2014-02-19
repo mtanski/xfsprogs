@@ -170,7 +170,7 @@ attr3_leaf_entries_count(
 	struct xfs_attr3_leafblock *leaf = obj;
 
 	ASSERT(startoff == 0);
-	if (be16_to_cpu(leaf->hdr.info.hdr.magic) != XFS_ATTR_LEAF_MAGIC)
+	if (be16_to_cpu(leaf->hdr.info.hdr.magic) != XFS_ATTR3_LEAF_MAGIC)
 		return 0;
 	return be16_to_cpu(leaf->hdr.count);
 }
