@@ -552,7 +552,7 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
 
 		newnode = bp->b_addr;
 		btree = xfs_da3_node_tree_p(newnode);
-		xfs_da3_node_hdr_from_disk(&nodehdr, node);
+		xfs_da3_node_hdr_from_disk(&nodehdr, newnode);
 		/*
 		 * verify magic number and back pointer, sanity-check
 		 * entry count, verify level
