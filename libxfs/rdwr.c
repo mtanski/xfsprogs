@@ -590,6 +590,10 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
 	struct xfs_bufkey key = {0};
 	int i;
 
+	if (nmaps == 1)
+		return libxfs_getbuf_flags(btp, map[0].bm_bn, map[0].bm_len,
+					   flags);
+
 	key.buftarg = btp;
 	key.blkno = map[0].bm_bn;
 	for (i = 0; i < nmaps; i++) {
