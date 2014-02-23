@@ -890,6 +890,11 @@ libxfs_writebufr(xfs_buf_t *bp)
 int
 libxfs_writebuf_int(xfs_buf_t *bp, int flags)
 {
+	/*
+	 * Clear any error hanging over from reading the buffer. This prevents
+	 * subsequent reads after this write from seeing stale errors.
+	 */
+	bp->b_error = 0;
 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
 	return 0;
 }
@@ -903,6 +908,11 @@ libxfs_writebuf(xfs_buf_t *bp, int flags)
 			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
 			(long long)bp->b_bn);
 #endif
+	/*
+	 * Clear any error hanging over from reading the buffer. This prevents
+	 * subsequent reads after this write from seeing stale errors.
+	 */
+	bp->b_error = 0;
 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
 	libxfs_putbuf(bp);
 	return 0;
