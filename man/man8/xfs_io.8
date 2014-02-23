@@ -4,7 +4,7 @@ xfs_io \- debug the I/O path of an XFS filesystem
 .SH SYNOPSIS
 .B xfs_io
 [
-.B \-adfmrRstx
+.B \-adfmrRstxT
 ] [
 .B \-c
 .I cmd
@@ -88,7 +88,7 @@ command for more details on any command.
 Display a list of all open files and (optionally) switch to an alternate
 current open file.
 .TP
-.BI "open [[ \-acdfrstR ] " path " ]"
+.BI "open [[ \-acdfrstRT ] " path " ]"
 Closes the current file, and opens the file specified by
 .I path
 instead. Without any arguments, displays statistics about the current
@@ -118,6 +118,14 @@ truncates on open (O_TRUNC).
 .TP
 .B \-n
 opens in non-blocking mode if possible (O_NONBLOCK).
+.TP
+.B \-T
+create a temporary file not linked into the filesystem namespace
+(O_TMPFILE).  The pathname passed must refer to a directory which
+is treated as virtual parent for the newly created invisible file.
+Can not be used together with the
+.B \-r
+option.
 .TP
 .B \-R
 marks the file as a realtime XFS file after

@@ -22,6 +22,22 @@
 #include "init.h"
 #include "io.h"
 
+#ifndef __O_TMPFILE
+#if defined __alpha__
+#define __O_TMPFILE	0100000000
+#elif defined(__hppa__)
+#define __O_TMPFILE	 040000000
+#elif defined(__sparc__)
+#define __O_TMPFILE	 0x2000000
+#else
+#define __O_TMPFILE	 020000000
+#endif
+#endif /* __O_TMPFILE */
+
+#ifndef O_TMPFILE
+#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
+#endif
+
 static cmdinfo_t open_cmd;
 static cmdinfo_t stat_cmd;
 static cmdinfo_t close_cmd;
@@ -77,13 +93,14 @@ stat_f(
 	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
 
 	printf(_("fd.path = \"%s\"\n"), file->name);
-	printf(_("fd.flags = %s,%s,%s%s%s%s\n"),
+	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
 		file->flags & IO_DIRECT ? _("direct") : _("non-direct"),
 		file->flags & IO_READONLY ? _("read-only") : _("read-write"),
 		file->flags & IO_REALTIME ? _(",real-time") : "",
 		file->flags & IO_APPEND ? _(",append-only") : "",
-		file->flags & IO_NONBLOCK ? _(",non-block") : "");
+		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
 	if (fstat64(file->fd, &st) < 0) {
 		perror("fstat64");
 	} else {
@@ -143,10 +160,13 @@ openfile(
 		oflags |= O_TRUNC;
 	if (flags & IO_NONBLOCK)
 		oflags |= O_NONBLOCK;
+	if (flags & IO_TMPFILE)
+		oflags |= O_TMPFILE;
 
 	fd = open(path, oflags, mode);
 	if (fd < 0) {
-		if ((errno == EISDIR) && (oflags & O_RDWR)) {
+		if (errno == EISDIR &&
+		    ((oflags & (O_RDWR|O_TMPFILE)) == O_RDWR)) {
 			/* make it as if we asked for O_RDONLY & try again */
 			oflags &= ~O_RDWR;
 			oflags |= O_RDONLY;
@@ -248,6 +268,7 @@ open_help(void)
 " -s -- open with O_SYNC\n"
 " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
 " -R -- mark the file as a realtime XFS file immediately after opening it\n"
+" -T -- open with O_TMPFILE (create a file not visible in the namespace)\n"
 " Note1: usually read/write direct IO requests must be blocksize aligned;\n"
 "        some kernels, however, allow sectorsize alignment for direct IO.\n"
 " Note2: the bmap for non-regular files can be obtained provided the file\n"
@@ -272,7 +293,7 @@ open_f(
 		return 0;
 	}
 
-	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
+	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
 		switch (c) {
 		case 'F':
 			/* Ignored / deprecated now, handled automatically */
@@ -310,6 +331,9 @@ open_f(
 		case 'x':	/* backwards compatibility */
 			flags |= IO_REALTIME;
 			break;
+		case 'T':
+			flags |= IO_TMPFILE;
+			break;
 		default:
 			return command_usage(&open_cmd);
 		}
@@ -324,6 +348,11 @@ open_f(
 
 	if (!platform_test_xfs_fd(fd))
 		flags |= IO_FOREIGN;
+
+	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
+		fprintf(stderr, _("-T and -r options are incompatible\n"));
+		return -1;
+	}
 
 	addfile(argv[optind], fd, &geometry, flags);
 	return 0;
@@ -731,7 +760,7 @@ open_init(void)
 	open_cmd.argmin = 0;
 	open_cmd.argmax = -1;
 	open_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
-	open_cmd.args = _("[-acdrstx] [path]");
+	open_cmd.args = _("[-acdrstxT] [path]");
 	open_cmd.oneline = _("open the file specified by path");
 	open_cmd.help = open_help;
 

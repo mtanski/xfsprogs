@@ -35,6 +35,7 @@
 #define IO_TRUNC	(1<<6)
 #define IO_FOREIGN	(1<<7)
 #define IO_NONBLOCK	(1<<8)
+#define IO_TMPFILE	(1<<9)
 
 /*
  * Regular file I/O control
