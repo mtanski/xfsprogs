@@ -93,6 +93,7 @@ extern void		dump_buffer(off64_t, ssize_t);
 extern void		attr_init(void);
 extern void		bmap_init(void);
 extern void		file_init(void);
+extern void		flink_init(void);
 extern void		freeze_init(void);
 extern void		fsync_init(void);
 extern void		getrusage_init(void);

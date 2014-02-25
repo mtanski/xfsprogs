@@ -58,6 +58,7 @@ init_commands(void)
 	bmap_init();
 	fadvise_init();
 	file_init();
+	flink_init();
 	freeze_init();
 	fsync_init();
 	getrusage_init();

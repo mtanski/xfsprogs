@@ -643,6 +643,9 @@ Only available in expert mode and requires privileges.
 Undo the effects of a filesystem freeze operation.
 Only available in expert mode and requires privileges.
 .TP
+.BI "flink " path
+Link the currently open file descriptor into the filesystem namespace.
+.TP
 .BI "inject [ " tag " ]"
 Inject errors into a filesystem to observe filesystem behavior at
 specific points under adverse conditions. Without the
