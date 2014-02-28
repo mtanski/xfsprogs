@@ -438,6 +438,7 @@ parseproto(
 	creds.cr_gid = (int)getnum(pp);
 	xname.name = (uchar_t *)name;
 	xname.len = name ? strlen(name) : 0;
+	xname.type = 0;
 	tp = libxfs_trans_alloc(mp, 0);
 	flags = XFS_ILOG_CORE;
 	xfs_bmap_init(&flist, &first);
@@ -453,6 +454,7 @@ parseproto(
 		if (buf)
 			free(buf);
 		libxfs_trans_ijoin(tp, pip, 0);
+		xname.type = XFS_DIR3_FT_REG_FILE;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		break;
@@ -469,6 +471,7 @@ parseproto(
 
 		libxfs_trans_ijoin(tp, pip, 0);
 
+		xname.type = XFS_DIR3_FT_REG_FILE;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		libxfs_trans_log_inode(tp, ip, flags);
@@ -490,6 +493,7 @@ parseproto(
 			fail(_("Inode allocation failed"), error);
 		}
 		libxfs_trans_ijoin(tp, pip, 0);
+		xname.type = XFS_DIR3_FT_BLKDEV;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		flags |= XFS_ILOG_DEV;
@@ -504,6 +508,7 @@ parseproto(
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
+		xname.type = XFS_DIR3_FT_CHRDEV;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		flags |= XFS_ILOG_DEV;
@@ -516,6 +521,7 @@ parseproto(
 		if (error)
 			fail(_("Inode allocation failed"), error);
 		libxfs_trans_ijoin(tp, pip, 0);
+		xname.type = XFS_DIR3_FT_FIFO;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		break;
@@ -529,6 +535,7 @@ parseproto(
 			fail(_("Inode allocation failed"), error);
 		flags |= newfile(tp, ip, &flist, &first, 1, 1, buf, len);
 		libxfs_trans_ijoin(tp, pip, 0);
+		xname.type = XFS_DIR3_FT_SYMLINK;
 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
 		libxfs_trans_ihold(tp, pip);
 		break;
@@ -546,6 +553,7 @@ parseproto(
 			isroot = 1;
 		} else {
 			libxfs_trans_ijoin(tp, pip, 0);
+			xname.type = XFS_DIR3_FT_DIR;
 			newdirent(mp, tp, pip, &xname, ip->i_ino,
 				  &first, &flist);
 			pip->i_d.di_nlink++;
