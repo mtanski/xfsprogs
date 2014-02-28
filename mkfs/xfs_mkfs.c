@@ -2366,32 +2366,40 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 	} else if (!loginternal && !xi.logdev) {
 		logblocks = 0;
 	} else if (loginternal && !logsize) {
-		/*
-		 * With a 2GB max log size, default to maximum size
-		 * at 4TB. This keeps the same ratio from the older
-		 * max log size of 128M at 256GB fs size. IOWs,
-		 * the ratio of fs size to log size is 2048:1.
-		 */
-		logblocks = (dblocks << blocklog) / 2048;
-		logblocks = logblocks >> blocklog;
-		logblocks = MAX(min_logblocks, logblocks);
 
-		/*
-		 * If the default log size doesn't fit in the AG size, use the
-		 * minimum log size instead. This ensures small filesystems
-		 * don't use excessive amounts of space for the log.
-		 */
-		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
+		if (dblocks < GIGABYTES(1, blocklog)) {
+			/* tiny filesystems get minimum sized logs. */
 			logblocks = min_logblocks;
+		} else if (dblocks < GIGABYTES(16, blocklog)) {
+
+			/*
+			 * For small filesystems, we want to use the
+			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
+			 * at all possible, ramping up to 128MB at 256GB.
+			 */
+			logblocks = MIN(XFS_MIN_LOG_BYTES >> blocklog,
+					min_logblocks * XFS_DFL_LOG_FACTOR);
 		} else {
-			logblocks = MAX(logblocks,
-				MAX(XFS_DFL_LOG_SIZE,
-					min_logblocks * XFS_DFL_LOG_FACTOR));
+			/*
+			 * With a 2GB max log size, default to maximum size
+			 * at 4TB. This keeps the same ratio from the older
+			 * max log size of 128M at 256GB fs size. IOWs,
+			 * the ratio of fs size to log size is 2048:1.
+			 */
+			logblocks = (dblocks << blocklog) / 2048;
+			logblocks = logblocks >> blocklog;
+			logblocks = MAX(min_logblocks, logblocks);
 		}
+
+		/* make sure the log fits wholly within an AG */
+		if (logblocks >= agsize)
+			logblocks = min_logblocks;
+
+		/* and now clamp the size to the maximum supported size */
 		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
-		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
+		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES)
 			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
-		}
+
 	}
 	validate_log_size(logblocks, blocklog, min_logblocks);
 
