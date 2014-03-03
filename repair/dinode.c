@@ -707,8 +707,8 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
 		ebno = agbno + irec.br_blockcount;
 		if (agno != locked_agno) {
 			if (locked_agno != -1)
-				pthread_mutex_unlock(&ag_locks[locked_agno]);
-			pthread_mutex_lock(&ag_locks[agno]);
+				pthread_mutex_unlock(&ag_locks[locked_agno].lock);
+			pthread_mutex_lock(&ag_locks[agno].lock);
 			locked_agno = agno;
 		}
 
@@ -777,7 +777,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
 	error = 0;
 done:
 	if (locked_agno != -1)
-		pthread_mutex_unlock(&ag_locks[locked_agno]);
+		pthread_mutex_unlock(&ag_locks[locked_agno].lock);
 
 	if (i != *numrecs) {
 		ASSERT(i < *numrecs);

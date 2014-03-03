@@ -294,13 +294,13 @@ init_bmaps(xfs_mount_t *mp)
 	if (!ag_bmap)
 		do_error(_("couldn't allocate block map btree roots\n"));
 
-	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(pthread_mutex_t));
+	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(struct aglock));
 	if (!ag_locks)
 		do_error(_("couldn't allocate block map locks\n"));
 
 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
 		btree_init(&ag_bmap[i]);
-		pthread_mutex_init(&ag_locks[i], NULL);
+		pthread_mutex_init(&ag_locks[i].lock, NULL);
 	}
 
 	init_rt_bmap(mp);
