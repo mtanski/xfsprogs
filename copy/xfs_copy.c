@@ -684,6 +684,16 @@ main(int argc, char **argv)
 	sb = &mbuf.m_sb;
 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
 
+	/*
+	 * For now, V5 superblock filesystems are not supported without -d;
+	 * we do not have the infrastructure yet to fix CRCs when a new UUID
+	 * is generated.
+	 */
+	if (xfs_sb_version_hascrc(sb) && !duplicate) {
+		do_log(_("%s: Cannot yet copy V5 fs without '-d'\n"), progname);
+		exit(1);
+	}
+
 	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 0);
 	if (mp == NULL) {
 		do_log(_("%s: %s filesystem failed to initialize\n"
@@ -957,7 +967,13 @@ main(int argc, char **argv)
 				 ((char *)btree_buf.data +
 				  pos - btree_buf.position);
 
-			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
+			if (be32_to_cpu(block->bb_magic) !=
+			    (xfs_sb_version_hascrc(&mp->m_sb) ?
+			     XFS_ABTB_CRC_MAGIC : XFS_ABTB_MAGIC)) {
+				do_log(_("Bad btree magic 0x%x\n"),
+				        be32_to_cpu(block->bb_magic));
+				exit(1);
+			}
 
 			if (be16_to_cpu(block->bb_level) == 0)
 				break;
