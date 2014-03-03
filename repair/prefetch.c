@@ -867,6 +867,68 @@ start_inode_prefetch(
 }
 
 /*
+ * prefetch_ag_range runs a prefetch-and-process loop across a range of AGs. It
+ * begins with @start+ag, and finishes with @end_ag - 1 (i.e. does not prefetch
+ * or process @end_ag). The function starts prefetch on the first AG, then loops
+ * starting prefetch on the next AG and then blocks processing the current AG as
+ * the prefetch queue brings inodes into the processing queue.
+ *
+ * There is only one prefetch taking place at a time, so the prefetch on the
+ * next AG only starts once the current AG has been completely prefetched. Hence
+ * the prefetch of the next AG will start some time before the processing of the
+ * current AG finishes, ensuring that when we iterate an start processing the
+ * next AG there is already a significant queue of inodes to process.
+ *
+ * Prefetch is done this way to prevent it from running too far ahead of the
+ * processing. Allowing it to do so can cause cache thrashing, where new
+ * prefetch causes previously prefetched buffers to be reclaimed before the
+ * processing thread uses them. This results in reading all the inodes and
+ * metadata twice per phase and it greatly slows down the processing. Hence we
+ * have to carefully control how far ahead we prefetch...
+ */
+static void
+prefetch_ag_range(
+	struct work_queue	*work,
+	xfs_agnumber_t		start_ag,
+	xfs_agnumber_t		end_ag,
+	bool			dirs_only,
+	void			(*func)(struct work_queue *,
+					xfs_agnumber_t, void *))
+{
+	int			i;
+	struct prefetch_args	*pf_args[2];
+
+	pf_args[start_ag & 1] = start_inode_prefetch(start_ag, dirs_only, NULL);
+	for (i = start_ag; i < end_ag; i++) {
+		/* Don't prefetch end_ag */
+		if (i + 1 < end_ag)
+			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+						dirs_only, pf_args[i & 1]);
+		func(work, i, pf_args[i & 1]);
+	}
+}
+
+struct pf_work_args {
+	xfs_agnumber_t	start_ag;
+	xfs_agnumber_t	end_ag;
+	bool		dirs_only;
+	void		(*func)(struct work_queue *, xfs_agnumber_t, void *);
+};
+
+static void
+prefetch_ag_range_work(
+	struct work_queue	*work,
+	xfs_agnumber_t		unused,
+	void			*args)
+{
+	struct pf_work_args *wargs = args;
+
+	prefetch_ag_range(work, wargs->start_ag, wargs->end_ag, 
+			  wargs->dirs_only, wargs->func);
+	free(args);
+}
+
+/*
  * Do inode prefetch in the most optimal way for the context under which repair
  * has been run.
  */
@@ -879,11 +941,9 @@ do_inode_prefetch(
 	bool			check_cache,
 	bool			dirs_only)
 {
-	int			i, j;
-	xfs_agnumber_t		agno;
+	int			i;
 	struct work_queue	queue;
 	struct work_queue	*queues;
-	struct prefetch_args	*pf_args[2];
 
 	/*
 	 * If the previous phases of repair have not overflowed the buffer
@@ -906,12 +966,8 @@ do_inode_prefetch(
 	 */
 	if (!stride) {
 		queue.mp = mp;
-		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
-		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
-			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
-					dirs_only, pf_args[i & 1]);
-			func(&queue, i, pf_args[i & 1]);
-		}
+		prefetch_ag_range(&queue, 0, mp->m_sb.sb_agcount,
+				  dirs_only, func);
 		return;
 	}
 
@@ -919,20 +975,27 @@ do_inode_prefetch(
 	 * create one worker thread for each segment of the volume
 	 */
 	queues = malloc(thread_count * sizeof(work_queue_t));
-	for (i = 0, agno = 0; i < thread_count; i++) {
+	for (i = 0; i < thread_count; i++) {
+		struct pf_work_args *wargs;
+
+		wargs = malloc(sizeof(struct pf_work_args));
+		wargs->start_ag = i * stride;
+		wargs->end_ag = min((i + 1) * stride,
+				    mp->m_sb.sb_agcount);
+		wargs->dirs_only = dirs_only;
+		wargs->func = func;
+
 		create_work_queue(&queues[i], mp, 1);
-		pf_args[0] = NULL;
-		for (j = 0; j < stride && agno < mp->m_sb.sb_agcount;
-				j++, agno++) {
-			pf_args[0] = start_inode_prefetch(agno, dirs_only,
-							  pf_args[0]);
-			queue_work(&queues[i], func, agno, pf_args[0]);
-		}
+		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
+
+		if (wargs->end_ag >= mp->m_sb.sb_agcount)
+			break;
 	}
+
 	/*
 	 * wait for workers to complete
 	 */
-	for (i = 0; i < thread_count; i++)
+	for (; i >= 0; i--)
 		destroy_work_queue(&queues[i]);
 	free(queues);
 }
