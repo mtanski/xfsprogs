@@ -874,7 +874,7 @@ xlog_print_record(
 	int			bad_hdr_warn)
 {
     xfs_caddr_t		buf, ptr;
-    int			read_len, skip;
+    int			read_len, skip, lost_context = 0;
     int			ret, n, i, j, k;
 
     if (print_no_print)
@@ -995,7 +995,10 @@ xlog_print_record(
 	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
 				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
 	    printf(_("Left over region from split log item\n"));
+	    /* Skip this leftover bit */
 	    ptr += be32_to_cpu(op_head->oh_len);
+	    /* We've lost context; don't complain if next one looks bad too */
+	    lost_context = 1;
 	    continue;
 	}
 
@@ -1050,7 +1053,7 @@ xlog_print_record(
 			break;
 		    }
 		    default: {
-			if (bad_hdr_warn) {
+			if (bad_hdr_warn && !lost_context) {
 				fprintf(stderr,
 			_("%s: unknown log operation type (%x)\n"),
 					progname, *(unsigned short *)ptr);
@@ -1064,6 +1067,7 @@ xlog_print_record(
 			}
 			skip = 0;
 			ptr += be32_to_cpu(op_head->oh_len);
+			lost_context = 0;
 		    }
 		} /* switch */
 	    } /* else */
