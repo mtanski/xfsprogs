@@ -1015,16 +1015,23 @@ obfuscate_sf_dir(
 	}
 }
 
+/*
+ * The pathname may not be null terminated. It may be terminated by the end of
+ * a buffer or inode literal area, and the start of the next region contains
+ * unknown data. Therefore, when we get to the last component of the symlink, we
+ * cannot assume that strlen() will give us the right result. Hence we need to
+ * track the remaining pathname length and use that instead.
+ */
 static void
 obfuscate_path_components(
 	char			*buf,
 	__uint64_t		len)
 {
-	uchar_t			*comp;
+	uchar_t			*comp = (uchar_t *)buf;
+	uchar_t			*end = comp + len;
 	xfs_dahash_t		hash;
 
-	comp = (uchar_t *)buf;
-	while (comp < (uchar_t *)buf + len) {
+	while (comp < end) {
 		char	*slash;
 		int	namelen;
 
@@ -1032,7 +1039,7 @@ obfuscate_path_components(
 		slash = strchr((char *)comp, '/');
 		if (!slash) {
 			/* last (or single) component */
-			namelen = strlen((char *)comp);
+			namelen = strnlen((char *)comp, len);
 			hash = libxfs_da_hashname(comp, namelen);
 			obfuscate_name(hash, namelen, comp);
 			break;
@@ -1041,11 +1048,13 @@ obfuscate_path_components(
 		/* handle leading or consecutive slashes */
 		if (!namelen) {
 			comp++;
+			len--;
 			continue;
 		}
 		hash = libxfs_da_hashname(comp, namelen);
 		obfuscate_name(hash, namelen, comp);
 		comp += namelen + 1;
+		len -= namelen + 1;
 	}
 }
 
