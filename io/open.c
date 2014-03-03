@@ -342,17 +342,17 @@ open_f(
 	if (optind != argc - 1)
 		return command_usage(&open_cmd);
 
+	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
+		fprintf(stderr, _("-T and -r options are incompatible\n"));
+		return -1;
+	}
+
 	fd = openfile(argv[optind], &geometry, flags, mode);
 	if (fd < 0)
 		return 0;
 
 	if (!platform_test_xfs_fd(fd))
 		flags |= IO_FOREIGN;
-
-	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
-		fprintf(stderr, _("-T and -r options are incompatible\n"));
-		return -1;
-	}
 
 	addfile(argv[optind], fd, &geometry, flags);
 	return 0;
