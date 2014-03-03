@@ -313,10 +313,18 @@ struct xfs_bufkey {
 	int			nmaps;
 };
 
+/*  2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1 */
+#define GOLDEN_RATIO_PRIME	0x9e37fffffffc0001UL
+#define CACHE_LINE_SIZE		64
 static unsigned int
-libxfs_bhash(cache_key_t key, unsigned int hashsize)
+libxfs_bhash(cache_key_t key, unsigned int hashsize, unsigned int hashshift)
 {
-	return (((unsigned int)((struct xfs_bufkey *)key)->blkno) >> 5) % hashsize;
+	uint64_t	hashval = ((struct xfs_bufkey *)key)->blkno;
+	uint64_t	tmp;
+
+	tmp = hashval ^ (GOLDEN_RATIO_PRIME + hashval) / CACHE_LINE_SIZE;
+	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> hashshift);
+	return tmp % hashsize;
 }
 
 static int

@@ -25,6 +25,7 @@
 #include <xfs/platform_defs.h>
 #include <xfs/list.h>
 #include <xfs/cache.h>
+#include <xfs/libxfs.h>
 
 #define CACHE_DEBUG 1
 #undef CACHE_DEBUG
@@ -61,6 +62,7 @@ cache_init(
 	cache->c_misses = 0;
 	cache->c_maxcount = maxcount;
 	cache->c_hashsize = hashsize;
+	cache->c_hashshift = libxfs_highbit32(hashsize);
 	cache->hash = cache_operations->hash;
 	cache->alloc = cache_operations->alloc;
 	cache->flush = cache_operations->flush;
@@ -343,7 +345,7 @@ cache_node_get(
 	int			priority = 0;
 	int			purged = 0;
 
-	hashidx = cache->hash(key, cache->c_hashsize);
+	hashidx = cache->hash(key, cache->c_hashsize, cache->c_hashshift);
 	hash = cache->c_hash + hashidx;
 	head = &hash->ch_list;
 
@@ -515,7 +517,8 @@ cache_node_purge(
 	struct cache_hash *	hash;
 	int			count = -1;
 
-	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
+	hash = cache->c_hash + cache->hash(key, cache->c_hashsize,
+					   cache->c_hashshift);
 	head = &hash->ch_list;
 	pthread_mutex_lock(&hash->ch_mutex);
 	for (pos = head->next, n = pos->next; pos != head;
