@@ -629,13 +629,32 @@ main(int argc, char **argv)
 	 * to target these for an increase in thread count. Hence a stride value
 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
 	 * on such filesystems.
+	 *
+	 * Limit the maximum thread count based on the available CPU power that
+	 * is available. If we use too many threads, we might run out of memory
+	 * and CPU power before we run out of IO concurrency. We limit to 8
+	 * threads/CPU as this is enough threads to saturate a CPU on fast
+	 * devices, yet few enough that it will saturate but won't overload slow
+	 * devices.
 	 */
 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
 		ag_stride = 15;
 
 	if (ag_stride) {
+		int max_threads = platform_nproc() * 8;
+
 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
-		thread_init();
+		while (thread_count > max_threads) {
+			ag_stride *= 2;
+			thread_count = (glob_agcount + ag_stride - 1) /
+								ag_stride;
+		}
+		if (thread_count > 0)
+			thread_init();
+		else {
+			thread_count = 1;
+			ag_stride = 0;
+		}
 	}
 
 	if (ag_stride && report_interval) {
