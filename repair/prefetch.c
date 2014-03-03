@@ -298,7 +298,8 @@ pf_scanfunc_bmap(
 	/*
 	 * do some validation on the block contents
 	 */
-	if ((be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) ||
+	if ((block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC) &&
+	     block->bb_magic != cpu_to_be32(XFS_BMAP_CRC_MAGIC)) ||
 			(be16_to_cpu(block->bb_level) != level))
 		return 0;
 
