@@ -400,6 +400,11 @@ the FALLOC_FL_PUNCH_HOLE flag as described in the
 .BR fallocate (2)
 manual page.
 .TP
+.BI fzero " offset length"
+Call fallocate with FALLOC_FL_ZERO_RANGE flag as described in the
+.BR fallocate (2)
+manual page to allocate and zero blocks within the range.
+.TP
 .BI truncate " offset"
 Truncates the current file at the given offset using
 .BR ftruncate (2).

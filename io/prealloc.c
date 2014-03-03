@@ -33,6 +33,10 @@
 #define FALLOC_FL_COLLAPSE_RANGE 0x08
 #endif
 
+#ifndef FALLOC_FL_ZERO_RANGE
+#define FALLOC_FL_ZERO_RANGE 0x10
+#endif
+
 static cmdinfo_t allocsp_cmd;
 static cmdinfo_t freesp_cmd;
 static cmdinfo_t resvsp_cmd;
@@ -42,6 +46,7 @@ static cmdinfo_t zero_cmd;
 static cmdinfo_t falloc_cmd;
 static cmdinfo_t fpunch_cmd;
 static cmdinfo_t fcollapse_cmd;
+static cmdinfo_t fzero_cmd;
 #endif
 
 static int
@@ -230,6 +235,31 @@ fcollapse_f(
 	}
 	return 0;
 }
+
+static int
+fzero_f(
+	int		argc,
+	char		**argv)
+{
+	xfs_flock64_t	segment;
+	int		mode = FALLOC_FL_ZERO_RANGE;
+	int		index = 1;
+
+	if (strncmp(argv[index], "-k", 3) == 0) {
+		mode |= FALLOC_FL_KEEP_SIZE;
+		index++;
+	}
+
+	if (!offset_length(argv[index], argv[index + 1], &segment))
+		return 0;
+
+	if (fallocate(file->fd, mode,
+			segment.l_start, segment.l_len)) {
+		perror("fallocate");
+		return 0;
+	}
+	return 0;
+}
 #endif	/* HAVE_FALLOCATE */
 
 void
@@ -292,7 +322,7 @@ prealloc_init(void)
 	falloc_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	falloc_cmd.args = _("[-c] [-k] [-p] off len");
 	falloc_cmd.oneline =
-		_("allocates space associated with part of a file via fallocate");
+	_("allocates space associated with part of a file via fallocate");
 	add_command(&falloc_cmd);
 
 	fpunch_cmd.name = "fpunch";
@@ -302,7 +332,7 @@ prealloc_init(void)
 	fpunch_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
 	fpunch_cmd.args = _("off len");
 	fpunch_cmd.oneline =
-		_("de-allocates space assocated with part of a file via fallocate");
+	_("de-allocates space assocated with part of a file via fallocate");
 	add_command(&fpunch_cmd);
 
 	fcollapse_cmd.name = "fcollapse";
@@ -314,5 +344,15 @@ prealloc_init(void)
 	fcollapse_cmd.oneline =
 	_("de-allocates space and eliminates the hole by shifting extents");
 	add_command(&fcollapse_cmd);
+
+	fzero_cmd.name = "fzero";
+	fzero_cmd.cfunc = fzero_f;
+	fzero_cmd.argmin = 2;
+	fzero_cmd.argmax = 3;
+	fzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+	fzero_cmd.args = _("[-k] off len");
+	fzero_cmd.oneline =
+	_("zeroes space and eliminates holes by preallocating");
+	add_command(&fzero_cmd);
 #endif	/* HAVE_FALLOCATE */
 }
