@@ -181,6 +181,7 @@ init(
 			break;
 		case 'T':
 			flags |= IO_TMPFILE;
+			break;
 		case 'x':
 			expert = 1;
 			break;
