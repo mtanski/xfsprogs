@@ -810,7 +810,6 @@ xlog_print_trans_icreate(
 
 	memmove(&icl_buf, *ptr, MIN(sizeof(struct xfs_icreate_log), len));
 	icl = &icl_buf;
-	(*i)++;
 	*ptr += len;
 
 	/* handle complete header only */
