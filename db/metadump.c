@@ -1331,29 +1331,27 @@ process_single_fsb_objects(
 	int		ret = 0;
 	int		i;
 
-	push_cur();
-	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-			DB_RING_IGN, NULL);
-
-	if (!iocur_top->data) {
-		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
-
-		print_warning("cannot read %s block %u/%u (%llu)",
-				typtab[btype].name, agno, agbno, s);
-		if (stop_on_read_error)
-			ret = -EIO;
-		goto out_pop;
-
-	}
-
-	if (dont_obfuscate) {
-		ret = write_buf(iocur_top);
-		goto out_pop;
-	}
-
-	dp = iocur_top->data;
 	for (i = 0; i < c; i++) {
+		push_cur();
+		set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), blkbb,
+				DB_RING_IGN, NULL);
+
+		if (!iocur_top->data) {
+			xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
+			xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
+
+			print_warning("cannot read %s block %u/%u (%llu)",
+					typtab[btype].name, agno, agbno, s);
+			if (stop_on_read_error)
+				ret = -EIO;
+			goto out_pop;
+
+		}
+
+		if (dont_obfuscate)
+			goto write;
+
+		dp = iocur_top->data;
 		switch (btype) {
 		case TYP_DIR2:
 			if (o >= mp->m_dirleafblk)
@@ -1371,13 +1369,17 @@ process_single_fsb_objects(
 		default:
 			break;
 		}
-		o++;
-		dp += mp->m_sb.sb_blocksize;
-	}
-	ret = write_buf(iocur_top);
 
+write:
+		ret = write_buf(iocur_top);
 out_pop:
-	pop_cur();
+		pop_cur();
+		if (ret)
+			break;
+		o++;
+		s++;
+	}
+
 	return ret;
 }
 
