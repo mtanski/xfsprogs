@@ -723,7 +723,7 @@ pf_queuing_worker(
 			irec, args->agno, i);
 #endif
 		err = sem_trywait(&args->ra_count);
-		if (err == EAGAIN) {
+		if (err < 0 && errno == EAGAIN) {
 			/*
 			 * Kick the queue once we have reached the limit;
 			 * without this the threads processing the inodes

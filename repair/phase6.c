@@ -2999,8 +2999,15 @@ traverse_function(
 		if (irec->ino_isa_dir == 0)
 			continue;
 
-		if (pf_args)
+		if (pf_args) {
 			sem_post(&pf_args->ra_count);
+#ifdef XR_PF_TRACE
+			sem_getvalue(&pf_args->ra_count, &i);
+			pftrace(
+		"processing inode chunk %p in AG %d (sem count = %d)",
+				irec, agno, i);
+#endif
+		}
 
 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
 			if (inode_isadir(irec, i))
