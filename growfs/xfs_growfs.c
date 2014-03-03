@@ -189,7 +189,7 @@ main(int argc, char **argv)
 		usage();
 	if (iflag && xflag)
 		usage();
-	if (dflag + lflag + rflag == 0)
+	if (dflag + lflag + rflag + mflag == 0)
 		aflag = 1;
 
 	fs_table_initialise(0, NULL, 0, NULL);
@@ -305,12 +305,15 @@ main(int argc, char **argv)
 	drsize -= (drsize % 2);
 
 	error = 0;
-	if (dflag | aflag) {
+
+	if (dflag | mflag | aflag) {
 		xfs_growfs_data_t	in;
 
 		if (!mflag)
 			maxpct = geo.imaxpct;
-		if (!dsize)
+		if (!dflag && !aflag)	/* Only mflag, no data size change */
+			dsize = geo.datablocks;
+		else if (!dsize)
 			dsize = ddsize / (geo.blocksize / BBSIZE);
 		else if (dsize > ddsize / (geo.blocksize / BBSIZE)) {
 			fprintf(stderr, _(
