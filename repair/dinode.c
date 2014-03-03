@@ -32,6 +32,37 @@
 #include "threads.h"
 
 /*
+ * gettext lookups for translations of strings use mutexes internally to
+ * the library. Hence when we come through here doing parallel scans in
+ * multiple AGs, then all do concurrent text conversions and serialise
+ * on the translation string lookups. Let's avoid doing repeated lookups
+ * by making them static variables and only assigning the translation
+ * once.
+ */
+static char	*forkname_data;
+static char	*forkname_attr;
+static char	*ftype_real_time;
+static char	*ftype_regular;
+
+void
+dinode_bmbt_translation_init(void)
+{
+	forkname_data = _("data");
+	forkname_attr = _("attr");
+	ftype_real_time = _("real-time");
+	ftype_regular = _("regular");
+}
+
+char *
+get_forkname(int whichfork)
+{
+
+	if (whichfork == XFS_DATA_FORK)
+		return forkname_data;
+	return forkname_attr;
+}
+
+/*
  * inode clearing routines
  */
 
@@ -542,7 +573,7 @@ process_bmbt_reclist_int(
 	xfs_dfiloff_t		op = 0;		/* prev offset */
 	xfs_dfsbno_t		b;
 	char			*ftype;
-	char			*forkname;
+	char			*forkname = get_forkname(whichfork);
 	int			i;
 	int			state;
 	xfs_agnumber_t		agno;
@@ -552,15 +583,10 @@ process_bmbt_reclist_int(
 	xfs_agnumber_t		locked_agno = -1;
 	int			error = 1;
 
-	if (whichfork == XFS_DATA_FORK)
-		forkname = _("data");
-	else
-		forkname = _("attr");
-
 	if (type == XR_INO_RTDATA)
-		ftype = _("real-time");
+		ftype = ftype_real_time;
 	else
-		ftype = _("regular");
+		ftype = ftype_regular;
 
 	for (i = 0; i < *numrecs; i++) {
 		libxfs_bmbt_disk_get_all(rp + i, &irec);
@@ -1110,7 +1136,7 @@ process_btinode(
 	xfs_ino_t		lino;
 	xfs_bmbt_ptr_t		*pp;
 	xfs_bmbt_key_t		*pkey;
-	char			*forkname;
+	char			*forkname = get_forkname(whichfork);
 	int			i;
 	int			level;
 	int			numrecs;
@@ -1121,11 +1147,6 @@ process_btinode(
 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 	*tot = 0;
 	*nex = 0;
-
-	if (whichfork == XFS_DATA_FORK)
-		forkname = _("data");
-	else
-		forkname = _("attr");
 
 	magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_BMAP_CRC_MAGIC
 						 : XFS_BMAP_MAGIC;

@@ -171,16 +171,11 @@ scan_bmapbt(
 	xfs_bmbt_rec_t		*rp;
 	xfs_dfiloff_t		first_key;
 	xfs_dfiloff_t		last_key;
-	char			*forkname;
+	char			*forkname = get_forkname(whichfork);
 	int			numrecs;
 	xfs_agnumber_t		agno;
 	xfs_agblock_t		agbno;
 	int			state;
-
-	if (whichfork == XFS_DATA_FORK)
-		forkname = _("data");
-	else
-		forkname = _("attr");
 
 	/*
 	 * unlike the ag freeblock btrees, if anything looks wrong

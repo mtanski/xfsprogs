@@ -29,6 +29,7 @@
 #include "prefetch.h"
 #include "threads.h"
 #include "progress.h"
+#include "dinode.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
@@ -533,6 +534,7 @@ main(int argc, char **argv)
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
+	dinode_bmbt_translation_init();
 
 	temp_mp = &xfs_m;
 	setbuf(stdout, NULL);

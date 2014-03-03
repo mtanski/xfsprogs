@@ -127,4 +127,7 @@ get_bmapi(xfs_mount_t		*mp,
 		xfs_dfiloff_t	bno,
 		int             whichfork );
 
+void dinode_bmbt_translation_init(void);
+char * get_forkname(int whichfork);
+
 #endif /* _XR_DINODE_H */
