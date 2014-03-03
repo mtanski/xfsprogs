@@ -17,6 +17,8 @@
  */
 
 #include <libxfs.h>
+#include "threads.h"
+#include "prefetch.h"
 #include "avl.h"
 #include "globals.h"
 #include "agheader.h"
@@ -25,9 +27,7 @@
 #include "protos.h"
 #include "err_protos.h"
 #include "dinode.h"
-#include "prefetch.h"
 #include "progress.h"
-#include "threads.h"
 #include "versions.h"
 
 static struct cred		zerocr;
@@ -3039,23 +3039,9 @@ update_missing_dotdot_entries(
 
 static void
 traverse_ags(
-	xfs_mount_t 		*mp)
+	struct xfs_mount	*mp)
 {
-	int			i;
-	work_queue_t		queue;
-	prefetch_args_t		*pf_args[2];
-
-	/*
-	 * we always do prefetch for phase 6 as it will fill in the gaps
-	 * not read during phase 3 prefetch.
-	 */
-	queue.mp = mp;
-	pf_args[0] = start_inode_prefetch(0, 1, NULL);
-	for (i = 0; i < glob_agcount; i++) {
-		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
-				pf_args[i & 1]);
-		traverse_function(&queue, i, pf_args[i & 1]);
-	}
+	do_inode_prefetch(mp, 0, traverse_function, false, true);
 }
 
 void

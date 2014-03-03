@@ -866,6 +866,77 @@ start_inode_prefetch(
 	return args;
 }
 
+/*
+ * Do inode prefetch in the most optimal way for the context under which repair
+ * has been run.
+ */
+void
+do_inode_prefetch(
+	struct xfs_mount	*mp,
+	int			stride,
+	void			(*func)(struct work_queue *,
+					xfs_agnumber_t, void *),
+	bool			check_cache,
+	bool			dirs_only)
+{
+	int			i, j;
+	xfs_agnumber_t		agno;
+	struct work_queue	queue;
+	struct work_queue	*queues;
+	struct prefetch_args	*pf_args[2];
+
+	/*
+	 * If the previous phases of repair have not overflowed the buffer
+	 * cache, then we don't need to re-read any of the metadata in the
+	 * filesystem - it's all in the cache. In that case, run a thread per
+	 * CPU to maximise parallelism of the queue to be processed.
+	 */
+	if (check_cache && !libxfs_bcache_overflowed()) {
+		queue.mp = mp;
+		create_work_queue(&queue, mp, libxfs_nproc());
+		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+			queue_work(&queue, func, i, NULL);
+		destroy_work_queue(&queue);
+		return;
+	}
+
+	/*
+	 * single threaded behaviour - single prefetch thread, processed
+	 * directly after each AG is queued.
+	 */
+	if (!stride) {
+		queue.mp = mp;
+		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
+		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+					dirs_only, pf_args[i & 1]);
+			func(&queue, i, pf_args[i & 1]);
+		}
+		return;
+	}
+
+	/*
+	 * create one worker thread for each segment of the volume
+	 */
+	queues = malloc(thread_count * sizeof(work_queue_t));
+	for (i = 0, agno = 0; i < thread_count; i++) {
+		create_work_queue(&queues[i], mp, 1);
+		pf_args[0] = NULL;
+		for (j = 0; j < stride && agno < mp->m_sb.sb_agcount;
+				j++, agno++) {
+			pf_args[0] = start_inode_prefetch(agno, dirs_only,
+							  pf_args[0]);
+			queue_work(&queues[i], func, agno, pf_args[0]);
+		}
+	}
+	/*
+	 * wait for workers to complete
+	 */
+	for (i = 0; i < thread_count; i++)
+		destroy_work_queue(&queues[i]);
+	free(queues);
+}
+
 void
 wait_for_inode_prefetch(
 	prefetch_args_t		*args)
