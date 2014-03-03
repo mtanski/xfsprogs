@@ -43,13 +43,13 @@ static struct xfs_name		xfs_name_dot = {(unsigned char *)".",
  * entries are updated. These must be rebuilt after the initial pass
  */
 typedef struct dotdot_update {
-	struct dotdot_update	*next;
+	struct list_head	list;
 	ino_tree_node_t		*irec;
 	xfs_agnumber_t		agno;
 	int			ino_offset;
 } dotdot_update_t;
 
-static dotdot_update_t		*dotdot_update_list;
+static LIST_HEAD(dotdot_update_list);
 static int			dotdot_update;
 
 static void
@@ -64,12 +64,12 @@ add_dotdot_update(
 		do_error(_("malloc failed add_dotdot_update (%zu bytes)\n"),
 			sizeof(dotdot_update_t));
 
-	dir->next = dotdot_update_list;
+	INIT_LIST_HEAD(&dir->list);
 	dir->irec = irec;
 	dir->agno = agno;
 	dir->ino_offset = ino_offset;
 
-	dotdot_update_list = dir;
+	list_add(&dir->list, &dotdot_update_list);
 }
 
 /*
@@ -3021,9 +3021,10 @@ update_missing_dotdot_entries(
 	 * set dotdot_update flag so processing routines do not count links
 	 */
 	dotdot_update = 1;
-	while (dotdot_update_list) {
-		dir = dotdot_update_list;
-		dotdot_update_list = dir->next;
+	while (!list_empty(&dotdot_update_list)) {
+		dir = list_entry(dotdot_update_list.prev, struct dotdot_update,
+				 list);
+		list_del(&dir->list);
 		process_dir_inode(mp, dir->agno, dir->irec, dir->ino_offset);
 		free(dir);
 	}
