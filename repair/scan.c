@@ -1224,7 +1224,6 @@ scan_ag(
 		do_error(_("can't get root superblock for ag %d\n"), agno);
 		return;
 	}
-
 	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
 	if (!sb) {
 		do_error(_("can't allocate memory for superblock\n"));

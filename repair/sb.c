@@ -139,7 +139,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			c_bufsb = (char *)sb + i;
 			libxfs_sb_from_disk(&bufsb, (xfs_dsb_t *)c_bufsb);
 
-			if (verify_sb(&bufsb, 0) != XR_OK)
+			if (verify_sb(c_bufsb, &bufsb, 0) != XR_OK)
 				continue;
 
 			do_warn(_("found candidate secondary superblock...\n"));
@@ -245,7 +245,7 @@ sb_validate_ino_align(struct xfs_sb *sb)
  */
 
 int
-verify_sb(xfs_sb_t *sb, int is_primary_sb)
+verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
 {
 	__uint32_t	bsize;
 	int		i;
@@ -263,8 +263,34 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 	if (is_primary_sb && sb->sb_inprogress == 1)
 		return(XR_BAD_INPROGRESS);
 
-	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
+	/*
+	 * before going *any further*, validate the sector size and if the
+	 * version says we should have CRCs enabled, validate that.
+	 */
 
+	/* check to make sure sectorsize is legal 2^N, 9 <= N <= 15 */
+	if (sb->sb_sectsize == 0)
+		return(XR_BAD_SECT_SIZE_DATA);
+
+	bsize = 1;
+	for (i = 0; bsize < sb->sb_sectsize &&
+		i < sizeof(sb->sb_sectsize) * NBBY; i++)  {
+		bsize <<= 1;
+	}
+
+	if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
+		return(XR_BAD_SECT_SIZE_DATA);
+
+	/* check sb sectorsize field against sb sectlog field */
+	if (i != sb->sb_sectlog)
+		return(XR_BAD_SECT_SIZE_DATA);
+
+	/* sector size in range - CRC check time */
+	if (xfs_sb_version_hascrc(sb) &&
+	    !xfs_verify_cksum(sb_buf, sb->sb_sectsize, XFS_SB_CRC_OFF))
+		return XR_BAD_CRC;
+
+	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
 	if (sb->sb_blocksize == 0)
 		return(XR_BAD_BLOCKSIZE);
 
@@ -299,26 +325,6 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
 		sb->sb_inodesize > XFS_DINODE_MAX_SIZE ||
 		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
 		return(XR_BAD_INO_SIZE_DATA);
-
-	/* check to make sure sectorsize is legal 2^N, 9 <= N <= 15 */
-
-	if (sb->sb_sectsize == 0)
-		return(XR_BAD_SECT_SIZE_DATA);
-
-	bsize = 1;
-
-	for (i = 0; bsize < sb->sb_sectsize &&
-		i < sizeof(sb->sb_sectsize) * NBBY; i++)  {
-		bsize <<= 1;
-	}
-
-	if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
-		return(XR_BAD_SECT_SIZE_DATA);
-
-	/* check sb sectorsize field against sb sectlog field */
-
-	if (i != sb->sb_sectlog)
-		return(XR_BAD_SECT_SIZE_DATA);
 
 	if (xfs_sb_version_hassector(sb))  {
 
@@ -482,8 +488,10 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
 	}
 
-	
 	libxfs_sb_to_disk(buf, sbp, XFS_SB_ALL_BITS);
+
+	if (xfs_sb_version_hascrc(sbp))
+		xfs_update_cksum((char *)buf, size, XFS_SB_CRC_OFF);
 
 	if (write(x.dfd, buf, size) != size) {
 		free(buf);
@@ -494,7 +502,7 @@ write_primary_sb(xfs_sb_t *sbp, int size)
 }
 
 /*
- * get a possible superblock -- don't check for internal consistency
+ * get a possible superblock -- checks for internal consistency
  */
 int
 get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
@@ -529,9 +537,10 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 		do_error("%s\n", strerror(error));
 	}
 	libxfs_sb_from_disk(sbp, buf);
-	free(buf);
 
-	return (verify_sb(sbp, 0));
+	rval = verify_sb((char *)buf, sbp, agno == 0);
+	free(buf);
+	return rval;
 }
 
 /* returns element on list with highest reference count */
@@ -745,13 +754,11 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 			off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
 
 			checked[agno] = 1;
-
-			if (get_sb(sb, off, size, agno) == XR_EOF)  {
-				retval = XR_EOF;
+			retval = get_sb(sb, off, size, agno);
+			if (retval == XR_EOF)
 				goto out_free_list;
-			}
 
-			if (verify_sb(sb, 0) == XR_OK)  {
+			if (retval == XR_OK) {
 				/*
 				 * save away geometry info.
 				 * don't bother checking the sb

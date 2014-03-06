@@ -472,7 +472,7 @@ verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	int status = XR_OK;
 	int status_sb = XR_OK;
 
-	status = verify_sb(sb, (i == 0));
+	status = verify_sb(sbuf->b_addr, sb, (i == 0));
 
 	if (status != XR_OK)  {
 		do_warn(_("bad on-disk superblock %d - %s\n"),

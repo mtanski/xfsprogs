@@ -49,7 +49,8 @@
 #define XR_BAD_SB_UNIT		17	/* bad stripe unit */
 #define XR_BAD_SB_WIDTH		18	/* bad stripe width */
 #define XR_BAD_SVN		19	/* bad shared version number */
-#define XR_BAD_ERR_CODE		20	/* Bad error code */
+#define XR_BAD_CRC		20	/* Bad CRC */
+#define XR_BAD_ERR_CODE		21	/* Bad error code */
 
 /* XFS filesystem (il)legal values */
 

@@ -137,6 +137,8 @@ err_string(int err_code)
 			_("bad stripe width in superblock");
 		err_message[XR_BAD_SVN] =
 			_("bad shared version number in superblock");
+		err_message[XR_BAD_CRC] =
+			_("bad CRC in superblock");
 		done = 1;
 	}
 
@@ -529,6 +531,8 @@ main(int argc, char **argv)
 	xfs_buf_t	*sbp;
 	xfs_mount_t	xfs_m;
 	char		*msgbuf;
+	struct xfs_sb	psb;
+	int		rval;
 
 	progname = basename(argv[0]);
 	setlocale(LC_ALL, "");
@@ -558,13 +562,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* prepare the mount structure */
-	memset(&xfs_m, 0, sizeof(xfs_mount_t));
-	libxfs_buftarg_init(&xfs_m, x.ddev, x.logdev, x.rtdev);
-	sbp = libxfs_readbuf(xfs_m.m_ddev_targp, XFS_SB_DADDR,
-				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0,
-				&xfs_sb_buf_ops);
-	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
+	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
+	if (rval != XR_OK) {
+		do_warn(_("Primary superblock bad after phase 1!\n"
+			  "Exiting now.\n"));
+		exit(1);
+	}
 
 	/*
 	 * if the sector size of the filesystem we are trying to repair is
@@ -583,7 +586,7 @@ main(int argc, char **argv)
 			geom.sectsize = BBSIZE;
 		}
 
-		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
+		if (psb.sb_sectsize < geom.sectsize) {
 			long	old_flags;
 
 			old_flags = fcntl(fd, F_GETFL, 0);
@@ -595,7 +598,10 @@ main(int argc, char **argv)
 			}
 		}
 	}
-	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
+
+	/* prepare the mount structure */
+	memset(&xfs_m, 0, sizeof(xfs_mount_t));
+	mp = libxfs_mount(&xfs_m, &psb, x.ddev, x.logdev, x.rtdev, 0);
 
 	if (!mp)  {
 		fprintf(stderr,
@@ -603,8 +609,6 @@ main(int argc, char **argv)
 			progname);
 		exit(1);
 	}
-	libxfs_putbuf(sbp);
-	libxfs_purgebuf(sbp);
 
 	/*
 	 * set XFS-independent status vars from the mount/sb structure

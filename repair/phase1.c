@@ -70,13 +70,14 @@ phase1(xfs_mount_t *mp)
 	ag_bp = alloc_ag_buf(MAX_SECTSIZE);
 	sb = (xfs_sb_t *) ag_bp;
 
-	if (get_sb(sb, 0LL, MAX_SECTSIZE, 0) == XR_EOF)
+	rval = get_sb(sb, 0LL, MAX_SECTSIZE, 0);
+	if (rval == XR_EOF)
 		do_error(_("error reading primary superblock\n"));
 
 	/*
 	 * is this really an sb, verify internal consistency
 	 */
-	if ((rval = verify_sb(sb, 1)) != XR_OK)  {
+	if (rval != XR_OK)  {
 		do_warn(_("bad primary superblock - %s !!!\n"),
 			err_string(rval));
 		if (!find_secondary_sb(sb))
