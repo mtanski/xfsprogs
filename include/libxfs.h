@@ -365,7 +365,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 #define XFS_BUF_PRIORITY(bp)		(cache_node_get_priority( \
 						(struct cache_node *)(bp)))
 #define xfs_buf_set_ref(bp,ref)		((void) 0)
-#define xfs_buf_ioerror(bp,err)		(bp)->b_error = (err);
+#define xfs_buf_ioerror(bp,err)		((bp)->b_error = (err))
 
 #define xfs_daddr_to_agno(mp,d) \
 	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
