@@ -52,6 +52,8 @@ typedef char*		xfs_caddr_t;
 #define xfs_flock64	flock64
 #define xfs_flock64_t	struct flock64
 
+#define EFSBADCRC	991	/* Bad CRC detected */
+
 typedef struct xfs_error_injection {
 	__int32_t	fd;
 	__int32_t	errtag;

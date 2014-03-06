@@ -150,6 +150,7 @@ typedef unsigned char	uchar_t;
 
 #define ENOATTR		989     /* Attribute not found */
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
+#define EFSBADCRC	991	/* Bad CRC detected */
 #define constpp		char * const *
 
 #define HAVE_FID	1

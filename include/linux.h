@@ -136,6 +136,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
 
 #define ENOATTR		ENODATA	/* Attribute not found */
 #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
+#define EFSBADCRC	EBADMSG	/* Bad CRC detected */
 
 typedef loff_t		xfs_off_t;
 typedef __uint64_t	xfs_ino_t;

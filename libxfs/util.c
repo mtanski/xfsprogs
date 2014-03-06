@@ -730,3 +730,16 @@ cmn_err(int level, char *fmt, ...)
 	fputs("\n", stderr);
 	va_end(ap);
 }
+
+/*
+ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
+ * values, and omit the stack trace unless the error level is tuned high.
+ */
+void
+xfs_verifier_error(
+	struct xfs_buf		*bp)
+{
+	xfs_alert(NULL, "Metadata %s detected at block 0x%llx/0x%x",
+		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
+		  bp->b_bn, BBTOB(bp->b_length));
+}

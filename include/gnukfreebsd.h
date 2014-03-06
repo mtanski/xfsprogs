@@ -36,6 +36,7 @@
 #define constpp	char * const *
 
 #define EFSCORRUPTED	990	/* Filesystem is corrupted */
+#define EFSBADCRC	991	/* Bad CRC detected */
 
 typedef off_t		xfs_off_t;
 typedef __uint64_t	xfs_ino_t;
