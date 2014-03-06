@@ -227,8 +227,8 @@ xfs_btree_lblock_verify_crc(
 	struct xfs_buf		*bp)
 {
 	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
-		return xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-					XFS_BTREE_LBLOCK_CRC_OFF);
+		return xfs_buf_verify_cksum(bp, XFS_BTREE_LBLOCK_CRC_OFF);
+
 	return true;
 }
 
@@ -260,8 +260,8 @@ xfs_btree_sblock_verify_crc(
 	struct xfs_buf		*bp)
 {
 	if (xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
-		return xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-					XFS_BTREE_SBLOCK_CRC_OFF);
+		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
+
 	return true;
 }
 
