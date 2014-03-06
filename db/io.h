@@ -67,6 +67,6 @@ static inline bool
 iocur_crc_valid()
 {
 	return (iocur_top->bp &&
-		iocur_top->bp->b_error != EFSCORRUPTED &&
+		iocur_top->bp->b_error != EFSBADCRC &&
 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
 }
