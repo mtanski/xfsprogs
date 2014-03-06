@@ -995,7 +995,7 @@ do_inode_prefetch(
 	/*
 	 * wait for workers to complete
 	 */
-	for (; i >= 0; i--)
+	while (i--)
 		destroy_work_queue(&queues[i]);
 	free(queues);
 }
