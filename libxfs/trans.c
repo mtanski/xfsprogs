@@ -694,7 +694,6 @@ inode_item_done(
 	xfs_mount_t		*mp;
 	xfs_buf_t		*bp;
 	int			error;
-	extern kmem_zone_t	*xfs_ili_zone;
 
 	ip = iip->ili_inode;
 	mp = iip->ili_item.li_mountp;
@@ -736,15 +735,9 @@ ili_done:
 	if (iip->ili_lock_flags) {
 		iip->ili_lock_flags = 0;
 		return;
-	} else {
-		libxfs_iput(ip, 0);
 	}
-
-	if (ip->i_itemp)
-		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
-	else
-		ASSERT(0);
-	ip->i_itemp = NULL;
+	/* free the inode */
+	libxfs_iput(ip, 0);
 }
 
 static void
