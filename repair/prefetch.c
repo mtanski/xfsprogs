@@ -944,6 +944,7 @@ do_inode_prefetch(
 	int			i;
 	struct work_queue	queue;
 	struct work_queue	*queues;
+	int			queues_started = 0;
 
 	/*
 	 * If the previous phases of repair have not overflowed the buffer
@@ -987,6 +988,7 @@ do_inode_prefetch(
 
 		create_work_queue(&queues[i], mp, 1);
 		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
+		queues_started++;
 
 		if (wargs->end_ag >= mp->m_sb.sb_agcount)
 			break;
@@ -995,7 +997,7 @@ do_inode_prefetch(
 	/*
 	 * wait for workers to complete
 	 */
-	while (i--)
+	for (i = 0; i < queues_started; i++)
 		destroy_work_queue(&queues[i]);
 	free(queues);
 }
