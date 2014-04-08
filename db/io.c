@@ -500,7 +500,7 @@ set_cur(
 	push_cur();
 
 	if (bbmap) {
-#ifdef DEBUG
+#ifdef DEBUG_BBMAP
 		int i;
 		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
 		printf(_("\tblock map"));
