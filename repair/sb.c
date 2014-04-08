@@ -518,6 +518,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 		exit(1);
 	}
 	memset(buf, 0, size);
+	memset(sbp, 0, sizeof(*sbp));
 
 	/* try and read it first */
 
