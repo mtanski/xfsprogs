@@ -358,8 +358,10 @@ ring_f(
 	}
 
 	index = (int)strtoul(argv[1], NULL, 0);
-	if (index < 0 || index >= RING_ENTRIES)
+	if (index < 0 || index >= RING_ENTRIES) {
 		dbprintf(_("invalid entry: %d\n"), index);
+		return 0;
+	}
 
 	ring_current = index;
 
