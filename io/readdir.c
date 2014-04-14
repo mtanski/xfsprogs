@@ -171,6 +171,7 @@ readdir_f(
 	gettimeofday(&t2, NULL);
 
 	closedir(dir);
+	close(dfd);
 
 	t2 = tsub(t2, t1);
 	timestr(&t2, ts, sizeof(ts), 0);

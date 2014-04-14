@@ -59,18 +59,19 @@ setup_proto(
 	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
 		fprintf(stderr, _("%s: failed to open %s: %s\n"),
 			progname, fname, strerror(errno));
-		exit(1);
+		goto out_fail;
 	}
+
 	buf = malloc(size + 1);
 	if (read(fd, buf, size) < size) {
 		fprintf(stderr, _("%s: read failed on %s: %s\n"),
 			progname, fname, strerror(errno));
-		exit(1);
+		goto out_fail;
 	}
 	if (buf[size - 1] != '\n') {
 		fprintf(stderr, _("%s: proto file %s premature EOF\n"),
 			progname, fname);
-		exit(1);
+		goto out_fail;
 	}
 	buf[size] = '\0';
 	/*
@@ -79,7 +80,12 @@ setup_proto(
 	(void)getstr(&buf);	/* boot image name */
 	(void)getnum(&buf);	/* block count */
 	(void)getnum(&buf);	/* inode count */
+	close(fd);
 	return buf;
+
+out_fail:
+	close(fd);
+	exit(1);
 }
 
 static long

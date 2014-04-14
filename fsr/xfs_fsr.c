@@ -706,6 +706,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
 		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
 			  mntdir);
+		close(fsfd);
 		return -1;
 	}
 
@@ -1346,6 +1347,8 @@ packfile(char *fname, char *tname, int fd,
 	if (lseek64(tfd, 0, SEEK_SET)) {
 		fsrprintf(_("Couldn't rewind on temporary file\n"));
 		close(tfd);
+		if (ffd != -1)
+			close(ffd);
 		free(fbuf);
 		return -1;
 	}
@@ -1359,6 +1362,8 @@ packfile(char *fname, char *tname, int fd,
 			fsrprintf(_("No improvement will be made (skipping): %s\n"), fname);
 		free(fbuf);
 		close(tfd);
+		if (ffd != -1)
+			close(ffd);
 		return 1; /* no change/no error */
 	}
 
@@ -1432,6 +1437,8 @@ packfile(char *fname, char *tname, int fd,
 				}
 				free(fbuf);
 				close(tfd);
+				if (ffd != -1)
+					close(ffd);
 				return -1;
 			}
 			if (nfrags) {
@@ -1446,7 +1453,8 @@ packfile(char *fname, char *tname, int fd,
 		}
 	}
 	ftruncate64(tfd, statp->bs_size);
-	if (ffd > 0) close(ffd);
+	if (ffd != -1)
+		close(ffd);
 	fsync(tfd);
 
 	free(fbuf);
