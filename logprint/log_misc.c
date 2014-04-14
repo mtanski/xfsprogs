@@ -477,13 +477,17 @@ xlog_print_trans_efd(xfs_caddr_t *ptr, uint len)
 
 
 int
-xlog_print_trans_efi(xfs_caddr_t *ptr, uint src_len)
+xlog_print_trans_efi(
+	xfs_caddr_t *ptr,
+	uint src_len,
+	int continued)
 {
     xfs_efi_log_format_t *src_f, *f;
     uint		 dst_len;
     xfs_extent_t	 *ex;
     int			 i;
     int			 error = 0;
+    int			 core_size = offsetof(xfs_efi_log_format_t, efi_extents);
 
     /*
      * memmove to ensure 8-byte alignment for the long longs in
@@ -498,17 +502,29 @@ xlog_print_trans_efi(xfs_caddr_t *ptr, uint src_len)
 
     /* convert to native format */
     dst_len = sizeof(xfs_efi_log_format_t) + (src_f->efi_nextents - 1) * sizeof(xfs_extent_t);
+
+    if (continued && src_len < core_size) {
+	printf(_("EFI: Not enough data to decode further\n"));
+	return 1;
+    }
+
     if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
 	fprintf(stderr, _("%s: xlog_print_trans_efi: malloc failed\n"), progname);
 	exit(1);
     }
-    if (xfs_efi_copy_format((char*)src_f, src_len, f)) {
+    if (xfs_efi_copy_format((char*)src_f, src_len, f, continued)) {
 	error = 1;
 	goto error;
     }
 
     printf(_("EFI:  #regs: %d    num_extents: %d  id: 0x%llx\n"),
 	   f->efi_size, f->efi_nextents, (unsigned long long)f->efi_id);
+
+    if (continued) {
+	printf(_("EFI free extent data skipped (CONTINUE set, no space)\n"));
+	goto error;
+    }
+
     ex = f->efi_extents;
     for (i=0; i < f->efi_nextents; i++) {
 	    printf("(s: 0x%llx, l: %d) ",
@@ -1033,7 +1049,8 @@ xlog_print_record(
 		    }
 		    case XFS_LI_EFI: {
 			skip = xlog_print_trans_efi(&ptr,
-					be32_to_cpu(op_head->oh_len));
+					be32_to_cpu(op_head->oh_len),
+					continued);
 			break;
 		    }
 		    case XFS_LI_EFD: {
@@ -1571,7 +1588,11 @@ xfs_inode_item_format_convert(char *src_buf, uint len, xfs_inode_log_format_t *i
 }
 
 int
-xfs_efi_copy_format(char *buf, uint len, xfs_efi_log_format_t *dst_efi_fmt)
+xfs_efi_copy_format(
+	char			  *buf,
+	uint			  len,
+	struct xfs_efi_log_format *dst_efi_fmt,
+	int			  continued)
 {
         uint i;
 	uint nextents = ((xfs_efi_log_format_t *)buf)->efi_nextents;
@@ -1579,7 +1600,7 @@ xfs_efi_copy_format(char *buf, uint len, xfs_efi_log_format_t *dst_efi_fmt)
         uint len32 = sizeof(xfs_efi_log_format_32_t) + (nextents - 1) * sizeof(xfs_extent_32_t);
         uint len64 = sizeof(xfs_efi_log_format_64_t) + (nextents - 1) * sizeof(xfs_extent_64_t);
 
-        if (len == dst_len) {
+        if (len == dst_len || continued) {
                 memcpy((char *)dst_efi_fmt, buf, len);
                 return 0;
         } else if (len == len32) {

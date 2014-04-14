@@ -410,7 +410,7 @@ xlog_recover_print_efi(
 	    fprintf(stderr, _("%s: xlog_recover_print_efi: malloc failed\n"), progname);
 	    exit(1);
 	}
-	if (xfs_efi_copy_format((char*)src_f, src_len, f)) {
+	if (xfs_efi_copy_format((char*)src_f, src_len, f, 0)) {
 	    free(f);
 	    return;
 	}
