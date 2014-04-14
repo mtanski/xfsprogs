@@ -1,3 +1,21 @@
+xfsprogs-3.2.0-rc1 (14 April 2014)
+	- First release candidate for full support of CRC enabled filesystems
+	- Large number of Coverity related fixes and cleanups
+	- disambiguous of CRC validation errors from IO errors.
+	- Improved dangerous mode handling in repair
+	- repair handles garbage in zeroed areas of superblocks better
+	- repair validates dirent ftype field fully
+	- metadump fully supports discontiguous directory blocks
+	- metadump only recalculates CRCs on metadata it obfuscates so as to
+	  preserve errors in the metadata where possible.
+	- default log size that mkfs creates is now reverted to the same size
+	  as 3.1.x releases create.
+	- mkfs sets the ftype on directory entries correctly during protofile
+	  population
+	- xfs_io support O_TMPFILE, flink, FALLOC_FL_ZERO_RANGE and
+	  FALLOC_FL_COLLAPSE_RANGE,
+	- logprint handles split entries better
+
 xfsprogs-3.2.0-alpha2 (25 November 2013)
 	- Alpha release for the purpose of testing the CRC feature in
 	  kernels 3.10 and newer.
