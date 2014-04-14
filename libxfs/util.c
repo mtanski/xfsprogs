@@ -265,6 +265,7 @@ libxfs_ialloc(
 	case S_IFSOCK:
 		/* doesn't make sense to set an rdev for these */
 		rdev = 0;
+		/* FALLTHROUGH */
 	case S_IFCHR:
 	case S_IFBLK:
 		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
