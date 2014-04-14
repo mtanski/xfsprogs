@@ -146,7 +146,7 @@ attr_set_f(
 			dbprintf(_("cannot allocate buffer (%d)\n"), valuelen);
 			goto out;
 		}
-		memset(value, 0xfeedface, valuelen);
+		memset(value, 'v', valuelen);
 	} else {
 		value = NULL;
 	}
