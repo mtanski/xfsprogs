@@ -289,15 +289,19 @@ quota_group_type(
 		}
 		gids = &gid;
 		ngroups = 1;
-	} else if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
-		    ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
-		    ((ngroups = getgroups(ngroups, gids)) < 0)) {
-		dofree = (gids != NULL);
-		gid = getgid();
-		gids = &gid;
-		ngroups = 1;
 	} else {
-		dofree = (gids != NULL);
+		if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
+		     ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
+		     ((ngroups = getgroups(ngroups, gids)) < 0)) {
+			/* something failed.  Fall back to 1 group */
+			free(gids);
+			gid = getgid();
+			gids = &gid;
+			ngroups = 1;
+		} else {
+			/* It all worked, and we allocated memory */
+			dofree = 1;
+		}
 	}
 
 	for (i = 0; i < ngroups; i++, name = NULL) {
