@@ -582,8 +582,17 @@ libxfs_alloc_file_space(
 		resblks = (uint)XFS_DIOSTRAT_SPACE_RES(mp, datablocks);
 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
 					  resblks, 0);
-		if (error)
+		/*
+		 * Check for running out of space
+		 */
+		if (error) {
+			/*
+			 * Free the transaction structure.
+			 */
+			ASSERT(error == ENOSPC);
+			xfs_trans_cancel(tp, 0);
 			break;
+		}
 		xfs_trans_ijoin(tp, ip, 0);
 		xfs_trans_ihold(tp, ip);
 
@@ -593,12 +602,12 @@ libxfs_alloc_file_space(
 				&reccount, &free_list);
 
 		if (error)
-			break;
+			goto error0;
 
 		/* complete the transaction */
 		error = xfs_bmap_finish(&tp, &free_list, &committed);
 		if (error)
-			break;
+			goto error0;
 
 		error = xfs_trans_commit(tp, 0);
 		if (error)
@@ -611,6 +620,11 @@ libxfs_alloc_file_space(
 		startoffset_fsb += allocated_fsb;
 		allocatesize_fsb -= allocated_fsb;
 	}
+	return error;
+
+error0:	/* Cancel bmap, cancel trans */
+	xfs_bmap_cancel(&free_list);
+	xfs_trans_cancel(tp, 0);
 	return error;
 }
 
