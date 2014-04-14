@@ -591,6 +591,9 @@ parseproto(
 		}
 		libxfs_iput(ip, 0);
 		return;
+	default:
+		ASSERT(0);
+		fail(_("Unknown format"), EINVAL);
 	}
 	libxfs_trans_log_inode(tp, ip, flags);
 	error = libxfs_bmap_finish(&tp, &flist, &committed);
