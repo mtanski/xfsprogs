@@ -942,11 +942,12 @@ xlog_print_record(
 	     */
 	    if (be32_to_cpu(rhead->h_cycle) !=
 			be32_to_cpu(*(__be32 *)ptr)) {
-		if (*read_type == FULL_READ)
-		    return -1;
-		else if (be32_to_cpu(rhead->h_cycle) + 1 !=
-			be32_to_cpu(*(__be32 *)ptr))
-		    return -1;
+		if ((*read_type == FULL_READ) ||
+		    (be32_to_cpu(rhead->h_cycle) + 1 !=
+				be32_to_cpu(*(__be32 *)ptr))) {
+			free(buf);
+			return -1;
+		}
 	    }
 	}
 
