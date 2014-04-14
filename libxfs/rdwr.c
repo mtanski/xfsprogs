@@ -741,7 +741,7 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
 int
 libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
 {
-	int	fd = libxfs_device_to_fd(btp->dev);
+	int	fd;
 	int	error = 0;
 	char	*buf;
 	int	i;

@@ -1964,8 +1964,6 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
 		int		rswidth;
 		__uint64_t	rtextbytes;
 
-		rswidth = 0;
-
 		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
 			rswidth = ft.rtswidth;
 		else

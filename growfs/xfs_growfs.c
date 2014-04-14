@@ -132,7 +132,6 @@ main(int argc, char **argv)
 	maxpct = esize = 0;
 	dsize = lsize = rsize = 0LL;
 	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
-	ci = 0;
 
 	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
 		switch (c) {

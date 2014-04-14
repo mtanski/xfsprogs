@@ -88,7 +88,6 @@ bmap(
 		}
 	} else if (fmt == XFS_DINODE_FMT_BTREE) {
 		push_cur();
-		bno = NULLFSBLOCK;
 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
 		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
 		pp = XFS_BMDR_PTR_ADDR(rblock, 1, xfs_bmdr_maxrecs(mp, fsize, 0));

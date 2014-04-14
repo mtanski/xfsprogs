@@ -598,8 +598,6 @@ free_geo(fs_geo_list_t *list)
 	fs_geo_list_t	*next;
 	fs_geo_list_t	*current;
 
-	current = list;
-
 	for (current = list; current != NULL; current = next)  {
 		next = current->next;
 		free(current);

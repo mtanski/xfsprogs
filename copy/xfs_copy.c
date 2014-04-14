@@ -238,7 +238,7 @@ killall(void)
 void
 handler(int sig)
 {
-	pid_t	pid = getpid();
+	pid_t	pid;
 	int	status, i;
 
 	pid = wait(&status);
@@ -912,7 +912,6 @@ main(int argc, char **argv)
 			    - (__uint64_t)mp->m_sb.sb_fdblocks + 10 * num_ags));
 
 	kids = num_targets;
-	block = (struct xfs_btree_block *) btree_buf.data;
 
 	for (agno = 0; agno < num_ags && kids > 0; agno++)  {
 		/* read in first blocks of the ag */

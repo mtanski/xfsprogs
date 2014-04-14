@@ -575,7 +575,6 @@ pf_batch_read(
 			 * go through the xfs_buf_t list copying from the
 			 * read buffer into the xfs_buf_t's and release them.
 			 */
-			last_off = first_off;
 			for (i = 0; i < num; i++) {
 
 				pbuf = ((char *)buf) + (LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[i])) - first_off);

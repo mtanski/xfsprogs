@@ -62,9 +62,9 @@ printpath(
 		else if (qstat.qs_flags & XFS_QUOTA_GDQ_ACCT)
 			c = printf("%sgqnoenforce", c ? ", " : "");
 		if (qstat.qs_flags & XFS_QUOTA_PDQ_ENFD)
-			c = printf("%spquota", c ? ", " : "");
+			printf("%spquota", c ? ", " : "");
 		else if (qstat.qs_flags & XFS_QUOTA_PDQ_ACCT)
-			c = printf("%spqnoenforce", c ? ", " : "");
+			printf("%spqnoenforce", c ? ", " : "");
 		printf(")");
 	}
 	printf("\n");

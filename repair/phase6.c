@@ -1858,7 +1858,6 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
 		if (junkit)  {
 			if (inum == orphanage_ino)
 				orphanage_ino = 0;
-			junkit = 0;
 			nbad++;
 			if (!no_modify)  {
 				dep->name[0] = '/';

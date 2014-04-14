@@ -736,7 +736,6 @@ xlog_print_trans_inode(
 	    *ptr += be32_to_cpu(op_head->oh_len);
 	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
 		return 1;
-	    op_head = (xlog_op_header_t *)*ptr;
     }
 
     return 0;

@@ -153,7 +153,6 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_agnumber_t agno)
 		/*
 		 * free extent ends here
 		 */
-		in_extent = 0;
 #if defined(XR_BLD_FREE_TRACE) && defined(XR_BLD_ADD_EXTENT)
 		fprintf(stderr, "adding extent %u [%u %u]\n",
 			agno, extent_start, extent_len);
@@ -223,7 +222,6 @@ setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
 		do_error(_("error - not enough free space in filesystem\n"));
 
 	agb_ptr = curs->btree_blocks;
-	j = curs->level[0].num_blocks;
 
 	/*
 	 * set up the free block array
@@ -438,7 +436,6 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 		do_error(_("can't rebuild fs trees -- not enough free space "
 			   "on ag %u\n"), agno);
 
-	i = 0;
 	while (ext_ptr != NULL && blocks_needed > 0)  {
 		if (ext_ptr->ex_blockcount <= blocks_needed)  {
 			blocks_needed -= ext_ptr->ex_blockcount;

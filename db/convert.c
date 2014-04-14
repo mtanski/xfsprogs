@@ -200,7 +200,6 @@ convert_f(int argc, char **argv)
 	if (cur_agno != NULLAGNUMBER && (conmask & M(AGNUMBER)) == 0) {
 		cvals[CT_AGNUMBER].agnumber = cur_agno;
 		mask |= M(AGNUMBER);
-		conmask |= ~ctydescs[CT_AGNUMBER].allowed;
 	}
 	v = 0;
 	for (c = (ctype_t)0; c < NCTS; c++) {

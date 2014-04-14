@@ -623,8 +623,6 @@ verify_da_path(xfs_mount_t	*mp,
 #ifdef XR_DIR_TRACE
 		cursor->level[this_level].n = newnode;
 #endif
-		node = newnode;
-
 		entry = cursor->level[this_level].index = 0;
 	}
 	/*

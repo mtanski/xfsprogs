@@ -1186,7 +1186,6 @@ blockuse_f(
 		return 0;
 	}
 	optind = 0;
-	count = 1;
 	shownames = 0;
 	fsb = XFS_DADDR_TO_FSB(mp, iocur_top->off >> BBSHIFT);
 	agno = XFS_FSB_TO_AGNO(mp, fsb);

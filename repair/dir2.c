@@ -606,7 +606,6 @@ _("bad level %d in block %u for directory inode %" PRIu64 "\n"),
 		cursor->level[this_level].bno = dabno;
 		cursor->level[this_level].hashval =
 			be32_to_cpu(btree[0].hashval);
-		node = newnode;
 
 		entry = cursor->level[this_level].index = 0;
 	}
@@ -780,7 +779,7 @@ process_sf_dir2(
 	 * run through entries, stop at first bad entry, don't need
 	 * to check for .. since that's encoded in its own field
 	 */
-	sfep = next_sfep = xfs_dir2_sf_firstentry(sfp);
+	next_sfep = xfs_dir2_sf_firstentry(sfp);
 	for (i = 0;
 	     i < num_entries && ino_dir_size > (char *)next_sfep - (char *)sfp;
 	     i++) {
