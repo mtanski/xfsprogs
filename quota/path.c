@@ -54,9 +54,9 @@ printpath(
 		c = 0;
 		printf(" (");
 		if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
-			c = printf("%suquota", c ? ", " : "");
+			c = printf("uquota");
 		else if (qstat.qs_flags & XFS_QUOTA_UDQ_ACCT)
-			c = printf("%suqnoenforce", c ? ", " : "");
+			c = printf("uqnoenforce");
 		if (qstat.qs_flags & XFS_QUOTA_GDQ_ENFD)
 			c = printf("%sgquota", c ? ", " : "");
 		else if (qstat.qs_flags & XFS_QUOTA_GDQ_ACCT)
