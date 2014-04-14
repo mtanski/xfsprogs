@@ -647,14 +647,19 @@ fsrall_cleanup(int timeout)
 	int ret;
 	char buf[SMBUFSZ];
 
-	/* record where we left off */
 	unlink(leftofffile);
-	fd = open(leftofffile, O_WRONLY|O_CREAT|O_EXCL, 0644);
-	if (fd == -1)
-		fsrprintf(_("open(%s) failed: %s\n"),
-		          leftofffile, strerror(errno));
-	else {
-		if (timeout) {
+
+	if (timeout) {
+		fsrprintf(_("%s startpass %d, endpass %d, time %d seconds\n"),
+			progname, startpass, fs->npass,
+			time(0) - endtime + howlong);
+
+		/* record where we left off */
+		fd = open(leftofffile, O_WRONLY|O_CREAT|O_EXCL, 0644);
+		if (fd == -1) {
+			fsrprintf(_("open(%s) failed: %s\n"),
+			          leftofffile, strerror(errno));
+		} else {
 			ret = sprintf(buf, "%s %d %llu\n", fs->dev,
 			        fs->npass, (unsigned long long)leftoffino);
 			if (write(fd, buf, ret) < strlen(buf))
@@ -663,11 +668,6 @@ fsrall_cleanup(int timeout)
 			close(fd);
 		}
 	}
-
-	if (timeout)
-		fsrprintf(_("%s startpass %d, endpass %d, time %d seconds\n"),
-			progname, startpass, fs->npass,
-			time(0) - endtime + howlong);
 }
 
 /*
