@@ -758,7 +758,6 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
 			break;
 		}
 		buf += len;
-		offset += len;
 	}
 
 	if (!error)
@@ -878,7 +877,6 @@ libxfs_writebufr(xfs_buf_t *bp)
 				break;
 			}
 			buf += len;
-			offset += len;
 		}
 	}
 
