@@ -1136,7 +1136,7 @@ blocktrash_f(
 	}
 	if (blocks == 0) {
 		dbprintf(_("blocktrash: no matching blocks\n"));
-		return 0;
+		goto out;
 	}
 	if (!sopt)
 		dbprintf(_("blocktrash: seed %u\n"), seed);
@@ -1161,6 +1161,7 @@ blocktrash_f(
 			}
 		}
 	}
+out:
 	xfree(lentab);
 	return 0;
 }
@@ -1907,6 +1908,7 @@ ncheck_f(
 			break;
 		default:
 			dbprintf(_("bad option -%c for ncheck command\n"), c);
+			xfree(ilist);
 			return 0;
 		}
 	}

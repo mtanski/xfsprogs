@@ -258,6 +258,8 @@ parent_check(void)
 	if (!bstatbuf || !parentbuf) {
 		fprintf(stderr, _("unable to allocate buffers: %s\n"),
 			strerror(errno));
+		free(bstatbuf);
+		free(parentbuf);
 		return 1;
 	}
 

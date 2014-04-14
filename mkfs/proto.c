@@ -49,7 +49,7 @@ char *
 setup_proto(
 	char	*fname)
 {
-	char		*buf;
+	char		*buf = NULL;
 	static char	dflt[] = "d--755 0 0 $";
 	int		fd;
 	long		size;
@@ -85,6 +85,7 @@ setup_proto(
 
 out_fail:
 	close(fd);
+	free(buf);
 	exit(1);
 }
 

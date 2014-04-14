@@ -233,6 +233,7 @@ bwrite_lrot(
 	memcpy(hold_region, base, shift);
 	memcpy(base, base+shift, len-shift);
 	memcpy(base+(len-shift), hold_region, shift);
+	free(hold_region);
 }
 
 /* ARGSUSED */
@@ -265,6 +266,7 @@ bwrite_rrot(
 	memcpy(hold_region, base+(len-shift), shift);
 	memmove(base+shift, base, len-shift);
 	memcpy(base, hold_region, shift);
+	free(hold_region);
 }
 
 /* ARGSUSED */
