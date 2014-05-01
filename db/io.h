@@ -62,6 +62,7 @@ extern void     write_cur(void);
 extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
 			bbmap_t *bbmap);
 extern void     ring_add(void);
+extern void	set_iocur_type(const struct typ *t);
 
 /*
  * returns -1 for unchecked, 0 for bad and 1 for good

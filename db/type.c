@@ -162,10 +162,11 @@ type_f(
 		if (tt == NULL) {
 			dbprintf(_("no such type %s\n"), argv[1]);
 		} else {
-			if (iocur_top->typ == NULL) {
-			    dbprintf(_("no current object\n"));
-			} else {
-			    iocur_top->typ = cur_typ = tt;
+			if (iocur_top->typ == NULL)
+				dbprintf(_("no current object\n"));
+			else {
+				cur_typ = tt;
+				set_iocur_type(tt);
 			}
 		}
 	}

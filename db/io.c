@@ -552,6 +552,30 @@ set_cur(
 		ring_add();
 }
 
+void
+set_iocur_type(
+	const typ_t	*t)
+{
+	struct xfs_buf	*bp = iocur_top->bp;
+
+	iocur_top->typ = t;
+
+	/* verify the buffer if the type has one. */
+	if (!bp)
+		return;
+	if (!t->bops) {
+		bp->b_ops = NULL;
+		bp->b_flags |= LIBXFS_B_UNCHECKED;
+		return;
+	}
+	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
+		return;
+	bp->b_error = 0;
+	bp->b_ops = t->bops;
+	bp->b_ops->verify_read(bp);
+	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+}
+
 static void
 stack_help(void)
 {
