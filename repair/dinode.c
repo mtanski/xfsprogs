@@ -1254,6 +1254,7 @@ process_symlink_remote(
 	while (pathlen > 0) {
 		int	blk_cnt = 1;
 		int	byte_cnt;
+		int	badcrc = 0;
 
 		fsbno = blkmap_get(blkmap, i);
 		if (fsbno == NULLDFSBNO) {
@@ -1284,6 +1285,12 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
 				lino, i, fsbno);
 			return 1;
 		}
+		if (bp->b_error == EFSBADCRC) {
+			do_warn(
+_("Bad symlink buffer CRC, block %" PRIu64 ", inode %" PRIu64 ".\n"
+  "Correcting CRC, but symlink may be bad.\n"), fsbno, lino);
+			badcrc = 1;
+		}
 
 		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
 		byte_cnt = MIN(pathlen, byte_cnt);
@@ -1307,7 +1314,10 @@ _("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n")
 		offset += byte_cnt;
 		i++;
 
-		libxfs_putbuf(bp);
+		if (badcrc && !no_modify)
+			libxfs_writebuf(bp, 0);
+		else
+			libxfs_putbuf(bp);
 	}
 	return 0;
 }
