@@ -63,10 +63,16 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
 			bbmap_t *bbmap);
 extern void     ring_add(void);
 
-static inline bool
+/*
+ * returns -1 for unchecked, 0 for bad and 1 for good
+ */
+static inline int
 iocur_crc_valid()
 {
-	return (iocur_top->bp &&
-		iocur_top->bp->b_error != EFSBADCRC &&
+	if (!iocur_top->bp)
+		return -1;
+	if (iocur_top->bp->b_flags & LIBXFS_B_UNCHECKED)
+		return -1;
+	return (iocur_top->bp->b_error != EFSBADCRC &&
 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
 }

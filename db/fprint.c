@@ -206,7 +206,20 @@ fp_crc(
 	__int64_t	val;
 	char		*ok;
 
-	ok = iocur_crc_valid() ? "correct" : "bad";
+	switch (iocur_crc_valid()) {
+	case -1:
+		ok = "unchecked";
+		break;
+	case 0:
+		ok = "bad";
+		break;
+	case 1:
+		ok = "correct";
+		break;
+	default:
+		ok = "unknown state";
+		break;
+	}
 
 	for (i = 0, bitpos = bit;
 	     i < count && !seenint();

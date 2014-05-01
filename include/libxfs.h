@@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
 	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
 	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
+	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
 };
 
 #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
