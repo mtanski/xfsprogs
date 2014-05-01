@@ -119,12 +119,6 @@ get_agino_buf(xfs_mount_t	*mp,
 		xfs_agino_t	agino,
 		xfs_dinode_t	**dipp);
 
-xfs_dfsbno_t
-get_bmapi(xfs_mount_t		*mp,
-		xfs_dinode_t	*dip,
-		xfs_ino_t	ino_num,
-		xfs_dfiloff_t	bno,
-		int             whichfork );
 
 void dinode_bmbt_translation_init(void);
 char * get_forkname(int whichfork);
