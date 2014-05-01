@@ -1207,28 +1207,29 @@ scan_ag(
 	void		*arg)
 {
 	struct aghdr_cnts *agcnts = arg;
-	xfs_agf_t	*agf;
-	xfs_buf_t	*agfbuf;
+	struct xfs_agf	*agf;
+	struct xfs_buf	*agfbuf = NULL;
 	int		agf_dirty = 0;
-	xfs_agi_t	*agi;
-	xfs_buf_t	*agibuf;
+	struct xfs_agi	*agi;
+	struct xfs_buf	*agibuf = NULL;
 	int		agi_dirty = 0;
-	xfs_sb_t	*sb;
-	xfs_buf_t	*sbbuf;
+	struct xfs_sb	*sb = NULL;
+	struct xfs_buf	*sbbuf = NULL;
 	int		sb_dirty = 0;
 	int		status;
+	char		*objname = NULL;
+
+	sb = (struct xfs_sb *)calloc(BBSIZE, 1);
+	if (!sb) {
+		do_error(_("can't allocate memory for superblock\n"));
+		return;
+	}
 
 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
 				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
 	if (!sbbuf)  {
-		do_error(_("can't get root superblock for ag %d\n"), agno);
-		return;
-	}
-	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
-	if (!sb) {
-		do_error(_("can't allocate memory for superblock\n"));
-		libxfs_putbuf(sbbuf);
-		return;
+		objname = _("root superblock");
+		goto out_free_sb;
 	}
 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
 
@@ -1236,10 +1237,8 @@ scan_ag(
 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
 	if (!agfbuf)  {
-		do_error(_("can't read agf block for ag %d\n"), agno);
-		libxfs_putbuf(sbbuf);
-		free(sb);
-		return;
+		objname = _("agf block");
+		goto out_free_sbbuf;
 	}
 	agf = XFS_BUF_TO_AGF(agfbuf);
 
@@ -1247,11 +1246,8 @@ scan_ag(
 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
 	if (!agibuf)  {
-		do_error(_("can't read agi block for ag %d\n"), agno);
-		libxfs_putbuf(agfbuf);
-		libxfs_putbuf(sbbuf);
-		free(sb);
-		return;
+		objname = _("agi block");
+		goto out_free_agfbuf;
 	}
 	agi = XFS_BUF_TO_AGI(agibuf);
 
@@ -1295,15 +1291,9 @@ scan_ag(
 	}
 
 	if (status && no_modify)  {
-		libxfs_putbuf(agibuf);
-		libxfs_putbuf(agfbuf);
-		libxfs_putbuf(sbbuf);
-		free(sb);
-
 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
 			agno);
-
-		return;
+		goto out_free_agibuf;
 	}
 
 	scan_freelist(agf, agcnts);
@@ -1312,20 +1302,33 @@ scan_ag(
 	validate_agi(agi, agno, agcnts);
 
 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
+	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
+	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
+
+	/*
+	 * Only pay attention to CRC/verifier errors if we can correct them.
+	 * While there, ensure that we corrected a corruption error if the
+	 * verifier detected one.
+	 */
+	if (!no_modify) {
+		ASSERT(agi_dirty || agibuf->b_error != EFSCORRUPTED);
+		ASSERT(agf_dirty || agfbuf->b_error != EFSCORRUPTED);
+		ASSERT(sb_dirty || sbbuf->b_error != EFSCORRUPTED);
+
+		agi_dirty += (agibuf->b_error == EFSBADCRC);
+		agf_dirty += (agfbuf->b_error == EFSBADCRC);
+		sb_dirty += (sbbuf->b_error == EFSBADCRC);
+	}
 
 	if (agi_dirty && !no_modify)
 		libxfs_writebuf(agibuf, 0);
 	else
 		libxfs_putbuf(agibuf);
 
-	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
-
 	if (agf_dirty && !no_modify)
 		libxfs_writebuf(agfbuf, 0);
 	else
 		libxfs_putbuf(agfbuf);
-
-	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
 
 	if (sb_dirty && !no_modify) {
 		if (agno == 0)
@@ -1341,6 +1344,18 @@ scan_ag(
 	print_inode_list(i);
 #endif
 	return;
+
+out_free_agibuf:
+	libxfs_putbuf(agibuf);
+out_free_agfbuf:
+	libxfs_putbuf(agfbuf);
+out_free_sbbuf:
+	libxfs_putbuf(sbbuf);
+out_free_sb:
+	free(sb);
+
+	if (objname)
+		do_error(_("can't get %s for ag %d\n"), objname, agno);
 }
 
 #define SCAN_THREADS 32
