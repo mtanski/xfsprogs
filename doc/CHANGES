@@ -1,3 +1,8 @@
+xfsprogs-3.2.0-rc2 (2 May 2014)
+	- Second release candidate for full support of CRC enabled filesystems
+	- xfs_repair has full CRC validation and repair
+	- Coverity related cleanups and fixes
+
 xfsprogs-3.2.0-rc1 (14 April 2014)
 	- First release candidate for full support of CRC enabled filesystems
 	- Large number of Coverity related fixes and cleanups
