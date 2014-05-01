@@ -387,8 +387,7 @@ pf_read_inode_dirs(
 	int			hasdir = 0;
 	int			isadir;
 
-	bp->b_ops = &xfs_inode_buf_ops;
-	bp->b_ops->verify_read(bp);
+	libxfs_readbuf_verify(bp, &xfs_inode_buf_ops);
 	if (bp->b_error)
 		return;
 
@@ -460,6 +459,7 @@ pf_read_discontig(
 
 	pthread_mutex_unlock(&args->lock);
 	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
+	bp->b_flags |= LIBXFS_B_UNCHECKED;
 	libxfs_putbuf(bp);
 	pthread_mutex_lock(&args->lock);
 }
@@ -582,7 +582,8 @@ pf_batch_read(
 				if (len < size)
 					break;
 				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
-				bplist[i]->b_flags |= LIBXFS_B_UPTODATE;
+				bplist[i]->b_flags |= (LIBXFS_B_UPTODATE |
+						       LIBXFS_B_UNCHECKED);
 				len -= size;
 				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
 					pf_read_inode_dirs(args, bplist[i]);

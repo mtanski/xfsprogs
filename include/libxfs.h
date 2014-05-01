@@ -436,6 +436,8 @@ extern void	libxfs_putbuf (xfs_buf_t *);
 
 #endif
 
+extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
+			const struct xfs_buf_ops *ops);
 extern xfs_buf_t *libxfs_getsb(xfs_mount_t *, int);
 extern void	libxfs_bcache_purge(void);
 extern void	libxfs_bcache_flush(void);
