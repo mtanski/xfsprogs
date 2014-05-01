@@ -84,7 +84,8 @@ setup_proto(
 	return buf;
 
 out_fail:
-	close(fd);
+	if (fd >= 0)
+		close(fd);
 	free(buf);
 	exit(1);
 }
