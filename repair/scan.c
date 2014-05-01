@@ -82,6 +82,12 @@ scan_sbtree(
 		do_error(_("can't read btree block %d/%d\n"), agno, root);
 		return;
 	}
+	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
+		do_warn(_("btree block %d/%d is suspect, error %d\n"),
+			agno, root, bp->b_error);
+		suspect = 1;
+	}
+
 	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
 							isroot, magic, priv);
 	libxfs_putbuf(bp);
@@ -123,6 +129,7 @@ scan_lbtree(
 	xfs_buf_t	*bp;
 	int		err;
 	int		dirty = 0;
+	bool		badcrc = false;
 
 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
 		      XFS_FSB_TO_BB(mp, 1), 0, ops);
@@ -132,6 +139,19 @@ scan_lbtree(
 			XFS_FSB_TO_AGBNO(mp, root));
 		return(1);
 	}
+
+	/*
+	 * only check for bad CRC here - caller will determine if there
+	 * is a corruption or not and whether it got corrected and so needs
+	 * writing back. CRC errors always imply we need to write the block.
+	 */
+	if (bp->b_error == EFSBADCRC) {
+		do_warn(_("btree block %d/%d is suspect, error %d\n"),
+			XFS_FSB_TO_AGNO(mp, root),
+			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
+		badcrc = true;
+	}
+
 	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
 			type, whichfork, root, ino, tot, nex, blkmapp,
 			bm_cursor, isroot, check_dups, &dirty,
@@ -139,7 +159,7 @@ scan_lbtree(
 
 	ASSERT(dirty == 0 || (dirty && !no_modify));
 
-	if (dirty && !no_modify)
+	if ((dirty || badcrc) && !no_modify)
 		libxfs_writebuf(bp, 0);
 	else
 		libxfs_putbuf(bp);
@@ -1066,6 +1086,9 @@ scan_freelist(
 		do_abort(_("can't read agfl block for ag %d\n"), agno);
 		return;
 	}
+	if (agflbuf->b_error == EFSBADCRC)
+		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
+
 	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
 	i = be32_to_cpu(agf->agf_flfirst);
 
