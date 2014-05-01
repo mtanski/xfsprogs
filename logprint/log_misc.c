@@ -482,7 +482,7 @@ xlog_print_trans_efi(
 	uint src_len,
 	int continued)
 {
-    xfs_efi_log_format_t *src_f, *f;
+    xfs_efi_log_format_t *src_f, *f = NULL;
     uint		 dst_len;
     xfs_extent_t	 *ex;
     int			 i;
@@ -505,7 +505,8 @@ xlog_print_trans_efi(
 
     if (continued && src_len < core_size) {
 	printf(_("EFI: Not enough data to decode further\n"));
-	return 1;
+	error = 1;
+	goto error;
     }
 
     if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
