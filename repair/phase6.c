@@ -125,6 +125,45 @@ typedef struct freetab {
 #define	DIR_HASH_CK_TOTAL	6
 
 /*
+ * Need to handle CRC and validation errors specially here. If there is a
+ * validator error, re-read without the verifier so that we get a buffer we can
+ * check and repair. Re-attach the ops to the buffer after the read so that when
+ * it is rewritten the CRC is recalculated.
+ *
+ * If the buffer was not read, we return an error. If the buffer was read but
+ * had a CRC or corruption error, we reread it without the verifier and if it is
+ * read successfully we increment *crc_error and return 0. Otherwise we
+ * return the read error.
+ */
+static int
+dir_read_buf(
+	struct xfs_inode	*ip,
+	xfs_dablk_t		bno,
+	xfs_daddr_t		mappedbno,
+	struct xfs_buf		**bpp,
+	const struct xfs_buf_ops *ops,
+	int			*crc_error)
+{
+	int error;
+	int error2;
+
+	error = libxfs_da_read_buf(NULL, ip, bno, mappedbno, bpp,
+				   XFS_DATA_FORK, ops);
+
+	if (error != EFSBADCRC && error != EFSCORRUPTED)
+		return error;
+
+	error2 = libxfs_da_read_buf(NULL, ip, bno, mappedbno, bpp,
+				   XFS_DATA_FORK, NULL);
+	if (error2)
+		return error2;
+
+	(*crc_error)++;
+	(*bpp)->b_ops = ops;
+	return 0;
+}
+
+/*
  * Returns 0 if the name already exists (ie. a duplicate)
  */
 static int
@@ -1906,15 +1945,19 @@ longform_dir2_check_leaf(
 	int			seeval;
 	struct xfs_dir2_leaf_entry *ents;
 	struct xfs_dir3_icleaf_hdr leafhdr;
+	int			error;
+	int			fixit = 0;
 
 	da_bno = mp->m_dirleafblk;
-	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK,
-				&xfs_dir3_leaf1_buf_ops)) {
+	error = dir_read_buf(ip, da_bno, -1, &bp, &xfs_dir3_leaf1_buf_ops,
+			     &fixit);
+	if (error) {
 		do_error(
-	_("can't read block %u for directory inode %" PRIu64 "\n"),
-			da_bno, ip->i_ino);
+	_("can't read block %u for directory inode %" PRIu64 ", error %d\n"),
+			da_bno, ip->i_ino, error);
 		/* NOTREACHED */
 	}
+
 	leaf = bp->b_addr;
 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
 	ents = xfs_dir3_leaf_ents_p(leaf);
@@ -1951,7 +1994,7 @@ longform_dir2_check_leaf(
 		return 1;
 	}
 	libxfs_putbuf(bp);
-	return 0;
+	return fixit;
 }
 
 /*
@@ -1978,6 +2021,8 @@ longform_dir2_check_node(
 	struct xfs_dir3_icleaf_hdr leafhdr;
 	struct xfs_dir3_icfree_hdr freehdr;
 	__be16			*bests;
+	int			error;
+	int			fixit = 0;
 
 	for (da_bno = mp->m_dirleafblk, next_da_bno = 0;
 			next_da_bno != NULLFILEOFF && da_bno < mp->m_dirfreeblk;
@@ -1993,11 +2038,12 @@ longform_dir2_check_node(
 		 * a node block, then we'll skip it below based on a magic
 		 * number check.
 		 */
-		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK, &xfs_da3_node_buf_ops)) {
+		error = dir_read_buf(ip, da_bno, -1, &bp,
+				     &xfs_da3_node_buf_ops, &fixit);
+		if (error) {
 			do_warn(
-	_("can't read leaf block %u for directory inode %" PRIu64 "\n"),
-				da_bno, ip->i_ino);
+	_("can't read leaf block %u for directory inode %" PRIu64 ", error %d\n"),
+				da_bno, ip->i_ino, error);
 			return 1;
 		}
 		leaf = bp->b_addr;
@@ -2016,6 +2062,12 @@ longform_dir2_check_node(
 			libxfs_putbuf(bp);
 			return 1;
 		}
+
+		/*
+		 * If there's a validator error, we need to ensure that we got
+		 * the right ops on the buffer for when we write it back out.
+		 */
+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
 		if (leafhdr.count > xfs_dir3_max_leaf_ents(mp, leaf) ||
 		    leafhdr.count < leafhdr.stale) {
 			do_warn(
@@ -2039,11 +2091,13 @@ longform_dir2_check_node(
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
 			break;
-		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
-				XFS_DATA_FORK, &xfs_dir3_free_buf_ops)) {
+
+		error = dir_read_buf(ip, da_bno, -1, &bp,
+				     &xfs_dir3_free_buf_ops, &fixit);
+		if (error) {
 			do_warn(
-	_("can't read freespace block %u for directory inode %" PRIu64 "\n"),
-				da_bno, ip->i_ino);
+	_("can't read freespace block %u for directory inode %" PRIu64 ", error %d\n"),
+				da_bno, ip->i_ino, error);
 			return 1;
 		}
 		free = bp->b_addr;
@@ -2093,7 +2147,7 @@ longform_dir2_check_node(
 			return 1;
 		}
 	}
-	return 0;
+	return fixit;
 }
 
 /*
@@ -2148,6 +2202,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
 	     da_bno = (xfs_dablk_t)next_da_bno) {
 		const struct xfs_buf_ops *ops;
+		int			 error;
 
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
@@ -2167,11 +2222,12 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 			ops = &xfs_dir3_block_buf_ops;
 		else
 			ops = &xfs_dir3_data_buf_ops;
-		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bplist[db],
-				       XFS_DATA_FORK, ops)) {
+
+		error = dir_read_buf(ip, da_bno, -1, &bplist[db], ops, &fixit);
+		if (error) {
 			do_warn(
-	_("can't read data block %u for directory inode %" PRIu64 "\n"),
-				da_bno, ino);
+	_("can't read data block %u for directory inode %" PRIu64 " error %d\n"),
+				da_bno, ino, error);
 			*num_illegal += 1;
 
 			/*
@@ -2189,7 +2245,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 				irec, ino_offset, &bplist[db], hashtab,
 				&freetab, da_bno, isblock);
 	}
-	fixit = (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
+	fixit |= (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
 
 	if (!dotdot_update) {
 		/* check btree and freespace */
