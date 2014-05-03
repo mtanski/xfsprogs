@@ -1,3 +1,10 @@
+xfsprogs (3.2.0) unstable; urgency=low
+
+  * New upstream release
+  * Add dh-autoreconf invocation (closes: #725971)
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 03 May 2014 15:59:55 +1000
+
 xfsprogs (3.1.11) unstable; urgency=low
 
   * New upstream release
