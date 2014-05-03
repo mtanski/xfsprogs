@@ -495,8 +495,9 @@ libxfs_getbufr_map(struct xfs_buftarg *btp, xfs_daddr_t blkno, int bblen,
 
 	if (blkno != map[0].bm_bn) {
 		fprintf(stderr,
-			_("%s: %s map blkno %lx doesn't match key %lx\n"),
-			progname, __FUNCTION__, map[0].bm_bn, blkno);
+			_("%s: %s map blkno 0x%llx doesn't match key 0x%llx\n"),
+			progname, __FUNCTION__, (long long)map[0].bm_bn,
+			(long long)blkno);
 		exit(1);
 	}
 
