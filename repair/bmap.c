@@ -260,7 +260,15 @@ blkmap_grow(
 {
 	pthread_key_t	key = dblkmap_key;
 	blkmap_t	*new_blkmap;
-	int		new_naexts = blkmap->naexts + 4;
+	int		new_naexts;
+
+	/* reduce the number of reallocations for large files */
+	if (blkmap->naexts < 1000)
+		new_naexts = blkmap->naexts + 4;
+	else if (blkmap->naexts < 10000)
+		new_naexts = blkmap->naexts + 100;
+	else
+		new_naexts = blkmap->naexts + 1000;
 
 	if (pthread_getspecific(key) != blkmap) {
 		key = ablkmap_key;
@@ -318,15 +326,33 @@ blkmap_set_ext(
 	}
 
 	ASSERT(blkmap->nexts < blkmap->naexts);
-	for (i = 0; i < blkmap->nexts; i++) {
-		if (blkmap->exts[i].startoff > o) {
-			memmove(blkmap->exts + i + 1,
-				blkmap->exts + i,
-				sizeof(bmap_ext_t) * (blkmap->nexts - i));
-			break;
-		}
+
+	if (blkmap->nexts == 0) {
+		i = 0;
+		goto insert;
 	}
 
+	/*
+	 * The most common insert pattern comes from an ascending offset order
+	 * bmapbt scan. In this case, the extent being added will end up at the
+	 * end of the array. Hence do a reverse order search for the insertion
+	 * point so we don't needlessly scan the entire array on every
+	 * insertion.
+	 *
+	 * Also, use "plus 1" indexing for the loop counter so when we break out
+	 * of the loop we are at the correct index for insertion.
+	 */
+	for (i = blkmap->nexts; i > 0; i--) {
+		if (blkmap->exts[i - 1].startoff < o)
+			break;
+	}
+
+	/* make space for the new extent */
+	memmove(blkmap->exts + i + 1,
+		blkmap->exts + i,
+		sizeof(bmap_ext_t) * (blkmap->nexts - i));
+
+insert:
 	blkmap->exts[i].startoff = o;
 	blkmap->exts[i].startblock = b;
 	blkmap->exts[i].blockcount = c;
