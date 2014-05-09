@@ -1,3 +1,10 @@
+xfsprogs-3.2.0-rc3 (9 May 2014)
+	- Third release candidate for full support of CRC enabled filesystems
+	- Updated Debian change logs in preparation for release (Nathan Scott)
+	- Build warning fixes (Nathan Scott)
+	- xfs_repair prefetch fix (Eric Sandeen)
+	- xfs_repair block tracking scalability fix
+
 xfsprogs-3.2.0-rc2 (2 May 2014)
 	- Second release candidate for full support of CRC enabled filesystems
 	- xfs_repair has full CRC validation and repair
