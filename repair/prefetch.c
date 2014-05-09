@@ -444,27 +444,6 @@ pf_read_inode_dirs(
 }
 
 /*
- * Discontiguous buffers require multiple IOs to fill, so we can't use any
- * linearising, hole filling algorithms on them to avoid seeks. Just remove them
- * for the prefetch queue and read them straight into the cache and release
- * them.
- */
-static void
-pf_read_discontig(
-	struct prefetch_args	*args,
-	struct xfs_buf		*bp)
-{
-	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
-		do_error(_("prefetch corruption\n"));
-
-	pthread_mutex_unlock(&args->lock);
-	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
-	bp->b_flags |= LIBXFS_B_UNCHECKED;
-	libxfs_putbuf(bp);
-	pthread_mutex_lock(&args->lock);
-}
-
-/*
  * pf_batch_read must be called with the lock locked.
  */
 static void
@@ -496,13 +475,19 @@ pf_batch_read(
 		}
 		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
 			/*
-			 * Handle discontiguous buffers outside the seek
-			 * optimised IO loop below.
+			 * Discontiguous buffers need special handling, so stop
+			 * gathering new buffers and process the list and this
+			 * discontigous buffer immediately. This avoids the
+			 * complexity of keeping a separate discontigous buffer
+			 * list and seeking back over ranges we've already done
+			 * optimised reads for.
 			 */
 			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
-				pf_read_discontig(args, bplist[num]);
-				bplist[num] = NULL;
-			} else if (which != PF_META_ONLY ||
+				num++;
+				break;
+			}
+
+			if (which != PF_META_ONLY ||
 				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
 				num++;
 			if (num == MAX_BUFS)
@@ -570,6 +555,20 @@ pf_batch_read(
 		 * now read the data and put into the xfs_but_t's
 		 */
 		len = pread64(mp_fd, buf, (int)(last_off - first_off), first_off);
+
+		/*
+		 * Check the last buffer on the list to see if we need to
+		 * process a discontiguous buffer. The gather above loop
+		 * guarantees that only the last buffer in the list will be a
+		 * discontiguous buffer.
+		 */
+		if ((bplist[num - 1]->b_flags & LIBXFS_B_DISCONTIG)) {
+			libxfs_readbufr_map(mp->m_ddev_targp, bplist[num - 1], 0);
+			bplist[num - 1]->b_flags |= LIBXFS_B_UNCHECKED;
+			libxfs_putbuf(bplist[num - 1]);
+			num--;
+		}
+
 		if (len > 0) {
 			/*
 			 * go through the xfs_buf_t list copying from the
