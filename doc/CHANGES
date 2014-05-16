@@ -1,3 +1,7 @@
+xfsprogs-3.2.0 (16 May 2014)
+	- First release with full support of CRC enabled filesystems
+	- No code changes from 3.2.0-rc3
+
 xfsprogs-3.2.0-rc3 (9 May 2014)
 	- Third release candidate for full support of CRC enabled filesystems
 	- Updated Debian change logs in preparation for release (Nathan Scott)
