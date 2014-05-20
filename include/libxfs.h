@@ -480,7 +480,6 @@ typedef struct xfs_inode_log_item {
 	unsigned int		ili_fields;		/* fields to be logged */
 	unsigned int		ili_last_fields;	/* fields when flushed*/
 	xfs_inode_log_format_t	ili_format;		/* logged structure */
-	int			ili_lock_flags;
 } xfs_inode_log_item_t;
 
 typedef struct xfs_buf_log_item {
@@ -535,9 +534,7 @@ extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
 
 extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, uint, struct xfs_inode **);
-extern void	libxfs_trans_iput(xfs_trans_t *, struct xfs_inode *);
 extern void	libxfs_trans_ijoin (xfs_trans_t *, struct xfs_inode *, uint);
-extern void	libxfs_trans_ihold (xfs_trans_t *, struct xfs_inode *);
 extern void	libxfs_trans_ijoin_ref(xfs_trans_t *, struct xfs_inode *, int);
 extern void	libxfs_trans_log_inode (xfs_trans_t *, struct xfs_inode *,
 				uint);

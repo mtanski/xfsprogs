@@ -292,7 +292,6 @@ roundup_64(__uint64_t x, __uint32_t y)
 #define xfs_trans_get_buf		libxfs_trans_get_buf
 #define xfs_trans_getsb			libxfs_trans_getsb
 #define xfs_trans_iget			libxfs_trans_iget
-#define xfs_trans_ihold			libxfs_trans_ihold
 #define xfs_trans_ijoin			libxfs_trans_ijoin
 #define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
 #define xfs_trans_init			libxfs_trans_init

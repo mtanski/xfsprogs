@@ -544,7 +544,6 @@ mk_rbmino(xfs_mount_t *mp)
 	 * commit changes
 	 */
 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-	libxfs_trans_ihold(tp, ip);
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 
 	/*
@@ -801,7 +800,6 @@ mk_rsumino(xfs_mount_t *mp)
 	 * commit changes
 	 */
 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-	libxfs_trans_ihold(tp, ip);
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 
 	/*
@@ -1063,6 +1061,8 @@ mk_orphanage(xfs_mount_t *mp)
 
 
 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+	IRELE(ip);
+	IRELE(pip);
 	add_inode_reached(irec,ino_offset);
 
 	return(ino);
@@ -1260,6 +1260,8 @@ mv_orphanage(
 
 		libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
 	}
+	IRELE(ino_p);
+	IRELE(orphanage_ip);
 }
 
 static int
@@ -1330,7 +1332,6 @@ longform_dir2_rebuild(
 	if (error)
 		res_failed(error);
 	libxfs_trans_ijoin(tp, ip, 0);
-	libxfs_trans_ihold(tp, ip);
 
 	if ((error = libxfs_bmap_last_offset(tp, ip, &lastblock,
 						XFS_DATA_FORK)))
@@ -1370,7 +1371,6 @@ longform_dir2_rebuild(
 			res_failed(error);
 
 		libxfs_trans_ijoin(tp, ip, 0);
-		libxfs_trans_ihold(tp, ip);
 
 		xfs_bmap_init(&flist, &firstblock);
 		error = libxfs_dir_createname(tp, ip, &p->name, p->inum,
@@ -1428,7 +1428,6 @@ dir2_kill_block(
 	if (error)
 		res_failed(error);
 	libxfs_trans_ijoin(tp, ip, 0);
-	libxfs_trans_ihold(tp, ip);
 	libxfs_trans_bjoin(tp, bp);
 	memset(&args, 0, sizeof(args));
 	xfs_bmap_init(&flist, &firstblock);
@@ -1616,7 +1615,6 @@ longform_dir2_entry_check_data(
 	if (error)
 		res_failed(error);
 	libxfs_trans_ijoin(tp, ip, 0);
-	libxfs_trans_ihold(tp, ip);
 	libxfs_trans_bjoin(tp, bp);
 	libxfs_trans_bhold(tp, bp);
 	xfs_bmap_init(&flist, &firstblock);
@@ -2800,7 +2798,6 @@ process_dir_inode(
 				res_failed(error);
 
 			libxfs_trans_ijoin(tp, ip, 0);
-			libxfs_trans_ihold(tp, ip);
 
 			shortform_dir2_entry_check(mp, ino, ip, &dirty,
 						irec, ino_offset,
@@ -2848,7 +2845,6 @@ process_dir_inode(
 			res_failed(error);
 
 		libxfs_trans_ijoin(tp, ip, 0);
-		libxfs_trans_ihold(tp, ip);
 
 		xfs_bmap_init(&flist, &first);
 
@@ -2910,7 +2906,6 @@ process_dir_inode(
 				res_failed(error);
 
 			libxfs_trans_ijoin(tp, ip, 0);
-			libxfs_trans_ihold(tp, ip);
 
 			xfs_bmap_init(&flist, &first);
 

@@ -110,7 +110,7 @@ libxfs_trans_roll(
 	/*
 	 * Commit the current transaction.
 	 * If this commit failed, then it'd just unlock those items that
-	 * are not marked ihold. That also means that a filesystem shutdown
+	 * are marked to be released. That also means that a filesystem shutdown
 	 * is in progress. The caller takes the responsibility to cancel
 	 * the duplicate transaction that gets returned.
 	 */
@@ -248,26 +248,6 @@ libxfs_trans_iget(
 }
 
 void
-libxfs_trans_iput(
-	xfs_trans_t		*tp,
-	xfs_inode_t		*ip)
-{
-	xfs_inode_log_item_t	*iip;
-
-	if (tp == NULL) {
-		IRELE(ip);
-		return;
-	}
-
-	ASSERT(ip->i_transp == tp);
-	iip = ip->i_itemp;
-	ASSERT(iip != NULL);
-	xfs_trans_del_item(&iip->ili_item);
-
-	IRELE(ip);
-}
-
-void
 libxfs_trans_ijoin(
 	xfs_trans_t		*tp,
 	xfs_inode_t		*ip,
@@ -300,25 +280,9 @@ libxfs_trans_ijoin_ref(
 	ASSERT(ip->i_itemp != NULL);
 
 	xfs_trans_ijoin(tp, ip, lock_flags);
-	ip->i_itemp->ili_lock_flags = lock_flags;
 
 #ifdef XACT_DEBUG
 	fprintf(stderr, "ijoin_ref'd inode %llu, transaction %p\n", ip->i_ino, tp);
-#endif
-}
-
-void
-libxfs_trans_ihold(
-	xfs_trans_t		*tp,
-	xfs_inode_t		*ip)
-{
-	ASSERT(ip->i_transp == tp);
-	ASSERT(ip->i_itemp != NULL);
-
-	ip->i_itemp->ili_lock_flags = 1;
-
-#ifdef XACT_DEBUG
-	fprintf(stderr, "ihold'd inode %llu, transaction %p\n", ip->i_ino, tp);
 #endif
 }
 
@@ -701,7 +665,7 @@ inode_item_done(
 	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
 		ip->i_transp = NULL;	/* disassociate from transaction */
 		iip->ili_flags = 0;	/* reset all flags */
-		goto ili_done;
+		return;
 	}
 
 	/*
@@ -711,7 +675,7 @@ inode_item_done(
 	if (error) {
 		fprintf(stderr, _("%s: warning - imap_to_bp failed (%d)\n"),
 			progname, error);
-		goto ili_done;
+		return;
 	}
 
 	XFS_BUF_SET_FSPRIVATE(bp, iip);
@@ -719,7 +683,7 @@ inode_item_done(
 	if (error) {
 		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
 			progname, error);
-		goto ili_done;
+		return;
 	}
 
 	ip->i_transp = NULL;	/* disassociate from transaction */
@@ -727,16 +691,9 @@ inode_item_done(
 	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
 	libxfs_writebuf(bp, 0);
 #ifdef XACT_DEBUG
-	fprintf(stderr, "flushing dirty inode %llu, buffer %p (hold=%u)\n",
-			ip->i_ino, bp, iip->ili_lock_flags);
+	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
+			ip->i_ino, bp);
 #endif
-ili_done:
-	if (iip->ili_lock_flags) {
-		iip->ili_lock_flags = 0;
-		return;
-	}
-	/* free the inode */
-	IRELE(ip);
 }
 
 static void
@@ -817,10 +774,6 @@ inode_item_unlock(
 	ip->i_transp = NULL;
 
 	iip->ili_flags = 0;
-	if (!iip->ili_lock_flags)
-		IRELE(ip);
-	else
-		iip->ili_lock_flags = 0;
 }
 
 /*

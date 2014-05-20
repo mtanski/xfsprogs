@@ -595,7 +595,6 @@ libxfs_alloc_file_space(
 			break;
 		}
 		xfs_trans_ijoin(tp, ip, 0);
-		xfs_trans_ihold(tp, ip);
 
 		xfs_bmap_init(&free_list, &firstfsb);
 		error = xfs_bmapi_write(tp, ip, startoffset_fsb, allocatesize_fsb,
