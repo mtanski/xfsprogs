@@ -505,7 +505,7 @@ pf_batch_read(
 		first_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[0]));
 		last_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[num-1])) +
 			XFS_BUF_SIZE(bplist[num-1]);
-		while (last_off - first_off > pf_max_bytes) {
+		while (num > 1 && last_off - first_off > pf_max_bytes) {
 			num--;
 			last_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[num-1])) +
 				XFS_BUF_SIZE(bplist[num-1]);
