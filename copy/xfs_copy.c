@@ -217,25 +217,6 @@ handle_error:
 }
 
 void
-killall(void)
-{
-	int i;
-
-	/* only the parent gets to kill things */
-
-	if (getpid() != parent_pid)
-		return;
-
-	for (i = 0; i < num_targets; i++)  {
-		if (target[i].state == ACTIVE)  {
-			/* kill up target threads */
-			pthread_kill(target[i].pid, SIGKILL);
-			pthread_mutex_unlock(&targ[i].wait);
-		}
-	}
-}
-
-void
 handler(int sig)
 {
 	pid_t	pid;
@@ -400,8 +381,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 	if (buf->length > buf->size)  {
 		do_warn(_("assert error:  buf->length = %d, buf->size = %d\n"),
 			buf->length, buf->size);
-		killall();
-		abort();
+		exit(1);
 	}
 
 	if ((res = read(fd, buf->data, buf->length)) < 0)  {
@@ -593,11 +573,6 @@ main(int argc, char **argv)
 	}
 
 	parent_pid = getpid();
-
-	if (atexit(killall))  {
-		do_log(_("%s: couldn't register atexit function.\n"), progname);
-		die_perror();
-	}
 
 	/* open up source -- is it a file? */
 
@@ -1177,9 +1152,6 @@ main(int argc, char **argv)
 	}
 
 	check_errors();
-	killall();
-	pthread_exit(NULL);
-	/*NOTREACHED*/
 	return 0;
 }
 
