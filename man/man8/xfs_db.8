@@ -38,8 +38,7 @@ commands may be run interactively (the default) or as arguments
 on the command line. Multiple
 .B \-c
 arguments may be given. The commands are run in the sequence given,
-then the program exits. This is the mechanism used to implement
-.BR xfs_check (8).
+then the program exits.
 .TP
 .B \-f
 Specifies that the filesystem image to be processed is stored in a
@@ -56,14 +55,11 @@ an ordinary file with
 .B \-F
 Specifies that we want to continue even if the superblock magic is not
 correct.  For use in
-.BR xfs_check
-and
 .BR xfs_metadump .
 .TP
 .B \-i
 Allows execution on a mounted filesystem, provided it is mounted read-only.
-Useful for shell scripts such as
-.BR xfs_check (8),
+Useful for shell scripts
 which must only operate on filesystems in a guaranteed consistent state
 (either unmounted or mounted read-only). These semantics are slightly
 different to that of the
@@ -204,9 +200,7 @@ command can be given, presumably with different arguments than the previous one.
 Get block usage and check filesystem consistency.
 The information is saved for use by a subsequent
 .BR blockuse ", " ncheck ", or " blocktrash
-command. See
-.BR xfs_check (8)
-for more information.
+command.
 .RS 1.0i
 .TP 0.4i
 .B \-b
@@ -244,7 +238,7 @@ Trashing occurs to randomly selected bits in the chosen blocks.
 This command is available only in debugging versions of
 .BR xfs_db .
 It is useful for testing
-.BR xfs_repair "(8) and " xfs_check (8).
+.BR xfs_repair "(8).
 .RS 1.0i
 .TP 0.4i
 .BR \-0 " | " -1 " | " -2 " | " -3
@@ -1856,12 +1850,60 @@ and printable ASCII chars.
 Many messages can come from the
 .B check
 .RB ( blockget )
-command; these are documented in
-.BR xfs_check (8).
+command.
+If the filesystem is completely corrupt, a core dump might
+be produced instead of the message
+.RS
+.I device
+.B is not a valid filesystem
+.RE
+.PP
+If the filesystem is very large (has many files) then
+.B check
+might run out of memory. In this case the message
+.RS
+.B out of memory
+.RE
+is printed.
+.PP
+The following is a description of the most likely problems and the associated
+messages.
+Most of the diagnostics produced are only meaningful with an understanding
+of the structure of the filesystem.
+.TP
+.BI "agf_freeblks " n ", counted " m " in ag " a
+The freeblocks count in the allocation group header for allocation group
+.I a
+doesn't match the number of blocks counted free.
+.TP
+.BI "agf_longest " n ", counted " m " in ag " a
+The longest free extent in the allocation group header for allocation group
+.I a
+doesn't match the longest free extent found in the allocation group.
+.TP
+.BI "agi_count " n ", counted " m " in ag " a
+The allocated inode count in the allocation group header for allocation group
+.I a
+doesn't match the number of inodes counted in the allocation group.
+.TP
+.BI "agi_freecount " n ", counted " m " in ag " a
+The free inode count in the allocation group header for allocation group
+.I a
+doesn't match the number of inodes counted free in the allocation group.
+.TP
+.BI "block " a/b " expected inum 0 got " i
+The block number is specified as a pair
+(allocation group number, block in the allocation group).
+The block is used multiple times (shared), between multiple inodes.
+This message usually follows a message of the next type.
+.TP
+.BI "block " a/b " expected type unknown got " y
+The block is used multiple times (shared).
+.TP
+.BI "block " a/b " type unknown not expected
 .SH SEE ALSO
 .BR mkfs.xfs (8),
 .BR xfs_admin (8),
-.BR xfs_check (8),
 .BR xfs_copy (8),
 .BR xfs_logprint (8),
 .BR xfs_metadump (8),
