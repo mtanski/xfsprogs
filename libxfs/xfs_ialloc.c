@@ -1080,7 +1080,7 @@ xfs_difree(
 	xfs_trans_t	*tp,		/* transaction pointer */
 	xfs_ino_t	inode,		/* inode to be freed */
 	xfs_bmap_free_t	*flist,		/* extents to free */
-	int		*delete,	/* set if inode cluster was deleted */
+	int		*deleted,	/* set if inode cluster was deleted */
 	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
 {
 	/* REFERENCED */
@@ -1180,7 +1180,7 @@ xfs_difree(
 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
 	    (rec.ir_freecount == XFS_IALLOC_INODES(mp))) {
 
-		*delete = 1;
+		*deleted = 1;
 		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
 
 		/*
@@ -1208,7 +1208,7 @@ xfs_difree(
 				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
 				XFS_IALLOC_BLOCKS(mp), flist, mp);
 	} else {
-		*delete = 0;
+		*deleted = 0;
 
 		error = xfs_inobt_update(cur, &rec);
 		if (error) {
