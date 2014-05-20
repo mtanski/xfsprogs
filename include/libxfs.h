@@ -535,7 +535,7 @@ extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
 
 extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, uint, struct xfs_inode **);
-extern void	libxfs_trans_iput(xfs_trans_t *, struct xfs_inode *, uint);
+extern void	libxfs_trans_iput(xfs_trans_t *, struct xfs_inode *);
 extern void	libxfs_trans_ijoin (xfs_trans_t *, struct xfs_inode *, uint);
 extern void	libxfs_trans_ihold (xfs_trans_t *, struct xfs_inode *);
 extern void	libxfs_trans_ijoin_ref(xfs_trans_t *, struct xfs_inode *, int);
@@ -656,7 +656,9 @@ extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
 /* Inode Cache Interfaces */
 extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
 				uint, xfs_inode_t **, xfs_daddr_t);
-extern void	libxfs_iput (xfs_inode_t *, uint);
+extern void	libxfs_iput (xfs_inode_t *);
+
+#define IRELE(ip) libxfs_iput(ip)
 
 /* Shared utility routines */
 extern unsigned int	libxfs_log2_roundup(unsigned int i);

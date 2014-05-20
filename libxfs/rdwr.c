@@ -1103,7 +1103,7 @@ libxfs_idestroy(xfs_inode_t *ip)
 }
 
 void
-libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+libxfs_iput(xfs_inode_t *ip)
 {
 	if (ip->i_itemp)
 		kmem_zone_free(xfs_ili_zone, ip->i_itemp);

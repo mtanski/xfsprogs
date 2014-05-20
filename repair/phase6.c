@@ -2929,7 +2929,7 @@ process_dir_inode(
 					|XFS_TRANS_SYNC);
 		}
 	}
-	libxfs_iput(ip, 0);
+	IRELE(ip);
 }
 
 /*

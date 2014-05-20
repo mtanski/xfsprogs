@@ -250,13 +250,12 @@ libxfs_trans_iget(
 void
 libxfs_trans_iput(
 	xfs_trans_t		*tp,
-	xfs_inode_t		*ip,
-	uint			lock_flags)
+	xfs_inode_t		*ip)
 {
 	xfs_inode_log_item_t	*iip;
 
 	if (tp == NULL) {
-		libxfs_iput(ip, lock_flags);
+		IRELE(ip);
 		return;
 	}
 
@@ -265,7 +264,7 @@ libxfs_trans_iput(
 	ASSERT(iip != NULL);
 	xfs_trans_del_item(&iip->ili_item);
 
-	libxfs_iput(ip, lock_flags);
+	IRELE(ip);
 }
 
 void
@@ -737,7 +736,7 @@ ili_done:
 		return;
 	}
 	/* free the inode */
-	libxfs_iput(ip, 0);
+	IRELE(ip);
 }
 
 static void
@@ -819,7 +818,7 @@ inode_item_unlock(
 
 	iip->ili_flags = 0;
 	if (!iip->ili_lock_flags)
-		libxfs_iput(ip, 0);
+		IRELE(ip);
 	else
 		iip->ili_lock_flags = 0;
 }

@@ -590,7 +590,7 @@ parseproto(
 				break;
 			parseproto(mp, ip, fsxp, pp, name);
 		}
-		libxfs_iput(ip, 0);
+		IRELE(ip);
 		return;
 	default:
 		ASSERT(0);
