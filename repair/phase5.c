@@ -74,6 +74,15 @@ typedef struct bt_status  {
 	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
 } bt_status_t;
 
+/*
+ * extra metadata for the agi
+ */
+struct agi_stat {
+	xfs_agino_t		first_agino;
+	xfs_agino_t		count;
+	xfs_agino_t		freecount;
+};
+
 static __uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
 static __uint64_t	*sb_ifree_ag;		/* free inodes per ag */
 static __uint64_t	*sb_fdblocks_ag;	/* free data blocks per ag */
@@ -1050,8 +1059,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
  */
 static void
 build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
-		bt_status_t *btree_curs, xfs_agino_t first_agino,
-		xfs_agino_t count, xfs_agino_t freecount)
+		bt_status_t *btree_curs, struct agi_stat *agi_stat)
 {
 	xfs_buf_t	*agi_buf;
 	xfs_agi_t	*agi;
@@ -1072,11 +1080,11 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
 	else
 		agi->agi_length = cpu_to_be32(mp->m_sb.sb_dblocks -
 			(xfs_drfsbno_t) mp->m_sb.sb_agblocks * agno);
-	agi->agi_count = cpu_to_be32(count);
+	agi->agi_count = cpu_to_be32(agi_stat->count);
 	agi->agi_root = cpu_to_be32(btree_curs->root);
 	agi->agi_level = cpu_to_be32(btree_curs->num_levels);
-	agi->agi_freecount = cpu_to_be32(freecount);
-	agi->agi_newino = cpu_to_be32(first_agino);
+	agi->agi_freecount = cpu_to_be32(agi_stat->freecount);
+	agi->agi_newino = cpu_to_be32(agi_stat->first_agino);
 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
 
 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  
@@ -1094,7 +1102,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
  */
 static void
 build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
-		bt_status_t *btree_curs, __uint32_t magic)
+		bt_status_t *btree_curs, __uint32_t magic,
+		struct agi_stat *agi_stat)
 {
 	xfs_agnumber_t		i;
 	xfs_agblock_t		j;
@@ -1224,7 +1233,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		}
 	}
 
-	build_agi(mp, agno, btree_curs, first_agino, count, freecount);
+	if (agi_stat) {
+		agi_stat->first_agino = first_agino;
+		agi_stat->count = count;
+		agi_stat->freecount = freecount;
+	}
 }
 
 /*
@@ -1481,6 +1494,7 @@ phase5_func(
 #endif
 	xfs_agblock_t	num_extents;
 	__uint32_t	magic;
+	struct agi_stat	agi_stat = {0,};
 
 	if (verbose)
 		do_log(_("        - agno = %d\n"), agno);
@@ -1612,12 +1626,16 @@ phase5_func(
 		build_agf_agfl(mp, agno, &bno_btree_curs,
 				&bcnt_btree_curs, freeblks1, extra_blocks);
 		/*
-		 * build inode allocation tree.  this also build the agi
+		 * build inode allocation tree.
 		 */
 		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
 				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
-		build_ino_tree(mp, agno, &ino_btree_curs, magic);
+		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat);
 		write_cursor(&ino_btree_curs);
+
+		/* build the agi */
+		build_agi(mp, agno, &ino_btree_curs, &agi_stat);
+
 		/*
 		 * tear down cursors
 		 */
