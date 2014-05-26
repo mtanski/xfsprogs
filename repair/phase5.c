@@ -1094,7 +1094,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
  */
 static void
 build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
-		bt_status_t *btree_curs)
+		bt_status_t *btree_curs, __uint32_t magic)
 {
 	xfs_agnumber_t		i;
 	xfs_agblock_t		j;
@@ -1132,11 +1132,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 		if (xfs_sb_version_hascrc(&mp->m_sb))
-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+			xfs_btree_init_block(mp, lptr->buf_p, magic,
 						i, 0, agno,
 						XFS_BTREE_CRC_BLOCKS);
 		else
-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+			xfs_btree_init_block(mp, lptr->buf_p, magic,
 						i, 0, agno, 0);
 	}
 
@@ -1163,11 +1163,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
 		if (xfs_sb_version_hascrc(&mp->m_sb))
-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+			xfs_btree_init_block(mp, lptr->buf_p, magic,
 						0, 0, agno,
 						XFS_BTREE_CRC_BLOCKS);
 		else
-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+			xfs_btree_init_block(mp, lptr->buf_p, magic,
 						0, 0, agno, 0);
 
 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
@@ -1480,6 +1480,7 @@ phase5_func(
 	xfs_extlen_t	freeblks2;
 #endif
 	xfs_agblock_t	num_extents;
+	__uint32_t	magic;
 
 	if (verbose)
 		do_log(_("        - agno = %d\n"), agno);
@@ -1613,7 +1614,9 @@ phase5_func(
 		/*
 		 * build inode allocation tree.  this also build the agi
 		 */
-		build_ino_tree(mp, agno, &ino_btree_curs);
+		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
+		build_ino_tree(mp, agno, &ino_btree_curs, magic);
 		write_cursor(&ino_btree_curs);
 		/*
 		 * tear down cursors
