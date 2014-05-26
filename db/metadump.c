@@ -1917,6 +1917,7 @@ scanfunc_ino(
 	xfs_inobt_ptr_t		*pp;
 	int			i;
 	int			numrecs;
+	int			finobt = *(int *) arg;
 
 	numrecs = be16_to_cpu(block->bb_numrecs);
 
@@ -1928,6 +1929,14 @@ scanfunc_ino(
 					typtab[btype].name, agno, agbno);
 			numrecs = mp->m_inobt_mxr[0];
 		}
+
+		/*
+		 * Only copy the btree blocks for the finobt. The inobt scan
+		 * copies the inode chunks.
+		 */
+		if (finobt)
+			return 1;
+
 		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
 		for (i = 0; i < numrecs; i++, rp++) {
 			if (!copy_inode_chunk(agno, rp))
@@ -1967,6 +1976,7 @@ copy_inodes(
 {
 	xfs_agblock_t		root;
 	int			levels;
+	int			finobt = 0;
 
 	root = be32_to_cpu(agi->agi_root);
 	levels = be32_to_cpu(agi->agi_level);
@@ -1985,7 +1995,20 @@ copy_inodes(
 		return 1;
 	}
 
-	return scan_btree(agno, root, levels, TYP_INOBT, agi, scanfunc_ino);
+	if (!scan_btree(agno, root, levels, TYP_INOBT, &finobt, scanfunc_ino))
+		return 0;
+
+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+		root = be32_to_cpu(agi->agi_free_root);
+		levels = be32_to_cpu(agi->agi_free_level);
+
+		finobt = 1;
+		if (!scan_btree(agno, root, levels, TYP_INOBT, &finobt,
+				scanfunc_ino))
+			return 0;
+	}
+
+	return 1;
 }
 
 static int
