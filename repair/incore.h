@@ -381,6 +381,33 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
 		((ino_tree_node_t *) ((ino_node_ptr)->avl_node.avl_forw))
 
 /*
+ * finobt helpers
+ */
+static inline ino_tree_node_t *
+findfirst_free_inode_rec(xfs_agnumber_t agno)
+{
+	ino_tree_node_t *ino_rec;
+
+	ino_rec = findfirst_inode_rec(agno);
+
+	while (ino_rec && !ino_rec->ir_free)
+		ino_rec = next_ino_rec(ino_rec);
+
+	return ino_rec;
+}
+
+static inline ino_tree_node_t *
+next_free_ino_rec(ino_tree_node_t *ino_rec)
+{
+	ino_rec = next_ino_rec(ino_rec);
+
+	while (ino_rec && !ino_rec->ir_free)
+		ino_rec = next_ino_rec(ino_rec);
+
+	return ino_rec;
+}
+
+/*
  * Has an inode been processed for phase 6 (reference count checking)?
  *
  * add_inode_refchecked() is set on an inode when it gets traversed
