@@ -399,14 +399,18 @@ calc_mkfs(xfs_mount_t *mp)
 	do_inoalign = mp->m_sinoalign;
 
 	/*
-	 * pre-calculate geometry of ag 0.  We know what it looks
-	 * like because we know what mkfs does -- 3 btree roots,
-	 * and some number of blocks to prefill the agfl.
+	 * Pre-calculate the geometry of ag 0. We know what it looks like
+	 * because we know what mkfs does: 2 allocation btree roots (by block
+	 * and by size), the inode allocation btree root, the free inode
+	 * allocation btree root (if enabled) and some number of blocks to
+	 * prefill the agfl.
 	 */
 	bnobt_root = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
 	bcntbt_root = bnobt_root + 1;
 	inobt_root = bnobt_root + 2;
 	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+		fino_bno++;
 
 	/*
 	 * If the log is allocated in the first allocation group we need to
