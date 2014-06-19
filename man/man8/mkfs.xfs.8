@@ -7,6 +7,9 @@ mkfs.xfs \- construct an XFS filesystem
 .B \-b
 .I block_size
 ] [
+.B \-m
+.I global_metadata_options
+] [
 .B \-d
 .I data_section_options
 ] [
@@ -124,6 +127,48 @@ or in bytes with
 The default value is 4096 bytes (4 KiB), the minimum is 512, and the
 maximum is 65536 (64 KiB).
 XFS on Linux currently only supports pagesize or smaller blocks.
+.TP
+.BI \-m " global_metadata_options"
+These options specify metadata format options that either apply to the entire
+filesystem or aren't easily characterised by a specific functionality group. The
+valid
+.I global_metadata_options
+are:
+.RS 1.2i
+.TP
+.BI crc= value
+This is used to create a filesystem which maintains and checks CRC information
+in all metadata objects on disk. The value is either 0 to disable the feature,
+or 1 to enable the use of CRCs.
+.IP
+CRCs enable enhanced error detection due to hardware issues, whilst the format
+changes also improves crash recovery algorithms and the ability of various tools
+to validate and repair metadata corruptions when they are found.  The CRC
+algorithm used is CRC32c, so the overhead is dependent on CPU architecture as
+some CPUs have hardware acceleration of this algorithm.  Typically the overhead
+of calculating and checking the CRCs is not noticable in normal operation.
+.IP
+By default,
+.B mkfs.xfs
+will not enable metadata CRCs.
+.TP
+.BI finobt= value
+This option enables the use of a separate free inode btree index in each
+allocation group. The value is either 0 to disable the feature, or 1 to create
+a free inode btree in each allocation group.
+.IP
+The free inode btree mirrors the existing allocated inode btree index which
+indexes both used and free inodes. The free inode btree does not index used
+inodes, allowing faster, more consistent inode allocation performance as
+filesystems age.
+.IP
+By default,
+.B mkfs.xfs
+will not create free inode btrees. This feature is also currently only available
+for filesystems created with the
+.B \-m crc=1
+option set.
+.RE
 .TP
 .BI \-d " data_section_options"
 These options specify the location, size, and other parameters of the
