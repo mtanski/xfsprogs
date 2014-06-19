@@ -554,6 +554,8 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
 			fsrprintf(_("could not read %s, starting with %s\n"),
 				leftofffile, *fs->dev);
 		} else {
+			/* Ensure the buffer we read is null terminated */
+			buf[SMBUFSZ-1] = '\0';
 			for (fs = fsbase; fs < fsend; fs++) {
 				fsname = fs->dev;
 				if ((strncmp(buf,fsname,strlen(fsname)) == 0)
