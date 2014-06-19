@@ -137,6 +137,8 @@ Enables/disables the use of block layer write barriers for
 writes into the journal and for data integrity operations.
 This allows for drive level write caching to be enabled, for
 devices that support write barriers.
+.sp
+Barriers are enabled by default.
 .TP
 .BR discard | nodiscard
 Enable/disable the issuing of commands to let the block
@@ -147,7 +149,7 @@ machine images, but may have a performance impact.
 Note: It is currently recommended that you use the fstrim
 application to discard unused blocks rather than the discard
 mount option because the performance impact of this option
-is quite severe.
+is quite severe.  For this reason, nodiscard is the default.
 .TP
 .BR grpid | bsdgroups | nogrpid | sysvgroups
 These options define what group ID a newly created file
@@ -167,7 +169,7 @@ configured to use it.
 When ikeep is specified, XFS does not delete empty inode
 clusters and keeps them around on disk.  When noikeep is
 specified, empty inode clusters are returned to the free
-space pool.
+space pool.  noikeep is the default.
 .TP
 .BR inode32 | inode64
 When inode32 is specified, it indicates that XFS limits
@@ -185,6 +187,8 @@ cause problems for some applications that cannot handle
 large inode numbers.  If applications are in use which do
 not handle inode numbers bigger than 32 bits, the inode32
 option should be specified.
+.sp
+For kernel v3.7 and later, inode64 is the default.
 .TP
 .BR  largeio | nolargeio
 If "nolargeio" is specified, the optimal I/O reported in
@@ -198,7 +202,8 @@ If "largeio" specified, a filesystem that was created with a
 in st_blksize. If the filesystem does not have a "swidth"
 specified but does specify an "allocsize" then "allocsize"
 (in bytes) will be returned instead. Otherwise the behavior
-is the same as if "nolargeio" was specified.
+is the same as if "nolargeio" was specified.  nolargeio
+is the default.
 .TP
 .B logbufs=value
 Set the number of in-memory log buffers.  Valid numbers
