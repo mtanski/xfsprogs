@@ -141,10 +141,20 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
 		exit(1);
 	}
 	if ((st.st_mode & S_IFMT) == S_IFREG) {
+		struct xfs_fsop_geom_v1 geom = { 0 };
+
 		*sz = (long long)(st.st_size >> 9);
-		*bsz = BBSIZE;
-		if (BBSIZE > max_block_alignment)
-			max_block_alignment = BBSIZE;
+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+			/*
+			 * fall back to BBSIZE; mkfs might fail if there's a
+			 * size mismatch between the image & the host fs...
+			 */
+			*bsz = BBSIZE;
+		} else
+			*bsz = geom.sectsize;
+
+		if (*bsz > max_block_alignment)
+			max_block_alignment = *bsz;
 		return;
 	}
 
