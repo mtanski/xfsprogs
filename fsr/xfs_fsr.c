@@ -1325,7 +1325,11 @@ packfile(char *fname, char *tname, int fd,
 				fsrprintf(_("could not trunc tmp %s\n"),
 					   tname);
 			}
-			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+				   tname, strerror(errno));
+				goto out;
+			}
 			continue;
 		} else if (outmap[extent].bmv_length == 0) {
 			/* to catch holes at the beginning of the file */
@@ -1341,7 +1345,11 @@ packfile(char *fname, char *tname, int fd,
 					" %s\n"), tname);
 				goto out;
 			}
-			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+				   tname, strerror(errno));
+				goto out;
+			}
 		}
 	} /* end of space allocation loop */
 
@@ -1365,8 +1373,16 @@ packfile(char *fname, char *tname, int fd,
 	for (extent = 0; extent < nextents; extent++) {
 		pos = outmap[extent].bmv_offset;
 		if (outmap[extent].bmv_block == -1) {
-			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
-			lseek64(fd, outmap[extent].bmv_length, SEEK_CUR);
+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+				   tname, strerror(errno));
+				goto out;
+			}
+			if (lseek64(fd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+				fsrprintf(_("could not lseek in file: %s : %s\n"),
+				   fname, strerror(errno));
+				goto out;
+			}
 			continue;
 		} else if (outmap[extent].bmv_length == 0) {
 			/* to catch holes at the beginning of the file */
@@ -1442,8 +1458,16 @@ packfile(char *fname, char *tname, int fd,
 			}
 		}
 	}
-	ftruncate64(tfd, statp->bs_size);
-	fsync(tfd);
+	if (ftruncate64(tfd, statp->bs_size) < 0) {
+		fsrprintf(_("could not truncate tmpfile: %s : %s\n"),
+				fname, strerror(errno));
+		goto out;
+	}
+	if (fsync(tfd) < 0) {
+		fsrprintf(_("could not fsync tmpfile: %s : %s\n"),
+				fname, strerror(errno));
+		goto out;
+	}
 
 	sx.sx_stat     = *statp; /* struct copy */
 	sx.sx_version  = XFS_SX_VERSION;
