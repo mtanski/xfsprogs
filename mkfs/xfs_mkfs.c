@@ -457,11 +457,30 @@ static void get_topology(
 	int			force_overwrite)
 {
 	if (!xi->disfile) {
-		const char *dfile = xi->volname ? xi->volname : xi->dname;
+		char *dfile = xi->volname ? xi->volname : xi->dname;
+		struct stat statbuf;
 
-		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-				   &ft->lsectorsize, &ft->psectorsize,
-				   force_overwrite);
+		/*
+		 * If our target is a regular file, and xi->disfile isn't
+		 * set (i.e. no "-d file" invocation), use platform_findsizes
+		 * to try to obtain the underlying filesystem's requirements
+		 * for direct IO; we'll set our sector size to that if possible.
+		 */
+		if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode)) {
+			int fd;
+			long long dummy;
+
+			fd = open(dfile, O_RDONLY);
+			if (fd >= 0) {
+				platform_findsizes(dfile, fd, &dummy,
+						   &ft->lsectorsize);
+				close(fd);
+			}
+		} else {
+			blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+					   &ft->lsectorsize, &ft->psectorsize,
+					   force_overwrite);
+		}
 	}
 
 	if (xi->rtname && !xi->risfile) {
