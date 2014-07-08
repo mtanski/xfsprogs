@@ -19,6 +19,37 @@
 #include <xfs/libxfs.h>
 #include "init.h"
 
+/*
+ * Important design/architecture note:
+ *
+ * The userspace code that uses the buffer cache is much less constrained than
+ * the kernel code. The userspace code is pretty nasty in places, especially
+ * when it comes to buffer error handling.  Very little of the userspace code
+ * outside libxfs clears bp->b_error - very little code even checks it - so the
+ * libxfs code is tripping on stale errors left by the userspace code.
+ *
+ * We can't clear errors or zero buffer contents in libxfs_getbuf-* like we do
+ * in the kernel, because those functions are used by the libxfs_readbuf_*
+ * functions and hence need to leave the buffers unchanged on cache hits. This
+ * is actually the only way to gather a write error from a libxfs_writebuf()
+ * call - you need to get the buffer again so you can check bp->b_error field -
+ * assuming that the buffer is still in the cache when you check, that is.
+ *
+ * This is very different to the kernel code which does not release buffers on a
+ * write so we can wait on IO and check errors. The kernel buffer cache also
+ * guarantees a buffer of a known initial state from xfs_buf_get() even on a
+ * cache hit.
+ *
+ * IOWs, userspace is behaving quite differently to the kernel and as a result
+ * it leaks errors from reads, invalidations and writes through
+ * libxfs_getbuf/libxfs_readbuf.
+ *
+ * The result of this is that until the userspace code outside libxfs is cleaned
+ * up, functions that release buffers from userspace control (i.e
+ * libxfs_writebuf/libxfs_putbuf) need to zero bp->b_error to prevent
+ * propagation of stale errors into future buffer operations.
+ */
+
 #define BDSTRAT_SIZE	(256 * 1024)
 
 #define IO_BCOMPARE_CHECK
@@ -632,6 +663,12 @@ libxfs_putbuf(xfs_buf_t *bp)
 			pthread_mutex_unlock(&bp->b_lock);
 		}
 	}
+	/*
+	 * ensure that any errors on this use of the buffer don't carry
+	 * over to the next user.
+	 */
+	bp->b_error = 0;
+
 	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
 }
 
@@ -928,6 +965,7 @@ libxfs_writebuf_int(xfs_buf_t *bp, int flags)
 	 * subsequent reads after this write from seeing stale errors.
 	 */
 	bp->b_error = 0;
+	bp->b_flags &= ~LIBXFS_B_STALE;
 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
 	return 0;
 }
@@ -946,6 +984,7 @@ libxfs_writebuf(xfs_buf_t *bp, int flags)
 	 * subsequent reads after this write from seeing stale errors.
 	 */
 	bp->b_error = 0;
+	bp->b_flags &= ~LIBXFS_B_STALE;
 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
 	libxfs_putbuf(bp);
 	return 0;
