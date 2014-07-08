@@ -138,6 +138,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 		for (i = 0; !done && i < bsize; i += BBSIZE)  {
 			c_bufsb = (char *)sb + i;
 			libxfs_sb_from_disk(&bufsb, (xfs_dsb_t *)c_bufsb);
+			libxfs_sb_quota_from_disk(&bufsb);
 
 			if (verify_sb(c_bufsb, &bufsb, 0) != XR_OK)
 				continue;
@@ -538,6 +539,7 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
 		do_error("%s\n", strerror(error));
 	}
 	libxfs_sb_from_disk(sbp, buf);
+	libxfs_sb_quota_from_disk(sbp);
 
 	rval = verify_sb((char *)buf, sbp, agno == 0);
 	free(buf);

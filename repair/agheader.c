@@ -245,13 +245,17 @@ compare_sb(xfs_mount_t *mp, xfs_sb_t *sb)
  * superblocks, not just the secondary superblocks.
  */
 static int
-secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
-	xfs_agnumber_t i)
+secondary_sb_wack(
+	struct xfs_mount *mp,
+	struct xfs_buf	*sbuf,
+	struct xfs_sb	*sb,
+	xfs_agnumber_t	i)
 {
-	int do_bzero;
-	int size;
-	char *ip;
-	int rval;
+	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(sbuf);
+	int		do_bzero = 0;
+	int		size;
+	char		*ip;
+	int		rval = 0;;
 
 	rval = do_bzero = 0;
 
@@ -334,12 +338,18 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 	}
 
 	/*
-	 * quota inodes and flags in secondary superblocks
-	 * are never set by mkfs.  However, they could be set
-	 * in a secondary if a fs with quotas was growfs'ed since
-	 * growfs copies the new primary into the secondaries.
+	 * quota inodes and flags in secondary superblocks are never set by
+	 * mkfs.  However, they could be set in a secondary if a fs with quotas
+	 * was growfs'ed since growfs copies the new primary into the
+	 * secondaries.
+	 *
+	 * Also, the in-core inode flags now have different meaning to the
+	 * on-disk flags, and so libxfs_sb_to_disk cannot directly write the
+	 * sb_gquotino/sb_pquotino fields without specific sb_qflags being set.
+	 * Hence we need to zero those fields directly in the sb buffer here.
 	 */
-	if (sb->sb_inprogress == 1 && sb->sb_uquotino)  {
+
+	if (sb->sb_inprogress == 1 && sb->sb_uquotino != NULLFSINO)  {
 		if (!no_modify)
 			sb->sb_uquotino = 0;
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
@@ -352,9 +362,11 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (sb->sb_inprogress == 1 && sb->sb_gquotino)  {
-		if (!no_modify)
+	if (sb->sb_inprogress == 1 && sb->sb_gquotino != NULLFSINO)  {
+		if (!no_modify) {
 			sb->sb_gquotino = 0;
+			dsb->sb_gquotino = 0;
+		}
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(
@@ -365,9 +377,11 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
 			rval |= XR_AG_SB_SEC;
 	}
 
-	if (sb->sb_inprogress == 1 && sb->sb_pquotino)  {
-		if (!no_modify)
+	if (sb->sb_inprogress == 1 && sb->sb_pquotino != NULLFSINO)  {
+		if (!no_modify) {
 			sb->sb_pquotino = 0;
+			dsb->sb_pquotino = 0;
+		}
 		if (sb->sb_versionnum & XR_PART_SECSB_VNMASK || !do_bzero)  {
 			rval |= XR_AG_SB;
 			do_warn(

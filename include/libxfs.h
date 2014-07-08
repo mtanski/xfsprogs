@@ -759,6 +759,7 @@ bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
 /* xfs_sb.h */
 #define libxfs_mod_sb			xfs_mod_sb
 #define libxfs_sb_from_disk		xfs_sb_from_disk
+#define libxfs_sb_quota_from_disk	xfs_sb_quota_from_disk
 #define libxfs_sb_to_disk		xfs_sb_to_disk
 
 /* xfs_symlink.h */

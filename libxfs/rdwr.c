@@ -944,10 +944,10 @@ libxfs_writebufr(xfs_buf_t *bp)
 	}
 
 #ifdef IO_DEBUG
-	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p\n",
+	printf("%lx: %s: wrote %u bytes, blkno=%llu(%llu), %p, error %d\n",
 			pthread_self(), __FUNCTION__, bp->b_bcount,
 			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
-			(long long)bp->b_bn, bp);
+			(long long)bp->b_bn, bp, error);
 #endif
 	if (!error) {
 		bp->b_flags |= LIBXFS_B_UPTODATE;
