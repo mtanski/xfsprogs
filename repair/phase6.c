@@ -1529,9 +1529,8 @@ longform_dir2_entry_check_data(
 
 		*freetabp = freetab = realloc(freetab, FREETAB_SIZE(db + 1));
 		if (!freetab) {
-			do_error(
-	_("realloc failed in longform_dir2_entry_check_data (%zu bytes)\n"),
-				FREETAB_SIZE(db + 1));
+			do_error(_("realloc failed in %s (%zu bytes)\n"),
+				__func__, FREETAB_SIZE(db + 1));
 		}
 		e.v = NULLDATAOFF;
 		e.s = 0;
@@ -2178,8 +2177,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	*need_dot = 1;
 	freetab = malloc(FREETAB_SIZE(ip->i_d.di_size / mp->m_dirblksize));
 	if (!freetab) {
-		do_error(
-		_("malloc failed in longform_dir2_entry_check (%" PRId64 " bytes)\n"),
+		do_error(_("malloc failed in %s (%" PRId64 " bytes)\n"),
+			__func__,
 			FREETAB_SIZE(ip->i_d.di_size / mp->m_dirblksize));
 		exit(1);
 	}
@@ -2191,6 +2190,10 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 	}
 	num_bps = freetab->naents;
 	bplist = calloc(num_bps, sizeof(struct xfs_buf*));
+	if (!bplist)
+		do_error(_("calloc failed in %s (%zu bytes)\n"),
+			__func__, num_bps * sizeof(struct xfs_buf*));
+
 	/* is this a block, leaf, or node directory? */
 	libxfs_dir2_isblock(NULL, ip, &isblock);
 	libxfs_dir2_isleaf(NULL, ip, &isleaf);
@@ -2203,16 +2206,26 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
 		int			 error;
 
 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
-		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
+		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK)) {
+			/*
+			 * if this is the first block, there isn't anything we
+			 * can recover so we just trash it.
+			 */
+			 if (da_bno == 0) {
+				fixit++;
+				goto out_fix;
+			}
 			break;
+		}
+
 		db = xfs_dir2_da_to_db(mp, da_bno);
 		if (db >= num_bps) {
 			/* more data blocks than expected */
 			num_bps = db + 1;
 			bplist = realloc(bplist, num_bps * sizeof(struct xfs_buf*));
 			if (!bplist)
-				do_error(
-		_("realloc failed in longform_dir2_entry_check (%zu bytes)\n"),
+				do_error(_("realloc failed in %s (%zu bytes)\n"),
+					__func__,
 					num_bps * sizeof(struct xfs_buf*));
 		}
 
