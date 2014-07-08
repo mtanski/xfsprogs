@@ -25,7 +25,7 @@
 #include "protos.h"
 #include "dir2.h"
 
-static int xfs_acl_valid(xfs_acl_disk_t *daclp);
+static int xfs_acl_valid(struct xfs_mount *mp, struct xfs_acl *daclp);
 static int xfs_mac_valid(xfs_mac_label_t *lp);
 
 /*
@@ -734,11 +734,15 @@ verify_da_path(xfs_mount_t	*mp,
  * If value is non-zero, then a remote attribute is being passed in
  */
 static int
-valuecheck(char *namevalue, char *value, int namelen, int valuelen)
+valuecheck(
+	struct xfs_mount *mp,
+	char		*namevalue,
+	char		*value,
+	int		namelen,
+	int		valuelen)
 {
 	/* for proper alignment issues, get the structs and memmove the values */
 	xfs_mac_label_t macl;
-	xfs_acl_t thisacl;
 	void *valuep;
 	int clearit = 0;
 
@@ -746,18 +750,23 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
 			(strncmp(namevalue, SGI_ACL_DEFAULT,
 				SGI_ACL_DEFAULT_SIZE) == 0)) {
 		if (value == NULL) {
-			memset(&thisacl, 0, sizeof(xfs_acl_t));
-			memmove(&thisacl, namevalue+namelen, valuelen);
-			valuep = &thisacl;
+			valuep = malloc(valuelen);
+			if (!valuep)
+				do_error(_("No memory for ACL check!\n"));
+			memcpy(valuep, namevalue + namelen, valuelen);
 		} else
 			valuep = value;
 
-		if (xfs_acl_valid((xfs_acl_disk_t *)valuep) != 0) {
+		if (xfs_acl_valid(mp, valuep) != 0) {
 			clearit = 1;
 			do_warn(
 	_("entry contains illegal value in attribute named SGI_ACL_FILE "
 	  "or SGI_ACL_DEFAULT\n"));
 		}
+
+		if (valuep != value)
+			free(valuep);
+
 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
 		if (value == NULL) {
 			memset(&macl, 0, sizeof(xfs_mac_label_t));
@@ -800,6 +809,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
  */
 static int
 process_shortform_attr(
+	struct xfs_mount *mp,
 	xfs_ino_t	ino,
 	xfs_dinode_t	*dip,
 	int		*repair)
@@ -904,7 +914,7 @@ process_shortform_attr(
 
 		/* Only check values for root security attributes */
 		if (currententry->flags & XFS_ATTR_ROOT)
-		       junkit = valuecheck((char *)&currententry->nameval[0],
+		       junkit = valuecheck(mp, (char *)&currententry->nameval[0],
 					NULL, currententry->namelen, 
 					currententry->valuelen);
 
@@ -1039,6 +1049,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
 
 static int
 process_leaf_attr_local(
+	struct xfs_mount	*mp,
 	xfs_attr_leafblock_t	*leaf,
 	int			i,
 	xfs_attr_leaf_entry_t	*entry,
@@ -1076,7 +1087,7 @@ process_leaf_attr_local(
 
 	/* Only check values for root security attributes */
 	if (entry->flags & XFS_ATTR_ROOT) {
-		if (valuecheck((char *)&local->nameval[0], NULL, 
+		if (valuecheck(mp, (char *)&local->nameval[0], NULL, 
 				local->namelen, be16_to_cpu(local->valuelen))) {
 			do_warn(
 	_("bad security value for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
@@ -1134,7 +1145,7 @@ process_leaf_attr_remote(
 			i, ino);
 		goto bad_free_out;
 	}
-	if (valuecheck((char *)&remotep->name[0], value, remotep->namelen,
+	if (valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
 				be32_to_cpu(remotep->valuelen))) {
 		do_warn(
 	_("remote attribute value check failed for entry %d, inode %" PRIu64 "\n"),
@@ -1216,15 +1227,15 @@ process_leaf_attr_block(
 			break;	/* got an overlap */
 		}
 
-		if (entry->flags & XFS_ATTR_LOCAL) 
-			thissize = process_leaf_attr_local(leaf, i, entry,
+		if (entry->flags & XFS_ATTR_LOCAL)
+			thissize = process_leaf_attr_local(mp, leaf, i, entry,
 						last_hashval, da_bno, ino);
 		else
 			thissize = process_leaf_attr_remote(leaf, i, entry,
 						last_hashval, da_bno, ino,
 						mp, blkmap);
 		if (thissize < 0) {
-			clearit = 1;				
+			clearit = 1;
 			break;
 		}
 
@@ -1608,23 +1619,27 @@ process_longform_attr(
 
 
 static int
-xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
+xfs_acl_from_disk(
+	struct xfs_mount	*mp,
+	struct xfs_icacl	**aclp,
+	struct xfs_acl		*dacl)
 {
+	struct xfs_icacl	*acl;
+	struct xfs_icacl_entry	*ace;
+	struct xfs_acl_entry	*dace;
 	int			count;
-	xfs_acl_t		*acl;
-	xfs_acl_entry_t 	*ace;
-	xfs_acl_entry_disk_t	*dace, *end;
+	int			i;
 
 	count = be32_to_cpu(dacl->acl_cnt);
-	if (count > XFS_ACL_MAX_ENTRIES) {
+	if (count > XFS_ACL_MAX_ENTRIES(mp)) {
 		do_warn(_("Too many ACL entries, count %d\n"), count);
 		*aclp = NULL;
 		return EINVAL;
 	}
 
 
-	end = &dacl->acl_entry[0] + count;
-	acl = malloc((int)((char *)end - (char *)dacl));
+	acl = malloc(sizeof(struct xfs_icacl) +
+		     count * sizeof(struct xfs_icacl_entry));
 	if (!acl) {
 		do_warn(_("cannot malloc enough for ACL attribute\n"));
 		do_warn(_("SKIPPING this ACL\n"));
@@ -1633,8 +1648,10 @@ xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
 	}
 
 	acl->acl_cnt = count;
-	ace = &acl->acl_entry[0];
-	for (dace = &dacl->acl_entry[0]; dace < end; ace++, dace++) {
+	for (i = 0; i < count; i++) {
+		ace = &acl->acl_entry[i];
+		dace = &dacl->acl_entry[i];
+
 		ace->ae_tag = be32_to_cpu(dace->ae_tag);
 		ace->ae_id = be32_to_cpu(dace->ae_id);
 		ace->ae_perm = be16_to_cpu(dace->ae_perm);
@@ -1667,7 +1684,7 @@ process_attributes(
 	if (aformat == XFS_DINODE_FMT_LOCAL) {
 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
 			XFS_DFORK_ASIZE(dip, mp));
-		err = process_shortform_attr(ino, dip, repair);
+		err = process_shortform_attr(mp, ino, dip, repair);
 	} else if (aformat == XFS_DINODE_FMT_EXTENTS ||
 					aformat == XFS_DINODE_FMT_BTREE)  {
 			err = process_longform_attr(mp, ino, dip, blkmap,
@@ -1686,17 +1703,19 @@ process_attributes(
  * Validate an ACL
  */
 static int
-xfs_acl_valid(xfs_acl_disk_t *daclp)
+xfs_acl_valid(
+	struct xfs_mount *mp,
+	struct xfs_acl	*daclp)
 {
-	xfs_acl_t	*aclp = NULL;
-	xfs_acl_entry_t *entry, *e;
+	struct xfs_icacl	*aclp = NULL;
+	struct xfs_icacl_entry	*entry, *e;
 	int user = 0, group = 0, other = 0, mask = 0, mask_required = 0;
 	int i, j;
 
 	if (daclp == NULL)
 		goto acl_invalid;
 
-	switch (xfs_acl_from_disk(&aclp, daclp)) {
+	switch (xfs_acl_from_disk(mp, &aclp, daclp)) {
 	case ENOMEM:
 		return 0;
 	case EINVAL:

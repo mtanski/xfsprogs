@@ -37,29 +37,49 @@ typedef __int32_t	xfs_acl_type_t;
 typedef __int32_t	xfs_acl_tag_t;
 typedef __int32_t	xfs_acl_id_t;
 
-typedef struct xfs_acl_entry {
+/*
+ * "icacl" = in-core ACL. There is no equivalent in the XFS kernel code,
+ * so they are magic names just for repair. The "acl" types are what the kernel
+ * code uses for the on-disk format names, so use them here too for the on-disk
+ * ACL format definitions.
+ */
+struct xfs_icacl_entry {
 	xfs_acl_tag_t	ae_tag;
 	xfs_acl_id_t	ae_id;
 	xfs_acl_perm_t	ae_perm;
-} xfs_acl_entry_t;
+};
 
-#define XFS_ACL_MAX_ENTRIES	25
-typedef struct xfs_acl {
-	__int32_t	acl_cnt;
-	xfs_acl_entry_t	acl_entry[XFS_ACL_MAX_ENTRIES];
-} xfs_acl_t;
+struct xfs_icacl {
+	__int32_t		acl_cnt;
+	struct xfs_icacl_entry	acl_entry[0];
+};
 
-typedef struct xfs_acl_entry_disk {
+struct xfs_acl_entry {
 	__be32		ae_tag;
 	__be32		ae_id;
 	__be16		ae_perm;
-} xfs_acl_entry_disk_t;
+	__be16		ae_pad;
+};
 
-typedef struct xfs_acl_disk {
-	__be32		acl_cnt;
-	xfs_acl_entry_disk_t	acl_entry[XFS_ACL_MAX_ENTRIES];
-} xfs_acl_disk_t;
+struct xfs_acl {
+	__be32			acl_cnt;
+	struct xfs_acl_entry	acl_entry[0];
+};
 
+/*
+ * The number of ACL entries allowed is defined by the on-disk format.
+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
+ * limited only by the maximum size of the xattr that stores the information.
+ */
+#define XFS_ACL_MAX_ENTRIES(mp) \
+	(xfs_sb_version_hascrc(&mp->m_sb) \
+		?  (XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
+						sizeof(struct xfs_acl_entry) \
+		: 25)
+
+#define XFS_ACL_MAX_SIZE(mp) \
+	(sizeof(struct xfs_acl) + \
+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
 
 #define SGI_ACL_FILE	"SGI_ACL_FILE"
 #define SGI_ACL_DEFAULT	"SGI_ACL_DEFAULT"
