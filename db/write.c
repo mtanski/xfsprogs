@@ -565,7 +565,7 @@ convert_arg(
 		return NULL;
 
 	/* Does the value fit into the range of the destination bitfield? */
-	if ((val >> bit_length) > 0)
+	if (bit_length < 64 && (val >> bit_length) > 0)
 		return NULL;
 	/*
 	 * If the length of the field is not a multiple of a byte, push
