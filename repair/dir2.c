@@ -596,7 +596,13 @@ _("bad level %d in block %u for directory inode %" PRIu64 "\n"),
 		 */
 		ASSERT(cursor->level[this_level].dirty == 0 ||
 			(cursor->level[this_level].dirty && !no_modify));
-
+		/*
+		 * If block looks ok but CRC didn't match, make sure to
+		 * recompute it.
+		 */
+		if (!no_modify &&
+		    cursor->level[this_level].bp->b_error == EFSBADCRC)
+			cursor->level[this_level].dirty = 1;
 		if (cursor->level[this_level].dirty && !no_modify)
 			libxfs_writebuf(cursor->level[this_level].bp, 0);
 		else
@@ -1621,6 +1627,9 @@ _("bad directory block magic # %#x in block %u for directory inode %" PRIu64 "\n
 		blp = (xfs_dir2_leaf_entry_t *)btp;
 	rval = process_dir2_data(mp, ino, dip, ino_discovery, dirname, parent,
 		bp, dot, dotdot, mp->m_dirdatablk, (char *)blp, &dirty);
+	/* If block looks ok but CRC didn't match, make sure to recompute it. */
+	if (!rval && bp->b_error == EFSBADCRC)
+		dirty = 1;
 	if (dirty && !no_modify) {
 		*repair = 1;
 		libxfs_writebuf(bp, 0);
@@ -1784,6 +1793,12 @@ _("bad sibling back pointer for block %u in directory inode %" PRIu64 "\n"),
 			}
 		}
 		current_hashval = greatest_hashval;
+		/*
+		 * If block looks ok but CRC didn't match, make sure to
+		 * recompute it.
+		 */
+		if (!no_modify && bp->b_error == EFSBADCRC)
+			buf_dirty = 1;
 		ASSERT(buf_dirty == 0 || (buf_dirty && !no_modify));
 		if (buf_dirty && !no_modify) {
 			*repair = 1;
@@ -1927,8 +1942,12 @@ _("bad directory block magic # %#x in block %" PRIu64 " for directory inode %" P
 		i = process_dir2_data(mp, ino, dip, ino_discovery, dirname,
 			parent, bp, dot, dotdot, (xfs_dablk_t)dbno,
 			(char *)data + mp->m_dirblksize, &dirty);
-		if (i == 0)
+		if (i == 0) {
 			good++;
+			/* Maybe just CRC is wrong. Make sure we correct it. */
+			if (bp->b_error == EFSBADCRC)
+				dirty = 1;
+		}
 		if (dirty && !no_modify) {
 			*repair = 1;
 			libxfs_writebuf(bp, 0);
