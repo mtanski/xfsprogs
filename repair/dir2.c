@@ -28,13 +28,6 @@
 #include "progress.h"
 
 /*
- * Tag bad directory entries with this.
- * We can't tag them with -1 since that will look like a
- * data_unused_t instead of a data_entry_t.
- */
-#define	BADFSINO	((xfs_ino_t)0xfeffffffffffffffULL)
-
-/*
  * Known bad inode list.  These are seen when the leaf and node
  * block linkages are incorrect.
  */
@@ -1320,7 +1313,7 @@ process_dir2_data(
 		 * Conditions must either set clearino to zero or set
 		 * clearreason why it's being cleared.
 		 */
-		if (!ino_discovery && ent_ino == BADFSINO) {
+		if (!ino_discovery && dep->name[0] == '/') {
 			/*
 			 * Don't do a damned thing.  We already found this
 			 * (or did it ourselves) during phase 3.
@@ -1407,8 +1400,7 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64
 				do_warn(
 _("\tclearing inode number in entry at offset %" PRIdPTR "...\n"),
 					(intptr_t)ptr - (intptr_t)d);
-				dep->inumber = cpu_to_be64(BADFSINO);
-				ent_ino = BADFSINO;
+				dep->name[0] = '/';
 				*dirty = 1;
 			} else {
 				do_warn(
@@ -1421,7 +1413,7 @@ _("\twould clear inode number in entry at offset %" PRIdPTR "...\n"),
 		 * discovery is turned on).  Otherwise, we'd complain a lot
 		 * during phase 4.
 		 */
-		junkit = ent_ino == BADFSINO;
+		junkit = dep->name[0] == '/';
 		nm_illegal = namecheck((char *)dep->name, dep->namelen);
 		if (ino_discovery && nm_illegal) {
 			do_warn(
@@ -1430,14 +1422,15 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64 " has ille
 				dep->namelen, dep->namelen, dep->name);
 			junkit = 1;
 		}
+
 		/*
-		 * Now we can mark entries with BADFSINO's bad.
+		 * Ensure we write back bad entries for later processing
 		 */
-		if (!no_modify && ent_ino == BADFSINO) {
-			dep->name[0] = '/';
+		if (!no_modify && dep->name[0] == '/') {
 			*dirty = 1;
 			junkit = 0;
 		}
+
 		/*
 		 * Special .. entry processing.
 		 */
