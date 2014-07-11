@@ -648,6 +648,12 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
 void
 libxfs_putbuf(xfs_buf_t *bp)
 {
+	/*
+	 * ensure that any errors on this use of the buffer don't carry
+	 * over to the next user.
+	 */
+	bp->b_error = 0;
+
 #ifdef XFS_BUF_TRACING
 	pthread_mutex_lock(&libxfs_bcache->c_mutex);
 	lock_buf_count--;
@@ -663,11 +669,6 @@ libxfs_putbuf(xfs_buf_t *bp)
 			pthread_mutex_unlock(&bp->b_lock);
 		}
 	}
-	/*
-	 * ensure that any errors on this use of the buffer don't carry
-	 * over to the next user.
-	 */
-	bp->b_error = 0;
 
 	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
 }
