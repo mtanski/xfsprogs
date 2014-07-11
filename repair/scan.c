@@ -1572,14 +1572,13 @@ scan_ag(
 
 	/*
 	 * Only pay attention to CRC/verifier errors if we can correct them.
-	 * While there, ensure that we corrected a corruption error if the
-	 * verifier detected one.
+	 * Note that we can get uncorrected EFSCORRUPTED errors here because
+	 * the verifier will flag on out of range values that we can't correct
+	 * until phase 5 when we have all the information necessary to rebuild
+	 * the freespace/inode btrees. We can correct bad CRC errors
+	 * immediately, though.
 	 */
 	if (!no_modify) {
-		ASSERT(agi_dirty || agibuf->b_error != EFSCORRUPTED);
-		ASSERT(agf_dirty || agfbuf->b_error != EFSCORRUPTED);
-		ASSERT(sb_dirty || sbbuf->b_error != EFSCORRUPTED);
-
 		agi_dirty += (agibuf->b_error == EFSBADCRC);
 		agf_dirty += (agfbuf->b_error == EFSBADCRC);
 		sb_dirty += (sbbuf->b_error == EFSBADCRC);
