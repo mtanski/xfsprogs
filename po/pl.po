@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: xfsprogs 3.2.0\n"
+"Project-Id-Version: xfsprogs 3.2.0+git20140709\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-21 18:34+0200\n"
-"PO-Revision-Date: 2014-05-21 18:41+0200\n"
+"POT-Creation-Date: 2014-07-09 19:08+0200\n"
+"PO-Revision-Date: 2014-07-09 20:45+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -30,8 +30,8 @@ msgstr "%s: nie udało się zapisać pliku logu \"%s\".\n"
 msgid "Aborting XFS copy -- logfile error -- reason: %s\n"
 msgstr "Przerwano XFS copy - błąd pliku logu - przyczyna: %s\n"
 
-#: .././copy/xfs_copy.c:126 .././copy/xfs_copy.c:286 .././copy/xfs_copy.c:566
-#: .././copy/xfs_copy.c:573
+#: .././copy/xfs_copy.c:126 .././copy/xfs_copy.c:267 .././copy/xfs_copy.c:546
+#: .././copy/xfs_copy.c:553
 msgid "Aborting XFS copy - reason"
 msgstr "Przerwano XFS copy - przyczyna"
 
@@ -62,125 +62,120 @@ msgstr "Wszystkie kopie ukończone.\n"
 msgid "See \"%s\" for more details.\n"
 msgstr "Więcej szczegółów w \"%s\".\n"
 
-#: .././copy/xfs_copy.c:255
+#: .././copy/xfs_copy.c:236
 #, c-format
 msgid "%s:  write error on target %d \"%s\" at offset %lld\n"
 msgstr "%s: błąd zapisu przy celu %d \"%s\" pod offsetem %lld\n"
 
-#: .././copy/xfs_copy.c:260
+#: .././copy/xfs_copy.c:241
 #, c-format
 msgid "%s:  lseek64 error on target %d \"%s\" at offset %lld\n"
 msgstr "%s: błąd lseek64 przy celu %d \"%s\" pod offsetem %lld\n"
 
-#: .././copy/xfs_copy.c:266
+#: .././copy/xfs_copy.c:247
 #, c-format
 msgid "Aborting target %d - reason"
 msgstr "Przerywano zapis celu %d - przyczyna"
 
-#: .././copy/xfs_copy.c:270
+#: .././copy/xfs_copy.c:251
 msgid "Aborting XFS copy - no more targets.\n"
 msgstr "Przerwano XFS copy - nie ma więcej celów.\n"
 
-#: .././copy/xfs_copy.c:281
+#: .././copy/xfs_copy.c:262
 #, c-format
 msgid "%s:  thread %d died unexpectedly, target \"%s\" incomplete\n"
 msgstr "%s: wątek %d zmarł nieoczekiwanie, cel \"%s\" niekompletny\n"
 
-#: .././copy/xfs_copy.c:283
+#: .././copy/xfs_copy.c:264
 #, c-format
 msgid "%s:  offset was probably %lld\n"
 msgstr "%s: offset prawdopodobnie %lld\n"
 
-#: .././copy/xfs_copy.c:294
+#: .././copy/xfs_copy.c:275
 #, c-format
 msgid "%s: Unknown child died (should never happen!)\n"
 msgstr "%s: Nieznany potomek zmarł (nie powinno się zdarzyć!)\n"
 
-#: .././copy/xfs_copy.c:304
+#: .././copy/xfs_copy.c:285
 #, c-format
 msgid "Usage: %s [-bdV] [-L logfile] source target [target ...]\n"
 msgstr "Składnia: %s [-bdV] [-L plik_logu] źródło cel [cel ...]\n"
 
-#: .././copy/xfs_copy.c:386
+#: .././copy/xfs_copy.c:367
 #, c-format
 msgid "%s:  lseek64 failure at offset %lld\n"
 msgstr "%s: niepowodzenie lseek64 pod offsetem %lld\n"
 
-#: .././copy/xfs_copy.c:401
+#: .././copy/xfs_copy.c:382
 #, c-format
 msgid "assert error:  buf->length = %d, buf->size = %d\n"
 msgstr "błąd zapewnienia: buf->length = %d, buf->size = %d\n"
 
-#: .././copy/xfs_copy.c:408
+#: .././copy/xfs_copy.c:388
 #, c-format
 msgid "%s:  read failure at offset %lld\n"
 msgstr "%s: błąd odczytu pod offsetem %lld\n"
 
-#: .././copy/xfs_copy.c:438
+#: .././copy/xfs_copy.c:418
 msgid "ag header buffer invalid!\n"
 msgstr "błędny bufor nagłówka ag!\n"
 
-#: .././copy/xfs_copy.c:546 .././db/init.c:94 .././estimate/xfs_estimate.c:144
-#: .././fsr/xfs_fsr.c:300 .././growfs/xfs_growfs.c:180 .././io/init.c:190
-#: .././logprint/logprint.c:203 .././mkfs/xfs_mkfs.c:1672
+#: .././copy/xfs_copy.c:526 .././db/init.c:94 .././estimate/xfs_estimate.c:144
+#: .././fsr/xfs_fsr.c:300 .././growfs/xfs_growfs.c:182 .././io/init.c:190
+#: .././logprint/logprint.c:203 .././mkfs/xfs_mkfs.c:1703
 #: .././quota/init.c:131 .././repair/xfs_repair.c:319 .././rtcp/xfs_rtcp.c:55
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s wersja %s\n"
 
-#: .././copy/xfs_copy.c:564
+#: .././copy/xfs_copy.c:544
 #, c-format
 msgid "%s: couldn't open log file \"%s\"\n"
 msgstr "%s: nie udało się otworzyć pliku logu \"%s\"\n"
 
-#: .././copy/xfs_copy.c:571
+#: .././copy/xfs_copy.c:551
 #, c-format
 msgid "%s: couldn't set up logfile stream\n"
 msgstr "%s: nie udało się ustanowić strumienia pliku logu\n"
 
-#: .././copy/xfs_copy.c:583
+#: .././copy/xfs_copy.c:563
 msgid "Couldn't allocate target array\n"
 msgstr "Nie udało się przydzielić tablicy celów\n"
 
-#: .././copy/xfs_copy.c:598
-#, c-format
-msgid "%s: couldn't register atexit function.\n"
-msgstr "%s: nie udało się zarejestrować funkcji atexit.\n"
-
-#: .././copy/xfs_copy.c:607
+#: .././copy/xfs_copy.c:582
 #, c-format
 msgid "%s:  couldn't open source \"%s\"\n"
 msgstr "%s: nie udało się otworzyć źródła \"%s\"\n"
 
-#: .././copy/xfs_copy.c:613
+#: .././copy/xfs_copy.c:588
 #, c-format
 msgid "%s:  couldn't stat source \"%s\"\n"
 msgstr "%s: nie udało się wykonać stat na źródle \"%s\"\n"
 
-#: .././copy/xfs_copy.c:623
+#: .././copy/xfs_copy.c:598
 #, c-format
 msgid "%s: Cannot set direct I/O flag on \"%s\".\n"
 msgstr "%s: Nie można ustawić flagi bezpośredniego we/wy na \"%s\".\n"
 
-#: .././copy/xfs_copy.c:628
+#: .././copy/xfs_copy.c:603
 #, c-format
 msgid "%s: xfsctl on file \"%s\" failed.\n"
 msgstr "%s: xfsctl na pliku \"%s\" nie powiodło się.\n"
 
-#: .././copy/xfs_copy.c:651
+#: .././copy/xfs_copy.c:626
 #, c-format
 msgid "%s:  Warning -- a filesystem is mounted on the source device.\n"
 msgstr "%s: Uwaga - system plików jest podmontowany na urządzeniu źródłowym.\n"
 
-#: .././copy/xfs_copy.c:654
+#: .././copy/xfs_copy.c:629
 msgid "\t\tGenerated copies may be corrupt unless the source is\n"
 msgstr "\t\tWygenerowane kopie mogą być uszkodzone o ile źródło nie jest\n"
 
-#: .././copy/xfs_copy.c:656
+#: .././copy/xfs_copy.c:631
 msgid "\t\tunmounted or mounted read-only.  Copy proceeding...\n"
 msgstr "\t\todmontowane lub podmontowane tylko do odczytu. Kopiowanie w trakcie...\n"
 
-#: .././copy/xfs_copy.c:673
+#: .././copy/xfs_copy.c:648
 #, c-format
 msgid ""
 "%s: couldn't initialize XFS library\n"
@@ -189,12 +184,12 @@ msgstr ""
 "%s: nie udało się zainicjować biblioteki XFS\n"
 "%s: Przerwano.\n"
 
-#: .././copy/xfs_copy.c:693
+#: .././copy/xfs_copy.c:668
 #, c-format
 msgid "%s: Cannot yet copy V5 fs without '-d'\n"
 msgstr "%s: Nie można jeszcze kopiować systemu plików V5 bez '-d'\n"
 
-#: .././copy/xfs_copy.c:699
+#: .././copy/xfs_copy.c:674
 #, c-format
 msgid ""
 "%s: %s filesystem failed to initialize\n"
@@ -203,7 +198,7 @@ msgstr ""
 "%s: Nie powiodła się inicjalizacja systemu plików %s\n"
 "%s: Przerwano.\n"
 
-#: .././copy/xfs_copy.c:703
+#: .././copy/xfs_copy.c:678
 #, c-format
 msgid ""
 "%s %s filesystem failed to initialize\n"
@@ -212,7 +207,7 @@ msgstr ""
 "%s: Nie powiodła się inicjalizacja systemu plików %s\n"
 "%s: Przerwano.\n"
 
-#: .././copy/xfs_copy.c:707
+#: .././copy/xfs_copy.c:682
 #, c-format
 msgid ""
 "%s: %s has an external log.\n"
@@ -221,7 +216,7 @@ msgstr ""
 "%s: %s ma zewnętrzny log.\n"
 "%s: Przerwano.\n"
 
-#: .././copy/xfs_copy.c:711
+#: .././copy/xfs_copy.c:686
 #, c-format
 msgid ""
 "%s: %s has a real-time section.\n"
@@ -230,7 +225,7 @@ msgstr ""
 "%s: %s ma sekcję real-time.\n"
 "%s: Przerwano.\n"
 
-#: .././copy/xfs_copy.c:736
+#: .././copy/xfs_copy.c:711
 msgid ""
 "Error:  filesystem block size is smaller than the disk sectorsize.\n"
 "Aborting XFS copy now.\n"
@@ -238,12 +233,12 @@ msgstr ""
 "Błąd: rozmiar bloku systemu plików jest mniejszy niż rozmiar sektora dysku.\n"
 "Przerwano XFS copy.\n"
 
-#: .././copy/xfs_copy.c:757
+#: .././copy/xfs_copy.c:732
 #, c-format
 msgid "Creating file %s\n"
 msgstr "Tworzenie pliku %s\n"
 
-#: .././copy/xfs_copy.c:775
+#: .././copy/xfs_copy.c:750
 #, c-format
 msgid ""
 "%s:  a filesystem is mounted on target device \"%s\".\n"
@@ -252,76 +247,76 @@ msgstr ""
 "%s: na urządzeniu docelowym \"%s\" jest podmontowany system plików.\n"
 "%s nie może kopiować na podmontowane systemy plików. Przerwano.\n"
 
-#: .././copy/xfs_copy.c:786
+#: .././copy/xfs_copy.c:761
 #, c-format
 msgid "%s:  couldn't open target \"%s\"\n"
 msgstr "%s: nie udało się otworzyć celu \"%s\"\n"
 
-#: .././copy/xfs_copy.c:796
+#: .././copy/xfs_copy.c:771
 #, c-format
 msgid "%s:  cannot grow data section.\n"
 msgstr "%s: nie można powiększyć sekcji danych.\n"
 
-#: .././copy/xfs_copy.c:804
+#: .././copy/xfs_copy.c:779
 #, c-format
 msgid "%s:  xfsctl on \"%s\" failed.\n"
 msgstr "%s: xfsctl na \"%s\" nie powiodło się.\n"
 
-#: .././copy/xfs_copy.c:823
+#: .././copy/xfs_copy.c:798
 #, c-format
 msgid "%s:  failed to write last block\n"
 msgstr "%s: nie udało się zapisać ostatniego bloku\n"
 
-#: .././copy/xfs_copy.c:825
+#: .././copy/xfs_copy.c:800
 #, c-format
 msgid "\tIs target \"%s\" too small?\n"
 msgstr "\tCzy cel \"%s\" jest zbyt mały?\n"
 
-#: .././copy/xfs_copy.c:835
+#: .././copy/xfs_copy.c:810
 msgid "Couldn't initialize global thread mask\n"
 msgstr "Nie udało się zainicjować globalnej maski wątków\n"
 
-#: .././copy/xfs_copy.c:842
+#: .././copy/xfs_copy.c:817
 msgid "Error initializing wbuf 0\n"
 msgstr "Błąd inicjalizacji wbuf 0\n"
 
-#: .././copy/xfs_copy.c:850
+#: .././copy/xfs_copy.c:825
 msgid "Error initializing btree buf 1\n"
 msgstr "Błąd inicjalizacji btree buf 1\n"
 
-#: .././copy/xfs_copy.c:855
+#: .././copy/xfs_copy.c:830
 msgid "Error creating first semaphore.\n"
 msgstr "Błąd tworzenia pierwszego semafora.\n"
 
-#: .././copy/xfs_copy.c:870
+#: .././copy/xfs_copy.c:845
 msgid "Couldn't malloc space for thread args\n"
 msgstr "Nie udało się przydzielić miejsca na argumenty wątku\n"
 
-#: .././copy/xfs_copy.c:882
+#: .././copy/xfs_copy.c:857
 #, c-format
 msgid "Error creating thread mutex %d\n"
 msgstr "Błąd podczas tworzenia sekcji krytycznej %d wątku\n"
 
-#: .././copy/xfs_copy.c:899
+#: .././copy/xfs_copy.c:874
 #, c-format
 msgid "Error creating thread for target %d\n"
 msgstr "Błąd podczas tworzenia wątku dla celu %d\n"
 
-#: .././copy/xfs_copy.c:953
+#: .././copy/xfs_copy.c:928
 #, c-format
 msgid "Error: current level %d >= btree levels %d\n"
 msgstr "Błąd: bieżący poziom %d >= poziomów b-drzewa %d\n"
 
-#: .././copy/xfs_copy.c:972
+#: .././copy/xfs_copy.c:947
 #, c-format
 msgid "Bad btree magic 0x%x\n"
 msgstr "Niewłaściwa liczba magiczna b-drzewa 0x%x\n"
 
-#: .././copy/xfs_copy.c:999
+#: .././copy/xfs_copy.c:974
 msgid "WARNING:  source filesystem inconsistent.\n"
 msgstr "UWAGA: źródłowy system plików niespójny.\n"
 
-#: .././copy/xfs_copy.c:1001
+#: .././copy/xfs_copy.c:976
 msgid "  A leaf btree rec isn't a leaf.  Aborting now.\n"
 msgstr " Liść rekordu b-drzewa nie jest liściem. Przerwano.\n"
 
@@ -413,7 +408,7 @@ msgstr ""
 " b-drzewo 'cnt' śledzi wolne miejsce indeksowane rozmiarem sekcji\n"
 " b-drzewo 'bno' śledzi sekcje wolnego miejsca indeksowane numerem bloku.\n"
 
-#: .././db/agf.c:107 .././db/agfl.c:106 .././db/agi.c:92 .././db/sb.c:163
+#: .././db/agf.c:107 .././db/agfl.c:106 .././db/agi.c:94 .././db/sb.c:163
 #, c-format
 msgid "bad allocation group number %s\n"
 msgstr "błędny numer grupy alokacji %s\n"
@@ -453,7 +448,7 @@ msgstr ""
 msgid "set address to agi header"
 msgstr "ustawienie adresu na nagłówek agi"
 
-#: .././db/agi.c:67
+#: .././db/agi.c:69
 msgid ""
 "\n"
 " set allocation group inode btree\n"
@@ -1560,12 +1555,12 @@ msgstr "błędna liczba magiczna agi %#x w ag %u\n"
 msgid "bad agi version # %#x in ag %u\n"
 msgstr "błędny numer wersji agi # %#x w ag %u\n"
 
-#: .././db/check.c:3763 .././repair/scan.c:1163
+#: .././db/check.c:3763 .././repair/scan.c:1383
 #, c-format
 msgid "agf_freeblks %u, counted %u in ag %u\n"
 msgstr "agf_freeblks %u, naliczono %u w ag %u\n"
 
-#: .././db/check.c:3770 .././repair/scan.c:1168
+#: .././db/check.c:3770 .././repair/scan.c:1388
 #, c-format
 msgid "agf_longest %u, counted %u in ag %u\n"
 msgstr "agf_longest %u, naliczono %u w ag %u\n"
@@ -1575,12 +1570,12 @@ msgstr "agf_longest %u, naliczono %u w ag %u\n"
 msgid "agf_btreeblks %u, counted %u in ag %u\n"
 msgstr "agf_btreeblks %u, naliczono %u w ag %u\n"
 
-#: .././db/check.c:3786 .././repair/scan.c:1202
+#: .././db/check.c:3786 .././repair/scan.c:1436
 #, c-format
 msgid "agi_count %u, counted %u in ag %u\n"
 msgstr "agi_count %u, naliczono %u w ag %u\n"
 
-#: .././db/check.c:3793 .././repair/scan.c:1207
+#: .././db/check.c:3793 .././repair/scan.c:1441
 #, c-format
 msgid "agi_freecount %u, counted %u in ag %u\n"
 msgstr "agi_freecount %u, naliczono %u w ag %u\n"
@@ -1595,7 +1590,7 @@ msgstr "agi unlinked bucket %d is %u in ag %u (inode=%lld)\n"
 msgid "can't read agfl block for ag %u\n"
 msgstr "nie można odczytać bloku agfl dla ag %u\n"
 
-#: .././db/check.c:3850 .././db/freesp.c:255 .././repair/scan.c:1099
+#: .././db/check.c:3850 .././db/freesp.c:255 .././repair/scan.c:1319
 #, c-format
 msgid "agf %d freelist blocks bad, skipping freelist scan\n"
 msgstr "błędne bloki listy wolnych agf %d, pominięto przeszukanie listy wolnych\n"
@@ -1642,7 +1637,7 @@ msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku btbno %u/%u\n"
 msgid "bad btree nrecs (%u, min=%u, max=%u) in btbno block %u/%u\n"
 msgstr "błędna liczba rekordów b-drzewa (%u, min=%u, max=%u) w bloku btbno %u/%u\n"
 
-#: .././db/check.c:4059 .././repair/scan.c:629
+#: .././db/check.c:4059 .././repair/scan.c:630
 #, c-format
 msgid "out-of-order bno btree record %d (%u %u) block %u/%u\n"
 msgstr "rekord b-drzewa bno poza kolejnością: %d (%u %u), blok %u/%u\n"
@@ -1657,7 +1652,7 @@ msgstr "błędna liczba magiczna %#x w bloku btcbt %u/%u\n"
 msgid "expected level %d got %d in btcnt block %u/%u\n"
 msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku btcnt %u/%u\n"
 
-#: .././db/check.c:4136 .././repair/scan.c:641
+#: .././db/check.c:4136 .././repair/scan.c:642
 #, c-format
 msgid "out-of-order cnt btree record %d (%u %u) block %u/%u\n"
 msgstr "rekord b-drzewa cnt poza kolejnością: %d (%u %u), blok %u/%u\n"
@@ -2174,8 +2169,8 @@ msgstr "\tmapa bloków"
 msgid "\tinode %lld, dir inode %lld, type %s\n"
 msgstr "\ti-węzeł %lld, i-węzeł katalogu %lld, typ %s\n"
 
-#: .././db/io.c:164 .././growfs/xfs_growfs.c:82 .././logprint/log_misc.c:151
-#: .././mkfs/xfs_mkfs.c:2085
+#: .././db/io.c:164 .././growfs/xfs_growfs.c:83 .././logprint/log_misc.c:151
+#: .././mkfs/xfs_mkfs.c:2126
 #, c-format
 msgid "none"
 msgstr "brak"
@@ -3158,359 +3153,379 @@ msgstr "Nie można użyć %s: mode=0%o own=%d nlink=%d\n"
 msgid "could not read %s, starting with %s\n"
 msgstr "nie można odczytać %s, rozpoczęcie z %s\n"
 
-#: .././fsr/xfs_fsr.c:591
+#: .././fsr/xfs_fsr.c:593
 #, c-format
 msgid "START: pass=%d ino=%llu %s %s\n"
 msgstr "START: przebieg=%d i-węzeł=%llu %s %s\n"
 
-#: .././fsr/xfs_fsr.c:608
+#: .././fsr/xfs_fsr.c:610
 #, c-format
 msgid "Completed all %d passes\n"
 msgstr "Zakończono wszystkie przebiegi w liczbie %d\n"
 
-#: .././fsr/xfs_fsr.c:618
+#: .././fsr/xfs_fsr.c:620
 msgid "couldn't fork sub process:"
 msgstr "nie udało się uruchomić podprocesu:"
 
-#: .././fsr/xfs_fsr.c:653
+#: .././fsr/xfs_fsr.c:655
 #, c-format
 msgid "%s startpass %d, endpass %d, time %d seconds\n"
 msgstr "%s pocz. przebieg %d, końc. przebieg %d, czas %d sekund\n"
 
-#: .././fsr/xfs_fsr.c:660
+#: .././fsr/xfs_fsr.c:662
 #, c-format
 msgid "open(%s) failed: %s\n"
 msgstr "open(%s) nie powiodło się: %s\n"
 
-#: .././fsr/xfs_fsr.c:666
+#: .././fsr/xfs_fsr.c:668
 #, c-format
 msgid "write(%s) failed: %s\n"
 msgstr "write(%s) nie powiodło się: %s\n"
 
-#: .././fsr/xfs_fsr.c:690
+#: .././fsr/xfs_fsr.c:692
 #, c-format
 msgid "%s start inode=%llu\n"
 msgstr "%s pocz. i-węzeł=%llu\n"
 
-#: .././fsr/xfs_fsr.c:695
+#: .././fsr/xfs_fsr.c:697
 #, c-format
 msgid "unable to get handle: %s: %s\n"
 msgstr "nie udało się uzyskać uchwytu: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:701
+#: .././fsr/xfs_fsr.c:703
 #, c-format
 msgid "unable to open: %s: %s\n"
 msgstr "nie udało się otworzyć: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:707
+#: .././fsr/xfs_fsr.c:709
 #, c-format
 msgid "Skipping %s: could not get XFS geometry\n"
 msgstr "Pominięto %s: nie można odczytać geometrii XFS\n"
 
-#: .././fsr/xfs_fsr.c:741
+#: .././fsr/xfs_fsr.c:743
 #, c-format
 msgid "could not open: inode %llu\n"
 msgstr "nie udało się otworzyć: i-węzeł %llu\n"
 
-#: .././fsr/xfs_fsr.c:771
+#: .././fsr/xfs_fsr.c:773
 #, c-format
 msgid "%s: xfs_bulkstat: %s\n"
 msgstr "%s: xfs_bulkstat: %s\n"
 
-#: .././fsr/xfs_fsr.c:797
+#: .././fsr/xfs_fsr.c:799
 #, c-format
 msgid "%s: Directory defragmentation not supported\n"
 msgstr "%s: Defragmentacja katalogów nie jest obsługiwana\n"
 
-#: .././fsr/xfs_fsr.c:816
+#: .././fsr/xfs_fsr.c:818
 #, c-format
 msgid "unable to construct sys handle for %s: %s\n"
 msgstr "nie udało się utworzyć uchwytu systemowego dla %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:827
+#: .././fsr/xfs_fsr.c:829
 #, c-format
 msgid "unable to open sys handle for %s: %s\n"
 msgstr "nie udało się otworzyć uchwytu systemowego dla %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:833
+#: .././fsr/xfs_fsr.c:835
 #, c-format
 msgid "unable to get bstat on %s: %s\n"
 msgstr "nie udało się uzyskać bstat na %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:841
+#: .././fsr/xfs_fsr.c:843
 #, c-format
 msgid "unable to open handle %s: %s\n"
 msgstr "nie udało się otworzyć uchwytu %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:849
+#: .././fsr/xfs_fsr.c:851
 #, c-format
 msgid "Unable to get geom on fs for: %s\n"
 msgstr "Nie udało się odczytać geometrii systemu plików dla: %s\n"
 
-#: .././fsr/xfs_fsr.c:898
+#: .././fsr/xfs_fsr.c:900
 #, c-format
 msgid "sync failed: %s: %s\n"
 msgstr "sync nie powiodło się: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:904
+#: .././fsr/xfs_fsr.c:906
 #, c-format
 msgid "%s: zero size, ignoring\n"
 msgstr "%s: zerowy rozmiar, zignorowano\n"
 
-#: .././fsr/xfs_fsr.c:923
+#: .././fsr/xfs_fsr.c:925
 #, c-format
 msgid "locking check failed: %s\n"
 msgstr "sprawdzenie blokowania nie powiodło się: %s\n"
 
-#: .././fsr/xfs_fsr.c:930
+#: .././fsr/xfs_fsr.c:932
 #, c-format
 msgid "mandatory lock: %s: ignoring\n"
 msgstr "obowiązkowa blokada: %s: zignorowano\n"
 
-#: .././fsr/xfs_fsr.c:943
+#: .././fsr/xfs_fsr.c:945
 #, c-format
 msgid "unable to get fs stat on %s: %s\n"
 msgstr "nie udało się uzyskać stat fs na %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:950
+#: .././fsr/xfs_fsr.c:952
 #, c-format
 msgid "insufficient freespace for: %s: size=%lld: ignoring\n"
 msgstr "niewystarczająca ilość miejsca dla: %s: rozmiar=%lld: zignorowano\n"
 
-#: .././fsr/xfs_fsr.c:957
+#: .././fsr/xfs_fsr.c:959
 #, c-format
 msgid "failed to get inode attrs: %s\n"
 msgstr "nie udało się uzyskać atrybutów i-węzła: %s\n"
 
-#: .././fsr/xfs_fsr.c:962
+#: .././fsr/xfs_fsr.c:964
 #, c-format
 msgid "%s: immutable/append, ignoring\n"
 msgstr "%s: niezmienny/tylko do dołączania, zignorowano\n"
 
-#: .././fsr/xfs_fsr.c:967
+#: .././fsr/xfs_fsr.c:969
 #, c-format
 msgid "%s: marked as don't defrag, ignoring\n"
 msgstr "%s: oznaczony jako nie do defragmentacji, zignorowano\n"
 
-#: .././fsr/xfs_fsr.c:973
+#: .././fsr/xfs_fsr.c:975
 #, c-format
 msgid "cannot get realtime geometry for: %s\n"
 msgstr "nie można uzyskać geometrii realtime dla: %s\n"
 
-#: .././fsr/xfs_fsr.c:978
+#: .././fsr/xfs_fsr.c:980
 #, c-format
 msgid "low on realtime free space: %s: ignoring file\n"
 msgstr "mało wolnego miejsca realtime: %s: plik zignorowany\n"
 
-#: .././fsr/xfs_fsr.c:985
+#: .././fsr/xfs_fsr.c:987
 #, c-format
 msgid "cannot open: %s: Permission denied\n"
 msgstr "nie można otworzyć: %s: brak uprawnień\n"
 
-#: .././fsr/xfs_fsr.c:1043 .././fsr/xfs_fsr.c:1093 .././fsr/xfs_fsr.c:1185
+#: .././fsr/xfs_fsr.c:1045 .././fsr/xfs_fsr.c:1095 .././fsr/xfs_fsr.c:1187
 msgid "could not set ATTR\n"
 msgstr "nie udało się ustawić ATTR\n"
 
-#: .././fsr/xfs_fsr.c:1052
+#: .././fsr/xfs_fsr.c:1054
 #, c-format
 msgid "unable to stat temp file: %s\n"
 msgstr "nie udało się wykonać stat na pliku tymczasowym: %s\n"
 
-#: .././fsr/xfs_fsr.c:1070
+#: .././fsr/xfs_fsr.c:1072
 #, c-format
 msgid "unable to get bstat on temp file: %s\n"
 msgstr "nie udało się uzyskać bstat pliku tymczasowego: %s\n"
 
-#: .././fsr/xfs_fsr.c:1075
+#: .././fsr/xfs_fsr.c:1077
 #, c-format
 msgid "orig forkoff %d, temp forkoff %d\n"
 msgstr "orig forkoff %d, temp forkoff %d\n"
 
-#: .././fsr/xfs_fsr.c:1124
+#: .././fsr/xfs_fsr.c:1126
 msgid "FSGETXATTRA failed on target\n"
 msgstr "FSGETXATTRA nie powiodło się na docelowym urządzeniu\n"
 
-#: .././fsr/xfs_fsr.c:1140
+#: .././fsr/xfs_fsr.c:1142
 msgid "big ATTR set failed\n"
 msgstr "duży zbiór ATTR nie powiódł się\n"
 
-#: .././fsr/xfs_fsr.c:1161
+#: .././fsr/xfs_fsr.c:1163
 #, c-format
 msgid "forkoff diff %d too large!\n"
 msgstr "różnica forkoff %d zbyt duża!\n"
 
-#: .././fsr/xfs_fsr.c:1178
+#: .././fsr/xfs_fsr.c:1180
 #, c-format
 msgid "data fork growth unimplemented\n"
 msgstr "powiększanie odgałęzienia danych nie jest zaimplementowane\n"
 
-#: .././fsr/xfs_fsr.c:1193
+#: .././fsr/xfs_fsr.c:1195
 msgid "set temp attr\n"
 msgstr "ustawianie atrybutów pliku tymczasowego\n"
 
-#: .././fsr/xfs_fsr.c:1196
+#: .././fsr/xfs_fsr.c:1198
 msgid "failed to match fork offset\n"
 msgstr "nie udało się dopasować offsetu odgałęzienia\n"
 
-#: .././fsr/xfs_fsr.c:1236
+#: .././fsr/xfs_fsr.c:1244
 #, c-format
 msgid "%s already fully defragmented.\n"
 msgstr "%s jest już całkowicie zdefragmentowany.\n"
 
-#: .././fsr/xfs_fsr.c:1241
+#: .././fsr/xfs_fsr.c:1250
 #, c-format
 msgid "%s extents=%d can_save=%d tmp=%s\n"
 msgstr "%s extents=%d can_save=%d tmp=%s\n"
 
-#: .././fsr/xfs_fsr.c:1247
+#: .././fsr/xfs_fsr.c:1256
 #, c-format
 msgid "could not open tmp file: %s: %s\n"
 msgstr "nie udało się otworzyć pliku tymczasowego: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1255
+#: .././fsr/xfs_fsr.c:1264
 #, c-format
 msgid "failed to set ATTR fork on tmp: %s:\n"
 msgstr "nie udało się ustawić odgałęzienia ATTR na tmp: %s\n"
 
-#: .././fsr/xfs_fsr.c:1263
+#: .././fsr/xfs_fsr.c:1271
 #, c-format
 msgid "could not set inode attrs on tmp: %s\n"
 msgstr "nie udało się ustawić atrybutów i-węzła na tmp: %s\n"
 
-#: .././fsr/xfs_fsr.c:1271
+#: .././fsr/xfs_fsr.c:1278
 #, c-format
 msgid "could not get DirectIO info on tmp: %s\n"
 msgstr "nie udało się uzyskać informacji o bezpośrednim we/wy na tmp: %s\n"
 
-#: .././fsr/xfs_fsr.c:1287
+#: .././fsr/xfs_fsr.c:1293
 #, c-format
 msgid "DEBUG: fsize=%lld blsz_dio=%d d_min=%d d_max=%d pgsz=%d\n"
 msgstr "DEBUG: fsize=%lld blsz_dio=%d d_min=%d d_max=%d pgsz=%d\n"
 
-#: .././fsr/xfs_fsr.c:1294
+#: .././fsr/xfs_fsr.c:1300
 #, c-format
 msgid "could not allocate buf: %s\n"
 msgstr "nie udało się przydzielić bufora: %s\n"
 
-#: .././fsr/xfs_fsr.c:1305
+#: .././fsr/xfs_fsr.c:1310
 #, c-format
 msgid "could not open fragfile: %s : %s\n"
 msgstr "nie udało się otworzyć pliku frag: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1322
+#: .././fsr/xfs_fsr.c:1325
 #, c-format
 msgid "could not trunc tmp %s\n"
 msgstr "nie udało się uciąć tmp %s\n"
 
-#: .././fsr/xfs_fsr.c:1337
+#: .././fsr/xfs_fsr.c:1329 .././fsr/xfs_fsr.c:1349 .././fsr/xfs_fsr.c:1377
+#, c-format
+msgid "could not lseek in tmpfile: %s : %s\n"
+msgstr "nie udało się przemieścić (lseek) w pliku tymczasowym: %s: %s\n"
+
+#: .././fsr/xfs_fsr.c:1344
 #, c-format
 msgid "could not pre-allocate tmp space: %s\n"
 msgstr "nie udało się wstępnie przydzielić miejsca tmp: %s\n"
 
-#: .././fsr/xfs_fsr.c:1348
+#: .././fsr/xfs_fsr.c:1357
 msgid "Couldn't rewind on temporary file\n"
 msgstr "Nie udało się przewinąć pliku tymczasowego\n"
 
-#: .././fsr/xfs_fsr.c:1359
+#: .././fsr/xfs_fsr.c:1364
 #, c-format
 msgid "Temporary file has %d extents (%d in original)\n"
 msgstr "Plik tymczasowy ma ekstentów: %d (%d w oryginale)\n"
 
-#: .././fsr/xfs_fsr.c:1362
+#: .././fsr/xfs_fsr.c:1367
 #, c-format
 msgid "No improvement will be made (skipping): %s\n"
 msgstr "Nie nastąpi poprawa (pominięto): %s\n"
 
-#: .././fsr/xfs_fsr.c:1408
+#: .././fsr/xfs_fsr.c:1382
+#, c-format
+msgid "could not lseek in file: %s : %s\n"
+msgstr "nie udało się przemieścić (lseek) w pliku: %s: %s\n"
+
+#: .././fsr/xfs_fsr.c:1418
 #, c-format
 msgid "bad read of %d bytes from %s: %s\n"
 msgstr "błędny odczyt %d bajtów z %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1412 .././fsr/xfs_fsr.c:1448
+#: .././fsr/xfs_fsr.c:1422 .././fsr/xfs_fsr.c:1454
 #, c-format
 msgid "bad write of %d bytes to %s: %s\n"
 msgstr "błędny zapis %d bajtów do %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1429
+#: .././fsr/xfs_fsr.c:1439
 #, c-format
 msgid "bad write2 of %d bytes to %s: %s\n"
 msgstr "błędny zapis 2 %d bajtów do %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1434
+#: .././fsr/xfs_fsr.c:1444
 #, c-format
 msgid "bad copy to %s\n"
 msgstr "błędna kopia do %s\n"
 
-#: .././fsr/xfs_fsr.c:1472
+#: .././fsr/xfs_fsr.c:1462
+#, c-format
+msgid "could not truncate tmpfile: %s : %s\n"
+msgstr "nie udało się obciąć pliku tymczasowego: %s: %s\n"
+
+#: .././fsr/xfs_fsr.c:1467
+#, c-format
+msgid "could not fsync tmpfile: %s : %s\n"
+msgstr "nie udało się wykonać fsync pliku tymczasowego: %s: %s\n"
+
+#: .././fsr/xfs_fsr.c:1482
 #, c-format
 msgid "failed to fchown tmpfile %s: %s\n"
 msgstr "nie udało się wykonać fchown na pliku tymczasowym %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1483
+#: .././fsr/xfs_fsr.c:1492
 #, c-format
 msgid "%s: file type not supported\n"
 msgstr "%s: tym pliku nie obsługiwany\n"
 
-#: .././fsr/xfs_fsr.c:1487
+#: .././fsr/xfs_fsr.c:1496
 #, c-format
 msgid "%s: file modified defrag aborted\n"
 msgstr "%s: plik zmodyfikowany, defragmentacja przerwana\n"
 
-#: .././fsr/xfs_fsr.c:1492
+#: .././fsr/xfs_fsr.c:1501
 #, c-format
 msgid "%s: file busy\n"
 msgstr "%s: plik zajęty\n"
 
-#: .././fsr/xfs_fsr.c:1494
+#: .././fsr/xfs_fsr.c:1503
 #, c-format
 msgid "XFS_IOC_SWAPEXT failed: %s: %s\n"
 msgstr "XFS_IOC_SWAPEXT nie powiodło się: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1503
+#: .././fsr/xfs_fsr.c:1511
 #, c-format
 msgid "extents before:%d after:%d %s %s\n"
 msgstr "ekstentów przed: %d po: %d %s %s\n"
 
-#: .././fsr/xfs_fsr.c:1530
+#: .././fsr/xfs_fsr.c:1545
 #, c-format
 msgid "tmp file name too long: %s\n"
 msgstr "nazwa pliku tymczasowego zbyt długa: %s\n"
 
-#: .././fsr/xfs_fsr.c:1580
+#: .././fsr/xfs_fsr.c:1595
 #, c-format
 msgid "realloc failed: %s\n"
 msgstr "realloc nie powiodło się: %s\n"
 
-#: .././fsr/xfs_fsr.c:1593
+#: .././fsr/xfs_fsr.c:1608
 #, c-format
 msgid "malloc failed: %s\n"
 msgstr "malloc nie powiodło się: %s\n"
 
-#: .././fsr/xfs_fsr.c:1623
+#: .././fsr/xfs_fsr.c:1638
 #, c-format
 msgid "failed reading extents: inode %llu"
 msgstr "nie udało się odczytać ekstentów: i-węzeł %llu"
 
-#: .././fsr/xfs_fsr.c:1673
+#: .././fsr/xfs_fsr.c:1688
 msgid "failed reading extents"
 msgstr "nie udało się odczytać ekstentów"
 
-#: .././fsr/xfs_fsr.c:1761 .././fsr/xfs_fsr.c:1775
+#: .././fsr/xfs_fsr.c:1776 .././fsr/xfs_fsr.c:1790
 #, c-format
 msgid "tmpdir already exists: %s\n"
 msgstr "katalog tymczasowy już istnieje: %s\n"
 
-#: .././fsr/xfs_fsr.c:1764
+#: .././fsr/xfs_fsr.c:1779
 #, c-format
 msgid "could not create tmpdir: %s: %s\n"
 msgstr "nie udało się utworzyć katalogu tymczasowego: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1777
+#: .././fsr/xfs_fsr.c:1792
 #, c-format
 msgid "cannot create tmpdir: %s: %s\n"
 msgstr "nie można utworzyć katalogu tymczasowego: %s: %s\n"
 
-#: .././fsr/xfs_fsr.c:1815 .././fsr/xfs_fsr.c:1823
+#: .././fsr/xfs_fsr.c:1830 .././fsr/xfs_fsr.c:1838
 #, c-format
 msgid "could not remove tmpdir: %s: %s\n"
 msgstr "nie udało się usunąć katalogu tymczasowego: %s: %s\n"
@@ -3552,12 +3567,12 @@ msgstr ""
 "\t-m imaxpct  ustawienie maksymalnego procentu i-węzłów na imaxpct\n"
 "\t-V          wypisanie informacji o wersji\n"
 
-#: .././growfs/xfs_growfs.c:62
+#: .././growfs/xfs_growfs.c:63
 #, c-format
 msgid ""
 "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
 "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-"         =%-22s crc=%u\n"
+"         =%-22s crc=%-8u finobt=%u\n"
 "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 "         =%-22s sunit=%-6u swidth=%u blks\n"
 "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
@@ -3567,7 +3582,7 @@ msgid ""
 msgstr ""
 "metadane=%-22s isize=%-6u agcount=%u, agsize=%u bloków\n"
 "        =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-"        =%-22s crc=%u\n"
+"        =%-22s crc=%-8u finobt=%u\n"
 "dane    =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 "        =%-22s sunit=%-6u swidth=%u bloków\n"
 "nazwy   =wersja %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
@@ -3575,148 +3590,148 @@ msgstr ""
 "        =%-22s sectsz=%-5u sunit=%u bloków, lazy-count=%u\n"
 "realtime=%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"
 
-#: .././growfs/xfs_growfs.c:79 .././growfs/xfs_growfs.c:449
-#: .././growfs/xfs_growfs.c:450
+#: .././growfs/xfs_growfs.c:80 .././growfs/xfs_growfs.c:453
+#: .././growfs/xfs_growfs.c:454
 msgid "internal"
 msgstr "wewnętrzny"
 
-#: .././growfs/xfs_growfs.c:79 .././growfs/xfs_growfs.c:82
-#: .././growfs/xfs_growfs.c:449 .././growfs/xfs_growfs.c:450
+#: .././growfs/xfs_growfs.c:80 .././growfs/xfs_growfs.c:83
+#: .././growfs/xfs_growfs.c:453 .././growfs/xfs_growfs.c:454
 msgid "external"
 msgstr "zewnętrzny"
 
-#: .././growfs/xfs_growfs.c:197
+#: .././growfs/xfs_growfs.c:199
 #, c-format
 msgid "%s: %s is not a mounted XFS filesystem\n"
 msgstr "%s: %s nie jest podmontowanym systemem plików XFS\n"
 
-#: .././growfs/xfs_growfs.c:214
+#: .././growfs/xfs_growfs.c:216
 #, c-format
 msgid "%s: specified file [\"%s\"] is not on an XFS filesystem\n"
 msgstr "%s: podany plik [\"%s\"] nie jest na systemie plików XFS\n"
 
-#: .././growfs/xfs_growfs.c:231
+#: .././growfs/xfs_growfs.c:233
 #, c-format
 msgid "%s: cannot determine geometry of filesystem mounted at %s: %s\n"
 msgstr "%s: nie można określić geometrii systemu plików podmontowanego pod %s: %s\n"
 
-#: .././growfs/xfs_growfs.c:270
+#: .././growfs/xfs_growfs.c:273
 #, c-format
 msgid "%s: failed to access data device for %s\n"
 msgstr "%s: nie udało się uzyskać dostępu do urządzenia z danymi dla %s\n"
 
-#: .././growfs/xfs_growfs.c:275
+#: .././growfs/xfs_growfs.c:278
 #, c-format
 msgid "%s: failed to access external log for %s\n"
 msgstr "%s: nie udało się uzyskać dostępu do zewnętrznego logu dla %s\n"
 
-#: .././growfs/xfs_growfs.c:281
+#: .././growfs/xfs_growfs.c:284
 #, c-format
 msgid "%s: failed to access realtime device for %s\n"
 msgstr "%s: nie udało się uzyskać dostępu do urządzenia realtime dla %s\n"
 
-#: .././growfs/xfs_growfs.c:319
+#: .././growfs/xfs_growfs.c:323
 #, c-format
 msgid "data size %lld too large, maximum is %lld\n"
 msgstr "rozmiar danych %lld zbyt duży, maksymalny to %lld\n"
 
-#: .././growfs/xfs_growfs.c:326
+#: .././growfs/xfs_growfs.c:330
 #, c-format
 msgid "data size %lld too small, old size is %lld\n"
 msgstr "rozmiar danych %lld zbyt mały, stary rozmiar to %lld\n"
 
-#: .././growfs/xfs_growfs.c:334
+#: .././growfs/xfs_growfs.c:338
 #, c-format
 msgid "data size unchanged, skipping\n"
 msgstr "rozmiar danych nie zmieniony, pominięto\n"
 
-#: .././growfs/xfs_growfs.c:337
+#: .././growfs/xfs_growfs.c:341
 #, c-format
 msgid "inode max pct unchanged, skipping\n"
 msgstr "maksymalny procent i-węzłów nie zmieniony, pominięto\n"
 
-#: .././growfs/xfs_growfs.c:344 .././growfs/xfs_growfs.c:383
-#: .././growfs/xfs_growfs.c:418
+#: .././growfs/xfs_growfs.c:348 .././growfs/xfs_growfs.c:387
+#: .././growfs/xfs_growfs.c:422
 #, c-format
 msgid "%s: growfs operation in progress already\n"
 msgstr "%s: operacja growfs już trwa\n"
 
-#: .././growfs/xfs_growfs.c:348
+#: .././growfs/xfs_growfs.c:352
 #, c-format
 msgid "%s: XFS_IOC_FSGROWFSDATA xfsctl failed: %s\n"
 msgstr "%s: xfsctl XFS_IOC_FSGROWFSDATA nie powiodło się: %s\n"
 
-#: .././growfs/xfs_growfs.c:364
+#: .././growfs/xfs_growfs.c:368
 #, c-format
 msgid "realtime size %lld too large, maximum is %lld\n"
 msgstr "rozmiar realtime %lld zbyt duży, maksymalny to %lld\n"
 
-#: .././growfs/xfs_growfs.c:370
+#: .././growfs/xfs_growfs.c:374
 #, c-format
 msgid "realtime size %lld too small, old size is %lld\n"
 msgstr "rozmiar realtime %lld zbyt mały, stary rozmiar to %lld\n"
 
-#: .././growfs/xfs_growfs.c:376
+#: .././growfs/xfs_growfs.c:380
 #, c-format
 msgid "realtime size unchanged, skipping\n"
 msgstr "rozmiar realtime nie zmieniony, pominięto\n"
 
-#: .././growfs/xfs_growfs.c:387
+#: .././growfs/xfs_growfs.c:391
 #, c-format
 msgid "%s: realtime growth not implemented\n"
 msgstr "%s: powiększanie realtime nie jest zaimplementowane\n"
 
-#: .././growfs/xfs_growfs.c:391
+#: .././growfs/xfs_growfs.c:395
 #, c-format
 msgid "%s: XFS_IOC_FSGROWFSRT xfsctl failed: %s\n"
 msgstr "%s: xfsctl XFS_IOC_FSGROWFSRT nie powiodło się: %s\n"
 
-#: .././growfs/xfs_growfs.c:412
+#: .././growfs/xfs_growfs.c:416
 #, c-format
 msgid "log size unchanged, skipping\n"
 msgstr "rozmiar logu nie zmieniony, pominięto\n"
 
-#: .././growfs/xfs_growfs.c:422
+#: .././growfs/xfs_growfs.c:426
 #, c-format
 msgid "%s: log growth not supported yet\n"
 msgstr "%s: powiększanie logu nie jest jeszcze obsługiwane\n"
 
-#: .././growfs/xfs_growfs.c:426
+#: .././growfs/xfs_growfs.c:430
 #, c-format
 msgid "%s: XFS_IOC_FSGROWFSLOG xfsctl failed: %s\n"
 msgstr "%s: xfsctl XFS_IOC_FSGROWFSLOG nie powiodło się: %s\n"
 
-#: .././growfs/xfs_growfs.c:434
+#: .././growfs/xfs_growfs.c:438
 #, c-format
 msgid "%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"
 msgstr "%s: xfsctl XFS_IOC_FSGEOMETRY nie powiodło się: %s\n"
 
-#: .././growfs/xfs_growfs.c:439
+#: .././growfs/xfs_growfs.c:443
 #, c-format
 msgid "data blocks changed from %lld to %lld\n"
 msgstr "bloki danych zmienione z %lld na %lld\n"
 
-#: .././growfs/xfs_growfs.c:442
+#: .././growfs/xfs_growfs.c:446
 #, c-format
 msgid "inode max percent changed from %d to %d\n"
 msgstr "maksymalny procent i-węzłów zmieniony z %d na %d\n"
 
-#: .././growfs/xfs_growfs.c:445
+#: .././growfs/xfs_growfs.c:449
 #, c-format
 msgid "log blocks changed from %d to %d\n"
 msgstr "bloki logu zmienione z %d na %d\n"
 
-#: .././growfs/xfs_growfs.c:448
+#: .././growfs/xfs_growfs.c:452
 #, c-format
 msgid "log changed from %s to %s\n"
 msgstr "log zmieniony - był %s, jest %s\n"
 
-#: .././growfs/xfs_growfs.c:452
+#: .././growfs/xfs_growfs.c:456
 #, c-format
 msgid "realtime blocks changed from %lld to %lld\n"
 msgstr "bloki realtime zmienione z %lld na %lld\n"
 
-#: .././growfs/xfs_growfs.c:455
+#: .././growfs/xfs_growfs.c:459
 #, c-format
 msgid "realtime extent size changed from %d to %d\n"
 msgstr "rozmiar ekstentu realtime zmieniony z %d na %d\n"
@@ -3840,7 +3855,7 @@ msgstr ""
 
 #: .././io/attr.c:171 .././io/attr.c:247 .././io/open.c:424 .././io/open.c:496
 #: .././io/open.c:620 .././io/open.c:642 .././libxfs/init.c:109
-#: .././mkfs/proto.c:294 .././quota/project.c:118 .././quota/project.c:163
+#: .././mkfs/proto.c:293 .././quota/project.c:118 .././quota/project.c:163
 #: .././quota/project.c:210
 #, c-format
 msgid "%s: cannot open %s: %s\n"
@@ -5727,7 +5742,7 @@ msgid "%s: can't determine device size: %s\n"
 msgstr "%s: nie można określić rozmiaru urządzenia: %s\n"
 
 #: .././libxfs/darwin.c:139 .././libxfs/freebsd.c:196 .././libxfs/irix.c:106
-#: .././libxfs/linux.c:216
+#: .././libxfs/linux.c:226
 #, c-format
 msgid "%s: can't determine memory size\n"
 msgstr "%s: nie można określić rozmiaru pamięci\n"
@@ -5907,82 +5922,82 @@ msgstr "%s: realloc nie powiodło się (%d bajtów): %s\n"
 msgid "%s: %s - cannot set blocksize %d on block device %s: %s\n"
 msgstr "%s: %s - nie można ustawić rozmiaru bloku %d dla urządzenia blokowego %s: %s\n"
 
-#: .././libxfs/linux.c:161
+#: .././libxfs/linux.c:171
 #, c-format
 msgid "%s: can't determine device size\n"
 msgstr "%s: nie można określić rozmiaru urządzenia\n"
 
-#: .././libxfs/linux.c:169
+#: .././libxfs/linux.c:179
 #, c-format
 msgid "%s: warning - cannot get sector size from block device %s: %s\n"
 msgstr "%s: uwaga - nie można pobrać rozmiaru sektora urządzenia blokowego %s: %s\n"
 
-#: .././libxfs/rdwr.c:37
+#: .././libxfs/rdwr.c:68
 #, c-format
 msgid "%s: %s can't memalign %d bytes: %s\n"
 msgstr "%s: %s nie można wykonać memalign dla %d bajtów: %s\n"
 
-#: .././libxfs/rdwr.c:47
+#: .././libxfs/rdwr.c:78
 #, c-format
 msgid "%s: %s seek to offset %llu failed: %s\n"
 msgstr "%s: %s zmiana offsetu na %llu nie powiodła się: %s\n"
 
-#: .././libxfs/rdwr.c:57
+#: .././libxfs/rdwr.c:88
 #, c-format
 msgid "%s: %s write failed: %s\n"
 msgstr "%s: %s zapis nie powiódł się: %s\n"
 
-#: .././libxfs/rdwr.c:61
+#: .././libxfs/rdwr.c:92
 #, c-format
 msgid "%s: %s not progressing?\n"
 msgstr "%s: %s nie postępuje?\n"
 
-#: .././libxfs/rdwr.c:378
+#: .././libxfs/rdwr.c:409
 #, c-format
 msgid "%s: %s can't memalign %u bytes: %s\n"
 msgstr "%s: %s nie można wykonać memalign dla %u bajtów: %s\n"
 
-#: .././libxfs/rdwr.c:410
+#: .././libxfs/rdwr.c:441
 #, c-format
 msgid "%s: %s can't malloc %u bytes: %s\n"
 msgstr "%s: %s nie można przydzielić %u bajtów: %s\n"
 
-#: .././libxfs/rdwr.c:491
+#: .././libxfs/rdwr.c:522
 #, c-format
 msgid "%s: %s invalid map %p or nmaps %d\n"
 msgstr "%s: %s nieprawidłowa mapa %p lub nmaps %d\n"
 
-#: .././libxfs/rdwr.c:498
+#: .././libxfs/rdwr.c:529
 #, c-format
 msgid "%s: %s map blkno 0x%llx doesn't match key 0x%llx\n"
 msgstr "%s: %s map blkno 0x%llx nie pasuje do klucza 0x%llx\n"
 
-#: .././libxfs/rdwr.c:543
+#: .././libxfs/rdwr.c:574
 #, c-format
 msgid "Warning: recursive buffer locking at block %<PRIu64> detected\n"
 msgstr "Uwaga: wykryto rekurencyjną blokadę bufora na bloku %<PRIu64>\n"
 
-#: .././libxfs/rdwr.c:673
+#: .././libxfs/rdwr.c:710
 #, c-format
 msgid "%s: read failed: %s\n"
 msgstr "%s: odczyt nie powiódł się: %s\n"
 
-#: .././libxfs/rdwr.c:679
+#: .././libxfs/rdwr.c:716
 #, c-format
 msgid "%s: error - read only %d of %d bytes\n"
 msgstr "%s: błąd - odczytano tylko %d z %d bajtów\n"
 
-#: .././libxfs/rdwr.c:841
+#: .././libxfs/rdwr.c:878
 #, c-format
 msgid "%s: pwrite64 failed: %s\n"
 msgstr "%s: pwrite64 nie powiodło się: %s\n"
 
-#: .././libxfs/rdwr.c:847
+#: .././libxfs/rdwr.c:884
 #, c-format
 msgid "%s: error - pwrite64 only %d of %d bytes\n"
 msgstr "%s: błąd - wykonano pwrite64 tylko %d z %d bajtów\n"
 
-#: .././libxfs/rdwr.c:883
+#: .././libxfs/rdwr.c:920
 #, c-format
 msgid "%s: write verifer failed on bno 0x%llx/0x%x\n"
 msgstr "%s: weryfikacja zapisu nie powiodła się na bno 0x%llx/0x%x\n"
@@ -5997,22 +6012,22 @@ msgstr "%s: calloc lidp nie powiodło się (%d bajtów): %s\n"
 msgid "%s: xact calloc failed (%d bytes): %s\n"
 msgstr "%s: xact calloc nie powiodło się (%d bajtów): %s\n"
 
-#: .././libxfs/trans.c:713
+#: .././libxfs/trans.c:676
 #, c-format
 msgid "%s: warning - imap_to_bp failed (%d)\n"
 msgstr "%s: uwaga - imap_to_bp nie powiodło się (%d)\n"
 
-#: .././libxfs/trans.c:721
+#: .././libxfs/trans.c:684
 #, c-format
 msgid "%s: warning - iflush_int failed (%d)\n"
 msgstr "%s: uwaga - iflush_int nie powiodło się (%d)\n"
 
-#: .././libxfs/trans.c:788 .././libxfs/trans.c:847
+#: .././libxfs/trans.c:744 .././libxfs/trans.c:799
 #, c-format
 msgid "%s: unrecognised log item type\n"
 msgstr "%s: nierozpoznany typ elementu logu\n"
 
-#: .././libxfs/util.c:692
+#: .././libxfs/util.c:691
 #, c-format
 msgid "%s: cannot reserve space: %s\n"
 msgstr "%s: nie można zarezerwować przestrzeni: %s\n"
@@ -6981,7 +6996,7 @@ msgstr ""
 msgid "%s: failed to open %s: %s\n"
 msgstr "%s: nie udało się otworzyć %s: %s\n"
 
-#: .././mkfs/proto.c:67 .././mkfs/proto.c:301
+#: .././mkfs/proto.c:67 .././mkfs/proto.c:300
 #, c-format
 msgid "%s: read failed on %s: %s\n"
 msgstr "%s: odczyt nie powiódł się dla %s: %s\n"
@@ -7004,489 +7019,494 @@ msgstr "%s: przedwczesny EOF w pliku prototypu\n"
 msgid "error reserving space for a file"
 msgstr "błąd podczas rezerwowania miejsca na plik"
 
-#: .././mkfs/proto.c:259
+#: .././mkfs/proto.c:258
 msgid "error allocating space for a file"
 msgstr "błąd podczas przydzielania miejsca na plik"
 
-#: .././mkfs/proto.c:263
+#: .././mkfs/proto.c:262
 #, c-format
 msgid "%s: cannot allocate space for file\n"
 msgstr "%s: nie można przydzielić miejsca na plik\n"
 
-#: .././mkfs/proto.c:328
+#: .././mkfs/proto.c:327
 msgid "directory createname error"
 msgstr "błąd tworzenia nazwy katalogu"
 
-#: .././mkfs/proto.c:342
+#: .././mkfs/proto.c:341
 msgid "directory create error"
 msgstr "błąd tworzenia katalogu"
 
-#: .././mkfs/proto.c:408 .././mkfs/proto.c:420 .././mkfs/proto.c:431
-#: .././mkfs/proto.c:438
+#: .././mkfs/proto.c:407 .././mkfs/proto.c:419 .././mkfs/proto.c:430
+#: .././mkfs/proto.c:437
 #, c-format
 msgid "%s: bad format string %s\n"
 msgstr "%s: błędny łańcuch formatujący %s\n"
 
-#: .././mkfs/proto.c:460 .././mkfs/proto.c:501 .././mkfs/proto.c:517
-#: .././mkfs/proto.c:530 .././mkfs/proto.c:543 .././mkfs/proto.c:555
+#: .././mkfs/proto.c:459 .././mkfs/proto.c:499 .././mkfs/proto.c:514
+#: .././mkfs/proto.c:526 .././mkfs/proto.c:538 .././mkfs/proto.c:549
 msgid "Inode allocation failed"
 msgstr "Przydzielanie i-węzła nie powiodło się"
 
-#: .././mkfs/proto.c:478
+#: .././mkfs/proto.c:476
 msgid "Inode pre-allocation failed"
 msgstr "Wczesne przydzielanie i-węzła nie powiodło się"
 
-#: .././mkfs/proto.c:489
+#: .././mkfs/proto.c:486
 msgid "Pre-allocated file creation failed"
 msgstr "Tworzenie wcześnie przydzielonego pliku nie powiodło się"
 
-#: .././mkfs/proto.c:575
+#: .././mkfs/proto.c:568
 msgid "Directory creation failed"
 msgstr "Tworzenie katalogu nie powiodło się"
 
-#: .././mkfs/proto.c:597
+#: .././mkfs/proto.c:589
 msgid "Unknown format"
 msgstr "Nieznany format"
 
-#: .././mkfs/proto.c:602
+#: .././mkfs/proto.c:594
 msgid "Error encountered creating file from prototype file"
 msgstr "Wystąpił błąd podczas tworzenia pliku z pliku prototypu"
 
-#: .././mkfs/proto.c:655
+#: .././mkfs/proto.c:648
 msgid "Realtime bitmap inode allocation failed"
 msgstr "Przydzielanie i-węzła bitmapy realtime nie powiodło się"
 
-#: .././mkfs/proto.c:673
+#: .././mkfs/proto.c:665
 msgid "Realtime summary inode allocation failed"
 msgstr "Tworzenie i-węzła opisu realtime nie powiodło się"
 
-#: .././mkfs/proto.c:702
+#: .././mkfs/proto.c:692
 msgid "Allocation of the realtime bitmap failed"
 msgstr "Przydzielenie bitmapy realtime nie powiodło się"
 
-#: .././mkfs/proto.c:715
+#: .././mkfs/proto.c:705
 msgid "Completion of the realtime bitmap failed"
 msgstr "Uzupełnienie bitmapy realtime nie powiodło się"
 
-#: .././mkfs/proto.c:739
+#: .././mkfs/proto.c:728
 msgid "Allocation of the realtime summary failed"
 msgstr "Przydzielenie opisu realtime nie powiodło się"
 
-#: .././mkfs/proto.c:751
+#: .././mkfs/proto.c:740
 msgid "Completion of the realtime summary failed"
 msgstr "Uzupełnienie opisu realtime nie powiodło się"
 
-#: .././mkfs/proto.c:771
+#: .././mkfs/proto.c:759
 msgid "Error initializing the realtime space"
 msgstr "Błąd podczas inicjalizacji przestrzeni realtime"
 
-#: .././mkfs/proto.c:776
+#: .././mkfs/proto.c:764
 msgid "Error completing the realtime space"
 msgstr "Błąd podczas uzupełniania przestrzeni realtime"
 
-#: .././mkfs/xfs_mkfs.c:228
+#: .././mkfs/xfs_mkfs.c:230
 #, c-format
 msgid "data su/sw must not be used in conjunction with data sunit/swidth\n"
 msgstr "su/sw danych nie można użyć w połączeniu z sunit/swidth danych\n"
 
-#: .././mkfs/xfs_mkfs.c:235
+#: .././mkfs/xfs_mkfs.c:237
 #, c-format
 msgid "both data sunit and data swidth options must be specified\n"
 msgstr "trzeba podać obie opcje sunit i swidth dla danych\n"
 
-#: .././mkfs/xfs_mkfs.c:244
+#: .././mkfs/xfs_mkfs.c:246
 #, c-format
 msgid "data sunit/swidth must not be used in conjunction with data su/sw\n"
 msgstr "sunit/swidth danych nie można użyć w połączeniu z su/sw danych\n"
 
-#: .././mkfs/xfs_mkfs.c:251
+#: .././mkfs/xfs_mkfs.c:253
 #, c-format
 msgid "both data su and data sw options must be specified\n"
 msgstr "trzeba podać obie opcje su i sw dla danych\n"
 
-#: .././mkfs/xfs_mkfs.c:258
+#: .././mkfs/xfs_mkfs.c:260
 #, c-format
 msgid "data su must be a multiple of the sector size (%d)\n"
 msgstr "su danych musi być wielokrotnością rozmiaru sektora (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:269
+#: .././mkfs/xfs_mkfs.c:271
 #, c-format
 msgid "data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"
 msgstr "szerokość pasa danych (%d) musi być wielokrotnością jednostki pasa danych (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:279
+#: .././mkfs/xfs_mkfs.c:281
 #, c-format
 msgid "log su should not be used in conjunction with log sunit\n"
 msgstr "su logu nie powinno być używane w połączeniu z sunit logu\n"
 
-#: .././mkfs/xfs_mkfs.c:288
+#: .././mkfs/xfs_mkfs.c:290
 #, c-format
 msgid "log sunit should not be used in conjunction with log su\n"
 msgstr "sunit logu nie powinno być używane w połączeniu z su logu\n"
 
-#: .././mkfs/xfs_mkfs.c:358 .././mkfs/xfs_mkfs.c:482
+#: .././mkfs/xfs_mkfs.c:360 .././mkfs/xfs_mkfs.c:503
 #, c-format
 msgid "%s: %s appears to contain an existing filesystem (%s).\n"
 msgstr "%s: %s zdaje się zawierać istniejący system plików (%s).\n"
 
-#: .././mkfs/xfs_mkfs.c:362 .././mkfs/xfs_mkfs.c:488
+#: .././mkfs/xfs_mkfs.c:364 .././mkfs/xfs_mkfs.c:509
 #, c-format
 msgid "%s: %s appears to contain a partition table (%s).\n"
 msgstr "%s: %s zdaje się zawierać tablicę partycji (%s).\n"
 
-#: .././mkfs/xfs_mkfs.c:366
+#: .././mkfs/xfs_mkfs.c:368
 #, c-format
 msgid "%s: %s appears to contain something weird according to blkid\n"
 msgstr "%s: %s zdaje się zawierać coś dziwnego wg blkid\n"
 
-#: .././mkfs/xfs_mkfs.c:376
+#: .././mkfs/xfs_mkfs.c:378
 #, c-format
 msgid "%s: probe of %s failed, cannot detect existing filesystem.\n"
 msgstr "%s: test %s nie powiódł się, nie można wykryć istniejącego systemu plików.\n"
 
-#: .././mkfs/xfs_mkfs.c:429
+#: .././mkfs/xfs_mkfs.c:431
 #, c-format
 msgid "warning: device is not properly aligned %s\n"
 msgstr "uwaga: urządzenie nie jest właściwie wyrównane: %s\n"
 
-#: .././mkfs/xfs_mkfs.c:434
+#: .././mkfs/xfs_mkfs.c:436
 #, c-format
 msgid "Use -f to force usage of a misaligned device\n"
 msgstr "Można użyć -f do wymuszenia użycia źle wyrównanego urządzenia\n"
 
-#: .././mkfs/xfs_mkfs.c:448
+#: .././mkfs/xfs_mkfs.c:450
 #, c-format
 msgid "warning: unable to probe device toplology for device %s\n"
 msgstr "uwaga: nie udało się odczytać topologii urządzenia %s\n"
 
-#: .././mkfs/xfs_mkfs.c:557
+#: .././mkfs/xfs_mkfs.c:578
 #, c-format
 msgid "log size %lld is not a multiple of the log stripe unit %d\n"
 msgstr "rozmiar logu %lld nie jest wielokrotnością jednostki pasa logu %d\n"
 
-#: .././mkfs/xfs_mkfs.c:585
+#: .././mkfs/xfs_mkfs.c:606
 #, c-format
 msgid "Due to stripe alignment, the internal log size (%lld) is too large.\n"
 msgstr "Ze względu na wyrównanie do rozmiaru pasa rozmiar wewnętrznego logu (%lld) jest zbyt duży.\n"
 
-#: .././mkfs/xfs_mkfs.c:587
+#: .././mkfs/xfs_mkfs.c:608
 #, c-format
 msgid "Must fit within an allocation group.\n"
 msgstr "Musi zmieścić się wewnątrz grupy alokacji.\n"
 
-#: .././mkfs/xfs_mkfs.c:598
+#: .././mkfs/xfs_mkfs.c:619
 #, c-format
 msgid "log size %lld blocks too small, minimum size is %d blocks\n"
 msgstr "rozmiar logu %lld bloków jest zbyt mały, minimalny rozmiar to %d bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:604
+#: .././mkfs/xfs_mkfs.c:625
 #, c-format
 msgid "log size %lld blocks too large, maximum size is %lld blocks\n"
 msgstr "rozmiar logu %lld bloków jest zbyt duży, maksymalny rozmiar to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:610
+#: .././mkfs/xfs_mkfs.c:631
 #, c-format
 msgid "log size %lld bytes too large, maximum size is %lld bytes\n"
 msgstr "rozmiar logu %lld bajtów jest zbyt duży, maksymalny rozmiar to %lld bajtów\n"
 
-#: .././mkfs/xfs_mkfs.c:718
+#: .././mkfs/xfs_mkfs.c:739
 #, c-format
 msgid "agsize (%lld blocks) too small, need at least %lld blocks\n"
 msgstr "agsize (%lld bloków) zbyt małe, potrzeba co najmniej %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:726
+#: .././mkfs/xfs_mkfs.c:747
 #, c-format
 msgid "agsize (%lld blocks) too big, maximum is %lld blocks\n"
 msgstr "agsize (%lld bloków) zbyt duże, maksimum to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:734
+#: .././mkfs/xfs_mkfs.c:755
 #, c-format
 msgid "agsize (%lld blocks) too big, data area is %lld blocks\n"
 msgstr "agsize (%lld bloków) zbyt duże, obszar danych to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:741
+#: .././mkfs/xfs_mkfs.c:762
 #, c-format
 msgid "too many allocation groups for size = %lld\n"
 msgstr "zbyt dużo grup alokacji dla rozmiaru = %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:743
+#: .././mkfs/xfs_mkfs.c:764
 #, c-format
 msgid "need at most %lld allocation groups\n"
 msgstr "potrzeba najwyżej %lld grup alokacji\n"
 
-#: .././mkfs/xfs_mkfs.c:751
+#: .././mkfs/xfs_mkfs.c:772
 #, c-format
 msgid "too few allocation groups for size = %lld\n"
 msgstr "zbyt mało grup alokacji dla rozmiaru = %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:753
+#: .././mkfs/xfs_mkfs.c:774
 #, c-format
 msgid "need at least %lld allocation groups\n"
 msgstr "potrzeba co najmniej %lld grup alokacji\n"
 
-#: .././mkfs/xfs_mkfs.c:766
+#: .././mkfs/xfs_mkfs.c:787
 #, c-format
 msgid "last AG size %lld blocks too small, minimum size is %lld blocks\n"
 msgstr "rozmiar ostatniej AG %lld bloków zbyt mały, minimalny rozmiar to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:777
+#: .././mkfs/xfs_mkfs.c:798
 #, c-format
 msgid "%lld allocation groups is too many, maximum is %lld\n"
 msgstr "%lld grup alokacji to zbyt dużo, maksimum to %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:801
+#: .././mkfs/xfs_mkfs.c:822
 #, c-format
 msgid "error reading existing superblock -- failed to memalign buffer\n"
 msgstr "błąd podczas odczytu istniejącego superbloku - nie udało się wykonać memalign dla bufora\n"
 
-#: .././mkfs/xfs_mkfs.c:807
+#: .././mkfs/xfs_mkfs.c:828
 #, c-format
 msgid "existing superblock read failed: %s\n"
 msgstr "odczyt istniejącego superbloku nie powiódł się: %s\n"
 
-#: .././mkfs/xfs_mkfs.c:1110
+#: .././mkfs/xfs_mkfs.c:1133
 #, c-format
 msgid "%s: Specify data sunit in 512-byte blocks, no unit suffix\n"
 msgstr "%s: sunit danych należy podać w 512-bajtowych blokach, bez jednostki\n"
 
-#: .././mkfs/xfs_mkfs.c:1126
+#: .././mkfs/xfs_mkfs.c:1149
 #, c-format
 msgid "%s: Specify data swidth in 512-byte blocks, no unit suffix\n"
 msgstr "%s: swidth danych należy podać w 512-bajtowych blokach, bez jednostki\n"
 
-#: .././mkfs/xfs_mkfs.c:1153
+#: .././mkfs/xfs_mkfs.c:1176
 #, c-format
 msgid "%s: Specify data sw as multiple of su, no unit suffix\n"
 msgstr "%s: sw danych należy podać jako wielokrotność su, bez jednostki\n"
 
-#: .././mkfs/xfs_mkfs.c:1382
+#: .././mkfs/xfs_mkfs.c:1405
 #, c-format
 msgid "Specify log sunit in 512-byte blocks, no size suffix\n"
 msgstr "sunit należy podać w 512-bajtowych blokach, bez jednostki\n"
 
-#: .././mkfs/xfs_mkfs.c:1485 .././mkfs/xfs_mkfs.c:1554
+#: .././mkfs/xfs_mkfs.c:1508 .././mkfs/xfs_mkfs.c:1585
 #, c-format
 msgid "cannot specify both crc and ftype\n"
 msgstr "nie można podać jednocześnie crc i ftype\n"
 
-#: .././mkfs/xfs_mkfs.c:1679
+#: .././mkfs/xfs_mkfs.c:1710
 #, c-format
 msgid "extra arguments\n"
 msgstr "nadmiarowe argumenty\n"
 
-#: .././mkfs/xfs_mkfs.c:1685
+#: .././mkfs/xfs_mkfs.c:1716
 #, c-format
 msgid "cannot specify both %s and -d name=%s\n"
 msgstr "nie można podać jednocześnie %s i -d name=%s\n"
 
-#: .././mkfs/xfs_mkfs.c:1702
+#: .././mkfs/xfs_mkfs.c:1733
 #, c-format
 msgid "illegal block size %d\n"
 msgstr "niedozwolony rozmiar bloku %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1737
+#: .././mkfs/xfs_mkfs.c:1768
 #, c-format
 msgid "specified blocksize %d is less than device physical sector size %d\n"
 msgstr "podany rozmiar bloku %d jest mniejszy niż rozmiar fizycznego sektora urządzenia (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:1740
+#: .././mkfs/xfs_mkfs.c:1771
 #, c-format
 msgid "switching to logical sector size %d\n"
 msgstr "przełączono na rozmiar sektora logicznego %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1758
+#: .././mkfs/xfs_mkfs.c:1789
 #, c-format
 msgid "illegal sector size %d\n"
 msgstr "niedozwolony rozmiar sektora %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1761
+#: .././mkfs/xfs_mkfs.c:1792
 #, c-format
 msgid "block size %d cannot be smaller than logical sector size %d\n"
 msgstr "rozmiar bloku %d nie może być mniejszy niż rozmiar sektora logicznego %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1766
+#: .././mkfs/xfs_mkfs.c:1797
 #, c-format
 msgid "illegal sector size %d; hw sector is %d\n"
 msgstr "niedozwolony rozmiar sektora %d; sektor sprzętowy ma %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1772
+#: .././mkfs/xfs_mkfs.c:1803
 #, c-format
 msgid "illegal log sector size %d\n"
 msgstr "niedozwolony rozmiar sektora logu %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1788 .././mkfs/xfs_mkfs.c:1883
+#: .././mkfs/xfs_mkfs.c:1819 .././mkfs/xfs_mkfs.c:1924
 #, c-format
 msgid "Minimum inode size for CRCs is %d bytes\n"
 msgstr "Minimalny rozmiar i-węzła dla CRC to %d bajtów\n"
 
-#: .././mkfs/xfs_mkfs.c:1796
+#: .././mkfs/xfs_mkfs.c:1827
 #, c-format
 msgid "Inodes always aligned for CRC enabled filesytems\n"
 msgstr "I-węzły są zawsze wyrównane dla systemów plików z CRC\n"
 
-#: .././mkfs/xfs_mkfs.c:1803
+#: .././mkfs/xfs_mkfs.c:1834
 #, c-format
 msgid "Lazy superblock counted always enabled for CRC enabled filesytems\n"
 msgstr "Leniwe liczenie syperbloków jest zawsze włączone dla systemów plików z CRC\n"
 
-#: .././mkfs/xfs_mkfs.c:1810
+#: .././mkfs/xfs_mkfs.c:1841
 #, c-format
 msgid "V2 logs always enabled for CRC enabled filesytems\n"
 msgstr "Logi V2 są zawsze włączone dla systemów plików z CRC\n"
 
-#: .././mkfs/xfs_mkfs.c:1817
+#: .././mkfs/xfs_mkfs.c:1848
 #, c-format
 msgid "V2 attribute format always enabled on CRC enabled filesytems\n"
 msgstr "Format atrybutów V2 jest zawsze włączony dla systemów plików z CRC\n"
 
-#: .././mkfs/xfs_mkfs.c:1825
+#: .././mkfs/xfs_mkfs.c:1856
 #, c-format
 msgid "32 bit Project IDs always enabled on CRC enabled filesytems\n"
 msgstr "32-bitowe ID projektów są zawsze włączone dla systemów plików z CRC\n"
 
-#: .././mkfs/xfs_mkfs.c:1833
+#: .././mkfs/xfs_mkfs.c:1867
+#, c-format
+msgid "warning: finobt not supported without CRC support, disabled.\n"
+msgstr "uwaga: finobt nie jest obsługiwane bez obsługi CRC, wyłączono.\n"
+
+#: .././mkfs/xfs_mkfs.c:1874
 #, c-format
 msgid "illegal directory block size %d\n"
 msgstr "niedozwolony rozmiar bloku katalogu %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1847
+#: .././mkfs/xfs_mkfs.c:1888
 #, c-format
 msgid "both -d agcount= and agsize= specified, use one or the other\n"
 msgstr "podano jednocześnie -d agcount= i agsize=, można użyć tylko jednej z tych opcji\n"
 
-#: .././mkfs/xfs_mkfs.c:1853
+#: .././mkfs/xfs_mkfs.c:1894
 #, c-format
 msgid "if -d file then -d name and -d size are required\n"
 msgstr "jeśli podano -d file, to -d name i -d size są wymagane\n"
 
-#: .././mkfs/xfs_mkfs.c:1862
+#: .././mkfs/xfs_mkfs.c:1903
 #, c-format
 msgid "illegal data length %lld, not a multiple of %d\n"
 msgstr "niedozwolona długość danych %lld, nie jest wielokrotnością %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1868
+#: .././mkfs/xfs_mkfs.c:1909
 #, c-format
 msgid "warning: data length %lld not a multiple of %d, truncated to %lld\n"
 msgstr "uwaga: długość danych %lld nie jest wielokrotnością %d, ucięto do %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:1890
+#: .././mkfs/xfs_mkfs.c:1931
 #, c-format
 msgid "if -l file then -l name and -l size are required\n"
 msgstr "jeśli podano -l file to -l name i -l size są wymagane\n"
 
-#: .././mkfs/xfs_mkfs.c:1899
+#: .././mkfs/xfs_mkfs.c:1940
 #, c-format
 msgid "illegal log length %lld, not a multiple of %d\n"
 msgstr "niedozwolona długość logu %lld, nie jest wielokrotnością %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1906
+#: .././mkfs/xfs_mkfs.c:1947
 #, c-format
 msgid "warning: log length %lld not a multiple of %d, truncated to %lld\n"
 msgstr "uwaga: długość logu %lld nie jest wielokrotnością %d, ucięto do %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:1912
+#: .././mkfs/xfs_mkfs.c:1953
 #, c-format
 msgid "if -r file then -r name and -r size are required\n"
 msgstr "jeśli podano -r file, to -r name i -r size są wymagane\n"
 
-#: .././mkfs/xfs_mkfs.c:1921
+#: .././mkfs/xfs_mkfs.c:1962
 #, c-format
 msgid "illegal rt length %lld, not a multiple of %d\n"
 msgstr "niedozwolona długość rt %lld, nie jest wielokrotnością %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1928
+#: .././mkfs/xfs_mkfs.c:1969
 #, c-format
 msgid "warning: rt length %lld not a multiple of %d, truncated to %lld\n"
 msgstr "uwaga: długość rt %lld nie jest wielokrotnością %d, ucięto do %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:1941
+#: .././mkfs/xfs_mkfs.c:1982
 #, c-format
 msgid "illegal rt extent size %lld, not a multiple of %d\n"
 msgstr "niedozwolony rozmiar ekstentu rt %lld, nie jest wielokrotnością %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1947
+#: .././mkfs/xfs_mkfs.c:1988
 #, c-format
 msgid "rt extent size %s too large, maximum %d\n"
 msgstr "rozmiar ekstentu rt %s zbyt duży, maksimum to %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1953
+#: .././mkfs/xfs_mkfs.c:1994
 #, c-format
 msgid "rt extent size %s too small, minimum %d\n"
 msgstr "rozmiar ekstentu rt %s zbyt mały, minimum to %d\n"
 
-#: .././mkfs/xfs_mkfs.c:1996
+#: .././mkfs/xfs_mkfs.c:2037
 #, c-format
 msgid "illegal inode size %d\n"
 msgstr "niedozwolony rozmiar i-węzła %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2001
+#: .././mkfs/xfs_mkfs.c:2042
 #, c-format
 msgid "allowable inode size with %d byte blocks is %d\n"
 msgstr "dozwolony rozmiar i-węzła przy blokach %d-bajtowych to %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2005
+#: .././mkfs/xfs_mkfs.c:2046
 #, c-format
 msgid "allowable inode size with %d byte blocks is between %d and %d\n"
 msgstr "dozwolone rozmiary i-węzła przy blokach %d-bajtowych są od %d do %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2013
+#: .././mkfs/xfs_mkfs.c:2054
 #, c-format
 msgid "log stripe unit specified, using v2 logs\n"
 msgstr "podano jednostkę pasa logu, użyto logów v2\n"
 
-#: .././mkfs/xfs_mkfs.c:2028
+#: .././mkfs/xfs_mkfs.c:2069
 #, c-format
 msgid "no device name given in argument list\n"
 msgstr "nie podano nazwy urządzenia w liście argumentów\n"
 
-#: .././mkfs/xfs_mkfs.c:2053
+#: .././mkfs/xfs_mkfs.c:2094
 #, c-format
 msgid "%s: Use the -f option to force overwrite.\n"
 msgstr "%s: Można użyć opcji -f do wymuszenia nadpisania.\n"
 
-#: .././mkfs/xfs_mkfs.c:2072
+#: .././mkfs/xfs_mkfs.c:2113
 msgid "internal log"
 msgstr "log wewnętrzny"
 
-#: .././mkfs/xfs_mkfs.c:2074
+#: .././mkfs/xfs_mkfs.c:2115
 msgid "volume log"
 msgstr "log na wolumenie"
 
-#: .././mkfs/xfs_mkfs.c:2076
+#: .././mkfs/xfs_mkfs.c:2117
 #, c-format
 msgid "no log subvolume or internal log\n"
 msgstr "brak podwolumenu logu ani logu wewnętrznego\n"
 
-#: .././mkfs/xfs_mkfs.c:2083
+#: .././mkfs/xfs_mkfs.c:2124
 msgid "volume rt"
 msgstr "wolumen rt"
 
-#: .././mkfs/xfs_mkfs.c:2088
+#: .././mkfs/xfs_mkfs.c:2129
 #, c-format
 msgid "size %s specified for data subvolume is too large, maximum is %lld blocks\n"
 msgstr "rozmiar %s podany dla podwolumenu danych jest zbyt duży, maksimum to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:2095
+#: .././mkfs/xfs_mkfs.c:2136
 #, c-format
 msgid "can't get size of data subvolume\n"
 msgstr "nie można pobrać rozmiaru podwolumenu danych\n"
 
-#: .././mkfs/xfs_mkfs.c:2100
+#: .././mkfs/xfs_mkfs.c:2141
 #, c-format
 msgid "size %lld of data subvolume is too small, minimum %d blocks\n"
 msgstr "rozmiar %lld dla podwolumenu danych jest zbyt mały, minimum to %d bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:2107
+#: .././mkfs/xfs_mkfs.c:2148
 #, c-format
 msgid "can't have both external and internal logs\n"
 msgstr "nie można mieć jednocześnie zewnętrznego i wewnętrznego logu\n"
 
-#: .././mkfs/xfs_mkfs.c:2111
+#: .././mkfs/xfs_mkfs.c:2152
 #, c-format
 msgid "data and log sector sizes must be equal for internal logs\n"
 msgstr "rozmiary sektora danych i logu muszą być równe dla logów wewnętrznych\n"
 
-#: .././mkfs/xfs_mkfs.c:2117
+#: .././mkfs/xfs_mkfs.c:2158
 #, c-format
 msgid ""
 "Warning: the data subvolume sector size %u is less than the sector size \n"
@@ -7495,7 +7515,7 @@ msgstr ""
 "Uwaga: rozmiar sektora podwolumenu danych %u jest mniejszy od rozmiaru\n"
 "sektora zgłaszanego przez urządzenie (%u).\n"
 
-#: .././mkfs/xfs_mkfs.c:2123
+#: .././mkfs/xfs_mkfs.c:2164
 #, c-format
 msgid ""
 "Warning: the log subvolume sector size %u is less than the sector size\n"
@@ -7504,7 +7524,7 @@ msgstr ""
 "Uwaga: rozmiar sektora podwolumenu logu %u jest mniejszy od rozmiaru\n"
 "sektora zgłaszanego przez urządzenie (%u).\n"
 
-#: .././mkfs/xfs_mkfs.c:2129
+#: .././mkfs/xfs_mkfs.c:2170
 #, c-format
 msgid ""
 "Warning: the realtime subvolume sector size %u is less than the sector size\n"
@@ -7513,37 +7533,37 @@ msgstr ""
 "Uwaga: rozmiar sektora podwolumenu realtime %u jest mniejszy od rozmiaru\n"
 "sektora zgłaszanego przez urządzenie (%u).\n"
 
-#: .././mkfs/xfs_mkfs.c:2136
+#: .././mkfs/xfs_mkfs.c:2177
 #, c-format
 msgid "size %s specified for rt subvolume is too large, maximum is %lld blocks\n"
 msgstr "rozmiar %s podany dla podwolumenu rt jest zbyt duży, maksimum to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:2144
+#: .././mkfs/xfs_mkfs.c:2185
 #, c-format
 msgid "size specified for non-existent rt subvolume\n"
 msgstr "podano rozmiar dla nie istniejącego podwolumenu rt\n"
 
-#: .././mkfs/xfs_mkfs.c:2159
+#: .././mkfs/xfs_mkfs.c:2200
 #, c-format
 msgid "%s: Specified data stripe unit %d is not the same as the volume stripe unit %d\n"
 msgstr "%s: Podana jednostka pasa danych %d nie jest taka sama jak jednostka pasa wolumenu %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2166
+#: .././mkfs/xfs_mkfs.c:2207
 #, c-format
 msgid "%s: Specified data stripe width %d is not the same as the volume stripe width %d\n"
 msgstr "%s: Podana szerokość pasa danych %d nie jest taka sama jak szerokość pasa wolumenu %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2184
+#: .././mkfs/xfs_mkfs.c:2225
 #, c-format
 msgid "agsize (%lld) not a multiple of fs blk size (%d)\n"
 msgstr "agsize (%lld) nie jest wielokrotnością rozmiaru bloku systemu plików (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:2234
+#: .././mkfs/xfs_mkfs.c:2275
 #, c-format
 msgid "agsize rounded to %lld, swidth = %d\n"
 msgstr "agsize zaokrąglone do %lld, swidth = %d\n"
 
-#: .././mkfs/xfs_mkfs.c:2266
+#: .././mkfs/xfs_mkfs.c:2307
 #, c-format
 msgid ""
 "Warning: AG size is a multiple of stripe width.  This can cause performance\n"
@@ -7555,57 +7575,57 @@ msgstr ""
 "Aby temu zapobiec, należy uruchomić mkfs z rozmiarem AG o jedną jednostkę\n"
 "pasa mniejszym, na przykład %llu.\n"
 
-#: .././mkfs/xfs_mkfs.c:2291
+#: .././mkfs/xfs_mkfs.c:2332
 #, c-format
 msgid "%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"
 msgstr "%s: Jednostka pasa (%d) lub szerokość pasa (%d) nie jest wielokrotnością rozmiaru bloku (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:2323
+#: .././mkfs/xfs_mkfs.c:2364
 #, c-format
 msgid "log stripe unit (%d) must be a multiple of the block size (%d)\n"
 msgstr "jednostka pasa logu (%d) musi być wielokrotnością rozmiaru bloku (%d)\n"
 
-#: .././mkfs/xfs_mkfs.c:2336
+#: .././mkfs/xfs_mkfs.c:2377
 #, c-format
 msgid "log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
 msgstr "jednostka pasa logu (%d bajtów) jest zbyt duża (maksimum to 256KiB)\n"
 
-#: .././mkfs/xfs_mkfs.c:2339
+#: .././mkfs/xfs_mkfs.c:2380
 #, c-format
 msgid "log stripe unit adjusted to 32KiB\n"
 msgstr "jednostka pasa logu zmodyfikowana na 32KiB\n"
 
-#: .././mkfs/xfs_mkfs.c:2351
+#: .././mkfs/xfs_mkfs.c:2392
 #, c-format
 msgid "size %s specified for log subvolume is too large, maximum is %lld blocks\n"
 msgstr "rozmiar %s podany dla podwolumenu logu jest zbyt duży, maksimum to %lld bloków\n"
 
-#: .././mkfs/xfs_mkfs.c:2358
+#: .././mkfs/xfs_mkfs.c:2399
 #, c-format
 msgid "size specified for non-existent log subvolume\n"
 msgstr "podano rozmiar dla nie istniejącego podwolumenu logu\n"
 
-#: .././mkfs/xfs_mkfs.c:2361
+#: .././mkfs/xfs_mkfs.c:2402
 #, c-format
 msgid "size %lld too large for internal log\n"
 msgstr "rozmiar %lld jest zbyt duży dla logu wewnętrznego\n"
 
-#: .././mkfs/xfs_mkfs.c:2430
+#: .././mkfs/xfs_mkfs.c:2495
 #, c-format
 msgid "internal log size %lld too large, must fit in allocation group\n"
 msgstr "rozmiar wewnętrznego logu %lld zbyt duży, musi się zmieścić w grupie alokacji\n"
 
-#: .././mkfs/xfs_mkfs.c:2438
+#: .././mkfs/xfs_mkfs.c:2503
 #, c-format
 msgid "log ag number %d too large, must be less than %lld\n"
 msgstr "liczba ag logu %d zbyt duża, musi być mniejsza niż %lld\n"
 
-#: .././mkfs/xfs_mkfs.c:2476
+#: .././mkfs/xfs_mkfs.c:2541
 #, c-format
 msgid ""
 "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
 "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-"         =%-22s crc=%u\n"
+"         =%-22s crc=%-8u finobt=%u\n"
 "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 "         =%-22s sunit=%-6u swidth=%u blks\n"
 "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
@@ -7615,7 +7635,7 @@ msgid ""
 msgstr ""
 "metadane=%-22s isize=%-6d agcount=%lld, agsize=%lld bloków\n"
 "        =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-"        =%-22s crc=%u\n"
+"        =%-22s crc=%-8u finobt=%u\n"
 "dane    =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
 "        =%-22s sunit=%-6u swidth=%u bloków\n"
 "nazwy   =wersja %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
@@ -7623,57 +7643,57 @@ msgstr ""
 "        =%-22s sectsz=%-5u sunit=%d bloków, lazy-count=%d\n"
 "realtime=%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
 
-#: .././mkfs/xfs_mkfs.c:2602
+#: .././mkfs/xfs_mkfs.c:2650
 #, c-format
 msgid "%s: Growing the data section failed\n"
 msgstr "%s: Powiększenie sekcji danych nie powiodło się\n"
 
-#: .././mkfs/xfs_mkfs.c:2631
+#: .././mkfs/xfs_mkfs.c:2679
 #, c-format
 msgid "%s: filesystem failed to initialize\n"
 msgstr "%s: nie udało się zainicjować systemu plików\n"
 
-#: .././mkfs/xfs_mkfs.c:2907
+#: .././mkfs/xfs_mkfs.c:2979
 #, c-format
 msgid "%s: root inode created in AG %u, not AG 0\n"
 msgstr "%s: główny i-węzeł utworzony w AG %u, nie AG 0\n"
 
-#: .././mkfs/xfs_mkfs.c:2973
+#: .././mkfs/xfs_mkfs.c:3045
 #, c-format
 msgid "Cannot specify both -%c %s and -%c %s\n"
 msgstr "Nie można podać jednocześnie -%c %s i %c %s\n"
 
-#: .././mkfs/xfs_mkfs.c:2984
+#: .././mkfs/xfs_mkfs.c:3056
 #, c-format
 msgid "Illegal value %s for -%s option\n"
 msgstr "Niedozwolona wartość %s dla opcji -%s\n"
 
-#: .././mkfs/xfs_mkfs.c:3001
+#: .././mkfs/xfs_mkfs.c:3073
 #, c-format
 msgid "-%c %s option requires a value\n"
 msgstr "Opcja -%c %s wymaga wartości\n"
 
-#: .././mkfs/xfs_mkfs.c:3014 .././repair/xfs_repair.c:164
+#: .././mkfs/xfs_mkfs.c:3086 .././repair/xfs_repair.c:164
 #, c-format
 msgid "option respecified\n"
 msgstr "ponownie podana opcja\n"
 
-#: .././mkfs/xfs_mkfs.c:3023 .././repair/xfs_repair.c:171
+#: .././mkfs/xfs_mkfs.c:3095 .././repair/xfs_repair.c:171
 #, c-format
 msgid "unknown option -%c %s\n"
 msgstr "nieznana opcja -%c %s\n"
 
-#: .././mkfs/xfs_mkfs.c:3062
+#: .././mkfs/xfs_mkfs.c:3134
 #, c-format
 msgid "blocksize not available yet.\n"
 msgstr "rozmiar bloku jeszcze nie dostępny.\n"
 
-#: .././mkfs/xfs_mkfs.c:3088
+#: .././mkfs/xfs_mkfs.c:3160
 #, c-format
 msgid ""
 "Usage: %s\n"
 "/* blocksize */\t\t[-b log=n|size=num]\n"
-"/* metadata */\t\t[-m crc=[0|1]\n"
+"/* metadata */\t\t[-m crc=0|1,finobt=0|1]\n"
 "/* data subvol */\t[-d agcount=n,agsize=n,file,name=xxx,size=num,\n"
 "\t\t\t    (sunit=value,swidth=value|su=num,sw=num|noalign),\n"
 "\t\t\t    sectlog=n|sectsize=num\n"
@@ -7700,7 +7720,7 @@ msgid ""
 msgstr ""
 "Składnia: %s\n"
 "/* rozmiar bloku */     [-b log=n|size=liczba]\n"
-"/* metadane */          [-m crc=[0|1]]\n"
+"/* metadane */          [-m crc=0|1,finobt=0|1]\n"
 "/* podwolumen danych */ [-d agcount=n,agsize=n,file,name=xxx,size=liczba,\n"
 "                           (sunit=wartość,swidth=wartość|su=ile,sw=ile|noalign),\n"
 "                           sectlog=n|sectsize=ile]\n"
@@ -7934,7 +7954,7 @@ msgstr "[-gpu] bsoft|bhard|isoft|ihard|rtbsoft|rtbhard=N -d|id|nazwa"
 msgid "modify quota limits"
 msgstr "zmiana limitów quot"
 
-#: .././quota/edit.c:697 .././quota/report.c:33 .././quota/report.c:635
+#: .././quota/edit.c:697 .././quota/report.c:33 .././quota/report.c:647
 msgid "[-gpu] [-f file]"
 msgstr "[-gpu] [-f plik]"
 
@@ -7995,46 +8015,46 @@ msgstr "%s: flaga quot projektu nie ustawiona dla %s\n"
 msgid "%s: project ID %u (%s) doesn't match ID %u (%s)\n"
 msgstr "%s: ID projektu %u (%s) nie zgadza się z ID %u (%s)\n"
 
-#: .././quota/free.c:229
+#: .././quota/free.c:230
 #, c-format
 msgid "Filesystem  "
 msgstr "System plików "
 
-#: .././quota/free.c:229
+#: .././quota/free.c:230
 #, c-format
 msgid "Filesystem          "
 msgstr "System plików       "
 
-#: .././quota/free.c:232
+#: .././quota/free.c:233
 #, c-format
 msgid "   Size   Used  Avail Use%%"
 msgstr " Rozmiar  Użyto Dost. %%uż."
 
-#: .././quota/free.c:233
+#: .././quota/free.c:234
 #, c-format
 msgid " 1K-blocks       Used  Available  Use%%"
 msgstr " Bloki 1K        Użyto Dostępnych %%uż."
 
-#: .././quota/free.c:236
+#: .././quota/free.c:237
 #, c-format
 msgid " Inodes   Used   Free Use%%"
 msgstr " I-węzły  Użyto Wolne %%uż."
 
-#: .././quota/free.c:237
+#: .././quota/free.c:238
 #, c-format
 msgid "    Inodes      IUsed      IFree IUse%%"
 msgstr "   I-węzły      UżytoI     WolneI %%użI"
 
-#: .././quota/free.c:238
+#: .././quota/free.c:239
 #, c-format
 msgid " Pathname\n"
 msgstr " Ścieżka\n"
 
-#: .././quota/free.c:370
+#: .././quota/free.c:371
 msgid "[-bir] [-hn] [-f file]"
 msgstr "[-bir] [hn] [-f plik]"
 
-#: .././quota/free.c:371
+#: .././quota/free.c:372
 msgid "show free and used counts for blocks and inodes"
 msgstr "pokazanie liczby wolnych i zajętych bloków i i-węzłów"
 
@@ -8376,7 +8396,7 @@ msgstr ""
 " (opcjonalny) użytkownik/grupa/projekt może być podany za pomocą nazwy lub\n"
 " numeru (tzn. uid/gid/projid).\n"
 
-#: .././quota/quota.c:84
+#: .././quota/quota.c:85
 #, c-format
 msgid ""
 "Disk quotas for %s %s (%u)\n"
@@ -8385,65 +8405,65 @@ msgstr ""
 "Limity dyskowe (quota) dla %s %s (%u)\n"
 "System plików%s"
 
-#: .././quota/quota.c:89
+#: .././quota/quota.c:90
 #, c-format
 msgid " Blocks  Quota  Limit Warn/Time    "
 msgstr " Bloki   Quota  Limit Czas ostrz.  "
 
-#: .././quota/quota.c:90
+#: .././quota/quota.c:91
 #, c-format
 msgid "     Blocks      Quota      Limit  Warn/Time      "
 msgstr "     Bloki       Quota      Limit  Czas ostrz.    "
 
-#: .././quota/quota.c:93
+#: .././quota/quota.c:94
 #, c-format
 msgid "  Files  Quota  Limit Warn/Time    "
 msgstr "  Pliki  Quota  Limit Czas ostrz.  "
 
-#: .././quota/quota.c:94
+#: .././quota/quota.c:95
 #, c-format
 msgid "      Files      Quota      Limit  Warn/Time      "
 msgstr "      Pliki      Quota      Limit  Czas ostrz.    "
 
-#: .././quota/quota.c:97
+#: .././quota/quota.c:98
 #, c-format
 msgid "Realtime Quota  Limit Warn/Time    "
 msgstr "Realtime Quota  Limit Czas ostrz.  "
 
-#: .././quota/quota.c:98
+#: .././quota/quota.c:99
 #, c-format
 msgid "   Realtime      Quota      Limit  Warn/Time      "
 msgstr "   Realtime      Quota      Limit  Czas ostrz.    "
 
-#: .././quota/quota.c:234
+#: .././quota/quota.c:235
 #, c-format
 msgid "%s: cannot find user %s\n"
 msgstr "%s: nie można odnaleźć użytkownika %s\n"
 
-#: .././quota/quota.c:284
+#: .././quota/quota.c:285
 #, c-format
 msgid "%s: cannot find group %s\n"
 msgstr "%s: nie można odnaleźć grupy %s\n"
 
-#: .././quota/quota.c:345
+#: .././quota/quota.c:346
 #, c-format
 msgid "%s: must specify a project name/ID\n"
 msgstr "%s: należy podać nazwę/ID projektu\n"
 
-#: .././quota/quota.c:358
+#: .././quota/quota.c:359
 #, c-format
 msgid "%s: cannot find project %s\n"
 msgstr "%s: nie można odnaleźć projektu %s\n"
 
-#: .././quota/quota.c:463
+#: .././quota/quota.c:464
 msgid "[-bir] [-gpu] [-hnNv] [-f file] [id|name]..."
 msgstr "[-bir] [-gpu] [-hnNv] [-f plik] [id|nazwa]..."
 
-#: .././quota/quota.c:464
+#: .././quota/quota.c:465
 msgid "show usage and limits"
 msgstr "pokazanie wykorzystania i limitów"
 
-#: .././quota/report.c:34 .././quota/report.c:636
+#: .././quota/report.c:34 .././quota/report.c:648
 msgid "dump quota information for backup utilities"
 msgstr "zrzucenie informacji o limitach (quota) dla narzędzi backupowych"
 
@@ -8470,7 +8490,7 @@ msgstr ""
 msgid "[-bir] [-gpu] [-ahntLNU] [-f file]"
 msgstr "[-bir] [-gpu] [-ahntLNU] [-f plik]"
 
-#: .././quota/report.c:49 .././quota/report.c:646
+#: .././quota/report.c:49 .././quota/report.c:658
 msgid "report filesystem quota information"
 msgstr "raportowanie informacji o limitach (quota) w systemie plików"
 
@@ -8551,7 +8571,7 @@ msgstr " Użyto  Miękki Twardy Ostrzeżenie"
 msgid "      Used       Soft       Hard    Warn/ Grace     "
 msgstr "     Użyto      Miękki     Twardy   Ostrzeżenie     "
 
-#: .././quota/report.c:645
+#: .././quota/report.c:657
 msgid "[-bir] [-gpu] [-ahnt] [-f file]"
 msgstr "[-bir] [-gpu] [-ahnt] [-f plik]"
 
@@ -8894,75 +8914,75 @@ msgstr "błędna długość %d dla agi %d, powinno być %<PRIu64>\n"
 msgid "bad uuid %s for agi %d\n"
 msgstr "błędny uuid %s dla agi %d\n"
 
-#: .././repair/agheader.c:298
+#: .././repair/agheader.c:302
 #, c-format
 msgid "zeroing unused portion of %s superblock (AG #%u)\n"
 msgstr "zerowanie nieużywanej części superbloku %s (AG #%u)\n"
 
-#: .././repair/agheader.c:299 .././repair/agheader.c:314
+#: .././repair/agheader.c:303 .././repair/agheader.c:318
 msgid "primary"
 msgstr "głównego"
 
-#: .././repair/agheader.c:299 .././repair/agheader.c:314
+#: .././repair/agheader.c:303 .././repair/agheader.c:318
 msgid "secondary"
 msgstr "zapasowego"
 
-#: .././repair/agheader.c:313
+#: .././repair/agheader.c:317
 #, c-format
 msgid "would zero unused portion of %s superblock (AG #%u)\n"
 msgstr "nieużywana część superbloku %s (AG #%u) zostałaby wyzerowana\n"
 
-#: .././repair/agheader.c:331
+#: .././repair/agheader.c:335
 #, c-format
 msgid "bad flags field in superblock %d\n"
 msgstr "błędne pole flag w superbloku %d\n"
 
-#: .././repair/agheader.c:348
+#: .././repair/agheader.c:358
 #, c-format
 msgid "non-null user quota inode field in superblock %d\n"
 msgstr "niezerowe pole i-węzła limitów użytkowników w superbloku %d\n"
 
-#: .././repair/agheader.c:361
+#: .././repair/agheader.c:373
 #, c-format
 msgid "non-null group quota inode field in superblock %d\n"
 msgstr "niezerowe pole i-węzła limitów grup w superbloku %d\n"
 
-#: .././repair/agheader.c:374
+#: .././repair/agheader.c:388
 #, c-format
 msgid "non-null project quota inode field in superblock %d\n"
 msgstr "niezerowe pole i-węzła limitów projektu w superbloku %d\n"
 
-#: .././repair/agheader.c:386
+#: .././repair/agheader.c:400
 #, c-format
 msgid "non-null quota flags in superblock %d\n"
 msgstr "niezerowe flagi limitów w superbloku %d\n"
 
-#: .././repair/agheader.c:404
+#: .././repair/agheader.c:418
 #, c-format
 msgid "bad shared version number in superblock %d\n"
 msgstr "błędny numer wersji dzielonej w superbloku %d\n"
 
-#: .././repair/agheader.c:416
+#: .././repair/agheader.c:430
 #, c-format
 msgid "bad inode alignment field in superblock %d\n"
 msgstr "błędne pole wyrównania i-węzłów w superbloku %d\n"
 
-#: .././repair/agheader.c:429
+#: .././repair/agheader.c:443
 #, c-format
 msgid "bad stripe unit/width fields in superblock %d\n"
 msgstr "błędne pola jednostki/szerokości pasa w superbloku %d\n"
 
-#: .././repair/agheader.c:447
+#: .././repair/agheader.c:461
 #, c-format
 msgid "bad log/data device sector size fields in superblock %d\n"
 msgstr "błędne pola rozmiaru sektora urządzenia logu/danych w superbloku %d\n"
 
-#: .././repair/agheader.c:478
+#: .././repair/agheader.c:492
 #, c-format
 msgid "bad on-disk superblock %d - %s\n"
 msgstr "błędny superblok %d na dysku - %s\n"
 
-#: .././repair/agheader.c:485
+#: .././repair/agheader.c:499
 #, c-format
 msgid "primary/secondary superblock %d conflict - %s\n"
 msgstr "konflikt głównego/zapasowego superbloku %d - %s\n"
@@ -8997,12 +9017,12 @@ msgstr "nie można odczytać bloku %u (fsbno %<PRIu64>) dla gałęzi atrybutów 
 msgid "bad dir/attr magic number in inode %<PRIu64>, file bno = %u, fsbno = %<PRIu64>\n"
 msgstr "błędna liczba magiczna katalogu/atrybutu w i-węźle %<PRIu64>, bno pliku = %u, fsbno = %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:200 .././repair/dir2.c:212
+#: .././repair/attr_repair.c:200 .././repair/dir2.c:205
 #, c-format
 msgid "bad record count in inode %<PRIu64>, count = %d, max = %d\n"
 msgstr "błędna liczba rekordów w i-węźle %<PRIu64>, liczba = %d, maksimum = %d\n"
 
-#: .././repair/attr_repair.c:219 .././repair/dir2.c:236
+#: .././repair/attr_repair.c:219 .././repair/dir2.c:229
 #, c-format
 msgid "bad directory btree for directory inode %<PRIu64>\n"
 msgstr "błędne b-drzewo katalogu dla i-węzła katalogu %<PRIu64>\n"
@@ -9022,12 +9042,12 @@ msgstr "release_da_cursor_int otrzymało nieoczekiwany niepusty bp, dabno = %u\n
 msgid "directory/attribute block used/count inconsistency - %d/%hu\n"
 msgstr "niespójność wartości used/count bloku katalogu/atrybutu - %d/%hu\n"
 
-#: .././repair/attr_repair.c:358 .././repair/dir2.c:361
+#: .././repair/attr_repair.c:358 .././repair/dir2.c:354
 #, c-format
 msgid "directory/attribute block hashvalue inconsistency, expected > %u / saw %u\n"
 msgstr "niespójność wartości hasza bloku katalogu/atrybutu - oczekiwano > %u, widziano %u\n"
 
-#: .././repair/attr_repair.c:365 .././repair/dir2.c:368
+#: .././repair/attr_repair.c:365 .././repair/dir2.c:361
 #, c-format
 msgid "bad directory/attribute forward block pointer, expected 0, saw %u\n"
 msgstr "błędny wskaźnik bloku w przód katalogu/atrybutu - oczekiwano 0, widziano %u\n"
@@ -9055,7 +9075,7 @@ msgstr ""
 "błędne hashval zostałoby poprawione w bloku katalogu/atrybutu nie będącego liściem\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/attr_repair.c:549 .././repair/dir2.c:537
+#: .././repair/attr_repair.c:549 .././repair/dir2.c:530
 #, c-format
 msgid "can't get map info for block %u of directory inode %<PRIu64>\n"
 msgstr "nie można uzyskać informacji o mapie dla bloku %u i-węzła katalogu %<PRIu64>\n"
@@ -9103,252 +9123,256 @@ msgstr ""
 "błędne hashval zostałoby poprawione w wewnętrznym bloku katalogu/atrybutu\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/attr_repair.c:758
+#: .././repair/attr_repair.c:755
+msgid "No memory for ACL check!\n"
+msgstr "Brak pamięci na sprawdzenie ACL!\n"
+
+#: .././repair/attr_repair.c:763
 msgid "entry contains illegal value in attribute named SGI_ACL_FILE or SGI_ACL_DEFAULT\n"
 msgstr "wpis zawiera niedozwoloną wartość w atrybucie SGI_ACL_FILE lub SGI_ACL_DEFAULT\n"
 
-#: .././repair/attr_repair.c:780
+#: .././repair/attr_repair.c:789
 msgid "entry contains illegal value in attribute named SGI_MAC_LABEL\n"
 msgstr "wpis zawiera niedozwoloną wartość w atrybucie SGI_MAC_LABEL\n"
 
-#: .././repair/attr_repair.c:786
+#: .././repair/attr_repair.c:795
 msgid "entry contains illegal value in attribute named SGI_CAP_FILE\n"
 msgstr "wpis zawiera niedozwoloną wartość w atrybucie SGI_CAP_FILE\n"
 
-#: .././repair/attr_repair.c:825
+#: .././repair/attr_repair.c:835
 #, c-format
 msgid "there are no attributes in the fork for inode %<PRIu64>\n"
 msgstr "nie ma atrybutów w gałęzi dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:833
+#: .././repair/attr_repair.c:843
 #, c-format
 msgid "would junk the attribute fork since count is 0 for inode %<PRIu64>\n"
 msgstr "gałąź atrybutów zostałaby usunięta ponieważ licznik wynosi 0 dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:853
+#: .././repair/attr_repair.c:863
 msgid "zero length name entry in attribute fork,"
 msgstr "wpis nazwy zerowej długości w gałęzi atrybutów,"
 
-#: .././repair/attr_repair.c:856 .././repair/attr_repair.c:876
+#: .././repair/attr_repair.c:866 .././repair/attr_repair.c:886
 #, c-format
 msgid " truncating attributes for inode %<PRIu64> to %d\n"
 msgstr " ucięto atrybuty dla i-węzła %<PRIu64> do %d\n"
 
-#: .././repair/attr_repair.c:861 .././repair/attr_repair.c:882
+#: .././repair/attr_repair.c:871 .././repair/attr_repair.c:892
 #, c-format
 msgid " would truncate attributes for inode %<PRIu64> to %d\n"
 msgstr " atrybuty dla i-węzła %<PRIu64> zostałyby ucięte do %d\n"
 
-#: .././repair/attr_repair.c:873
+#: .././repair/attr_repair.c:883
 msgid "name or value attribute lengths are too large,\n"
 msgstr "długości nazwy lub wartości atrybutów są zbyt duże,\n"
 
-#: .././repair/attr_repair.c:895
+#: .././repair/attr_repair.c:905
 msgid "entry contains illegal character in shortform attribute name\n"
 msgstr "wpis zawiera niedozwolony znak w nazwie atrybutu krótkiego\n"
 
-#: .././repair/attr_repair.c:901
+#: .././repair/attr_repair.c:911
 msgid "entry has INCOMPLETE flag on in shortform attribute\n"
 msgstr "wpis ma flagę NIEPEŁNY w atrybucie krótkim\n"
 
-#: .././repair/attr_repair.c:918
+#: .././repair/attr_repair.c:928
 #, c-format
 msgid "removing attribute entry %d for inode %<PRIu64>\n"
 msgstr "usunięto wpis atrybutu %d dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:930
+#: .././repair/attr_repair.c:940
 #, c-format
 msgid "would remove attribute entry %d for inode %<PRIu64>\n"
 msgstr "wpis atrybutu %d dla i-węzła %<PRIu64> zostałby usunięty\n"
 
-#: .././repair/attr_repair.c:945
+#: .././repair/attr_repair.c:955
 #, c-format
 msgid "would have corrected attribute entry count in inode %<PRIu64> from %d to %d\n"
 msgstr "liczba wpisów atrybutów w i-węźle %<PRIu64> zostałaby poprawiona z %d na %d\n"
 
-#: .././repair/attr_repair.c:949
+#: .././repair/attr_repair.c:959
 #, c-format
 msgid "corrected attribute entry count in inode %<PRIu64>, was %d, now %d\n"
 msgstr "poprawiono liczbę wpisów atrybutów w i-węźle %<PRIu64> - było %d, jest %d\n"
 
-#: .././repair/attr_repair.c:960
+#: .././repair/attr_repair.c:970
 #, c-format
 msgid "would have corrected attribute totsize in inode %<PRIu64> from %d to %d\n"
 msgstr "totsize atrybutów w i-węźle %<PRIu64> zostałby poprawiony z %d na %d\n"
 
-#: .././repair/attr_repair.c:965
+#: .././repair/attr_repair.c:975
 #, c-format
 msgid "corrected attribute entry totsize in inode %<PRIu64>, was %d, now %d\n"
 msgstr "poprawiono totsize wpisu atrybutów w i-węźle %<PRIu64> - było %d, jest %d\n"
 
-#: .././repair/attr_repair.c:999
+#: .././repair/attr_repair.c:1009
 #, c-format
 msgid "remote block for attributes of inode %<PRIu64> is missing\n"
 msgstr "brak odległego bloku dla atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1008
+#: .././repair/attr_repair.c:1018
 #, c-format
 msgid "can't read remote block for attributes of inode %<PRIu64>\n"
 msgstr "nie można odczytać odległego bloku dla atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1015
+#: .././repair/attr_repair.c:1025
 #, c-format
 msgid "Corrupt remote block for attributes of inode %<PRIu64>\n"
 msgstr "Uszkodzony odległy blok dla atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1055
+#: .././repair/attr_repair.c:1066
 #, c-format
 msgid "attribute entry %d in attr block %u, inode %<PRIu64> has bad name (namelen = %d)\n"
 msgstr "wpis atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64> ma błędną nazwę (namelen = %d)\n"
 
-#: .././repair/attr_repair.c:1072
+#: .././repair/attr_repair.c:1083
 #, c-format
 msgid "bad hashvalue for attribute entry %d in attr block %u, inode %<PRIu64>\n"
 msgstr "błędna wartość hasza dla wpisu atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1082
+#: .././repair/attr_repair.c:1093
 #, c-format
 msgid "bad security value for attribute entry %d in attr block %u, inode %<PRIu64>\n"
 msgstr "błędna wartość bezpieczeństwa dla wpisu atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1115
+#: .././repair/attr_repair.c:1126
 #, c-format
 msgid "inconsistent remote attribute entry %d in attr block %u, ino %<PRIu64>\n"
 msgstr "niespójny wpis odległego atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1125
+#: .././repair/attr_repair.c:1136
 #, c-format
 msgid "cannot malloc enough for remotevalue attribute for inode %<PRIu64>\n"
 msgstr "nie można przydzielić wystarczająco dużo dla atrybutu remotevalue dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1127
+#: .././repair/attr_repair.c:1138
 msgid "SKIPPING this remote attribute\n"
 msgstr "POMINIĘTO ten atrybut odległy\n"
 
-#: .././repair/attr_repair.c:1133
+#: .././repair/attr_repair.c:1144
 #, c-format
 msgid "remote attribute get failed for entry %d, inode %<PRIu64>\n"
 msgstr "pobranie odległego atrybutu nie powiodło się dla wpisu %d, i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1140
+#: .././repair/attr_repair.c:1151
 #, c-format
 msgid "remote attribute value check failed for entry %d, inode %<PRIu64>\n"
 msgstr "sprawdzenie wartości odległego atrybutu nie powiodło się dla wpisu %d, i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1178
+#: .././repair/attr_repair.c:1189
 #, c-format
 msgid "bad attribute count %d in attr block %u, inode %<PRIu64>\n"
 msgstr "błędna liczba atrybutów %d w bloku atrybutów %u, i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1193
+#: .././repair/attr_repair.c:1204
 #, c-format
 msgid "bad attribute nameidx %d in attr block %u, inode %<PRIu64>\n"
 msgstr "błędny nameidx atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1202
+#: .././repair/attr_repair.c:1213
 #, c-format
 msgid "attribute entry #%d in attr block %u, inode %<PRIu64> is INCOMPLETE\n"
 msgstr "wpis atrybutu #%d w bloku atrybutów %u, i-węźle %<PRIu64> jest NIEPEŁNY\n"
 
-#: .././repair/attr_repair.c:1213
+#: .././repair/attr_repair.c:1224
 #, c-format
 msgid "attribute entry %d in attr block %u, inode %<PRIu64> claims already used space\n"
 msgstr "wpis atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64> odwołuje się do już użytego miejsca\n"
 
-#: .././repair/attr_repair.c:1236
+#: .././repair/attr_repair.c:1247
 #, c-format
 msgid "attribute entry %d in attr block %u, inode %<PRIu64> claims used space\n"
 msgstr "wpis atrybutu %d w bloku atrybutów %u, i-węźle %<PRIu64> odwołuje się do używanego miejsca\n"
 
-#: .././repair/attr_repair.c:1260
+#: .././repair/attr_repair.c:1271
 #, c-format
 msgid "- resetting first used heap value from %d to %d in block %u of attribute fork of inode %<PRIu64>\n"
 msgstr "- przestawiono pierwszą używaną wartość sterty z %d na %d w bloku %u gałęzi atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1268
+#: .././repair/attr_repair.c:1279
 #, c-format
 msgid "- would reset first used value from %d to %d in block %u of attribute fork of inode %<PRIu64>\n"
 msgstr "- pierwsza używana wartość zostałaby przestawiona z %d na %d w bloku %u gałęzi atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1278
+#: .././repair/attr_repair.c:1289
 #, c-format
 msgid "- resetting usedbytes cnt from %d to %d in block %u of attribute fork of inode %<PRIu64>\n"
 msgstr "- przestawiono liczbę użytych bajtów z %d na %d w bloku %u gałęzi atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1286
+#: .././repair/attr_repair.c:1297
 #, c-format
 msgid "- would reset usedbytes cnt from %d to %d in block %u of attribute fork of %<PRIu64>\n"
 msgstr "- liczba użytych bajtów zostałaby przestawiona z %d na %d w bloku %u gałęzi atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1341
+#: .././repair/attr_repair.c:1352
 #, c-format
 msgid "can't map block %u for attribute fork for inode %<PRIu64>\n"
 msgstr "nie można odwzorować bloku %u dla gałęzi atrybutów dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1351
+#: .././repair/attr_repair.c:1362
 #, c-format
 msgid "can't read file block %u (fsbno %<PRIu64>) for attribute fork of inode %<PRIu64>\n"
 msgstr "nie można odczytać bloku pliku %u (fsbno %<PRIu64>) dla gałęzi atrybutów i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1365
+#: .././repair/attr_repair.c:1376
 #, c-format
 msgid "bad attribute leaf magic %#x for inode %<PRIu64>\n"
 msgstr "błędna liczba magiczna liścia atrybutu %#x dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1396
+#: .././repair/attr_repair.c:1407
 #, c-format
 msgid "bad sibling back pointer for block %u in attribute fork for inode %<PRIu64>\n"
 msgstr "błędny wskaźnik wsteczny dla bloku %u w gałęzi atrybutów dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1423
+#: .././repair/attr_repair.c:1434
 #, c-format
 msgid "bad hash path in attribute fork for inode %<PRIu64>\n"
 msgstr "błędna ścieżka hasza w gałęzi atrybutów dla i-węzła %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1523
+#: .././repair/attr_repair.c:1534
 #, c-format
 msgid "block 0 of inode %<PRIu64> attribute fork is missing\n"
 msgstr "brak bloku 0 i-węzła %<PRIu64> gałęzi atrybutów\n"
 
-#: .././repair/attr_repair.c:1530
+#: .././repair/attr_repair.c:1541
 #, c-format
 msgid "agno of attribute fork of inode %<PRIu64> out of regular partition\n"
 msgstr "agno gałęzi atrybutów i-węzła %<PRIu64> spoza zwykłej partycji\n"
 
-#: .././repair/attr_repair.c:1538
+#: .././repair/attr_repair.c:1549
 #, c-format
 msgid "can't read block 0 of inode %<PRIu64> attribute fork\n"
 msgstr "nie można odczytać bloku 0 i-węzła %<PRIu64> gałęzi atrybutów\n"
 
-#: .././repair/attr_repair.c:1555
+#: .././repair/attr_repair.c:1566
 #, c-format
 msgid "clearing forw/back pointers in block 0 for attributes in inode %<PRIu64>\n"
 msgstr "wyczyszczono wskaźniki forw/back w bloku 0 dla atrybutów w i-węźle %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1563
+#: .././repair/attr_repair.c:1574
 #, c-format
 msgid "would clear forw/back pointers in block 0 for attributes in inode %<PRIu64>\n"
 msgstr "wskaźniki forw/back w bloku 0 dla atrybutów w i-węźle %<PRIu64> zostałyby wyczyszczone\n"
 
-#: .././repair/attr_repair.c:1595
+#: .././repair/attr_repair.c:1606
 #, c-format
 msgid "bad attribute leaf magic # %#x for dir ino %<PRIu64>\n"
 msgstr "błędna liczba magiczna liścia atrybutu %#x dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/attr_repair.c:1620
+#: .././repair/attr_repair.c:1635
 #, c-format
 msgid "Too many ACL entries, count %d\n"
 msgstr "Za dużo wpisów ACL, liczba %d\n"
 
-#: .././repair/attr_repair.c:1629
+#: .././repair/attr_repair.c:1644
 msgid "cannot malloc enough for ACL attribute\n"
 msgstr "nie można wykonać wystarczającego malloc dla atrybutu ACL\n"
 
-#: .././repair/attr_repair.c:1630
+#: .././repair/attr_repair.c:1645
 msgid "SKIPPING this ACL\n"
 msgstr "POMINIĘTO ten ACL\n"
 
-#: .././repair/attr_repair.c:1678 .././repair/dinode.c:2053
+#: .././repair/attr_repair.c:1695 .././repair/dinode.c:2053
 #, c-format
 msgid "illegal attribute format %d, ino %<PRIu64>\n"
 msgstr "niedozwolony format atrybutu %d, i-węzeł %<PRIu64>\n"
@@ -9702,7 +9726,7 @@ msgstr "błędne numrecs 0 w bloku głównym bmap btree i-węzła %<PRIu64>\n"
 msgid "indicated size of %s btree root (%d bytes) greater than space in inode %<PRIu64> %s fork\n"
 msgstr "oznaczony rozmiar korzenia b-drzewa %s (%d bajtów) większy niż miejsce w i-węźle %<PRIu64> gałęzi %s\n"
 
-#: .././repair/dinode.c:963 .././repair/scan.c:428
+#: .././repair/dinode.c:963 .././repair/scan.c:429
 #, c-format
 msgid "bad bmap btree ptr 0x%llx in ino %<PRIu64>\n"
 msgstr "błędny wskaźnik bmap btree 0x%llx w i-węźle %<PRIu64>\n"
@@ -10246,51 +10270,51 @@ msgstr "problem z dowiązaniem symbolicznym w i-węźle %<PRIu64>\n"
 msgid "processing inode %d/%d\n"
 msgstr "analiza i-węzła %d/%d\n"
 
-#: .././repair/dir2.c:56
+#: .././repair/dir2.c:49
 #, c-format
 msgid "malloc failed (%zu bytes) dir2_add_badlist:ino %<PRIu64>\n"
 msgstr "malloc nie powiodło się (%zu bajtów) w dir2_add_badlist:ino %<PRIu64>\n"
 
-#: .././repair/dir2.c:118 .././repair/prefetch.c:238
+#: .././repair/dir2.c:111 .././repair/prefetch.c:238
 msgid "couldn't malloc dir2 buffer list\n"
 msgstr "nie można przydzielić listy bufora dir2\n"
 
-#: .././repair/dir2.c:181 .././repair/dir2.c:548 .././repair/dir2.c:1598
+#: .././repair/dir2.c:174 .././repair/dir2.c:541 .././repair/dir2.c:1597
 #, c-format
 msgid "can't read block %u for directory inode %<PRIu64>\n"
 msgstr "nie można odczytać bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:193
+#: .././repair/dir2.c:186
 #, c-format
 msgid "found non-root LEAFN node in inode %<PRIu64> bno = %u\n"
 msgstr "znaleziono niegłówny węzeł LEAFN w i-węźle %<PRIu64> bno = %u\n"
 
-#: .././repair/dir2.c:203
+#: .././repair/dir2.c:196
 #, c-format
 msgid "bad dir magic number 0x%x in inode %<PRIu64> bno = %u\n"
 msgstr "błędna liczba magiczna katalogu 0x%x w i-węźle %<PRIu64> bno = %u\n"
 
-#: .././repair/dir2.c:225
+#: .././repair/dir2.c:218
 #, c-format
 msgid "bad header depth for directory inode %<PRIu64>\n"
 msgstr "błędna głębokość nagłówka dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:285
+#: .././repair/dir2.c:278
 #, c-format
 msgid "release_dir2_cursor_int got unexpected non-null bp, dabno = %u\n"
 msgstr "release_dir2_cursor_int otrzymał nieoczekiwany niezerowy bp, dabno = %u\n"
 
-#: .././repair/dir2.c:352
+#: .././repair/dir2.c:345
 #, c-format
 msgid "directory block used/count inconsistency - %d / %hu\n"
 msgstr "niespójność wartości used/count bloku katalogu - %d / %hu\n"
 
-#: .././repair/dir2.c:374
+#: .././repair/dir2.c:367
 #, c-format
 msgid "bad directory block in inode %<PRIu64>\n"
 msgstr "błędny blok katalogu w i-węźle %<PRIu64>\n"
 
-#: .././repair/dir2.c:394
+#: .././repair/dir2.c:387
 #, c-format
 msgid ""
 "correcting bad hashval in non-leaf dir block\n"
@@ -10299,7 +10323,7 @@ msgstr ""
 "poprawiono błędne hashval w bloku katalogu nie będącego liściem\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/dir2.c:402
+#: .././repair/dir2.c:395
 #, c-format
 msgid ""
 "would correct bad hashval in non-leaf dir block\n"
@@ -10308,27 +10332,27 @@ msgstr ""
 "błędne hashval w bloku katalogu nie będącego liściem zostałoby poprawione\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/dir2.c:564
+#: .././repair/dir2.c:557
 #, c-format
 msgid "bad magic number %x in block %u for directory inode %<PRIu64>\n"
 msgstr "błędna liczba magiczna %x w bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:571
+#: .././repair/dir2.c:564
 #, c-format
 msgid "bad back pointer in block %u for directory inode %<PRIu64>\n"
 msgstr "błędny wskaźnik wstecz w bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:577
+#: .././repair/dir2.c:570
 #, c-format
 msgid "entry count %d too large in block %u for directory inode %<PRIu64>\n"
 msgstr "liczba wpisów %d zbyt duża w bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:584
+#: .././repair/dir2.c:577
 #, c-format
 msgid "bad level %d in block %u for directory inode %<PRIu64>\n"
 msgstr "błędny poziom %d w bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:625
+#: .././repair/dir2.c:624
 #, c-format
 msgid ""
 "correcting bad hashval in interior dir block\n"
@@ -10337,7 +10361,7 @@ msgstr ""
 "poprawiono błędne hashval w wewnętrznym bloku katalogu\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/dir2.c:633
+#: .././repair/dir2.c:632
 #, c-format
 msgid ""
 "would correct bad hashval in interior dir block\n"
@@ -10346,389 +10370,389 @@ msgstr ""
 "błędne hashval w wewnętrznym bloku katalogu zostałoby poprawione\n"
 "\tw i-węźle (poziomu %d) %<PRIu64>.\n"
 
-#: .././repair/dir2.c:668
+#: .././repair/dir2.c:667
 msgid "couldn't malloc dir2 shortform copy\n"
 msgstr "nie udało się przydzielić krótkiej kopii dir2\n"
 
-#: .././repair/dir2.c:804
+#: .././repair/dir2.c:803
 msgid "current"
 msgstr "bieżącego i-węzła"
 
-#: .././repair/dir2.c:807 .././repair/dir2.c:1329
+#: .././repair/dir2.c:806 .././repair/dir2.c:1328
 msgid "invalid"
 msgstr "nieprawidłowego i-węzła"
 
-#: .././repair/dir2.c:810 .././repair/dir2.c:1331
+#: .././repair/dir2.c:809 .././repair/dir2.c:1330
 msgid "realtime bitmap"
 msgstr "i-węzła bitmapy realtime"
 
-#: .././repair/dir2.c:813 .././repair/dir2.c:1333
+#: .././repair/dir2.c:812 .././repair/dir2.c:1332
 msgid "realtime summary"
 msgstr "i-węzła opisu realtime"
 
-#: .././repair/dir2.c:816 .././repair/dir2.c:1335
+#: .././repair/dir2.c:815 .././repair/dir2.c:1334
 msgid "user quota"
 msgstr "i-węzła limitów użytkownika"
 
-#: .././repair/dir2.c:819 .././repair/dir2.c:1337
+#: .././repair/dir2.c:818 .././repair/dir2.c:1336
 msgid "group quota"
 msgstr "i-węzła limitów grupy"
 
-#: .././repair/dir2.c:822 .././repair/dir2.c:1339
+#: .././repair/dir2.c:821 .././repair/dir2.c:1338
 msgid "project quota"
 msgstr "i-węzła limitów projektu"
 
-#: .././repair/dir2.c:840 .././repair/dir2.c:1369
+#: .././repair/dir2.c:839 .././repair/dir2.c:1368
 msgid "free"
 msgstr "free"
 
-#: .././repair/dir2.c:857 .././repair/dir2.c:1349
+#: .././repair/dir2.c:856 .././repair/dir2.c:1348
 msgid "non-existent"
 msgstr "nie istniejącego i-węzła"
 
-#: .././repair/dir2.c:862
+#: .././repair/dir2.c:861
 #, c-format
 msgid "entry \"%*.*s\" in shortform directory %<PRIu64> references %s inode %<PRIu64>\n"
 msgstr "wpis \"%*.*s\" w krótkim katalogu %<PRIu64> odwołuje się do %s %<PRIu64>\n"
 
-#: .././repair/dir2.c:882
+#: .././repair/dir2.c:881
 #, c-format
 msgid "zero length entry in shortform dir %<PRIu64>, resetting to %d\n"
 msgstr "wpis zerowej długości w krótkim katalogu %<PRIu64>, przestawiono na %d\n"
 
-#: .././repair/dir2.c:887
+#: .././repair/dir2.c:886
 #, c-format
 msgid "zero length entry in shortform dir %<PRIu64>, would set to %d\n"
 msgstr "wpis zerowej długości w krótkim katalogu %<PRIu64>, zostałby przestawiony na %d\n"
 
-#: .././repair/dir2.c:892
+#: .././repair/dir2.c:891
 #, c-format
 msgid "zero length entry in shortform dir %<PRIu64>"
 msgstr "wpis zerowej długości w krótkim katalogu %<PRIu64>"
 
-#: .././repair/dir2.c:895
+#: .././repair/dir2.c:894
 #, c-format
 msgid ", junking %d entries\n"
 msgstr ", wyrzucono %d wpisów\n"
 
-#: .././repair/dir2.c:898
+#: .././repair/dir2.c:897
 #, c-format
 msgid ", would junk %d entries\n"
 msgstr ", %d wpisów zostałoby wyrzucone\n"
 
-#: .././repair/dir2.c:916
+#: .././repair/dir2.c:915
 #, c-format
 msgid "size of last entry overflows space left in in shortform dir %<PRIu64>, "
 msgstr "rozmiar ostatniego wpisu przekracza miejsce pozostałe w krótkim katalogu %<PRIu64>, "
 
-#: .././repair/dir2.c:919
+#: .././repair/dir2.c:918
 #, c-format
 msgid "resetting to %d\n"
 msgstr "przestawiono na %d\n"
 
-#: .././repair/dir2.c:924
+#: .././repair/dir2.c:923
 #, c-format
 msgid "would reset to %d\n"
 msgstr "zostałby przestawiony na %d\n"
 
-#: .././repair/dir2.c:929
+#: .././repair/dir2.c:928
 #, c-format
 msgid "size of entry #%d overflows space left in in shortform dir %<PRIu64>\n"
 msgstr "rozmiar wpisu #%d przekracza miejsce pozostałe w krótkim katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:934
+#: .././repair/dir2.c:933
 #, c-format
 msgid "junking entry #%d\n"
 msgstr "wyrzucono wpis #%d\n"
 
-#: .././repair/dir2.c:938
+#: .././repair/dir2.c:937
 #, c-format
 msgid "junking %d entries\n"
 msgstr "wyrzucono %d wpisów\n"
 
-#: .././repair/dir2.c:943
+#: .././repair/dir2.c:942
 #, c-format
 msgid "would junk entry #%d\n"
 msgstr "wpis #%d zostałby wyrzucony\n"
 
-#: .././repair/dir2.c:947
+#: .././repair/dir2.c:946
 #, c-format
 msgid "would junk %d entries\n"
 msgstr "%d wpisów zostałoby wyrzuconych\n"
 
-#: .././repair/dir2.c:966
+#: .././repair/dir2.c:965
 #, c-format
 msgid "entry contains illegal character in shortform dir %<PRIu64>\n"
 msgstr "wpis zawiera niedozwolony znak w krótkim katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:973
+#: .././repair/dir2.c:972
 #, c-format
 msgid "entry contains offset out of order in shortform dir %<PRIu64>\n"
 msgstr "wpis zawiera uszkodzony offset w krótkim katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1030
+#: .././repair/dir2.c:1029
 #, c-format
 msgid "junking entry \"%s\" in directory inode %<PRIu64>\n"
 msgstr "wyrzucono wpis \"%s\" w i-węźle katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1034
+#: .././repair/dir2.c:1033
 #, c-format
 msgid "would have junked entry \"%s\" in directory inode %<PRIu64>\n"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> zostałby wyrzucony\n"
 
-#: .././repair/dir2.c:1059
+#: .././repair/dir2.c:1058
 #, c-format
 msgid "would have corrected entry count in directory %<PRIu64> from %d to %d\n"
 msgstr "liczba wpisów w katalogu %<PRIu64> zostałaby poprawiona z %d na %d\n"
 
-#: .././repair/dir2.c:1063
+#: .././repair/dir2.c:1062
 #, c-format
 msgid "corrected entry count in directory %<PRIu64>, was %d, now %d\n"
 msgstr "poprawiono liczbę wpisów w katalogu %<PRIu64> - było %d, jest %d\n"
 
-#: .././repair/dir2.c:1074
+#: .././repair/dir2.c:1073
 #, c-format
 msgid "would have corrected i8 count in directory %<PRIu64> from %d to %d\n"
 msgstr "liczba i8 zostałaby poprawiona w katalogu %<PRIu64> z %d na %d\n"
 
-#: .././repair/dir2.c:1078
+#: .././repair/dir2.c:1077
 #, c-format
 msgid "corrected i8 count in directory %<PRIu64>, was %d, now %d\n"
 msgstr "poprawiono liczbę i8 w katalogu %<PRIu64> - było %d, jest %d\n"
 
-#: .././repair/dir2.c:1092
+#: .././repair/dir2.c:1091
 #, c-format
 msgid "would have corrected directory %<PRIu64> size from %<PRId64> to %<PRIdPTR>\n"
 msgstr "rozmiar katalogu %<PRIu64> zostałby poprawiony z %<PRId64> na %<PRIdPTR>\n"
 
-#: .././repair/dir2.c:1097
+#: .././repair/dir2.c:1096
 #, c-format
 msgid "corrected directory %<PRIu64> size, was %<PRId64>, now %<PRIdPTR>\n"
 msgstr "poprawiono rozmiar katalogu %<PRIu64> - było %<PRId64>, jest %<PRIdPTR>\n"
 
-#: .././repair/dir2.c:1109
+#: .././repair/dir2.c:1108
 #, c-format
 msgid "directory %<PRIu64> offsets too high\n"
 msgstr "offsety zbyt duże w katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1115
+#: .././repair/dir2.c:1114
 #, c-format
 msgid "would have corrected entry offsets in directory %<PRIu64>\n"
 msgstr "offsety wpisów w katalogu %<PRIu64> zostałyby poprawione\n"
 
-#: .././repair/dir2.c:1119
+#: .././repair/dir2.c:1118
 #, c-format
 msgid "corrected entry offsets in directory %<PRIu64>\n"
 msgstr "poprawiono offsety wpisów w katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1138
+#: .././repair/dir2.c:1137
 #, c-format
 msgid "bogus .. inode number (%<PRIu64>) in directory inode %<PRIu64>, "
 msgstr "błędny numer i-węzła .. (%<PRIu64>) w i-węźle katalogu %<PRIu64>, "
 
-#: .././repair/dir2.c:1142 .././repair/dir2.c:1177
+#: .././repair/dir2.c:1141 .././repair/dir2.c:1176
 msgid "clearing inode number\n"
 msgstr "wyczyszczono numer i-węzła\n"
 
-#: .././repair/dir2.c:1148 .././repair/dir2.c:1183
+#: .././repair/dir2.c:1147 .././repair/dir2.c:1182
 msgid "would clear inode number\n"
 msgstr "numer i-węzła zostałby wyczyszczony\n"
 
-#: .././repair/dir2.c:1156
+#: .././repair/dir2.c:1155
 #, c-format
 msgid "corrected root directory %<PRIu64> .. entry, was %<PRIu64>, now %<PRIu64>\n"
 msgstr "poprawiono wpis .. głównego katalogu %<PRIu64> - było %<PRIu64>, jest %<PRIu64>\n"
 
-#: .././repair/dir2.c:1164
+#: .././repair/dir2.c:1163
 #, c-format
 msgid "would have corrected root directory %<PRIu64> .. entry from %<PRIu64> to %<PRIu64>\n"
 msgstr "wpis .. głównego katalogu %<PRIu64> zostałby poprawiony z %<PRIu64> na %<PRIu64>\n"
 
-#: .././repair/dir2.c:1174
+#: .././repair/dir2.c:1173
 #, c-format
 msgid "bad .. entry in directory inode %<PRIu64>, points to self, "
 msgstr "błędny wpis .. w i-węźle katalogu %<PRIu64>, wskazuje na siebie, "
 
-#: .././repair/dir2.c:1287
+#: .././repair/dir2.c:1286
 #, c-format
 msgid "corrupt block %u in directory inode %<PRIu64>\n"
 msgstr "uszkodzony blok %u w i-węźle katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1290
+#: .././repair/dir2.c:1289
 msgid "\twill junk block\n"
 msgstr "\tblok zostanie wyrzucony\n"
 
-#: .././repair/dir2.c:1292
+#: .././repair/dir2.c:1291
 msgid "\twould junk block\n"
 msgstr "\tblok zostałby wyrzucony\n"
 
-#: .././repair/dir2.c:1378
+#: .././repair/dir2.c:1377
 #, c-format
 msgid "entry \"%*.*s\" at block %d offset %<PRIdPTR> in directory inode %<PRIu64> references %s inode %<PRIu64>\n"
 msgstr "wpis \"%*.*s\" w bloku %d offsecie %<PRIdPTR> w i-węźle katalogu %<PRIu64> odwołuje się do %s %<PRIu64>\n"
 
-#: .././repair/dir2.c:1389
+#: .././repair/dir2.c:1388
 #, c-format
 msgid "entry at block %u offset %<PRIdPTR> in directory inode %<PRIu64>has 0 namelength\n"
 msgstr "wpis w bloku %u offsecie %<PRIdPTR> w i-węźle katalogu %<PRIu64> ma zerową długość nazwy\n"
 
-#: .././repair/dir2.c:1402
+#: .././repair/dir2.c:1401
 #, c-format
 msgid "\tclearing inode number in entry at offset %<PRIdPTR>...\n"
 msgstr "\twyczyszczono numer i-węzła we wpisie o offsecie %<PRIdPTR>...\n"
 
-#: .././repair/dir2.c:1409
+#: .././repair/dir2.c:1407
 #, c-format
 msgid "\twould clear inode number in entry at offset %<PRIdPTR>...\n"
 msgstr "\tnumer i-węzła we wpisie o offsecie %<PRIdPTR> zostałby wyczyszczony...\n"
 
-#: .././repair/dir2.c:1422
+#: .././repair/dir2.c:1420
 #, c-format
 msgid "entry at block %u offset %<PRIdPTR> in directory inode %<PRIu64> has illegal name \"%*.*s\": "
 msgstr "wpis w bloku %u offsecie %<PRIdPTR> w i-węźle katalogu %<PRIu64> ma niedozwoloną nazwę \"%*.*s\": "
 
-#: .././repair/dir2.c:1452
+#: .././repair/dir2.c:1451
 #, c-format
 msgid "bad .. entry in directory inode %<PRIu64>, points to self: "
 msgstr "błędny wpis .. w i-węźle katalogu %<PRIu64>, wskazuje na siebie: "
 
-#: .././repair/dir2.c:1463
+#: .././repair/dir2.c:1462
 #, c-format
 msgid "bad .. entry in root directory inode %<PRIu64>, was %<PRIu64>: "
 msgstr "błędny wpis w i-węźle głównego katalogu %<PRIu64>, było %<PRIu64>: "
 
-#: .././repair/dir2.c:1466 .././repair/dir2.c:1498 .././repair/phase2.c:184
+#: .././repair/dir2.c:1465 .././repair/dir2.c:1497 .././repair/phase2.c:184
 #: .././repair/phase2.c:193 .././repair/phase2.c:202
 msgid "correcting\n"
 msgstr "poprawiono\n"
 
-#: .././repair/dir2.c:1470 .././repair/dir2.c:1502 .././repair/phase2.c:186
+#: .././repair/dir2.c:1469 .././repair/dir2.c:1501 .././repair/phase2.c:186
 #: .././repair/phase2.c:195 .././repair/phase2.c:204
 msgid "would correct\n"
 msgstr "zostałby poprawiony\n"
 
-#: .././repair/dir2.c:1482
+#: .././repair/dir2.c:1481
 #, c-format
 msgid "multiple .. entries in directory inode %<PRIu64>: "
 msgstr "wiele wpisów .. w i-węźle katalogu %<PRIu64>: "
 
-#: .././repair/dir2.c:1495
+#: .././repair/dir2.c:1494
 #, c-format
 msgid "bad . entry in directory inode %<PRIu64>, was %<PRIu64>: "
 msgstr "błędny wpis . w i-węźle katalogu %<PRIu64>, było %<PRIu64>: "
 
-#: .././repair/dir2.c:1507
+#: .././repair/dir2.c:1506
 #, c-format
 msgid "multiple . entries in directory inode %<PRIu64>: "
 msgstr "wiele wpisów . w i-węźle katalogu %<PRIu64>: "
 
-#: .././repair/dir2.c:1517
+#: .././repair/dir2.c:1516
 #, c-format
 msgid "entry \"%*.*s\" in directory inode %<PRIu64> points to self: "
 msgstr "wpis \"%*.*s\" w i-węźle katalogu %<PRIu64> wskazuje na siebie: "
 
-#: .././repair/dir2.c:1528
+#: .././repair/dir2.c:1527
 msgid "clearing entry\n"
 msgstr "wyczyszczono wpis\n"
 
-#: .././repair/dir2.c:1530
+#: .././repair/dir2.c:1529
 msgid "would clear entry\n"
 msgstr "wpis zostałby wyczyszczony\n"
 
-#: .././repair/dir2.c:1543
+#: .././repair/dir2.c:1542
 #, c-format
 msgid "bad bestfree table in block %u in directory inode %<PRIu64>: "
 msgstr "błędna tablica bestfree w bloku %u w i-węźle katalogu %<PRIu64>: "
 
-#: .././repair/dir2.c:1546
+#: .././repair/dir2.c:1545
 msgid "repairing table\n"
 msgstr "naprawiono tablicę\n"
 
-#: .././repair/dir2.c:1550
+#: .././repair/dir2.c:1549
 msgid "would repair table\n"
 msgstr "tablica zostałaby naprawiona\n"
 
-#: .././repair/dir2.c:1589
+#: .././repair/dir2.c:1588
 #, c-format
 msgid "block %u for directory inode %<PRIu64> is missing\n"
 msgstr "brak bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1609
+#: .././repair/dir2.c:1608
 #, c-format
 msgid "bad directory block magic # %#x in block %u for directory inode %<PRIu64>\n"
 msgstr "błędna liczba magiczna bloku katalogu %#x w bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1658
+#: .././repair/dir2.c:1660
 #, c-format
 msgid "bad entry count in block %u of directory inode %<PRIu64>\n"
 msgstr "błędna liczba wpisów w bloku %u i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1666
+#: .././repair/dir2.c:1668
 #, c-format
 msgid "bad hash ordering in block %u of directory inode %<PRIu64>\n"
 msgstr "błędna kolejność hasza w bloku %u i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1674
+#: .././repair/dir2.c:1676
 #, c-format
 msgid "bad stale count in block %u of directory inode %<PRIu64>\n"
 msgstr "błędna liczba stale %u i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1723
+#: .././repair/dir2.c:1725
 #, c-format
 msgid "can't map block %u for directory inode %<PRIu64>\n"
 msgstr "nie można odwzorować bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1733
+#: .././repair/dir2.c:1735
 #, c-format
 msgid "can't read file block %u for directory inode %<PRIu64>\n"
 msgstr "nie można odczytać bloku pliku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1745
+#: .././repair/dir2.c:1747
 #, c-format
 msgid "bad directory leaf magic # %#x for directory inode %<PRIu64> block %u\n"
 msgstr "błędna liczba magiczna liścia katalogu %#x dla i-węzła katalogu %<PRIu64> bloku %u\n"
 
-#: .././repair/dir2.c:1773
+#: .././repair/dir2.c:1775
 #, c-format
 msgid "bad sibling back pointer for block %u in directory inode %<PRIu64>\n"
 msgstr "błędny wskaźnik wstecz dla bloku %u w i-węźle katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1798
+#: .././repair/dir2.c:1806
 #, c-format
 msgid "bad hash path in directory %<PRIu64>\n"
 msgstr "błędna ścieżka hasza w katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1908
+#: .././repair/dir2.c:1916
 #, c-format
 msgid "block %<PRIu64> for directory inode %<PRIu64> is missing\n"
 msgstr "brak bloku %<PRIu64> dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1917
+#: .././repair/dir2.c:1925
 #, c-format
 msgid "can't read block %<PRIu64> for directory inode %<PRIu64>\n"
 msgstr "nie można odczytać bloku %<PRIu64> dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:1925
+#: .././repair/dir2.c:1933
 #, c-format
 msgid "bad directory block magic # %#x in block %<PRIu64> for directory inode %<PRIu64>\n"
 msgstr "błędna liczba magiczna bloku katalogu %#x w bloku %<PRIu64> dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:2002
+#: .././repair/dir2.c:2014
 #, c-format
 msgid "bad size/format for directory %<PRIu64>\n"
 msgstr "błędny rozmiar/format dla katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:2009
+#: .././repair/dir2.c:2021
 #, c-format
 msgid "no . entry for directory %<PRIu64>\n"
 msgstr "brak wpisu . dla katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:2019
+#: .././repair/dir2.c:2031
 #, c-format
 msgid "no .. entry for directory %<PRIu64>\n"
 msgstr "brak wpisu .. dla katalogu %<PRIu64>\n"
 
-#: .././repair/dir2.c:2021
+#: .././repair/dir2.c:2033
 #, c-format
 msgid "no .. entry for root directory %<PRIu64>\n"
 msgstr "brak wpisu .. dla katalogu głównego %<PRIu64>\n"
@@ -11029,8 +11053,8 @@ msgstr "i-węzeł opisu realtime oznaczony jako wolny, "
 msgid "cannot read agi block %<PRId64> for ag %u\n"
 msgstr "nie można odczytać bloku agi %<PRId64> dla ag %u\n"
 
-#: .././repair/phase3.c:76 .././repair/phase4.c:139 .././repair/phase5.c:1485
-#: .././repair/phase6.c:3051
+#: .././repair/phase3.c:76 .././repair/phase4.c:139 .././repair/phase5.c:1525
+#: .././repair/phase6.c:3059
 #, c-format
 msgid "        - agno = %d\n"
 msgstr "        - agno = %d\n"
@@ -11085,79 +11109,79 @@ msgstr "nieznany stan ekstentu rt, ekstent %<PRIu64>\n"
 msgid "        - check for inodes claiming duplicate blocks...\n"
 msgstr "        - szukanie i-węzłów odwołujących się do powtórzonych bloków...\n"
 
-#: .././repair/phase5.c:210
+#: .././repair/phase5.c:219
 msgid "could not set up btree block array\n"
 msgstr "nie udało się utworzyć tablicy bloków b-drzewa\n"
 
-#: .././repair/phase5.c:222
+#: .././repair/phase5.c:231
 msgid "error - not enough free space in filesystem\n"
 msgstr "błąd - za mało wolnego miejsca w systemie plików\n"
 
-#: .././repair/phase5.c:436
+#: .././repair/phase5.c:445
 #, c-format
 msgid "can't rebuild fs trees -- not enough free space on ag %u\n"
 msgstr "nie można przebudować drzew systemu plików - za mało wolnego miejsca w ag %u\n"
 
-#: .././repair/phase5.c:459
+#: .././repair/phase5.c:468
 #, c-format
 msgid "ag %u - not enough free space to build freespace btrees\n"
 msgstr "ag %u - za mało wolnego miejsca na przebudowanie b-drzew wolnego miejsca\n"
 
-#: .././repair/phase5.c:494
+#: .././repair/phase5.c:503
 #, c-format
 msgid "not enough free blocks left to describe all free blocks in AG %u\n"
 msgstr "za mało wolnych bloków na opisanie wszystkich wolnych bloków w AG %u\n"
 
-#: .././repair/phase5.c:1364
+#: .././repair/phase5.c:1399
 #, c-format
 msgid "lost %d blocks in ag %u\n"
 msgstr "utracono %d bloków w ag %u\n"
 
-#: .././repair/phase5.c:1367
+#: .././repair/phase5.c:1402
 #, c-format
 msgid "thought we were going to lose %d blocks in ag %u, actually lost %d\n"
 msgstr "przewidywano utracenie %d bloków w ag %u, a utracono %d\n"
 
-#: .././repair/phase5.c:1436 .././repair/xfs_repair.c:887
+#: .././repair/phase5.c:1471 .././repair/xfs_repair.c:891
 msgid "couldn't get superblock\n"
 msgstr "nie udało się pobrać superbloku\n"
 
-#: .././repair/phase5.c:1508
+#: .././repair/phase5.c:1548
 #, c-format
 msgid "unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"
 msgstr "nie udało się przebudować AG %u. Za mało wolnego miejsca w AG na dysku.\n"
 
-#: .././repair/phase5.c:1543
+#: .././repair/phase5.c:1588
 #, c-format
 msgid "unable to rebuild AG %u.  No free space.\n"
 msgstr "nie udało się przebudować AG %u. Brak wolnego miejsca.\n"
 
-#: .././repair/phase5.c:1570
+#: .././repair/phase5.c:1615
 #, c-format
 msgid "lost %d blocks in agno %d, sorry.\n"
 msgstr "niestety utracono %d bloków w agno %d.\n"
 
-#: .././repair/phase5.c:1639
+#: .././repair/phase5.c:1704
 msgid "Phase 5 - rebuild AG headers and trees...\n"
 msgstr "Faza 5 - przebudowywanie nagłówków i drzew AG...\n"
 
-#: .././repair/phase5.c:1669
+#: .././repair/phase5.c:1734
 msgid "cannot alloc sb_icount_ag buffers\n"
 msgstr "nie można przydzielić buforów sb_icount_ag\n"
 
-#: .././repair/phase5.c:1673
+#: .././repair/phase5.c:1738
 msgid "cannot alloc sb_ifree_ag buffers\n"
 msgstr "nie można przydzielić buforów sb_ifree_ag\n"
 
-#: .././repair/phase5.c:1677
+#: .././repair/phase5.c:1742
 msgid "cannot alloc sb_fdblocks_ag buffers\n"
 msgstr "nie można przydzielić buforów sb_fdblocks_ag\n"
 
-#: .././repair/phase5.c:1696
+#: .././repair/phase5.c:1761
 msgid "        - generate realtime summary info and bitmap...\n"
 msgstr "        - generowanie opisu i bitmapy realtime...\n"
 
-#: .././repair/phase5.c:1701
+#: .././repair/phase5.c:1766
 msgid "        - reset superblock...\n"
 msgstr "        - przestawianie superbloku...\n"
 
@@ -11221,77 +11245,77 @@ msgstr "brak miejsca na dysku!\n"
 msgid "xfs_trans_reserve returned %d\n"
 msgstr "xfs_trans_reserve zwróciło %d\n"
 
-#: .././repair/phase6.c:506 .././repair/phase6.c:616
+#: .././repair/phase6.c:506 .././repair/phase6.c:615
 #, c-format
 msgid "couldn't iget realtime bitmap inode -- error - %d\n"
 msgstr "nie udało się wykonać iget dla i-węzła bitmapy realtime - błąd %d\n"
 
-#: .././repair/phase6.c:571
+#: .././repair/phase6.c:570
 #, c-format
 msgid "couldn't allocate realtime bitmap, error = %d\n"
 msgstr "nie udało się przydzielić bitmapy realtime, błąd = %d\n"
 
-#: .././repair/phase6.c:584
+#: .././repair/phase6.c:583
 #, c-format
 msgid "allocation of the realtime bitmap failed, error = %d\n"
 msgstr "przydzielenie bitmapy realtime nie powiodło się, błąd = %d\n"
 
-#: .././repair/phase6.c:630
+#: .././repair/phase6.c:629
 #, c-format
 msgid "couldn't map realtime bitmap block %<PRIu64>, error = %d\n"
 msgstr "nie udało się odwzorować bloku bitmapy realtime %<PRIu64>, błąd = %d\n"
 
-#: .././repair/phase6.c:643
+#: .././repair/phase6.c:642
 #, c-format
 msgid "can't access block %<PRIu64> (fsbno %<PRIu64>) of realtime bitmap inode %<PRIu64>\n"
 msgstr "brak dostępu do bloku %<PRIu64> (fsbno %<PRIu64>) i-węzła bitmapy realtime %<PRIu64>\n"
 
-#: .././repair/phase6.c:688 .././repair/phase6.c:763
+#: .././repair/phase6.c:687 .././repair/phase6.c:762
 #, c-format
 msgid "couldn't iget realtime summary inode -- error - %d\n"
 msgstr "nie udało się wykonać iget dla i-węzła opisu realtime - błąd %d\n"
 
-#: .././repair/phase6.c:702
+#: .././repair/phase6.c:701
 #, c-format
 msgid "couldn't map realtime summary inode block %<PRIu64>, error = %d\n"
 msgstr "nie udało się odwzorować bloku i-węzła opisu realtime %<PRIu64>, błąd = %d\n"
 
-#: .././repair/phase6.c:715
+#: .././repair/phase6.c:714
 #, c-format
 msgid "can't access block %<PRIu64> (fsbno %<PRIu64>) of realtime summary inode %<PRIu64>\n"
 msgstr "brak dostępu do bloku %<PRIu64> (fsbno %<PRIu64>) i-węzła opisu realtime %<PRIu64>\n"
 
-#: .././repair/phase6.c:833
+#: .././repair/phase6.c:831
 #, c-format
 msgid "couldn't allocate realtime summary inode, error = %d\n"
 msgstr "nie udało się przydzielić i-węzła opisu realtime, błąd = %d\n"
 
-#: .././repair/phase6.c:846
+#: .././repair/phase6.c:844
 #, c-format
 msgid "allocation of the realtime summary ino failed, error = %d\n"
 msgstr "przydzielenie i-węzła opisu realtime nie powiodło się, błąd = %d\n"
 
-#: .././repair/phase6.c:878
+#: .././repair/phase6.c:876
 #, c-format
 msgid "could not iget root inode -- error - %d\n"
 msgstr "nie udało się wykonać iget dla głównego i-węzła - błąd %d\n"
 
-#: .././repair/phase6.c:960
+#: .././repair/phase6.c:958
 #, c-format
 msgid "%d - couldn't iget root inode to obtain %s\n"
 msgstr "%d - nie udało się wykonać iget dla głównego węzła, aby uzyskać %s\n"
 
-#: .././repair/phase6.c:993
+#: .././repair/phase6.c:991
 #, c-format
 msgid "%s inode allocation failed %d\n"
 msgstr "przydzielenie i-węzłą %s nie powiodło się - %d\n"
 
-#: .././repair/phase6.c:1040
+#: .././repair/phase6.c:1038
 #, c-format
 msgid "can't make %s, createname error %d\n"
 msgstr "nie można zrobić %s, błąd createname %d\n"
 
-#: .././repair/phase6.c:1060
+#: .././repair/phase6.c:1058
 #, c-format
 msgid "%s directory creation failed -- bmapf error %d\n"
 msgstr "tworzenie katalogu %s nie powiodło się - błąd bmapf %d\n"
@@ -11339,25 +11363,25 @@ msgstr "operacja zastąpienia nazwy nie powiodła się (%d), może brakować mie
 msgid "bmap finish failed (%d), filesystem may be out of space\n"
 msgstr "zakończenie bmap nie powiodło się (%d), może brakować miejsca w systemie plików\n"
 
-#: .././repair/phase6.c:1275
+#: .././repair/phase6.c:1277
 msgid ", marking entry to be junked\n"
 msgstr ", zaznaczono wpis do wyrzucenia\n"
 
-#: .././repair/phase6.c:1279
+#: .././repair/phase6.c:1281
 msgid ", would junk entry\n"
 msgstr ", wpis zostałby wyrzucony\n"
 
-#: .././repair/phase6.c:1313
+#: .././repair/phase6.c:1315
 #, c-format
 msgid "rebuilding directory inode %<PRIu64>\n"
 msgstr "przebudowywanie i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:1337
+#: .././repair/phase6.c:1338
 #, c-format
 msgid "xfs_bmap_last_offset failed -- error - %d\n"
 msgstr "xfs_bmap_last_offset nie powiodło się - błąd %d\n"
 
-#: .././repair/phase6.c:1344
+#: .././repair/phase6.c:1345
 #, c-format
 msgid "xfs_bunmapi failed -- error - %d\n"
 msgstr "xfs_bunmapi nie powiodło się - błąd %d\n"
@@ -11367,343 +11391,343 @@ msgstr "xfs_bunmapi nie powiodło się - błąd %d\n"
 msgid "name create failed in ino %<PRIu64> (%d), filesystem may be out of space\n"
 msgstr "tworzenie nazwy nie powiodło się w i-węźle %<PRIu64> (%d), może brakować miejsca w systemie plików\n"
 
-#: .././repair/phase6.c:1446
+#: .././repair/phase6.c:1445
 #, c-format
 msgid "shrink_inode failed inode %<PRIu64> block %u\n"
 msgstr "shrink_inode nie powiodło się dla i-węzła %<PRIu64> bloku %u\n"
 
-#: .././repair/phase6.c:1534
+#: .././repair/phase6.c:1532 .././repair/phase6.c:2227
 #, c-format
-msgid "realloc failed in longform_dir2_entry_check_data (%zu bytes)\n"
-msgstr "realloc nie powiodło się w longform_dir2_entry_check_data (%zu bajtów)\n"
+msgid "realloc failed in %s (%zu bytes)\n"
+msgstr "realloc nie powiodło się w %s (bajtów: %zu)\n"
 
-#: .././repair/phase6.c:1591
+#: .././repair/phase6.c:1589
 #, c-format
 msgid "empty data block %u in directory inode %<PRIu64>: "
 msgstr "pusty blok danych %u w i-węźle katalogu %<PRIu64>: "
 
-#: .././repair/phase6.c:1595
+#: .././repair/phase6.c:1593
 #, c-format
 msgid "corrupt block %u in directory inode %<PRIu64>: "
 msgstr "uszkodzony blok %u w i-węźle katalogu %<PRIu64>: "
 
-#: .././repair/phase6.c:1599
+#: .././repair/phase6.c:1597
 msgid "junking block\n"
 msgstr "wyrzucono blok\n"
 
-#: .././repair/phase6.c:1602
+#: .././repair/phase6.c:1600
 msgid "would junk block\n"
 msgstr "blok zostałby wyrzucony\n"
 
-#: .././repair/phase6.c:1625
+#: .././repair/phase6.c:1622
 #, c-format
 msgid "bad directory block magic # %#x for directory inode %<PRIu64> block %d: "
 msgstr "błędna liczba magiczna bloku katalogu %#x dla i-węzła katalogu %<PRIu64> bloku %d: "
 
-#: .././repair/phase6.c:1628
+#: .././repair/phase6.c:1625
 #, c-format
 msgid "fixing magic # to %#x\n"
 msgstr "poprawiono liczbę magiczną na %#x\n"
 
-#: .././repair/phase6.c:1632
+#: .././repair/phase6.c:1629
 #, c-format
 msgid "would fix magic # to %#x\n"
 msgstr "liczba magiczna zostałaby poprawiona na %#x\n"
 
-#: .././repair/phase6.c:1653
+#: .././repair/phase6.c:1650
 #, c-format
 msgid "directory inode %<PRIu64> block %u has consecutive free entries: "
 msgstr "i-węzeł katalogu %<PRIu64> blok %u ma kolejne wolne wpisy: "
 
-#: .././repair/phase6.c:1656
+#: .././repair/phase6.c:1653
 msgid "joining together\n"
 msgstr "połączono\n"
 
-#: .././repair/phase6.c:1665
+#: .././repair/phase6.c:1662
 msgid "would join together\n"
 msgstr "zostałyby połączone\n"
 
-#: .././repair/phase6.c:1697
+#: .././repair/phase6.c:1694
 #, c-format
 msgid "entry \"%s\" in directory inode %<PRIu64> points to non-existent inode %<PRIu64>"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> wskazuje na nie istniejący i-węzeł %<PRIu64>"
 
-#: .././repair/phase6.c:1714
+#: .././repair/phase6.c:1711
 #, c-format
 msgid "entry \"%s\" in directory inode %<PRIu64> points to free inode %<PRIu64>"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> wskazuje na wolny i-węzeł %<PRIu64>"
 
-#: .././repair/phase6.c:1732 .././repair/phase6.c:2530
+#: .././repair/phase6.c:1729 .././repair/phase6.c:2541
 #, c-format
 msgid "%s (ino %<PRIu64>) in root (%<PRIu64>) is not a directory"
 msgstr "%s (i-węzeł %<PRIu64>) w katalogu głównym (%<PRIu64>) nie jest katalogiem"
 
-#: .././repair/phase6.c:1754 .././repair/phase6.c:2552
+#: .././repair/phase6.c:1751 .././repair/phase6.c:2563
 #, c-format
 msgid "entry \"%s\" (ino %<PRIu64>) in dir %<PRIu64> is a duplicate name"
 msgstr "wpis \"%s\" (i-węzeł %<PRIu64>) w katalogu %<PRIu64> jest powtórzoną nazwą"
 
-#: .././repair/phase6.c:1785
+#: .././repair/phase6.c:1782
 #, c-format
 msgid "entry \"%s\" (ino %<PRIu64>) in dir %<PRIu64> is not in the the first block"
 msgstr "wpis \"%s\" (i-węzeł %<PRIu64>) w katalogu %<PRIu64> nie jest w pierwszym bloku"
 
-#: .././repair/phase6.c:1811
+#: .././repair/phase6.c:1808
 #, c-format
 msgid "entry \"%s\" in dir %<PRIu64> is not the first entry"
 msgstr "wpis \"%s\" w katalogu %<PRIu64> nie jest pierwszym wpisem"
 
-#: .././repair/phase6.c:1837 .././repair/phase6.c:2621
+#: .././repair/phase6.c:1834 .././repair/phase6.c:2632
 #, c-format
 msgid "would fix ftype mismatch (%d/%d) in directory/child inode %<PRIu64>/%<PRIu64>\n"
 msgstr "niezgodność ftype (%d/%d) w i-węźle katalogu/potomnym %<PRIu64>/%<PRIu64> zostałaby poprawiona\n"
 
-#: .././repair/phase6.c:1842 .././repair/phase6.c:2626
+#: .././repair/phase6.c:1839 .././repair/phase6.c:2637
 #, c-format
 msgid "fixing ftype mismatch (%d/%d) in directory/child inode %<PRIu64>/%<PRIu64>\n"
 msgstr "niezgodność ftype (%d/%d) w i-węźle katalogu/potomnym %<PRIu64>/%<PRIu64> zostanie poprawiona\n"
 
-#: .././repair/phase6.c:1875
+#: .././repair/phase6.c:1872
 #, c-format
 msgid "entry \"%s\" in dir %<PRIu64> points to an already connected directory inode %<PRIu64>\n"
 msgstr "wpis \"%s\" w katalogu %<PRIu64> wskazuje na już podłączony i-węzeł katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:1884 .././repair/phase6.c:2590
+#: .././repair/phase6.c:1881 .././repair/phase6.c:2601
 #, c-format
 msgid "entry \"%s\" in dir ino %<PRIu64> doesn't have a .. entry, will set it in ino %<PRIu64>.\n"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> nie ma wpisu .., zostanie ustawiony w i-węźle %<PRIu64>.\n"
 
-#: .././repair/phase6.c:1894
+#: .././repair/phase6.c:1891
 #, c-format
 msgid "entry \"%s\" in dir inode %<PRIu64> inconsistent with .. value (%<PRIu64>) in ino %<PRIu64>\n"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> niespójny z wartością .. (%<PRIu64>) w i-węźle %<PRIu64>\n"
 
-#: .././repair/phase6.c:1906
+#: .././repair/phase6.c:1903
 #, c-format
 msgid "\twill clear entry \"%s\"\n"
 msgstr "\twpis \"%s\" zostanie wyczyszczony\n"
 
-#: .././repair/phase6.c:1909
+#: .././repair/phase6.c:1906
 #, c-format
 msgid "\twould clear entry \"%s\"\n"
 msgstr "\twpis \"%s\" zostałby wyczyszczony\n"
 
-#: .././repair/phase6.c:1956
+#: .././repair/phase6.c:1953
 #, c-format
 msgid "can't read block %u for directory inode %<PRIu64>, error %d\n"
 msgstr "nie można odczytać bloku %u dla i-węzła katalogu %<PRIu64>, błąd %d\n"
 
-#: .././repair/phase6.c:1974 .././repair/phase6.c:2074
+#: .././repair/phase6.c:1971 .././repair/phase6.c:2071
 #, c-format
 msgid "leaf block %u for directory inode %<PRIu64> bad header\n"
 msgstr "błędny nagłówek bloku liścia %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:1991
+#: .././repair/phase6.c:1988
 #, c-format
 msgid "leaf block %u for directory inode %<PRIu64> bad tail\n"
 msgstr "błędna końcówka bloku liścia %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2045
+#: .././repair/phase6.c:2042
 #, c-format
 msgid "can't read leaf block %u for directory inode %<PRIu64>, error %d\n"
 msgstr "nie można odczytać bloku liścia %u dla i-węzła katalogu %<PRIu64>, błąd %d\n"
 
-#: .././repair/phase6.c:2060
+#: .././repair/phase6.c:2057
 #, c-format
 msgid "unknown magic number %#x for block %u in directory inode %<PRIu64>\n"
 msgstr "nieznana liczba magiczna %#x dla bloku %u w i-węźle katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2099
+#: .././repair/phase6.c:2096
 #, c-format
 msgid "can't read freespace block %u for directory inode %<PRIu64>, error %d\n"
 msgstr "nie można odczytać bloku wolnego miejsca %u dla i-węzła katalogu %<PRIu64>, błąd %d\n"
 
-#: .././repair/phase6.c:2114
+#: .././repair/phase6.c:2111
 #, c-format
 msgid "free block %u for directory inode %<PRIu64> bad header\n"
 msgstr "błędny nagłówek wolnego bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2124
+#: .././repair/phase6.c:2121
 #, c-format
 msgid "free block %u entry %i for directory ino %<PRIu64> bad\n"
 msgstr "błędny wpis wolnego bloku %u numer %i dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2134
+#: .././repair/phase6.c:2131
 #, c-format
 msgid "free block %u for directory inode %<PRIu64> bad nused\n"
 msgstr "błędna liczba nused w wolnym bloku %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2145
+#: .././repair/phase6.c:2142
 #, c-format
 msgid "missing freetab entry %u for directory inode %<PRIu64>\n"
 msgstr "brak wpisu freetab %u dla i-węzła katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2184
+#: .././repair/phase6.c:2180
 #, c-format
-msgid "malloc failed in longform_dir2_entry_check (%<PRId64> bytes)\n"
-msgstr "malloc nie powiodło się w longform_dir2_entry_check (%<PRId64> bajtów)\n"
+msgid "malloc failed in %s (%<PRId64> bytes)\n"
+msgstr "malloc nie powiodło się w %s (bajtów: %<PRId64>)\n"
 
-#: .././repair/phase6.c:2217
+#: .././repair/phase6.c:2194
 #, c-format
-msgid "realloc failed in longform_dir2_entry_check (%zu bytes)\n"
-msgstr "realloc nie powiodło się w longform_dir2_entry_check (%zu bajtów)\n"
+msgid "calloc failed in %s (%zu bytes)\n"
+msgstr "calloc nie powiodło się w %s (bajtów: %zu)\n"
 
-#: .././repair/phase6.c:2229
+#: .././repair/phase6.c:2240
 #, c-format
 msgid "can't read data block %u for directory inode %<PRIu64> error %d\n"
 msgstr "nie można odczytać bloku danych %u dla i-węzła katalogu %<PRIu64>, błąd %d\n"
 
-#: .././repair/phase6.c:2322
+#: .././repair/phase6.c:2333
 msgid "would junk entry\n"
 msgstr "wpis zostałby wyrzucony\n"
 
-#: .././repair/phase6.c:2346
+#: .././repair/phase6.c:2357
 msgid "junking entry\n"
 msgstr "wyrzucono wpis\n"
 
-#: .././repair/phase6.c:2392
+#: .././repair/phase6.c:2403
 #, c-format
 msgid "would set .. in sf dir inode %<PRIu64> to %<PRIu64>\n"
 msgstr "wpis .. w i-węźle katalogu sf %<PRIu64> zostałby ustawiony na %<PRIu64>\n"
 
-#: .././repair/phase6.c:2396
+#: .././repair/phase6.c:2407
 #, c-format
 msgid "setting .. in sf dir inode %<PRIu64> to %<PRIu64>\n"
 msgstr "ustawiono wpis .. w i-węźle katalogu sf %<PRIu64> na %<PRIu64>\n"
 
-#: .././repair/phase6.c:2497
+#: .././repair/phase6.c:2508
 #, c-format
 msgid "entry \"%s\" in shortform directory %<PRIu64> references non-existent inode %<PRIu64>\n"
 msgstr "wpis \"%s\" w krótkim katalogu %<PRIu64> odwołuje się do nie istniejącego i-węzła %<PRIu64>\n"
 
-#: .././repair/phase6.c:2514
+#: .././repair/phase6.c:2525
 #, c-format
 msgid "entry \"%s\" in shortform directory inode %<PRIu64> points to free inode %<PRIu64>\n"
 msgstr "wpis \"%s\" w i-węźle krótkiego katalogu %<PRIu64> wskazuje na wolny i-węzeł %<PRIu64>\n"
 
-#: .././repair/phase6.c:2576
+#: .././repair/phase6.c:2587
 #, c-format
 msgid "entry \"%s\" in directory inode %<PRIu64> references already connected inode %<PRIu64>.\n"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> odwołuje się do już podłączonego i-węzła %<PRIu64>.\n"
 
-#: .././repair/phase6.c:2599
+#: .././repair/phase6.c:2610
 #, c-format
 msgid "entry \"%s\" in directory inode %<PRIu64> not consistent with .. value (%<PRIu64>) in inode %<PRIu64>,\n"
 msgstr "wpis \"%s\" w i-węźle katalogu %<PRIu64> niespójny z wartością .. (%<PRIu64>) w i-węźle %<PRIu64>,\n"
 
-#: .././repair/phase6.c:2656
+#: .././repair/phase6.c:2667
 #, c-format
 msgid "would fix i8count in inode %<PRIu64>\n"
 msgstr "i8count w i-węźle %<PRIu64> zostałoby poprawione\n"
 
-#: .././repair/phase6.c:2671
+#: .././repair/phase6.c:2682
 #, c-format
 msgid "fixing i8count in inode %<PRIu64>\n"
 msgstr "poprawiono i8count w i-węźle %<PRIu64>\n"
 
-#: .././repair/phase6.c:2691
+#: .././repair/phase6.c:2702
 #, c-format
 msgid "setting size to %<PRId64> bytes to reflect junked entries\n"
 msgstr "ustawiono rozmiar na %<PRId64>, aby odzwierciedlał wyrzucone wpisy\n"
 
-#: .././repair/phase6.c:2730 .././repair/phase6.c:2734 .././repair/phase7.c:84
+#: .././repair/phase6.c:2741 .././repair/phase6.c:2745 .././repair/phase7.c:84
 #, c-format
 msgid "couldn't map inode %<PRIu64>, err = %d\n"
 msgstr "nie udało się odwzorować i-węzła %<PRIu64>, błąd = %d\n"
 
-#: .././repair/phase6.c:2840
+#: .././repair/phase6.c:2850
 msgid "recreating root directory .. entry\n"
 msgstr "ponowne tworzenie wpisu .. głównego katalogu\n"
 
-#: .././repair/phase6.c:2859
+#: .././repair/phase6.c:2868
 #, c-format
 msgid "can't make \"..\" entry in root inode %<PRIu64>, createname error %d\n"
 msgstr "nie można utworzyć wpisu \"..\" w i-węźle głównego katalogu %<PRIu64>, błąd createname %d\n"
 
-#: .././repair/phase6.c:2870
+#: .././repair/phase6.c:2879
 msgid "would recreate root directory .. entry\n"
 msgstr "wpis .. głównego katalogu zostałby ponownie utworzony\n"
 
-#: .././repair/phase6.c:2894
+#: .././repair/phase6.c:2903
 #, c-format
 msgid "would create missing \".\" entry in dir ino %<PRIu64>\n"
 msgstr "brakujący wpis \".\" w i-węźle katalogu %<PRIu64> zostałby utworzony\n"
 
-#: .././repair/phase6.c:2901
+#: .././repair/phase6.c:2910
 #, c-format
 msgid "creating missing \".\" entry in dir ino %<PRIu64>\n"
 msgstr "tworzenie brakującego wpisu \".\" w i-węźle katalogu %<PRIu64>\n"
 
-#: .././repair/phase6.c:2921
+#: .././repair/phase6.c:2929
 #, c-format
 msgid "can't make \".\" entry in dir ino %<PRIu64>, createname error %d\n"
 msgstr "nie można utworzyć wpisu \".\" w i-węźle katalogu %<PRIu64>, błąd createname %d\n"
 
-#: .././repair/phase6.c:3018
+#: .././repair/phase6.c:3026
 #, c-format
 msgid "disconnected dir inode %<PRIu64>, "
 msgstr "odłączony i-węzeł katalogu %<PRIu64>, "
 
-#: .././repair/phase6.c:3020
+#: .././repair/phase6.c:3028
 #, c-format
 msgid "disconnected inode %<PRIu64>, "
 msgstr "odłączony i-węzeł %<PRIu64>, "
 
-#: .././repair/phase6.c:3024
+#: .././repair/phase6.c:3032
 #, c-format
 msgid "moving to %s\n"
 msgstr "przeniesiono do %s\n"
 
-#: .././repair/phase6.c:3027
+#: .././repair/phase6.c:3035
 #, c-format
 msgid "would move to %s\n"
 msgstr "zostałby przeniesiony do %s\n"
 
-#: .././repair/phase6.c:3112
+#: .././repair/phase6.c:3120
 msgid "Phase 6 - check inode connectivity...\n"
 msgstr "Faza 6 - sprawdzanie łączności i-węzłów...\n"
 
-#: .././repair/phase6.c:3126
+#: .././repair/phase6.c:3134
 msgid "reinitializing root directory\n"
 msgstr "ponowne inicjowanie głównego katalogu\n"
 
-#: .././repair/phase6.c:3131
+#: .././repair/phase6.c:3139
 msgid "would reinitialize root directory\n"
 msgstr "główny katalog zostałby ponownie zainicjowany\n"
 
-#: .././repair/phase6.c:3137
+#: .././repair/phase6.c:3145
 msgid "reinitializing realtime bitmap inode\n"
 msgstr "ponowne inicjowanie i-węzła bitmapy realtime\n"
 
-#: .././repair/phase6.c:3141
+#: .././repair/phase6.c:3149
 msgid "would reinitialize realtime bitmap inode\n"
 msgstr "i-węzeł bitmapy realtime zostałby ponownie zainicjowany\n"
 
-#: .././repair/phase6.c:3147
+#: .././repair/phase6.c:3155
 msgid "reinitializing realtime summary inode\n"
 msgstr "ponowne inicjowanie i-węzła opisu realtime\n"
 
-#: .././repair/phase6.c:3151
+#: .././repair/phase6.c:3159
 msgid "would reinitialize realtime summary inode\n"
 msgstr "i-węzeł opisu realtime zostałby ponownie zainicjowany\n"
 
-#: .././repair/phase6.c:3157
+#: .././repair/phase6.c:3165
 msgid "        - resetting contents of realtime bitmap and summary inodes\n"
 msgstr "        - przestawianie zawartości i-węzłów bitmapy i opisu realtime\n"
 
-#: .././repair/phase6.c:3160 .././repair/phase6.c:3165
+#: .././repair/phase6.c:3168 .././repair/phase6.c:3173
 msgid "Warning:  realtime bitmap may be inconsistent\n"
 msgstr "Uwaga: bitmapa realtime może być niespójna\n"
 
-#: .././repair/phase6.c:3171
+#: .././repair/phase6.c:3179
 msgid "        - traversing filesystem ...\n"
 msgstr "        - przechodzenie systemu plików...\n"
 
-#: .././repair/phase6.c:3194
+#: .././repair/phase6.c:3202
 msgid "        - traversal finished ...\n"
 msgstr "        - przechodzenie zakończone...\n"
 
-#: .././repair/phase6.c:3195
+#: .././repair/phase6.c:3203
 #, c-format
 msgid "        - moving disconnected inodes to %s ...\n"
 msgstr "        - przenoszenie odłączonych i-węzłów do %s...\n"
@@ -12024,54 +12048,54 @@ msgstr ""
 msgid "error finding secondary superblock -- failed to memalign buffer\n"
 msgstr "błąd podczas szukania zapasowego superbloku - nie udało się memalign bufora\n"
 
-#: .././repair/sb.c:145
+#: .././repair/sb.c:146
 msgid "found candidate secondary superblock...\n"
 msgstr "znaleziono potencjalny zapasowy superblok...\n"
 
-#: .././repair/sb.c:157
+#: .././repair/sb.c:158
 msgid "verified secondary superblock...\n"
 msgstr "sprawdzono zapasowy superblok...\n"
 
-#: .././repair/sb.c:162
+#: .././repair/sb.c:163
 msgid "unable to verify superblock, continuing...\n"
 msgstr "nie udało się sprawdzić superbloku, kontynuacja...\n"
 
-#: .././repair/sb.c:481
+#: .././repair/sb.c:482
 msgid "failed to memalign superblock buffer\n"
 msgstr "nie udało się wykonać memalign dla bufora superbloku\n"
 
-#: .././repair/sb.c:488
+#: .././repair/sb.c:489
 msgid "couldn't seek to offset 0 in filesystem\n"
 msgstr "nie udało się wykonać seek na offset 0 w systemie plików\n"
 
-#: .././repair/sb.c:498
+#: .././repair/sb.c:499
 msgid "primary superblock write failed!\n"
 msgstr "zapis głównego superbloku nie powiódł się!\n"
 
-#: .././repair/sb.c:516
+#: .././repair/sb.c:517
 #, c-format
 msgid "error reading superblock %u -- failed to memalign buffer\n"
 msgstr "błąd podczas odczytu superbloku %u - nie udało się wykonać memalign dla bufora\n"
 
-#: .././repair/sb.c:527
+#: .././repair/sb.c:528
 #, c-format
 msgid "error reading superblock %u -- seek to offset %<PRId64> failed\n"
 msgstr "błąd podczas odczytu superbloku %u - seek na offset %<PRId64> nie powiódł się\n"
 
-#: .././repair/sb.c:536
+#: .././repair/sb.c:537
 #, c-format
 msgid "superblock read failed, offset %<PRId64>, size %d, ag %u, rval %d\n"
 msgstr "odczyt superbloku nie powiódł się, offset %<PRId64>, rozmiar %d, ag %u, rval %d\n"
 
-#: .././repair/sb.c:583
+#: .././repair/sb.c:585
 msgid "couldn't malloc geometry structure\n"
 msgstr "nie udało się przydzielić struktury geometrii\n"
 
-#: .././repair/sb.c:733
+#: .././repair/sb.c:735
 msgid "calloc failed in verify_set_primary_sb\n"
 msgstr "calloc nie powiodło się w verify_set_primary_sb\n"
 
-#: .././repair/sb.c:804
+#: .././repair/sb.c:806
 msgid ""
 "Only two AGs detected and they do not match - cannot validate filesystem geometry.\n"
 "Use the -o force_geometry option to proceed.\n"
@@ -12079,7 +12103,7 @@ msgstr ""
 "Wykryto tylko dwie AG i nie zgadzają się - nie można sprawdzić poprawności geometrii systemu plików.\n"
 "Proszę użyć opcji -o force_geometry, aby kontynuować.\n"
 
-#: .././repair/sb.c:820
+#: .././repair/sb.c:822
 msgid ""
 "Only one AG detected - cannot validate filesystem geometry.\n"
 "Use the -o force_geometry option to proceed.\n"
@@ -12087,40 +12111,40 @@ msgstr ""
 "Wykryto tylko dwie AG - nie można sprawdzić poprawności geometrii systemu plików.\n"
 "Proszę użyć opcji -o force_geometry, aby kontynuować.\n"
 
-#: .././repair/sb.c:835
+#: .././repair/sb.c:837
 msgid "Not enough matching superblocks - cannot proceed.\n"
 msgstr "Za mało pasujących superbloków - nie można kontynuować.\n"
 
-#: .././repair/sb.c:850
+#: .././repair/sb.c:852
 msgid "could not read superblock\n"
 msgstr "nie udało się odczytać superbloku\n"
 
-#: .././repair/scan.c:82 .././repair/scan.c:137
+#: .././repair/scan.c:83 .././repair/scan.c:138
 #, c-format
 msgid "can't read btree block %d/%d\n"
 msgstr "nie można odczytać bloku b-drzewa %d/%d\n"
 
-#: .././repair/scan.c:86 .././repair/scan.c:149
+#: .././repair/scan.c:87 .././repair/scan.c:150
 #, c-format
 msgid "btree block %d/%d is suspect, error %d\n"
 msgstr "blok b-drzewa %d/%d jest podejrzany, błąd %d\n"
 
-#: .././repair/scan.c:209
+#: .././repair/scan.c:210
 #, c-format
 msgid "bad magic # %#x in inode %<PRIu64> (%s fork) bmbt block %<PRIu64>\n"
 msgstr "błędna liczba magiczna %#x w i-węźle %<PRIu64> (gałąź %s) blok bmbt %<PRIu64>\n"
 
-#: .././repair/scan.c:215
+#: .././repair/scan.c:216
 #, c-format
 msgid "expected level %d got %d in inode %<PRIu64>, (%s fork) bmbt block %<PRIu64>\n"
 msgstr "oczekiwano poziomu %d, a uzyskano %d w i-węźle %<PRIu64>, (gałęzi %s) blok bmbt %<PRIu64>\n"
 
-#: .././repair/scan.c:225
+#: .././repair/scan.c:226
 #, c-format
 msgid "expected owner inode %<PRIu64>, got %llu, bmbt block %<PRIu64>\n"
 msgstr "oczekiwano i-węzła właściciela %<PRIu64>, napotkano %llu, blok bmbt %<PRIu64>\n"
 
-#: .././repair/scan.c:245
+#: .././repair/scan.c:246
 #, c-format
 msgid ""
 "bad fwd (right) sibling pointer (saw %<PRIu64> parent block says %<PRIu64>)\n"
@@ -12129,7 +12153,7 @@ msgstr ""
 "błędny wskaźnik w przód (prawy) (widziano %<PRIu64>, blok nadrzędny mówi %<PRIu64>)\n"
 "\tw i-węźle %<PRIu64> (gałęzi %s) bloku bmap btree %<PRIu64>\n"
 
-#: .././repair/scan.c:255
+#: .././repair/scan.c:256
 #, c-format
 msgid ""
 "bad back (left) sibling pointer (saw %llu parent block says %<PRIu64>)\n"
@@ -12138,7 +12162,7 @@ msgstr ""
 "błędny wskaźnik wstecz (lewy) (widziano %llu, blok nadrzędny mówi %<PRIu64>)\n"
 "\tw i-węźle %<PRIu64> (gałęzi %s) bloku bmap btree %<PRIu64>\n"
 
-#: .././repair/scan.c:270
+#: .././repair/scan.c:271
 #, c-format
 msgid ""
 "bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
@@ -12147,32 +12171,32 @@ msgstr ""
 "błędny wskaźnik wstecz (lewy) (widziano %llu, powinien być NULL (0))\n"
 "\tw i-węźle %<PRIu64> (gałęzi %s) bloku bmap btree %<PRIu64>\n"
 
-#: .././repair/scan.c:311
+#: .././repair/scan.c:312
 #, c-format
 msgid "inode 0x%<PRIx64>bmap block 0x%<PRIx64> claimed, state is %d\n"
 msgstr "i-węzeł 0x%<PRIx64> blok bmap 0x%<PRIx64> przypisany, stan to %d\n"
 
-#: .././repair/scan.c:318
+#: .././repair/scan.c:319
 #, c-format
 msgid "inode 0x%<PRIx64> bmap block 0x%<PRIx64> claimed, state is %d\n"
 msgstr "i-węzeł 0x%<PRIx64> blok bmap 0x%<PRIx64> przypisany, stan to %d\n"
 
-#: .././repair/scan.c:333
+#: .././repair/scan.c:334
 #, c-format
 msgid "bad state %d, inode %<PRIu64> bmap block 0x%<PRIx64>\n"
 msgstr "błędny stan %d, i-węzeł %<PRIu64> blok bmap 0x%<PRIx64>\n"
 
-#: .././repair/scan.c:360 .././repair/scan.c:411
+#: .././repair/scan.c:361 .././repair/scan.c:412
 #, c-format
 msgid "inode %<PRIu64> bad # of bmap records (%u, min - %u, max - %u)\n"
 msgstr "błędna liczba rekordów bmap w i-węźle %<PRIu64> (%u, minimum - %u, maksimum - %u)\n"
 
-#: .././repair/scan.c:390
+#: .././repair/scan.c:391
 #, c-format
 msgid "out-of-order bmap key (file offset) in inode %<PRIu64>, %s fork, fsbno %<PRIu64>\n"
 msgstr "uszkodzony klucz bmap (offset pliku) w i-węźle %<PRIu64>, gałęzi %s, fsbno %<PRIu64>\n"
 
-#: .././repair/scan.c:456
+#: .././repair/scan.c:457
 #, c-format
 msgid ""
 "correcting bt key (was %llu, now %<PRIu64>) in inode %<PRIu64>\n"
@@ -12181,7 +12205,7 @@ msgstr ""
 "poprawiono klucz bt (było %llu, jest %<PRIu64>) w i-węźle %<PRIu64>\n"
 "\t\tgałąź %s, blok b-drzewa %<PRIu64>\n"
 
-#: .././repair/scan.c:468
+#: .././repair/scan.c:469
 #, c-format
 msgid ""
 "bad btree key (is %llu, should be %<PRIu64>) in inode %<PRIu64>\n"
@@ -12190,7 +12214,7 @@ msgstr ""
 "błędny klucz b-drzewa (jest %llu, powinno być %<PRIu64>) w i-węźle %<PRIu64>\n"
 "\t\tgałąź %s, blok b-drzewa %<PRIu64>\n"
 
-#: .././repair/scan.c:486
+#: .././repair/scan.c:487
 #, c-format
 msgid ""
 "bad fwd (right) sibling pointer (saw %<PRIu64> should be NULLDFSBNO)\n"
@@ -12199,206 +12223,262 @@ msgstr ""
 "błędny wskaźnik w przód (prawy) (widziano %<PRIu64>, powinien być NULLDFSBNO)\n"
 "\tw i-węźle %<PRIu64> (gałęzi %s) bloku bmap btree %<PRIu64>\n"
 
-#: .././repair/scan.c:544
+#: .././repair/scan.c:545
 #, c-format
 msgid "bad magic # %#x in bt%s block %d/%d\n"
 msgstr "błędna liczba magiczna %#x w bloku bt%s %d/%d\n"
 
-#: .././repair/scan.c:562
+#: .././repair/scan.c:563
 #, c-format
 msgid "expected level %d got %d in bt%s block %d/%d\n"
 msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku bt%s %d/%d\n"
 
-#: .././repair/scan.c:576
+#: .././repair/scan.c:577
 #, c-format
 msgid "%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 msgstr "blok b-drzewa wolnego miejsca %s przypisany (stan %d), agno %d, bno %d, podejrzany %d\n"
 
-#: .././repair/scan.c:596 .././repair/scan.c:697
+#: .././repair/scan.c:597 .././repair/scan.c:698
 #, c-format
 msgid "bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"
 msgstr "błędna liczba rekordów b-drzewa (%u, min=%u, max=%u) w bt%s, blok %u/%u\n"
 
-#: .././repair/scan.c:614
+#: .././repair/scan.c:615
 #, c-format
 msgid "invalid start block %u in record %u of %s btree block %u/%u\n"
 msgstr "błędny blok początkowy %u w rekordzie %u bloku b-drzewa %s %u/%u\n"
 
-#: .././repair/scan.c:620
+#: .././repair/scan.c:621
 #, c-format
 msgid "invalid length %u in record %u of %s btree block %u/%u\n"
 msgstr "błędna długość %u w rekordzie %u bloku b-drzewa %s %u/%u\n"
 
-#: .././repair/scan.c:667
+#: .././repair/scan.c:668
 #, c-format
 msgid "block (%d,%d-%d) multiply claimed by %s space tree, state - %d\n"
 msgstr "blok (%d,%d-%d) wielokrotnie przypisany do drzewa miejsca %s, stan - %d\n"
 
-#: .././repair/scan.c:774
+#: .././repair/scan.c:775
 #, c-format
 msgid "badly aligned inode rec (starting inode = %<PRIu64>)\n"
 msgstr "błędnie wyrównany rekord i-węzła (początkowy i-węzeł = %<PRIu64>)\n"
 
-#: .././repair/scan.c:790
+#: .././repair/scan.c:791
 #, c-format
 msgid "bad starting inode # (%<PRIu64> (0x%x 0x%x)) in ino rec, skipping rec\n"
 msgstr "błędny numer początkowego i-węzła (%<PRIu64> (0x%x 0x%x)) w rekordzie i-węzła, pominięto rekord\n"
 
-#: .././repair/scan.c:798
+#: .././repair/scan.c:799
 #, c-format
 msgid "bad ending inode # (%<PRIu64> (0x%x 0x%zx)) in ino rec, skipping rec\n"
 msgstr "błędny numer końcowego i-węzła (%<PRIu64> (0x%x 0x%zx)) w rekordzie i-węzła, pominięto rekord\n"
 
-#: .././repair/scan.c:823
+#: .././repair/scan.c:824
 #, c-format
 msgid "inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"
 msgstr "część i-węzła odwołuje się do używanego bloku, blok inobt - agno %d, bno %d, inopb %d\n"
 
-#: .././repair/scan.c:845
+#: .././repair/scan.c:846
 #, c-format
 msgid "inode rec for ino %<PRIu64> (%d/%d) overlaps existing rec (start %d/%d)\n"
 msgstr "rekord i-węzła dla i-węzła %<PRIu64> (%d/%d) nachodzi na istniejący rekord (początek %d/%d)\n"
 
-#: .././repair/scan.c:892
+#: .././repair/scan.c:893
 #, c-format
 msgid "ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"
 msgstr "niezgodność ir_freecount/free, porcja i-węzłów %d/%u, freecount %d nfree %d\n"
 
-#: .././repair/scan.c:939
+#: .././repair/scan.c:934
+#, c-format
+msgid "badly aligned finobt inode rec (starting inode = %<PRIu64>)\n"
+msgstr "błędnie wyrównany rekord i-węzła finobt (początkowy i-węzeł = %<PRIu64>)\n"
+
+#: .././repair/scan.c:948
+#, c-format
+msgid "bad starting inode # (%<PRIu64> (0x%x 0x%x)) in finobt rec, skipping rec\n"
+msgstr "błędny numer początkowego i-węzła (%<PRIu64> (0x%x 0x%x)) w rekordzie finobt, pominięto rekord\n"
+
+#: .././repair/scan.c:956
+#, c-format
+msgid "bad ending inode # (%<PRIu64> (0x%x 0x%zx)) in finobt rec, skipping rec\n"
+msgstr "błędny numer końcowego i-węzła (%<PRIu64> (0x%x 0x%zx)) w rekordzie finobt, pominięto rekord\n"
+
+#: .././repair/scan.c:981
+#, c-format
+msgid "inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"
+msgstr "część i-węzła odwołuje się do nieśledzonego bloku, blok finobt - agno %d, bno %d, inopb %d\n"
+
+#: .././repair/scan.c:988
+#, c-format
+msgid "inode chunk claims used block, finobt block - agno %d, bno %d, inopb %d\n"
+msgstr "część i-węzła odwołuje się do używanego bloku, blok finobt - agno %d, bno %d, inopb %d\n"
+
+#: .././repair/scan.c:1010
+#, c-format
+msgid "finobt rec for ino %<PRIu64> (%d/%u) does not match existing rec (%d/%d)\n"
+msgstr "rekord finobt dla i-węzła %<PRIu64> (%d/%u) nie pasuje do istniejącego rekordu (%d/%d)\n"
+
+#: .././repair/scan.c:1038
+#, c-format
+msgid "undiscovered finobt record, ino %<PRIu64> (%d/%u)\n"
+msgstr "nie rozpoznany rekord finobt, i-węzeł %<PRIu64> (%d/%u)\n"
+
+#: .././repair/scan.c:1092
+#, c-format
+msgid "finobt ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"
+msgstr "niezgodność finobt ir_freecount/free, porcja i-węzłów %d/%u, freecount %d nfree %d\n"
+
+#: .././repair/scan.c:1098
+#, c-format
+msgid "finobt record with no free inodes, inode chunk %d/%u\n"
+msgstr "rekord finobt bez wolnych i-węzłów, porcja i-węzłów %d/%u\n"
+
+#: .././repair/scan.c:1142
 #, c-format
 msgid "bad magic # %#x in inobt block %d/%d\n"
 msgstr "błędna liczba magiczna %#x w bloku inobt %d/%d\n"
 
-#: .././repair/scan.c:947
+#: .././repair/scan.c:1150
 #, c-format
 msgid "expected level %d got %d in inobt block %d/%d\n"
 msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku inobt %d/%d\n"
 
-#: .././repair/scan.c:969
+#: .././repair/scan.c:1172
 #, c-format
 msgid "inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
 msgstr "blok b-drzewa i-węzłów przypisany (stan %d), agno %d, bno %d, podejrzany %d\n"
 
-#: .././repair/scan.c:992
+#: .././repair/scan.c:1195
 #, c-format
 msgid "dubious inode btree block header %d/%d\n"
 msgstr "wątpliwy nagłówek bloku b-drzewa i-węzłów %d/%d\n"
 
-#: .././repair/scan.c:1086
+#: .././repair/scan.c:1306
 #, c-format
 msgid "can't read agfl block for ag %d\n"
 msgstr "nie można odczytać bloku agfl dla ag %d\n"
 
-#: .././repair/scan.c:1090
+#: .././repair/scan.c:1310
 #, c-format
 msgid "agfl has bad CRC for ag %d\n"
 msgstr "agfl ma błędną sumę kontrolną dla ag %d\n"
 
-#: .././repair/scan.c:1111
+#: .././repair/scan.c:1331
 #, c-format
 msgid "bad agbno %u in agfl, agno %d\n"
 msgstr "błędne agbno %u w agfl, agno %d\n"
 
-#: .././repair/scan.c:1120
+#: .././repair/scan.c:1340
 #, c-format
 msgid "freeblk count %d != flcount %d in ag %d\n"
 msgstr "liczba freeblk %d != flcount %d w ag %d\n"
 
-#: .././repair/scan.c:1146
+#: .././repair/scan.c:1366
 #, c-format
 msgid "bad agbno %u for btbno root, agno %d\n"
 msgstr "błędne agbno %u dla głównego btbno, agno %d\n"
 
-#: .././repair/scan.c:1158
+#: .././repair/scan.c:1378
 #, c-format
 msgid "bad agbno %u for btbcnt root, agno %d\n"
 msgstr "błędne agbno %u dla głównego btbcnt, agno %d\n"
 
-#: .././repair/scan.c:1174
+#: .././repair/scan.c:1394
 #, c-format
 msgid "agf_btreeblks %u, counted %<PRIu64> in ag %u\n"
 msgstr "agf_btreeblks %u, naliczono %<PRIu64> w ag %u\n"
 
-#: .././repair/scan.c:1197
+#: .././repair/scan.c:1417
 #, c-format
 msgid "bad agbno %u for inobt root, agno %d\n"
 msgstr "błędne agbno %u dla głównego inobt, agno %d\n"
 
-#: .././repair/scan.c:1216
+#: .././repair/scan.c:1430
+#, c-format
+msgid "bad agbno %u for finobt root, agno %d\n"
+msgstr "błędne agbno %u dla głównego finobt, agno %d\n"
+
+#: .././repair/scan.c:1447
+#, c-format
+msgid "agi_freecount %u, counted %u in ag %u finobt\n"
+msgstr "agi_freecount %u, naliczono %u w ag %u finobt\n"
+
+#: .././repair/scan.c:1457
 #, c-format
 msgid "agi unlinked bucket %d is %u in ag %u (inode=%<PRIu64>)\n"
 msgstr "niedowiązany kubełek agi %d to %u w ag %u (i-węzeł=%<PRIu64>)\n"
 
-#: .././repair/scan.c:1247
+#: .././repair/scan.c:1488
 msgid "can't allocate memory for superblock\n"
 msgstr "nie można przydzielić pamięci dla superbloku\n"
 
-#: .././repair/scan.c:1254
+#: .././repair/scan.c:1495
 msgid "root superblock"
 msgstr "główny superblok"
 
-#: .././repair/scan.c:1263
+#: .././repair/scan.c:1505
 msgid "agf block"
 msgstr "blok agf"
 
-#: .././repair/scan.c:1272
+#: .././repair/scan.c:1514
 msgid "agi block"
 msgstr "blok agi"
 
-#: .././repair/scan.c:1293
+#: .././repair/scan.c:1535
 #, c-format
 msgid "reset bad sb for ag %d\n"
 msgstr "przestawiono błędny superblok dla ag %d\n"
 
-#: .././repair/scan.c:1296
+#: .././repair/scan.c:1538
 #, c-format
 msgid "would reset bad sb for ag %d\n"
 msgstr "błędny superblok dla ag %d zostałby przestawiony\n"
 
-#: .././repair/scan.c:1301
+#: .././repair/scan.c:1543
 #, c-format
 msgid "reset bad agf for ag %d\n"
 msgstr "przestawiono błędne agf dla ag %d\n"
 
-#: .././repair/scan.c:1304
+#: .././repair/scan.c:1546
 #, c-format
 msgid "would reset bad agf for ag %d\n"
 msgstr "błędne agf dla ag %d zostałoby przestawione\n"
 
-#: .././repair/scan.c:1309
+#: .././repair/scan.c:1551
 #, c-format
 msgid "reset bad agi for ag %d\n"
 msgstr "przestawiono błędne agi dla ag %d\n"
 
-#: .././repair/scan.c:1312
+#: .././repair/scan.c:1554
 #, c-format
 msgid "would reset bad agi for ag %d\n"
 msgstr "błędna agi dla ag %d zostałoby przestawione\n"
 
-#: .././repair/scan.c:1317
+#: .././repair/scan.c:1559
 #, c-format
 msgid "bad uncorrected agheader %d, skipping ag...\n"
 msgstr "błędny nie poprawiony agheader %d, pominięto ag...\n"
 
-#: .././repair/scan.c:1381
+#: .././repair/scan.c:1623
+#, c-format
 msgid "can't get %s for ag %d\n"
 msgstr "nie można uzyskać %s dla ag %d\n"
 
-#: .././repair/scan.c:1400
+#: .././repair/scan.c:1642
 msgid "no memory for ag header counts\n"
 msgstr "brak pamięci na liczniki nagłówków ag\n"
 
-#: .././repair/scan.c:1425
+#: .././repair/scan.c:1667
 #, c-format
 msgid "sb_icount %<PRIu64>, counted %<PRIu64>\n"
 msgstr "sb_icount %<PRIu64>, naliczono %<PRIu64>\n"
 
-#: .././repair/scan.c:1430
+#: .././repair/scan.c:1672
 #, c-format
 msgid "sb_ifree %<PRIu64>, counted %<PRIu64>\n"
 msgstr "sb_ifree %<PRIu64>, naliczono %<PRIu64>\n"
 
-#: .././repair/scan.c:1435
+#: .././repair/scan.c:1677
 #, c-format
 msgid "sb_fdblocks %<PRIu64>, counted %<PRIu64>\n"
 msgstr "sb_fdblocks %<PRIu64>, naliczono %<PRIu64>\n"
@@ -12730,52 +12810,52 @@ msgstr ""
 "\n"
 "błąd krytyczny - "
 
-#: .././repair/xfs_repair.c:456
+#: .././repair/xfs_repair.c:460
 #, c-format
 msgid "sb root inode value %<PRIu64> %sinconsistent with calculated value %u\n"
 msgstr "wartość i-węzła głównego superbloku %<PRIu64> %sniespójna z obliczoną wartością %u\n"
 
-#: .././repair/xfs_repair.c:463
+#: .././repair/xfs_repair.c:467
 #, c-format
 msgid "resetting superblock root inode pointer to %u\n"
 msgstr "przestawiono wskaźnik i-węzła głównego superbloku na %u\n"
 
-#: .././repair/xfs_repair.c:467
+#: .././repair/xfs_repair.c:471
 #, c-format
 msgid "would reset superblock root inode pointer to %u\n"
 msgstr "wskaźnik i-węzła głównego superbloku zostałby przestawiony na %u\n"
 
-#: .././repair/xfs_repair.c:479
+#: .././repair/xfs_repair.c:483
 #, c-format
 msgid "sb realtime bitmap inode %<PRIu64> %sinconsistent with calculated value %u\n"
 msgstr "i-węzeł bitmapy realtime superbloku %<PRIu64> %sniespójny z obliczoną wartością %u\n"
 
-#: .././repair/xfs_repair.c:486
+#: .././repair/xfs_repair.c:490
 #, c-format
 msgid "resetting superblock realtime bitmap ino pointer to %u\n"
 msgstr "przestawiono wskaźnik i-węzła bitmapy realtime superbloku na %u\n"
 
-#: .././repair/xfs_repair.c:490
+#: .././repair/xfs_repair.c:494
 #, c-format
 msgid "would reset superblock realtime bitmap ino pointer to %u\n"
 msgstr "wskaźnik i-węzła bitmapy realtime superbloku zostałby przestawiony na %u\n"
 
-#: .././repair/xfs_repair.c:502
+#: .././repair/xfs_repair.c:506
 #, c-format
 msgid "sb realtime summary inode %<PRIu64> %sinconsistent with calculated value %u\n"
 msgstr "i-węzeł opisu realtime superbloku %<PRIu64> %sniespójny z obliczoną wartością %u\n"
 
-#: .././repair/xfs_repair.c:509
+#: .././repair/xfs_repair.c:513
 #, c-format
 msgid "resetting superblock realtime summary ino pointer to %u\n"
 msgstr "przestawiono wskaźnik i-węzła opisu realtime superbloku na %u\n"
 
-#: .././repair/xfs_repair.c:513
+#: .././repair/xfs_repair.c:517
 #, c-format
 msgid "would reset superblock realtime summary ino pointer to %u\n"
 msgstr "wskaźnik i-węzła opisu realtime superbloku zostałby przestawiony na %u\n"
 
-#: .././repair/xfs_repair.c:559
+#: .././repair/xfs_repair.c:563
 msgid ""
 "Primary superblock would have been modified.\n"
 "Cannot proceed further in no_modify mode.\n"
@@ -12785,7 +12865,7 @@ msgstr ""
 "Nie można kontynuować w trybie bez modyfikacji.\n"
 "Zakończono.\n"
 
-#: .././repair/xfs_repair.c:567
+#: .././repair/xfs_repair.c:571
 msgid ""
 "Primary superblock bad after phase 1!\n"
 "Exiting now.\n"
@@ -12793,7 +12873,7 @@ msgstr ""
 "Nieprawidłowy główny superblok po fazie 1!\n"
 "Koniec działania.\n"
 
-#: .././repair/xfs_repair.c:583
+#: .././repair/xfs_repair.c:587
 msgid ""
 "Cannot get host filesystem geometry.\n"
 "Repair may fail if there is a sector size mismatch between\n"
@@ -12803,7 +12883,7 @@ msgstr ""
 "Naprawienie może się nie powieść, jeśli istnieje niespójność rozmiaru\n"
 "sektora między obrazem a systemem plików hosta.\n"
 
-#: .././repair/xfs_repair.c:595
+#: .././repair/xfs_repair.c:599
 msgid ""
 "Sector size on host filesystem larger than image sector size.\n"
 "Cannot turn off direct IO, so exiting.\n"
@@ -12811,22 +12891,22 @@ msgstr ""
 "Rozmiar sektora na systemie plików hosta większy niż rozmiar sektora obrazu.\n"
 "Nie można wyłączyć bezpośredniego we/wy - zakończono działanie.\n"
 
-#: .././repair/xfs_repair.c:608
+#: .././repair/xfs_repair.c:612
 #, c-format
 msgid "%s: cannot repair this filesystem.  Sorry.\n"
 msgstr "%s: niestety nie można naprawić tego systemu plików.\n"
 
-#: .././repair/xfs_repair.c:667
+#: .././repair/xfs_repair.c:671
 #, c-format
 msgid "        - reporting progress in intervals of %s\n"
 msgstr "        - informowanie o postępie w odstępach %s\n"
 
-#: .././repair/xfs_repair.c:712
+#: .././repair/xfs_repair.c:716
 #, c-format
 msgid "        - max_mem = %lu, icount = %<PRIu64>, imem = %<PRIu64>, dblock = %<PRIu64>, dmem = %<PRIu64>\n"
 msgstr "        - max_mem = %lu, icount = %<PRIu64>, imem = %<PRIu64>, dblock = %<PRIu64>, dmem = %<PRIu64>\n"
 
-#: .././repair/xfs_repair.c:721
+#: .././repair/xfs_repair.c:725
 #, c-format
 msgid ""
 "Required memory for repair is greater that the maximum specified\n"
@@ -12835,7 +12915,7 @@ msgstr ""
 "Pamięć wymagana do naprawy przekracza maksimum określone opcją -m.\n"
 "Proszę ją zwiększyć do co najmniej %lu.\n"
 
-#: .././repair/xfs_repair.c:726
+#: .././repair/xfs_repair.c:730
 #, c-format
 msgid ""
 "Memory available for repair (%luMB) may not be sufficient.\n"
@@ -12846,50 +12926,50 @@ msgstr ""
 "Aby wydajnie naprawić ten system plików, niezbędne jest co najmniej %luMB.\n"
 "Jeśli naprawa nie powiedzie się z powodu braku pamięci, proszę\n"
 
-#: .././repair/xfs_repair.c:732
+#: .././repair/xfs_repair.c:736
 msgid "turn prefetching off (-P) to reduce the memory footprint.\n"
 msgstr "wyłączyć prefetch (-P), aby zmniejszyć zużycie pamięci.\n"
 
-#: .././repair/xfs_repair.c:735
+#: .././repair/xfs_repair.c:739
 #, c-format
 msgid "increase system RAM and/or swap space to at least %luMB.\n"
 msgstr "proszę rozszerzyć rozmiar RAM systemu i/lub przestrzeni wymiany do co najmniej %luMB.\n"
 
-#: .././repair/xfs_repair.c:750
+#: .././repair/xfs_repair.c:754
 #, c-format
 msgid "        - block cache size set to %d entries\n"
 msgstr "        - rozmiar bufora bloku ustawiony na %d wpisów\n"
 
-#: .././repair/xfs_repair.c:774
+#: .././repair/xfs_repair.c:778
 msgid "Found unsupported filesystem features.  Exiting now.\n"
 msgstr "Znaleziono nie obsługiwane cechy systemu plików. Zakończono.\n"
 
-#: .././repair/xfs_repair.c:792
+#: .././repair/xfs_repair.c:796
 #, c-format
 msgid "No modify flag set, skipping phase 5\n"
 msgstr "Ustawiono flagę braku modyfikacji, pominięto fazę 5\n"
 
-#: .././repair/xfs_repair.c:811
+#: .././repair/xfs_repair.c:815
 msgid "Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"
 msgstr "B-drzewa alokacji i-węzłów są zbyt uszkodzone, pominięto fazy 6 i 7\n"
 
-#: .././repair/xfs_repair.c:817
+#: .././repair/xfs_repair.c:821
 msgid "Warning:  no quota inodes were found.  Quotas disabled.\n"
 msgstr "Uwaga: nie znaleziono i-węzłów limitów (quot). Limity wyłączone.\n"
 
-#: .././repair/xfs_repair.c:820
+#: .././repair/xfs_repair.c:824
 msgid "Warning:  no quota inodes were found.  Quotas would be disabled.\n"
 msgstr "Uwaga: nie znaleziono i-węzłów limitów (quot). Limity zostałyby wyłączone.\n"
 
-#: .././repair/xfs_repair.c:825
+#: .././repair/xfs_repair.c:829
 msgid "Warning:  quota inodes were cleared.  Quotas disabled.\n"
 msgstr "Uwaga: i-węzły limitów (quot) były wyczyszczone. Limity wyłączone.\n"
 
-#: .././repair/xfs_repair.c:828
+#: .././repair/xfs_repair.c:832
 msgid "Warning:  quota inodes would be cleared.  Quotas would be disabled.\n"
 msgstr "Uwaga: i-węzły limitów (quot) zostałyby wyczyszczone. Limity zostałyby wyłączone.\n"
 
-#: .././repair/xfs_repair.c:834
+#: .././repair/xfs_repair.c:838
 msgid ""
 "Warning:  user quota information was cleared.\n"
 "User quotas can not be enforced until limit information is recreated.\n"
@@ -12897,7 +12977,7 @@ msgstr ""
 "Uwaga: informacje o limitach użytkowników były wyczyszczone.\n"
 "Limity użytkowników nie mogą być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:838
+#: .././repair/xfs_repair.c:842
 msgid ""
 "Warning:  user quota information would be cleared.\n"
 "User quotas could not be enforced until limit information was recreated.\n"
@@ -12905,7 +12985,7 @@ msgstr ""
 "Uwaga: informacje o limitach użytkowników zostałyby wyczyszczone.\n"
 "Limity użytkowników nie mogłyby być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:846
+#: .././repair/xfs_repair.c:850
 msgid ""
 "Warning:  group quota information was cleared.\n"
 "Group quotas can not be enforced until limit information is recreated.\n"
@@ -12913,7 +12993,7 @@ msgstr ""
 "Uwaga: informacje o limitach grup były wyczyszczone.\n"
 "Limity grup nie mogą być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:850
+#: .././repair/xfs_repair.c:854
 msgid ""
 "Warning:  group quota information would be cleared.\n"
 "Group quotas could not be enforced until limit information was recreated.\n"
@@ -12921,7 +13001,7 @@ msgstr ""
 "Uwaga: informacje o limitach grup zostałyby wyczyszczone.\n"
 "Limity grup nie mogłyby być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:858
+#: .././repair/xfs_repair.c:862
 msgid ""
 "Warning:  project quota information was cleared.\n"
 "Project quotas can not be enforced until limit information is recreated.\n"
@@ -12929,7 +13009,7 @@ msgstr ""
 "Uwaga: informacje o limitach projektów były wyczyszczone.\n"
 "Limity projektów nie mogą być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:862
+#: .././repair/xfs_repair.c:866
 msgid ""
 "Warning:  project quota information would be cleared.\n"
 "Project quotas could not be enforced until limit information was recreated.\n"
@@ -12937,15 +13017,15 @@ msgstr ""
 "Uwaga: informacje o limitach projektów zostałyby wyczyszczone.\n"
 "Limity projektów nie mogłyby być wymuszone do czasu odtworzenia informacji.\n"
 
-#: .././repair/xfs_repair.c:873
+#: .././repair/xfs_repair.c:877
 msgid "No modify flag set, skipping filesystem flush and exiting.\n"
 msgstr "Flaga braku modyfikacji ustawiona, pominięto zrzucanie systemu plików, zakończono.\n"
 
-#: .././repair/xfs_repair.c:892
+#: .././repair/xfs_repair.c:896
 msgid "Note - quota info will be regenerated on next quota mount.\n"
 msgstr "Uwaga - informacje o limitach zostaną ponownie wygenerowane przy następnym montowaniu.\n"
 
-#: .././repair/xfs_repair.c:899
+#: .././repair/xfs_repair.c:903
 #, c-format
 msgid ""
 "Note - stripe unit (%d) and width (%d) fields have been reset.\n"
@@ -12954,11 +13034,11 @@ msgstr ""
 "Uwaga - pola jednostki pasa (%d) i szerokości pasa (%d) zostały przestawione.\n"
 "Proszę ustawić przy użyciu mount -o sunit=<wartość>,swidth=<wartość>\n"
 
-#: .././repair/xfs_repair.c:922
+#: .././repair/xfs_repair.c:926
 msgid "done\n"
 msgstr "gotowe\n"
 
-#: .././repair/xfs_repair.c:926
+#: .././repair/xfs_repair.c:930
 msgid "Repair of readonly mount complete.  Immediate reboot encouraged.\n"
 msgstr "Naprawa systemu zamontowanego tylko do odczytu zakończona. Zalecany natychmiastowy restart systemu.\n"
 
