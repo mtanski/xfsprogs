@@ -1,3 +1,20 @@
+xfsprogs-3.2.1 (15 July 2014)
+	- Added support for new on-disk free inode btree (Brian Foster)
+	- libxfs inode use-after free fixes (Mark Tinguely)
+	- xfs_copy threading cleanups (Junxiao Bi)
+	- xfs_check has been removed
+	- C++ header compiler fixes (Roger Willcocks)
+	- xfs_repair prefetch fixes (Eric Sandeen)
+	- xfs_repair directory block CRC detection fixes (Jan Kara)
+	- xfs_repair directory rebuild fixes
+	- libxfs buffer error handling fixes
+	- xfs_repair quota inode handling fixes
+	- removed incorrect asserts from phase 2 of xfs_repair
+	- updated Polish translations (Jakub Bogusz)
+	- xfs_mkfs 4k sector device fixes (Eric Sandeen)
+	- xfs_fsr cleanups nd fixes (Eric Sandeen)
+	- mount options described in xfs(5) man page (Eric Sandeen)
+
 xfsprogs-3.2.0 (16 May 2014)
 	- First release with full support of CRC enabled filesystems
 	- No code changes from 3.2.0-rc3
