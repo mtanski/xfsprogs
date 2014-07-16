@@ -624,7 +624,7 @@ report_f(
 		if (flags & ALL_MOUNTS_FLAG)
 			report_any_type(fp, form, type, NULL,
 					lower, upper, flags);
-		else if (fs_path->fs_flags & FS_MOUNT_POINT)
+		else if (fs_path && (fs_path->fs_flags & FS_MOUNT_POINT))
 			report_any_type(fp, form, type, fs_path->fs_dir,
 					lower, upper, flags);
 	} else while (argc > optind) {
