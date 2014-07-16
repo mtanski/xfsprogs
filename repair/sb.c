@@ -151,7 +151,7 @@ find_secondary_sb(xfs_sb_t *rsb)
 			 */
 			memmove(rsb, &bufsb, sizeof(xfs_sb_t));
 			rsb->sb_inprogress = 0;
-			clear_sunit = 1;
+			copied_sunit = 1;
 
 			if (verify_set_primary_sb(rsb, 0, &dirty) == XR_OK)  {
 				do_warn(

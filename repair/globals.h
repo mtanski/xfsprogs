@@ -124,7 +124,7 @@ EXTERN int	lazy_count;		/* What to set if to if converting */
 
 EXTERN int		primary_sb_modified;
 EXTERN int		bad_ino_btree;
-EXTERN int		clear_sunit;
+EXTERN int		copied_sunit;
 EXTERN int		fs_is_dirty;
 
 /* for hunting down the root inode */

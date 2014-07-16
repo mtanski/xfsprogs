@@ -193,7 +193,7 @@ process_args(int argc, char **argv)
 	delete_attr_ok = 1;
 	force_geo = 0;
 	assume_xfs = 0;
-	clear_sunit = 0;
+	copied_sunit = 0;
 	sb_inoalignmt = 0;
 	sb_unit = 0;
 	sb_width = 0;
@@ -898,13 +898,11 @@ _("Warning:  project quota information would be cleared.\n"
 		dsb->sb_qflags &= cpu_to_be16(~XFS_ALL_QUOTA_CHKD);
 	}
 
-	if (clear_sunit) {
+	if (copied_sunit) {
 		do_warn(
-_("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
-  "Please set with mount -o sunit=<value>,swidth=<value>\n"),
+_("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\n"
+  "Please reset with mount -o sunit=<value>,swidth=<value> if necessary\n"),
 			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
-		dsb->sb_unit = 0;
-		dsb->sb_width = 0;
 	}
 
 	libxfs_writebuf(sbp, 0);
