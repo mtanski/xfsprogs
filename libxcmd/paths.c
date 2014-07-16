@@ -269,6 +269,9 @@ out_nomem:
 /*
  * If *path is NULL, initialize the fs table with all xfs mount points in mtab
  * If *path is specified, search for that path in mtab
+ *
+ * Everything - path, devices, and mountpoints - are boiled down to realpath()
+ * for comparison, but fs_table is populated with what comes from getmntent.
  */
 static int
 fs_table_initialise_mounts(
@@ -278,7 +281,7 @@ fs_table_initialise_mounts(
 	FILE		*mtp;
 	char		*fslog, *fsrt;
 	int		error, found;
-	char		*rpath = NULL;
+	char		rpath[PATH_MAX], rmnt_fsname[PATH_MAX], rmnt_dir[PATH_MAX];
 
 	error = found = 0;
 	fslog = fsrt = NULL;
@@ -294,17 +297,20 @@ fs_table_initialise_mounts(
 
 	/* Use realpath to resolve symlinks, relative paths, etc */
 	if (path)
-		if ((rpath = realpath(path, NULL)) == NULL)
-			return ENOENT;
+		if (!realpath(path, rpath))
+			return errno;
 
 	while ((mnt = getmntent(mtp)) != NULL) {
 		if (strcmp(mnt->mnt_type, "xfs") != 0)
 			continue;
+		if (!realpath(mnt->mnt_dir, rmnt_dir))
+			continue;
+		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
+			continue;
+
 		if (path &&
-		    ((strcmp(path, mnt->mnt_dir) != 0) &&
-		     (strcmp(path, mnt->mnt_fsname) != 0) &&
-		     (strcmp(rpath, mnt->mnt_dir) != 0) &&
-		     (strcmp(rpath, mnt->mnt_fsname) != 0)))
+		    ((strcmp(rpath, rmnt_dir) != 0) &&
+		     (strcmp(rpath, rmnt_fsname) != 0)))
 			continue;
 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
 			continue;
@@ -316,7 +322,6 @@ fs_table_initialise_mounts(
 		}
 	}
 	endmntent(mtp);
-	free(rpath);
 
 	if (path && !found)
 		error = ENXIO;
@@ -330,6 +335,9 @@ fs_table_initialise_mounts(
 /*
  * If *path is NULL, initialize the fs table with all xfs mount points in mtab
  * If *path is specified, search for that path in mtab
+ *
+ * Everything - path, devices, and mountpoints - are boiled down to realpath()
+ * for comparison, but fs_table is populated with what comes from getmntinfo.
  */
 static int
 fs_table_initialise_mounts(
@@ -337,7 +345,7 @@ fs_table_initialise_mounts(
 {
 	struct statfs	*stats;
 	int		i, count, error, found;
-	char		*rpath = NULL;
+	char		rpath[PATH_MAX], rmntfromname[PATH_MAX], rmntonname[PATH_MAX];
 
 	error = found = 0;
 	if ((count = getmntinfo(&stats, 0)) < 0) {
@@ -348,17 +356,20 @@ fs_table_initialise_mounts(
 
 	/* Use realpath to resolve symlinks, relative paths, etc */
 	if (path)
-		if ((rpath = realpath(path, NULL)) == NULL)
-			return ENOENT;
+		if (!realpath(path, rpath))
+			return errno;
 
 	for (i = 0; i < count; i++) {
 		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
 			continue;
+		if (!realpath(stats[i].f_mntfromname, rmntfromname))
+			continue;
+		if (!realpath(stats[i].f_mntonname, rmnttomname)))
+			continue;
+
 		if (path &&
-		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
-		     (strcmp(path, stats[i].f_mntfromname) != 0) &&
-		     (strcmp(rpath, stats[i].f_mntonname) != 0) &&
-		     (strcmp(rpath, stats[i].f_mntfromname) != 0)))
+		    ((strcmp(rpath, rmntonname) != 0) &&
+		     (strcmp(rpath, rmntfromname) != 0)))
 			continue;
 		/* TODO: external log and realtime device? */
 		(void) fs_table_insert(stats[i].f_mntonname, 0,
@@ -369,7 +380,6 @@ fs_table_initialise_mounts(
 			break;
 		}
 	}
-	free(rpath);
 	if (path && !found)
 		error = ENXIO;
 
