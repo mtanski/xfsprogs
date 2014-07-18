@@ -325,7 +325,15 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
 		agi = (xfs_agi_t *)(*ptr);
 		printf(_("AGI Buffer: XAGI  "));
-		if (be32_to_cpu(head->oh_len) < sizeof(xfs_agi_t) -
+		/*
+		 * v4 filesystems only contain the fields before the uuid.
+		 * Even v5 filesystems don't log any field beneath it. That
+		 * means that the size that is logged is almost always going to
+		 * be smaller than the structure itself. Hence we need to make
+		 * sure that the buffer contains all the data we want to print
+		 * rather than just check against the structure size.
+		 */
+		if (be32_to_cpu(head->oh_len) < offsetof(xfs_agi_t, agi_uuid) -
 				XFS_AGI_UNLINKED_BUCKETS*sizeof(xfs_agino_t)) {
 			printf(_("out of space\n"));
 		} else {
@@ -367,7 +375,15 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGF_MAGIC) {
 		agf = (xfs_agf_t *)(*ptr);
 		printf(_("AGF Buffer: XAGF  "));
-		if (be32_to_cpu(head->oh_len) < sizeof(xfs_agf_t)) {
+		/*
+		 * v4 filesystems only contain the fields before the uuid.
+		 * Even v5 filesystems don't log any field beneath it. That
+		 * means that the size that is logged is almost always going to
+		 * be smaller than the structure itself. Hence we need to make
+		 * sure that the buffer contains all the data we want to print
+		 * rather than just check against the structure size.
+		 */
+		if (be32_to_cpu(head->oh_len) < offsetof(xfs_agf_t, agf_uuid)) {
 			printf(_("Out of space\n"));
 		} else {
 			printf("\n");
