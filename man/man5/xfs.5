@@ -1,6 +1,6 @@
 .TH xfs 5
 .SH NAME
-xfs \- layout and mount options for the XFS filesystem
+xfs \- layout, mount options, and supported file attributes for the XFS filesystem
 .SH DESCRIPTION
 An XFS filesystem can reside on a regular disk partition or on a
 logical volume.
@@ -302,7 +302,27 @@ namespace is on stable storage. This is useful in HA setups
 where failover must not result in clients seeing
 inconsistent namespace presentation during or after a
 failover event.
+.SH FILE ATTRIBUTES
+The XFS filesystem supports setting the following file
+attributes on Linux systems using the
+.BR chattr (1)
+utility:
+.sp
+.BR a " - append only"
+.sp
+.BR A " - no atime updates"
+.sp
+.BR d " - no dump"
+.sp
+.BR i " - immutable"
+.sp
+.BR S " - synchronous updates"
+.sp
+For descriptions of these attribute flags, please refer to the
+.BR chattr (1)
+man page.
 .SH SEE ALSO
+.BR chattr (1),
 .BR xfsctl (3),
 .BR mount (8),
 .BR mkfs.xfs (8),
