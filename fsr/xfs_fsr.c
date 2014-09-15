@@ -809,15 +809,15 @@ fsrfile(char *fname, xfs_ino_t ino)
 {
 	xfs_bstat_t	statbuf;
 	jdm_fshandle_t	*fshandlep;
-	int	fd, fsfd;
-	int	error = 0;
+	int	fd = -1, fsfd = -1;
+	int	error = -1;
 	char	*tname;
 
 	fshandlep = jdm_getfshandle(getparent (fname) );
-	if (! fshandlep) {
+	if (!fshandlep) {
 		fsrprintf(_("unable to construct sys handle for %s: %s\n"),
 			fname, strerror(errno));
-		return -1;
+		goto out;
 	}
 
 	/*
@@ -828,39 +828,39 @@ fsrfile(char *fname, xfs_ino_t ino)
 	if (fsfd < 0) {
 		fsrprintf(_("unable to open sys handle for %s: %s\n"),
 			fname, strerror(errno));
-		return -1;
+		goto out;
 	}
 
 	if ((xfs_bulkstat_single(fsfd, &ino, &statbuf)) < 0) {
 		fsrprintf(_("unable to get bstat on %s: %s\n"),
 			fname, strerror(errno));
-		close(fsfd);
-		return -1;
+		goto out;
 	}
 
 	fd = jdm_open(fshandlep, &statbuf, O_RDWR|O_DIRECT);
 	if (fd < 0) {
 		fsrprintf(_("unable to open handle %s: %s\n"),
 			fname, strerror(errno));
-		close(fsfd);
-		return -1;
+		goto out;
 	}
 
 	/* Get the fs geometry */
 	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
 		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
-		close(fsfd);
-		return -1;
+		goto out;
 	}
-
-	close(fsfd);
 
 	tname = gettmpname(fname);
 
 	if (tname)
 		error = fsrfile_common(fname, tname, NULL, fd, &statbuf);
 
-	close(fd);
+out:
+	if (fsfd >= 0)
+		close(fsfd);
+	if (fd >= 0)
+		close(fd);
+	free(fshandlep);
 
 	return error;
 }
