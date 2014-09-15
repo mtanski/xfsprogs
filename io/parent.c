@@ -293,7 +293,7 @@ print_parent_entry(parent_t *parent, int fullpath)
 static int
 parent_list(int fullpath)
 {
-	void *handlep;
+	void *handlep = NULL;
 	size_t handlen;
 	int error, i;
 	int retval = 1;
@@ -313,6 +313,7 @@ parent_list(int fullpath)
 				progname, path, strerror(errno));
 			goto error;
 		}
+		free_handle(fshandle, fshlen);
 	}
 
 	if (path_to_handle(path, &handlep, &handlen) != 0) {
@@ -325,7 +326,7 @@ parent_list(int fullpath)
 		if (!parentbuf) {
 			fprintf(stderr, _("%s: unable to allocate parent buffer: %s\n"),
 				progname, strerror(errno));
-			return 1;
+			goto error;
 		}
 
 		if (fullpath) {
@@ -365,6 +366,7 @@ parent_list(int fullpath)
 
 	retval = 0;
 error:
+	free(handlep);
 	free(parentbuf);
 	return retval;
 }
