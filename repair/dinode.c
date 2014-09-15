@@ -2456,7 +2456,7 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 	_("Bad flags set in inode %" PRIu64 "\n"),
 					lino);
 			}
-			flags &= ~XFS_DIFLAG_ANY;
+			flags &= XFS_DIFLAG_ANY;
 		}
 
 		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) {
@@ -2513,11 +2513,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
 		}
 		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
 			if (!no_modify) {
-				do_warn(_(", fixing bad flags.\n"));
+				do_warn(_("fixing bad flags.\n"));
 				dino->di_flags = cpu_to_be16(flags);
 				*dirty = 1;
 			} else
-				do_warn(_(", would fix bad flags.\n"));
+				do_warn(_("would fix bad flags.\n"));
 		}
 	}
 
