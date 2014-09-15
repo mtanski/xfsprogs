@@ -7171,7 +7171,7 @@ msgstr "Można użyć -f do wymuszenia użycia źle wyrównanego urządzenia\n"
 
 #: .././mkfs/xfs_mkfs.c:450
 #, c-format
-msgid "warning: unable to probe device toplology for device %s\n"
+msgid "warning: unable to probe device topology for device %s\n"
 msgstr "uwaga: nie udało się odczytać topologii urządzenia %s\n"
 
 #: .././mkfs/xfs_mkfs.c:578

@@ -447,7 +447,7 @@ static void blkid_get_topology(
 out_free_probe:
 	blkid_free_probe(pr);
 	fprintf(stderr,
-		_("warning: unable to probe device toplology for device %s\n"),
+		_("warning: unable to probe device topology for device %s\n"),
 		device);
 }
 
