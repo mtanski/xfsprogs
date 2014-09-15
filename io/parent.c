@@ -258,9 +258,8 @@ parent_check(void)
 	if (!bstatbuf || !parentbuf) {
 		fprintf(stderr, _("unable to allocate buffers: %s\n"),
 			strerror(errno));
-		free(bstatbuf);
-		free(parentbuf);
-		return 1;
+		err_status = 1;
+		goto out;
 	}
 
 	if (do_bulkstat(parentbuf, &parentbuf_size, bstatbuf, fsfd, fshandlep) != 0)
@@ -272,8 +271,10 @@ parent_check(void)
 		printf(_("succeeded checking %llu inodes\n"),
 			(unsigned long long) inodes_checked);
 
+out:
 	free(bstatbuf);
 	free(parentbuf);
+	free(fshandlep);
 	return err_status;
 }
 
