@@ -702,6 +702,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 	if ((fsfd = open(mntdir, O_RDONLY)) < 0) {
 		fsrprintf(_("unable to open: %s: %s\n"),
 		          mntdir, strerror( errno ));
+		free(fshandlep);
 		return -1;
 	}
 
@@ -709,6 +710,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
 			  mntdir);
 		close(fsfd);
+		free(fshandlep);
 		return -1;
 	}
 
@@ -774,6 +776,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 out0:
 	tmp_close(mntdir);
 	close(fsfd);
+	free(fshandlep);
 	return 0;
 }
 
