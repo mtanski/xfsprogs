@@ -652,6 +652,7 @@ write_struct(
 	buf = convert_arg(argv[1], bit_length);
 	if (!buf) {
 		dbprintf(_("unable to convert value '%s'.\n"), argv[1]);
+		flist_free(fl);
 		return;
 	}
 
