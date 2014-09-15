@@ -97,6 +97,7 @@ path_to_fshandle(
 		/* new filesystem. add it to the cache */
 		fdhp = malloc(sizeof(struct fdhash));
 		if (fdhp == NULL) {
+			free(*fshanp);
 			close(fd);
 			errno = ENOMEM;
 			return -1;
