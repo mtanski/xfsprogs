@@ -914,7 +914,8 @@ process_shortform_attr(
 
 		/* Only check values for root security attributes */
 		if (currententry->flags & XFS_ATTR_ROOT)
-		       junkit = valuecheck(mp, (char *)&currententry->nameval[0],
+		       junkit |= valuecheck(mp,
+					(char *)&currententry->nameval[0],
 					NULL, currententry->namelen, 
 					currententry->valuelen);
 
