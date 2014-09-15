@@ -29,6 +29,7 @@ static cmdinfo_t mread_cmd;
 static cmdinfo_t msync_cmd;
 static cmdinfo_t munmap_cmd;
 static cmdinfo_t mwrite_cmd;
+static cmdinfo_t mremap_cmd;
 
 mmap_region_t	*maptable;
 int		mapcount;
@@ -574,6 +575,66 @@ mwrite_f(
 	return 0;
 }
 
+static void
+mremap_help(void)
+{
+	printf(_(
+"\n"
+" resizes the current memory mapping\n"
+"\n"
+" Examples:\n"
+" 'mremap 8192' - resizes the current mapping to 8192 bytes.\n"
+"\n"
+" Resizes the mappping, growing or shrinking from the current size.\n"
+" The default stored value is 'X', repeated to fill the range specified.\n"
+" -f -- use the MREMAP_FIXED flag\n"
+" -m -- use the MREMAP_MAYMOVE flag\n"
+"\n"));
+}
+
+int
+mremap_f(
+	int		argc,
+	char		**argv)
+{
+	ssize_t		new_length;
+	void		*new_addr;
+	int		flags = 0;
+	int		c;
+	size_t		blocksize, sectsize;
+
+	while ((c = getopt(argc, argv, "fm")) != EOF) {
+		switch (c) {
+		case 'f':
+			flags = MREMAP_FIXED|MREMAP_MAYMOVE;
+			break;
+		case 'm':
+			flags = MREMAP_MAYMOVE;
+			break;
+		default:
+			return command_usage(&mremap_cmd);
+		}
+	}
+
+	init_cvtnum(&blocksize, &sectsize);
+	new_length = cvtnum(blocksize, sectsize, argv[optind]);
+	if (new_length < 0) {
+		printf(_("non-numeric offset argument -- %s\n"),
+			argv[optind]);
+		return 0;
+	}
+
+	new_addr = mremap(mapping->addr, mapping->length, new_length, flags);
+	if (new_addr == MAP_FAILED)
+		perror("mremap");
+	else {
+		mapping->addr = new_addr;
+		mapping->length = new_length;
+	}
+
+	return 0;
+}
+
 void
 mmap_init(void)
 {
@@ -628,9 +689,21 @@ mmap_init(void)
 		_("writes data into a region in the current memory mapping");
 	mwrite_cmd.help = mwrite_help;
 
+	mremap_cmd.name = "mremap";
+	mremap_cmd.altname = "mrm";
+	mremap_cmd.cfunc = mremap_f;
+	mremap_cmd.argmin = 1;
+	mremap_cmd.argmax = 2;
+	mremap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
+	mremap_cmd.args = _("[-m|-f] newsize");
+	mremap_cmd.oneline =
+		_("alters the size of the current memory mapping");
+	mremap_cmd.help = mremap_help;
+
 	add_command(&mmap_cmd);
 	add_command(&mread_cmd);
 	add_command(&msync_cmd);
 	add_command(&munmap_cmd);
 	add_command(&mwrite_cmd);
+	add_command(&mremap_cmd);
 }

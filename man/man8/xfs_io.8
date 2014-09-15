@@ -501,6 +501,20 @@ See the
 .B mmap
 command.
 .TP
+.BI "mremap [ \-f ] [ \-m ] " new_length
+Changes the current mapping size to
+.IR new_length .
+Whether the mapping may be moved is controlled by the flags passed;
+MREMAP_FIXED
+.RB ( \-f ),
+or MREMAP_MAYMOVE
+.RB ( \-m ).
+.TP
+.B mrm
+See the
+.B mremap
+command.
+.TP
 .B munmap
 Unmaps the current memory mapping.
 .TP
