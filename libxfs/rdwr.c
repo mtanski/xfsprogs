@@ -187,7 +187,7 @@ libxfs_log_header(
 		head->h_len = cpu_to_be32(sunit - BBSIZE);
 	else
 		head->h_len = cpu_to_be32(20);
-	head->h_crc = cpu_to_be32(0);
+	head->h_crc = cpu_to_le32(0);
 	head->h_prev_block = cpu_to_be32(-1);
 	head->h_num_logops = cpu_to_be32(1);
 	head->h_cycle_data[0] = cpu_to_be32(0xb0c0d0d0);
