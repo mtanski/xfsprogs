@@ -362,10 +362,6 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	extent_tree_node_t	*ext_ptr;
 	int			level;
 #ifdef XR_BLD_FREE_TRACE
-	int			old_state;
-	int			state = XR_E_BAD_STATE;
-#endif
-#ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr,
 		"in init_freespace_cursor, agno = %d\n", agno);
 #endif
@@ -1292,8 +1288,8 @@ build_agf_agfl(xfs_mount_t	*mp,
 	memset(agf, 0, mp->m_sb.sb_sectsize);
 
 #ifdef XR_BLD_FREE_TRACE
-	fprintf(stderr, "agf = 0x%x, agf_buf->b_un.b_addr = 0x%x\n",
-		(__psint_t) agf, (__psint_t) agf_buf->b_un.b_addr);
+	fprintf(stderr, "agf = 0x%p, agf_buf->b_addr = 0x%p\n",
+		agf, agf_buf->b_addr);
 #endif
 
 	/*
@@ -1452,7 +1448,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 	}
 
 #ifdef XR_BLD_FREE_TRACE
-	fprintf(stderr, "wrote agf for ag %u, error = %d\n", agno, error);
+	fprintf(stderr, "wrote agf for ag %u\n", agno);
 #endif
 }
 
@@ -1707,11 +1703,10 @@ phase5(xfs_mount_t *mp)
 #ifdef XR_BLD_FREE_TRACE
 	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
 		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0),
-		xfs_inobt_maxrecs(mp->m_sb.sb_blocksize, 0) / 2
-		);
+		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0) / 2);
 	fprintf(stderr, "inobt level 0 (leaf), maxrec = %d, minrec = %d\n",
-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, xfs_inobt, 1),
-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, xfs_inobt, 1) / 2);
+		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1),
+		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1) / 2);
 	fprintf(stderr, "xr inobt level 0 (leaf), maxrec = %d\n",
 		XR_INOBT_BLOCK_MAXRECS(mp, 0));
 	fprintf(stderr, "xr inobt level 1 (int), maxrec = %d\n",
