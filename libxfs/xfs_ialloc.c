@@ -1057,7 +1057,8 @@ xfs_dialloc_ag(
 		 * most recently allocated inode.
 		 */
 		if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
-			error = xfs_inobt_lookup(cur, agi->agi_newino,
+			error = xfs_inobt_lookup(cur,
+						 be32_to_cpu(agi->agi_newino),
 						 XFS_LOOKUP_EQ, &i);
 			if (error)
 				goto error_cur;
