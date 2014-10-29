@@ -245,9 +245,10 @@ Set additional attributes associated with files in XFS file systems.
 The final argument points to a variable of type
 .BR "struct fsxattr" ,
 but only the following fields are used in this call:
-.B fsx_xflags
+.BR fsx_xflags ,
+.B fsx_extsize
 and
-.BR fsx_extsize .
+.BR fsx_projid .
 The
 .B fsx_xflags
 realtime file bit and the file's extent size may be changed only
