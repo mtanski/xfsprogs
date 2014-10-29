@@ -1088,12 +1088,12 @@ libxfs_bcache_overflowed(void)
 }
 
 struct cache_operations libxfs_bcache_operations = {
-	/* .hash */	libxfs_bhash,
-	/* .alloc */	libxfs_balloc,
-	/* .flush */	libxfs_bflush,
-	/* .relse */	libxfs_brelse,
-	/* .compare */	libxfs_bcompare,
-	/* .bulkrelse */libxfs_bulkrelse
+	.hash		= libxfs_bhash,
+	.alloc		= libxfs_balloc,
+	.flush		= libxfs_bflush,
+	.relse		= libxfs_brelse,
+	.compare	= libxfs_bcompare,
+	.bulkrelse	= libxfs_bulkrelse
 };
 
 
