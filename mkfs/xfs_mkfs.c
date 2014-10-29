@@ -946,6 +946,8 @@ main(
 	int			logversion;
 	int			lvflag;
 	int			lsflag;
+	int			lsuflag;
+	int			lsunitflag;
 	int			lsectorlog;
 	int			lsectorsize;
 	int			lslflag;
@@ -1004,7 +1006,7 @@ main(
 	sectorsize = lsectorsize = XFS_MIN_SECTORSIZE;
 	agsize = daflag = dasize = dblocks = 0;
 	ilflag = imflag = ipflag = isflag = 0;
-	liflag = laflag = lsflag = ldflag = lvflag = 0;
+	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
 	loginternal = 1;
 	logversion = 2;
 	logagno = logblocks = rtblocks = rtextblocks = 0;
@@ -1400,6 +1402,7 @@ main(
 						respec('l', lopts, L_SU);
 					lsu = cvtnum(
 						blocksize, sectorsize, value);
+					lsuflag = 1;
 					break;
 				case L_SUNIT:
 					if (!value || *value == '\0')
@@ -1412,6 +1415,7 @@ main(
 						usage();
 					}
 					lsunit = cvtnum(0, 0, value);
+					lsunitflag = 1;
 					break;
 				case L_NAME:
 				case L_DEV:
@@ -2379,11 +2383,15 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
 	}
 
 	if (logversion == 2 && (lsunit * blocksize) > 256 * 1024) {
-		fprintf(stderr,
+		/* Warn only if specified on commandline */
+		if (lsuflag || lsunitflag) {
+			fprintf(stderr,
 	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
-			(lsunit * blocksize));
+				(lsunit * blocksize));
+			fprintf(stderr,
+	_("log stripe unit adjusted to 32KiB\n"));
+		}
 		lsunit = (32 * 1024) >> blocklog;
-		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
 	}
 
 	min_logblocks = max_trans_res(crcs_enabled, dirversion,
