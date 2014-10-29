@@ -171,7 +171,7 @@ pf_read_bmbt_reclist(
 	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
 	struct xfs_buf_map	*map = map_array;
 	int			max_extents = MAP_ARRAY_SZ;
-	int			nmaps = 0;;
+	int			nmaps = 0;
 	unsigned int		len = 0;
 	int			ret = 0;
 

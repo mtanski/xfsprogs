@@ -25,7 +25,7 @@ int pflag;
 char *progname;
 
 void
-usage()
+usage(void)
 {
 	fprintf(stderr, _("%s [-e extsize] [-p] [-V] source target\n"), progname);
 	exit(2);
