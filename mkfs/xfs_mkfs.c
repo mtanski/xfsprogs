@@ -410,21 +410,27 @@ static void blkid_get_topology(
 	*lsectorsize = val;
 	val = blkid_topology_get_physical_sector_size(tp);
 	*psectorsize = val;
+	val = blkid_topology_get_minimum_io_size(tp);
+	*sunit = val;
+	val = blkid_topology_get_optimal_io_size(tp);
+	*swidth = val;
+
+	/*
+	 * If the reported values are the same as the physical sector size
+	 * do not bother to report anything.  It will only cause warnings
+	 * if people specify larger stripe units or widths manually.
+	 */
+	if (*sunit == *psectorsize || *swidth == *psectorsize) {
+		*sunit = 0;
+		*swidth = 0;
+	}
 
 	/*
 	 * Blkid reports the information in terms of bytes, but we want it in
-	 * terms of 512 bytes blocks (just to convert it to bytes later..)
-	 *
-	 * If the reported values are the same as the physical sector size
-	 * do not bother to report anything.  It will just cause warnings
-	 * if people specify larger stripe units or widths manually.
+	 * terms of 512 bytes blocks (only to convert it to bytes later..)
 	 */
-	val = blkid_topology_get_minimum_io_size(tp);
-	if (val > *psectorsize)
-		*sunit = val >> 9;
-	val = blkid_topology_get_optimal_io_size(tp);
-	if (val > *psectorsize)
-		*swidth = val >> 9;
+	*sunit = *sunit >> 9;
+	*swidth = *swidth >> 9;	
 
 	if (blkid_topology_get_alignment_offset(tp) != 0) {
 		fprintf(stderr,
@@ -484,10 +490,10 @@ static void get_topology(
 	}
 
 	if (xi->rtname && !xi->risfile) {
-		int dummy;
+		int sunit, lsectorsize, psectorsize;
 
-		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
-				   &dummy, &dummy, force_overwrite);
+		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
+				   &lsectorsize, &psectorsize, force_overwrite);
 	}
 }
 #else /* ENABLE_BLKID */
