@@ -109,6 +109,7 @@ extern void		pwrite_init(void);
 extern void		quit_init(void);
 extern void		seek_init(void);
 extern void		shutdown_init(void);
+extern void		sync_init(void);
 extern void		truncate_init(void);
 
 #ifdef HAVE_FADVISE

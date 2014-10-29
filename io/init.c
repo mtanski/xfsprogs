@@ -80,8 +80,9 @@ init_commands(void)
 	resblks_init();
 	sendfile_init();
 	shutdown_init();
-	truncate_init();
+	sync_init();
 	sync_range_init();
+	truncate_init();
 }
 
 static int

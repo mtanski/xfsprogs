@@ -11,7 +11,7 @@ HFILES = init.h io.h
 CFILES = init.c \
 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
-	truncate.c
+	sync.c truncate.c
 
 LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
 LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
@@ -62,6 +62,10 @@ endif
 ifeq ($(HAVE_SYNC_FILE_RANGE),yes)
 CFILES += sync_file_range.c
 LCFLAGS += -DHAVE_SYNC_FILE_RANGE
+endif
+
+ifeq ($(HAVE_SYNCFS),yes)
+LCFLAGS += -DHAVE_SYNCFS
 endif
 
 ifeq ($(ENABLE_READLINE),yes)

@@ -362,6 +362,16 @@ start writeback of dirty data in the given range (SYNC_FILE_RANGE_WRITE).
 .RE
 .PD
 .TP
+.B sync
+Calls
+.BR sync (2)
+to flush all filesystems' in-core data to disk.
+.TP
+.B syncfs
+Calls
+.BR syncfs (2)
+to flush this filesystem's in-core data to disk.
+.TP
 .BI resvsp " offset length"
 Allocates reserved, unwritten space for part of a file using the
 XFS_IOC_RESVSP system call described in the

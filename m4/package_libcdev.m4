@@ -171,6 +171,23 @@ AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
   ])
 
 #
+# Check if we have a syncfs libc call (Linux)
+#
+AC_DEFUN([AC_HAVE_SYNCFS],
+  [ AC_MSG_CHECKING([for syncfs])
+    AC_TRY_LINK([
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <unistd.h>
+    ], [
+         syncfs(0);
+    ], have_sync_fs=yes
+       AC_MSG_RESULT(yes),
+       AC_MSG_RESULT(no))
+    AC_SUBST(have_syncfs)
+  ])
+
+#
 # Check if we have a readdir libc call
 #
 AC_DEFUN([AC_HAVE_READDIR],
