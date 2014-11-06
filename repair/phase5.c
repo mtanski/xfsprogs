@@ -335,11 +335,22 @@ finish_cursor(bt_status_t *curs)
 }
 
 /*
+ * We need to leave some free records in the tree for the corner case of
+ * setting up the AGFL. This may require allocation of blocks, and as
+ * such can require insertion of new records into the tree (e.g. moving
+ * a record in the by-count tree when a long extent is shortened). If we
+ * pack the records into the leaves with no slack space, this requires a
+ * leaf split to occur and a block to be allocated from the free list.
+ * If we don't have any blocks on the free list (because we are setting
+ * it up!), then we fail, and the filesystem will fail with the same
+ * failure at runtime. Hence leave a couple of records slack space in
+ * each block to allow immediate modification of the tree without
+ * requiring splits to be done.
+ *
  * XXX(hch): any reason we don't just look at mp->m_alloc_mxr?
  */
 #define XR_ALLOC_BLOCK_MAXRECS(mp, level) \
-			xfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, \
-						(level) == 0)
+	(xfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, (level) == 0) - 2)
 
 /*
  * this calculates a freespace cursor for an ag.
@@ -361,10 +372,6 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	bt_stat_level_t		*p_lptr;
 	extent_tree_node_t	*ext_ptr;
 	int			level;
-#ifdef XR_BLD_FREE_TRACE
-	fprintf(stderr,
-		"in init_freespace_cursor, agno = %d\n", agno);
-#endif
 
 	num_extents = *extents;
 	extents_used = 0;
@@ -385,6 +392,13 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 	lptr->num_recs_tot = num_extents;
 	level = 1;
 
+#ifdef XR_BLD_FREE_TRACE
+	fprintf(stderr, "%s 0 %d %d %d %d\n", __func__,
+			lptr->num_blocks,
+			lptr->num_recs_pb,
+			lptr->modulo,
+			lptr->num_recs_tot);
+#endif
 	/*
 	 * if we need more levels, set them up.  # of records
 	 * per level is the # of blocks in the level below it
@@ -402,6 +416,14 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 			lptr->num_recs_pb = p_lptr->num_blocks
 					/ lptr->num_blocks;
 			lptr->num_recs_tot = p_lptr->num_blocks;
+#ifdef XR_BLD_FREE_TRACE
+			fprintf(stderr, "%s %d %d %d %d %d\n", __func__,
+					level,
+					lptr->num_blocks,
+					lptr->num_recs_pb,
+					lptr->modulo,
+					lptr->num_recs_tot);
+#endif
 		}
 	}
 
@@ -546,8 +568,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
 				lptr = &btree_curs->level[level];
 				p_lptr = &btree_curs->level[level-1];
 				lptr->num_blocks = howmany(p_lptr->num_blocks,
-						XR_ALLOC_BLOCK_MAXRECS(mp,
-								level));
+					XR_ALLOC_BLOCK_MAXRECS(mp, level));
 				lptr->modulo = p_lptr->num_blocks
 						% lptr->num_blocks;
 				lptr->num_recs_pb = p_lptr->num_blocks
@@ -1434,6 +1455,7 @@ build_agf_agfl(xfs_mount_t	*mp,
 		xfs_alloc_arg_t	args;
 		xfs_trans_t	*tp;
 		struct xfs_trans_res tres = {0};
+		int		error;
 
 		memset(&args, 0, sizeof(args));
 		args.tp = tp = libxfs_trans_alloc(mp, 0);
@@ -1442,8 +1464,12 @@ build_agf_agfl(xfs_mount_t	*mp,
 		args.alignment = 1;
 		args.pag = xfs_perag_get(mp,agno);
 		libxfs_trans_reserve(tp, &tres, XFS_MIN_FREELIST(agf, mp), 0);
-		libxfs_alloc_fix_freelist(&args, 0);
+		error = libxfs_alloc_fix_freelist(&args, 0);
 		xfs_perag_put(args.pag);
+		if (error) {
+			do_error(_("failed to fix AGFL on AG %d, error %d\n"),
+					agno, error);
+		}
 		libxfs_trans_commit(tp, 0);
 	}
 
