@@ -1,3 +1,11 @@
+xfsprogs (3.2.2) unstable; urgency=low
+
+  * New upstream release
+  * Rework dh-autoreconf invocation (closes: #757455)
+  * Update licensing words for headers (closes: #751511)
+
+ -- Nathan Scott <nathans@debian.org>  Mon, 10 Nov 2014 20:35:27 +1100
+
 xfsprogs (3.2.1) unstable; urgency=low
 
   * New upstream release (closes: #747080)
