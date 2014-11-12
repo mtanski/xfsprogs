@@ -35,7 +35,7 @@ config: .census
 .census:
 	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
-	dh_autotools-dev_updateconfig
+	AUTOHEADER=/bin/true dh_autoreconf
 	$(options) $(MAKE) include/platform_defs.h
 	touch .census
 
@@ -58,7 +58,7 @@ clean:
 	$(MAKE) distclean
 	-rm -rf $(dirme) $(dirdev) $(dirdi)
 	-rm -f debian/*substvars debian/files* debian/*.debhelper
-	dh_autotools-dev_restoreconfig
+	dh_autoreconf_clean
 	dh_clean
 
 binary-indep:
