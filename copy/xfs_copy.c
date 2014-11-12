@@ -475,7 +475,7 @@ main(int argc, char **argv)
 	int		open_flags;
 	xfs_off_t	pos, end_pos;
 	size_t		length;
-	int		c, first_residue, tmp_residue;
+	int		c;
 	__uint64_t	size, sizeb;
 	__uint64_t	numblocks = 0;
 	int		wblocks = 0;
@@ -697,27 +697,13 @@ main(int argc, char **argv)
 	ASSERT(source_blocksize % source_sectorsize == 0);
 	ASSERT(source_sectorsize % BBSIZE == 0);
 
-	if (source_blocksize > source_sectorsize)  {
-		/* get number of leftover sectors in last block of ag header */
-
-		tmp_residue = ((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-					% source_blocksize;
-		first_residue = (tmp_residue == 0) ? 0 :
-			source_blocksize - tmp_residue;
-		ASSERT(first_residue % source_sectorsize == 0);
-	} else if (source_blocksize == source_sectorsize)  {
-		first_residue = 0;
-	} else  {
+	if (source_blocksize < source_sectorsize)  {
 		do_log(_("Error:  filesystem block size is smaller than the"
 			" disk sectorsize.\nAborting XFS copy now.\n"));
 		exit(1);
 	}
 
-	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-				+ first_residue) / source_blocksize;
-	ASSERT(first_agbno != 0);
-	ASSERT(((((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-				+ first_residue) % source_blocksize) == 0);
+	first_agbno = XFS_AGFL_BLOCK(mp) + 1;
 
 	/* now open targets */
 
