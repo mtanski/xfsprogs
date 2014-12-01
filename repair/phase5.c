@@ -914,26 +914,10 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 	lptr = &btree_curs->level[0];
 	btree_curs->init = 1;
 
-	if ((ino_rec = findfirst_inode_rec(agno)) == NULL)  {
-		/*
-		 * easy corner-case -- no inode records
-		 */
-		lptr->num_blocks = 1;
-		lptr->modulo = 0;
-		lptr->num_recs_pb = 0;
-		lptr->num_recs_tot = 0;
-
-		btree_curs->num_levels = 1;
-		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
-
-		setup_cursor(mp, agno, btree_curs);
-
-		return;
-	}
-
 	/*
 	 * build up statistics
 	 */
+	ino_rec = findfirst_inode_rec(agno);
 	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
 		rec_nfinos = 0;
 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
@@ -951,6 +935,23 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
 		nfinos += rec_nfinos;
 		ninos += XFS_INODES_PER_CHUNK;
 		num_recs++;
+	}
+
+	if (num_recs == 0) {
+		/*
+		 * easy corner-case -- no inode records
+		 */
+		lptr->num_blocks = 1;
+		lptr->modulo = 0;
+		lptr->num_recs_pb = 0;
+		lptr->num_recs_tot = 0;
+
+		btree_curs->num_levels = 1;
+		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
+
+		setup_cursor(mp, agno, btree_curs);
+
+		return;
 	}
 
 	blocks_allocated = lptr->num_blocks = howmany(num_recs,
