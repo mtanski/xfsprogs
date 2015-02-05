@@ -667,12 +667,14 @@ _("inode %" PRIu64 " - bad extent overflows - start %" PRIu64 ", "
 					irec.br_startoff);
 				goto done;
 		}
-		if (irec.br_startoff >= fs_max_file_offset)  {
+		/* Ensure this extent does not extend beyond the max offset */
+		if (irec.br_startoff + irec.br_blockcount - 1 >
+							fs_max_file_offset) {
 			do_warn(
-_("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
-  "count %" PRIu64 ", offset %" PRIu64 "\n"),
-				ino, irec.br_startblock, irec.br_blockcount,
-				irec.br_startoff);
+_("inode %" PRIu64 " - extent exceeds max offset - start %" PRIu64 ", "
+  "count %" PRIu64 ", physical block %" PRIu64 "\n"),
+				ino, irec.br_startoff, irec.br_blockcount,
+				irec.br_startblock);
 			goto done;
 		}
 
