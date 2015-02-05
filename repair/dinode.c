@@ -1333,7 +1333,7 @@ process_symlink(
 	xfs_dinode_t	*dino,
 	blkmap_t 	*blkmap)
 {
-	char			*symlink, *cptr;
+	char			*symlink;
 	char			data[MAXPATHLEN];
 
 	/*
@@ -1378,31 +1378,6 @@ process_symlink(
 _("found illegal null character in symlink inode %" PRIu64 "\n"),
 			lino);
 		return(1);
-	}
-
-	/*
-	 * check for any component being too long
-	 */
-	if (be64_to_cpu(dino->di_size) >= MAXNAMELEN)  {
-		cptr = strchr(symlink, '/');
-
-		while (cptr != NULL)  {
-			if (cptr - symlink >= MAXNAMELEN)  {
-				do_warn(
-_("component of symlink in inode %" PRIu64 " too long\n"),
-					lino);
-				return(1);
-			}
-			symlink = cptr + 1;
-			cptr = strchr(symlink, '/');
-		}
-
-		if (strlen(symlink) >= MAXNAMELEN)  {
-			do_warn(
-_("component of symlink in inode %" PRIu64 " too long\n"),
-				lino);
-			return(1);
-		}
 	}
 
 	return(0);
