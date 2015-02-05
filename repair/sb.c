@@ -724,7 +724,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	 * sector size rather than the sector size in @rsb.
 	 */
 	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
-	retval = 0;
 	list = NULL;
 	num_ok = 0;
 	*sb_modified = 0;
@@ -779,6 +778,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	/*
 	 * see if we have enough superblocks to bother with
 	 */
+	retval = 0;
 	if (num_ok < num_sbs / 2) {
 		retval = XR_INSUFF_SEC_SB;
 		goto out_free_list;
@@ -868,5 +868,5 @@ out_free_list:
 	free_geo(list);
 	free(sb);
 	free(checked);
-	return(retval);
+	return retval;
 }
