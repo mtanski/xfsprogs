@@ -21,7 +21,7 @@ endif
 
 LLDLIBS += $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES += $(LIBXFS)
-LLDFLAGS = -static
+LLDFLAGS = -static-libtool-libs
 
 LSRCFILES = $(FSTYP).c
 LDIRT = $(FSTYP)

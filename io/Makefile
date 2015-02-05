@@ -15,7 +15,7 @@ CFILES = init.c \
 
 LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
 LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-LLDFLAGS = -static
+LLDFLAGS = -static-libtool-libs
 
 ifeq ($(HAVE_FADVISE),yes)
 CFILES += fadvise.c

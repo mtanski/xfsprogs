@@ -14,7 +14,7 @@ CFILES = logprint.c \
 
 LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
 LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
-LLDFLAGS = -static
+LLDFLAGS = -static-libtool-libs
 
 default: depend $(LTCOMMAND)
 
