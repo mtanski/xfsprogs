@@ -196,7 +196,8 @@ sb_validate_ino_align(struct xfs_sb *sb)
 	if (!xfs_sb_version_hascrc(sb))
 		return false;
 
-	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
+	align = (XFS_INODE_BIG_CLUSTER_SIZE *
+		 sb->sb_inodesize / XFS_DINODE_MIN_SIZE) >> sb->sb_blocklog;
 	if (align == sb->sb_inoalignmt)
 		return true;
 
