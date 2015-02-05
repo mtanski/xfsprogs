@@ -770,7 +770,8 @@ scan_single_ino_chunk(
 	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
 	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
 	     off % XFS_INODES_PER_CHUNK != 0) ||
-	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0))  {
+	    (fs_aligned_inodes && fs_ino_alignment &&
+	     agbno % fs_ino_alignment != 0))  {
 		do_warn(
 	_("badly aligned inode rec (starting inode = %" PRIu64 ")\n"),
 			lino);
@@ -929,7 +930,8 @@ scan_single_finobt_chunk(
 	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
 	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
 	     off % XFS_INODES_PER_CHUNK != 0) ||
-	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0)) {
+	    (fs_aligned_inodes && fs_ino_alignment &&
+	     agbno % fs_ino_alignment != 0)) {
 		do_warn(
 	_("badly aligned finobt inode rec (starting inode = %" PRIu64 ")\n"),
 			lino);
