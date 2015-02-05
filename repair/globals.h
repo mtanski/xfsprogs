@@ -57,7 +57,6 @@
 #define XR_LOG2BSIZE_MIN	9	/* min/max fs blocksize (log2) */
 #define XR_LOG2BSIZE_MAX	16	/* 2^XR_* == blocksize */
 
-#define	NUM_SBS			8	/* max # of sbs to verify */
 #define NUM_AGH_SECTS		4	/* # of components in an ag header */
 
 /*
@@ -88,7 +87,6 @@ EXTERN char	*iobuf;			/* large buffer */
 EXTERN int	iobuf_size;
 EXTERN char	*smallbuf;		/* small (1-4 page) buffer */
 EXTERN int	smallbuf_size;
-EXTERN char	*sb_bufs[NUM_SBS];	/* superblock buffers */
 EXTERN int	sbbuf_size;
 
 /* direct I/O info */

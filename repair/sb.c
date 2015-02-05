@@ -702,20 +702,11 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	xfs_sb_t	*sb;
 	fs_geo_list_t	*list;
 	fs_geo_list_t	*current;
-	char		*checked;
 	xfs_agnumber_t	agno;
 	int		num_sbs;
-	int		skip;
 	int		size;
 	int		num_ok;
 	int		retval;
-	int		round;
-
-	/*
-	 * select the number of secondaries to try for
-	 */
-	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
-	skip = howmany(num_sbs, rsb->sb_agcount);
 
 	/*
 	 * We haven't been able to validate the sector size yet properly
@@ -727,51 +718,38 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 	list = NULL;
 	num_ok = 0;
 	*sb_modified = 0;
+	num_sbs = rsb->sb_agcount;
 
 	sb = (xfs_sb_t *) alloc_ag_buf(size);
-	checked = calloc(rsb->sb_agcount, sizeof(char));
-	if (!checked) {
-		do_error(_("calloc failed in verify_set_primary_sb\n"));
-		exit(1);
-	}
 
 	/*
 	 * put the primary sb geometry info onto the geometry list
 	 */
-	checked[sb_index] = 1;
 	get_sb_geometry(&geo, rsb);
 	list = add_geo(list, &geo, sb_index);
 
 	/*
-	 * grab N secondaries.  check them off as we get them
-	 * so we only process each one once
+	 * scan the secondaries and check them off as we get them so we only
+	 * process each one once
 	 */
-	for (round = 0; round < skip; round++)  {
-		for (agno = round; agno < rsb->sb_agcount; agno += skip)  {
-			if (checked[agno])
-				continue;
+	for (agno = 1; agno < rsb->sb_agcount; agno++) {
+		off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
 
-			off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
+		retval = get_sb(sb, off, size, agno);
+		if (retval == XR_EOF)
+			goto out_free_list;
 
-			checked[agno] = 1;
-			retval = get_sb(sb, off, size, agno);
-			if (retval == XR_EOF)
-				goto out_free_list;
-
-			if (retval == XR_OK) {
-				/*
-				 * save away geometry info.
-				 * don't bother checking the sb
-				 * against the agi/agf as the odds
-				 * of the sb being corrupted in a way
-				 * that it is internally consistent
-				 * but not consistent with the rest
-				 * of the filesystem is really really low.
-				 */
-				get_sb_geometry(&geo, sb);
-				list = add_geo(list, &geo, agno);
-				num_ok++;
-			}
+		if (retval == XR_OK) {
+			/*
+			 * save away geometry info. don't bother checking the
+			 * sb against the agi/agf as the odds of the sb being
+			 * corrupted in a way that it is internally consistent
+			 * but not consistent with the rest of the filesystem is
+			 * really really low.
+			 */
+			get_sb_geometry(&geo, sb);
+			list = add_geo(list, &geo, agno);
+			num_ok++;
 		}
 	}
 
@@ -867,6 +845,5 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
 out_free_list:
 	free_geo(list);
 	free(sb);
-	free(checked);
 	return retval;
 }
