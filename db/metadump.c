@@ -2112,7 +2112,7 @@ copy_ino(
 	int			offset;
 	int			rval = 0;
 
-	if (ino == 0)
+	if (ino == 0 || ino == NULLFSINO)
 		return 1;
 
 	agno = XFS_INO_TO_AGNO(mp, ino);
