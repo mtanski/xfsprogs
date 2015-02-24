@@ -2441,8 +2441,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
 			 */
 			logblocks = (dblocks << blocklog) / 2048;
 			logblocks = logblocks >> blocklog;
-			logblocks = MAX(min_logblocks, logblocks);
 		}
+
+		/* Ensure the chosen size meets minimum log size requirements */
+		logblocks = MAX(min_logblocks, logblocks);
 
 		/* make sure the log fits wholly within an AG */
 		if (logblocks >= agsize)
