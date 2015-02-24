@@ -1865,6 +1865,7 @@ copy_inode_chunk(
 			(mp->m_sb.sb_inopblock > XFS_INODES_PER_CHUNK &&
 					off % XFS_INODES_PER_CHUNK != 0) ||
 			(xfs_sb_version_hasalign(&mp->m_sb) &&
+					mp->m_sb.sb_inoalignmt != 0 &&
 					agbno % mp->m_sb.sb_inoalignmt != 0)) {
 		if (show_warnings)
 			print_warning("badly aligned inode (start = %llu)",
