@@ -202,3 +202,20 @@ AC_DEFUN([AC_HAVE_READDIR],
     AC_SUBST(have_readdir)
   ])
 
+#
+# Check if we have a working mlock system call
+#
+AC_DEFUN([AC_HAVE_MLOCK],
+  [ AC_MSG_CHECKING([for mlock ])
+    AC_TRY_COMPILE([
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <sys/mman.h>
+    ], [
+	mlock(0, 0L);
+    ],	have_mlock=yes
+	AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no))
+    AC_SUBST(have_mlock)
+  ])
+

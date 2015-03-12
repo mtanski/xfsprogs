@@ -90,6 +90,11 @@ CFILES += readdir.c
 LCFLAGS += -DHAVE_READDIR
 endif
 
+ifeq ($(HAVE_MLOCK),yes)
+CFILES += mlock.c
+LCFLAGS += -DHAVE_MLOCK
+endif
+
 default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)

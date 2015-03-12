@@ -83,6 +83,7 @@ init_commands(void)
 	sync_init();
 	sync_range_init();
 	truncate_init();
+	mlock_init();
 }
 
 static int

@@ -159,3 +159,9 @@ extern void		readdir_init(void);
 #else
 #define readdir_init()		do { } while (0)
 #endif
+
+#ifdef HAVE_MLOCK
+extern void		mlock_init(void);
+#else
+#define mlock_init()	do { } while (0)
+#endif
